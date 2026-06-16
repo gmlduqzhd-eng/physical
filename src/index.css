@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* 모바일 UI 제스처 통제 최적화 */
 html, body, #root { 
