@@ -94,17 +94,17 @@ export const ScoreBoard = () => {
                 <span className="text-6xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400">
                   {score.score}
                 </span>
-                <span className="text-slate-500 mt-2 font-medium tracking-widest">SCORE</span>
+                <span className="text-slate-500 mt-2 font-medium tracking-widest">충전된 에너지</span>
               </div>
 
               <div className="w-full bg-slate-800 rounded-full h-3 mb-2 overflow-hidden border border-slate-700">
                 <div 
                   className={`h-full rounded-full transition-all duration-1000 ${score.is_defused ? 'bg-emerald-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`} 
-                  style={{ width: `${Math.min(100, (score.score / 500) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (score.score / 1000) * 100)}%` }}
                 ></div>
               </div>
               <div className="text-right text-xs text-slate-500 font-mono">
-                {score.score} / 500
+                {score.score} / 1000 MAX
               </div>
             </div>
           ))
