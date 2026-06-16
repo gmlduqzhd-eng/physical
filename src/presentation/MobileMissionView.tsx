@@ -1,7 +1,6 @@
-import React from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useSyncQueue } from '../application/useSyncQueue';
-import { Shield, Zap, CheckCircle2, WifiOff, Wifi } from 'lucide-react';
+import { Shield, Zap, WifiOff, Wifi } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 export const MobileMissionView = () => {

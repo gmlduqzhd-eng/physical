@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import { ScoreBoard } from './presentation/ScoreBoard';
 import { MobileMissionView } from './presentation/MobileMissionView';

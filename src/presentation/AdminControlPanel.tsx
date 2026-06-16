@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { supabase } from '../data/supabase';
 import { ShieldAlert, Play, Pause, Plus, Minus, RotateCcw } from 'lucide-react';

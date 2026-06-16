@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { Shield, Clock, AlertTriangle } from 'lucide-react';
 

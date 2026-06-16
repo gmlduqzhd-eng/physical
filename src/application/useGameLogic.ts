@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../data/supabase';
-import { BombDefusalScore, GameControl } from '../domain/types';
+import type { BombDefusalScore, GameControl } from '../domain/types';
 
 export const useGameLogic = () => {
   const [scores, setScores] = useState<BombDefusalScore[]>([]);

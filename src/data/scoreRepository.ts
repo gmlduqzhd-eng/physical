@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { BombDefusalScore } from '../domain/types';
+import type { BombDefusalScore } from '../domain/types';
 
 export const ScoreRepository = {
   // 전체 점수 보드 가져오기
