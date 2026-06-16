@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 모바일 UI 제스처 통제 최적화 */
+html, body, #root { 
+  height: 100dvh; 
+  width: 100vw; 
+  overflow: hidden; 
+  touch-action: none; 
+  -webkit-touch-callout: none; 
+  user-select: none; 
+}
+
+img, svg { 
+  -webkit-user-drag: none; 
+  pointer-events: none; 
+}
+
+button { 
+  pointer-events: auto; 
+}
