@@ -29,35 +29,7 @@ export const MobileMissionView = () => {
     return () => window.removeEventListener('touchstart', init);
   }, [playBeep]);
 
-  if (!id || !myGroup) return <div className="min-h-screen bg-slate-900 text-white flex justify-center items-center">로딩중...</div>;
-
-  const isLocked = isTimeUp || gameControl?.status !== 'playing' || myGroup.is_hacked || gameControl?.current_event === 'tsunami';
-  const hasBuff = myGroup.item_buff_until && new Date(myGroup.item_buff_until).getTime() > Date.now();
-  const isBossMode = myGroup.score >= 800 && !myGroup.is_defused;
-
-  const handleMissionComplete = (amount: number) => {
-    if (isLocked || cooldown) return;
-    
-    playBeep();
-    setCooldown(true);
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id, amount },
-      timestamp: Date.now()
-    });
-
-    setTimeout(() => setCooldown(false), 3000);
-  };
-
-  const buyBuff = async () => {
-    if (myGroup.score < 200) return alert('점수가 부족합니다!');
-    if (hasBuff) return alert('이미 버프가 적용 중입니다!');
-    if(window.confirm('200점을 소모하여 1분간 점수 2배 버프를 구매하시겠습니까?')) {
-      await supabase.rpc('buy_buff', { row_id: id });
-      playBeep();
-    }
-  };
+  const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
 
   // 보스 모드가 아닐 때 (또는 초기화 되었을 때) 찌꺼기 타이머와 게이지 강제 리셋
   useEffect(() => {
@@ -69,6 +41,11 @@ export const MobileMissionView = () => {
       }
     }
   }, [isBossMode]);
+
+  if (!id || !myGroup) return <div className="min-h-screen bg-slate-900 text-white flex justify-center items-center">로딩중...</div>;
+
+  const isLocked = isTimeUp || gameControl?.status !== 'playing' || myGroup.is_hacked || gameControl?.current_event === 'tsunami';
+  const hasBuff = myGroup.item_buff_until && new Date(myGroup.item_buff_until).getTime() > Date.now();
 
   const startHold = () => {
     if (isLocked) return;
