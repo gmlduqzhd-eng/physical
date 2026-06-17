@@ -1,39 +1,10 @@
-import { useState, useEffect } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
+import { useGameTimer } from '../application/useGameTimer';
 import { Shield, Clock, AlertTriangle } from 'lucide-react';
 
 export const ScoreBoard = () => {
   const { scores, gameControl } = useGameLogic();
-  const [timeLeft, setTimeLeft] = useState<number>(300); // 기본 5분 = 300초
-
-  useEffect(() => {
-    if (!gameControl) return;
-
-    const interval = setInterval(() => {
-      if (gameControl.status === 'playing' && gameControl.started_at) {
-        const start = new Date(gameControl.started_at).getTime();
-        const now = new Date().getTime();
-        const elapsed = Math.floor((now - start) / 1000);
-        
-        let remaining = 300 - elapsed + gameControl.global_time_modifier;
-        if (remaining < 0) remaining = 0;
-        setTimeLeft(remaining);
-      } else if (!gameControl.started_at) {
-        // 게임 시작 전
-        let remaining = 300 + gameControl.global_time_modifier;
-        if (remaining < 0) remaining = 0;
-        setTimeLeft(remaining);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [gameControl]);
-
-  const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-  const secs = (timeLeft % 60).toString().padStart(2, '0');
-  
-  // 1분 이하 시 폭탄 점멸 효과
-  const isDanger = timeLeft > 0 && timeLeft <= 60; 
+  const { mins, secs, isDanger } = useGameTimer(gameControl);
 
   return (
     <div className={`min-h-screen font-sans overflow-hidden relative transition-colors duration-1000 ${isDanger ? 'bg-red-950' : 'bg-slate-950'} text-white`}>

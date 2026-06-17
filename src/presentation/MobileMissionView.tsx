@@ -1,26 +1,36 @@
+import { useState } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
+import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
-import { Shield, Zap, WifiOff, Wifi, Anchor, Brain, Flame } from 'lucide-react';
+import { Shield, Zap, WifiOff, Wifi, Anchor, Brain, Flame, CheckCircle, Lock } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 export const MobileMissionView = () => {
-  const { id } = useParams<{ id: string }>(); // 모둠 ID
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { scores } = useGameLogic();
+  const { scores, gameControl } = useGameLogic();
+  const { isTimeUp } = useGameTimer(gameControl);
   const { isOnline, queueLength, enqueueAction } = useSyncQueue();
+
+  const [cooldown, setCooldown] = useState(false);
 
   const myGroup = scores.find(s => s.id === id);
 
   const handleMissionComplete = (amount: number) => {
-    if (!id) return;
+    if (!id || cooldown || isTimeUp || gameControl?.status !== 'playing') return;
     
-    // 네트워킹 불안정 대응을 위해 useSyncQueue의 enqueueAction 호출 (원자적 점수 증가 요청)
+    setCooldown(true);
     enqueueAction({
-      id: Math.random().toString(), // Action ID
+      id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
       payload: { id, amount },
       timestamp: Date.now()
     });
+
+    // 3초 쿨다운
+    setTimeout(() => {
+      setCooldown(false);
+    }, 3000);
   };
 
   if (!id || !myGroup) {
@@ -34,16 +44,31 @@ export const MobileMissionView = () => {
     );
   }
 
+  // 1000점 달성 (해체 완료) 화면
+  if (myGroup.is_defused) {
+    return (
+      <div className="min-h-[100dvh] bg-emerald-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent animate-[pulse_2s_ease-in-out_infinite]"></div>
+        <CheckCircle className="w-32 h-32 text-emerald-400 mb-8 animate-bounce relative z-10" />
+        <h1 className="text-5xl font-black text-white mb-4 text-center tracking-tighter relative z-10">폭탄 해체<br/>성공!</h1>
+        <p className="text-emerald-300 text-xl font-bold mb-12 relative z-10">여수 바다를 지켜냈습니다!</p>
+        <button onClick={() => navigate('/')} className="px-8 py-4 bg-emerald-600 rounded-2xl text-white font-bold text-lg shadow-[0_0_20px_rgba(5,150,105,0.4)] relative z-10">
+          메인 화면으로
+        </button>
+      </div>
+    );
+  }
+
+  const isLocked = isTimeUp || gameControl?.status !== 'playing';
+
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col relative overflow-hidden">
-      {/* Network Status Badge */}
       <div className={`absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${isOnline ? 'bg-emerald-950/50 border-emerald-500 text-emerald-400' : 'bg-red-950/50 border-red-500 text-red-400'}`}>
         {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
         {isOnline ? 'Online' : `Offline (Queue: ${queueLength})`}
       </div>
 
       <div className="flex-1 p-6 flex flex-col">
-        {/* Header */}
         <div className="flex flex-col items-center mb-6 mt-6">
           <div className="w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] mb-3">
             <Shield className="w-8 h-8 text-white" />
@@ -53,17 +78,25 @@ export const MobileMissionView = () => {
           </h1>
         </div>
 
-        {/* Score Card (Glassmorphism) */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 mb-6 flex flex-col items-center shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
           <span className="text-slate-400 font-bold tracking-widest text-xs mb-1">현재 에너지 충전율</span>
           <span className="text-6xl font-black font-mono text-white">{myGroup.score}</span>
         </div>
 
-        {/* Action Area (Mission Buttons) */}
-        <div className="mt-auto pb-4 flex flex-col gap-3">
+        {/* Action Area */}
+        <div className="mt-auto pb-4 flex flex-col gap-3 relative">
           
-          <button onClick={() => handleMissionComplete(10)} className="w-full relative group">
+          {(isLocked || cooldown) && (
+            <div className="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center border border-slate-800">
+              <Lock className="w-10 h-10 text-slate-500 mb-2" />
+              <p className="text-slate-400 font-bold text-sm">
+                {cooldown ? '에너지 전송 중... (3초 대기)' : '미션 진행 상태가 아닙니다'}
+              </p>
+            </div>
+          )}
+
+          <button onClick={() => handleMissionComplete(10)} disabled={isLocked || cooldown} className="w-full relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl blur opacity-20 group-hover:opacity-100 transition duration-200"></div>
             <div className="relative w-full py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
               <div className="flex items-center gap-3">
@@ -77,7 +110,7 @@ export const MobileMissionView = () => {
             </div>
           </button>
 
-          <button onClick={() => handleMissionComplete(50)} className="w-full relative group">
+          <button onClick={() => handleMissionComplete(50)} disabled={isLocked || cooldown} className="w-full relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl blur opacity-20 group-hover:opacity-100 transition duration-200"></div>
             <div className="relative w-full py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
               <div className="flex items-center gap-3">
@@ -91,7 +124,7 @@ export const MobileMissionView = () => {
             </div>
           </button>
 
-          <button onClick={() => handleMissionComplete(100)} className="w-full relative group">
+          <button onClick={() => handleMissionComplete(100)} disabled={isLocked || cooldown} className="w-full relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl blur opacity-20 group-hover:opacity-100 transition duration-200"></div>
             <div className="relative w-full py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
               <div className="flex items-center gap-3">
@@ -105,7 +138,7 @@ export const MobileMissionView = () => {
             </div>
           </button>
 
-          <button onClick={() => handleMissionComplete(200)} className="w-full relative group">
+          <button onClick={() => handleMissionComplete(200)} disabled={isLocked || cooldown} className="w-full relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl blur opacity-20 group-hover:opacity-100 transition duration-200"></div>
             <div className="relative w-full py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
               <div className="flex items-center gap-3">
