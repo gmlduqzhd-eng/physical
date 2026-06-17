@@ -1,11 +1,30 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
-import { Shield, Zap, Anchor, Brain, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint } from 'lucide-react';
+import { Shield, Zap, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint, Footprints, Activity, Users, Flame } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+
+interface MissionDef {
+  amount: number;
+  cooldown: number;
+  title: string;
+  desc: string;
+  icon: any;
+  color: string;
+  bg: string;
+}
+
+const MISSIONS: MissionDef[] = [
+  { amount: 10, cooldown: 1, title: '제자리 잔발뛰기', desc: '10초간 전력으로 제자리 뛰기', icon: Footprints, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-900' },
+  { amount: 20, cooldown: 2, title: '정확한 스쿼트', desc: '허리를 펴고 스쿼트 5회', icon: Activity, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-900' },
+  { amount: 40, cooldown: 3, title: '등 맞대고 일어서기', desc: '조원 2명 등 맞대고 앉았다 일어서기', icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-900' },
+  { amount: 50, cooldown: 3, title: '버피 테스트', desc: '가슴이 닿게 버피 테스트 5회', icon: Flame, color: 'text-orange-400', bg: 'bg-orange-950/40 border-orange-900' },
+  { amount: 80, cooldown: 5, title: '코어 플랭크', desc: '전원 바닥에 엎드려 플랭크 10초 유지', icon: Shield, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-900' },
+  { amount: 100, cooldown: 5, title: '만세 점프', desc: '전원 손잡고 만세하며 5번 점프', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-900' }
+];
 
 export const MobileMissionView = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,8 +35,14 @@ export const MobileMissionView = () => {
   const { playBeep, playVictory } = useAudio();
 
   const [cooldown, setCooldown] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [maxCooldownTime, setMaxCooldownTime] = useState(1);
   const [activeTab, setActiveTab] = useState<'mission' | 'shop'>('mission');
   const [holdProgress, setHoldProgress] = useState(0);
+  
+  // 낙관적 UI 상태
+  const [optimisticOffset, setOptimisticOffset] = useState(0);
+  const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
   
   const holdInterval = useRef<any>(null);
   const myGroup = scores.find(s => s.id === id);
@@ -33,19 +58,54 @@ export const MobileMissionView = () => {
   const isLocked = isTimeUp || gameControl?.status !== 'playing' || myGroup?.is_hacked || gameControl?.current_event === 'tsunami';
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
-  const handleMissionComplete = (amount: number) => {
+  // 서버 점수 동기화 시 낙관적 오프셋 리셋
+  useEffect(() => {
+    setOptimisticOffset(0);
+  }, [myGroup?.score]);
+
+  // 부드러운 쿨다운 타이머
+  useEffect(() => {
+    if (cooldownTime > 0) {
+      const timer = setTimeout(() => setCooldownTime(c => c - 50), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setCooldown(false);
+    }
+  }, [cooldownTime]);
+
+  const handleMissionComplete = (amount: number, cdSecs: number, e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
     if (isLocked || cooldown || !id) return;
     
+    // 즉각적인 시각 피드백 (낙관적 UI)
     playBeep();
     setCooldown(true);
+    setCooldownTime(cdSecs * 1000);
+    setMaxCooldownTime(cdSecs * 1000);
+    
+    const actualAmount = hasBuff ? amount * 2 : amount;
+    setOptimisticOffset(prev => prev + actualAmount);
+
+    // 터치 좌표 기반 + 점수 애니메이션
+    let x = 0; let y = 0;
+    if ('touches' in e) {
+      x = e.touches[0].clientX; y = e.touches[0].clientY;
+    } else {
+      x = (e as React.MouseEvent).clientX; y = (e as React.MouseEvent).clientY;
+    }
+    const clickId = Date.now() + Math.random();
+    setClicks(prev => [...prev, { id: clickId, x, y, val: actualAmount }]);
+    setTimeout(() => {
+      setClicks(prev => prev.filter(c => c.id !== clickId));
+    }, 800);
+
+    // 서버 전송 (백그라운드)
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
       payload: { id, amount },
       timestamp: Date.now()
     });
-
-    setTimeout(() => setCooldown(false), 3000);
   };
 
   const buyBuff = async () => {
@@ -71,17 +131,23 @@ export const MobileMissionView = () => {
 
   if (!id || !myGroup) return <div className="min-h-screen bg-slate-900 text-white flex justify-center items-center">로딩중...</div>;
 
-  const startHold = () => {
-    if (isLocked) return;
-    if (holdProgress >= 100) return;
-    if (holdInterval.current) return; // 다중 터치(연타) 꼼수 완벽 차단
+  const startHold = (e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    if (isLocked || holdProgress >= 100 || holdInterval.current) return;
     
+    playBeep();
     holdInterval.current = setInterval(() => {
       setHoldProgress(p => {
         if(p >= 100) {
           clearInterval(holdInterval.current);
           holdInterval.current = null;
-          handleMissionComplete(200); // Boss Defused!
+          // 보스 해체 점수 전송 (여기서는 가짜 이벤트 전송 방지용으로 빈 껍데기만 넘김)
+          enqueueAction({
+            id: Math.random().toString(),
+            type: 'INCREMENT_SCORE',
+            payload: { id, amount: 200 },
+            timestamp: Date.now()
+          });
           playVictory();
           return 100;
         }
@@ -109,7 +175,6 @@ export const MobileMissionView = () => {
     );
   }
 
-  // 글리치(해킹) 화면 연출
   if (myGroup.is_hacked) {
     return (
       <div className="min-h-[100dvh] bg-red-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -121,28 +186,41 @@ export const MobileMissionView = () => {
     );
   }
 
+  const displayScore = myGroup.score + optimisticOffset;
+
   return (
-    <div className={`min-h-[100dvh] ${gameControl?.current_event === 'tsunami' ? 'bg-blue-950' : 'bg-slate-950'} text-white flex flex-col relative overflow-hidden`}>
+    <div className={`min-h-[100dvh] ${gameControl?.current_event === 'tsunami' ? 'bg-blue-950' : 'bg-slate-950'} text-white flex flex-col relative overflow-hidden select-none`}>
+      {/* 플로팅 터치 애니메이션 */}
+      {clicks.map(c => (
+        <div key={c.id} className="absolute z-50 animate-float font-black text-3xl text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={{ left: c.x, top: c.y }}>
+          +{c.val}
+        </div>
+      ))}
+
       {gameControl?.current_event === 'tsunami' && (
-        <div className="absolute inset-0 bg-blue-600/20 animate-pulse z-0"></div>
+        <div className="absolute inset-0 bg-blue-600/20 animate-pulse z-0 pointer-events-none"></div>
       )}
       
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-900/80 border-slate-700 text-slate-300">
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-slate-900/80 border-slate-700 text-slate-300 pointer-events-none">
         <Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
       </div>
 
-      <div className="flex-1 p-6 flex flex-col z-10 mt-12">
+      <div className="flex-1 p-5 flex flex-col z-10 mt-12 overflow-y-auto">
         {/* Score Display */}
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-6 mb-6 flex flex-col items-center shadow-2xl relative overflow-hidden">
+        <div className="shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-2xl relative overflow-hidden transition-all">
           {hasBuff && <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>}
-          <span className="text-slate-400 font-bold tracking-widest text-xs mb-1">현재 에너지 충전율 {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}</span>
-          <span className="text-6xl font-black font-mono text-white">{myGroup.score}</span>
+          <span className="text-slate-400 font-bold tracking-widest text-xs mb-1">
+            현재 에너지 충전율 {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
+          </span>
+          <span className={`text-6xl font-black font-mono transition-transform ${optimisticOffset > 0 ? 'scale-110 text-cyan-300' : 'text-white'}`}>
+            {displayScore}
+          </span>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex gap-2 mb-6">
+        <div className="shrink-0 flex gap-2 mb-4">
           <button onClick={() => setActiveTab('mission')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'mission' ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
-            <Shield className="w-5 h-5" /> 미션
+            <Shield className="w-5 h-5" /> 체육 미션
           </button>
           <button onClick={() => setActiveTab('shop')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'shop' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
             <ShoppingCart className="w-5 h-5" /> 상점
@@ -150,7 +228,7 @@ export const MobileMissionView = () => {
         </div>
 
         {/* Action Area */}
-        <div className="mt-auto pb-4 flex flex-col gap-3 relative">
+        <div className="flex-1 flex flex-col relative min-h-0">
           {isLocked && !myGroup.is_hacked && (
             <div className="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center border border-slate-800">
               <Lock className="w-10 h-10 text-slate-500 mb-2" />
@@ -163,46 +241,55 @@ export const MobileMissionView = () => {
           {activeTab === 'mission' ? (
             isBossMode ? (
               <div 
-                className="w-full relative h-64 bg-slate-900 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center overflow-hidden select-none"
+                className="w-full h-full relative bg-slate-900 border-2 border-red-500/50 rounded-3xl flex flex-col items-center justify-center overflow-hidden touch-none"
                 onTouchStart={startHold} onTouchEnd={stopHold} onMouseDown={startHold} onMouseUp={stopHold} onMouseLeave={stopHold}
               >
                 <div className="absolute bottom-0 left-0 right-0 bg-red-500/30 transition-all duration-100 ease-linear" style={{ height: `${holdProgress}%` }}></div>
-                <Fingerprint className={`w-24 h-24 mb-4 z-10 ${holdProgress > 0 ? 'text-red-400 animate-ping' : 'text-slate-600'}`} />
-                <p className="z-10 font-bold text-lg text-white">최종 해체 모드</p>
-                <p className="z-10 text-xs text-slate-400">조원 전원이 손을 대고 5초간 유지하세요</p>
+                <Fingerprint className={`w-32 h-32 mb-6 z-10 ${holdProgress > 0 ? 'text-red-400 animate-ping' : 'text-slate-600'}`} />
+                <p className="z-10 font-black text-2xl text-white mb-2">최종 해체 모드</p>
+                <p className="z-10 text-sm text-slate-400 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
               </div>
             ) : (
-              <>
-                <button onClick={() => handleMissionComplete(10)} disabled={isLocked || cooldown} className="w-full relative group py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
-                  <div className="flex items-center gap-3">
-                    <Anchor className="w-6 h-6 text-cyan-400" />
-                    <div className="text-left"><div className="font-bold">진입로 확보</div></div>
-                  </div>
-                  <span className="font-black text-cyan-400">+10</span>
-                </button>
-                <button onClick={() => handleMissionComplete(50)} disabled={isLocked || cooldown} className="w-full relative group py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
-                  <div className="flex items-center gap-3">
-                    <Zap className="w-6 h-6 text-emerald-400" />
-                    <div className="text-left"><div className="font-bold">에너지 충전</div></div>
-                  </div>
-                  <span className="font-black text-emerald-400">+50</span>
-                </button>
-                <button onClick={() => handleMissionComplete(100)} disabled={isLocked || cooldown} className="w-full relative group py-3 bg-slate-900 border border-slate-700 rounded-2xl flex items-center justify-between px-5">
-                  <div className="flex items-center gap-3">
-                    <Brain className="w-6 h-6 text-purple-400" />
-                    <div className="text-left"><div className="font-bold">암호 해독</div></div>
-                  </div>
-                  <span className="font-black text-purple-400">+100</span>
-                </button>
-              </>
+              <div className="flex flex-col gap-3 overflow-y-auto pb-4 custom-scrollbar pr-2 h-full">
+                {MISSIONS.map((m, i) => (
+                  <button 
+                    key={i}
+                    onTouchStart={(e) => handleMissionComplete(m.amount, m.cooldown, e)}
+                    onMouseDown={(e) => handleMissionComplete(m.amount, m.cooldown, e)}
+                    disabled={isLocked || cooldown} 
+                    className={`w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-none ${m.bg}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-full bg-slate-950/50 flex items-center justify-center border border-white/10 ${m.color}`}>
+                        <m.icon className="w-6 h-6" />
+                      </div>
+                      <div className="text-left flex flex-col justify-center">
+                        <div className={`font-black text-lg ${m.color}`}>{m.title}</div>
+                        <div className="text-xs text-slate-400 font-bold mt-0.5">{m.desc}</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`font-black text-2xl ${m.color}`}>+{m.amount}</span>
+                      <span className="text-[10px] text-slate-500 font-bold mt-1">대기 {m.cooldown}초</span>
+                    </div>
+
+                    {/* Button Cooldown Overlay */}
+                    {cooldown && (
+                      <div className="absolute inset-0 bg-slate-950/60 rounded-2xl overflow-hidden backdrop-blur-[1px]">
+                        <div className="absolute bottom-0 left-0 h-1 bg-white/30 transition-all duration-50 ease-linear" style={{ width: `${(cooldownTime / maxCooldownTime) * 100}%` }}></div>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             )
           ) : (
-            <div className="p-4 bg-slate-900 border border-purple-500/30 rounded-2xl flex justify-between items-center">
+            <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl flex justify-between items-center shrink-0">
               <div>
-                <p className="font-bold text-purple-400 mb-1">점수 2배 부스터 (1분)</p>
-                <p className="text-xs text-slate-400">모든 획득 에너지가 2배가 됩니다.</p>
+                <p className="font-bold text-purple-400 mb-1 text-lg">점수 2배 부스터 (1분)</p>
+                <p className="text-sm text-slate-400 font-bold">모든 획득 에너지가 2배가 됩니다.</p>
               </div>
-              <button onClick={buyBuff} disabled={hasBuff || myGroup.score < 200} className={`px-4 py-2 rounded-xl font-bold ${myGroup.score >= 200 && !hasBuff ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-500'}`}>
+              <button onClick={buyBuff} disabled={hasBuff || myGroup.score < 200} className={`px-6 py-4 rounded-xl font-black text-lg transition-transform active:scale-95 ${myGroup.score >= 200 && !hasBuff ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'bg-slate-800 text-slate-500'}`}>
                 200점
               </button>
             </div>
