@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
-import { Shield, Zap, WifiOff, Wifi, Anchor, Brain, Flame, CheckCircle, Lock } from 'lucide-react';
+import { Shield, Zap, WifiOff, Wifi, Anchor, Brain, Flame, CheckCircle, Lock, Clock } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 export const MobileMissionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { scores, gameControl } = useGameLogic();
-  const { isTimeUp } = useGameTimer(gameControl);
+  const { isTimeUp, mins, secs, isDanger } = useGameTimer(gameControl);
   const { isOnline, queueLength, enqueueAction } = useSyncQueue();
 
   const [cooldown, setCooldown] = useState(false);
@@ -63,6 +63,12 @@ export const MobileMissionView = () => {
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col relative overflow-hidden">
+      {/* 미니 타이머 추가 */}
+      <div className={`absolute top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${isTimeUp ? 'bg-red-950/80 border-red-500 text-red-400' : isDanger ? 'bg-red-900/50 border-red-500 text-red-400 animate-pulse' : 'bg-slate-900/80 border-slate-700 text-slate-300'}`}>
+        <Clock className="w-4 h-4" />
+        <span className="font-mono tracking-wider">{mins}:{secs}</span>
+      </div>
+
       <div className={`absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border ${isOnline ? 'bg-emerald-950/50 border-emerald-500 text-emerald-400' : 'bg-red-950/50 border-red-500 text-red-400'}`}>
         {isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
         {isOnline ? 'Online' : `Offline (Queue: ${queueLength})`}
