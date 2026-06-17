@@ -52,8 +52,7 @@ export const MobileMissionView = () => {
   const [activeTab, setActiveTab] = useState<'mission' | 'shop'>('mission');
   const [holdProgress, setHoldProgress] = useState(0);
   
-  // 낙관적 UI 상태
-  const [optimisticOffset, setOptimisticOffset] = useState(0);
+  // 시각적 타격감(플로팅 숫자) 상태
   const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
 
   // 로컬 스토리지 패시브 아이템 상태
@@ -69,7 +68,6 @@ export const MobileMissionView = () => {
     if (hasDrone && gameControl?.status === 'playing') {
       const int = setInterval(() => {
         if (!id) return;
-        setOptimisticOffset(prev => prev + 10);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 10 }, timestamp: Date.now() });
       }, 5000);
       return () => clearInterval(int);
@@ -83,14 +81,9 @@ export const MobileMissionView = () => {
     return () => window.removeEventListener('touchstart', init);
   }, [playBeep]);
 
-  const isBossMode = myGroup ? myGroup.score + optimisticOffset >= 800 && !myGroup.is_defused : false;
+  const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
   const isLocked = isTimeUp || gameControl?.status !== 'playing' || myGroup?.is_hacked || gameControl?.current_event === 'tsunami';
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
-
-  // 서버 점수 동기화 시 낙관적 오프셋 리셋
-  useEffect(() => {
-    setOptimisticOffset(0);
-  }, [myGroup?.score]);
 
   // 부드러운 쿨다운 타이머
   useEffect(() => {
@@ -115,8 +108,6 @@ export const MobileMissionView = () => {
     let actualAmount = hasBuff ? baseAmount * 2 : baseAmount;
     if (hasBonus) actualAmount += 10;
 
-    setOptimisticOffset(prev => prev + actualAmount);
-
     let x = 0; let y = 0;
     if ('touches' in e) {
       x = e.touches[0].clientX; y = e.touches[0].clientY;
@@ -132,30 +123,23 @@ export const MobileMissionView = () => {
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
-      payload: { id, amount: hasBonus ? baseAmount + 10 : baseAmount }, // 서버단에서는 amount만 받고 2배는 스스로 계산하므로
-      // Wait! 서버 RPC `increment_score`는 `hasBonus`를 모름.
-      // 그래서 amount 자체를 (baseAmount + 10)으로 보내야 함! RPC는 그 결과에 *2를 할 것임.
-      // 하지만 잠깐! hasBuff일 때 RPC가 amount * 2를 함.
-      // 만약 amount에 10을 더해서 보내면, (baseAmount + 10) * 2 가 됨!
-      // 기획상 보너스 요정의 10점도 2배가 되면 더 재밌음! 그대로 전송!
+      payload: { id, amount: hasBonus ? baseAmount + 10 : baseAmount }, 
       timestamp: Date.now()
     });
   };
 
   const buyItem = async (item: typeof SHOP_ITEMS[0]) => {
     if (!myGroup || !id) return;
-    const currentScore = myGroup.score + optimisticOffset;
+    const currentScore = myGroup.score;
     
     if (item.id === 'allin') {
       if (currentScore <= 0) return alert('걸 점수가 없습니다!');
       if (!window.confirm(`정말 ${currentScore}점을 모두 걸고 올인하시겠습니까?`)) return;
       
-      setOptimisticOffset(prev => prev - currentScore);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -currentScore }, timestamp: Date.now() });
       
       if (Math.random() < 0.5) {
         setTimeout(() => {
-          setOptimisticOffset(prev => prev + currentScore * 2);
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: currentScore * 2 }, timestamp: Date.now() });
           alert('🎉 대박!! 점수가 2배가 되었습니다!!');
         }, 500);
@@ -179,7 +163,6 @@ export const MobileMissionView = () => {
     if (!window.confirm(`${item.cost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) return;
 
     // 기본 코스트 소모
-    setOptimisticOffset(prev => prev - item.cost);
     enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -item.cost }, timestamp: Date.now() });
     playBeep();
 
@@ -192,7 +175,6 @@ export const MobileMissionView = () => {
     } else if (item.id === 'lucky') {
       if (Math.random() < 0.2) {
         setTimeout(() => {
-          setOptimisticOffset(prev => prev + 400);
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 400 }, timestamp: Date.now() });
           alert('🎉 400점 대박 당첨!!');
         }, 300);
@@ -202,8 +184,7 @@ export const MobileMissionView = () => {
     } else if (item.id === 'donate') {
       const lowest = scores.reduce((prev, curr) => prev.score < curr.score ? prev : curr);
       if (lowest.id === id) {
-        setOptimisticOffset(prev => prev + 100);
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 100 }, timestamp: Date.now() });
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 100 }, timestamp: Date.now() }); // 환불
         return alert('우리 조가 꼴등입니다! 다른 사람을 도울 여유가 없네요 ㅠㅠ');
       }
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: lowest.id, amount: 200 }, timestamp: Date.now() });
@@ -211,13 +192,11 @@ export const MobileMissionView = () => {
     } else if (item.id === 'steal') {
       const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
       if (highest.id === id) {
-        setOptimisticOffset(prev => prev + 150);
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 150 }, timestamp: Date.now() });
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 150 }, timestamp: Date.now() }); // 환불
         return alert('우리 조가 이미 1등입니다! 훔칠 곳이 없어요.');
       }
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: highest.id, amount: -100 }, timestamp: Date.now() });
       setTimeout(() => {
-        setOptimisticOffset(prev => prev + 100);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 100 }, timestamp: Date.now() });
         alert('성공! 1등 조의 점수를 100점 훔쳐왔습니다!');
       }, 500);
@@ -232,11 +211,10 @@ export const MobileMissionView = () => {
 
   const buyVaccine = async () => {
     if (!myGroup || !id) return;
-    const currentScore = myGroup.score + optimisticOffset;
+    const currentScore = myGroup.score;
     if (currentScore < 50) return alert('점수가 부족합니다!');
     if (!window.confirm('50점을 소모하여 해킹을 즉시 복구하시겠습니까?')) return;
     
-    setOptimisticOffset(prev => prev - 50);
     enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -50 }, timestamp: Date.now() });
     await supabase.from('bomb_defusal_scores').update({ is_hacked: false }).eq('id', id);
     playBeep();
@@ -298,7 +276,7 @@ export const MobileMissionView = () => {
     );
   }
 
-  const displayScore = myGroup.score + optimisticOffset;
+  const displayScore = myGroup.score;
 
   if (myGroup.is_hacked) {
     return (
@@ -341,7 +319,7 @@ export const MobileMissionView = () => {
           <span className="text-slate-400 font-bold tracking-widest text-sm mb-1">
             현재 에너지 충전율 {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
           </span>
-          <span className={`text-7xl font-black font-mono transition-transform ${optimisticOffset > 0 ? 'scale-110 text-cyan-300' : 'text-white'}`}>
+          <span className={`text-7xl font-black font-mono transition-transform text-white`}>
             {displayScore}
           </span>
           
