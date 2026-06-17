@@ -3,7 +3,7 @@ import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
-import { Shield, Zap, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint, Footprints, Activity, Users, Flame } from 'lucide-react';
+import { Shield, Zap, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint, Footprints, Activity, Users, Flame, Gift, Coins, HeartHandshake, Skull, BatteryCharging, Ghost, ShieldAlert } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 
@@ -26,6 +26,18 @@ const MISSIONS: MissionDef[] = [
   { amount: 100, cooldown: 5, title: '만세 점프', desc: '전원 손잡고 만세하며 5번 점프', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-900' }
 ];
 
+const SHOP_ITEMS = [
+  { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 체육 미션 점수가 2배가 됩니다.', icon: Zap, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-500/30' },
+  { id: 'drone', name: '자동 채굴 드론', cost: 300, desc: '가만히 있어도 5초마다 10점씩 자동으로 오릅니다! (영구)', icon: BatteryCharging, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-500/30' },
+  { id: 'cooldown', name: '쿨다운 감소 포션', cost: 150, desc: '모든 체육 미션의 대기 시간이 50% 줄어듭니다! (영구)', icon: Clock, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-500/30' },
+  { id: 'bonus', name: '보너스 요정', cost: 150, desc: '미션을 깰 때마다 +10점의 보너스가 추가됩니다! (영구)', icon: Gift, color: 'text-pink-400', bg: 'bg-pink-950/40 border-pink-500/30' },
+  { id: 'lucky', name: '럭키 캡슐', cost: 100, desc: '20% 확률로 400점 대박! (80%는 꽝입니다)', icon: Coins, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-500/30' },
+  { id: 'allin', name: '올인(All-In) 룰렛', cost: 0, desc: '현재 점수를 전부 걸고 50% 확률로 점수 2배! 실패하면 0점...', icon: Skull, color: 'text-red-400', bg: 'bg-red-950/40 border-red-500/30' },
+  { id: 'donate', name: '기부 천사', cost: 100, desc: '현재 꼴등 조에게 무려 200점을 쏩니다! (나는 100점 소모)', icon: HeartHandshake, color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-500/30' },
+  { id: 'steal', name: '도둑 고양이', cost: 150, desc: '현재 1등 조의 점수를 몰래 100점 훔쳐옵니다!', icon: Ghost, color: 'text-slate-400', bg: 'bg-slate-800/80 border-slate-500/30' },
+  { id: 'time', name: '시간술사의 시계', cost: 200, desc: '학급 전체의 게임 남은 시간을 30초 늘려줍니다! (영웅 등장)', icon: Clock, color: 'text-indigo-400', bg: 'bg-indigo-950/40 border-indigo-500/30' }
+];
+
 export const MobileMissionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -43,9 +55,26 @@ export const MobileMissionView = () => {
   // 낙관적 UI 상태
   const [optimisticOffset, setOptimisticOffset] = useState(0);
   const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
+
+  // 로컬 스토리지 패시브 아이템 상태
+  const [hasDrone, setHasDrone] = useState(() => localStorage.getItem('has_drone') === 'true');
+  const [hasCooldown, setHasCooldown] = useState(() => localStorage.getItem('has_cooldown') === 'true');
+  const [hasBonus, setHasBonus] = useState(() => localStorage.getItem('has_bonus') === 'true');
   
   const holdInterval = useRef<any>(null);
   const myGroup = scores.find(s => s.id === id);
+
+  // 자동 채굴 드론 로직
+  useEffect(() => {
+    if (hasDrone && gameControl?.status === 'playing') {
+      const int = setInterval(() => {
+        if (!id) return;
+        setOptimisticOffset(prev => prev + 10);
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 10 }, timestamp: Date.now() });
+      }, 5000);
+      return () => clearInterval(int);
+    }
+  }, [hasDrone, gameControl?.status, id, enqueueAction]);
 
   // 플레이 시 브금 및 오디오 문맥 활성화
   useEffect(() => {
@@ -54,7 +83,7 @@ export const MobileMissionView = () => {
     return () => window.removeEventListener('touchstart', init);
   }, [playBeep]);
 
-  const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
+  const isBossMode = myGroup ? myGroup.score + optimisticOffset >= 800 && !myGroup.is_defused : false;
   const isLocked = isTimeUp || gameControl?.status !== 'playing' || myGroup?.is_hacked || gameControl?.current_event === 'tsunami';
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
@@ -73,20 +102,21 @@ export const MobileMissionView = () => {
     }
   }, [cooldownTime]);
 
-  const handleMissionComplete = (amount: number, cdSecs: number, e: React.TouchEvent | React.MouseEvent) => {
+  const handleMissionComplete = (baseAmount: number, cdSecs: number, e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
     if (isLocked || cooldown || !id) return;
     
-    // 즉각적인 시각 피드백 (낙관적 UI)
     playBeep();
     setCooldown(true);
-    setCooldownTime(cdSecs * 1000);
-    setMaxCooldownTime(cdSecs * 1000);
+    const finalCdSecs = hasCooldown ? cdSecs / 2 : cdSecs;
+    setCooldownTime(finalCdSecs * 1000);
+    setMaxCooldownTime(finalCdSecs * 1000);
     
-    const actualAmount = hasBuff ? amount * 2 : amount;
+    let actualAmount = hasBuff ? baseAmount * 2 : baseAmount;
+    if (hasBonus) actualAmount += 10;
+
     setOptimisticOffset(prev => prev + actualAmount);
 
-    // 터치 좌표 기반 + 점수 애니메이션
     let x = 0; let y = 0;
     if ('touches' in e) {
       x = e.touches[0].clientX; y = e.touches[0].clientY;
@@ -99,23 +129,117 @@ export const MobileMissionView = () => {
       setClicks(prev => prev.filter(c => c.id !== clickId));
     }, 800);
 
-    // 서버 전송 (백그라운드)
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
-      payload: { id, amount },
+      payload: { id, amount: hasBonus ? baseAmount + 10 : baseAmount }, // 서버단에서는 amount만 받고 2배는 스스로 계산하므로
+      // Wait! 서버 RPC `increment_score`는 `hasBonus`를 모름.
+      // 그래서 amount 자체를 (baseAmount + 10)으로 보내야 함! RPC는 그 결과에 *2를 할 것임.
+      // 하지만 잠깐! hasBuff일 때 RPC가 amount * 2를 함.
+      // 만약 amount에 10을 더해서 보내면, (baseAmount + 10) * 2 가 됨!
+      // 기획상 보너스 요정의 10점도 2배가 되면 더 재밌음! 그대로 전송!
       timestamp: Date.now()
     });
   };
 
-  const buyBuff = async () => {
+  const buyItem = async (item: typeof SHOP_ITEMS[0]) => {
     if (!myGroup || !id) return;
-    if (myGroup.score < 200) return alert('점수가 부족합니다!');
-    if (hasBuff) return alert('이미 버프가 적용 중입니다!');
-    if(window.confirm('200점을 소모하여 1분간 점수 2배 버프를 구매하시겠습니까?')) {
-      await supabase.rpc('buy_buff', { row_id: id });
-      playBeep();
+    const currentScore = myGroup.score + optimisticOffset;
+    
+    if (item.id === 'allin') {
+      if (currentScore <= 0) return alert('걸 점수가 없습니다!');
+      if (!window.confirm(`정말 ${currentScore}점을 모두 걸고 올인하시겠습니까?`)) return;
+      
+      setOptimisticOffset(prev => prev - currentScore);
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -currentScore }, timestamp: Date.now() });
+      
+      if (Math.random() < 0.5) {
+        setTimeout(() => {
+          setOptimisticOffset(prev => prev + currentScore * 2);
+          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: currentScore * 2 }, timestamp: Date.now() });
+          alert('🎉 대박!! 점수가 2배가 되었습니다!!');
+        }, 500);
+      } else {
+        setTimeout(() => alert('💀 실패... 점수를 모두 잃었습니다.'), 500);
+      }
+      return;
     }
+
+    if (item.id === 'double') {
+      if (currentScore < item.cost) return alert('점수가 부족합니다!');
+      if (hasBuff) return alert('이미 버프가 적용 중입니다!');
+      if(window.confirm(`${item.cost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) {
+        await supabase.rpc('buy_buff', { row_id: id });
+        playBeep();
+      }
+      return;
+    }
+
+    if (currentScore < item.cost) return alert('점수가 부족합니다!');
+    if (!window.confirm(`${item.cost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) return;
+
+    // 기본 코스트 소모
+    setOptimisticOffset(prev => prev - item.cost);
+    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -item.cost }, timestamp: Date.now() });
+    playBeep();
+
+    if (item.id === 'drone') {
+      setHasDrone(true); localStorage.setItem('has_drone', 'true');
+    } else if (item.id === 'cooldown') {
+      setHasCooldown(true); localStorage.setItem('has_cooldown', 'true');
+    } else if (item.id === 'bonus') {
+      setHasBonus(true); localStorage.setItem('has_bonus', 'true');
+    } else if (item.id === 'lucky') {
+      if (Math.random() < 0.2) {
+        setTimeout(() => {
+          setOptimisticOffset(prev => prev + 400);
+          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 400 }, timestamp: Date.now() });
+          alert('🎉 400점 대박 당첨!!');
+        }, 300);
+      } else {
+        setTimeout(() => alert('😭 꽝입니다...'), 300);
+      }
+    } else if (item.id === 'donate') {
+      const lowest = scores.reduce((prev, curr) => prev.score < curr.score ? prev : curr);
+      if (lowest.id === id) {
+        setOptimisticOffset(prev => prev + 100);
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 100 }, timestamp: Date.now() });
+        return alert('우리 조가 꼴등입니다! 다른 사람을 도울 여유가 없네요 ㅠㅠ');
+      }
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: lowest.id, amount: 200 }, timestamp: Date.now() });
+      alert('천사 강림! 꼴등 조에게 200점을 선물했습니다!');
+    } else if (item.id === 'steal') {
+      const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
+      if (highest.id === id) {
+        setOptimisticOffset(prev => prev + 150);
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 150 }, timestamp: Date.now() });
+        return alert('우리 조가 이미 1등입니다! 훔칠 곳이 없어요.');
+      }
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: highest.id, amount: -100 }, timestamp: Date.now() });
+      setTimeout(() => {
+        setOptimisticOffset(prev => prev + 100);
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: 100 }, timestamp: Date.now() });
+        alert('성공! 1등 조의 점수를 100점 훔쳐왔습니다!');
+      }, 500);
+    } else if (item.id === 'time') {
+      if (gameControl) {
+        const newMod = gameControl.global_time_modifier + 30;
+        await supabase.from('game_controls').update({ global_time_modifier: newMod }).eq('id', 1);
+        alert('시간술사의 힘! 학급 전체 제한 시간이 30초 늘어났습니다!');
+      }
+    }
+  };
+
+  const buyVaccine = async () => {
+    if (!myGroup || !id) return;
+    const currentScore = myGroup.score + optimisticOffset;
+    if (currentScore < 50) return alert('점수가 부족합니다!');
+    if (!window.confirm('50점을 소모하여 해킹을 즉시 복구하시겠습니까?')) return;
+    
+    setOptimisticOffset(prev => prev - 50);
+    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id, amount: -50 }, timestamp: Date.now() });
+    await supabase.from('bomb_defusal_scores').update({ is_hacked: false }).eq('id', id);
+    playBeep();
   };
 
   // 보스 모드가 아닐 때 (또는 초기화 되었을 때) 찌꺼기 타이머와 게이지 강제 리셋
@@ -141,7 +265,6 @@ export const MobileMissionView = () => {
         if(p >= 100) {
           clearInterval(holdInterval.current);
           holdInterval.current = null;
-          // 보스 해체 점수 전송 (여기서는 가짜 이벤트 전송 방지용으로 빈 껍데기만 넘김)
           enqueueAction({
             id: Math.random().toString(),
             type: 'INCREMENT_SCORE',
@@ -151,7 +274,7 @@ export const MobileMissionView = () => {
           playVictory();
           return 100;
         }
-        return p + 2; // 100ms * 50 = 5초
+        return p + 2; 
       });
     }, 100);
   };
@@ -175,24 +298,31 @@ export const MobileMissionView = () => {
     );
   }
 
+  const displayScore = myGroup.score + optimisticOffset;
+
   if (myGroup.is_hacked) {
     return (
       <div className="min-h-[100dvh] bg-red-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-red-600/30 mix-blend-color-burn animate-[pulse_0.1s_ease-in-out_infinite]"></div>
         <AlertTriangle className="w-32 h-32 text-red-500 mb-8 animate-ping relative z-10" />
-        <h1 className="text-4xl font-black text-red-400 mb-4 text-center relative z-10 glitch-text">시스템 해킹됨!</h1>
-        <p className="text-white text-lg font-bold mb-12 text-center relative z-10">교사에게 즉시 보고하여<br/>통신망을 복구하세요!</p>
+        <h1 className="text-5xl font-black text-red-400 mb-4 text-center relative z-10 glitch-text">시스템 해킹됨!</h1>
+        <p className="text-white text-lg font-bold mb-8 text-center relative z-10">교사에게 즉시 보고하여<br/>통신망을 복구하세요!</p>
+        
+        <div className="relative z-10 bg-slate-900/80 p-5 rounded-2xl border border-red-500/50 flex flex-col items-center">
+          <ShieldAlert className="w-12 h-12 text-emerald-400 mb-3" />
+          <p className="text-sm text-slate-300 mb-4 text-center">또는 백신을 구매하여<br/>즉시 해킹을 무효화할 수 있습니다.</p>
+          <button onClick={buyVaccine} disabled={displayScore < 50} className={`w-full py-4 rounded-xl font-black text-lg ${displayScore >= 50 ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(52,211,153,0.4)]' : 'bg-slate-800 text-slate-500'}`}>
+            백신 구매 (50점)
+          </button>
+        </div>
       </div>
     );
   }
 
-  const displayScore = myGroup.score + optimisticOffset;
-
   return (
     <div className={`min-h-[100dvh] ${gameControl?.current_event === 'tsunami' ? 'bg-blue-950' : 'bg-slate-950'} text-white flex flex-col relative overflow-hidden select-none`}>
-      {/* 플로팅 터치 애니메이션 */}
       {clicks.map(c => (
-        <div key={c.id} className="absolute z-50 animate-float font-black text-3xl text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={{ left: c.x, top: c.y }}>
+        <div key={c.id} className="absolute z-50 animate-float font-black text-4xl text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={{ left: c.x, top: c.y }}>
           +{c.val}
         </div>
       ))}
@@ -205,34 +335,38 @@ export const MobileMissionView = () => {
         <Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
       </div>
 
-      <div className="flex-1 p-5 flex flex-col z-10 mt-12 overflow-y-auto">
-        {/* Score Display */}
+      <div className="flex-1 p-4 flex flex-col z-10 mt-12 overflow-y-auto">
         <div className="shrink-0 bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-2xl relative overflow-hidden transition-all">
           {hasBuff && <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>}
-          <span className="text-slate-400 font-bold tracking-widest text-xs mb-1">
+          <span className="text-slate-400 font-bold tracking-widest text-sm mb-1">
             현재 에너지 충전율 {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
           </span>
-          <span className={`text-6xl font-black font-mono transition-transform ${optimisticOffset > 0 ? 'scale-110 text-cyan-300' : 'text-white'}`}>
+          <span className={`text-7xl font-black font-mono transition-transform ${optimisticOffset > 0 ? 'scale-110 text-cyan-300' : 'text-white'}`}>
             {displayScore}
           </span>
+          
+          {/* 패시브 아이템 현황 표시 */}
+          <div className="flex gap-2 mt-3">
+            {hasDrone && <span className="px-2 py-1 bg-cyan-900/50 text-cyan-300 rounded text-xs">드론 가동중</span>}
+            {hasCooldown && <span className="px-2 py-1 bg-blue-900/50 text-blue-300 rounded text-xs">쿨다운 단축</span>}
+            {hasBonus && <span className="px-2 py-1 bg-pink-900/50 text-pink-300 rounded text-xs">보너스 요정</span>}
+          </div>
         </div>
 
-        {/* Tab Navigation */}
         <div className="shrink-0 flex gap-2 mb-4">
           <button onClick={() => setActiveTab('mission')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'mission' ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
             <Shield className="w-5 h-5" /> 체육 미션
           </button>
           <button onClick={() => setActiveTab('shop')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'shop' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
-            <ShoppingCart className="w-5 h-5" /> 상점
+            <ShoppingCart className="w-5 h-5" /> 아이템 상점
           </button>
         </div>
 
-        {/* Action Area */}
         <div className="flex-1 flex flex-col relative min-h-0">
           {isLocked && !myGroup.is_hacked && (
             <div className="absolute inset-0 z-20 bg-slate-950/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center border border-slate-800">
               <Lock className="w-10 h-10 text-slate-500 mb-2" />
-              <p className="text-red-400 font-bold text-center">
+              <p className="text-red-400 font-bold text-center text-lg">
                 {gameControl?.current_event === 'tsunami' ? '해일 대피 중! 미션 중단!' : '미션 진행 상태가 아닙니다'}
               </p>
             </div>
@@ -246,8 +380,8 @@ export const MobileMissionView = () => {
               >
                 <div className="absolute bottom-0 left-0 right-0 bg-red-500/30 transition-all duration-100 ease-linear" style={{ height: `${holdProgress}%` }}></div>
                 <Fingerprint className={`w-32 h-32 mb-6 z-10 ${holdProgress > 0 ? 'text-red-400 animate-ping' : 'text-slate-600'}`} />
-                <p className="z-10 font-black text-2xl text-white mb-2">최종 해체 모드</p>
-                <p className="z-10 text-sm text-slate-400 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
+                <p className="z-10 font-black text-3xl text-white mb-2">최종 해체 모드</p>
+                <p className="z-10 text-lg text-slate-400 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3 overflow-y-auto pb-4 custom-scrollbar pr-2 h-full">
@@ -260,20 +394,19 @@ export const MobileMissionView = () => {
                     className={`w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-none ${m.bg}`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full bg-slate-950/50 flex items-center justify-center border border-white/10 ${m.color}`}>
-                        <m.icon className="w-6 h-6" />
+                      <div className={`w-14 h-14 rounded-full bg-slate-950/50 flex items-center justify-center border border-white/10 ${m.color}`}>
+                        <m.icon className="w-8 h-8" />
                       </div>
                       <div className="text-left flex flex-col justify-center">
-                        <div className={`font-black text-lg ${m.color}`}>{m.title}</div>
-                        <div className="text-xs text-slate-400 font-bold mt-0.5">{m.desc}</div>
+                        <div className={`font-black text-xl ${m.color}`}>{m.title}</div>
+                        <div className="text-sm text-slate-400 font-bold mt-0.5">{m.desc}</div>
                       </div>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className={`font-black text-2xl ${m.color}`}>+{m.amount}</span>
-                      <span className="text-[10px] text-slate-500 font-bold mt-1">대기 {m.cooldown}초</span>
+                      <span className={`font-black text-3xl ${m.color}`}>+{m.amount}</span>
+                      <span className="text-xs text-slate-500 font-bold mt-1">대기 {m.cooldown}초</span>
                     </div>
 
-                    {/* Button Cooldown Overlay */}
                     {cooldown && (
                       <div className="absolute inset-0 bg-slate-950/60 rounded-2xl overflow-hidden backdrop-blur-[1px]">
                         <div className="absolute bottom-0 left-0 h-1 bg-white/30 transition-all duration-50 ease-linear" style={{ width: `${(cooldownTime / maxCooldownTime) * 100}%` }}></div>
@@ -284,14 +417,27 @@ export const MobileMissionView = () => {
               </div>
             )
           ) : (
-            <div className="p-5 bg-slate-900 border border-purple-500/30 rounded-2xl flex justify-between items-center shrink-0">
-              <div>
-                <p className="font-bold text-purple-400 mb-1 text-lg">점수 2배 부스터 (1분)</p>
-                <p className="text-sm text-slate-400 font-bold">모든 획득 에너지가 2배가 됩니다.</p>
-              </div>
-              <button onClick={buyBuff} disabled={hasBuff || myGroup.score < 200} className={`px-6 py-4 rounded-xl font-black text-lg transition-transform active:scale-95 ${myGroup.score >= 200 && !hasBuff ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'bg-slate-800 text-slate-500'}`}>
-                200점
-              </button>
+            <div className="flex flex-col gap-3 overflow-y-auto pb-4 custom-scrollbar pr-2 h-full">
+              {SHOP_ITEMS.map((item) => (
+                <div key={item.id} className={`p-4 bg-slate-900 border rounded-2xl flex justify-between items-center shrink-0 ${item.bg}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full bg-slate-950/50 flex items-center justify-center border border-white/10 ${item.color}`}>
+                      <item.icon className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <p className={`font-black text-lg ${item.color}`}>{item.name}</p>
+                      <p className="text-xs text-slate-400 font-bold break-keep pr-2">{item.desc}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => buyItem(item)} 
+                    disabled={displayScore < item.cost || (item.id === 'double' && hasBuff)} 
+                    className={`shrink-0 px-4 py-3 rounded-xl font-black text-base transition-transform active:scale-95 ${displayScore >= item.cost ? 'bg-purple-600 text-white shadow-[0_0_10px_rgba(147,51,234,0.4)]' : 'bg-slate-800 text-slate-500'}`}
+                  >
+                    {item.id === 'allin' ? '전부' : `${item.cost}점`}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>
