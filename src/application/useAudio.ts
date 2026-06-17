@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 // 브라우저 AudioContext를 활용한 절차적 사운드 생성 엔진 (외부 MP3 파일 의존성 제거)
 export const useAudio = () => {
   const audioCtx = useRef<AudioContext | null>(null);
+  const lastSirenPlay = useRef(0);
 
   useEffect(() => {
     // 사용자 제스처 전까지는 AudioContext를 생성하지 않거나 suspend 상태임
@@ -44,25 +45,30 @@ export const useAudio = () => {
 
   const playSiren = () => {
     if (!audioCtx.current) return;
-    const osc = audioCtx.current.createOscillator();
-    const gain = audioCtx.current.createGain();
+    // 6초 이내 중복 재생 방지 (청각 테러 차단)
+    if (Date.now() - lastSirenPlay.current < 6000) return;
+    lastSirenPlay.current = Date.now();
+    
+    const ctx = audioCtx.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.connect(gain);
-    gain.connect(audioCtx.current.destination);
+    gain.connect(ctx.destination);
     
     osc.type = 'square';
     
     // 사이렌 위아래 주파수 변조
     for(let i=0; i<6; i++) {
-      osc.frequency.setValueAtTime(600, audioCtx.current.currentTime + i);
-      osc.frequency.linearRampToValueAtTime(1000, audioCtx.current.currentTime + i + 0.5);
-      osc.frequency.linearRampToValueAtTime(600, audioCtx.current.currentTime + i + 1);
+      osc.frequency.setValueAtTime(600, ctx.currentTime + i);
+      osc.frequency.linearRampToValueAtTime(1000, ctx.currentTime + i + 0.5);
+      osc.frequency.linearRampToValueAtTime(600, ctx.currentTime + i + 1);
     }
 
-    gain.gain.setValueAtTime(0.2, audioCtx.current.currentTime);
-    gain.gain.linearRampToValueAtTime(0, audioCtx.current.currentTime + 6);
+    gain.gain.setValueAtTime(0.2, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 6);
     
     osc.start();
-    osc.stop(audioCtx.current.currentTime + 6);
+    osc.stop(ctx.currentTime + 6);
   };
 
   const playVictory = () => {

@@ -59,13 +59,27 @@ export const MobileMissionView = () => {
     }
   };
 
+  // 보스 모드가 아닐 때 (또는 초기화 되었을 때) 찌꺼기 타이머와 게이지 강제 리셋
+  useEffect(() => {
+    if (!isBossMode) {
+      setHoldProgress(0);
+      if (holdInterval.current) {
+        clearInterval(holdInterval.current);
+        holdInterval.current = null;
+      }
+    }
+  }, [isBossMode]);
+
   const startHold = () => {
     if (isLocked) return;
     if (holdProgress >= 100) return;
+    if (holdInterval.current) return; // 다중 터치(연타) 꼼수 완벽 차단
+    
     holdInterval.current = setInterval(() => {
       setHoldProgress(p => {
         if(p >= 100) {
           clearInterval(holdInterval.current);
+          holdInterval.current = null;
           handleMissionComplete(200); // Boss Defused!
           playVictory();
           return 100;
@@ -76,7 +90,10 @@ export const MobileMissionView = () => {
   };
 
   const stopHold = () => {
-    clearInterval(holdInterval.current);
+    if (holdInterval.current) {
+      clearInterval(holdInterval.current);
+      holdInterval.current = null;
+    }
     if(holdProgress < 100) setHoldProgress(0);
   };
 
