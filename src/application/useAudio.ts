@@ -67,22 +67,23 @@ export const useAudio = () => {
 
   const playVictory = () => {
     if (!audioCtx.current) return;
+    const ctx = audioCtx.current;
     // 아르페지오 팡파레
     const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
     freqs.forEach((freq, i) => {
-      const osc = audioCtx.current.createOscillator();
-      const gain = audioCtx.current.createGain();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(audioCtx.current.destination);
+      gain.connect(ctx.destination);
       osc.type = 'triangle';
       osc.frequency.value = freq;
       
-      gain.gain.setValueAtTime(0, audioCtx.current.currentTime + i*0.1);
-      gain.gain.linearRampToValueAtTime(0.3, audioCtx.current.currentTime + i*0.1 + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.current.currentTime + i*0.1 + 1);
+      gain.gain.setValueAtTime(0, ctx.currentTime + i*0.1);
+      gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i*0.1 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + i*0.1 + 1);
       
-      osc.start(audioCtx.current.currentTime + i*0.1);
-      osc.stop(audioCtx.current.currentTime + i*0.1 + 1);
+      osc.start(ctx.currentTime + i*0.1);
+      osc.stop(ctx.currentTime + i*0.1 + 1);
     });
   };
 

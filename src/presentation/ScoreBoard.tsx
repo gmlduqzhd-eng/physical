@@ -2,16 +2,15 @@ import { useEffect, useRef } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame } from 'lucide-react';
 
 export const ScoreBoard = () => {
   const { scores, gameControl } = useGameLogic();
   const { mins, secs, isDanger } = useGameTimer(gameControl);
-  const { playSiren, playVictory } = useAudio();
+  const { playSiren } = useAudio();
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
-  const defusedCount = scores.filter(s => s.is_defused).length;
   
   const isTsunami = gameControl?.current_event === 'tsunami';
   const isPlankEvent = mins === '01' && secs === '00' && gameControl?.status === 'playing';
@@ -78,7 +77,7 @@ export const ScoreBoard = () => {
       </header>
 
       <main className="relative z-10 p-12 grid grid-cols-2 lg:grid-cols-3 gap-8">
-        {scores.map((score, index) => (
+        {scores.map((score) => (
           <div key={score.id} className={`flex flex-col bg-slate-900/80 backdrop-blur border-2 rounded-2xl p-6 transition-all duration-500 ${score.is_defused ? 'border-emerald-500 shadow-[0_0_30px_rgba(16,185,129,0.3)]' : score.is_hacked ? 'border-red-500 animate-pulse' : 'border-slate-700'}`}>
             <div className="flex justify-between items-start mb-4">
               <h2 className="text-2xl font-bold text-slate-200">{score.group_name}</h2>

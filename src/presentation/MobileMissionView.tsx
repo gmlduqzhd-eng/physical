@@ -3,7 +3,7 @@ import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
-import { Shield, Zap, WifiOff, Wifi, Anchor, Brain, Flame, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint } from 'lucide-react';
+import { Shield, Zap, Anchor, Brain, CheckCircle, Lock, Clock, ShoppingCart, AlertTriangle, Fingerprint } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 
@@ -11,8 +11,8 @@ export const MobileMissionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { scores, gameControl } = useGameLogic();
-  const { isTimeUp, mins, secs, isDanger } = useGameTimer(gameControl);
-  const { isOnline, queueLength, enqueueAction } = useSyncQueue();
+  const { isTimeUp, mins, secs } = useGameTimer(gameControl);
+  const { enqueueAction } = useSyncQueue();
   const { playBeep, playVictory } = useAudio();
 
   const [cooldown, setCooldown] = useState(false);

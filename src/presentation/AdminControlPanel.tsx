@@ -1,7 +1,7 @@
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { supabase } from '../data/supabase';
-import { ShieldAlert, Play, Pause, Plus, Minus, RotateCcw, Clock, CheckCircle, Waves, Bug } from 'lucide-react';
+import { ShieldAlert, Play, Pause, RotateCcw, CheckCircle, Waves, Bug } from 'lucide-react';
 
 export const AdminControlPanel = () => {
   const { scores, gameControl } = useGameLogic();
