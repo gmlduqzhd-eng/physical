@@ -1,36 +1,49 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../data/supabase';
-import type { BombDefusalScore, GameControl } from '../domain/types';
+import type { RoomGroup, GameRoom, MissionTemplate } from '../domain/types';
 
-export const useGameLogic = () => {
-  const [scores, setScores] = useState<BombDefusalScore[]>([]);
-  const [gameControl, setGameControl] = useState<GameControl | null>(null);
+export const useGameLogic = (roomId?: string) => {
+  const [scores, setScores] = useState<RoomGroup[]>([]);
+  const [gameRoom, setGameRoom] = useState<GameRoom | null>(null);
+  const [template, setTemplate] = useState<MissionTemplate | null>(null);
 
   useEffect(() => {
-    // 초기 데이터 일괄 로드
+    if (!roomId) return;
+
     const fetchInitialData = async () => {
       const { data: scoreData } = await supabase
-        .from('bomb_defusal_scores')
+        .from('room_groups')
         .select('*')
+        .eq('room_id', roomId)
         .order('score', { ascending: false });
       if (scoreData) setScores(scoreData);
 
-      const { data: controlData } = await supabase
-        .from('game_controls')
+      const { data: roomData } = await supabase
+        .from('game_rooms')
         .select('*')
-        .eq('id', 1)
+        .eq('id', roomId)
         .single();
-      if (controlData) setGameControl(controlData);
+      
+      if (roomData) {
+        setGameRoom(roomData);
+        if (roomData.template_id) {
+          const { data: templateData } = await supabase
+            .from('mission_templates')
+            .select('*')
+            .eq('id', roomData.template_id)
+            .single();
+          if (templateData) setTemplate(templateData);
+        }
+      }
     };
 
     fetchInitialData();
 
-    // Supabase Realtime 채널 구독 (점수 현황)
     const scoreSubscription = supabase
-      .channel('public:bomb_defusal_scores')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bomb_defusal_scores' }, payload => {
+      .channel(`public:room_groups:${roomId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: `room_id=eq.${roomId}` }, payload => {
         setScores(current => {
-          const newRecord = payload.new as BombDefusalScore;
+          const newRecord = payload.new as RoomGroup;
           if (payload.eventType === 'INSERT') {
             return [...current, newRecord].sort((a, b) => b.score - a.score);
           }
@@ -45,21 +58,20 @@ export const useGameLogic = () => {
       })
       .subscribe();
 
-    // Supabase Realtime 채널 구독 (게임 전체 통제 상태)
-    const controlSubscription = supabase
-      .channel('public:game_controls')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_controls' }, payload => {
+    const roomSubscription = supabase
+      .channel(`public:game_rooms:${roomId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${roomId}` }, payload => {
         if (payload.eventType === 'UPDATE') {
-           setGameControl(payload.new as GameControl);
+           setGameRoom(payload.new as GameRoom);
         }
       })
       .subscribe();
 
     return () => {
       supabase.removeChannel(scoreSubscription);
-      supabase.removeChannel(controlSubscription);
+      supabase.removeChannel(roomSubscription);
     };
-  }, []);
+  }, [roomId]);
 
-  return { scores, gameControl };
+  return { scores, gameRoom, template };
 };

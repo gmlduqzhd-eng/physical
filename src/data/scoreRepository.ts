@@ -1,12 +1,13 @@
 import { supabase } from './supabase';
-import type { BombDefusalScore } from '../domain/types';
+import type { RoomGroup } from '../domain/types';
 
 export const ScoreRepository = {
-  // 전체 점수 보드 가져오기
-  async getAllScores(): Promise<BombDefusalScore[]> {
+  // 특정 방의 점수 보드 가져오기
+  async getScoresByRoomId(roomId: string): Promise<RoomGroup[]> {
     const { data, error } = await supabase
-      .from('bomb_defusal_scores')
+      .from('room_groups')
       .select('*')
+      .eq('room_id', roomId)
       .order('score', { ascending: false });
     
     if (error) {
@@ -25,20 +26,6 @@ export const ScoreRepository = {
     
     if (error) {
       console.error('Error incrementing score via RPC:', error);
-      return false;
-    }
-    return true;
-  },
-
-  // 미션 상태 업데이트 (일반)
-  async updateMissionStats(id: string, newStats: Record<string, boolean | number>): Promise<boolean> {
-    const { error } = await supabase
-      .from('bomb_defusal_scores')
-      .update({ mission_stats: newStats, updated_at: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error updating mission stats:', error);
       return false;
     }
     return true;

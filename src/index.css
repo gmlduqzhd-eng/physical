@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&display=swap');
 
 /* 모바일 UI 제스처 통제 최적화 */
 html, body, #root { 
@@ -9,7 +9,7 @@ html, body, #root {
   touch-action: none; 
   -webkit-touch-callout: none; 
   user-select: none; 
-  font-family: 'Jua', sans-serif;
+  font-family: 'Gaegu', cursive;
 }
 
 img, svg { 

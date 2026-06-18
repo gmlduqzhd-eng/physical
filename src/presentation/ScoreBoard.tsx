@@ -1,27 +1,27 @@
 import { useEffect, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
 import { Shield, Clock, AlertTriangle, Flame } from 'lucide-react';
 
 export const ScoreBoard = () => {
-  const { scores, gameControl } = useGameLogic();
-  const { mins, secs, isDanger } = useGameTimer(gameControl);
+  const { roomId } = useParams<{ roomId: string }>();
+  const { scores, gameRoom } = useGameLogic(roomId);
+  const { mins, secs, isDanger } = useGameTimer(gameRoom);
   const { playSiren } = useAudio();
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
   
-  const isTsunami = gameControl?.current_event === 'tsunami';
-  const isPlankEvent = mins === '01' && secs === '00' && gameControl?.status === 'playing';
+  const isTsunami = gameRoom?.status === 'tsunami';
+  const isPlankEvent = mins === '01' && secs === '00' && gameRoom?.status === 'playing';
 
   useEffect(() => {
-    // 1분 남았을 때 코어 과부하 이벤트 알림
     if (isPlankEvent && !plankPlayed.current) {
       playSiren();
       plankPlayed.current = true;
     }
-    // 해일 경보 시
     if (isTsunami && !sirenPlayed.current) {
       playSiren();
       sirenPlayed.current = true;
@@ -32,10 +32,8 @@ export const ScoreBoard = () => {
 
   return (
     <div className={`min-h-screen font-sans overflow-hidden relative transition-colors duration-1000 ${isTsunami ? 'bg-blue-950' : isDanger ? 'bg-red-950' : 'bg-slate-950'} text-white`}>
-      {/* Background Cyberpunk grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       
-      {/* Tsunami Alert Overlay */}
       {isTsunami && (
         <div className="absolute inset-0 z-40 bg-blue-600/30 flex flex-col items-center justify-center animate-pulse backdrop-blur-sm">
           <AlertTriangle className="w-48 h-48 text-blue-400 mb-8" />
@@ -44,7 +42,6 @@ export const ScoreBoard = () => {
         </div>
       )}
 
-      {/* 1 Minute Plank Event Overlay */}
       {isPlankEvent && !isTsunami && (
         <div className="absolute inset-0 z-40 bg-red-600/30 flex flex-col items-center justify-center animate-pulse backdrop-blur-sm">
           <Flame className="w-48 h-48 text-red-500 mb-8" />
@@ -57,16 +54,9 @@ export const ScoreBoard = () => {
         <div className="flex items-center gap-4">
           <Shield className="w-12 h-12 text-cyan-400" />
           <h1 className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
-            폭탄 해체 작전
+            {gameRoom ? gameRoom.name : '폭탄 해체 작전'}
           </h1>
         </div>
-        
-        {/* Combo Alert */}
-        {gameControl?.last_score_time && new Date(gameControl.last_score_time).getTime() > Date.now() - 3000 && (
-          <div className="px-6 py-2 bg-yellow-500/20 text-yellow-400 border border-yellow-500 rounded-full font-black animate-bounce text-xl">
-            🔥 SYNERGY COMBO! (+20)
-          </div>
-        )}
 
         <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-700/80 border-red-400 animate-pulse' : 'bg-slate-900 border-slate-700'}`}>
           <Clock className={`w-8 h-8 ${isDanger ? 'text-white' : 'text-red-500'}`} />
@@ -94,7 +84,7 @@ export const ScoreBoard = () => {
               <span className={`text-6xl font-black font-mono ${score.is_hacked ? 'text-red-500 glitch-text' : 'text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400'}`}>
                 {score.score}
               </span>
-              <span className="text-slate-500 mt-2 font-medium text-sm">에너지</span>
+              <span className="text-slate-500 mt-2 font-medium text-sm">점수</span>
             </div>
 
             <div className="w-full bg-slate-800 rounded-full h-3 mb-2 overflow-hidden border border-slate-700">
@@ -102,6 +92,7 @@ export const ScoreBoard = () => {
             </div>
           </div>
         ))}
+        {scores.length === 0 && <p className="text-slate-400 col-span-full text-center text-xl">아직 접속한 모둠이 없습니다.</p>}
       </main>
     </div>
   );

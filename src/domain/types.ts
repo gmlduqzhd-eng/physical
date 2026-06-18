@@ -1,21 +1,39 @@
-export interface BombDefusalScore {
+export interface MissionButton {
   id: string;
-  class_name: string;
-  group_name: string;
-  score: number;
-  mission_stats: Record<string, boolean | number>;
-  is_defused: boolean;
-  updated_at: string;
-  is_hacked?: boolean;
-  item_buff_until?: string | null;
+  amount: number;
+  cooldown: number;
+  title: string;
+  desc: string;
+  iconName: string;
+  color: string;
+  bg: string;
 }
 
-export interface GameControl {
-  id: number;
-  status: 'playing' | 'paused' | 'locked';
+export interface MissionTemplate {
+  id: string;
+  name: string;
+  buttons: MissionButton[];
+  created_at: string;
+}
+
+export interface GameRoom {
+  id: string;
+  pin_code: string;
+  name: string;
+  template_id: string | null;
+  status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami';
   global_time_modifier: number;
   started_at: string | null;
-  current_event?: 'none' | 'tsunami';
-  last_score_time?: string | null;
-  last_score_group?: string | null;
+  created_at: string;
+}
+
+export interface RoomGroup {
+  id: string;
+  room_id: string;
+  group_name: string;
+  score: number;
+  is_defused: boolean;
+  is_hacked: boolean;
+  item_buff_until: string | null;
+  updated_at: string;
 }
