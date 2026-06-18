@@ -67,7 +67,7 @@ export const Lobby = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-8 gap-6 text-white font-sans">
-      <h1 className="text-4xl font-black text-cyan-400 mb-2">체육 미션 허브</h1>
+      <h1 className="text-4xl font-black text-cyan-400 mb-2">땀방울 원정대</h1>
       <p className="text-slate-400 mb-8 text-center">선생님이 알려주신 핀 번호와<br/>우리 모둠을 선택하고 입장하세요!</p>
       
       <form onSubmit={handleJoin} className="w-full max-w-sm bg-slate-800 rounded-2xl p-6 border border-slate-700 shadow-xl flex flex-col gap-5">

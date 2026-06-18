@@ -59,7 +59,7 @@ export const AdminControlPanel = () => {
 
   const createRoom = async (templateId: string) => {
     const pin = Math.floor(1000 + Math.random() * 9000).toString(); // 4자리 랜덤 핀
-    const name = prompt('새로운 방의 이름을 입력하세요', '체육 미션 방');
+    const name = prompt('새로운 방의 이름을 입력하세요', '오늘의 원정대');
     if (!name) return;
     
     await supabase.from('game_rooms').insert([{ pin_code: pin, name, template_id: templateId }]);
@@ -105,7 +105,7 @@ export const AdminControlPanel = () => {
     <div className="min-h-[100dvh] bg-slate-950 text-white p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-400 relative z-10 mb-8">
-          <ShieldAlert className="w-10 h-10 text-cyan-500" /> 교사 제어 패널
+          <ShieldAlert className="w-10 h-10 text-cyan-500" /> 땀방울 원정대 - 교사 제어 패널
         </h1>
 
         {activeTab !== 'create_template' && (

@@ -8,9 +8,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 
 const SHOP_ITEMS = [
-  { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 체육 미션 점수가 2배가 됩니다.', icon: LucideIcons.Zap, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-500/30' },
+  { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 원정대 미션 점수가 2배가 됩니다.', icon: LucideIcons.Zap, color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-500/30' },
   { id: 'drone', name: '자동 채굴 드론', cost: 300, desc: '가만히 있어도 5초마다 10점씩 자동으로 오릅니다! (영구)', icon: LucideIcons.BatteryCharging, color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-500/30' },
-  { id: 'cooldown', name: '쿨다운 감소 포션', cost: 150, desc: '모든 체육 미션의 대기 시간이 50% 줄어듭니다! (영구)', icon: LucideIcons.Clock, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-500/30' },
+  { id: 'cooldown', name: '쿨다운 감소 포션', cost: 150, desc: '모든 미션의 대기 시간이 50% 줄어듭니다! (영구)', icon: LucideIcons.Clock, color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-500/30' },
   { id: 'bonus', name: '보너스 요정', cost: 150, desc: '미션을 깰 때마다 +10점의 보너스가 추가됩니다! (영구)', icon: LucideIcons.Gift, color: 'text-pink-400', bg: 'bg-pink-950/40 border-pink-500/30' },
   { id: 'lucky', name: '럭키 캡슐', cost: 100, desc: '20% 확률로 400점 대박! (80%는 꽝입니다)', icon: LucideIcons.Coins, color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-500/30' },
   { id: 'allin', name: '올인(All-In) 룰렛', cost: 0, desc: '현재 점수를 전부 걸고 50% 확률로 점수 2배! 실패하면 0점...', icon: LucideIcons.Skull, color: 'text-red-400', bg: 'bg-red-950/40 border-red-500/30' },
@@ -306,7 +306,7 @@ export const MobileMissionView = () => {
 
         <div className="shrink-0 flex gap-2 mb-4">
           <button onClick={() => setActiveTab('mission')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'mission' ? 'bg-cyan-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
-            <LucideIcons.Shield className="w-5 h-5" /> 체육 미션
+            <LucideIcons.Shield className="w-5 h-5" /> 땀방울 원정대 미션
           </button>
           <button onClick={() => setActiveTab('shop')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 ${activeTab === 'shop' ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-400'}`}>
             <LucideIcons.ShoppingCart className="w-5 h-5" /> 아이템 상점
