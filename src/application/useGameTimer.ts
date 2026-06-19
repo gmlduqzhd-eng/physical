@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { GameRoom } from '../domain/types';
+import { timeOffset } from './timeSync';
 
 export const useGameTimer = (gameRoom: GameRoom | null) => {
   const [timeLeft, setTimeLeft] = useState<number>(300);
@@ -10,7 +11,7 @@ export const useGameTimer = (gameRoom: GameRoom | null) => {
     const interval = setInterval(() => {
       if (gameRoom.status === 'playing' && gameRoom.started_at) {
         const start = new Date(gameRoom.started_at).getTime();
-        const now = new Date().getTime();
+        const now = Date.now() + timeOffset;
         const elapsed = Math.floor((now - start) / 1000);
         
         let remaining = 300 - elapsed + gameRoom.global_time_modifier;

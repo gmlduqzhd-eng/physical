@@ -4,13 +4,23 @@ import { ScoreRepository } from '../data/scoreRepository';
 export interface SyncAction {
   id: string;
   type: 'INCREMENT_SCORE';
-  payload: any;
+  payload: { id: string; amount: number; [key: string]: unknown };
   timestamp: number;
 }
 
 export const useSyncQueue = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [queue, setQueue] = useState<SyncAction[]>([]);
+  const [queue, setQueue] = useState<SyncAction[]>(() => {
+    const savedQueue = localStorage.getItem('bomb_defusal_sync_queue');
+    if (savedQueue) {
+      try {
+        return JSON.parse(savedQueue);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
   const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
@@ -19,15 +29,6 @@ export const useSyncQueue = () => {
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
-    const savedQueue = localStorage.getItem('bomb_defusal_sync_queue');
-    if (savedQueue) {
-      try {
-        setQueue(JSON.parse(savedQueue));
-      } catch(e) {
-        console.error('Failed to parse sync queue', e);
-      }
-    }
 
     return () => {
       window.removeEventListener('online', handleOnline);
@@ -46,7 +47,7 @@ export const useSyncQueue = () => {
     const currentQueue = [...queue];
     setQueue([]);
 
-    let failedActions: SyncAction[] = [];
+    const failedActions: SyncAction[] = [];
 
     for (const action of currentQueue) {
       try {
@@ -67,6 +68,7 @@ export const useSyncQueue = () => {
 
   useEffect(() => {
     if (isOnline && queue.length > 0 && !isSyncing) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       processQueue();
     }
   }, [isOnline, queue.length, isSyncing, processQueue]);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '../data/supabase';
 import type { MissionButton, MissionTemplate } from '../domain/types';
 import * as LucideIcons from 'lucide-react';
@@ -10,13 +10,13 @@ const ICONS = [
 ];
 
 const THEMES = [
-  { name: 'Cyan (청록)', color: 'text-cyan-400', bg: 'bg-cyan-950/40 border-cyan-900' },
-  { name: 'Blue (파랑)', color: 'text-blue-400', bg: 'bg-blue-950/40 border-blue-900' },
-  { name: 'Emerald (에메랄드)', color: 'text-emerald-400', bg: 'bg-emerald-950/40 border-emerald-900' },
-  { name: 'Orange (주황)', color: 'text-orange-400', bg: 'bg-orange-950/40 border-orange-900' },
-  { name: 'Purple (보라)', color: 'text-purple-400', bg: 'bg-purple-950/40 border-purple-900' },
-  { name: 'Yellow (노랑)', color: 'text-yellow-400', bg: 'bg-yellow-950/40 border-yellow-900' },
-  { name: 'Red (빨강)', color: 'text-red-400', bg: 'bg-red-950/40 border-red-900' },
+  { name: 'Cyan (청록)', color: 'text-cyan-600', bg: 'bg-cyan-50 border-cyan-200' },
+  { name: 'Blue (파랑)', color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
+  { name: 'Emerald (초록)', color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { name: 'Orange (주황)', color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200' },
+  { name: 'Purple (보라)', color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
+  { name: 'Yellow (노랑)', color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
+  { name: 'Red (빨강)', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
 ];
 
 interface TemplateBuilderProps {
@@ -29,13 +29,14 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
   const [name, setName] = useState('');
   const [buttons, setButtons] = useState<MissionButton[]>([]);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (initialTemplate) {
-      setName(initialTemplate.name);
-      setButtons(initialTemplate.buttons);
-    }
-  }, [initialTemplate]);
+  
+  // Derived state pattern for resetting state on prop change
+  const [prevTemplateId, setPrevTemplateId] = useState<string | undefined>(undefined);
+  if (initialTemplate?.id !== prevTemplateId) {
+    setPrevTemplateId(initialTemplate?.id);
+    setName(initialTemplate?.name || '');
+    setButtons(initialTemplate?.buttons || []);
+  }
 
   const addButton = () => {
     const newButton: MissionButton = {
@@ -51,7 +52,7 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
     setButtons([...buttons, newButton]);
   };
 
-  const updateButton = (index: number, field: keyof MissionButton, value: any) => {
+  const updateButton = <K extends keyof MissionButton>(index: number, field: K, value: MissionButton[K]) => {
     const newButtons = [...buttons];
     newButtons[index] = { ...newButtons[index], [field]: value };
     setButtons(newButtons);
@@ -112,71 +113,71 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-700 p-6 rounded-2xl shadow-xl space-y-6">
-      <div className="flex justify-between items-center border-b border-slate-700 pb-4">
-        <h2 className="text-2xl font-bold text-white">
+    <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xl space-y-6">
+      <div className="flex justify-between items-center border-b border-slate-200 pb-4">
+        <h2 className="text-2xl font-bold text-slate-900">
           {initialTemplate ? '템플릿 수정하기' : '나만의 미션 템플릿 만들기'}
         </h2>
-        <button onClick={onBack} className="text-slate-400 hover:text-white transition-colors text-sm font-bold">
+        <button onClick={onBack} className="text-slate-500 hover:text-slate-900 transition-colors text-sm font-bold">
           &larr; 돌아가기
         </button>
       </div>
 
       <div>
-        <label className="block text-slate-300 font-bold mb-2">템플릿 이름</label>
+        <label className="block text-slate-700 font-bold mb-2">템플릿 이름</label>
         <input 
           type="text" 
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="예: 6학년 1학기 왕복달리기 세트" 
-          className="w-full bg-slate-800 border border-slate-600 rounded-lg p-3 text-white focus:outline-none focus:border-cyan-500"
+          className="w-full bg-slate-50 border border-slate-300 rounded-lg p-3 text-slate-900 focus:outline-none focus:border-cyan-500"
         />
       </div>
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <label className="text-slate-300 font-bold">미션 버튼 목록 ({buttons.length}개)</label>
-          <button onClick={addButton} className="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 font-bold border border-emerald-500/30 rounded-lg text-sm transition-colors">
+          <label className="text-slate-700 font-bold">미션 버튼 목록 ({buttons.length}개)</label>
+          <button onClick={addButton} className="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-600 font-bold border border-emerald-200 rounded-lg text-sm transition-colors">
             + 새 미션 추가
           </button>
         </div>
 
         {buttons.length === 0 && (
-          <div className="text-center py-10 bg-slate-800/50 rounded-xl border border-dashed border-slate-600 text-slate-500">
+          <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-300 text-slate-500">
             아직 추가된 미션이 없습니다.<br/>위젯의 '새 미션 추가' 버튼을 눌러보세요.
           </div>
         )}
 
         <div className="space-y-4">
           {buttons.map((btn, i) => {
-            const IconComp = (LucideIcons as any)[btn.iconName] || LucideIcons.Activity;
+            const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[btn.iconName] || LucideIcons.Activity;
             
             return (
-              <div key={btn.id} className={`p-4 border rounded-xl flex flex-col gap-4 relative ${btn.bg}`}>
+              <div key={btn.id} className={`p-4 border rounded-xl flex flex-col gap-4 relative shadow-sm ${btn.bg}`}>
                 <div className="absolute top-4 right-4 flex gap-2">
-                  <div className="flex bg-slate-900/80 rounded overflow-hidden">
+                  <div className="flex bg-white rounded overflow-hidden border border-slate-200">
                     <button 
                       onClick={() => moveButton(i, 'up')} 
                       disabled={i === 0}
-                      className="px-2 py-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed border-r border-slate-700/50"
+                      className="px-2 py-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed border-r border-slate-200"
                     >
                       <LucideIcons.ChevronUp className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => moveButton(i, 'down')} 
                       disabled={i === buttons.length - 1}
-                      className="px-2 py-1 text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-2 py-1 text-slate-500 hover:text-slate-900 disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       <LucideIcons.ChevronDown className="w-4 h-4" />
                     </button>
                   </div>
-                  <button onClick={() => removeButton(i)} className="text-slate-400 hover:text-red-400 font-bold text-xs bg-slate-900/80 px-2 py-1 rounded">
+                  <button onClick={() => removeButton(i)} className="text-slate-500 hover:text-red-500 font-bold text-xs bg-white border border-slate-200 px-2 py-1 rounded">
                     삭제
                   </button>
                 </div>
                 
-                <div className="flex gap-4 items-center border-b border-white/10 pb-4 mt-2">
-                  <div className={`w-12 h-12 rounded-full bg-slate-950/50 flex items-center justify-center border border-white/10 shrink-0 ${btn.color}`}>
+                <div className="flex gap-4 items-center border-b border-slate-200/50 pb-4 mt-2">
+                  <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center border border-slate-200 shadow-sm shrink-0 ${btn.color}`}>
                     <IconComp className="w-6 h-6" />
                   </div>
                   <div className="flex-1 pr-16">
@@ -188,36 +189,46 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
                     <input 
                       type="text" value={btn.desc} onChange={e => updateButton(i, 'desc', e.target.value)}
                       placeholder="설명 (예: 5회 반복)"
-                      className="bg-transparent text-sm text-slate-300 font-bold w-full focus:outline-none mt-1"
+                      className="bg-transparent text-sm text-slate-500 font-bold w-full focus:outline-none mt-1"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">지급 점수 (점)</label>
-                    <input type="number" value={btn.amount} onChange={e => updateButton(i, 'amount', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-mono"/>
+                    <label className="block text-xs text-slate-500 mb-1">지급 점수 (점)</label>
+                    <input type="number" value={btn.amount} onChange={e => updateButton(i, 'amount', Number(e.target.value))} className="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-900 font-mono focus:outline-none focus:border-cyan-500"/>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">쿨다운 (초)</label>
-                    <input type="number" value={btn.cooldown} onChange={e => updateButton(i, 'cooldown', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white font-mono"/>
+                    <label className="block text-xs text-slate-500 mb-1">쿨다운 (초)</label>
+                    <input type="number" value={btn.cooldown} onChange={e => updateButton(i, 'cooldown', Number(e.target.value))} className="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-900 font-mono focus:outline-none focus:border-cyan-500"/>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">아이콘</label>
-                    <select value={btn.iconName} onChange={e => updateButton(i, 'iconName', e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white">
+                    <label className="block text-xs text-slate-500 mb-1">아이콘</label>
+                    <select value={btn.iconName} onChange={e => updateButton(i, 'iconName', e.target.value)} className="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-900 focus:outline-none focus:border-cyan-500">
                       {ICONS.map(icon => <option key={icon} value={icon}>{icon}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">색상 테마</label>
+                    <label className="block text-xs text-slate-500 mb-1">색상 테마</label>
                     <select 
                       value={THEMES.findIndex(t => t.color === btn.color)} 
                       onChange={e => updateTheme(i, Number(e.target.value))} 
-                      className="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"
+                      className="w-full bg-slate-50 border border-slate-300 rounded p-2 text-slate-900 focus:outline-none focus:border-cyan-500"
                     >
                       {THEMES.map((theme, idx) => <option key={idx} value={idx}>{theme.name}</option>)}
                     </select>
                   </div>
+                </div>
+                <div className="mt-4 flex items-center gap-2 px-2 pb-2">
+                  <input
+                    type="checkbox"
+                    id={`req-app-${btn.id}`}
+                    checked={btn.requires_approval || false}
+                    onChange={e => updateButton(i, 'requires_approval', e.target.checked)}
+                    className="w-4 h-4 text-cyan-600 rounded border-slate-300 focus:ring-cyan-500"
+                  />
+                  <label htmlFor={`req-app-${btn.id}`} className="text-sm font-bold text-slate-700">관리자 승인(선생님 확인) 필요 임무로 설정</label>
                 </div>
               </div>
             );

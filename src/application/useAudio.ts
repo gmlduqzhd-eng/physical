@@ -9,7 +9,7 @@ export const useAudio = () => {
     // 사용자 제스처 전까지는 AudioContext를 생성하지 않거나 suspend 상태임
     const initAudio = () => {
       if (!audioCtx.current) {
-        audioCtx.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        audioCtx.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       }
       if (audioCtx.current.state === 'suspended') {
         audioCtx.current.resume();
