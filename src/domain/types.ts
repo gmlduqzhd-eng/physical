@@ -22,7 +22,7 @@ export interface GameRoom {
   pin_code: string;
   name: string;
   template_id: string | null;
-  status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami' | 'finished' | 'boss_raid';
+  status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami' | 'finished' | 'boss_raid' | 'mafia';
   global_time_modifier: number;
   started_at: string | null;
   announcement: string | null;

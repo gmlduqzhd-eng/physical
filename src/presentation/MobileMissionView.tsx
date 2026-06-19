@@ -76,7 +76,7 @@ export const MobileMissionView = () => {
   }, [roomId]);
 
   const handleInfect = async () => {
-    if (!infectCode || infectCode.length !== 4) return;
+    if (!infectCode || infectCode.length !== 4 || !groupId) return;
     const targetGroup = scores.find(s => s.id.substring(0,4).toUpperCase() === infectCode.toUpperCase() && s.id !== groupId);
     if (!targetGroup) {
       alert('유효하지 않은 코드이거나 존재하지 않는 생존자입니다.');
@@ -161,7 +161,7 @@ export const MobileMissionView = () => {
         (decodedText) => {
           scanner.clear();
           setShowScanner(false);
-          const mission = template?.buttons?.find((m: Record<string, unknown>) => m.id === decodedText);
+          const mission = template?.buttons?.find((m: import('../domain/types').MissionButton) => m.id === decodedText);
           if (mission) {
              const fakeEvent = { preventDefault: () => {}, clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 };
              // Use a small delay so scanner modal closes before processing
@@ -346,7 +346,7 @@ export const MobileMissionView = () => {
 
       const { x, y, z } = event.acceleration || {};
       const threshold = 15; // Threshold (감도)
-      if (x !== null && y !== null && z !== null) {
+      if (x != null && y != null && z != null) {
         if (Math.abs(x) > threshold || Math.abs(y) > threshold || Math.abs(z) > threshold) {
           lastMotionPenalty.current = Date.now();
           if (navigator.vibrate) navigator.vibrate([500, 200, 500]);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../infrastructure/supabaseClient';
-import { GameRoom, RoomGroup, MissionTemplate } from '../domain/types';
+import React, { useState } from 'react';
+import { supabase } from '../data/supabase';
+import type { GameRoom, RoomGroup, MissionTemplate } from '../domain/types';
 import * as LucideIcons from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
