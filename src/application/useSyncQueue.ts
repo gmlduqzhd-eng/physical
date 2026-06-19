@@ -52,7 +52,8 @@ export const useSyncQueue = () => {
     for (const action of currentQueue) {
       try {
         if (action.type === 'INCREMENT_SCORE') {
-          await ScoreRepository.incrementScore(action.payload.id, action.payload.amount);
+          const success = await ScoreRepository.incrementScore(action.payload.id, action.payload.amount);
+          if (!success) throw new Error('Failed to increment score');
         }
       } catch (err) {
         console.error('Failed to sync action', action, err);
@@ -76,8 +77,10 @@ export const useSyncQueue = () => {
   const enqueueAction = useCallback((action: SyncAction) => {
     if (isOnline) {
       if (action.type === 'INCREMENT_SCORE') {
-        ScoreRepository.incrementScore(action.payload.id, action.payload.amount).catch(() => {
-            setQueue(prev => [...prev, action]);
+        ScoreRepository.incrementScore(action.payload.id, action.payload.amount).then(success => {
+          if (!success) setQueue(prev => [...prev, action]);
+        }).catch(() => {
+          setQueue(prev => [...prev, action]);
         });
       }
     } else {
