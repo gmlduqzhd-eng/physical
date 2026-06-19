@@ -262,7 +262,7 @@ export const AdminControlPanel = () => {
       roomGroups.forEach(group => {
         if (group.pending_missions && group.pending_missions.length > 0) {
           group.pending_missions.forEach(missionId => {
-            const m = template.buttons.find((btn: any) => btn.id === missionId);
+            const m = template.buttons.find((btn: import('../domain/types').MissionButton) => btn.id === missionId);
             if (m) {
               pendingApprovals.push({ group, mission: m as import('../domain/types').MissionButton });
             }

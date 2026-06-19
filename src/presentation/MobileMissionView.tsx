@@ -47,7 +47,7 @@ export const MobileMissionView = () => {
   const activeDefuseCountRef = useRef(0);
   const myGroup = scores.find(s => s.id === groupId);
 
-  const deviceIdRef = useRef(Math.random().toString(36).substring(2));
+  const [deviceId] = useState(() => Math.random().toString(36).substring(2));
   const joinTimeRef = useRef(Date.now());
 
   const [activeDevicesCount, setActiveDevicesCount] = useState(0);
@@ -61,7 +61,7 @@ export const MobileMissionView = () => {
   const isComebackActive = isLowest && (highestScore - (myGroup?.score || 0) >= 500);
 
   const isZombie = myGroup?.badges?.includes('zombie') || false;
-  const isSpy = myGroup?.spy_device_id === deviceIdRef.current;
+  const isSpy = myGroup?.spy_device_id === deviceId;
   const mySurvivorCode = myGroup?.id.substring(0, 4).toUpperCase() || '';
   const [infectCode, setInfectCode] = useState('');
 
@@ -118,7 +118,7 @@ export const MobileMissionView = () => {
     
     if (navigator.vibrate) navigator.vibrate(50);
     playBeep();
-    const cdSecs = (mission as any).cooldown || 5;
+    const cdSecs = mission.cooldown || 5;
     const finalCdSecs = hasCooldown ? cdSecs / 2 : cdSecs;
     setCooldownTime(finalCdSecs * 1000);
     setMaxCooldownTime(finalCdSecs * 1000);
@@ -232,13 +232,13 @@ export const MobileMissionView = () => {
 
   const handleCoopTouchStart = async (missionId: string) => {
     if (channelRef.current) {
-      await channelRef.current.track({ deviceId: deviceIdRef.current, joined_at: joinTimeRef.current, pressingCoop: missionId });
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: missionId });
     }
   };
 
   const handleCoopTouchEnd = async () => {
     if (channelRef.current) {
-      await channelRef.current.track({ deviceId: deviceIdRef.current, joined_at: joinTimeRef.current, pressingCoop: null });
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: null });
     }
   };
 
@@ -262,7 +262,7 @@ export const MobileMissionView = () => {
   useEffect(() => {
     if (!roomId || !groupId) return;
     
-    const myDeviceId = deviceIdRef.current;
+    const myDeviceId = deviceId;
     const myJoinTime = joinTimeRef.current;
     
     const channel = supabase.channel(`presence_room_${roomId}_group_${groupId}`, {
@@ -294,7 +294,7 @@ export const MobileMissionView = () => {
       activeDefuseCountRef.current = defusePressingCount;
 
       deviceIds.sort();
-      if (deviceIds[0] === deviceIdRef.current && gameRoom?.status === 'mafia') {
+      if (deviceIds[0] === deviceId && gameRoom?.status === 'mafia') {
         const myGroupNow = scores.find(s => s.id === groupId);
         if (myGroupNow && !myGroupNow.spy_device_id && deviceIds.length > 0) {
           const randomSpy = deviceIds[Math.floor(Math.random() * deviceIds.length)];
@@ -593,7 +593,7 @@ export const MobileMissionView = () => {
     playBeep();
 
     if (channelRef.current) {
-      await channelRef.current.track({ deviceId: deviceIdRef.current, joined_at: joinTimeRef.current, pressingDefuse: true });
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: true });
     }
 
     holdInterval.current = setInterval(() => {
@@ -614,7 +614,7 @@ export const MobileMissionView = () => {
           });
           supabase.from('room_groups').update({ is_defused: true }).eq('id', groupId).then();
           playVictory();
-          if (channelRef.current) channelRef.current.track({ deviceId: deviceIdRef.current, joined_at: joinTimeRef.current, pressingDefuse: false });
+          if (channelRef.current) channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
           return 100;
         }
         return p + 2; 
@@ -629,7 +629,7 @@ export const MobileMissionView = () => {
     }
     if(holdProgress < 100) setHoldProgress(0);
     if (channelRef.current) {
-      await channelRef.current.track({ deviceId: deviceIdRef.current, joined_at: joinTimeRef.current, pressingDefuse: false });
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
     }
   };
 
@@ -903,7 +903,7 @@ export const MobileMissionView = () => {
                             {m.requires_approval && !isPending && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full border border-red-200">승인필요</span>}
                             {isPending && <span className="text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full border border-yellow-200">대기 중</span>}
                           </div>
-                          <div className="text-sm text-slate-500 font-bold mt-0.5">{(m as any).desc}</div>
+                          <div className="text-sm text-slate-500 font-bold mt-0.5">{m.desc}</div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
