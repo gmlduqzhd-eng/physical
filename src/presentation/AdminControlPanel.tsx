@@ -541,9 +541,10 @@ export const AdminControlPanel = () => {
                   </div>
                   <div className="flex gap-4">
                     <div className="flex-1 flex flex-col gap-2">
-                      <button onClick={triggerTsunami} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'tsunami' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <Waves className="w-6 h-6" />
-                        {currentRoom.status === 'tsunami' ? '해일 경보 해제' : '해일 경보 발동'}
+                      <button onClick={triggerTsunami} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'tsunami' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <Waves className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'tsunami' ? '해일 경보 해제' : '해일 경보 발동'}</span>
+                        {currentRoom.status !== 'tsunami' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">학생 기기 조작 잠금<br/>(집중/통제용)</span>}
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'boss_raid') {
@@ -551,9 +552,10 @@ export const AdminControlPanel = () => {
                         } else {
                           await supabase.from('game_rooms').update({ status: 'boss_raid', boss_hp: 10000, boss_max_hp: 10000 }).eq('id', currentRoom.id);
                         }
-                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'boss_raid' ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <LucideIcons.Swords className="w-6 h-6" />
-                        {currentRoom.status === 'boss_raid' ? '보스 레이드 종료' : '보스 레이드 시작!'}
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'boss_raid' ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <LucideIcons.Swords className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'boss_raid' ? '보스 레이드 종료' : '보스 레이드 시작!'}</span>
+                        {currentRoom.status !== 'boss_raid' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">반 전체가 협동하여<br/>거대 보스 처치</span>}
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'mafia') {
@@ -562,9 +564,10 @@ export const AdminControlPanel = () => {
                         } else {
                           await supabase.from('game_rooms').update({ status: 'mafia' }).eq('id', currentRoom.id);
                         }
-                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'mafia' ? 'bg-red-900 text-red-100 shadow-[0_0_20px_rgba(153,27,27,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <LucideIcons.UserX className="w-6 h-6" />
-                        {currentRoom.status === 'mafia' ? '마피아 게임 종료' : '스파이/마피아 발동'}
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'mafia' ? 'bg-red-900 text-red-100 shadow-[0_0_20px_rgba(153,27,27,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <LucideIcons.UserX className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'mafia' ? '마피아 게임 종료' : '스파이/마피아 발동'}</span>
+                        {currentRoom.status !== 'mafia' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">조별 1명씩 남몰래<br/>점수를 깎는 스파이 지정</span>}
                       </button>
                     </div>
                     
@@ -572,23 +575,26 @@ export const AdminControlPanel = () => {
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'time_attack' ? 'playing' : 'time_attack';
                         await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
-                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <Clock className="w-6 h-6" />
-                        {currentRoom.status === 'time_attack' ? '타임어택 종료' : '타임어택 모드'}
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <Clock className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'time_attack' ? '타임어택 종료' : '타임어택 모드'}</span>
+                        {currentRoom.status !== 'time_attack' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">제한시간 내<br/>최고 점수 도달 경쟁</span>}
                       </button>
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'defense' ? 'playing' : 'defense';
                         await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
-                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'defense' ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <ShieldAlert className="w-6 h-6" />
-                        {currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'defense' ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <ShieldAlert className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}</span>
+                        {currentRoom.status !== 'defense' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">1초마다 조 점수가<br/>자동으로 깎임 (생존)</span>}
                       </button>
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
                         await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
-                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'zombie' ? 'bg-stone-800 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <LucideIcons.Ghost className="w-6 h-6" />
-                        {currentRoom.status === 'zombie' ? '좀비 사태 진압' : '좀비 바이러스 살포!'}
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'zombie' ? 'bg-stone-800 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <LucideIcons.Ghost className="w-6 h-6 mb-1" />
+                        <span className="text-sm">{currentRoom.status === 'zombie' ? '좀비 사태 진압' : '좀비 바이러스 살포!'}</span>
+                        {currentRoom.status !== 'zombie' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">술래 조가 생겨나<br/>다른 조를 감염시킴</span>}
                       </button>
                     </div>
                     <div className="flex-1 flex flex-col justify-center gap-2">
