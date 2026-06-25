@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
@@ -133,6 +133,11 @@ export const AdminControlPanel = () => {
     await supabase.from('game_rooms').update({ announcement: null }).eq('id', currentRoom.id);
   };
 
+  const roomGroupsRef = useRef(roomGroups);
+  useEffect(() => {
+    roomGroupsRef.current = roomGroups;
+  }, [roomGroups]);
+
   useEffect(() => {
     if (!currentRoom) return;
     
@@ -154,9 +159,18 @@ export const AdminControlPanel = () => {
       }
     }, 1000);
 
+    const defenseInterval = setInterval(() => {
+      if (currentRoom.status === 'defense') {
+        roomGroupsRef.current.forEach((g: RoomGroup) => {
+          supabase.rpc('increment_score', { row_id: g.id, amount: -5 }).then();
+        });
+      }
+    }, 2000);
+
     return () => {
       supabase.removeChannel(channel);
       clearInterval(interval);
+      clearInterval(defenseInterval);
     };
   }, [currentRoom]);
 
@@ -413,7 +427,7 @@ export const AdminControlPanel = () => {
                 </h2>
                 <div className="flex flex-col gap-2">
                   {pendingApprovals.map((req, idx) => (
-                    <div key={idx} className="bg-white p-3 rounded-lg border border-red-200 flex justify-between items-center shadow-sm">
+                    <div key={`${req.group.id}-${req.mission.id}-${idx}`} className="bg-white p-3 rounded-lg border border-red-200 flex justify-between items-center shadow-sm">
                       <div>
                         <span className="font-black text-slate-800 mr-2">[{req.group.group_name}]</span>
                         <span className="text-slate-600 font-bold">{req.mission.title}</span>
@@ -537,6 +551,30 @@ export const AdminControlPanel = () => {
                       }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'mafia' ? 'bg-red-900 text-red-100 shadow-[0_0_20px_rgba(153,27,27,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.UserX className="w-6 h-6" />
                         {currentRoom.status === 'mafia' ? '마피아 게임 종료' : '스파이/마피아 발동'}
+                      </button>
+                    </div>
+                    
+                    <div className="flex-1 flex flex-col gap-2">
+                      <button onClick={async () => {
+                        const newStatus = currentRoom.status === 'time_attack' ? 'playing' : 'time_attack';
+                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <Clock className="w-6 h-6" />
+                        {currentRoom.status === 'time_attack' ? '타임어택 종료' : '타임어택 모드'}
+                      </button>
+                      <button onClick={async () => {
+                        const newStatus = currentRoom.status === 'defense' ? 'playing' : 'defense';
+                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'defense' ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <ShieldAlert className="w-6 h-6" />
+                        {currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}
+                      </button>
+                      <button onClick={async () => {
+                        const newStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
+                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                      }} className={`flex-1 py-4 flex flex-col items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'zombie' ? 'bg-stone-800 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                        <LucideIcons.Ghost className="w-6 h-6" />
+                        {currentRoom.status === 'zombie' ? '좀비 사태 진압' : '좀비 바이러스 살포!'}
                       </button>
                     </div>
                     <div className="flex-1 flex flex-col justify-center gap-2">

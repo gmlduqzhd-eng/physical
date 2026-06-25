@@ -8,6 +8,9 @@ export interface MissionButton {
   color: string;
   bg: string;
   requires_approval?: boolean;
+  isHidden?: boolean;
+  prerequisiteMissionId?: string;
+  isVaccine?: boolean;
 }
 
 export interface MissionTemplate {
@@ -22,7 +25,7 @@ export interface GameRoom {
   pin_code: string;
   name: string;
   template_id: string | null;
-  status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami' | 'finished' | 'boss_raid' | 'mafia';
+  status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami' | 'finished' | 'boss_raid' | 'mafia' | 'time_attack' | 'defense' | 'zombie';
   global_time_modifier: number;
   started_at: string | null;
   announcement: string | null;

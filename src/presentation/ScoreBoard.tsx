@@ -138,6 +138,24 @@ export const ScoreBoard = () => {
         </div>
       </header>
 
+      {gameRoom?.status === 'boss_raid' && (
+        <div className="relative z-10 px-12 py-6 bg-slate-900 border-b border-slate-800 shadow-xl flex flex-col items-center justify-center">
+          <div className="flex items-center gap-4 mb-2">
+            <LucideIcons.Swords className="w-10 h-10 text-red-500 animate-pulse" />
+            <h2 className="text-3xl font-black text-white">보스 레이드: 체육관의 수호자</h2>
+          </div>
+          <div className="w-full max-w-4xl bg-slate-800 rounded-full h-10 border-4 border-slate-700 relative overflow-hidden">
+            <div 
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-1000 ease-out"
+              style={{ width: `${Math.max(0, ((gameRoom.boss_hp || 0) / (gameRoom.boss_max_hp || 1)) * 100)}%` }}
+            ></div>
+            <div className="absolute inset-0 flex items-center justify-center text-white font-black font-mono text-xl text-shadow-sm">
+              {gameRoom.boss_hp} / {gameRoom.boss_max_hp}
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="relative z-10 p-12 grid grid-cols-2 lg:grid-cols-3 gap-8">
         {scores.map((score) => {
           const AvatarIcon = (LucideIcons as unknown as Record<string, React.ElementType>)[score.avatar || 'Smile'] || LucideIcons.Smile;

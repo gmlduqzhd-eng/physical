@@ -19,7 +19,8 @@ const SHOP_ITEMS = [
   { id: 'donate', name: '기부 천사', cost: 100, desc: '현재 꼴등 조에게 무려 200점을 쏩니다! (나는 100점 소모)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
   { id: 'steal', name: '도둑 고양이', cost: 150, desc: '현재 1등 조의 점수를 몰래 100점 훔쳐옵니다!', icon: LucideIcons.Ghost, color: 'text-slate-600', bg: 'bg-slate-100 border-slate-300' },
   { id: 'time', name: '시간술사의 시계', cost: 200, desc: '학급 전체의 게임 남은 시간을 30초 늘려줍니다! (영웅 등장)', icon: LucideIcons.Clock, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
-  { id: 'blind', name: '먹물 공격', cost: 200, desc: '현재 1등 조의 화면을 15초간 시커멓게 가립니다!', icon: LucideIcons.EyeOff, color: 'text-stone-600', bg: 'bg-stone-100 border-stone-300' }
+  { id: 'blind', name: '먹물 공격', cost: 200, desc: '현재 1등 조의 화면을 15초간 시커멓게 가립니다!', icon: LucideIcons.EyeOff, color: 'text-stone-600', bg: 'bg-stone-100 border-stone-300' },
+  { id: 'tsunami', name: '해킹 스크립트', cost: 300, desc: '가장 점수가 높은 조에게 해킹 공격을 가하여 미션을 잠금 상태로 만듭니다!', icon: LucideIcons.TerminalSquare, color: 'text-red-700', bg: 'bg-red-100 border-red-300' }
 ];
 
 export const MobileMissionView = () => {
@@ -27,7 +28,7 @@ export const MobileMissionView = () => {
   const navigate = useNavigate();
   const { scores, gameRoom, template } = useGameLogic(roomId);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
-  const { enqueueAction } = useSyncQueue();
+  const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
 
   const [cooldownTime, setCooldownTime] = useState(0);
@@ -99,8 +100,25 @@ export const MobileMissionView = () => {
 
   const handleMissionComplete = async (mission: import('../domain/types').MissionButton, e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (isLocked || cooldown || !groupId) return;
+    // Check prerequisite
+    if (mission.prerequisiteMissionId && !myGroup?.completed_missions?.includes(mission.prerequisiteMissionId)) {
+      alert('이전 단계 미션을 먼저 완료해야 합니다!');
+      return;
+    }
     
+    // Check zombie vaccine
+    if (gameRoom?.status === 'zombie' && isLocked) {
+       if (!mission.isVaccine) {
+          alert('좀비에게 감염되었습니다! 백신 QR코드만 스캔할 수 있습니다.');
+          return;
+       } else {
+          alert('백신을 투여하여 감염에서 회복되었습니다!');
+          await supabase.from('room_groups').update({ is_hacked: false, is_defused: false }).eq('id', groupId);
+       }
+    } else if (isLocked || cooldown || !groupId) {
+       return;
+    }
+
     if (mission.requires_approval) {
       if (myGroup?.pending_missions?.includes(mission.id)) {
         return alert('이미 승인 대기 중입니다!');
@@ -147,9 +165,28 @@ export const MobileMissionView = () => {
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: actualAmount }, 
+      payload: { id: groupId as string, amount: actualAmount }, 
       timestamp: Date.now()
     });
+
+    // Handle completed missions and laps (Time Attack / Story mode)
+    if (mission.id && !myGroup?.completed_missions?.includes(mission.id)) {
+      const newCompleted = [...(myGroup?.completed_missions || []), mission.id];
+      const allVisibleMissions = template?.buttons?.filter((m: import('../domain/types').MissionButton) => !m.isHidden).map((m: import('../domain/types').MissionButton) => m.id) || [];
+      const isLapComplete = allVisibleMissions.length > 0 && allVisibleMissions.every((id: string) => newCompleted.includes(id));
+
+      if (gameRoom?.status === 'time_attack' && isLapComplete) {
+        const currentLaps = myGroup?.stats?.laps || 0;
+        await supabase.from('room_groups').update({ 
+          completed_missions: [], 
+          stats: { ...(myGroup?.stats || {}), laps: currentLaps + 1 }
+        }).eq('id', groupId);
+        alert(`🎉 랩(Lap) ${currentLaps + 1} 완성! 서킷 1바퀴를 완주했습니다!`);
+        playVictory();
+      } else {
+        await supabase.from('room_groups').update({ completed_missions: newCompleted }).eq('id', groupId);
+      }
+    }
   };
 
   const handleMissionCompleteRef = useRef(handleMissionComplete);
@@ -513,6 +550,22 @@ export const MobileMissionView = () => {
       const blindedUntil = new Date(Date.now() + 15000).toISOString();
       await supabase.from('room_groups').update({ is_blinded_until: blindedUntil }).eq('id', highest.id);
       alert('성공! 1등 조의 화면에 먹물을 뿌렸습니다!');
+    } else if (item.id === 'tsunami') {
+      const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
+      if (highest.id === groupId) {
+        return alert('우리 조가 이미 1등입니다! 해킹 대상을 찾을 수 없습니다.');
+      }
+      const { error } = await supabase.rpc('attack_group', {
+        attacker_id: groupId,
+        target_id: highest.id,
+        cost: actualCost
+      });
+      if (error) {
+        alert('공격 실패: ' + error.message);
+      } else {
+        alert('성공! 1등 조의 화면을 해킹하여 잠금 상태로 만들었습니다!');
+        trackPurchase();
+      }
     }
   };
 
@@ -725,6 +778,12 @@ export const MobileMissionView = () => {
           <span>{gameRoom.announcement}</span>
         </div>
       )}
+      {gameRoom?.status === 'defense' && (
+        <div className="w-full z-40 bg-orange-600 text-white font-black py-2 px-4 shadow-md flex items-center justify-center gap-2 animate-pulse">
+          <LucideIcons.ShieldAlert className="w-5 h-5" />
+          <span>진지 방어전 발동! (2초마다 -5점씩 차감 중)</span>
+        </div>
+      )}
       {isComebackActive && (
         <div className="w-full z-40 bg-orange-500 text-white font-black py-2 px-4 shadow-md flex items-center justify-center gap-2 animate-pulse">
           <LucideIcons.Flame className="w-5 h-5" />
@@ -782,8 +841,20 @@ export const MobileMissionView = () => {
         <div className="absolute inset-0 bg-blue-500/10 animate-pulse z-0 pointer-events-none"></div>
       )}
       
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700 pointer-events-none shadow-sm">
-        <LucideIcons.Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
+      <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700 shadow-sm">
+          <LucideIcons.Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
+        </div>
+        {!isOnline && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-orange-100/90 backdrop-blur-sm border-orange-300 text-orange-800 shadow-sm animate-pulse">
+            <LucideIcons.WifiOff className="w-4 h-4" /> <span>오프라인 ({queueLength}개 대기 중)</span>
+          </div>
+        )}
+        {isOnline && isSyncing && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-cyan-100/90 backdrop-blur-sm border-cyan-300 text-cyan-800 shadow-sm">
+            <LucideIcons.RefreshCw className="w-4 h-4 animate-spin" /> <span>동기화 중...</span>
+          </div>
+        )}
       </div>
 
       {!isZombie && (
@@ -885,12 +956,16 @@ export const MobileMissionView = () => {
                     <p className="text-sm">조원들 몰래 방해 공작을 수행하세요. 일반 미션 버튼을 누르면 점수가 깎입니다!</p>
                   </div>
                 )}
-                {template.buttons.map((m: import('../domain/types').MissionButton, i: number) => {
+                {template.buttons.filter((m: import('../domain/types').MissionButton) => {
+                  if (m.isHidden) return false;
+                  if (m.prerequisiteMissionId && !myGroup?.completed_missions?.includes(m.prerequisiteMissionId)) return false;
+                  return true;
+                }).map((m: import('../domain/types').MissionButton, i: number) => {
                   const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
                   const isPending = myGroup?.pending_missions?.includes(m.id);
                   return (
                     <button 
-                      key={i}
+                      key={m.id || i}
                       onTouchStart={(e) => handleMissionComplete(m, e)}
                       onMouseDown={(e) => handleMissionComplete(m, e)}
                       disabled={isLocked || cooldown || isPending} 

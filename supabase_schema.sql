@@ -25,8 +25,13 @@ CREATE TABLE public.game_rooms (
     pin_code TEXT UNIQUE NOT NULL,
     name TEXT NOT NULL,
     template_id UUID REFERENCES public.mission_templates(id) ON DELETE SET NULL,
-    status TEXT CHECK (status IN ('waiting', 'playing', 'paused', 'locked', 'tsunami')) DEFAULT 'waiting',
+    status TEXT CHECK (status IN ('waiting', 'playing', 'paused', 'locked', 'tsunami', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'finished')) DEFAULT 'waiting',
     global_time_modifier INTEGER DEFAULT 0,
+    boss_hp INTEGER,
+    boss_max_hp INTEGER,
+    active_minigame JSONB,
+    announcement TEXT,
+    flash_sale BOOLEAN DEFAULT false,
     started_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -45,6 +50,13 @@ CREATE TABLE public.room_groups (
     is_defused BOOLEAN DEFAULT false,
     is_hacked BOOLEAN DEFAULT false,
     item_buff_until TIMESTAMP WITH TIME ZONE,
+    is_blinded_until TIMESTAMP WITH TIME ZONE,
+    completed_missions JSONB DEFAULT '[]'::jsonb,
+    pending_missions JSONB DEFAULT '[]'::jsonb,
+    badges JSONB DEFAULT '[]'::jsonb,
+    stats JSONB DEFAULT '{}'::jsonb,
+    spy_device_id TEXT,
+    avatar TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(room_id, group_name)
 );
@@ -110,6 +122,33 @@ BEGIN
         item_buff_until = buff_end,
         updated_at = NOW()
     WHERE id = row_id;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8. 그룹 해킹(공격) 함수 만들기
+CREATE OR REPLACE FUNCTION attack_group(attacker_id UUID, target_id UUID, cost INTEGER)
+RETURNS VOID AS $$
+DECLARE
+  attacker_score INTEGER;
+BEGIN
+  -- 점수 확인
+  SELECT score INTO attacker_score FROM public.room_groups WHERE id = attacker_id;
+  
+  IF attacker_score >= cost THEN
+    -- 공격자 점수 차감
+    UPDATE public.room_groups
+    SET score = score - cost,
+        updated_at = NOW()
+    WHERE id = attacker_id;
+    
+    -- 타겟 상태 변경 (해킹)
+    UPDATE public.room_groups
+    SET is_hacked = true,
+        updated_at = NOW()
+    WHERE id = target_id;
+  ELSE
+    RAISE EXCEPTION 'Not enough score to attack';
   END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
