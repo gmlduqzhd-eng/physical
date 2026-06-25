@@ -6,6 +6,7 @@ export interface SyncAction {
   type: 'INCREMENT_SCORE';
   payload: { id: string; amount: number; [key: string]: unknown };
   timestamp: number;
+  retryCount?: number;
 }
 
 export const useSyncQueue = () => {
@@ -57,7 +58,12 @@ export const useSyncQueue = () => {
         }
       } catch (err) {
         console.error('Failed to sync action', action, err);
-        failedActions.push(action);
+        const retries = (action.retryCount || 0) + 1;
+        if (retries < 3) {
+          failedActions.push({ ...action, retryCount: retries });
+        } else {
+          console.error('Action dropped after 3 failed retries:', action);
+        }
       }
     }
 

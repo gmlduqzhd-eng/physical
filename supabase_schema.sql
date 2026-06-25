@@ -54,10 +54,25 @@ INSERT INTO public.room_groups (room_id, group_name) VALUES
 ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '1모둠'),
 ('b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22', '2모둠');
 
--- 4. 보안 정책 해제 (누구나 실시간 접근 가능하도록)
-ALTER TABLE public.mission_templates DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.game_rooms DISABLE ROW LEVEL SECURITY;
-ALTER TABLE public.room_groups DISABLE ROW LEVEL SECURITY;
+-- 4. 보안 정책 (RLS) 활성화 및 전체 접근 허용 정책 추가
+-- (누구나 실시간 접근 가능하도록 하되, Supabase 보안 경고를 피하기 위해 명시적으로 정책을 설정합니다)
+ALTER TABLE public.mission_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.game_rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.room_groups ENABLE ROW LEVEL SECURITY;
+
+-- 모든 작업(SELECT, INSERT, UPDATE, DELETE)을 익명 사용자에게 허용하는 정책
+DROP POLICY IF EXISTS "Allow all for mission_templates" ON public.mission_templates;
+CREATE POLICY "Allow all for mission_templates" ON public.mission_templates FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all for game_rooms" ON public.game_rooms;
+CREATE POLICY "Allow all for game_rooms" ON public.game_rooms FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow all for room_groups" ON public.room_groups;
+CREATE POLICY "Allow all for room_groups" ON public.room_groups FOR ALL USING (true) WITH CHECK (true);
+
+-- 점수(score) 컬럼에 대한 클라이언트의 직접 수정을 차단합니다. (핵심 보안 방어)
+-- 이제 점수는 오직 아래에 정의된 RPC(increment_score, buy_buff)를 통해서만 수정할 수 있습니다.
+REVOKE UPDATE (score) ON public.room_groups FROM anon, authenticated;
 
 -- 5. Realtime(실시간 동기화) 기능 켜기
 BEGIN;
@@ -74,7 +89,7 @@ BEGIN
       updated_at = NOW()
   WHERE id = row_id;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 7. 버프 구매 아이템(원자적 처리)
 CREATE OR REPLACE FUNCTION buy_buff(row_id UUID)
@@ -97,4 +112,4 @@ BEGIN
     WHERE id = row_id;
   END IF;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

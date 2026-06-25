@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/purity */
+/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect */
 import React, { useState, useRef, useEffect } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
@@ -152,6 +152,9 @@ export const MobileMissionView = () => {
     });
   };
 
+  const handleMissionCompleteRef = useRef(handleMissionComplete);
+  useEffect(() => { handleMissionCompleteRef.current = handleMissionComplete; });
+
   const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
@@ -165,7 +168,7 @@ export const MobileMissionView = () => {
           if (mission) {
              const fakeEvent = { preventDefault: () => {}, clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 };
              // Use a small delay so scanner modal closes before processing
-             setTimeout(() => handleMissionComplete(mission as import('../domain/types').MissionButton, fakeEvent as unknown as React.MouseEvent), 100);
+             setTimeout(() => handleMissionCompleteRef.current(mission as import('../domain/types').MissionButton, fakeEvent as unknown as React.MouseEvent), 100);
           } else {
              alert('❌ 게임에 등록되지 않은 QR 코드입니다.');
           }
@@ -174,7 +177,7 @@ export const MobileMissionView = () => {
       );
       return () => { scanner.clear().catch(()=>{}); };
     }
-  }, [showScanner, template]); // handleMissionComplete is removed from deps to avoid re-render issues
+  }, [showScanner, template]); // handleMissionCompleteRef doesn't change, so we don't restart scanner
 
   const handleBingoComplete = async (missionId: string, baseAmount: number, isCoop: boolean) => {
     if (!myGroup || !groupId) return;
@@ -230,6 +233,9 @@ export const MobileMissionView = () => {
     playVictory();
   };
 
+  const handleBingoCompleteRef = useRef(handleBingoComplete);
+  useEffect(() => { handleBingoCompleteRef.current = handleBingoComplete; });
+
   const handleCoopTouchStart = async (missionId: string) => {
     if (channelRef.current) {
       await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: missionId });
@@ -247,11 +253,8 @@ export const MobileMissionView = () => {
       localStorage.removeItem(`has_drone_${roomId}_${groupId}`);
       localStorage.removeItem(`has_cooldown_${roomId}_${groupId}`);
       localStorage.removeItem(`has_bonus_${roomId}_${groupId}`);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasDrone(false);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasCooldown(false);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHasBonus(false);
     }
   }, [gameRoom, gameRoom?.status, roomId, groupId]);
@@ -304,7 +307,7 @@ export const MobileMissionView = () => {
 
       if (pressingCount >= 2 && targetMissionId && !coopTriggered.current) {
         coopTriggered.current = true;
-        handleBingoComplete(targetMissionId, 500, true);
+        handleBingoCompleteRef.current(targetMissionId, 500, true);
         playVictory();
         alert('🎉 깍두기 크로스 성공! 2명이 동시에 눌러 미션이 완료되었습니다!');
       }
@@ -319,6 +322,7 @@ export const MobileMissionView = () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId, groupId]);
 
   useEffect(() => {
@@ -525,7 +529,6 @@ export const MobileMissionView = () => {
 
   useEffect(() => {
     if (!isBossMode) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setHoldProgress(0);
       if (holdInterval.current) {
         clearInterval(holdInterval.current as number);
