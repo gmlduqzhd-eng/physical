@@ -72,7 +72,7 @@ export const Lobby = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-8 gap-6 text-slate-900 font-sans">
+    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-16 pb-20 px-6 gap-6 text-slate-900 font-sans overflow-y-auto">
       <h1 className="text-4xl font-black text-cyan-600 mb-2">땀방울 원정대</h1>
       <p className="text-slate-600 mb-8 text-center">선생님이 알려주신 핀 번호와<br/>우리 모둠을 선택하고 입장하세요!</p>
       

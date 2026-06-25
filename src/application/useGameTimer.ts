@@ -9,7 +9,9 @@ export const useGameTimer = (gameRoom: GameRoom | null) => {
     if (!gameRoom) return;
 
     const interval = setInterval(() => {
-      if (gameRoom.status === 'playing' && gameRoom.started_at) {
+      const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
+      
+      if (activeStatuses.includes(gameRoom.status) && gameRoom.started_at) {
         const start = new Date(gameRoom.started_at).getTime();
         const now = Date.now() + timeOffset;
         const elapsed = Math.floor((now - start) / 1000);
