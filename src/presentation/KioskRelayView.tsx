@@ -58,7 +58,7 @@ export const KioskRelayView = () => {
 
   if (!room) {
     return (
-      <div className="min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans relative">
+      <div className="min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
         <button onClick={() => navigate('/')} className="absolute top-6 left-6 px-4 py-2 bg-white/10 text-white border border-white/20 rounded-xl font-bold hover:bg-white/20 flex items-center gap-2">
           <LucideIcons.Home className="w-5 h-5"/> 홈
         </button>
@@ -85,7 +85,7 @@ export const KioskRelayView = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 text-white p-6 flex flex-col items-center justify-center relative font-sans">
+    <div className="min-h-[100dvh] bg-slate-900 text-white p-6 pt-12 pb-24 flex flex-col items-center relative font-sans overflow-y-auto">
       {successMsg && (
         <div className="absolute inset-0 z-50 bg-emerald-600 flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
           <LucideIcons.CheckCircle className="w-32 h-32 text-white mb-6 animate-bounce" />

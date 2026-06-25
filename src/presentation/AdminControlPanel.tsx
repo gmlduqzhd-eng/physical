@@ -244,7 +244,7 @@ export const AdminControlPanel = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans relative">
+      <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
         <button onClick={() => navigate('/')} className="absolute top-6 left-6 px-4 py-2 bg-white border border-slate-200 shadow-sm rounded-lg font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors">
           <Home className="w-4 h-4"/> 홈으로 돌아가기
         </button>

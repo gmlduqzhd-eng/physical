@@ -596,7 +596,7 @@ export const MobileMissionView = () => {
     }
   }, [gameRoom?.status]);
 
-  if (!groupId || !myGroup || !template) return <div className="min-h-screen bg-slate-50 text-slate-900 flex justify-center items-center">데이터를 불러오는 중...</div>;
+  if (!groupId || !myGroup || !template) return <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex justify-center items-center">데이터를 불러오는 중...</div>;
 
   if (gameRoom?.status === 'finished') {
     // Sort scores to find rank
@@ -605,7 +605,7 @@ export const MobileMissionView = () => {
     const isMVP = myRank === 1;
 
     return (
-      <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden text-white">
+      <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center pt-16 pb-20 p-6 relative overflow-y-auto text-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-[pulse_3s_ease-in-out_infinite]"></div>
         
         {isMVP ? (

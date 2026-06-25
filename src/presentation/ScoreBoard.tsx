@@ -36,8 +36,8 @@ export const ScoreBoard = () => {
     const top3 = sorted.slice(0, 3);
 
     return (
-      <div className="min-h-screen font-sans overflow-hidden relative bg-slate-900 text-white flex flex-col items-center justify-center p-8">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite]"></div>
+      <div className="min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center py-12 px-8 pb-24">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite] pointer-events-none"></div>
         
         <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-12 drop-shadow-lg relative z-10 tracking-widest">🏆 최종 결과 발표 🏆</h1>
 
@@ -103,7 +103,7 @@ export const ScoreBoard = () => {
   }
 
   return (
-    <div className={`min-h-screen font-sans overflow-hidden relative transition-colors duration-1000 ${isTsunami ? 'bg-blue-100' : isDanger ? 'bg-red-50' : 'bg-slate-50'} text-slate-900`}>
+    <div className={`min-h-[100dvh] font-sans overflow-y-auto relative transition-colors duration-1000 ${isTsunami ? 'bg-blue-100' : isDanger ? 'bg-red-50' : 'bg-slate-50'} text-slate-900 pb-20`}>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       
       {isTsunami && (
