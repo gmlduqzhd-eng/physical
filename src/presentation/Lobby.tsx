@@ -5,8 +5,8 @@ import { supabase } from '../data/supabase';
 
 export const Lobby = () => {
   const [pinCode, setPinCode] = useState('');
+  const [studentName, setStudentName] = useState('');
   const [groupName, setGroupName] = useState('1모둠');
-  const [avatar] = useState('Smile');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,6 +15,10 @@ export const Lobby = () => {
     e.preventDefault();
     if (!pinCode) {
       setError('핀 번호를 입력해주세요.');
+      return;
+    }
+    if (!studentName.trim()) {
+      setError('이름을 입력해주세요.');
       return;
     }
     setLoading(true);
@@ -45,6 +49,7 @@ export const Lobby = () => {
       .single();
 
     let groupId: string;
+    const avatar = 'Smile'; // Default fallback
 
     if (groupError || !groupData) {
       // 그룹이 없으면 생성
@@ -65,6 +70,9 @@ export const Lobby = () => {
       await supabase.from('room_groups').update({ avatar }).eq('id', groupId);
     }
 
+    // 이름 로컬 저장
+    localStorage.setItem('physical_student_name', studentName.trim());
+
     // 접속 성공 시 이동
     navigate(`/mobile/${roomId}/${groupId}`);
   };
@@ -83,6 +91,18 @@ export const Lobby = () => {
             value={pinCode}
             onChange={(e) => setPinCode(e.target.value)}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-xl font-mono text-center tracking-[0.5em] focus:outline-none focus:border-cyan-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-slate-700 text-sm font-bold mb-2">본인 이름 (활동명)</label>
+          <input 
+            type="text" 
+            placeholder="예: 홍길동" 
+            value={studentName}
+            onChange={(e) => setStudentName(e.target.value)}
+            maxLength={10}
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg font-bold text-center focus:outline-none focus:border-cyan-500"
           />
         </div>
 

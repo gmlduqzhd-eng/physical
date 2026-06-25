@@ -30,6 +30,7 @@ export const MobileMissionView = () => {
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
+  const [studentName] = useState(() => localStorage.getItem('physical_student_name') || '');
 
   const [cooldownTime, setCooldownTime] = useState(0);
   const cooldown = cooldownTime > 0;
@@ -886,7 +887,7 @@ export const MobileMissionView = () => {
         <div className={`shrink-0 bg-white border border-slate-200 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${isZombie ? 'opacity-80' : ''}`}>
           {hasBuff && <div className="absolute inset-0 bg-yellow-100 animate-pulse"></div>}
           <span className="text-slate-500 font-bold tracking-widest text-sm mb-1 relative z-10">
-            현재 에너지 충전율 {hasBuff && <span className="text-yellow-600 ml-2">X2 버프 중!</span>}
+            {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : '현재 에너지 충전율'} {hasBuff && <span className="text-yellow-600 ml-2">X2 버프 중!</span>}
           </span>
           <span className={`text-7xl font-black font-mono transition-transform text-slate-900 relative z-10`}>
             {displayScore}
