@@ -8,23 +8,32 @@ export const useGameTimer = (gameRoom: GameRoom | null) => {
   useEffect(() => {
     if (!gameRoom) return;
 
-    const interval = setInterval(() => {
       const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
       
-      if (activeStatuses.includes(gameRoom.status) && gameRoom.started_at) {
-        const start = new Date(gameRoom.started_at).getTime();
-        const now = Date.now() + timeOffset;
-        const elapsed = Math.floor((now - start) / 1000);
-        
-        let remaining = 300 - elapsed + gameRoom.global_time_modifier;
-        if (remaining < 0) remaining = 0;
-        setTimeLeft(remaining);
-      } else if (!gameRoom.started_at) {
-        let remaining = 300 + gameRoom.global_time_modifier;
-        if (remaining < 0) remaining = 0;
-        setTimeLeft(remaining);
-      }
-    }, 1000);
+      const updateTimer = () => {
+        if (gameRoom.started_at) {
+          const start = new Date(gameRoom.started_at).getTime();
+          const now = Date.now() + timeOffset;
+          const elapsed = Math.floor((now - start) / 1000);
+          
+          let remaining = 300 - elapsed + gameRoom.global_time_modifier;
+          if (remaining < 0) remaining = 0;
+          setTimeLeft(remaining);
+        } else {
+          let remaining = 300 + gameRoom.global_time_modifier;
+          if (remaining < 0) remaining = 0;
+          setTimeLeft(remaining);
+        }
+      };
+
+      // Initial update when gameRoom changes
+      updateTimer();
+
+      const interval = setInterval(() => {
+        if (activeStatuses.includes(gameRoom.status)) {
+          updateTimer();
+        }
+      }, 1000);
 
     return () => clearInterval(interval);
   }, [gameRoom]);

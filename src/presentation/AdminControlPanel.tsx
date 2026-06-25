@@ -110,8 +110,22 @@ export const AdminControlPanel = () => {
 
   const handleTimeModifier = async (amount: number) => {
     if (!currentRoom) return;
+    
+    let overshoot = 0;
+    if (currentRoom.started_at) {
+      const start = new Date(currentRoom.started_at).getTime();
+      const now = Date.now(); // Assuming rough time is fine for this click
+      const elapsed = Math.floor((now - start) / 1000);
+      const remaining = 300 - elapsed + currentRoom.global_time_modifier;
+      if (remaining < 0) {
+        overshoot = -remaining;
+      }
+    }
+    
+    const actualAmount = (amount > 0 && overshoot > 0) ? amount + overshoot : amount;
+
     await supabase.from('game_rooms')
-      .update({ global_time_modifier: currentRoom.global_time_modifier + amount })
+      .update({ global_time_modifier: currentRoom.global_time_modifier + actualAmount })
       .eq('id', currentRoom.id);
   };
 
