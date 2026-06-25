@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
-import * as LucideIcons from 'lucide-react';
 
-const AVATAR_OPTIONS = ['Smile', 'Star', 'Zap', 'Flame', 'Ghost', 'Rocket', 'Crown', 'Heart'];
 
 export const Lobby = () => {
   const [pinCode, setPinCode] = useState('');
   const [groupName, setGroupName] = useState('1모둠');
-  const [avatar, setAvatar] = useState('Smile');
+  const [avatar] = useState('Smile');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -101,28 +99,7 @@ export const Lobby = () => {
           </select>
         </div>
 
-        <div>
-          <label className="block text-slate-700 text-sm font-bold mb-2">모둠 아바타</label>
-          <div className="grid grid-cols-4 gap-2">
-            {AVATAR_OPTIONS.map(opt => {
-              const Icon = (LucideIcons as unknown as Record<string, React.ElementType>)[opt] || LucideIcons.Smile;
-              return (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => setAvatar(opt)}
-                  className={`p-3 rounded-xl flex justify-center items-center border transition-all ${
-                    avatar === opt 
-                      ? 'bg-cyan-100 border-cyan-500 text-cyan-600 shadow-sm scale-105' 
-                      : 'bg-slate-50 border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                  }`}
-                >
-                  <Icon className="w-6 h-6" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
+
 
         {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
