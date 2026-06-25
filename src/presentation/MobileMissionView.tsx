@@ -863,7 +863,7 @@ export const MobileMissionView = () => {
         </div>
       )}
 
-      <div className="flex-1 p-4 flex flex-col z-10 mt-12 overflow-y-auto">
+      <div className="flex-1 p-4 flex flex-col z-10 mt-12 overflow-y-auto custom-scrollbar">
         {isZombie && (
           <div className="shrink-0 bg-emerald-900 text-white p-4 mb-4 rounded-2xl border border-emerald-500 shadow-lg shadow-emerald-900/50 animate-pulse relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
@@ -911,7 +911,7 @@ export const MobileMissionView = () => {
           </button>
         </div>
 
-        <div className="flex-1 flex flex-col relative min-h-0">
+        <div className="flex flex-col relative">
           {showScanner && (
             <div className="absolute inset-0 z-50 bg-black flex flex-col rounded-3xl overflow-hidden">
               <div className="flex justify-between items-center p-4 bg-slate-900">
@@ -942,7 +942,7 @@ export const MobileMissionView = () => {
                 <p className="z-10 text-lg text-slate-500 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-3 overflow-y-auto pb-4 custom-scrollbar pr-2 h-full">
+              <div className="flex flex-col gap-3 pb-4">
                 <button
                   onClick={() => setShowScanner(true)}
                   disabled={isLocked || cooldown}
@@ -1000,12 +1000,12 @@ export const MobileMissionView = () => {
               </div>
             )
           ) : activeTab === 'bingo' ? (
-            <div className="flex flex-col gap-2 h-full pb-4">
+            <div className="flex flex-col gap-2 pb-4">
               <div className="bg-orange-100 border border-orange-200 rounded-xl p-3 mb-2 flex justify-between items-center">
                 <span className="text-orange-800 font-bold text-sm">3x3 빙고 보드! 가로, 세로, 대각선 완성 시 보너스 1000점!</span>
                 <span className="text-xs bg-orange-200 text-orange-900 px-2 py-1 rounded-full font-black">현재 {activeDevicesCount}명 접속 중</span>
               </div>
-              <div className="grid grid-cols-3 gap-2 flex-1">
+              <div className="grid grid-cols-3 gap-2">
                 {template?.buttons?.slice(0, 9).map((m: import('../domain/types').MissionButton, i: number) => {
                   const isCompleted = myGroup?.completed_missions?.includes(m.id);
                   const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
