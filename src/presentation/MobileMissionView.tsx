@@ -418,6 +418,7 @@ export const MobileMissionView = () => {
         }
       }
       activeDefuseCountRef.current = defusePressingCount;
+      activeCoopCountRef.current = pressingCount;
 
       deviceIds.sort();
       if (deviceIds[0] === deviceId && gameRoom?.status === 'mafia') {
@@ -1044,7 +1045,7 @@ export const MobileMissionView = () => {
                 <p className="z-10 text-lg text-slate-500 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-3 pb-4">
+              <div className="flex flex-col gap-3 pb-32">
                 <button
                   onClick={() => setShowScanner(true)}
                   disabled={isLocked || cooldown}
@@ -1102,7 +1103,7 @@ export const MobileMissionView = () => {
               </div>
             )
           ) : activeTab === 'bingo' ? (
-            <div className="flex flex-col gap-2 pb-4">
+            <div className="flex flex-col gap-2 pb-32">
               <div className="bg-orange-100 border border-orange-200 rounded-xl p-3 mb-2 flex justify-between items-center">
                 <span className="text-orange-800 font-bold text-sm">영토 점령전! 다른 조보다 먼저 빙고 칸을 선점하세요!</span>
                 <span className="text-xs bg-orange-200 text-orange-900 px-2 py-1 rounded-full font-black">선착순</span>
@@ -1157,7 +1158,7 @@ export const MobileMissionView = () => {
 
             </div>
           ) : (
-            <div className="flex flex-col gap-3 overflow-y-auto pb-4 custom-scrollbar pr-2 h-full">
+            <div className="flex flex-col gap-3 overflow-y-auto pb-32 custom-scrollbar pr-2 h-full">
               {gameRoom?.flash_sale && (
                 <div className="bg-yellow-50 border-2 border-yellow-400 p-3 rounded-2xl animate-pulse shadow-sm flex items-center justify-center gap-2">
                   <LucideIcons.Zap className="w-5 h-5 text-yellow-600" />
