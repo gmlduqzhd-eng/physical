@@ -29,7 +29,7 @@ export interface GameRoom {
   global_time_modifier: number;
   started_at: string | null;
   announcement: string | null;
-  active_minigame: { question: string; options: string[]; answer: number; reward: number; } | null;
+  active_minigame: any;
   flash_sale?: boolean;
   boss_hp?: number;
   boss_max_hp?: number;

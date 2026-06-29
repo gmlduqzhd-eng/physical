@@ -7,6 +7,7 @@ export const Lobby = () => {
   const [pinCode, setPinCode] = useState('');
   const [studentName, setStudentName] = useState('');
   const [groupName, setGroupName] = useState('1모둠');
+  const [role, setRole] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -70,8 +71,9 @@ export const Lobby = () => {
       await supabase.from('room_groups').update({ avatar }).eq('id', groupId);
     }
 
-    // 이름 로컬 저장
+    // 이름 및 직업 로컬 저장
     localStorage.setItem('physical_student_name', studentName.trim());
+    localStorage.setItem('physical_student_role', role);
 
     // 접속 성공 시 이동
     navigate(`/mobile/${roomId}/${groupId}`);
@@ -116,6 +118,20 @@ export const Lobby = () => {
             {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
               <option key={num} value={`${num}모둠`}>{num}모둠</option>
             ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-slate-700 text-sm font-bold mb-2">당신의 직업 (RPG 클래스)</label>
+          <select 
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg focus:outline-none focus:border-cyan-500"
+          >
+            <option value="novice">초보자 (특성 없음)</option>
+            <option value="warrior">전사 (미션 완료 시 점수 1.2배 획득)</option>
+            <option value="thief">도적 (도둑 고양이 아이템 가격 50% 할인)</option>
+            <option value="priest">사제 (기부 천사 사용 시 꼴등에게 400점 지급)</option>
           </select>
         </div>
 

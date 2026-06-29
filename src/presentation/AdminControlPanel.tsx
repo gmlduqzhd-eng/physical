@@ -18,7 +18,7 @@ const QUIZ_LIST = [
 export const AdminControlPanel = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
-  const [activeTab, setActiveTab] = useState<'rooms' | 'templates' | 'create_template'>('rooms');
+  const [activeTab, setActiveTab] = useState<'rooms' | 'templates' | 'create_template' | 'treasures'>('rooms');
   const navigate = useNavigate();
   
   // Data
@@ -179,6 +179,24 @@ export const AdminControlPanel = () => {
           supabase.rpc('increment_score', { row_id: g.id, amount: -5 }).then();
         });
       }
+      
+      if (currentRoom.active_minigame?.type === 'bomb') {
+        const bomb = currentRoom.active_minigame;
+        if (Date.now() >= bomb.explodesAt) {
+          // 폭발!
+          supabase.from('game_rooms').update({ active_minigame: null }).eq('id', currentRoom.id).then();
+          supabase.rpc('increment_score', { row_id: bomb.holderId, amount: -bomb.penalty }).then();
+          alert(`💥 폭탄이 터졌습니다! 페널티: -${bomb.penalty}점`);
+        }
+      }
+
+      if (currentRoom.status === 'boss_raid' && currentRoom.boss_hp !== null && currentRoom.boss_hp <= 0) {
+        supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id).then();
+        roomGroupsRef.current.forEach((g: RoomGroup) => {
+          supabase.rpc('increment_score', { row_id: g.id, amount: 2000 }).then();
+        });
+        alert(`🎉 보스 레이드 성공! 모든 학생에게 2000점이 지급되었습니다!`);
+      }
     }, 2000);
 
     return () => {
@@ -316,6 +334,7 @@ export const AdminControlPanel = () => {
           <div className="flex gap-4 border-b border-slate-300 pb-2 mb-6 overflow-x-auto">
             <button onClick={() => setActiveTab('rooms')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'rooms' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>방 관리 (Rooms)</button>
             <button onClick={() => setActiveTab('templates')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'templates' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>템플릿 관리</button>
+            <button onClick={() => setActiveTab('treasures')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'treasures' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>보물 QR 생성</button>
           </div>
         )}
 
@@ -361,6 +380,38 @@ export const AdminControlPanel = () => {
                   <button onClick={() => createRoom(t.id)} className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4"/> 이 템플릿으로 새 방 파기
                   </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'treasures' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-slate-600">
+                인쇄용 보물 QR 코드를 생성합니다. 화면에 띄우거나 인쇄하여 학생들에게 찾게 하세요.
+              </p>
+              <button onClick={() => window.print()} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2">
+                <LucideIcons.Printer className="w-4 h-4"/> 이 화면 인쇄하기
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 print:grid-cols-4">
+              {[
+                { id: 'TREASURE_SCORE_500', name: '보물상자 (500점)', color: 'text-yellow-600' },
+                { id: 'TREASURE_SCORE_1000', name: '대박 보물 (1000점)', color: 'text-orange-600' },
+                { id: 'TREASURE_ITEM_DOUBLE', name: '점수 2배 물약', color: 'text-purple-600' },
+                { id: 'TREASURE_ITEM_DRONE', name: '자동 채굴 드론', color: 'text-cyan-600' },
+                { id: 'TREASURE_ITEM_COOLDOWN', name: '쿨다운 감소', color: 'text-blue-600' },
+                { id: 'TREASURE_ITEM_BONUS', name: '보너스 요정', color: 'text-pink-600' },
+                { id: 'TREASURE_BOMB_DEFUSE', name: '폭탄 해체 킷', color: 'text-emerald-600' },
+                { id: 'TREASURE_TRAP_MINUS', name: '함정 (-300점)', color: 'text-red-600' },
+              ].map(treasure => (
+                <div key={treasure.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
+                  <h3 className={`font-black text-lg mb-2 ${treasure.color}`}>{treasure.name}</h3>
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${treasure.id}`} alt={treasure.name} className="w-32 h-32 mb-2" />
+                  <p className="text-xs text-slate-400 break-all">{treasure.id}</p>
                 </div>
               ))}
             </div>
@@ -504,7 +555,80 @@ export const AdminControlPanel = () => {
                 </button>
               </div>
             </div>
-            
+
+            <div className="bg-red-50 shadow-sm p-4 rounded-xl border border-red-200 mt-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-bold text-red-900 flex items-center gap-2">
+                  <LucideIcons.Bomb className="w-5 h-5" /> 스마트폰 릴레이 폭탄 돌리기
+                </h2>
+                {currentRoom.active_minigame?.type === 'bomb' && (
+                  <span className="px-3 py-1 bg-red-200 text-red-800 text-xs font-bold rounded-full animate-pulse">
+                    폭탄 돌아가는 중!
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-red-700 mb-4">임의의 한 조에게 폭탄이 떨어집니다! 미션을 완료해서 다른 조로 폭탄을 넘겨야 합니다. 터지면 점수가 깎입니다.</p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={async () => {
+                    if (roomGroups.length < 2) return alert('폭탄 돌리기를 하려면 최소 2개 조 이상이 필요합니다!');
+                    const randomGroup = roomGroups[Math.floor(Math.random() * roomGroups.length)];
+                    const bombData = {
+                      type: 'bomb',
+                      holderId: randomGroup.id,
+                      explodesAt: Date.now() + 60000,
+                      penalty: 500
+                    };
+                    await supabase.from('game_rooms').update({ active_minigame: bombData }).eq('id', currentRoom.id);
+                  }}
+                  className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <LucideIcons.Bomb className="w-5 h-5" /> 60초 타이머 폭탄 투하
+                </button>
+                <button 
+                  onClick={clearMinigame}
+                  className="bg-white hover:bg-red-100 text-red-600 px-4 py-3 rounded-xl font-bold border border-red-200 transition-colors"
+                >
+                  강제 해체
+                </button>
+              </div>
+            </div>
+            <div className="bg-orange-50 shadow-sm p-4 rounded-xl border border-orange-200 mt-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-bold text-orange-900 flex items-center gap-2">
+                  <LucideIcons.Swords className="w-5 h-5" /> 보스 레이드 (학급 전체 협동)
+                </h2>
+                {currentRoom.status === 'boss_raid' && (
+                  <span className="px-3 py-1 bg-orange-200 text-orange-800 text-xs font-bold rounded-full animate-pulse">
+                    레이드 진행 중! (HP: {currentRoom.boss_hp}/{currentRoom.boss_max_hp})
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-orange-700 mb-4">레이드를 시작하면 학생들이 미션을 수행할 때마다 보스 체력이 깎입니다. 0이 되면 전원에게 보상이 지급됩니다.</p>
+              <div className="flex gap-2">
+                <button 
+                  onClick={async () => {
+                    const hpStr = window.prompt('보스의 체력을 입력하세요 (예: 10000)', '10000');
+                    const hp = parseInt(hpStr || '0', 10);
+                    if (hp > 0) {
+                      await supabase.from('game_rooms').update({ status: 'boss_raid', boss_hp: hp, boss_max_hp: hp }).eq('id', currentRoom.id);
+                    }
+                  }}
+                  className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
+                >
+                  <LucideIcons.Swords className="w-5 h-5" /> 레이드 시작
+                </button>
+                <button 
+                  onClick={async () => {
+                    await supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id);
+                  }}
+                  className="bg-white hover:bg-orange-100 text-orange-600 px-4 py-3 rounded-xl font-bold border border-orange-200 transition-colors"
+                >
+                  종료
+                </button>
+              </div>
+            </div>
+
             <div className="bg-yellow-50 shadow-sm p-4 rounded-xl border border-yellow-200 mt-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-bold text-yellow-900 flex items-center gap-2">
