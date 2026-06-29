@@ -358,6 +358,19 @@ export const MobileMissionView = () => {
   const handleBingoCompleteRef = useRef(handleBingoComplete);
   useEffect(() => { handleBingoCompleteRef.current = handleBingoComplete; });
 
+  const activeCoopCountRef = useRef(0);
+  const handleCoopTouchStart = async (missionId: string) => {
+    if (channelRef.current) {
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: missionId });
+    }
+  };
+
+  const handleCoopTouchEnd = async () => {
+    if (channelRef.current) {
+      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: null });
+    }
+  };
+
   useEffect(() => {
     if (gameRoom && gameRoom.status === 'waiting') {
       localStorage.removeItem(`has_drone_${roomId}_${groupId}`);
@@ -673,8 +686,18 @@ export const MobileMissionView = () => {
 
     return (
       <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center pt-16 pb-20 p-6 relative overflow-y-auto text-white">
-        <h1 className="text-4xl font-black mb-2 text-center text-yellow-400">게임 종료!</h1>
-        <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center mb-8">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-[pulse_3s_ease-in-out_infinite]"></div>
+        
+        {isMVP ? (
+          <LucideIcons.Crown className="w-32 h-32 text-yellow-400 mb-4 animate-bounce relative z-10 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+        ) : (
+          <LucideIcons.Medal className="w-24 h-24 text-slate-400 mb-4 relative z-10" />
+        )}
+        
+        <h1 className="text-4xl font-black mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 relative z-10">게임 종료!</h1>
+        <p className="text-xl font-bold mb-8 text-slate-300 relative z-10">최종 순위: {myRank}위</p>
+        
+        <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center relative z-10 mb-8">
           <span className="text-6xl font-black font-mono text-yellow-400 mb-6">{myGroup.score}점</span>
           <div className="text-center font-bold text-slate-500 text-sm mt-4 pb-12">
             선생님이 시작 버튼을 누를 때까지 대기하세요.
@@ -879,6 +902,8 @@ export const MobileMissionView = () => {
         <div 
           className="absolute inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 touch-none"
           onTouchStart={(e) => {
+            if (globalChannelRef.current) {
+              globalChannelRef.current.send({ type: 'broadcast', event: 'boss_damage', payload: { amount: 1 } });
             }
             const x = e.touches[0].clientX; const y = e.touches[0].clientY;
             const clickId = Date.now() + Math.random();

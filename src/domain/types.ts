@@ -50,6 +50,6 @@ export interface RoomGroup {
   completed_missions: string[];
   pending_missions?: string[];
   badges: string[];
-  stats: Record<string, number>;
+  stats: any;
   updated_at: string;
 }

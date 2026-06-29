@@ -190,7 +190,7 @@ export const AdminControlPanel = () => {
         }
       }
 
-      if (currentRoom.status === 'boss_raid' && currentRoom.boss_hp !== null && currentRoom.boss_hp <= 0) {
+      if (currentRoom.status === 'boss_raid' && currentRoom.boss_hp != null && currentRoom.boss_hp <= 0) {
         supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id).then();
         roomGroupsRef.current.forEach((g: RoomGroup) => {
           supabase.rpc('increment_score', { row_id: g.id, amount: 2000 }).then();
