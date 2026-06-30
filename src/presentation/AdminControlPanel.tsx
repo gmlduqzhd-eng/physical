@@ -620,6 +620,49 @@ export const AdminControlPanel = () => {
               </div>
             </div>
 
+            {/* Phase 3 Minigames Panel */}
+            <div className="bg-purple-50 shadow-sm p-4 rounded-xl border border-purple-200 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-bold text-purple-900 flex items-center gap-2">
+                  <LucideIcons.Sparkles className="w-5 h-5" /> 텐션 & 운빨 미니게임 (Phase 3)
+                </h2>
+                {currentRoom.active_minigame && ['fate_card', 'whack_a_mole', 'scream'].includes(currentRoom.active_minigame.type) && (
+                  <span className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-bold rounded-full animate-pulse">
+                    미니게임 진행 중!
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-purple-700 mb-4">운과 활력을 불어넣는 액티비티형 숏폼 미니게임입니다.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'fate_card' } }).eq('id', currentRoom.id)}
+                  className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.Dices className="w-5 h-5" /> 운명의 잭팟 카드
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'whack_a_mole' } }).eq('id', currentRoom.id)}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.Target className="w-5 h-5" /> 별 두더지 잡기
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'scream' } }).eq('id', currentRoom.id)}
+                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.Mic2 className="w-5 h-5" /> 소리질러 (데시벨)
+                </button>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button 
+                  onClick={clearMinigame}
+                  className="bg-white hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-lg font-bold border border-purple-200 transition-colors text-sm"
+                >
+                  미니게임 강제 종료
+                </button>
+              </div>
+            </div>
+
             <div className="bg-indigo-50 shadow-sm p-4 rounded-xl border border-indigo-200 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">

@@ -6,6 +6,9 @@ import { ShakeGame } from './ShakeGame';
 import { MemoryGame } from './MemoryGame';
 import { StopwatchGame } from './StopwatchGame';
 import { NumberGridGame } from './NumberGridGame';
+import { FateCardGame } from './FateCardGame';
+import { WhackAMoleGame } from './WhackAMoleGame';
+import { ScreamGame } from './ScreamGame';
 import { LegacyBombGame } from './LegacyBombGame';
 import { LegacyQuizGame } from './LegacyQuizGame';
 
@@ -39,6 +42,12 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
       return <StopwatchGame groupId={groupId} enqueueAction={enqueueAction} />;
     case 'number_grid':
       return <NumberGridGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'fate_card':
+      return <FateCardGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'whack_a_mole':
+      return <WhackAMoleGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'scream':
+      return <ScreamGame groupId={groupId} enqueueAction={enqueueAction} />;
     case 'bomb':
       return <LegacyBombGame bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
     case 'quiz':
