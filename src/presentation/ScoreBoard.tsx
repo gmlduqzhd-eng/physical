@@ -160,11 +160,19 @@ export const ScoreBoard = () => {
         {scores.map((score) => {
           const AvatarIcon = (LucideIcons as unknown as Record<string, React.ElementType>)[score.avatar || 'Smile'] || LucideIcons.Smile;
           return (
-          <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
-            <div className="flex justify-between items-start mb-4">
+          <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 relative overflow-hidden ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
+            {score.item_buff_until && new Date(score.item_buff_until).getTime() > Date.now() && (
+              <div className="absolute inset-0 bg-yellow-400/10 animate-pulse pointer-events-none"></div>
+            )}
+            <div className="flex justify-between items-start mb-4 relative z-10">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg text-slate-600 border border-slate-200 shadow-sm">
+                <div className="p-2 bg-slate-100 rounded-lg text-slate-600 border border-slate-200 shadow-sm relative">
                   <AvatarIcon className="w-6 h-6" />
+                  {(() => {
+                    const cnt = score.completed_missions?.length || 0;
+                    const pet = cnt >= 20 ? '🔥' : cnt >= 10 ? '🐔' : cnt >= 5 ? '🐥' : '🥚';
+                    return <span className="absolute -top-2 -right-2 text-xl drop-shadow-md">{pet}</span>;
+                  })()}
                 </div>
                 <h2 className="text-2xl font-bold text-slate-800">{score.group_name}</h2>
               </div>
@@ -172,19 +180,21 @@ export const ScoreBoard = () => {
                 <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded">해체 완료</span>
               ) : score.is_hacked ? (
                 <span className="px-3 py-1 bg-red-500/20 text-red-400 text-sm font-bold rounded">해킹됨</span>
+              ) : score.item_buff_until && new Date(score.item_buff_until).getTime() > Date.now() ? (
+                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-500 text-sm font-bold rounded flex items-center gap-1"><LucideIcons.Zap className="w-3 h-3" /> 점수 2배!</span>
               ) : (
-                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm font-bold rounded">작전 중</span>
+                <span className="px-3 py-1 bg-slate-100 text-slate-500 text-sm font-bold rounded">작전 중</span>
               )}
             </div>
             
-            <div className="flex-1 flex flex-col items-center justify-center py-6">
+            <div className="flex-1 flex flex-col items-center justify-center py-6 relative z-10">
               <span className={`text-6xl font-black font-mono ${score.is_hacked ? 'text-red-500 glitch-text' : 'text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-500'}`}>
                 {score.score}
               </span>
               <span className="text-slate-500 mt-2 font-medium text-sm">점수</span>
             </div>
 
-            <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden border border-slate-200">
+            <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden border border-slate-200 relative z-10">
               <div className={`h-full rounded-full transition-all duration-1000 ${score.is_defused ? 'bg-emerald-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`} style={{ width: `${Math.min(100, (score.score / 1000) * 100)}%` }}></div>
             </div>
           </div>
