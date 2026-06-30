@@ -103,6 +103,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- 6.5. 그룹 리셋 함수 만들기 (관리자용)
+CREATE OR REPLACE FUNCTION reset_group_scores(room_uuid UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE public.room_groups
+  SET score = 0,
+      is_defused = false,
+      is_hacked = false,
+      item_buff_until = null,
+      is_blinded_until = null,
+      completed_missions = '[]'::jsonb,
+      pending_missions = '[]'::jsonb,
+      badges = '[]'::jsonb,
+      stats = '{}'::jsonb,
+      spy_device_id = null,
+      updated_at = NOW()
+  WHERE room_id = room_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- 7. 버프 구매 아이템(원자적 처리)
 CREATE OR REPLACE FUNCTION buy_buff(row_id UUID)
 RETURNS VOID AS $$

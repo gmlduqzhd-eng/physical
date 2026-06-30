@@ -45,7 +45,7 @@ export const KioskRelayView = () => {
     // Instead we can just do a standard read/write, since Kiosk is used sequentially!
     const { data } = await supabase.from('room_groups').select('score').eq('id', selectedGroup.id).single();
     if (data) {
-      await supabase.from('room_groups').update({ score: data.score + amount }).eq('id', selectedGroup.id);
+      await supabase.rpc('increment_score', { row_id: selectedGroup.id, amount });
     }
     
     setSuccessMsg(`🎉 [${selectedGroup.group_name}] 조에 ${amount}점이 지급되었습니다! 다음 주자에게 패드를 넘기세요!`);

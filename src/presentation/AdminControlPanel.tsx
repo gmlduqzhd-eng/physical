@@ -232,7 +232,7 @@ export const AdminControlPanel = () => {
     if(!currentRoom) return;
     if(window.confirm('정말 이 방의 데이터를 초기화하시겠습니까?')) {
       await supabase.from('game_rooms').update({ status: 'waiting', global_time_modifier: 0, started_at: null, active_minigame: null, announcement: null }).eq('id', currentRoom.id);
-      await supabase.from('room_groups').update({ score: 0, is_defused: false, is_hacked: false, item_buff_until: null, is_blinded_until: null, completed_missions: [], badges: [], stats: {} }).eq('room_id', currentRoom.id);
+      await supabase.rpc('reset_group_scores', { room_uuid: currentRoom.id });
     }
   };
 
