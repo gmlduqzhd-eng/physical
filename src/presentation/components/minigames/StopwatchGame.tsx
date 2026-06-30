@@ -12,6 +12,7 @@ export const StopwatchGame = ({ groupId, enqueueAction }: Props) => {
   const startTimeRef = useRef<number>(Date.now());
   const [finished, setFinished] = useState(false);
   const [diff, setDiff] = useState<number | null>(null);
+  const lockRef = useRef(false);
 
   useEffect(() => {
     if (!running) return;
@@ -24,7 +25,8 @@ export const StopwatchGame = ({ groupId, enqueueAction }: Props) => {
   }, [running]);
 
   const handleStop = () => {
-    if (!running) return;
+    if (lockRef.current || !running) return;
+    lockRef.current = true;
     
     setRunning(false);
     setFinished(true);

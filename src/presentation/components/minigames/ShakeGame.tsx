@@ -50,6 +50,7 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
     if (finished) return;
     
     setProgress((p) => {
+      if (p >= 100) return 100;
       const next = p + amount;
       if (next >= 100) {
         setFinished(true);

@@ -50,6 +50,7 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
     // Hit successful
     setActiveMole(null); // Hide immediately
     setHits(h => {
+      if (h >= 15) return 15;
       const next = h + 1;
       if (next >= 15) {
         setFinished(true);

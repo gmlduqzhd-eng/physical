@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 
 interface Props {
@@ -18,6 +18,7 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
   const [sequence, setSequence] = useState<number[]>([]);
   const [userInputs, setUserInputs] = useState<number[]>([]);
   const [activeColorIndex, setActiveColorIndex] = useState<number | null>(null);
+  const lockRef = useRef(false);
 
   useEffect(() => {
     // Generate sequence
@@ -66,6 +67,8 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
     }
 
     if (newInputs.length === sequence.length) {
+      if (lockRef.current) return;
+      lockRef.current = true;
       setPhase('success');
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
     }

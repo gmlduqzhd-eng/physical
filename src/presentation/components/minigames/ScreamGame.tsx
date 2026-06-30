@@ -59,6 +59,7 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
           
           setVolume(volPercent);
           setMaxVolume(prev => {
+            if (prev >= 95) return prev;
             const nextMax = Math.max(prev, volPercent);
             if (nextMax >= 95 && !finished) {
               setFinished(true);
@@ -107,6 +108,7 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
   const handleFallbackTap = () => {
     if (finished) return;
     setMaxVolume(prev => {
+      if (prev >= 100) return 100;
       const nextMax = prev + 5;
       setVolume(nextMax);
       if (nextMax >= 100) {

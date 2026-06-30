@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 
 interface Props {
@@ -14,6 +14,7 @@ const OUTCOMES = [
 
 export const FateCardGame = ({ groupId, enqueueAction }: Props) => {
   const [selectedCard, setSelectedCard] = useState<number | null>(null);
+  const lockRef = useRef(false);
   const [shuffledOutcomes] = useState(() => {
     const arr = [...OUTCOMES];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -24,7 +25,8 @@ export const FateCardGame = ({ groupId, enqueueAction }: Props) => {
   });
 
   const handleSelect = (index: number) => {
-    if (selectedCard !== null) return;
+    if (lockRef.current || selectedCard !== null) return;
+    lockRef.current = true;
     
     setSelectedCard(index);
     const outcome = shuffledOutcomes[index];

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import type { GameRoom } from '../../../domain/types';
 
@@ -10,6 +10,7 @@ interface Props {
 
 export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   const [diff, setDiff] = useState<number | null>(null);
+  const lockRef = useRef(false);
   const [timeLeft, setTimeLeft] = useState<string>('0.00');
   const minigame = gameRoom.active_minigame;
 
@@ -35,7 +36,8 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   }, [minigame.target_time, diff]);
 
   const handleTap = () => {
-    if (diff !== null) return;
+    if (lockRef.current) return;
+    lockRef.current = true;
     
     const target = minigame.target_time || Date.now();
     const currentDiff = Math.abs(Date.now() - target);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 
 interface Props {
@@ -12,6 +12,7 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(15);
   const [won, setWon] = useState(false);
+  const lockRef = useRef(false);
 
   useEffect(() => {
     // Generate shuffled 1 to 9
@@ -42,6 +43,8 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
     
     if (num === currentStep) {
       if (num === 9) {
+        if (lockRef.current) return;
+        lockRef.current = true;
         setFinished(true);
         setWon(true);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });

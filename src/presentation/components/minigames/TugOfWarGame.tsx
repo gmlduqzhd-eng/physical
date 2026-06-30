@@ -35,6 +35,7 @@ export const TugOfWarGame = ({ groupId, enqueueAction }: Props) => {
     if (finished) return;
     
     setProgress(p => {
+      if (p >= 100) return 100;
       const next = p + 2; // Player pulls 2 units per tap
       if (next >= 100) {
         setFinished(true);
