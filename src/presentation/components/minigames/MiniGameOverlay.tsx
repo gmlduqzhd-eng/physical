@@ -2,6 +2,10 @@ import type { GameRoom } from '../../../domain/types';
 import { VolcanoGame } from './VolcanoGame';
 import { TelepathyGame } from './TelepathyGame';
 import { TugOfWarGame } from './TugOfWarGame';
+import { ShakeGame } from './ShakeGame';
+import { MemoryGame } from './MemoryGame';
+import { StopwatchGame } from './StopwatchGame';
+import { NumberGridGame } from './NumberGridGame';
 import { LegacyBombGame } from './LegacyBombGame';
 import { LegacyQuizGame } from './LegacyQuizGame';
 
@@ -26,7 +30,15 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
     case 'telepathy':
       return <TelepathyGame gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'tug_of_war':
-      return <TugOfWarGame gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
+      return <TugOfWarGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'shake':
+      return <ShakeGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'memory':
+      return <MemoryGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'stopwatch':
+      return <StopwatchGame groupId={groupId} enqueueAction={enqueueAction} />;
+    case 'number_grid':
+      return <NumberGridGame groupId={groupId} enqueueAction={enqueueAction} />;
     case 'bomb':
       return <LegacyBombGame bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
     case 'quiz':

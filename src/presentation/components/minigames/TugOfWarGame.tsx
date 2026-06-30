@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
-import type { GameRoom } from '../../../domain/types';
 
 interface Props {
-  gameRoom: GameRoom;
   groupId: string;
   enqueueAction: (action: any) => void;
 }

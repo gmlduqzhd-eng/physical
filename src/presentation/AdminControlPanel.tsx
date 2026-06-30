@@ -571,6 +571,55 @@ export const AdminControlPanel = () => {
               </div>
             </div>
 
+            {/* Phase 2 Minigames Panel */}
+            <div className="bg-cyan-50 shadow-sm p-4 rounded-xl border border-cyan-200 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-bold text-cyan-900 flex items-center gap-2">
+                  <LucideIcons.Brain className="w-5 h-5" /> 집중력 및 감각 미니게임 (Phase 2)
+                </h2>
+                {currentRoom.active_minigame && ['shake', 'number_grid', 'memory', 'stopwatch'].includes(currentRoom.active_minigame.type) && (
+                  <span className="px-3 py-1 bg-cyan-200 text-cyan-800 text-xs font-bold rounded-full animate-pulse">
+                    미니게임 진행 중!
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-cyan-700 mb-4">순발력과 기억력을 요하는 짧은 개인/단체 미니게임을 발동합니다.</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'shake' } }).eq('id', currentRoom.id)}
+                  className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.BatteryCharging className="w-5 h-5" /> 바운스 충전
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'number_grid' } }).eq('id', currentRoom.id)}
+                  className="bg-red-600 hover:bg-red-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.ShieldAlert className="w-5 h-5" /> 순차적 암호해제
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'memory' } }).eq('id', currentRoom.id)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.Brain className="w-5 h-5" /> 컬러 패턴 기억
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'stopwatch' } }).eq('id', currentRoom.id)}
+                  className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                >
+                  <LucideIcons.Timer className="w-5 h-5" /> 7.00초 스탑워치
+                </button>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button 
+                  onClick={clearMinigame}
+                  className="bg-white hover:bg-cyan-100 text-cyan-600 px-4 py-2 rounded-lg font-bold border border-cyan-200 transition-colors text-sm"
+                >
+                  미니게임 강제 종료
+                </button>
+              </div>
+            </div>
+
             <div className="bg-indigo-50 shadow-sm p-4 rounded-xl border border-indigo-200 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
