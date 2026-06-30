@@ -528,7 +528,50 @@ export const AdminControlPanel = () => {
               </div>
             )}
 
-            <div className="bg-indigo-50 shadow-sm p-4 rounded-xl border border-indigo-200">
+            {/* Phase 1 Minigames Panel */}
+            <div className="bg-emerald-50 shadow-sm p-4 rounded-xl border border-emerald-200 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                  <LucideIcons.Gamepad2 className="w-5 h-5" /> 단체 숏폼 미니게임 (Phase 1)
+                </h2>
+                {currentRoom.active_minigame && ['volcano', 'telepathy', 'tug_of_war'].includes(currentRoom.active_minigame.type) && (
+                  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full animate-pulse">
+                    미니게임 진행 중!
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-emerald-700 mb-4">학생들 스마트폰에 10~15초짜리 짧은 단체 미니게임 팝업을 강제 발동합니다.</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000 } }).eq('id', currentRoom.id)}
+                  className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
+                >
+                  <LucideIcons.Flame className="w-5 h-5" /> 화산폭발 (광클러시)
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000 } }).eq('id', currentRoom.id)}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
+                >
+                  <LucideIcons.Wifi className="w-5 h-5" /> 텔레파시 (동시터치)
+                </button>
+                <button 
+                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'tug_of_war' } }).eq('id', currentRoom.id)}
+                  className="bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
+                >
+                  <LucideIcons.Grab className="w-5 h-5" /> 줄다리기 (무한당기기)
+                </button>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button 
+                  onClick={clearMinigame}
+                  className="bg-white hover:bg-emerald-100 text-emerald-600 px-4 py-2 rounded-lg font-bold border border-emerald-200 transition-colors text-sm"
+                >
+                  미니게임 강제 종료
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-indigo-50 shadow-sm p-4 rounded-xl border border-indigo-200 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 돌발 팝업 게임 (퀴즈) 발송
