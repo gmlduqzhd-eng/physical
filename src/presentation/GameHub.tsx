@@ -1100,7 +1100,7 @@ export const GameHub = () => {
             <h3 className="text-xs font-bold text-blue-300 mb-2 px-1 flex items-center gap-1.5">
               <span>⚽</span> 스포츠 세부 유형 (기술형 · 전략형 · 생태형)
             </h3>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex flex-wrap gap-2">
               {SPORT_SUB_TYPES.map(st => (
                 <button
                   key={st.key}
@@ -1131,7 +1131,7 @@ export const GameHub = () => {
               스마트폰 · 태블릿 PC · 데스크톱 PC
             </span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex flex-wrap gap-2">
             {DEVICE_FILTERS.map(d => {
               const count = d.key === '전체' 
                 ? GAMES.length 
@@ -1166,7 +1166,7 @@ export const GameHub = () => {
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
               <span>👥</span> 활동 형태 (개인 / 협동)
             </h2>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex flex-wrap gap-2">
               {PLAY_MODE_FILTERS.map(pm => {
                 const count = pm.key === '전체'
                   ? GAMES.length
@@ -1199,7 +1199,7 @@ export const GameHub = () => {
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-cyan-400" /> 학년군 선택
             </h2>
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <div className="flex flex-wrap gap-2">
               {GRADE_GROUPS.map(g => {
                 const count = g.key === '전체'
                   ? GAMES.length
