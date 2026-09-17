@@ -11,6 +11,7 @@ import { BoardEntry } from './presentation/BoardEntry';
 import { GameHub } from './presentation/GameHub';
 import { GamePlayPage } from './presentation/GamePlayPage';
 import { syncServerTime } from './application/timeSync';
+import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 
 function App() {
   useEffect(() => {
@@ -24,6 +25,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <KakaoInAppNotice />
       <Routes>
         {/* 메인: 게임 허브 */}
         <Route path="/" element={<GameHub />} />

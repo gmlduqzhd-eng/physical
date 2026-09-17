@@ -1,5 +1,5 @@
-const CACHE_NAME = 'physical-v1';
-const PRECACHE_URLS = ['/', '/index.html'];
+const CACHE_NAME = 'physical-v2';
+const PRECACHE_URLS = ['/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,17 +19,25 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  
-  // Network first, fallback to cache for navigation requests
+
+  // 카카오톡 웹뷰 및 일반 브라우저 navigation 실패 방지
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match('/index.html'))
+      fetch(event.request).catch(async () => {
+        const cached = await caches.match('/');
+        if (cached) return cached;
+        return new Response('Network error occurred. Please refresh.', {
+          status: 503,
+          headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+        });
+      })
     );
     return;
   }
 
-  // Cache first for static assets
+  // 정적 리소스: 네트워크 우선, 실패 시 캐시
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    fetch(event.request)
+      .catch(() => caches.match(event.request))
   );
 });
