@@ -373,9 +373,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: '2S24Ks2S3Ew',
-      title: '초등 체육 쉬운 K-POP 방송댄스 챌린지 루틴',
-      defaultBpm: 110,
+      videoId: 'eNRfklcMt1E',
+      title: '[온라인 방송댄스] 모모랜드 - Ready Or Not 안무 거울모드 쉬운버전',
+      defaultBpm: 115,
     },
     steps: [
       { stepNum: 1, title: '하체 스텝: 바운스 & 사이드 스텝', durationSeconds: 30, guide: '영상의 리듬에 맞춰 무릎을 굽히며 좌우로 통통 튀는 기본 바운스를 익힙니다.', actionTip: '거울 모드(좌우 반전)를 켜고 영상을 마주보며 따라합니다.' },
@@ -591,8 +591,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: 'V1bFr2KGQ1g',
-      title: '초등 체육 전통 탈춤 기본사위(불림, 고개잡이, 다리들기)',
+      videoId: '1MxoZmT41tI',
+      title: '표현(3차시) 탈춤 1탄 - 불림과 고개잡이 배우기 (광주초등체육교과연구회)',
       defaultBpm: 90,
     },
     steps: [
@@ -648,8 +648,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: 'f_p1LwG6qL0',
-      title: '세계 민속 춤 스텝 가이드 (폴카 & 마임)',
+      videoId: '-hF8AsjaVAQ',
+      title: '세계민속춤 - 이스라엘 마임 & 스텝 튜토리얼',
       defaultBpm: 105,
     },
     steps: [
@@ -679,9 +679,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: 'kOHB85vDuow',
-      title: 'K-POP 포인트 댄스 커버 튜토리얼 (거울 모드)',
-      defaultBpm: 120,
+      videoId: '9bZkp7q19f0',
+      title: '싸이(PSY) - 강남스타일 포인트 안무 (K-POP 방송댄스)',
+      defaultBpm: 130,
     },
     steps: [
       { stepNum: 1, title: '파트별 포지셔닝 & 오프닝 대형', durationSeconds: 25, guide: 'V자 대형으로 서서 곡의 인트로 비트에 맞춰 한 명씩 시차(카운트) 안무를 선보입니다.', actionTip: '자신의 등장 카운트를 머릿속으로 정확히 셉니다.' },
@@ -736,9 +736,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: 'h8q6f_Q3y0s',
-      title: '초등 치어리딩 기본 모션 튜토리얼 (High-V, Low-V, T-Motion)',
-      defaultBpm: 125,
+      videoId: 'xfgB0UEwIyc',
+      title: '[YBM초등체육6] 음악에 맞추어 치어리딩 기본 동작 배우기',
+      defaultBpm: 120,
     },
     steps: [
       { stepNum: 1, title: '기본 모션 콤보 (High V -> T -> Low V)', durationSeconds: 30, guide: '팔꿈치를 굽히지 않고 주먹을 꽉 쥔 채 칼로 자르듯 절도 있게 모션을 끊어칩니다.', actionTip: '어깨에 힘을 주고 주먹의 엄지 방향을 정확히 맞춥니다.' },
@@ -767,9 +767,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: '5wBT8W0rF_s',
-      title: '초등 음악 줄넘기 프리스타일 스텝 루틴 가이드',
-      defaultBpm: 128,
+      videoId: '2xslrk_MexY',
+      title: '[초등 전학년 체육] 음악줄넘기 기본 스텝 및 안무 배우기',
+      defaultBpm: 125,
     },
     steps: [
       { stepNum: 1, title: '양발 모아 비트 점프 (1박 1도약)', durationSeconds: 30, guide: '줄넘기를 돌리지 않고 가상 줄넘기(맨손 스윙) 또는 실제 줄넘기로 비트에 점프합니다.', actionTip: '무릎 탄력만을 이용해 가볍게 1cm만 뜁니다.' },
@@ -798,9 +798,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     videoInfo: {
-      videoId: 'Y4r_5ZlQ3cI',
-      title: '신나는 청소년 태보 & 킥복싱 피트니스 루틴 (135 BPM)',
-      defaultBpm: 135,
+      videoId: 'cb9WHmjR0B0',
+      title: '신나는 태보 & 복싱 에어로빅 다이어트 댄스 피트니스',
+      defaultBpm: 130,
     },
     steps: [
       { stepNum: 1, title: '원-투 복싱 잽 & 가드 바운스', durationSeconds: 30, guide: '턱밑에 가드를 올리고 왼손 잽, 오른손 스트레이트를 비트에 맞춰 연속으로 뻗습니다.', actionTip: '펀치를 칠 때 허리를 함께 비틀어 파워를 냅니다.' },
