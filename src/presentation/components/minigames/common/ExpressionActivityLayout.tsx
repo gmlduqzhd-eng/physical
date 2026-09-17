@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ShieldAlert, CheckCircle2, Play, ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Award } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Award } from 'lucide-react';
 import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
@@ -15,9 +15,8 @@ export const ExpressionActivityLayout = ({
   onComplete,
   onExit,
 }: ExpressionActivityLayoutProps) => {
-  // 단계: 'safety' -> 'countdown' -> 'active' -> 'rubric' -> 'result'
-  const [phase, setPhase] = useState<'safety' | 'countdown' | 'active' | 'rubric' | 'result'>('safety');
-  const [safetyChecked, setSafetyChecked] = useState<boolean[]>([false, false, false, false, false]);
+  // 단계: 'countdown' -> 'active' -> 'rubric' -> 'result'
+  const [phase, setPhase] = useState<'countdown' | 'active' | 'rubric' | 'result'>('countdown');
   const [countdown, setCountdown] = useState<number>(3);
   const [currentStepIdx, setCurrentStepIdx] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(game.steps[0]?.durationSeconds || 30);
@@ -28,17 +27,6 @@ export const ExpressionActivityLayout = ({
   const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 5));
   const [selfReflection, setSelfReflection] = useState<string>('친구들과 함께 멋진 표현을 완성하여 보람찼습니다!');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
-
-  // 안전 체크리스트 토글
-  const toggleSafety = (idx: number) => {
-    setSafetyChecked(prev => {
-      const next = [...prev];
-      next[idx] = !next[idx];
-      return next;
-    });
-  };
-
-  const allSafetyPassed = safetyChecked.every(Boolean);
 
   // 카운트다운 3초
   useEffect(() => {
@@ -178,67 +166,7 @@ export const ExpressionActivityLayout = ({
         </div>
       </div>
 
-      {/* 1. 안전 점검 단계 */}
-      {phase === 'safety' && (
-        <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 animate-in fade-in duration-200">
-          <div className="flex items-center gap-2.5 text-amber-400 font-black text-base border-b border-slate-800 pb-3">
-            <ShieldAlert className="w-5 h-5" />
-            <span>표현 활동 시작 전 필수 안전 점검</span>
-          </div>
-
-          <p className="text-xs text-slate-300 leading-relaxed">
-            자유롭고 창의적인 신체표현 활동을 위해 아래 5가지 안전 수칙을 확인하고 체크해 주세요.
-          </p>
-
-          <div className="space-y-2.5">
-            {[
-              '양팔을 벌려 주변 2m 이내에 부딪칠 사람이나 책상, 장애물이 없는지 확인했습니다.',
-              '실내 운동화 착용 및 바닥에 미끄러운 물기나 물건이 없는지 점검했습니다.',
-              '활동 중 어지러움이나 호흡 곤란을 느끼면 즉시 멈추고 안전하게 쉴 것을 약속합니다.',
-              '친구와 동작을 함께할 때 강제로 잡아당기지 않고 말과 신호로 협력하겠습니다.',
-              '친구의 개성 있는 표현을 비웃지 않고 긍정적으로 존중하며 감상하겠습니다.',
-            ].map((rule, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => toggleSafety(idx)}
-                className={`w-full p-3 rounded-2xl text-left text-xs font-bold transition-all border flex items-center gap-3 ${
-                  safetyChecked[idx]
-                    ? 'bg-purple-950/60 border-purple-500/60 text-purple-200 shadow-md'
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:bg-slate-800/80'
-                }`}
-              >
-                <div className={`w-5 h-5 rounded-md flex items-center justify-center border shrink-0 transition-colors ${
-                  safetyChecked[idx]
-                    ? 'bg-purple-600 border-purple-400 text-white'
-                    : 'bg-slate-900 border-slate-700 text-transparent'
-                }`}>
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                </div>
-                <span className="flex-1 leading-relaxed">{rule}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              type="button"
-              disabled={!allSafetyPassed}
-              onClick={() => setPhase('countdown')}
-              className={`px-6 py-3 rounded-2xl font-black text-sm transition-all shadow-lg flex items-center gap-2 ${
-                allSafetyPassed
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white active:scale-95 shadow-purple-900/40'
-                  : 'bg-slate-800 text-slate-600 cursor-not-allowed border border-slate-700'
-              }`}
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>안전 점검 완료! 활동 시작 (3초 카운트)</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 2. 3초 카운트다운 단계 */}
+      {/* 1. 3초 카운트다운 단계 */}
       {phase === 'countdown' && (
         <div className="bg-slate-900/90 border border-purple-500/40 rounded-3xl p-16 shadow-2xl flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in-95 duration-200">
           <div className="text-xs font-black text-purple-400 uppercase tracking-widest animate-pulse">

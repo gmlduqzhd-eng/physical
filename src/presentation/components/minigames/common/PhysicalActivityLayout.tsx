@@ -1,19 +1,11 @@
 import { useState, type ReactNode } from 'react';
-import { ShieldCheck, Play, ArrowLeft, RotateCcw, CheckCircle2, Sparkles } from 'lucide-react';
+import { Play, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export interface SafetyItem {
   id: string;
   text: string;
 }
-
-const DEFAULT_SAFETY_ITEMS: SafetyItem[] = [
-  { id: 'obstacle', text: '주변 장애물을 치워 안전한 공간을 확보했나요?' },
-  { id: 'distance', text: '친구와 부딪히지 않도록 안전거리를 충분히 두었나요?' },
-  { id: 'floor', text: '바닥이 미끄럽지 않고 넘어질 위험이 없나요?' },
-  { id: 'equipment', text: '사용하는 공이나 도구가 안전하고 파손되지 않았나요?' },
-  { id: 'health', text: '몸이 아프거나 어지러우면 언제든 즉시멈출 준비가 되었나요?' },
-];
 
 interface Props {
   title: string;
@@ -46,24 +38,16 @@ export const PhysicalActivityLayout = ({
   expectedMinutes,
   equipment = [],
   instructions,
-  safetyItems = DEFAULT_SAFETY_ITEMS,
   children,
 }: Props) => {
   const navigate = useNavigate();
-  // flow: 'intro' -> 'safety' -> 'countdown' -> 'active' -> 'completed'
-  const [step, setStep] = useState<'intro' | 'safety' | 'countdown' | 'active' | 'completed'>('intro');
+  // flow: 'intro' -> 'countdown' -> 'active' -> 'completed'
+  const [step, setStep] = useState<'intro' | 'countdown' | 'active' | 'completed'>('intro');
   const [countdown, setCountdown] = useState(3);
-  const [checkedSafety, setCheckedSafety] = useState<Record<string, boolean>>({});
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [completionSummary, setCompletionSummary] = useState<string>('');
 
-  const allSafetyChecked = safetyItems.every(item => checkedSafety[item.id]);
-
-  const handleStartSafety = () => {
-    setStep('safety');
-  };
-
-  const handlePassSafety = () => {
+  const handleStartActivity = () => {
     setStep('countdown');
     setCountdown(3);
     const interval = setInterval(() => {
@@ -98,16 +82,6 @@ export const PhysicalActivityLayout = ({
         return prev - 1;
       });
     }, 1000);
-  };
-
-  const toggleSafetyItem = (id: string) => {
-    setCheckedSafety(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  const selectAllSafety = () => {
-    const next: Record<string, boolean> = {};
-    safetyItems.forEach(item => { next[item.id] = true; });
-    setCheckedSafety(next);
   };
 
   return (
@@ -162,75 +136,15 @@ export const PhysicalActivityLayout = ({
           </div>
 
           <button
-            onClick={handleStartSafety}
+            onClick={handleStartActivity}
             className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
-            <ShieldCheck className="w-5 h-5" /> 안전 수칙 확인 후 시작하기
+            <Play className="w-5 h-5 fill-current" /> 활동 시작하기 (3초 카운트)
           </button>
         </div>
       )}
 
-      {/* 2. 안전 확인 단계: 5대 안전 수칙 체크 */}
-      {step === 'safety' && (
-        <div className="max-w-xl w-full mx-auto my-auto py-6 animate-in fade-in duration-200">
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto mb-3 text-2xl">
-              ⚠️
-            </div>
-            <h2 className="text-xl md:text-2xl font-black text-white mb-1">체육활동 안전 확인</h2>
-            <p className="text-xs text-slate-400">신나고 안전한 체육활동을 위해 항목을 꼼꼼히 확인하세요.</p>
-          </div>
-
-          <div className="space-y-2.5 mb-6">
-            {safetyItems.map(item => {
-              const isChecked = !!checkedSafety[item.id];
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => toggleSafetyItem(item.id)}
-                  type="button"
-                  className={`w-full p-3.5 rounded-2xl border text-left text-xs md:text-sm font-bold flex items-center gap-3 transition-all ${
-                    isChecked
-                      ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-200'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
-                  }`}
-                >
-                  <div className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
-                    isChecked ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-700 bg-slate-800'
-                  }`}>
-                    {isChecked && <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" />}
-                  </div>
-                  <span className="flex-1 leading-snug">{item.text}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={selectAllSafety}
-              type="button"
-              className="px-4 py-3 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 rounded-2xl font-bold text-xs shrink-0"
-            >
-              모두 체크
-            </button>
-            <button
-              type="button"
-              onClick={handlePassSafety}
-              disabled={!allSafetyChecked}
-              className={`flex-1 py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
-                allSafetyChecked
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/20 active:scale-95'
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
-              }`}
-            >
-              <Play className="w-4 h-4" /> 준비 완료! 시작 (3초 카운트)
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 3. 3초 준비 카운트다운 */}
+      {/* 2. 3초 준비 카운트다운 */}
       {step === 'countdown' && (
         <div className="max-w-md w-full mx-auto my-auto text-center py-12 animate-in zoom-in-90 duration-300">
           <p className="text-sm font-bold text-cyan-400 mb-2">몸과 마음의 준비를 하세요!</p>
