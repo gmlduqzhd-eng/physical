@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Settings, BookOpen, Monitor, Award, Sparkles, Filter, ChevronRight, Info } from 'lucide-react';
+import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award } from 'lucide-react';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
@@ -1120,9 +1120,9 @@ export const GameHub = () => {
       )}
 
       {/* 필터 그룹: 기기 지원 / 활동 형태 / 학년군 */}
-      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 space-y-2.5">
+      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 space-y-2.5 overflow-hidden">
         {/* 기기 분류 (스마트폰 · 태블릿 PC · 데스크톱 PC) */}
-        <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+        <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-xs font-bold text-slate-300 px-1 flex items-center gap-1.5">
               <span>🖥️</span> 지원 기기 분류
@@ -1131,7 +1131,7 @@ export const GameHub = () => {
               스마트폰 · 태블릿 PC · 데스크톱 PC
             </span>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
             {DEVICE_FILTERS.map(d => {
               const count = d.key === '전체' 
                 ? GAMES.length 
@@ -1160,13 +1160,13 @@ export const GameHub = () => {
         </div>
 
         {/* 활동 형태 (개인/협동) & 학년군 선택 (2열 레이아웃) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 overflow-hidden">
           {/* 활동 형태 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
               <span>👥</span> 활동 형태 (개인 / 협동)
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
               {PLAY_MODE_FILTERS.map(pm => {
                 const count = pm.key === '전체'
                   ? GAMES.length
@@ -1195,11 +1195,11 @@ export const GameHub = () => {
           </div>
 
           {/* 학년군 선택 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
               <Filter className="w-3.5 h-3.5 text-cyan-400" /> 학년군 선택
             </h2>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
               {GRADE_GROUPS.map(g => {
                 const count = g.key === '전체'
                   ? GAMES.length
@@ -1362,22 +1362,13 @@ export const GameHub = () => {
 
       {/* Footer */}
       <div className="px-4 md:px-8 pb-10 max-w-5xl mx-auto">
-        <div className="border-t border-slate-800/80 pt-6 flex flex-wrap gap-2 justify-center items-center">
-          <Link to="/manual" className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-colors border border-slate-800">
-            <BookOpen className="w-3.5 h-3.5 text-cyan-400" /> 사용 설명서
-          </Link>
-          <Link to="/admin" className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-colors border border-slate-800">
-            <Settings className="w-3.5 h-3.5 text-cyan-400" /> 교사 제어 패널
-          </Link>
-          <Link to="/board" className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-colors border border-slate-800">
-            <Monitor className="w-3.5 h-3.5 text-cyan-400" /> TV 전광판
-          </Link>
-          <Link to="/lobby" className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-xl text-xs font-bold transition-colors border border-slate-800">
-            🔑 PIN 모둠 입장
+        <div className="border-t border-slate-800/80 pt-6 flex justify-center items-center">
+          <Link to="/manual" className="flex items-center gap-1.5 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 rounded-xl text-xs font-bold transition-all border border-slate-800 shadow-md hover:border-cyan-500/40">
+            <BookOpen className="w-4 h-4 text-cyan-400" /> 사용 설명서
           </Link>
         </div>
         <p className="text-center text-slate-600 text-[11px] font-medium mt-4">
-          교육부 고시 제2022-33호 [별책 11] 체육과 교육과정 기반 땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
+          땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
         </p>
       </div>
     </div>

@@ -147,10 +147,20 @@ button {
 }
 
 /* 스크롤바 숨김 유틸리티 */
-.scrollbar-hide {
+.scrollbar-hide,
+.scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.scrollbar-hide::-webkit-scrollbar {
+.scrollbar-hide::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
   display: none;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 브라우저 가로 스크롤바 트랙 원천 차단 */
+*::-webkit-scrollbar:horizontal {
+  display: none !important;
+  height: 0 !important;
 }
