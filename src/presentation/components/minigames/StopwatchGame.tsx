@@ -41,6 +41,8 @@ export const StopwatchGame = ({ groupId, enqueueAction }: Props) => {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
     } else if (timeDiff <= 500) {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 200 }, timestamp: Date.now() });
+    } else {
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
     }
   };
 

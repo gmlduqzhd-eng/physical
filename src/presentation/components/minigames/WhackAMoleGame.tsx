@@ -22,7 +22,8 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(timer);
           setFinished(true);
-          setWon(false); // Finished by time -> fail (since win triggers earlier if they hit 15)
+          setWon(false);
+          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
         return prev - 1;

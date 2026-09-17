@@ -63,6 +63,7 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
     const currentStep = newInputs.length - 1;
     if (newInputs[currentStep] !== sequence[currentStep]) {
       setPhase('fail');
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
       return;
     }
 

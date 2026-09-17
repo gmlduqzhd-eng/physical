@@ -34,10 +34,10 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   }, [minigame.end_time, finished]);
 
   const submitScore = async () => {
+    // 1 탭당 5점
+    const reward = taps * 5;
+    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: reward }, timestamp: Date.now() });
     if (taps > 0) {
-      // 1 탭당 5점
-      const reward = taps * 5;
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: reward }, timestamp: Date.now() });
       alert(`🌋 화산 탈출! 총 ${taps}번 터치하여 ${reward}점을 획득했습니다!`);
     }
   };

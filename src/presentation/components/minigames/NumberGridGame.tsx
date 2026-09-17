@@ -29,6 +29,7 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
           clearInterval(timer);
           setFinished(true);
           setWon(false);
+          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
         return prev - 1;
