@@ -137,6 +137,102 @@ export const Manual = () => {
             </section>
           </div>
           
+          {/* Step 5: 신규 실제 신체활동 게임 8종 안내 */}
+            <section className="bg-slate-900 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl space-y-6">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-cyan-500 text-slate-950 font-black flex items-center justify-center text-sm shadow-md">5</span>
+                <h3 className="text-xl font-black text-cyan-400">
+                  🏃 신규 실제 신체활동 게임 8종 가이드
+                </h3>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                학생들이 화면만 터치하는 것을 넘어, 체육관이나 교실에서 실제 공, 표적, 도구 및 친구와의 상호작용을 통해 온몸을 움직이는 <strong>2022 개정 체육과 연계 신규 8종 게임</strong>이 추가되었습니다.
+              </p>
+
+              {/* 8종 게임 분류 카드 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                {/* 운동 2종 */}
+                <div className="bg-slate-950 p-4 rounded-2xl border border-emerald-500/30 space-y-2">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-black text-sm">
+                    <span>🏃</span> 운동 영역 (2종)
+                  </div>
+                  <ul className="space-y-2 text-slate-300">
+                    <li>
+                      <strong className="text-white block">🔍 심박 탐정단</strong>
+                      안정 시, 30초 운동 직후, 회복 후 15초 맥박 변화를 관찰하고 그래프로 분석합니다.
+                    </li>
+                    <li>
+                      <strong className="text-white block">🤖 자세 수호 로봇</strong>
+                      의자 앉기, 짐 들기 등 일상 5대 바른 자세를 10초간 유지하며 로봇 부품을 수리합니다.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 스포츠 4종 */}
+                <div className="bg-slate-950 p-4 rounded-2xl border border-blue-500/30 space-y-2">
+                  <div className="flex items-center gap-1.5 text-blue-400 font-black text-sm">
+                    <span>⚽</span> 스포츠 영역 (4종)
+                  </div>
+                  <ul className="space-y-2 text-slate-300">
+                    <li>
+                      <strong className="text-white block">🥌 공 굴림 컬링 원정</strong>
+                      바닥 동심원 표적으로 실제 공을 굴려 5회 시도 점수와 힘 조절 능력을 기릅니다.
+                    </li>
+                    <li>
+                      <strong className="text-white block">🥅 패스 게이트 구조대</strong>
+                      콘 게이트 사이로 모둠원 전원이 협력 패스를 성공시키는 전략 게임입니다.
+                    </li>
+                    <li>
+                      <strong className="text-white block">🥁 드리블 박자 공장</strong>
+                      BPM 박자 메트로놈에 맞춰 20초간 손/발로 실제 공을 일정하게 통제합니다.
+                    </li>
+                    <li>
+                      <strong className="text-white block">🗺️ 빈 공간 설계자</strong>
+                      미니 전술판에서 공간 침투 전술을 설계하고 실제 코트에서 1분간 실행합니다.
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 표현 2종 */}
+                <div className="bg-slate-950 p-4 rounded-2xl border border-purple-500/30 space-y-2">
+                  <div className="flex items-center gap-1.5 text-purple-400 font-black text-sm">
+                    <span>🎭</span> 표현 영역 (2종)
+                  </div>
+                  <ul className="space-y-2 text-slate-300">
+                    <li>
+                      <strong className="text-white block">🌡️ 감정 온도계</strong>
+                      감정과 강도(1~5단계)를 온몸으로 표현하고 짝꿍과 감상을 나눕니다.
+                    </li>
+                    <li>
+                      <strong className="text-white block">🤖 파트너 로봇 연구소</strong>
+                      팔·다리·몸통 카드로 창의적 로봇 시퀀스를 만들어 짝과 교대로 시연합니다.
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 필수 운영 및 안전 수칙 안내 */}
+              <div className="bg-slate-950/90 p-5 rounded-2xl border border-amber-500/30 space-y-3 text-xs">
+                <h4 className="text-amber-400 font-black flex items-center gap-1.5 text-sm">
+                  ⚠️ 교사 및 학생 필수 안내 사항
+                </h4>
+                <ul className="space-y-2 text-slate-300 leading-relaxed list-disc list-inside">
+                  <li>
+                    <strong className="text-white">실제 공·도구 사용 및 안전거리:</strong> 컬링, 패스 게이트 등 공을 사용하는 활동 시 공을 던지지 않고 바닥으로 굴리며, 주변 2m 이상의 안전거리를 유지하도록 지도해 주세요.
+                  </li>
+                  <li>
+                    <strong className="text-white">짝·모둠 활동 신체 접촉 금지:</strong> 파트너 로봇 연구소 등 표현 활동 시 상대의 신체를 강제로 잡지 않고, 오직 말과 시범으로만 전달하도록 안내합니다.
+                  </li>
+                  <li>
+                    <strong className="text-white">심박수 기록의 교육적 성격:</strong> 심박 탐정단의 맥박 기록은 의료 진단이나 건강 판정 목적이 아니며, 운동 전후 신체의 자연스러운 반응을 학습하기 위한 교육용 관찰 지표입니다. (정상/비정상 구분 및 순위 비교 금지)
+                  </li>
+                  <li>
+                    <strong className="text-white">독립 실행형 운영 안내:</strong> 신규 신체활동 8종은 각 게임 컴포넌트 내부 상태를 활용하는 독립 실행형 게임이며, 현재 실시간 PIN 모둠 시스템 및 전광판 데이터베이스에는 직접 연동되지 않습니다.
+                  </li>
+                </ul>
+              </div>
+            </section>
+          
           <div className="mt-10 pt-6 border-t border-slate-200">
             <p className="text-center text-slate-500 font-bold text-sm">
               💡 팁: 교실 앞 TV에 <strong>'테스트 방 전광판 보기'</strong>(로비 메뉴) 화면을 띄워두시면<br/>

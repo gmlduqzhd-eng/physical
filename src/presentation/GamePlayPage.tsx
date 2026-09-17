@@ -41,6 +41,14 @@ import { StretchTimer } from './components/minigames/StretchTimer';
 import { OneLegBalance } from './components/minigames/OneLegBalance';
 import { FitnessRoulette } from './components/minigames/FitnessRoulette';
 import { BodyTwist } from './components/minigames/BodyTwist';
+import { PulseDetective } from './components/minigames/PulseDetective';
+import { PostureGuardian } from './components/minigames/PostureGuardian';
+import { RollingCurling } from './components/minigames/RollingCurling';
+import { PassGateRescue } from './components/minigames/PassGateRescue';
+import { DribbleRhythm } from './components/minigames/DribbleRhythm';
+import { OpenSpaceTactician } from './components/minigames/OpenSpaceTactician';
+import { EmotionThermometer } from './components/minigames/EmotionThermometer';
+import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 
@@ -94,6 +102,14 @@ const GAME_TITLES: Record<string, GameMeta> = {
   one_leg: { name: '한 발 서기', emoji: '🦩', domain: '운동', code: '[6체01-02]', target: '평형성 체력 측정' },
   fitness: { name: '체력 룰렛', emoji: '🎰', domain: '운동', code: '[4체01-06]', target: '체력 운동 실천' },
   body_twist: { name: '몸 비틀기!', emoji: '🔄', domain: '표현', code: '[4체03-05]', target: '리듬 신체 표현' },
+  'pulse-detective': { name: '심박 탐정단', emoji: '🔍', domain: '운동', code: '[6체01-01]', target: '신체 변화 관찰' },
+  'posture-guardian': { name: '자세 수호 로봇', emoji: '🤖', domain: '운동', code: '[4체01-04]', target: '바른 자세 실천' },
+  'rolling-curling': { name: '공 굴림 컬링 원정', emoji: '🥌', domain: '스포츠', code: '[4체02-05]', target: '표적 힘 조절' },
+  'pass-gate-rescue': { name: '패스 게이트 구조대', emoji: '🥅', domain: '스포츠', code: '[4체02-06]', target: '협력 패스 전술' },
+  'dribble-rhythm': { name: '드리블 박자 공장', emoji: '🥁', domain: '스포츠', code: '[4체02-03]', target: '리듬 조작 움직임' },
+  'open-space-tactician': { name: '빈 공간 설계자', emoji: '🗺️', domain: '스포츠', code: '[6체02-05]', target: '공간 침투 전술' },
+  'emotion-thermometer': { name: '감정 온도계', emoji: '🌡️', domain: '표현', code: '[4체03-04]', target: '감정 신체 표현' },
+  'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '신체 요소 창의 표현' },
 };
 
 export const GamePlayPage = () => {
@@ -253,6 +269,22 @@ export const GamePlayPage = () => {
         return <FitnessRoulette key={key} {...commonProps} />;
       case 'body_twist':
         return <BodyTwist key={key} {...commonProps} />;
+      case 'pulse-detective':
+        return <PulseDetective key={key} />;
+      case 'posture-guardian':
+        return <PostureGuardian key={key} />;
+      case 'rolling-curling':
+        return <RollingCurling key={key} />;
+      case 'pass-gate-rescue':
+        return <PassGateRescue key={key} />;
+      case 'dribble-rhythm':
+        return <DribbleRhythm key={key} />;
+      case 'open-space-tactician':
+        return <OpenSpaceTactician key={key} />;
+      case 'emotion-thermometer':
+        return <EmotionThermometer key={key} />;
+      case 'partner-robot-lab':
+        return <PartnerRobotLab key={key} />;
       default:
         return null;
     }
