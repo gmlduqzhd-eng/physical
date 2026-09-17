@@ -52,7 +52,7 @@ export const PhysicalActivityLayout = ({
   const navigate = useNavigate();
   // flow: 'intro' -> 'safety' -> 'countdown' -> 'active' -> 'completed'
   const [step, setStep] = useState<'intro' | 'safety' | 'countdown' | 'active' | 'completed'>('intro');
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(3);
   const [checkedSafety, setCheckedSafety] = useState<Record<string, boolean>>({});
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [completionSummary, setCompletionSummary] = useState<string>('');
@@ -65,7 +65,7 @@ export const PhysicalActivityLayout = ({
 
   const handlePassSafety = () => {
     setStep('countdown');
-    setCountdown(5);
+    setCountdown(3);
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -87,7 +87,7 @@ export const PhysicalActivityLayout = ({
     setSelfRating(null);
     setCompletionSummary('');
     setStep('countdown');
-    setCountdown(5);
+    setCountdown(3);
     const interval = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -215,22 +215,22 @@ export const PhysicalActivityLayout = ({
               모두 체크
             </button>
             <button
+              type="button"
               onClick={handlePassSafety}
               disabled={!allSafetyChecked}
-              type="button"
               className={`flex-1 py-3.5 rounded-2xl font-black text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
                 allSafetyChecked
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/20 active:scale-95'
                   : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700/50'
               }`}
             >
-              <Play className="w-4 h-4" /> 준비 완료! 시작 (5초 카운트)
+              <Play className="w-4 h-4" /> 준비 완료! 시작 (3초 카운트)
             </button>
           </div>
         </div>
       )}
 
-      {/* 3. 5초 준비 카운트다운 */}
+      {/* 3. 3초 준비 카운트다운 */}
       {step === 'countdown' && (
         <div className="max-w-md w-full mx-auto my-auto text-center py-12 animate-in zoom-in-90 duration-300">
           <p className="text-sm font-bold text-cyan-400 mb-2">몸과 마음의 준비를 하세요!</p>
@@ -238,7 +238,7 @@ export const PhysicalActivityLayout = ({
             {countdown}
           </div>
           <p className="text-xs text-slate-400">
-            {countdown > 2 ? '호흡을 고르고 제자리에 섭니다' : '출발 준비 완료!'}
+            {countdown > 1 ? '호흡을 고르고 제자리에 섭니다' : '출발 준비 완료!'}
           </p>
         </div>
       )}

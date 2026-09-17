@@ -37,19 +37,31 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
   }, []);
 
+  const triggerJump = () => {
+    if (cooldown.current || finished) return;
+    cooldown.current = true;
+    sfxCoin();
+    setJumps(j => { const n = j + 1; jumpsRef.current = n; return n; });
+    setLastJump(true);
+    setTimeout(() => { setLastJump(false); cooldown.current = false; }, 300);
+  };
+
   return (
-    <div className={`min-h-[100dvh] bg-blue-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors ${lastJump ? '!bg-cyan-900' : ''}`}>
+    <div 
+      onClick={triggerJump}
+      className={`min-h-[100dvh] bg-blue-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer ${lastJump ? '!bg-cyan-900' : ''}`}
+    >
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
         <div><span className="text-blue-400 text-sm font-bold">점프 횟수</span><div className="text-white text-3xl font-black">{jumps}</div></div>
         <div className="text-right"><span className="text-blue-400 text-sm font-bold">남은 시간</span><div className={`text-3xl font-black ${timeLeft <= 5 ? 'text-red-500' : 'text-white'}`}>{timeLeft}초</div></div>
       </div>
       <span className={`text-8xl mb-4 transition-transform ${lastJump ? 'scale-125 -translate-y-8' : ''}`}>🦘</span>
       <h1 className="text-3xl font-black text-white mb-2 text-center">점프왕!</h1>
-      <p className="text-blue-300 font-bold mb-4 text-center text-sm">폰을 들고 제자리에서 점프하세요!</p>
+      <p className="text-blue-300 font-bold mb-4 text-center text-sm">폰을 들고 제자리 점프하거나 화면을 클릭·터치하세요!</p>
       <div className="w-full max-w-xs h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700 relative z-10">
         <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all" style={{ width: `${Math.min(100, jumps * 5)}%` }} />
       </div>
-      <p className="text-blue-500 text-xs mt-2 font-bold">목표: 20회 점프!</p>
+      <p className="text-blue-500 text-xs mt-2 font-bold">목표: 20회 점프! (화면 어디든 터치 가능)</p>
       {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-6xl font-black text-cyan-400 mb-4">{jumps}회 점프!</div><p className="text-xl text-white font-bold">+{jumps * 30}점</p></div>}
     </div>
   );

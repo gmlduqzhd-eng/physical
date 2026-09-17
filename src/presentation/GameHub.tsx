@@ -5,6 +5,10 @@ import { Settings, BookOpen, Monitor, Award, Sparkles, Filter, ChevronRight, Inf
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
 export type SportType = '전체' | '기술형' | '전략형' | '생태형';
+export type DeviceType = '스마트폰' | '태블릿 PC' | '데스크톱 PC';
+export type DeviceFilter = '전체' | '스마트폰' | '태블릿 PC' | '데스크톱 PC';
+export type PlayMode = '개인' | '협동';
+export type PlayModeFilter = '전체' | '개인' | '협동';
 
 export interface AchievementStandard {
   code: string; // e.g. '[4체01-02]'
@@ -31,6 +35,8 @@ export interface GameDef {
   equipment?: string[];
   safetyTips?: string[];
   physicalActivity?: boolean;
+  devices: DeviceType[];
+  playMode: PlayMode;
 }
 
 const GAMES: GameDef[] = [
@@ -50,6 +56,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (순발력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'squat',
@@ -64,6 +72,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (근력·근지구력)',
     achievement: { code: '[6체01-02]', title: '체력 측정 및 운동 수행', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'run',
@@ -78,6 +88,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (심폐지구력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'plank',
@@ -92,6 +104,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (코어 근력)',
     achievement: { code: '[6체01-05]', title: '체력 운동의 끈기 있는 수행', desc: '체력 운동을 끈기 있게 규칙적으로 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'stretch',
@@ -106,6 +120,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강·생활 습관 (유연성)',
     achievement: { code: '[4체01-04]', title: '건강 생활 습관 실천', desc: '건강한 생활 습관을 이해하고 규칙적으로 실천한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'one_leg',
@@ -120,6 +136,8 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (평형성)',
     achievement: { code: '[6체01-02]', title: '운동 체력(평형성) 측정', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'tilt_balance',
@@ -134,6 +152,8 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (평형성·조절)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'multi_touch',
@@ -148,6 +168,8 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (양손 협응성)',
     achievement: { code: '[6체01-02]', title: '운동 체력(협응성) 발달', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC'],
+    playMode: '개인'
   },
   {
     type: 'speed_circle',
@@ -162,6 +184,8 @@ const GAMES: GameDef[] = [
     subCategory: '기본 체력운동 (가동성·순발력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'fitness',
@@ -176,6 +200,8 @@ const GAMES: GameDef[] = [
     subCategory: '체력 운동 실천 (종합)',
     achievement: { code: '[4체01-06]', title: '건강 생활 습관 실천', desc: '운동과 건강한 생활 습관 형성에 관심을 갖고 실천한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'shake',
@@ -190,6 +216,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (순발력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'volcano',
@@ -204,6 +232,8 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (순발력·스피드)',
     achievement: { code: '[6체01-01]', title: '운동 체력 요소 탐색', desc: '건강 체력과 운동 체력의 의미·요소를 알고 운동 방법을 탐색한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'reaction',
@@ -218,6 +248,8 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (민첩성·반응시간)',
     achievement: { code: '[6체01-02]', title: '민첩성 체력 측정·수행', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'scream',
@@ -232,6 +264,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강 생활 습관 (정서 관리)',
     achievement: { code: '[4체01-04]', title: '정서 관리 습관 실천', desc: '건강한 생활 습관을 이해하고 규칙적으로 실천한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'arm_raise',
@@ -246,6 +280,8 @@ const GAMES: GameDef[] = [
     subCategory: '기본 움직임 (뻗기·버티기)',
     achievement: { code: '[4체01-05]', title: '안전한 기본 움직임', desc: '자신의 신체적 특징을 긍정적으로 인식하고 안전하게 운동한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'wave',
@@ -260,6 +296,8 @@ const GAMES: GameDef[] = [
     subCategory: '건강·운동 습관 (맨손체조)',
     achievement: { code: '[4체01-04]', title: '맨손체조 생활 실천', desc: '건강한 생활 습관을 이해하고 규칙적으로 실천한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'math',
@@ -274,6 +312,8 @@ const GAMES: GameDef[] = [
     subCategory: '뇌건강 인지 운동',
     achievement: { code: '[4체01-01]', title: '신체·두뇌 건강 이해', desc: '운동과 체력의 의미 및 관계를 이해한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'color_word',
@@ -288,6 +328,8 @@ const GAMES: GameDef[] = [
     subCategory: '신경 협응 인지 운동',
     achievement: { code: '[6체01-01]', title: '신체 협응 요소 탐색', desc: '건강 체력과 운동 체력의 의미·요소를 알고 운동 방법을 탐색한다.' },
     grades: ['5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
 
   // ==========================================
@@ -308,6 +350,8 @@ const GAMES: GameDef[] = [
     subCategory: '표적 활동 (조작 움직임)',
     achievement: { code: '[4체02-05]', title: '기술형 표적 활동 움직임', desc: '기술형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'whack_a_mole',
@@ -323,6 +367,8 @@ const GAMES: GameDef[] = [
     subCategory: '표적·조작 활동',
     achievement: { code: '[6체02-02]', title: '기술형 스포츠 기본 기능', desc: '기술형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'stopwatch',
@@ -338,6 +384,8 @@ const GAMES: GameDef[] = [
     subCategory: '기록형 활동 (시간 계측)',
     achievement: { code: '[6체02-02]', title: '기록형 스포츠 기능 수행', desc: '기술형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'left_right',
@@ -353,6 +401,8 @@ const GAMES: GameDef[] = [
     subCategory: '비이동 반사 움직임',
     achievement: { code: '[4체02-03]', title: '기본 움직임 기술 수행', desc: '움직임 요소에 따라 기본 움직임 기술을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'direction',
@@ -368,6 +418,8 @@ const GAMES: GameDef[] = [
     subCategory: '조작 움직임 (방향 전환)',
     achievement: { code: '[4체02-03]', title: '기본 움직임 기술 수행', desc: '움직임 요소에 따라 기본 움직임 기술을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'zone_touch',
@@ -383,6 +435,8 @@ const GAMES: GameDef[] = [
     subCategory: '이동 움직임 (방향 전환 달리기)',
     achievement: { code: '[4체02-03]', title: '이동 움직임 기술 수행', desc: '움직임 요소에 따라 기본 움직임 기술을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'zigzag',
@@ -398,6 +452,8 @@ const GAMES: GameDef[] = [
     subCategory: '복합 이동 움직임',
     achievement: { code: '[4체02-04]', title: '복합 움직임 기술 수행', desc: '기본 움직임을 연결한 복합 움직임 기술을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'punch',
@@ -413,6 +469,8 @@ const GAMES: GameDef[] = [
     subCategory: '투기형 활동 (타격 기술)',
     achievement: { code: '[6체02-02]', title: '투기형 스포츠 기본 기능', desc: '기술형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'tilt_race',
@@ -428,6 +486,8 @@ const GAMES: GameDef[] = [
     subCategory: '표적 제어 (조작 움직임)',
     achievement: { code: '[4체02-05]', title: '기술형 스포츠 조작 수행', desc: '기술형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'tug_of_war',
@@ -443,6 +503,8 @@ const GAMES: GameDef[] = [
     subCategory: '대결·투기형 (당기기 힘 겨루기)',
     achievement: { code: '[4체02-05]', title: '기술형 스포츠 움직임', desc: '기술형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
 
   // --- 전략형 (공간 탐색, 패턴, 심리 전략 게임) ---
@@ -460,6 +522,8 @@ const GAMES: GameDef[] = [
     subCategory: '공간 탐색 전략 게임',
     achievement: { code: '[4체02-06]', title: '전략형 스포츠 기본 움직임', desc: '전략형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'memory',
@@ -475,6 +539,8 @@ const GAMES: GameDef[] = [
     subCategory: '패턴 전략 인지 게임',
     achievement: { code: '[6체02-06]', title: '전략형 게임 전략 적용', desc: '전략형 스포츠의 활동 방법과 기본 전략을 게임에 적용한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'card_match',
@@ -490,6 +556,8 @@ const GAMES: GameDef[] = [
     subCategory: '시각 공간 전략 게임',
     achievement: { code: '[4체02-06]', title: '전략형 스포츠 참여', desc: '전략형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'balloon',
@@ -505,6 +573,8 @@ const GAMES: GameDef[] = [
     subCategory: '위험 판단 심리 전략',
     achievement: { code: '[6체02-06]', title: '전략형 게임 전략 적용', desc: '전략형 스포츠의 활동 방법과 기본 전략을 게임에 적용한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
 
   // --- 생태형 (민속놀이, 자연·환경 규칙 놀이) ---
@@ -522,6 +592,8 @@ const GAMES: GameDef[] = [
     subCategory: '민속놀이 (정지와 이동 신체조절)',
     achievement: { code: '[4체02-07]', title: '생태형 민속놀이 움직임', desc: '생태형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'freeze',
@@ -537,6 +609,8 @@ const GAMES: GameDef[] = [
     subCategory: '민속 신체놀이 (규칙 준수)',
     achievement: { code: '[6체02-08]', title: '생태형 민속놀이 기능 수행', desc: '생태형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'coin_flip',
@@ -552,6 +626,8 @@ const GAMES: GameDef[] = [
     subCategory: '전통 놀이 (규칙 준수)',
     achievement: { code: '[4체02-09]', title: '게임 최선 및 규칙 준수', desc: '게임에 최선을 다하고 규칙을 지킨다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'fate_card',
@@ -567,6 +643,8 @@ const GAMES: GameDef[] = [
     subCategory: '생활 여가 놀이 (상대 인정)',
     achievement: { code: '[6체02-10]', title: '목표 노력 및 상대 인정', desc: '목표 달성을 위해 노력하고 상대의 기술을 인정한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
 
   // ==========================================
@@ -585,6 +663,8 @@ const GAMES: GameDef[] = [
     subCategory: '현대 표현 (라인댄스·동작)',
     achievement: { code: '[6체03-06]', title: '현대 표현 기본 동작', desc: '현대 표현의 기본 동작을 파악하고 표현한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'animal',
@@ -599,6 +679,8 @@ const GAMES: GameDef[] = [
     subCategory: '사물·자연 모방 표현',
     achievement: { code: '[4체03-03]', title: '사물·자연 모방 표현', desc: '사물이나 자연을 움직임으로 모방하여 표현한다.' },
     grades: ['1~2학년', '3~4학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'circle_draw',
@@ -613,6 +695,8 @@ const GAMES: GameDef[] = [
     subCategory: '움직임 요소 표현 (공간·궤적)',
     achievement: { code: '[4체03-02]', title: '움직임 요소 표현 탐색', desc: '움직임 요소에 따른 표현 방법을 탐색하고 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC'],
+    playMode: '개인'
   },
   {
     type: 'trace_shape',
@@ -627,6 +711,8 @@ const GAMES: GameDef[] = [
     subCategory: '도구 및 형태 표현',
     achievement: { code: '[4체03-06]', title: '도구 활용 움직임 표현', desc: '도구를 활용하여 움직임을 표현한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'body_twist',
@@ -641,6 +727,8 @@ const GAMES: GameDef[] = [
     subCategory: '기초 신체 표현 (회전·비틀기)',
     achievement: { code: '[4체03-05]', title: '기본 움직임 리듬 표현', desc: '기본 움직임을 리듬에 맞춰 표현한다.' },
     grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰','태블릿 PC'],
+    playMode: '개인'
   },
 
   // ==========================================
@@ -663,6 +751,8 @@ const GAMES: GameDef[] = [
     activityType: '개인',
     durationMinutes: 4,
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'posture-guardian',
@@ -681,6 +771,8 @@ const GAMES: GameDef[] = [
     durationMinutes: 4,
     equipment: ['의자 또는 가벼운 물건'],
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
 
   // --- 신규 스포츠 영역 (4종) ---
@@ -702,6 +794,8 @@ const GAMES: GameDef[] = [
     durationMinutes: 5,
     equipment: ['공 1개', '바닥 표적'],
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'pass-gate-rescue',
@@ -721,6 +815,8 @@ const GAMES: GameDef[] = [
     durationMinutes: 5,
     equipment: ['공 1개', '콘 4~6개'],
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'dribble-rhythm',
@@ -740,6 +836,8 @@ const GAMES: GameDef[] = [
     durationMinutes: 4,
     equipment: ['공 1개'],
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '개인'
   },
   {
     type: 'open-space-tactician',
@@ -759,6 +857,8 @@ const GAMES: GameDef[] = [
     durationMinutes: 5,
     equipment: ['공', '콘'],
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
 
   // --- 신규 표현 영역 (2종) ---
@@ -778,6 +878,8 @@ const GAMES: GameDef[] = [
     activityType: '짝',
     durationMinutes: 4,
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
   {
     type: 'partner-robot-lab',
@@ -795,6 +897,8 @@ const GAMES: GameDef[] = [
     activityType: '짝',
     durationMinutes: 4,
     physicalActivity: true,
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    playMode: '협동'
   },
 ];
 
@@ -859,19 +963,45 @@ const SPORT_SUB_TYPES: { key: SportType; label: string; emoji: string }[] = [
   { key: '생태형', label: '생태형 (민속·환경·놀이)', emoji: '🌿' },
 ];
 
+const DEVICE_FILTERS: { key: DeviceFilter; label: string; emoji: string }[] = [
+  { key: '전체', label: '전체 기기', emoji: '💻' },
+  { key: '스마트폰', label: '스마트폰', emoji: '📱' },
+  { key: '태블릿 PC', label: '태블릿 PC', emoji: '📟' },
+  { key: '데스크톱 PC', label: '데스크톱 PC', emoji: '🖥️' },
+];
+
+const PLAY_MODE_FILTERS: { key: PlayModeFilter; label: string; emoji: string }[] = [
+  { key: '전체', label: '전체 형태', emoji: '🎮' },
+  { key: '개인', label: '개인 게임', emoji: '👤' },
+  { key: '협동', label: '협동 게임', emoji: '🤝' },
+];
+
 export const GameHub = () => {
   const navigate = useNavigate();
   const [gradeFilter, setGradeFilter] = useState<GradeGroup>('전체');
   const [domainFilter, setDomainFilter] = useState<PeDomain2022>('전체');
   const [sportFilter, setSportFilter] = useState<SportType>('전체');
+  const [deviceFilter, setDeviceFilter] = useState<DeviceFilter>('전체');
+  const [playModeFilter, setPlayModeFilter] = useState<PlayModeFilter>('전체');
   const [activeAchievement, setActiveAchievement] = useState<AchievementStandard | null>(null);
 
   const filtered = GAMES.filter(g => {
     const gradeMatch = gradeFilter === '전체' || g.grades.includes(gradeFilter);
     const domainMatch = domainFilter === '전체' || g.domain === domainFilter;
     const sportMatch = domainFilter !== '스포츠' || sportFilter === '전체' || g.sportType === sportFilter;
-    return gradeMatch && domainMatch && sportMatch;
+    const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
+    const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch;
   });
+
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체';
+  const resetAllFilters = () => {
+    setDomainFilter('전체');
+    setSportFilter('전체');
+    setGradeFilter('전체');
+    setDeviceFilter('전체');
+    setPlayModeFilter('전체');
+  };
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-white font-sans overflow-y-auto">
@@ -989,45 +1119,126 @@ export const GameHub = () => {
         </div>
       )}
 
-      {/* 학년군 선택 */}
-      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4">
-        <h2 className="text-xs font-bold text-slate-400 mb-2 px-1 flex items-center gap-1.5">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" /> 학년군 선택
-        </h2>
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-          {GRADE_GROUPS.map(g => (
-            <button
-              key={g.key}
-              onClick={() => setGradeFilter(g.key)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                gradeFilter === g.key
-                  ? 'bg-cyan-600 border-cyan-400 text-white shadow-lg shadow-cyan-500/20'
-                  : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-              }`}
-            >
-              <span>{g.label}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-normal ${gradeFilter === g.key ? 'bg-cyan-800 text-cyan-100' : 'bg-slate-800 text-slate-500'}`}>
-                {g.badge}
-              </span>
-            </button>
-          ))}
+      {/* 필터 그룹: 기기 지원 / 활동 형태 / 학년군 */}
+      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 space-y-2.5">
+        {/* 기기 분류 (스마트폰 · 태블릿 PC · 데스크톱 PC) */}
+        <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-bold text-slate-300 px-1 flex items-center gap-1.5">
+              <span>🖥️</span> 지원 기기 분류
+            </h2>
+            <span className="text-[10px] text-slate-500 hidden sm:inline">
+              스마트폰 · 태블릿 PC · 데스크톱 PC
+            </span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {DEVICE_FILTERS.map(d => {
+              const count = d.key === '전체' 
+                ? GAMES.length 
+                : GAMES.filter(g => g.devices.includes(d.key as DeviceType)).length;
+              const isSelected = deviceFilter === d.key;
+              return (
+                <button
+                  key={d.key}
+                  type="button"
+                  onClick={() => setDeviceFilter(d.key)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-md shadow-emerald-900/30'
+                      : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>{d.emoji}</span>
+                  <span>{d.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 활동 형태 (개인/협동) & 학년군 선택 (2열 레이아웃) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+          {/* 활동 형태 */}
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
+              <span>👥</span> 활동 형태 (개인 / 협동)
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {PLAY_MODE_FILTERS.map(pm => {
+                const count = pm.key === '전체'
+                  ? GAMES.length
+                  : GAMES.filter(g => g.playMode === pm.key).length;
+                const isSelected = playModeFilter === pm.key;
+                return (
+                  <button
+                    key={pm.key}
+                    type="button"
+                    onClick={() => setPlayModeFilter(pm.key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 border-amber-400 text-white shadow-md shadow-amber-900/30'
+                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{pm.emoji}</span>
+                    <span>{pm.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 학년군 선택 */}
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm">
+            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
+              <Filter className="w-3.5 h-3.5 text-cyan-400" /> 학년군 선택
+            </h2>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {GRADE_GROUPS.map(g => {
+                const count = g.key === '전체'
+                  ? GAMES.length
+                  : GAMES.filter(game => game.grades.includes(g.key as any)).length;
+                const isSelected = gradeFilter === g.key;
+                return (
+                  <button
+                    key={g.key}
+                    type="button"
+                    onClick={() => setGradeFilter(g.key)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-cyan-600 border-cyan-400 text-white shadow-lg shadow-cyan-500/20'
+                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{g.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-cyan-800 text-cyan-100' : 'bg-slate-800 text-slate-500'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* 결과 카운트 및 안내 */}
       <div className="px-5 md:px-9 max-w-5xl mx-auto mb-3 flex items-center justify-between text-xs text-slate-400">
         <div className="font-bold flex items-center gap-2">
-          <span>총 <strong className="text-cyan-400 font-black">{filtered.length}</strong>개 게임</span>
-          {(domainFilter !== '전체' || gradeFilter !== '전체' || sportFilter !== '전체') && (
+          <span>검색 결과 <strong className="text-cyan-400 font-black text-sm">{filtered.length}</strong> / {GAMES.length}개 게임</span>
+          {hasActiveFilter && (
             <button
-              onClick={() => {
-                setDomainFilter('전체');
-                setGradeFilter('전체');
-                setSportFilter('전체');
-              }}
-              className="text-[11px] text-slate-500 hover:text-slate-300 underline"
+              type="button"
+              onClick={resetAllFilters}
+              className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-cyan-400 hover:text-cyan-300 border border-slate-700 transition-colors"
             >
-              필터 초기화
+              필터 초기화 ↺
             </button>
           )}
         </div>
@@ -1056,20 +1267,29 @@ export const GameHub = () => {
                   <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${game.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
 
                   <div>
-                    {/* 상단 성취기준 태그 & 영역 태그 */}
+                    {/* 상단 성취기준 태그 & 활동 형태 & 영역 태그 */}
                     <div className="flex items-center justify-between gap-1.5 mb-2.5">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveAchievement(game.achievement);
-                        }}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-cyan-950/80 border border-slate-700 hover:border-cyan-500/50 text-[10px] font-mono font-bold text-cyan-300 transition-colors"
-                        title="성취기준 상세 보기"
-                      >
-                        <Info className="w-2.5 h-2.5" />
-                        <span>{game.achievement.code}</span>
-                      </button>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveAchievement(game.achievement);
+                          }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-cyan-950/80 border border-slate-700 hover:border-cyan-500/50 text-[10px] font-mono font-bold text-cyan-300 transition-colors"
+                          title="성취기준 상세 보기"
+                        >
+                          <Info className="w-2.5 h-2.5" />
+                          <span>{game.achievement.code}</span>
+                        </button>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${
+                          game.playMode === '협동'
+                            ? 'bg-amber-950/80 text-amber-300 border-amber-800/60'
+                            : 'bg-slate-800/80 text-slate-300 border-slate-700/60'
+                        }`}>
+                          {game.playMode === '협동' ? '🤝 협동' : '👤 개인'}
+                        </span>
+                      </div>
 
                       <div className="flex items-center gap-1">
                         <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${
@@ -1109,19 +1329,26 @@ export const GameHub = () => {
                     </div>
                   </div>
 
-                  {/* 하단 학년군 & 시작 버튼 */}
+                  {/* 하단 학년군, 기기 아이콘 & 시작 버튼 */}
                   <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <div className="flex items-center gap-1 flex-wrap">
-                      {game.grades.map(gr => (
-                        <span key={gr} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold border border-slate-700/60">
-                          {gr}
-                        </span>
-                      ))}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1">
+                        {game.grades.map(gr => (
+                          <span key={gr} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold border border-slate-700/60">
+                            {gr}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-0.5 text-[11px] bg-slate-950/60 px-1.5 py-0.5 rounded border border-slate-800/70" title={`지원 기기: ${game.devices.join(', ')}`}>
+                        {game.devices.includes('스마트폰') && <span title="스마트폰 지원">📱</span>}
+                        {game.devices.includes('태블릿 PC') && <span title="태블릿 PC 지원">📟</span>}
+                        {game.devices.includes('데스크톱 PC') && <span title="데스크톱 PC 지원">🖥️</span>}
+                      </div>
                     </div>
 
                     <button
                       onClick={() => navigate(`/play/${game.type}`)}
-                      className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1 active:scale-95 transition-all"
+                      className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1 active:scale-95 transition-all shrink-0"
                     >
                       시작 <ChevronRight className="w-3.5 h-3.5" />
                     </button>
