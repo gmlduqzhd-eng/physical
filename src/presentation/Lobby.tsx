@@ -1,16 +1,28 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { RotateCcw } from 'lucide-react';
 
 
 export const Lobby = () => {
   const [pinCode, setPinCode] = useState('');
-  const [studentName, setStudentName] = useState('');
+  const [studentName, setStudentName] = useState(() => localStorage.getItem('physical_student_name') || '');
   const [groupName, setGroupName] = useState('1모둠');
-  const [role, setRole] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // 이전 접속 정보 확인
+  const lastRoom = localStorage.getItem('physical_last_room');
+  const lastGroup = localStorage.getItem('physical_last_group');
+  const lastGroupName = localStorage.getItem('physical_last_group_name');
+  const lastName = localStorage.getItem('physical_student_name');
+
+  const handleResume = () => {
+    if (lastRoom && lastGroup) {
+      navigate(`/mobile/${lastRoom}/${lastGroup}`);
+    }
+  };
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,18 +83,32 @@ export const Lobby = () => {
       await supabase.from('room_groups').update({ avatar }).eq('id', groupId);
     }
 
-    // 이름 및 직업 로컬 저장
+    // 이름 및 접속 정보 로컬 저장
     localStorage.setItem('physical_student_name', studentName.trim());
-    localStorage.setItem('physical_student_role', role);
+    localStorage.setItem('physical_student_role', 'novice');
+    localStorage.setItem('physical_last_room', roomId);
+    localStorage.setItem('physical_last_group', groupId);
+    localStorage.setItem('physical_last_group_name', groupName);
 
     // 접속 성공 시 이동
     navigate(`/mobile/${roomId}/${groupId}`);
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-16 pb-20 px-6 gap-6 text-slate-900 font-sans overflow-y-auto">
-      <h1 className="text-4xl font-black text-cyan-600 mb-2">땀방울 원정대</h1>
-      <p className="text-slate-600 mb-8 text-center">선생님이 알려주신 핀 번호와<br/>우리 모둠을 선택하고 입장하세요!</p>
+    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-12 pb-20 px-6 gap-4 text-slate-900 font-sans overflow-y-auto">
+      <h1 className="text-4xl font-black text-cyan-600 mb-1">땀방울 원정대</h1>
+      <p className="text-slate-600 mb-4 text-center">선생님이 알려주신 핀 번호와<br/>우리 모둠을 선택하고 입장하세요!</p>
+
+      {/* 이전 수업 이어하기 버튼 */}
+      {lastRoom && lastGroup && lastName && (
+        <button
+          onClick={handleResume}
+          className="w-full max-w-sm py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
+        >
+          <RotateCcw className="w-5 h-5" />
+          이전 수업 이어하기 ({lastName} / {lastGroupName})
+        </button>
+      )}
       
       <form onSubmit={handleJoin} className="w-full max-w-sm bg-white rounded-2xl p-6 border border-slate-200 shadow-xl flex flex-col gap-5">
         <div>
@@ -121,22 +147,6 @@ export const Lobby = () => {
           </select>
         </div>
 
-        <div>
-          <label className="block text-slate-700 text-sm font-bold mb-2">당신의 직업 (RPG 클래스)</label>
-          <select 
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg focus:outline-none focus:border-cyan-500"
-          >
-            <option value="novice">초보자 (특성 없음)</option>
-            <option value="warrior">전사 (미션 완료 시 점수 1.2배 획득)</option>
-            <option value="thief">도적 (도둑 고양이 아이템 가격 50% 할인)</option>
-            <option value="priest">사제 (기부 천사 사용 시 꼴등에게 400점 지급)</option>
-          </select>
-        </div>
-
-
-
         {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
         <button 
@@ -148,22 +158,22 @@ export const Lobby = () => {
         </button>
       </form>
 
-      <div className="w-full max-w-sm mt-8 flex flex-col gap-3">
+      <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
         <Link to="/manual" className="w-full py-3 bg-cyan-50 rounded-xl text-center font-bold hover:bg-cyan-100 text-cyan-600 transition-colors text-sm border border-cyan-200 shadow-sm">
           📖 땀방울 원정대 사용 설명서
         </Link>
         <Link to="/admin" className="w-full py-3 bg-white rounded-xl text-center font-bold hover:bg-slate-50 text-slate-600 transition-colors text-sm border border-slate-200 shadow-sm">
           ⚙️ 교사 제어 패널 (관리자)
         </Link>
-        <Link to="/kiosk" className="w-full py-3 bg-cyan-100 rounded-xl text-center font-black hover:bg-cyan-200 text-cyan-800 transition-colors text-sm border border-cyan-300 shadow-sm">
-          🏃‍♂️ 공용 패드 (릴레이 스테이션) 모드 입장
+        <Link to="/kiosk" className="w-full py-4 bg-cyan-100 rounded-xl text-center font-black hover:bg-cyan-200 text-cyan-800 transition-colors border-2 border-cyan-300 shadow-sm flex items-center justify-center gap-2">
+          🏃‍♂️ 공용 패드 (릴레이 스테이션) 모드
         </Link>
-        <Link to="/board/b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a22" className="w-full py-3 bg-white rounded-xl text-center font-bold hover:bg-slate-50 text-slate-600 transition-colors text-sm border border-slate-200 shadow-sm">
-          🖥️ 테스트 방 전광판 보기
+        <Link to="/board" className="w-full py-3 bg-white rounded-xl text-center font-bold hover:bg-slate-50 text-slate-600 transition-colors text-sm border border-slate-200 shadow-sm">
+          🖥️ TV 전광판 열기 (PIN 입력)
         </Link>
       </div>
 
-      <p className="mt-8 text-sm text-slate-400 font-bold">
+      <p className="mt-6 text-sm text-slate-400 font-bold">
         ⓒ2026. 엽쌤 All rights reserved.
       </p>
     </div>

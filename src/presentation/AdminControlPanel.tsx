@@ -6,6 +6,8 @@ import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
 import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home } from 'lucide-react';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
+import { QRCodePanel } from './components/admin/QRCodePanel';
+import { QuickStart } from './components/admin/QuickStart';
 import * as LucideIcons from 'lucide-react';
 
 const QUIZ_LIST = [
@@ -420,13 +422,21 @@ export const AdminControlPanel = () => {
 
         {activeTab === 'rooms' && !selectedRoomId && (
           <div className="space-y-4">
+            <QuickStart templates={templates} onRoomCreated={(id) => setSelectedRoomId(id)} onRefresh={fetchRooms} />
             <h2 className="text-xl font-bold">진행 중인 방 목록</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rooms.map(r => (
-                <div key={r.id} onClick={() => setSelectedRoomId(r.id)} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 cursor-pointer transition-colors">
-                  <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500"/> {r.pin_code}</h3>
-                  <p className="text-slate-700 font-bold">{r.name}</p>
-                  <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
+                <div key={r.id} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 cursor-pointer transition-colors">
+                  <div onClick={() => setSelectedRoomId(r.id)}>
+                    <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500"/> {r.pin_code}</h3>
+                    <p className="text-slate-700 font-bold">{r.name}</p>
+                    <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <button onClick={(e) => { e.stopPropagation(); window.open(`/board/${r.id}`, '_blank'); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
+                      <LucideIcons.Monitor className="w-4 h-4" /> TV 전광판
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -450,7 +460,13 @@ export const AdminControlPanel = () => {
                 <h2 className="text-2xl font-black text-slate-900">{currentRoom.name}</h2>
                 <p className="text-cyan-600 font-bold mt-1">접속 핀 번호: {currentRoom.pin_code}</p>
               </div>
+              <button onClick={() => window.open(`/board/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2">
+                <LucideIcons.Monitor className="w-4 h-4" /> TV 전광판 열기
+              </button>
             </div>
+
+            {/* 모둠별 QR코드 생성 패널 */}
+            <QRCodePanel currentRoom={currentRoom} roomGroups={roomGroups} />
 
             <div className="bg-white shadow-sm p-4 rounded-xl border border-slate-200">
               <h2 className="text-lg font-bold text-slate-700 mb-2">실시간 라이브 공지 발송</h2>

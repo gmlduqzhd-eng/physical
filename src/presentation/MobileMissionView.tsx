@@ -4,9 +4,11 @@ import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
+import { useOutdoorMode } from '../application/useOutdoorMode';
 import * as LucideIcons from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
+import { WaitingScreen } from './components/WaitingScreen';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 
@@ -25,6 +27,13 @@ const SHOP_ITEMS = [
   { id: 'tsunami', name: '해킹 스크립트', cost: 300, desc: '가장 점수가 높은 조에게 해킹 공격을 가하여 미션을 잠금 상태로 만듭니다!', icon: LucideIcons.TerminalSquare, color: 'text-red-700', bg: 'bg-red-100 border-red-300' }
 ];
 
+const ROLE_OPTIONS = [
+  { id: 'novice', name: '초보자', desc: '기본 직업 (특성 없음)', icon: LucideIcons.User, color: 'text-slate-600' },
+  { id: 'warrior', name: '전사', desc: '미션 점수 +20% 보너스', icon: LucideIcons.Sword, color: 'text-red-600' },
+  { id: 'thief', name: '도적', desc: '도둑 고양이 비용 50% 할인', icon: LucideIcons.Ghost, color: 'text-purple-600' },
+  { id: 'priest', name: '사제', desc: '기부 천사 효과 2배 (400점)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600' },
+];
+
 export const MobileMissionView = () => {
   const { roomId, groupId } = useParams<{ roomId: string, groupId: string }>();
   const navigate = useNavigate();
@@ -32,8 +41,10 @@ export const MobileMissionView = () => {
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
+  const { isOutdoorMode, toggleOutdoorMode } = useOutdoorMode();
   const [studentName] = useState(() => localStorage.getItem('physical_student_name') || '');
-  const [role] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
+  const [role, setRole] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
+  const [showFlash, setShowFlash] = useState(false);
 
   const [combo, setCombo] = useState(0);
   const [lastMissionTime, setLastMissionTime] = useState(0);
@@ -61,7 +72,8 @@ export const MobileMissionView = () => {
   const [activeDevicesCount, setActiveDevicesCount] = useState(0);
 
   const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
-  const isLocked = isTimeUp || gameRoom?.status !== 'playing' || myGroup?.is_hacked;
+  const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
+  const isLocked = isTimeUp || !activeStatuses.includes(gameRoom?.status || '') || myGroup?.is_hacked;
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
   const highestScore = scores.length > 0 ? Math.max(...scores.map(s => s.score)) : 0;
@@ -141,6 +153,9 @@ export const MobileMissionView = () => {
     
     if (navigator.vibrate) navigator.vibrate(50);
     playBeep();
+    // 화면 플래시 효과
+    setShowFlash(true);
+    setTimeout(() => setShowFlash(false), 400);
     const cdSecs = mission.cooldown || 5;
     const finalCdSecs = hasCooldown ? cdSecs / 2 : cdSecs;
     setCooldownTime(finalCdSecs * 1000);
@@ -679,7 +694,17 @@ export const MobileMissionView = () => {
     }
   }, [isBossMode]);
 
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole);
+    localStorage.setItem('physical_student_role', newRole);
+  };
+
   if (!groupId || !myGroup || !template) return <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex justify-center items-center">데이터를 불러오는 중...</div>;
+
+  // 대기 화면 — 게임 시작 전
+  if (gameRoom?.status === 'waiting' || gameRoom?.status === 'paused') {
+    return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} />;
+  }
 
   if (gameRoom?.status === 'finished') {
     const sortedScores = [...scores].sort((a, b) => b.score - a.score);
@@ -816,7 +841,17 @@ export const MobileMissionView = () => {
   }
 
   return (
-    <div className={`min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col relative overflow-hidden select-none`}>
+    <div className={`min-h-[100dvh] flex flex-col relative overflow-hidden select-none mobile-mission-root ${isOutdoorMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'}`}>
+      {/* 화면 플래시 효과 */}
+      {showFlash && <div className="fixed inset-0 z-[200] bg-cyan-400 animate-screen-flash" />}
+
+      {/* 야외 모드 토글 */}
+      <button
+        onClick={toggleOutdoorMode}
+        className={`outdoor-toggle fixed top-4 right-14 z-50 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-md border-2 ${isOutdoorMode ? 'bg-yellow-400 border-yellow-300 text-black' : 'bg-white/80 border-slate-200 text-slate-600'}`}
+      >
+        {isOutdoorMode ? '☀️' : '🌙'}
+      </button>
       {combo > 1 && (
         <div className="absolute top-1/4 right-8 z-40 transform rotate-12 animate-bounce flex flex-col items-center pointer-events-none">
           <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 drop-shadow-lg italic">
@@ -878,16 +913,16 @@ export const MobileMissionView = () => {
       )}
       
       <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700 shadow-sm">
+        <div className={`status-badge flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border shadow-sm ${isOutdoorMode ? 'bg-black/80 border-slate-700 text-white' : 'bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700'}`}>
           <LucideIcons.Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
         </div>
         {!isOnline && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-orange-100/90 backdrop-blur-sm border-orange-300 text-orange-800 shadow-sm animate-pulse">
+          <div className="status-badge flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-orange-100/90 backdrop-blur-sm border-orange-300 text-orange-800 shadow-sm animate-pulse">
             <LucideIcons.WifiOff className="w-4 h-4" /> <span>오프라인 ({queueLength}개 대기 중)</span>
           </div>
         )}
         {isOnline && isSyncing && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-cyan-100/90 backdrop-blur-sm border-cyan-300 text-cyan-800 shadow-sm">
+          <div className="status-badge flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-cyan-100/90 backdrop-blur-sm border-cyan-300 text-cyan-800 shadow-sm">
             <LucideIcons.RefreshCw className="w-4 h-4 animate-spin" /> <span>동기화 중...</span>
           </div>
         )}
@@ -919,33 +954,24 @@ export const MobileMissionView = () => {
           </div>
         )}
 
-        <div className={`shrink-0 bg-white border border-slate-200 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${isZombie ? 'opacity-80' : ''}`}>
-          {hasBuff && <div className="absolute inset-0 bg-yellow-100 animate-pulse"></div>}
-          <span className="text-slate-500 font-bold tracking-widest text-sm mb-1 relative z-10">
-            {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : '현재 에너지 충전율'} {hasBuff && <span className="text-yellow-600 ml-2">X2 버프 중!</span>}
+        <div className={`score-card shrink-0 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${isZombie ? 'opacity-80' : ''} ${isOutdoorMode ? 'bg-black/80 border-2 border-cyan-600' : 'bg-white border border-slate-200'}`}>
+          {hasBuff && <div className="absolute inset-0 bg-yellow-100/30 animate-pulse"></div>}
+          <span className={`score-label font-bold tracking-widest text-sm mb-1 relative z-10 ${isOutdoorMode ? 'text-slate-300' : 'text-slate-500'}`}>
+            {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : '현재 에너지 충전율'} {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
           </span>
-          <span className={`text-7xl font-black font-mono transition-transform text-slate-900 relative z-10`}>
+          <span className={`score-value text-7xl font-black font-mono transition-transform relative z-10 ${isOutdoorMode ? 'text-cyan-400' : 'text-slate-900'}`}>
             {displayScore}
           </span>
           
           <div className="flex gap-2 mt-3 relative z-10">
-            {hasDrone && <span className="px-2 py-1 bg-cyan-50 text-cyan-600 border border-cyan-200 rounded text-xs font-bold">드론 가동중</span>}
-            {hasCooldown && <span className="px-2 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded text-xs font-bold">쿨다운 단축</span>}
-            {hasBonus && <span className="px-2 py-1 bg-pink-50 text-pink-600 border border-pink-200 rounded text-xs font-bold">보너스 요정</span>}
+            {hasDrone && <span className="px-2 py-1 bg-cyan-900/50 text-cyan-400 border border-cyan-700 rounded text-xs font-bold">드론 가동중</span>}
+            {hasCooldown && <span className="px-2 py-1 bg-blue-900/50 text-blue-400 border border-blue-700 rounded text-xs font-bold">쿨다운 단축</span>}
+            {hasBonus && <span className="px-2 py-1 bg-pink-900/50 text-pink-400 border border-pink-700 rounded text-xs font-bold">보너스 요정</span>}
+            {role !== 'novice' && <span className="px-2 py-1 bg-purple-900/50 text-purple-400 border border-purple-700 rounded text-xs font-bold">{ROLE_OPTIONS.find(r => r.id === role)?.name}</span>}
           </div>
         </div>
 
-        <div className="shrink-0 flex gap-2 mb-4">
-          <button onClick={() => setActiveTab('mission')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'mission' ? 'bg-cyan-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500'}`}>
-            <LucideIcons.Shield className="w-5 h-5" /> 미션
-          </button>
-          <button onClick={() => setActiveTab('bingo')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'bingo' ? 'bg-orange-500 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500'}`}>
-            <LucideIcons.Grid className="w-5 h-5" /> 빙고
-          </button>
-          <button onClick={() => setActiveTab('shop')} className={`flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'shop' ? 'bg-purple-600 text-white shadow-md' : 'bg-white border border-slate-200 text-slate-500'}`}>
-            <LucideIcons.ShoppingCart className="w-5 h-5" /> 상점
-          </button>
-        </div>
+        {/* 하단 고정 탭바를 위한 스페이서 - 실제 탭바는 아래에 fixed로 렌더링 */}
 
         <div className="flex flex-col relative">
           {showScanner && (
@@ -1002,31 +1028,34 @@ export const MobileMissionView = () => {
                   return (
                     <button 
                       key={m.id || i}
-                      onTouchStart={(e) => handleMissionComplete(m, e)}
+                      onTouchStart={(e) => {
+                        if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
+                        handleMissionComplete(m, e);
+                      }}
                       onMouseDown={(e) => handleMissionComplete(m, e)}
-                      disabled={isLocked || cooldown || isPending} 
-                      className={`w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-none bg-white shadow-sm hover:shadow-md ${m.bg}`}
+                      disabled={isLocked || isPending} 
+                      className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-none shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm ${m.color}`}>
                           {isPending ? <LucideIcons.Clock className="w-8 h-8 text-yellow-500 animate-pulse" /> : <IconComp className="w-8 h-8" />}
                         </div>
                         <div className="text-left flex flex-col justify-center">
-                          <div className={`font-black text-xl flex items-center gap-2 ${m.color}`}>
+                          <div className={`mission-title font-black text-xl flex items-center gap-2 ${isOutdoorMode ? 'text-white' : m.color}`}>
                             {m.title}
                             {m.requires_approval && !isPending && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full border border-red-200">승인필요</span>}
                             {isPending && <span className="text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full border border-yellow-200">대기 중</span>}
                           </div>
-                          <div className="text-sm text-slate-500 font-bold mt-0.5">{m.desc}</div>
+                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <span className={`font-black text-3xl ${m.color}`}>+{m.amount}</span>
+                        <span className={`mission-amount font-black text-3xl ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>+{m.amount}</span>
                         <span className="text-xs text-slate-400 font-bold mt-1">대기 {m.cooldown}초</span>
                       </div>
 
                       {cooldown && (
-                        <div className="absolute inset-0 bg-white/70 rounded-2xl overflow-hidden backdrop-blur-sm z-10">
+                        <div className={`cooldown-overlay absolute inset-0 rounded-2xl overflow-hidden backdrop-blur-sm z-10 ${isOutdoorMode ? 'bg-black/70' : 'bg-white/70'}`}>
                           <div className="absolute bottom-0 left-0 h-1 bg-slate-400 transition-all duration-50 ease-linear" style={{ width: `${(cooldownTime / maxCooldownTime) * 100}%` }}></div>
                         </div>
                       )}
@@ -1092,6 +1121,30 @@ export const MobileMissionView = () => {
             </div>
           ) : (
             <div className="flex flex-col gap-3 overflow-y-auto pb-32 custom-scrollbar pr-2 h-full">
+              {/* 직업 변경 섹션 */}
+              <div className={`p-4 rounded-2xl border shadow-sm ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200'}`}>
+                <h3 className={`font-black text-sm mb-3 flex items-center gap-2 ${isOutdoorMode ? 'text-purple-400' : 'text-purple-700'}`}>
+                  <LucideIcons.Swords className="w-4 h-4" /> 직업 변경
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {ROLE_OPTIONS.map(r => (
+                    <button
+                      key={r.id}
+                      onClick={() => handleRoleChange(r.id)}
+                      className={`p-3 rounded-xl text-left transition-all active:scale-95 flex items-center gap-2 ${role === r.id 
+                        ? (isOutdoorMode ? 'bg-purple-900 border-2 border-purple-500 text-white' : 'bg-purple-600 text-white border-2 border-purple-400') 
+                        : (isOutdoorMode ? 'bg-slate-800 border border-slate-600 text-slate-300' : 'bg-white border border-slate-200 text-slate-700')}`}
+                    >
+                      <r.icon className="w-5 h-5 shrink-0" />
+                      <div>
+                        <p className="font-black text-sm">{r.name}</p>
+                        <p className={`text-[10px] ${role === r.id ? 'text-white/70' : (isOutdoorMode ? 'text-slate-500' : 'text-slate-400')}`}>{r.desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {gameRoom?.flash_sale && (
                 <div className="bg-yellow-50 border-2 border-yellow-400 p-3 rounded-2xl animate-pulse shadow-sm flex items-center justify-center gap-2">
                   <LucideIcons.Zap className="w-5 h-5 text-yellow-600" />
@@ -1101,23 +1154,23 @@ export const MobileMissionView = () => {
               {SHOP_ITEMS.map((item) => {
                 const actualCost = gameRoom?.flash_sale && item.id !== 'allin' ? Math.floor(item.cost / 2) : item.cost;
                 return (
-                  <div key={item.id} className={`p-4 bg-white border rounded-2xl flex justify-between items-center shrink-0 shadow-sm ${item.bg}`}>
+                  <div key={item.id} className={`p-4 border rounded-2xl flex justify-between items-center shrink-0 shadow-sm ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${item.bg}`}`}>
                     <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm ${item.color}`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center border shadow-sm ${isOutdoorMode ? 'bg-slate-800 border-slate-600' : 'bg-white border-slate-100'} ${item.color}`}>
                         <item.icon className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className={`font-black text-lg flex items-center gap-2 ${item.color}`}>
+                        <p className={`font-black text-lg flex items-center gap-2 ${isOutdoorMode ? 'text-white' : item.color}`}>
                           {item.name}
                           {gameRoom?.flash_sale && item.id !== 'allin' && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">SALE</span>}
                         </p>
-                        <p className="text-xs text-slate-500 font-bold break-keep pr-2">{item.desc}</p>
+                        <p className={`text-xs font-bold break-keep pr-2 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.desc}</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => buyItem(item)} 
                       disabled={displayScore < actualCost || (item.id === 'double' && hasBuff)} 
-                      className={`shrink-0 px-4 py-3 rounded-xl font-black text-base transition-transform active:scale-95 flex flex-col items-center justify-center ${displayScore >= actualCost ? 'bg-purple-600 text-white shadow-md hover:bg-purple-500' : 'bg-slate-100 text-slate-400'}`}
+                      className={`shrink-0 px-4 py-3 rounded-xl font-black text-base transition-transform active:scale-95 flex flex-col items-center justify-center ${displayScore >= actualCost ? 'bg-purple-600 text-white shadow-md hover:bg-purple-500' : (isOutdoorMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400')}`}
                     >
                       {item.id === 'allin' ? '전부' : (
                         <>
@@ -1132,6 +1185,19 @@ export const MobileMissionView = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* 하단 고정 탭바 */}
+      <div className={`tab-bar fixed bottom-0 left-0 right-0 z-50 flex gap-2 p-3 border-t shadow-lg safe-area-bottom ${isOutdoorMode ? 'bg-black/95 border-slate-800' : 'bg-white/95 backdrop-blur-md border-slate-200'}`}>
+        <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'bg-cyan-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.Shield className="w-5 h-5" /> 미션
+        </button>
+        <button onClick={() => setActiveTab('bingo')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'bingo' ? `tab-active ${isOutdoorMode ? 'bg-orange-700 text-white' : 'bg-orange-500 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.Grid className="w-5 h-5" /> 빙고
+        </button>
+        <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.ShoppingCart className="w-5 h-5" /> 상점
+        </button>
       </div>
     </div>
   );

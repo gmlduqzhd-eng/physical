@@ -6,6 +6,8 @@ import { AdminControlPanel } from './presentation/AdminControlPanel';
 import { Lobby } from './presentation/Lobby';
 import { Manual } from './presentation/Manual';
 import { KioskRelayView } from './presentation/KioskRelayView';
+import { QuickJoin } from './presentation/QuickJoin';
+import { BoardEntry } from './presentation/BoardEntry';
 import { syncServerTime } from './application/timeSync';
 
 function App() {
@@ -34,7 +36,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Lobby />} />
+        <Route path="/join" element={<QuickJoin />} />
         <Route path="/manual" element={<Manual />} />
+        <Route path="/board" element={<BoardEntry />} />
         <Route path="/board/:roomId" element={<ScoreBoard />} />
         <Route path="/mobile/:roomId/:groupId" element={<MobileMissionView />} />
         <Route path="/admin" element={<AdminControlPanel />} />
