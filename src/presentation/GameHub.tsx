@@ -1065,10 +1065,10 @@ export const GameHub = () => {
             <span className="text-xs font-bold text-cyan-300">2022 개정 교육과정 초등 체육과 연계</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 text-center">
-            땀방울 원정대 체육 플랫폼
+            땀방울 원정대
           </h1>
           <p className="text-slate-400 font-medium mt-1.5 text-center text-xs md:text-sm max-w-xl">
-            초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400 font-bold">운동</span> · <span className="text-blue-400 font-bold">스포츠</span> · <span className="text-purple-400 font-bold">표현</span>) 및 성취기준에 맞춘 스마트 체육 미니게임
+            초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400 font-bold">운동</span> · <span className="text-blue-400 font-bold">스포츠</span> · <span className="text-purple-400 font-bold">표현</span>) 및 성취기준에 맞춘 스마트 체육 미니게임 플랫폼
           </p>
         </div>
       </div>
