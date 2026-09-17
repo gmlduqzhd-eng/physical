@@ -892,7 +892,7 @@ export const MobileMissionView = () => {
         >
           <LucideIcons.Swords className="w-32 h-32 text-red-500 mb-8 animate-bounce" />
           <h1 className="text-4xl font-black text-white mb-2">보스 레이드 발동!</h1>
-          <p className="text-red-300 font-bold mb-10 text-center">전체 조가 협력하여 보스를 물리치세요!<br/>화면을 미친듯이 탭하세요!</p>
+          <p className="text-red-300 font-bold mb-10 text-center">전체 조가 협력하여 보스를 물리치세요!<br/>화면을 빠르게 탭하세요!</p>
           
           <div className="w-full bg-slate-800 rounded-full h-8 border-2 border-slate-700 overflow-hidden relative">
             <div 

@@ -90,7 +90,7 @@ export const TugOfWarGame = ({ groupId, enqueueAction }: Props) => {
       )}
 
       <div className="absolute bottom-10 text-slate-500 text-sm font-bold animate-pulse">
-        화면을 미친듯이 연타하세요!
+        화면을 빠르게 연타하세요!
       </div>
     </div>
   );

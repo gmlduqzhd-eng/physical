@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import type { GameRoom } from '../../../domain/types';
 
@@ -10,8 +10,10 @@ interface Props {
 
 export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   const [taps, setTaps] = useState(0);
+  const tapsRef = useRef(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [finished, setFinished] = useState(false);
+  const finishedRef = useRef(false);
   const minigame = gameRoom.active_minigame;
 
   useEffect(() => {
@@ -21,30 +23,26 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
       const remaining = Math.max(0, Math.floor((end - Date.now()) / 1000));
       setTimeLeft(remaining);
       
-      if (remaining <= 0) {
+      if (remaining <= 0 && !finishedRef.current) {
         clearInterval(timer);
-        if (!finished) {
-          setFinished(true);
-          submitScore();
-        }
+        finishedRef.current = true;
+        setFinished(true);
+        // ref를 사용하여 최신 taps 값 참조
+        const reward = tapsRef.current * 5;
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: reward }, timestamp: Date.now() });
       }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [minigame.end_time, finished]);
-
-  const submitScore = async () => {
-    // 1 탭당 5점
-    const reward = taps * 5;
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: reward }, timestamp: Date.now() });
-    if (taps > 0) {
-      alert(`🌋 화산 탈출! 총 ${taps}번 터치하여 ${reward}점을 획득했습니다!`);
-    }
-  };
+  }, [minigame.end_time, groupId, enqueueAction]);
 
   const handleTap = () => {
     if (timeLeft > 0 && !finished) {
-      setTaps(t => t + 1);
+      setTaps(t => {
+        const next = t + 1;
+        tapsRef.current = next;
+        return next;
+      });
     }
   };
 
@@ -60,7 +58,7 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
       <LucideIcons.Flame className={`w-40 h-40 ${taps % 2 === 0 ? 'text-orange-500 scale-110' : 'text-red-500 scale-90'} transition-transform duration-75 relative z-10 mb-8`} />
 
       <h1 className="text-4xl font-black text-white mb-2 text-center relative z-10">화산 폭발!</h1>
-      <p className="text-orange-300 font-bold mb-8 text-center relative z-10">화면을 미친듯이 연타해서 탈출하세요!</p>
+      <p className="text-orange-300 font-bold mb-8 text-center relative z-10">화면을 빠르게 연타해서 탈출하세요!</p>
       
       <div className="text-5xl font-black text-white relative z-10">
         {taps} HIT!

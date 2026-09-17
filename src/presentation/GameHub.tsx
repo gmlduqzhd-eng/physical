@@ -6,7 +6,7 @@ const GAMES = [
     type: 'volcano',
     name: '화산 폭발',
     emoji: '🌋',
-    desc: '10초 안에 화면을 미친듯이 연타하세요!',
+    desc: '10초 안에 화면을 빠르게 연타하세요!',
     icon: Flame,
     color: 'from-orange-500 to-red-600',
     border: 'border-orange-400/30',

@@ -151,7 +151,7 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
           onClick={handleFallbackTap}
           className="relative z-10 px-6 py-4 bg-red-600 rounded-xl text-white font-black animate-bounce"
         >
-          마이크 접근 실패! 여기를 미친듯이 연타하세요!
+          마이크 접근 실패! 여기를 빠르게 연타하세요!
         </button>
       )}
 
