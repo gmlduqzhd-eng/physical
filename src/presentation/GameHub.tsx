@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award } from 'lucide-react';
+import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
@@ -900,6 +901,25 @@ const GAMES: GameDef[] = [
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '협동'
   },
+  ...EXPRESSION_GAMES.map(eg => ({
+    type: eg.id,
+    name: eg.name,
+    emoji: eg.emoji,
+    desc: eg.desc,
+    color: 'from-purple-500 to-indigo-600',
+    border: 'border-purple-400/40',
+    glow: 'hover:shadow-purple-500/30',
+    difficulty: 2,
+    domain: '표현' as const,
+    subCategory: eg.subCategory,
+    achievement: eg.achievement,
+    grades: eg.grades,
+    activityType: (eg.playMode === '협동' ? '모둠' : '개인') as '개인' | '짝' | '모둠',
+    durationMinutes: 3,
+    physicalActivity: true,
+    devices: eg.devices,
+    playMode: eg.playMode,
+  })),
 ];
 
 const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [

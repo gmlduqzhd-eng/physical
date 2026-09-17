@@ -49,6 +49,8 @@ import { DribbleRhythm } from './components/minigames/DribbleRhythm';
 import { OpenSpaceTactician } from './components/minigames/OpenSpaceTactician';
 import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
+import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
+import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 
@@ -111,6 +113,17 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'emotion-thermometer': { name: '감정 온도계', emoji: '🌡️', domain: '표현', code: '[4체03-04]', target: '감정 신체 표현' },
   'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '신체 요소 창의 표현' },
 };
+
+// 30종 신규 표현 게임 메타 자동 등록
+EXPRESSION_GAMES.forEach(eg => {
+  GAME_TITLES[eg.id] = {
+    name: eg.name,
+    emoji: eg.emoji,
+    domain: '표현',
+    code: eg.achievement.code,
+    target: eg.subCategory,
+  };
+});
 
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
@@ -285,8 +298,22 @@ export const GamePlayPage = () => {
         return <EmotionThermometer key={key} />;
       case 'partner-robot-lab':
         return <PartnerRobotLab key={key} />;
-      default:
+      default: {
+        const isExpressionGame = EXPRESSION_GAMES.some(eg => eg.id === gameType);
+        if (isExpressionGame && gameType) {
+          return (
+            <div className="pt-16 pb-12 px-4 min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center">
+              <ExpressionGameViewer
+                key={key}
+                gameType={gameType}
+                onComplete={(score) => localEnqueueAction({ payload: { amount: score } })}
+                onExit={() => navigate('/')}
+              />
+            </div>
+          );
+        }
         return null;
+      }
     }
   };
 

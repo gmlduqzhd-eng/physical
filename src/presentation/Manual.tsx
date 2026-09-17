@@ -29,10 +29,10 @@ export const Manual = () => {
               <Sparkles className="w-3.5 h-3.5" /> 2022 개정 초등 체육과 교육과정 연계
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
-              총 49종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
+              총 79종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
             </h2>
             <p className="text-sm text-slate-400 mt-2 max-w-2xl mx-auto leading-relaxed">
-              화면 터치형 센서 미니게임부터 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동까지!
+              화면 터치형 센서 미니게임부터 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동, 그리고 유튜브 영상 연계 댄스·표현 활동까지!
               학생들의 신체활동 역량과 협동심을 기를 수 있도록 설계된 학교 체육 수업 플랫폼입니다.
             </p>
           </div>
@@ -41,10 +41,10 @@ export const Manual = () => {
           <section className="space-y-4">
             <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">1</span>
-              2022 개정 체육과 3대 영역 (총 49종 게임)
+              2022 개정 체육과 3대 영역 (총 79종 게임)
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              2022 개정 교육과정 기준에 맞추어 <strong className="text-emerald-400">운동 (20종)</strong>, <strong className="text-blue-400">스포츠 (22종)</strong>, <strong className="text-purple-400">표현 (7종)</strong>의 3개 대영역으로 체계적으로 분류되어 있으며, 모든 활동 카드에서 학년군별 성취기준 코드와 세부 목표를 열람할 수 있습니다.
+              2022 개정 교육과정 기준에 맞추어 <strong className="text-emerald-400">운동 (20종)</strong>, <strong className="text-blue-400">스포츠 (22종)</strong>, <strong className="text-purple-400">표현 (37종)</strong>의 3개 대영역으로 체계적으로 분류되어 있으며, 모든 활동 카드에서 학년군별 성취기준 코드와 세부 목표를 열람할 수 있습니다.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
@@ -77,13 +77,13 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-purple-500/30">
                 <div className="font-black text-purple-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">🎭 표현 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">7종</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">37종</span>
                 </div>
                 <p className="text-slate-400 text-xs leading-relaxed">
-                  신체 움직임을 통해 생각과 정서를 창의적으로 나타내고, 리듬과 감정을 교감하며 심미적 가치를 감상하는 활동
+                  신체 움직임을 통해 생각과 정서를 창의적으로 나타내고, 유튜브 영상 연계 댄스·탈춤·치어리딩 및 심미적 가치를 감상하는 활동
                 </p>
                 <div className="mt-2 text-[11px] text-slate-500">
-                  대표: 감정 온도계, 파트너 로봇 연구소, 댄스 포즈 마스터, 동물 흉내 체조 등
+                  대표: 전통 탈춤, K-POP 안무 챌린지, 바디 퍼커션, 치어리딩, 음악 줄넘기, 태보 등
                 </div>
               </div>
             </div>
@@ -250,7 +250,115 @@ export const Manual = () => {
             </div>
           </section>
 
-          {/* 5. 안전 및 수업 운영 수칙 */}
+          {/* 5. 🎭 신규 표현 활동 30종 & 유튜브 영상 연계 수업 가이드 */}
+          <section className="bg-slate-950 p-6 rounded-3xl border border-purple-500/40 space-y-6 shadow-2xl">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold border border-purple-500/30">5</span>
+              <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
+                <span>🎭</span> 신규 표현 활동 30종 &amp; 유튜브 영상 연계 수업
+              </h3>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              2022 개정 체육과 교육과정에 맞추어 <strong className="text-purple-300">1~2학년(8종)</strong>, <strong className="text-purple-300">3~4학년(12종)</strong>, <strong className="text-purple-300">5~6학년(10종)</strong> 총 30종의 독창적인 표현 활동이 추가되었습니다. 특히 K-POP 안무, 전통 탈춤, 세계 민속 춤, 치어리딩, 음악 줄넘기, 태보 등은 <strong>유튜브 시연 영상을 직접 보며</strong> 따라 할 수 있습니다.
+            </p>
+
+            {/* 유튜브 플레이어 기능 안내 카드 */}
+            <div className="bg-purple-950/30 p-4 sm:p-5 rounded-2xl border border-purple-500/30 space-y-3">
+              <h4 className="text-sm font-black text-purple-300 flex items-center gap-2">
+                <span>📺</span> 영상 연계 플레이어 핵심 기능
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
+                  <div className="font-bold text-white mb-1">🪞 거울 모드 (좌우 반전)</div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    강사의 왼손/오른손이 거울처럼 마주 보여 학생들이 헷갈리지 않고 쉽게 동작을 따라 합니다.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
+                  <div className="font-bold text-white mb-1">🔗 맞춤 영상 URL 변경</div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    선생님이 수업에 사용할 유튜브 링크(URL)를 직접 붙여넣어 원하는 교육 영상으로 즉시 교체 가능합니다.
+                  </p>
+                </div>
+                <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
+                  <div className="font-bold text-white mb-1">🎵 비트 메트로놈</div>
+                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                    8박자(1-2-3-4 / 5-6-7-8) 시각·청각 가이드를 통해 음악의 빠르기와 강약을 체득합니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* 학년군별 30종 게임 목록 요약 */}
+            <div className="space-y-3 text-xs">
+              <h4 className="text-sm font-black text-slate-200">
+                📚 학년군별 표현 게임 30종 라인업
+              </h4>
+
+              {/* 1~2학년군 8종 */}
+              <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+                <div className="font-bold text-cyan-400 flex items-center justify-between">
+                  <span>🌱 1~2학년군 (8종) - 기본 움직임 &amp; 자연·사물 모방</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">[2체03-01~03]</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
+                  <div>• 🌱 씨앗의 성장</div>
+                  <div>• 🌦️ 날씨 탐험대</div>
+                  <div>• 🧣 마법 스카프 요정</div>
+                  <div>• 🍿 팝콘 팡팡</div>
+                  <div>• 👥 그림자 인형사</div>
+                  <div>• 🎨 소리 그리기</div>
+                  <div>• 🚦 교통 신호등 요원</div>
+                  <div>• 🎈 풍선 여행기</div>
+                </div>
+              </div>
+
+              {/* 3~4학년군 12종 */}
+              <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+                <div className="font-bold text-emerald-400 flex items-center justify-between">
+                  <span>🚀 3~4학년군 (12종) - 공간·시간·힘 원리 &amp; 리듬·스토리</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">[4체03-01~05]</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
+                  <div>• 🚀 우주 유영가</div>
+                  <div>• 🔥 4원소 소환사</div>
+                  <div>• 🏛️ 신체 조각 미술관</div>
+                  <div>• 🥁 바디 퍼커션</div>
+                  <div>• 🌟 K-POP 기초 (영상)</div>
+                  <div>• 🎭 뮤지컬 스톱 모션</div>
+                  <div>• 🎀 리듬 리본 체조</div>
+                  <div>• 🦎 템포 카멜레온</div>
+                  <div>• 📖 릴레이 극장</div>
+                  <div>• 🪞 싱크로 미러 듀오</div>
+                  <div>• 🪂 중력 탈출 러너</div>
+                  <div>• 🖼️ 갤러리 감상단</div>
+                </div>
+              </div>
+
+              {/* 5~6학년군 10종 */}
+              <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+                <div className="font-bold text-purple-400 flex items-center justify-between">
+                  <span>👺 5~6학년군 (10종) - 민속·현대·스포츠 표현 &amp; 창작</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">[6체03-01~04]</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
+                  <div>• 👺 전통 탈춤 (영상)</div>
+                  <div>• 🌕 달맞이 강강술래</div>
+                  <div>• 🗺️ 세계 민속 춤 (영상)</div>
+                  <div>• 💃 K-POP 커버 (영상)</div>
+                  <div>• 🎬 뮤지컬 연출가</div>
+                  <div>• 📣 파워 치어리딩 (영상)</div>
+                  <div>• 🪢 음악 줄넘기 (영상)</div>
+                  <div>• 🥊 태보 에어로빅 (영상)</div>
+                  <div>• 👥 모둠 플래시몹</div>
+                  <div>• 🏆 표현 페스티벌</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 6. 안전 및 수업 운영 수칙 */}
           <section className="bg-amber-950/30 p-5 sm:p-6 rounded-2xl border border-amber-500/30 space-y-3">
             <h4 className="text-amber-400 font-black flex items-center gap-2 text-sm sm:text-base">
               <ShieldCheck className="w-5 h-5 text-amber-400" /> 교사 및 학생 필수 안전 수칙
