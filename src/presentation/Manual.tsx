@@ -19,8 +19,44 @@ export const Manual = () => {
 
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xl space-y-10">
           <div className="text-center pb-6 border-b border-slate-100">
-            <p className="text-lg text-slate-600 font-bold">학생들이 게임처럼 열광하는 체육 수업 플랫폼!</p>
-            <p className="text-sm text-slate-500 mt-2">단순한 체력 측정을 넘어, 다양한 미니게임과 RPG 요소를 결합한 수업 가이드입니다.</p>
+            <p className="text-lg text-slate-600 font-bold">2022 개정 초등 체육과 교육과정 연계 스마트 수업 플랫폼!</p>
+            <p className="text-sm text-slate-500 mt-2">단순한 체력 측정을 넘어, 교육과정 3대 영역(운동·스포츠·표현) 및 성취기준을 기반으로 설계된 게임형 체육 수업 가이드입니다.</p>
+          </div>
+
+          {/* 2022 개정 교육과정 연계 안내 배너 */}
+          <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-6 rounded-2xl border border-cyan-200">
+            <h3 className="text-lg font-black text-cyan-800 mb-3 flex items-center gap-2">
+              <span className="text-2xl">🎓</span> 2022 개정 체육과 교육과정 영역 및 수업 연계
+            </h3>
+            <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+              2022 개정 교육과정(교육부 고시 제2022-33호)에 따라 기존 5개 영역에서 <strong>운동, 스포츠, 표현</strong>의 3개 대영역으로 개편되었습니다. 모든 게임은 학년군별 성취기준 코드와 직접 매핑되어 수업 설계 및 과정 중심 평가에 활용할 수 있습니다.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div className="bg-white p-3.5 rounded-xl border border-emerald-200 shadow-sm">
+                <div className="font-black text-emerald-700 mb-1 flex items-center gap-1.5">
+                  <span>🏃</span> 운동 영역
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  자신의 몸과 체력 수준을 이해하고 생활 속 규칙적인 운동 실천 (건강 체력, 운동 체력, 성장·발달, 생활 습관, 안전)
+                </p>
+              </div>
+              <div className="bg-white p-3.5 rounded-xl border border-blue-200 shadow-sm">
+                <div className="font-black text-blue-700 mb-1 flex items-center gap-1.5">
+                  <span>⚽</span> 스포츠 영역
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  기능과 전략을 게임에 적용하고 협력·배려 실천 (기술형: 표적·기록·투기, 전략형: 영역·필드·네트, 생태형: 민속·놀이)
+                </p>
+              </div>
+              <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-sm">
+                <div className="font-black text-purple-700 mb-1 flex items-center gap-1.5">
+                  <span>🎭</span> 표현 영역
+                </div>
+                <p className="text-slate-600 text-[11px] leading-relaxed">
+                  생각과 감정을 창의적으로 표현하고 심미성 감상 (기본 움직임 표현, 사물·자연 모방, 리듬, 현대 및 스포츠 표현)
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-10">
