@@ -9,6 +9,16 @@ import { ScreamGame } from './components/minigames/ScreamGame';
 import { ShakeGame } from './components/minigames/ShakeGame';
 import { TugOfWarGame } from './components/minigames/TugOfWarGame';
 import { FateCardGame } from './components/minigames/FateCardGame';
+import { ReactionTest } from './components/minigames/ReactionTest';
+import { BalloonPump } from './components/minigames/BalloonPump';
+import { DirectionSwipe } from './components/minigames/DirectionSwipe';
+import { ColorWord } from './components/minigames/ColorWord';
+import { CardMatch } from './components/minigames/CardMatch';
+import { MathSprint } from './components/minigames/MathSprint';
+import { TargetShoot } from './components/minigames/TargetShoot';
+import { RedGreenLight } from './components/minigames/RedGreenLight';
+import { LeftRight } from './components/minigames/LeftRight';
+import { CoinFlip } from './components/minigames/CoinFlip';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 
 const GAME_TITLES: Record<string, { name: string; emoji: string }> = {
@@ -21,6 +31,16 @@ const GAME_TITLES: Record<string, { name: string; emoji: string }> = {
   shake: { name: '바운스 충전', emoji: '🔋' },
   tug_of_war: { name: '스마트 줄다리기', emoji: '🏋️' },
   fate_card: { name: '운명의 카드', emoji: '🃏' },
+  reaction: { name: '반응속도 테스트', emoji: '⚡' },
+  balloon: { name: '풍선 불기', emoji: '🎈' },
+  direction: { name: '방향 스와이프', emoji: '👆' },
+  color_word: { name: '색깔 읽기 챌린지', emoji: '🎨' },
+  card_match: { name: '짝 맞추기', emoji: '🃏' },
+  math: { name: '계산왕 스프린트', emoji: '🔢' },
+  target: { name: '타겟 조준', emoji: '🎯' },
+  red_green: { name: '무궁화꽃이 피었습니다', emoji: '🚦' },
+  left_right: { name: '좌우 반사신경', emoji: '👈👉' },
+  coin_flip: { name: '동전 뒤집기', emoji: '🪙' },
 };
 
 export const GamePlayPage = () => {
@@ -101,6 +121,26 @@ export const GamePlayPage = () => {
         return <TugOfWarGame key={key} {...commonProps} />;
       case 'fate_card':
         return <FateCardGame key={key} {...commonProps} />;
+      case 'reaction':
+        return <ReactionTest key={key} {...commonProps} />;
+      case 'balloon':
+        return <BalloonPump key={key} {...commonProps} />;
+      case 'direction':
+        return <DirectionSwipe key={key} {...commonProps} />;
+      case 'color_word':
+        return <ColorWord key={key} {...commonProps} />;
+      case 'card_match':
+        return <CardMatch key={key} {...commonProps} />;
+      case 'math':
+        return <MathSprint key={key} {...commonProps} />;
+      case 'target':
+        return <TargetShoot key={key} {...commonProps} />;
+      case 'red_green':
+        return <RedGreenLight key={key} {...commonProps} />;
+      case 'left_right':
+        return <LeftRight key={key} {...commonProps} />;
+      case 'coin_flip':
+        return <CoinFlip key={key} {...commonProps} />;
       default:
         return null;
     }
