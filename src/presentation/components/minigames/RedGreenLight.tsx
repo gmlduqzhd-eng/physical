@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { sfxClick, sfxPop } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -46,10 +47,12 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
     if (finished || eliminated) return;
 
     if (isGreenRef.current) {
+      sfxClick();
       setScore(s => s + 1);
       scoreRef.current += 1;
     } else {
       // 빨간불에 터치 → 탈락!
+      sfxPop();
       setEliminated(true);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
     }

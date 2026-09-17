@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { sfxTap } from '../../../application/soundEffects';
 import * as LucideIcons from 'lucide-react';
 
 interface Props {
@@ -34,6 +35,7 @@ export const TugOfWarGame = ({ groupId, enqueueAction }: Props) => {
 
   const handleTap = () => {
     if (finished) return;
+    sfxTap();
     
     setProgress(p => {
       if (p >= 100) return 100;

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { sfxCoin } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -50,6 +51,7 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
 
     // Hit successful
     setActiveMole(null); // Hide immediately
+    sfxCoin();
     setHits(h => {
       if (h >= 15) return 15;
       const next = h + 1;

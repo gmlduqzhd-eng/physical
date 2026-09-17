@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -50,8 +51,10 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
     if (idx === question.correctIdx) {
       setScore(s => s + 1);
       scoreRef.current += 1;
+      sfxCoin();
       setFlash('correct');
     } else {
+      sfxPop();
       setFlash('wrong');
     }
     setTimeout(() => setFlash(null), 150);

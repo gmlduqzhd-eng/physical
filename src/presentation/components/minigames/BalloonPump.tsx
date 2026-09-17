@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { sfxTap, sfxPop, sfxCoin } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -15,9 +16,11 @@ export const BalloonPump = ({ groupId, enqueueAction }: Props) => {
 
   const handlePump = () => {
     if (popped || cashedOut) return;
+    sfxTap();
     const newSize = size + 4 + Math.floor(Math.random() * 4);
     if (newSize >= popThreshold) {
       setPopped(true);
+      sfxPop();
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
     } else {
       setSize(newSize);
@@ -28,6 +31,7 @@ export const BalloonPump = ({ groupId, enqueueAction }: Props) => {
     if (popped || cashedOut || lockRef.current) return;
     lockRef.current = true;
     setCashedOut(true);
+    sfxCoin();
     const score = Math.floor((size - 60) * 5);
     enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() });
   };

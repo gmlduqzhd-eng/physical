@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import type { GameRoom } from '../../../domain/types';
+import { sfxTap } from '../../../application/soundEffects';
 
 interface Props {
   gameRoom: GameRoom;
@@ -38,6 +39,7 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
 
   const handleTap = () => {
     if (timeLeft > 0 && !finished) {
+      sfxTap();
       setTaps(t => {
         const next = t + 1;
         tapsRef.current = next;

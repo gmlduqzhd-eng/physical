@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -30,11 +31,13 @@ export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
 
       const correct = pred === coinResult;
       if (correct) {
+        sfxCoin();
         const bonus = (streak + 1) * 50;
         setStreak(s => s + 1);
         setTotalScore(s => s + bonus);
         totalScoreRef.current += bonus;
       } else {
+        sfxPop();
         setStreak(0);
       }
 

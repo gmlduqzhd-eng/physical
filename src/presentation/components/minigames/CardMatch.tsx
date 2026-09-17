@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { sfxClick, sfxCoin } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -25,6 +26,7 @@ export const CardMatch = ({ groupId, enqueueAction }: Props) => {
 
   const handleFlip = (index: number) => {
     if (lockRef.current || flipped.includes(index) || matched.has(index) || finished) return;
+    sfxClick();
 
     const newFlipped = [...flipped, index];
     setFlipped(newFlipped);
@@ -35,6 +37,7 @@ export const CardMatch = ({ groupId, enqueueAction }: Props) => {
 
       if (cards[newFlipped[0]] === cards[newFlipped[1]]) {
         // 매치!
+        sfxCoin();
         const newMatched = new Set(matched);
         newMatched.add(newFlipped[0]);
         newMatched.add(newFlipped[1]);

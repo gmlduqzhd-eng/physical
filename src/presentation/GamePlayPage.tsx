@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { VolcanoGame } from './components/minigames/VolcanoGame';
 import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
@@ -20,6 +20,7 @@ import { RedGreenLight } from './components/minigames/RedGreenLight';
 import { LeftRight } from './components/minigames/LeftRight';
 import { CoinFlip } from './components/minigames/CoinFlip';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
+import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 
 const GAME_TITLES: Record<string, { name: string; emoji: string }> = {
   volcano: { name: '화산 폭발', emoji: '🌋' },
@@ -46,15 +47,29 @@ const GAME_TITLES: Record<string, { name: string; emoji: string }> = {
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const navigate = useNavigate();
-  const [key, setKey] = useState(0); // 게임 리셋용 키
+  const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
+
+  // BGM 시작/종료
+  useEffect(() => {
+    startBgm();
+    return () => stopBgm();
+  }, []);
 
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
   const localEnqueueAction = useCallback((action: { payload: { amount: number } }) => {
     const earned = action.payload.amount;
     setLastEarnedScore(earned);
     setGameFinished(true);
+    stopBgm();
+
+    // 성공/실패 효과음
+    if (earned > 0) {
+      sfxSuccess();
+    } else {
+      sfxFail();
+    }
 
     // 최고 기록 저장
     if (gameType) {
@@ -70,6 +85,7 @@ export const GamePlayPage = () => {
     setGameFinished(false);
     setLastEarnedScore(0);
     setKey(prev => prev + 1);
+    startBgm();
   };
 
   const gameInfo = GAME_TITLES[gameType || ''];

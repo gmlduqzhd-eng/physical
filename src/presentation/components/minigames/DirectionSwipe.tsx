@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { sfxWhoosh, sfxPop } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -77,8 +78,10 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
     if (swiped === current) {
       setScore(s => s + 1);
       scoreRef.current += 1;
+      sfxWhoosh();
       setFlash('correct');
     } else {
+      sfxPop();
       setFlash('wrong');
     }
     setTimeout(() => setFlash(null), 200);

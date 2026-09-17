@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { sfxTap } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -31,6 +32,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
   const handleShoot = () => {
     if (finished || lockRef.current) return;
     lockRef.current = true;
+    sfxTap();
 
     if (animRef.current) cancelAnimationFrame(animRef.current);
 

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { sfxClick, sfxPop } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -42,8 +43,10 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
     if (side === targetSide) {
       setScore(s => s + 1);
       scoreRef.current += 1;
+      sfxClick();
       setFlash('correct');
     } else {
+      sfxPop();
       setFlash('wrong');
     }
     setTimeout(() => setFlash(null), 100);
