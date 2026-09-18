@@ -49,6 +49,27 @@ import { DribbleRhythm } from './components/minigames/DribbleRhythm';
 import { OpenSpaceTactician } from './components/minigames/OpenSpaceTactician';
 import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
+import { CompassAzimuth } from './components/minigames/novel/CompassAzimuth';
+import { KayakPaddle } from './components/minigames/novel/KayakPaddle';
+import { WindSurfBalance } from './components/minigames/novel/WindSurfBalance';
+import { TentPegHammer } from './components/minigames/novel/TentPegHammer';
+import { TrailMazeRun } from './components/minigames/novel/TrailMazeRun';
+import { AlpineGlider } from './components/minigames/novel/AlpineGlider';
+import { CampfireBreath } from './components/minigames/novel/CampfireBreath';
+import { CrevasseJump } from './components/minigames/novel/CrevasseJump';
+import { SlingshotArchery } from './components/minigames/novel/SlingshotArchery';
+import { SpikeBlockWall } from './components/minigames/novel/SpikeBlockWall';
+import { BaseRunningDecide } from './components/minigames/novel/BaseRunningDecide';
+import { BadmintonSmashRhythm } from './components/minigames/novel/BadmintonSmashRhythm';
+import { TacticalGridSlide } from './components/minigames/novel/TacticalGridSlide';
+import { SoundGoalball } from './components/minigames/novel/SoundGoalball';
+import { JugglingBouncePaddle } from './components/minigames/novel/JugglingBouncePaddle';
+import { HeadShouldersKnees } from './components/minigames/novel/HeadShouldersKnees';
+import { AnimalHopStep } from './components/minigames/novel/AnimalHopStep';
+import { BicyclePedalCrank } from './components/minigames/novel/BicyclePedalCrank';
+import { DoubleUnderRope } from './components/minigames/novel/DoubleUnderRope';
+import { MirrorMotionInvert } from './components/minigames/novel/MirrorMotionInvert';
+import { SeesawBalanceTap } from './components/minigames/novel/SeesawBalanceTap';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
@@ -112,6 +133,28 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'open-space-tactician': { name: '빈 공간 설계자', emoji: '🗺️', domain: '스포츠', code: '[6체02-05]', target: '공간 침투 전술' },
   'emotion-thermometer': { name: '감정 온도계', emoji: '🌡️', domain: '표현', code: '[4체03-04]', target: '감정 신체 표현' },
   'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '신체 요소 창의 표현' },
+  // 신규 21종 차별화 미니게임 메타 등록
+  'compass-azimuth': { name: '나침반 방위각 마스터', emoji: '🧭', domain: '스포츠', code: '[4체02-08]', target: '생태형 오리엔티어링' },
+  'kayak-paddle': { name: '급류 탈출 카약', emoji: '🛶', domain: '스포츠', code: '[4체02-07]', target: '생태형 수상 모험' },
+  'wind-surf-balance': { name: '바람을 타는 윈드서핑', emoji: '🏄', domain: '스포츠', code: '[6체02-09]', target: '생태형 바람 밸런스' },
+  'tent-peg-hammer': { name: '텐트 팩 해머링', emoji: '⛺', domain: '스포츠', code: '[4체02-08]', target: '생태형 캠핑 야외' },
+  'trail-maze-run': { name: '모험 트레일 러닝', emoji: '🏃‍♂️', domain: '스포츠', code: '[4체02-07]', target: '생태형 코스 탈출' },
+  'alpine-glider': { name: '알프스 활강 글라이더', emoji: '🪂', domain: '스포츠', code: '[6체02-09]', target: '생태형 체공 활강' },
+  'campfire-breath': { name: '생태 모닥불 호흡 릴랙스', emoji: '🔥', domain: '스포츠', code: '[4체02-10]', target: '생태형 여가 이완' },
+  'crevasse-jump': { name: '빙판 크레바스 점프', emoji: '🧗', domain: '스포츠', code: '[6체02-08]', target: '생태형 도약 모험' },
+  'slingshot-archery': { name: '슬링샷 양궁 퍼펙트 텐', emoji: '🎯', domain: '스포츠', code: '[6체02-04]', target: '전략형 투사체 표적' },
+  'spike-block-wall': { name: '스파이크 블로킹 월', emoji: '🏐', domain: '스포츠', code: '[6체02-05]', target: '전략형 네트 블로킹' },
+  'base-running-decide': { name: '야구/티볼 주루 판단', emoji: '⚾', domain: '스포츠', code: '[6체02-06]', target: '전략형 필드 주루' },
+  'badminton-smash-rhythm': { name: '셔틀콕 스매시 리듬', emoji: '🏸', domain: '스포츠', code: '[4체02-06]', target: '전략형 네트 리듬' },
+  'tactical-grid-slide': { name: '수비 포메이션 슬라이더', emoji: '🛡️', domain: '스포츠', code: '[6체02-05]', target: '전략형 수비 차단' },
+  'sound-goalball': { name: '골볼 소리 탐지 캐치', emoji: '🔔', domain: '스포츠', code: '[4체02-06]', target: '전략형 청각 스포츠' },
+  'juggling-bounce-paddle': { name: '저글링 바운스 컨트롤러', emoji: '🎾', domain: '스포츠', code: '[4체02-03]', target: '전략형 다구 조작' },
+  'head-shoulders-knees': { name: '머리 어깨 무릎 발 바디 비트', emoji: '🧢', domain: '운동', code: '[2체01-01]', target: '기본 움직임 신체 지각' },
+  'animal-hop-step': { name: '동물 발자국 깡충 스텝', emoji: '🐾', domain: '운동', code: '[2체01-02]', target: '이동 움직임 징검다리' },
+  'bicycle-pedal-crank': { name: '자전거 크랭크 페달', emoji: '🚲', domain: '운동', code: '[2체01-03]', target: '체력 가동성 페달링' },
+  'double-under-rope': { name: '이단 줄넘기 더블 탭', emoji: '⚡', domain: '운동', code: '[4체01-02]', target: '체력 도약 2단 쌩쌩이' },
+  'mirror-motion-invert': { name: '거울 모드 동작 반전', emoji: '🪞', domain: '운동', code: '[2체01-04]', target: '신경 협응 거울 공간' },
+  'seesaw-balance-tap': { name: '균형 시소 버티기', emoji: '⚖️', domain: '운동', code: '[2체01-02]', target: '비이동 평형성 시소' },
 };
 
 // 30종 신규 표현 게임 메타 자동 등록
@@ -298,6 +341,48 @@ export const GamePlayPage = () => {
         return <EmotionThermometer key={key} />;
       case 'partner-robot-lab':
         return <PartnerRobotLab key={key} />;
+      case 'compass-azimuth':
+        return <CompassAzimuth key={key} {...commonProps} />;
+      case 'kayak-paddle':
+        return <KayakPaddle key={key} {...commonProps} />;
+      case 'wind-surf-balance':
+        return <WindSurfBalance key={key} {...commonProps} />;
+      case 'tent-peg-hammer':
+        return <TentPegHammer key={key} {...commonProps} />;
+      case 'trail-maze-run':
+        return <TrailMazeRun key={key} {...commonProps} />;
+      case 'alpine-glider':
+        return <AlpineGlider key={key} {...commonProps} />;
+      case 'campfire-breath':
+        return <CampfireBreath key={key} {...commonProps} />;
+      case 'crevasse-jump':
+        return <CrevasseJump key={key} {...commonProps} />;
+      case 'slingshot-archery':
+        return <SlingshotArchery key={key} {...commonProps} />;
+      case 'spike-block-wall':
+        return <SpikeBlockWall key={key} {...commonProps} />;
+      case 'base-running-decide':
+        return <BaseRunningDecide key={key} {...commonProps} />;
+      case 'badminton-smash-rhythm':
+        return <BadmintonSmashRhythm key={key} {...commonProps} />;
+      case 'tactical-grid-slide':
+        return <TacticalGridSlide key={key} {...commonProps} />;
+      case 'sound-goalball':
+        return <SoundGoalball key={key} {...commonProps} />;
+      case 'juggling-bounce-paddle':
+        return <JugglingBouncePaddle key={key} {...commonProps} />;
+      case 'head-shoulders-knees':
+        return <HeadShouldersKnees key={key} {...commonProps} />;
+      case 'animal-hop-step':
+        return <AnimalHopStep key={key} {...commonProps} />;
+      case 'bicycle-pedal-crank':
+        return <BicyclePedalCrank key={key} {...commonProps} />;
+      case 'double-under-rope':
+        return <DoubleUnderRope key={key} {...commonProps} />;
+      case 'mirror-motion-invert':
+        return <MirrorMotionInvert key={key} {...commonProps} />;
+      case 'seesaw-balance-tap':
+        return <SeesawBalanceTap key={key} {...commonProps} />;
       default: {
         const isExpressionGame = EXPRESSION_GAMES.some(eg => eg.id === gameType);
         if (isExpressionGame && gameType) {
