@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Shield } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxWhoosh } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type Lane = 'left' | 'center' | 'right';
+const LANES: Lane[] = ['left', 'center', 'right'];
 
 export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
   const [round, setRound] = useState(1);
@@ -15,83 +17,78 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
   const [isSpiking, setIsSpiking] = useState(false);
   const [blockedLanes, setBlockedLanes] = useState<Lane[]>(['left', 'center']);
   const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>('상대 스파이커가 도약합니다! 블로킹 위치를 잡으세요.');
   const [finished, setFinished] = useState(false);
+  const resolveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blockedLanesRef = useRef<Lane[]>(['left', 'center']);
+  const scoreRef = useRef(0);
 
-  const lanes: Lane[] = ['left', 'center', 'right'];
-
-  useEffect(() => {
-    startNextSpike();
-  }, [round]);
-
-  const startNextSpike = () => {
-    setIsSpiking(false);
-    setFeedback('상대 스파이커가 도약합니다! 블로킹 위치를 잡으세요.');
-
-    // 1.5초 후 스파이크 발동
-    const timer = setTimeout(() => {
-      const target = lanes[Math.floor(Math.random() * 3)];
-      setSpikeLane(target);
-      setIsSpiking(true);
-      sfxWhoosh();
-
-      // 타격 판정
-      setTimeout(() => {
-        resolveBlock(target);
-      }, 700);
-    }, 1400);
-
-    return () => clearTimeout(timer);
-  };
-
-  const finishGame = (finalScore?: number) => {
+  const finishGame = useCallback((finalScore?: number) => {
     setFinished(true);
     sfxSuccess();
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
       timestamp: Date.now(),
     });
-  };
+  }, [enqueueAction, groupId]);
 
-  const resolveBlock = (actualLane: Lane) => {
-    if (blockedLanes.includes(actualLane)) {
-      // 셧다운 블로킹 성공!
-      sfxSuccess();
-      const add = 50;
-      setScore(s => s + add);
-      setFeedback('✋ 완벽한 셧다운 블로킹 차단! (+50점)');
-    } else {
-      // 수비 뚫림
-      sfxFail();
-      setFeedback(`💥 스파이크 허용! (${actualLane === 'left' ? '왼쪽' : actualLane === 'center' ? '중앙' : '오른쪽'} 코트)`);
-    }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const target = LANES[Math.floor(Math.random() * LANES.length)];
+      setSpikeLane(target);
+      setIsSpiking(true);
+      sfxWhoosh();
+      resolveTimeoutRef.current = setTimeout(() => {
+        const blocked = blockedLanesRef.current.includes(target);
+        if (blocked) {
+          sfxSuccess();
+          scoreRef.current += 50;
+          setScore(scoreRef.current);
+          setFeedback('✋ 완벽한 셧다운 블로킹 차단! (+50점)');
+        } else {
+          sfxFail();
+          setFeedback(`💥 스파이크 허용! (${target === 'left' ? '왼쪽' : target === 'center' ? '중앙' : '오른쪽'} 코트)`);
+        }
+        advanceTimeoutRef.current = setTimeout(() => {
+          if (round >= 5) finishGame(scoreRef.current);
+          else {
+            setIsSpiking(false);
+            setFeedback('상대 스파이커가 도약합니다! 블로킹 위치를 잡으세요.');
+            setRound(r => r + 1);
+          }
+        }, 1000);
+      }, 700);
+    }, 1400);
 
-    setTimeout(() => {
-      if (round >= 5) {
-        finishGame(score + (blockedLanes.includes(actualLane) ? 50 : 0));
-      } else {
-        setRound(r => r + 1);
-      }
-    }, 1000);
-  };
+    return () => {
+      clearTimeout(timer);
+      if (resolveTimeoutRef.current) clearTimeout(resolveTimeoutRef.current);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    };
+  }, [finishGame, round]);
 
   const toggleLane = (lane: Lane) => {
     if (isSpiking || finished) return;
     sfxTap();
     setBlockedLanes(prev => {
+      let next: Lane[];
       if (prev.includes(lane)) {
         // 최소 1개는 유지
         if (prev.length <= 1) return prev;
-        return prev.filter(l => l !== lane);
+        next = prev.filter(l => l !== lane);
       } else {
         // 최대 2인 블로킹
         if (prev.length >= 2) {
-          return [prev[1], lane];
+          next = [prev[1], lane];
+        } else {
+          next = [...prev, lane];
         }
-        return [...prev, lane];
       }
+      blockedLanesRef.current = next;
+      return next;
     });
   };
 
@@ -112,7 +109,7 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
       <div className="relative w-full h-72 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950 rounded-2xl overflow-hidden border-2 border-indigo-500/40 p-3 flex flex-col justify-between shadow-inner">
         {/* 상대 코트 (상단) 및 스파이커 */}
         <div className="w-full flex justify-around items-center pt-2">
-          {lanes.map(lane => (
+          {LANES.map(lane => (
             <div key={lane} className="flex flex-col items-center w-24">
               {isSpiking && spikeLane === lane ? (
                 <div className="text-4xl animate-bounce">🏐</div>
@@ -133,7 +130,7 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
 
         {/* 우리 진영 블로커 벽 (2명) */}
         <div className="w-full flex justify-around items-center pb-2">
-          {lanes.map(lane => {
+          {LANES.map(lane => {
             const isBlocked = blockedLanes.includes(lane);
             return (
               <div

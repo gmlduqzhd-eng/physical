@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bike } from 'lucide-react';
 import { sfxSuccess, sfxWhoosh } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
@@ -19,6 +20,17 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
   const lastAngleRef = useRef<number | null>(null);
   const cumulativeAngleRef = useRef(0);
   const isDragging = useRef(false);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(250, Math.round(cumulativeAngleRef.current / 360) * 15) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 자연 감속 루프
@@ -42,18 +54,7 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
       clearInterval(timer);
       clearInterval(decayTimer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(250, Math.round(cumulativeAngleRef.current / 360) * 15) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const calculateAngle = (clientX: number, clientY: number) => {
     if (!dialRef.current) return;

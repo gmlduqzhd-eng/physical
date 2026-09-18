@@ -1,28 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { Target, Wind } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop, sfxFail, sfxTap } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
   const [arrowCount, setArrowCount] = useState(5);
   const [pullVector, setPullVector] = useState({ x: 0, y: 0 });
   const [isPulling, setIsPulling] = useState(false);
-  const [wind, setWind] = useState(1.5); // wind factor
+  const [wind, setWind] = useState(() => (Math.random() - 0.5) * 4); // wind factor
   const [score, setScore] = useState(0);
   const [lastShot, setLastShot] = useState<{ ring: string; pts: number } | null>(null);
   const [finished, setFinished] = useState(false);
 
   const anchorRef = useRef({ x: 180, y: 240 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    // 각 발마다 바람 변화
-    setWind((Math.random() - 0.5) * 4);
-  }, [arrowCount]);
+  useEffect(() => () => {
+    if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
+  }, []);
 
   const finishGame = (finalScore?: number) => {
     setFinished(true);
@@ -74,8 +75,8 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
       -pullVector.y * 1.5 + 85
     );
 
-    let pts = 0;
-    let ring = '빗나감';
+    let pts: number;
+    let ring: string;
     if (targetOffset <= 20) {
       pts = 10;
       ring = '텐(10점) 엑스텐 정중앙!';
@@ -101,9 +102,10 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
 
     const remaining = arrowCount - 1;
     setArrowCount(remaining);
+    if (remaining > 0) setWind((Math.random() - 0.5) * 4);
 
     if (remaining <= 0) {
-      setTimeout(() => finishGame(nextScore), 1200);
+      finishTimeoutRef.current = setTimeout(() => finishGame(nextScore), 1200);
     }
   };
 

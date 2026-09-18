@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Footprints } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type AnimalType = 'rabbit' | 'frog' | 'kangaroo';
@@ -16,6 +17,11 @@ interface SteppingStone {
   name: string;
 }
 
+const createTrack = (): SteppingStone[] => Array.from({ length: 15 }, (_, id) => {
+  const animal = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
+  return { id, animal: animal.type, emoji: animal.emoji, name: animal.name };
+});
+
 const ANIMALS: { type: AnimalType; name: string; emoji: string; color: string }[] = [
   { type: 'rabbit', name: '토끼 (1칸 홉)', emoji: '🐰', color: 'from-pink-500 to-rose-600' },
   { type: 'frog', name: '개구리 (2칸 홉)', emoji: '🐸', color: 'from-emerald-500 to-teal-600' },
@@ -23,15 +29,26 @@ const ANIMALS: { type: AnimalType; name: string; emoji: string; color: string }[
 ];
 
 export const AnimalHopStep = ({ groupId, enqueueAction }: Props) => {
-  const [stones, setStones] = useState<SteppingStone[]>([]);
+  const [stones] = useState<SteppingStone[]>(createTrack);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(25);
   const [finished, setFinished] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback((finalScore?: number) => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    generateTrack();
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -43,27 +60,7 @@ export const AnimalHopStep = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  const generateTrack = () => {
-    const list: SteppingStone[] = [];
-    for (let i = 0; i < 15; i++) {
-      const a = ANIMALS[Math.floor(Math.random() * ANIMALS.length)];
-      list.push({ id: i, animal: a.type, emoji: a.emoji, name: a.name });
-    }
-    setStones(list);
-  };
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handleHop = (type: AnimalType) => {
     if (finished || currentIndex >= stones.length) return;
@@ -73,13 +70,15 @@ export const AnimalHopStep = ({ groupId, enqueueAction }: Props) => {
       // 홉 성공!
       sfxPop();
       const add = 20;
-      setScore(s => s + add);
+      const nextScore = scoreRef.current + add;
+      scoreRef.current = nextScore;
+      setScore(nextScore);
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
       setFeedback(`🐾 깡충! ${currentStone.name} 발자국 통과!`);
 
       if (nextIdx >= stones.length) {
-        finishGame(score + 50);
+        finishGame(nextScore + 50);
       }
     } else {
       sfxFail();

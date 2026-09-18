@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import type { GameRoom } from '../domain/types';
 import { VolcanoGame } from './components/minigames/VolcanoGame';
 import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
 import { StopwatchGame } from './components/minigames/StopwatchGame';
@@ -168,12 +169,26 @@ EXPRESSION_GAMES.forEach(eg => {
   };
 });
 
+const NOVEL_GAME_TYPES = new Set([
+  'compass-azimuth', 'kayak-paddle', 'wind-surf-balance', 'tent-peg-hammer',
+  'trail-maze-run', 'alpine-glider', 'campfire-breath', 'crevasse-jump',
+  'slingshot-archery', 'spike-block-wall', 'base-running-decide',
+  'badminton-smash-rhythm', 'tactical-grid-slide', 'sound-goalball',
+  'juggling-bounce-paddle', 'head-shoulders-knees', 'animal-hop-step',
+  'bicycle-pedal-crank', 'double-under-rope', 'mirror-motion-invert',
+  'seesaw-balance-tap',
+]);
+
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const navigate = useNavigate();
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
+  const [standaloneTiming] = useState(() => ({
+    startedAt: new Date().toISOString(),
+    endTime: Date.now() + 10000,
+  }));
 
   // BGM 시작/종료
   useEffect(() => {
@@ -225,16 +240,18 @@ export const GamePlayPage = () => {
   const bestScore = parseInt(localStorage.getItem(`physical_best_${gameType}`) || '0', 10);
 
   // 화산 게임은 gameRoom을 필요로 하므로 더미 gameRoom 생성
-  const dummyGameRoom = {
+  const dummyGameRoom: GameRoom = {
     id: 'standalone',
     pin_code: '0000',
     name: 'Standalone',
     status: 'playing' as const,
-    started_at: new Date().toISOString(),
+    started_at: standaloneTiming.startedAt,
     global_time_modifier: 0,
-    active_minigame: { type: gameType, end_time: Date.now() + 10000 },
+    active_minigame: { type: gameType, end_time: standaloneTiming.endTime },
     template_id: null,
     flash_sale: false,
+    announcement: null,
+    created_at: standaloneTiming.startedAt,
   };
 
   const dummyGroupId = 'standalone-player';
@@ -244,7 +261,7 @@ export const GamePlayPage = () => {
 
     switch (gameType) {
       case 'volcano':
-        return <VolcanoGame key={key} gameRoom={dummyGameRoom as any} {...commonProps} />;
+        return <VolcanoGame key={key} gameRoom={dummyGameRoom} {...commonProps} />;
       case 'whack_a_mole':
         return <WhackAMoleGame key={key} {...commonProps} />;
       case 'stopwatch':
@@ -403,7 +420,7 @@ export const GamePlayPage = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh]">
+    <div className={`relative min-h-[100dvh] ${NOVEL_GAME_TYPES.has(gameType) ? 'bg-slate-950' : ''}`}>
       {/* 게임 렌더링 */}
       {renderGame()}
 

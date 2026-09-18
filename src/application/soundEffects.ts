@@ -1,12 +1,19 @@
 // Web Audio API 기반 사운드 시스템 — 외부 파일 없이 코드로 생성
 let audioCtx: AudioContext | null = null;
-let bgmInterval: any = null;
+let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmGain: GainNode | null = null;
 
 function getCtx() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const audioWindow = window as Window & { webkitAudioContext?: typeof AudioContext };
+  const AudioContextConstructor = window.AudioContext || audioWindow.webkitAudioContext;
+  if (!AudioContextConstructor) throw new Error('Web Audio API is not supported in this browser.');
+  if (!audioCtx) audioCtx = new AudioContextConstructor();
   if (audioCtx.state === 'suspended') audioCtx.resume();
   return audioCtx;
+}
+
+export function unlockAudio() {
+  void getCtx().resume();
 }
 
 function playTone(freq: number, duration: number, type: OscillatorType = 'square', volume = 0.15, delay = 0) {
@@ -71,6 +78,24 @@ export function sfxCoin() {
 export function sfxWhoosh() {
   playTone(400, 0.08, 'sine', 0.08, 0);
   playTone(800, 0.06, 'sine', 0.06, 0.05);
+}
+
+export function sfxDirectionalBell(pan: -1 | 0 | 1) {
+  const ctx = getCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const panner = ctx.createStereoPanner();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(620, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.35);
+  gain.gain.setValueAtTime(0.16, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+  panner.pan.value = pan;
+  osc.connect(gain);
+  gain.connect(panner);
+  panner.connect(ctx.destination);
+  osc.start();
+  osc.stop(ctx.currentTime + 0.45);
 }
 
 export function sfxClick() {

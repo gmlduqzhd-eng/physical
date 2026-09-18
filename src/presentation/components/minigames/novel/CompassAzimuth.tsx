@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Compass, CheckCircle2 } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 interface TargetQuest {
@@ -31,6 +32,17 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
 
   const dialRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback((finalScore?: number) => {
+    setFinished(true);
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   const currentQuest = QUESTS[round % QUESTS.length];
 
@@ -46,18 +58,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [round]);
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    const earned = finalScore !== undefined ? finalScore : score;
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: earned },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame, round]);
 
   const calculateAngle = (clientX: number, clientY: number) => {
     if (!dialRef.current) return;
@@ -94,13 +95,21 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
       // 대성공 (퍼펙트)
       sfxSuccess();
       const add = 100;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setFeedback('🎯 완벽한 방위각 조준! (+100점)');
     } else if (diff <= 18) {
       // 성공
       sfxPop();
       const add = 60;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setFeedback('👍 양호한 방향! (+60점)');
     } else {
       sfxFail();
@@ -127,14 +136,14 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded">R {Math.min(round + 1, 5)}/5</span>
-          <span className="text-amber-400 font-mono font-bold text-lg">{timeLeft}s</span>
+          <span className="text-amber-300 font-mono font-bold text-lg">{timeLeft}s</span>
           <span className="text-cyan-400 font-mono font-bold text-lg">{score}점</span>
         </div>
       </div>
 
       {/* 목표 방위 카드 */}
       <div className="w-full bg-slate-800/80 border border-amber-500/30 rounded-xl p-3 text-center mb-4">
-        <span className="text-xs text-amber-400/80 font-medium">탐험 목표 방위</span>
+        <span className="text-xs text-amber-200 font-medium">탐험 목표 방위</span>
         <div className="text-xl text-white font-black">{currentQuest.label}</div>
         <div className="text-xs text-slate-400 mt-0.5">다이얼을 돌려 각도 {currentQuest.angle}°에 맞추세요!</div>
       </div>

@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Mountain, AlertCircle } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
@@ -18,6 +19,17 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
   const isDragging = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentPosRef = useRef({ x: 30, y: 150 });
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback((finalScore?: number) => {
+    setFinished(true);
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -31,18 +43,7 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    const s = finalScore !== undefined ? finalScore : score;
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: s },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   // 캔버스에 굽이치는 트레일 오솔길 렌더링
   useEffect(() => {
@@ -100,8 +101,8 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
     if (finished) return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left) * (canvasRef.current!.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvasRef.current!.height / rect.height);
 
     // 출발선 근처(x < 60)에서만 드래그 시작 가능
     if (x <= 60 && Math.abs(y - 150) <= 35) {
@@ -119,8 +120,8 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     // 경로 바깥 덤불에 닿았는지 체크 (픽셀 색상 기반: 흙길 색상이 아니면 탈락)
     const pixel = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
@@ -147,7 +148,8 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
       isDragging.current = false;
       sfxSuccess();
       const add = 60;
-      const nextScore = score + add;
+      const nextScore = scoreRef.current + add;
+      scoreRef.current = nextScore;
       setScore(nextScore);
 
       if (stage >= 3) {
@@ -173,8 +175,8 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded">코스 {stage}/3</span>
-          <span className="text-amber-400 font-mono font-bold text-lg">{timeLeft}s</span>
-          <span className="text-emerald-400 font-mono font-bold text-lg">{score}점</span>
+          <span className="text-amber-300 font-mono font-bold text-lg">{timeLeft}s</span>
+          <span className="text-emerald-300 font-mono font-bold text-lg">{score}점</span>
         </div>
       </div>
 

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Trophy } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 interface Ball {
@@ -28,6 +29,17 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
   const paddleRef = useRef(50);
   const ballsRef = useRef(balls);
   const bouncesRef = useRef(0);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(250, bouncesRef.current * 10) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 공 물리 업데이트 루프
@@ -91,18 +103,7 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(250, bouncesRef.current * 10) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const movePaddle = (dir: 'left' | 'right') => {
     if (finished) return;

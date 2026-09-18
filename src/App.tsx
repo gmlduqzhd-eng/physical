@@ -15,13 +15,11 @@ import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 
 function App() {
   useEffect(() => {
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      syncServerTime(import.meta.env.VITE_SUPABASE_URL);
-    }
+    syncServerTime();
   }, []);
 
   // Supabase 미설정 시 — 게임 허브와 독립 플레이는 여전히 작동
-  const hasSupabase = !!import.meta.env.VITE_SUPABASE_URL;
+  const hasSupabase = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   return (
     <BrowserRouter>
@@ -40,6 +38,7 @@ function App() {
         <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <MobileMissionView /> : <SupabaseRequired />} />
         <Route path="/admin" element={hasSupabase ? <AdminControlPanel /> : <SupabaseRequired />} />
         <Route path="/kiosk" element={hasSupabase ? <KioskRelayView /> : <SupabaseRequired />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
@@ -56,6 +55,17 @@ const SupabaseRequired = () => (
       <li className="mb-2">VITE_SUPABASE_URL</li>
       <li>VITE_SUPABASE_ANON_KEY</li>
     </ul>
+  </div>
+);
+
+const NotFound = () => (
+  <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center gap-4 p-6 text-center font-sans">
+    <div className="text-6xl" aria-hidden="true">🧭</div>
+    <h1 className="text-3xl font-black">페이지를 찾을 수 없습니다</h1>
+    <p className="text-slate-300">주소를 다시 확인하거나 게임 허브로 돌아가 주세요.</p>
+    <a href="/" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
+      게임 허브로 이동
+    </a>
   </div>
 );
 

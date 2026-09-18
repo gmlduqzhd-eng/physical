@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Eye } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type MotionSide = 'left-arm' | 'right-arm' | 'left-leg' | 'right-leg';
+const MOTION_IDS: MotionSide[] = ['left-arm', 'right-arm', 'left-leg', 'right-leg'];
 
 const MOTIONS: { id: MotionSide; label: string; desc: string; emoji: string }[] = [
   { id: 'left-arm', label: '화면의 왼쪽 팔', desc: '거울 속 왼쪽 손을 마주보고 터치!', emoji: '🙋‍♂️' },
@@ -17,14 +19,29 @@ const MOTIONS: { id: MotionSide; label: string; desc: string; emoji: string }[] 
 ];
 
 export const MirrorMotionInvert = ({ groupId, enqueueAction }: Props) => {
-  const [currentMotion, setCurrentMotion] = useState<MotionSide>('left-arm');
+  const [currentMotion, setCurrentMotion] = useState<MotionSide>(() => MOTION_IDS[Math.floor(Math.random() * MOTION_IDS.length)]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
+  const scoreRef = useRef(0);
+
+  const pickNext = useCallback(() => {
+    setCurrentMotion(MOTION_IDS[Math.floor(Math.random() * MOTION_IDS.length)]);
+  }, []);
+
+  const finishGame = useCallback((finalScore?: number) => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    pickNext();
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -36,36 +53,29 @@ export const MirrorMotionInvert = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  const pickNext = () => {
-    const list: MotionSide[] = ['left-arm', 'right-arm', 'left-leg', 'right-leg'];
-    const next = list[Math.floor(Math.random() * list.length)];
-    setCurrentMotion(next);
-  };
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame, pickNext]);
 
   const handleChoice = (side: MotionSide) => {
     if (finished) return;
-    if (side === currentMotion) {
+    const mirrored: Record<MotionSide, MotionSide> = {
+      'left-arm': 'right-arm',
+      'right-arm': 'left-arm',
+      'left-leg': 'right-leg',
+      'right-leg': 'left-leg',
+    };
+    if (side === mirrored[currentMotion]) {
       sfxPop();
       const add = 25;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setFeedback('🪞 딩동댕! 완벽한 거울 대칭 포즈!');
       pickNext();
     } else {
       sfxFail();
-      setFeedback('반대쪽입니다! 거울 속 모습을 다시 보세요.');
+      setFeedback('거울에서는 좌우가 반대예요! 맞은편 위치를 다시 찾아보세요.');
     }
     setTimeout(() => setFeedback(null), 500);
   };
@@ -122,7 +132,7 @@ export const MirrorMotionInvert = ({ groupId, enqueueAction }: Props) => {
       </div>
 
       <p className="text-xs text-slate-400 text-center mt-2">
-        거울을 보듯 화면 속 친구가 움직인 쪽을 찾아 재빠르게 터치하세요!
+        거울을 마주 본 것처럼 친구가 움직인 쪽의 반대편 위치를 재빠르게 터치하세요!
       </p>
     </div>
   );

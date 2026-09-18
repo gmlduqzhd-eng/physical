@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Waves, ArrowLeft, ArrowRight } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
@@ -18,6 +19,17 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
 
   const goalDistance = 100;
   const currentRef = useRef({ distance: 0, combo: 0 });
+
+  const finishGame = useCallback((finalDist?: number) => {
+    setFinished(true);
+    const d = finalDist ?? currentRef.current.distance;
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(200, Math.round(d * 2)) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -33,19 +45,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  const finishGame = (finalDist?: number) => {
-    setFinished(true);
-    const d = finalDist !== undefined ? finalDist : currentRef.current.distance;
-    const finalScore = Math.min(200, Math.round(d * 2));
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handlePaddle = (side: 'left' | 'right') => {
     if (finished) return;

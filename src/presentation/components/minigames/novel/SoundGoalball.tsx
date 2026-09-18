@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Volume2, EyeOff } from 'lucide-react';
-import { sfxTap, sfxSuccess, sfxPop, sfxFail, sfxWhoosh } from '../../../../application/soundEffects';
+import { sfxDirectionalBell, sfxSuccess, sfxFail, unlockAudio } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type Direction = 'left' | 'center' | 'right';
+const DIRECTIONS: Direction[] = ['left', 'center', 'right'];
 
 export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
   const [round, setRound] = useState(1);
@@ -17,35 +19,37 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string>('소리에 귀를 기울이세요!');
   const [finished, setFinished] = useState(false);
+  const [awaitingCue, setAwaitingCue] = useState(true);
+  const cueTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const dirs: Direction[] = ['left', 'center', 'right'];
-
-  useEffect(() => {
-    startSoundRound();
-  }, [round]);
-
-  const startSoundRound = () => {
+  const startSoundRound = useCallback(() => {
+    unlockAudio();
+    setAwaitingCue(false);
     setCanBlock(false);
     setIsPlayingSound(true);
     setFeedback('방울 소리가 굴러오는 방향을 들으세요...');
 
-    const chosen = dirs[Math.floor(Math.random() * 3)];
+    const chosen = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
     setTargetDir(chosen);
 
     // 가상 방울 소리 발생 (삐- 삐- 삐-)
-    const timer1 = setTimeout(() => {
-      sfxPop();
-      if (chosen === 'left') sfxTap();
-      else if (chosen === 'right') sfxWhoosh();
-      else sfxPop();
+    cueTimeoutRef.current = setTimeout(() => {
+      sfxDirectionalBell(chosen === 'left' ? -1 : chosen === 'right' ? 1 : 0);
 
       setIsPlayingSound(false);
       setCanBlock(true);
       setFeedback('방향이 감지되었습니다! 막을 방향을 빠르게 터치하세요!');
     }, 1200);
 
-    return () => clearTimeout(timer1);
-  };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (cueTimeoutRef.current) clearTimeout(cueTimeoutRef.current);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    };
+  }, []);
 
   const finishGame = (finalScore?: number) => {
     setFinished(true);
@@ -73,10 +77,12 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
       setFeedback(`골 허용! 실제 공 방향: ${targetDir === 'left' ? '왼쪽' : targetDir === 'center' ? '중앙' : '오른쪽'}`);
     }
 
-    setTimeout(() => {
+    advanceTimeoutRef.current = setTimeout(() => {
       if (round >= 4) {
         finishGame(score + (dir === targetDir ? 50 : 0));
       } else {
+        setAwaitingCue(true);
+        setFeedback('준비되면 소리 듣기 버튼을 누르세요.');
         setRound(r => r + 1);
       }
     }, 1200);
@@ -91,7 +97,7 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs bg-slate-800 text-slate-300 px-2 py-1 rounded">세트 {round}/4</span>
-          <span className="text-purple-400 font-mono font-bold text-lg">{score}점</span>
+          <span className="text-purple-300 font-mono font-bold text-lg">{score}점</span>
         </div>
       </div>
 
@@ -118,6 +124,15 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
           {feedback}
         </div>
       </div>
+
+      {awaitingCue && !finished && (
+        <button
+          onClick={startSoundRound}
+          className="w-full mt-4 py-4 rounded-2xl bg-purple-600 hover:bg-purple-500 active:scale-95 text-white font-black text-lg border border-purple-300/50"
+        >
+          🔊 소리 듣기 시작
+        </button>
+      )}
 
       {/* 3방향 다이빙 블로킹 버튼 */}
       <div className="grid grid-cols-3 gap-3 w-full mt-4">

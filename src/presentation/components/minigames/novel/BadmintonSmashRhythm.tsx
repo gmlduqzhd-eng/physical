@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Zap } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
@@ -17,6 +18,18 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
 
   const shuttleRef = useRef(0);
   const speedRef = useRef(2.2);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(250, scoreRef.current) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     const anim = setInterval(() => {
@@ -50,18 +63,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(250, score) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handleSmash = () => {
     if (finished) return;
@@ -73,7 +75,11 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       const newCombo = combo + 1;
       setCombo(newCombo);
       const add = 40 + newCombo * 5;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setHitEffect(`⚡ PERFECT SMASH! (+${add})`);
       shuttleRef.current = 0;
       speedRef.current = 2.2 + Math.random() * 1.5;
@@ -82,7 +88,11 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       sfxPop();
       setCombo(c => c + 1);
       const add = 20;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setHitEffect('🏸 GOOD RETURN! (+20)');
       shuttleRef.current = 0;
       speedRef.current = 2.0 + Math.random() * 1.5;

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tent, Hammer } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxPop } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
@@ -18,6 +19,18 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
 
   const sliderRef = useRef(50);
   const dirRef = useRef(1);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback((bonus = 0) => {
+    setFinished(true);
+    const finalScore = scoreRef.current + bonus;
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   // 슬라이더 진자 운동
   useEffect(() => {
@@ -50,18 +63,7 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       clearInterval(animInterval);
       clearInterval(gameTimer);
     };
-  }, []);
-
-  const finishGame = (bonus?: number) => {
-    setFinished(true);
-    const finalScore = (score + (bonus || 0)) || 50;
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handleHammerHit = () => {
     if (finished) return;
@@ -71,7 +73,11 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       // 퍼펙트 임팩트!
       sfxTap();
       const newDepth = pegDepth + 34;
-      setScore(s => s + 50);
+      setScore(s => {
+        const next = s + 50;
+        scoreRef.current = next;
+        return next;
+      });
       setHitFeedback('🔨 쾅! 퍼펙트 임팩트 (+50점)');
 
       if (newDepth >= 100) {
@@ -93,7 +99,11 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       // 굿 임팩트
       sfxPop();
       const newDepth = pegDepth + 18;
-      setScore(s => s + 25);
+      setScore(s => {
+        const next = s + 25;
+        scoreRef.current = next;
+        return next;
+      });
       setHitFeedback('👍 탁! 유효 타격 (+25점)');
       if (newDepth >= 100) {
         sfxSuccess();

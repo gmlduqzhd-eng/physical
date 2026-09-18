@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Cloud, Plane } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
@@ -17,11 +18,24 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
   const isHolding = useRef(false);
   const altRef = useRef(50);
   const scoreRef = useRef(0);
+  const targetYRef = useRef(50);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(200, scoreRef.current) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 타겟 기류 윈도우 무빙
     const gateTimer = setInterval(() => {
       const nextGate = 25 + Math.random() * 50; // 25 ~ 75%
+      targetYRef.current = nextGate;
       setTargetY(nextGate);
     }, 2500);
 
@@ -36,7 +50,7 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
       });
 
       // 타겟 기류존 내 체공 시 점수 가산
-      if (Math.abs(altRef.current - targetY) < 18) {
+      if (Math.abs(altRef.current - targetYRef.current) < 18) {
         scoreRef.current += 1;
         setScore(scoreRef.current);
       }
@@ -61,18 +75,7 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
       clearInterval(gateTimer);
       clearInterval(physicsTimer);
     };
-  }, [targetY]);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(200, scoreRef.current) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handlePointerDown = () => {
     isHolding.current = true;

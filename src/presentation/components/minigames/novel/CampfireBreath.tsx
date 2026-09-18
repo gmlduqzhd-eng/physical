@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flame, Heart } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type BreathPhase = 'inhale' | 'hold' | 'exhale';
@@ -18,6 +19,18 @@ export const CampfireBreath = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
 
   const phaseRef = useRef<BreathPhase>('inhale');
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback((earned: number) => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: earned + scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     const breathTimer = setInterval(() => {
@@ -54,25 +67,18 @@ export const CampfireBreath = ({ groupId, enqueueAction }: Props) => {
     }, 1000);
 
     return () => clearInterval(breathTimer);
-  }, []);
-
-  const finishGame = (earned: number) => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: earned + score },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handleBreatheTap = () => {
     if (finished) return;
     if (phase === 'exhale') {
       sfxWhoosh();
       setFlameLevel(f => Math.min(100, f + 15));
-      setScore(s => s + 20);
+      setScore(s => {
+        const next = s + 20;
+        scoreRef.current = next;
+        return next;
+      });
     } else {
       sfxPop();
       setFlameLevel(f => Math.min(100, f + 5));

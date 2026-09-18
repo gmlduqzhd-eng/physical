@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Scale, AlertTriangle } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
@@ -19,6 +20,18 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
   const ballPosRef = useRef(0);
   const ballVelRef = useRef(0);
   const fallRef = useRef(false);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(250, scoreRef.current) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 물리 업데이트 루프
@@ -37,7 +50,11 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
 
       // 구슬이 중앙 안전 구역(±30)에 있으면 점수 획득
       if (Math.abs(ballPosRef.current) <= 30) {
-        setScore(s => s + 1);
+        setScore(s => {
+          const updated = s + 1;
+          scoreRef.current = updated;
+          return updated;
+        });
       }
 
       // 구슬 추락 판정 (±90 초과)
@@ -73,18 +90,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
       clearInterval(physics);
       clearInterval(timer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(250, score) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handlePump = (side: 'left' | 'right') => {
     if (fallOff || finished) return;

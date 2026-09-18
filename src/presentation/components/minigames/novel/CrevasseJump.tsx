@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Snowflake } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
   const [round, setRound] = useState(1);
-  const [targetGap, setTargetGap] = useState(45); // target power required (30 ~ 75%)
+  const [targetGap, setTargetGap] = useState(() => 45 + Math.floor(Math.random() * 8)); // target power required (30 ~ 75%)
   const [charge, setCharge] = useState(0); // 0 to 100%
   const [jumping, setJumping] = useState(false);
   const [score, setScore] = useState(0);
@@ -18,12 +19,15 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
 
   const isCharging = useRef(false);
   const chargeRef = useRef(0);
-  const animRef = useRef<any>(null);
+  const animRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const jumpTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resultTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    // 라운드별 타겟 거리 설정
-    setTargetGap(35 + (round * 10) + Math.floor(Math.random() * 8));
-  }, [round]);
+  useEffect(() => () => {
+    if (animRef.current) clearInterval(animRef.current);
+    if (jumpTimeoutRef.current) clearTimeout(jumpTimeoutRef.current);
+    if (resultTimeoutRef.current) clearTimeout(resultTimeoutRef.current);
+  }, []);
 
   const finishGame = (finalScore?: number) => {
     setFinished(true);
@@ -51,7 +55,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
   const handleChargeRelease = () => {
     if (!isCharging.current || jumping || finished) return;
     isCharging.current = false;
-    clearInterval(animRef.current);
+    if (animRef.current) clearInterval(animRef.current);
     executeJump(chargeRef.current);
   };
 
@@ -61,7 +65,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
 
     const diff = finalCharge - targetGap;
     // 오차 범위: ±8% 이내 완벽 착지
-    setTimeout(() => {
+    jumpTimeoutRef.current = setTimeout(() => {
       if (Math.abs(diff) <= 8) {
         sfxSuccess();
         const add = 80;
@@ -77,14 +81,16 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
         setScore(s => s + 15);
       }
 
-      setTimeout(() => {
+      resultTimeoutRef.current = setTimeout(() => {
         setJumping(false);
         setCharge(0);
         setFeedback(null);
         if (round >= 4) {
-          finishGame(score + (Math.abs(diff) <= 8 ? 80 : 20));
+          finishGame(score + (Math.abs(diff) <= 8 ? 80 : diff < -8 ? 20 : 15));
         } else {
-          setRound(r => r + 1);
+          const nextRound = round + 1;
+          setTargetGap(35 + (nextRound * 10) + Math.floor(Math.random() * 8));
+          setRound(nextRound);
         }
       }, 1000);
     }, 600);

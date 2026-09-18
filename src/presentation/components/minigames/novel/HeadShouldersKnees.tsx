@@ -1,13 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Smile } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 type BodyPart = 'head' | 'shoulders' | 'knees' | 'toes';
+const BODY_PART_IDS: BodyPart[] = ['head', 'shoulders', 'knees', 'toes'];
 
 const BODY_PARTS: { id: BodyPart; label: string; emoji: string; color: string }[] = [
   { id: 'head', label: '머리', emoji: '🧢', color: 'from-amber-500 to-orange-600' },
@@ -19,12 +21,27 @@ const BODY_PARTS: { id: BodyPart; label: string; emoji: string; color: string }[
 export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(25);
-  const [currentTarget, setCurrentTarget] = useState<BodyPart>('head');
+  const [currentTarget, setCurrentTarget] = useState<BodyPart>(() => BODY_PART_IDS[Math.floor(Math.random() * BODY_PART_IDS.length)]);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
+  const scoreRef = useRef(0);
+
+  const pickNextTarget = useCallback(() => {
+    setCurrentTarget(BODY_PART_IDS[Math.floor(Math.random() * BODY_PART_IDS.length)]);
+  }, []);
+
+  const finishGame = useCallback((finalScore?: number) => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: finalScore ?? scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    pickNextTarget();
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -36,24 +53,7 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
-
-  const pickNextTarget = () => {
-    const list: BodyPart[] = ['head', 'shoulders', 'knees', 'toes'];
-    const chosen = list[Math.floor(Math.random() * list.length)];
-    setCurrentTarget(chosen);
-  };
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame, pickNextTarget]);
 
   const handleTouchPart = (part: BodyPart) => {
     if (finished) return;
@@ -61,7 +61,11 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
       // 정답!
       sfxPop();
       const add = 20;
-      setScore(s => s + add);
+      setScore(s => {
+        const next = s + add;
+        scoreRef.current = next;
+        return next;
+      });
       setFeedback('✨ 딩동댕! 정확한 신체 부위 터치!');
       pickNextTarget();
     } else {

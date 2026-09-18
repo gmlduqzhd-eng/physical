@@ -1,28 +1,40 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Zap } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxWhoosh } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const DoubleUnderRope = ({ groupId, enqueueAction }: Props) => {
   const [ropeAngle, setRopeAngle] = useState(0); // 0 to 360 degrees
   const [jumps, setJumps] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [finished, setFinished] = useState(false);
 
   const angleRef = useRef(0);
   const tapTimesRef = useRef<number[]>([]);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(250, scoreRef.current) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 줄넘기 회전 애니메이션
     const anim = setInterval(() => {
-      let next = (angleRef.current + 8) % 360;
+      const next = (angleRef.current + 8) % 360;
       angleRef.current = next;
       setRopeAngle(next);
 
@@ -48,18 +60,7 @@ export const DoubleUnderRope = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(250, score) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const handleTap = () => {
     if (finished) return;
@@ -82,7 +83,7 @@ export const DoubleUnderRope = ({ groupId, enqueueAction }: Props) => {
         const newCombo = combo + 1;
         setCombo(newCombo);
         const add = 25 + newCombo * 5;
-        setScore(s => s + add);
+        scoreRef.current += add;
         setJumps(j => j + 1);
         setFeedback(`⚡ 따닥! 쌩쌩이(2단뛰기) 성공! (+${add}점)`);
         tapTimesRef.current = [];

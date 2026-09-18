@@ -1,89 +1,92 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Shield } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
   const [round, setRound] = useState(1);
-  const [strikerPos, setStrikerPos] = useState({ row: 0, col: 1 }); // striker starts at top
+  const [strikerPos, setStrikerPos] = useState(() => ({ row: 0, col: Math.floor(Math.random() * 3) }));
   const [defenders, setDefenders] = useState<number[]>([4, 7]); // tile indices (0 to 8)
   const [score, setScore] = useState(0);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>('공격수의 슛 코스를 예측하여 수비수를 배치하세요!');
   const [roundTime, setRoundTime] = useState(5);
   const [finished, setFinished] = useState(false);
+  const defendersRef = useRef<number[]>([4, 7]);
+  const scoreRef = useRef(0);
+  const targetColRef = useRef(strikerPos.col);
+  const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: scoreRef.current },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    // 새 라운드: 공격수 위치 랜덤
-    const targetCol = Math.floor(Math.random() * 3);
-    setStrikerPos({ row: 0, col: targetCol });
-    setRoundTime(5);
-    setFeedback('공격수의 슛 코스를 예측하여 수비수를 배치하세요!');
-
     const timer = setInterval(() => {
       setRoundTime(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          evaluateDefense(targetCol);
+          const blocked = defendersRef.current.some(idx => idx % 3 === targetColRef.current);
+          if (blocked) {
+            sfxSuccess();
+            scoreRef.current += 50;
+            setScore(scoreRef.current);
+            setFeedback('🛡️ 슛 궤적 완벽 차단! 블록 성공 (+50점)');
+          } else {
+            sfxFail();
+            setFeedback('⚽ 수비 빈틈으로 실점 허용!');
+          }
+          advanceTimeoutRef.current = setTimeout(() => {
+            if (round >= 4) {
+              finishGame();
+            } else {
+              const nextCol = Math.floor(Math.random() * 3);
+              targetColRef.current = nextCol;
+              setStrikerPos({ row: 0, col: nextCol });
+              setRoundTime(5);
+              setFeedback('공격수의 슛 코스를 예측하여 수비수를 배치하세요!');
+              setRound(r => r + 1);
+            }
+          }, 1200);
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => clearInterval(timer);
-  }, [round]);
-
-  const finishGame = (finalScore?: number) => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
-      timestamp: Date.now(),
-    });
-  };
-
-  const evaluateDefense = (targetCol: number) => {
-    // 수비수 중 하나라도 targetCol 열에 배치되어 있으면 블록 성공!
-    // (열 인덱스: 0, 1, 2)
-    const blocked = defenders.some(idx => idx % 3 === targetCol);
-
-    if (blocked) {
-      sfxSuccess();
-      const add = 50;
-      setScore(s => s + add);
-      setFeedback('🛡️ 슛 궤적 완벽 차단! 블록 성공 (+50점)');
-    } else {
-      sfxFail();
-      setFeedback('⚽ 수비 빈틈으로 실점 허용!');
-    }
-
-    setTimeout(() => {
-      if (round >= 4) {
-        finishGame(score + (blocked ? 50 : 0));
-      } else {
-        setRound(r => r + 1);
-      }
-    }, 1200);
-  };
+    return () => {
+      clearInterval(timer);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    };
+  }, [finishGame, round]);
 
   const handleTileClick = (idx: number) => {
     if (finished) return;
     sfxTap();
     setDefenders(prev => {
+      let next: number[];
       if (prev.includes(idx)) {
-        return prev.filter(i => i !== idx);
+        next = prev.filter(i => i !== idx);
       } else {
         if (prev.length >= 2) {
-          return [prev[1], idx]; // 최대 2명 유지
+          next = [prev[1], idx]; // 최대 2명 유지
+        } else {
+          next = [...prev, idx];
         }
-        return [...prev, idx];
       }
+      defendersRef.current = next;
+      return next;
     });
   };
 

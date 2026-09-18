@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Trophy, FastForward, RotateCcw } from 'lucide-react';
 import { sfxSuccess, sfxFail } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 interface PlayScenario {
@@ -52,6 +53,7 @@ const SCENARIOS: PlayScenario[] = [
 ];
 
 export const BaseRunningDecide = ({ groupId, enqueueAction }: Props) => {
+  const nextRoundTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -85,7 +87,7 @@ export const BaseRunningDecide = ({ groupId, enqueueAction }: Props) => {
       setFeedback(`❌ 아웃(OUT)! ${current.solutionReason}`);
     }
 
-    setTimeout(() => {
+    nextRoundTimeoutRef.current = setTimeout(() => {
       setWaiting(false);
       setFeedback(null);
       if (index + 1 >= SCENARIOS.length) {
@@ -95,6 +97,10 @@ export const BaseRunningDecide = ({ groupId, enqueueAction }: Props) => {
       }
     }, 1200);
   };
+
+  useEffect(() => () => {
+    if (nextRoundTimeoutRef.current) clearTimeout(nextRoundTimeoutRef.current);
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">

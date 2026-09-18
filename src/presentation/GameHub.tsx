@@ -1435,7 +1435,7 @@ export const GameHub = () => {
           <h2 className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> 2022 개정 체육과 영역
           </h2>
-          <span className="text-[11px] text-slate-500">교육부 고시 제2022-33호 기반</span>
+          <span className="text-[11px] text-slate-400">교육부 고시 제2022-33호 기반</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {PE_DOMAINS.map(d => {
@@ -1460,7 +1460,7 @@ export const GameHub = () => {
                   </span>
                 </div>
                 <div className="font-black text-sm">{d.key}</div>
-                <div className={`text-[10px] font-medium truncate mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                <div className={`text-[10px] font-medium truncate mt-0.5 ${isSelected ? 'text-white/80' : 'text-slate-400'}`}>
                   {d.desc}
                 </div>
               </button>
@@ -1503,7 +1503,7 @@ export const GameHub = () => {
             <h2 className="text-xs font-bold text-slate-300 px-1 flex items-center gap-1.5">
               <span>🖥️</span> 지원 기기 분류
             </h2>
-            <span className="text-[10px] text-slate-500 hidden sm:inline">
+            <span className="text-[10px] text-slate-400 hidden sm:inline">
               스마트폰 · 태블릿 PC · 데스크톱 PC
             </span>
           </div>
@@ -1526,7 +1526,7 @@ export const GameHub = () => {
                 >
                   <span>{d.emoji}</span>
                   <span>{d.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
                     {count}
                   </span>
                 </button>
@@ -1561,7 +1561,7 @@ export const GameHub = () => {
                   >
                     <span>{pm.emoji}</span>
                     <span>{pm.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
                       {count}
                     </span>
                   </button>
@@ -1579,7 +1579,7 @@ export const GameHub = () => {
               {GRADE_GROUPS.map(g => {
                 const count = g.key === '전체'
                   ? GAMES.length
-                  : GAMES.filter(game => game.grades.includes(g.key as any)).length;
+                  : GAMES.filter(game => game.grades.includes(g.key as GameDef['grades'][number])).length;
                 const isSelected = gradeFilter === g.key;
                 return (
                   <button
@@ -1588,12 +1588,12 @@ export const GameHub = () => {
                     onClick={() => setGradeFilter(g.key)}
                     className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
                       isSelected
-                        ? 'bg-cyan-600 border-cyan-400 text-white shadow-lg shadow-cyan-500/20'
+                        ? 'bg-cyan-700 border-cyan-400 text-white shadow-lg shadow-cyan-500/20'
                         : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
                     }`}
                   >
                     <span>{g.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-cyan-800 text-cyan-100' : 'bg-slate-800 text-slate-500'}`}>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-cyan-800 text-cyan-100' : 'bg-slate-800 text-slate-400'}`}>
                       {count}
                     </span>
                   </button>
@@ -1618,7 +1618,7 @@ export const GameHub = () => {
             </button>
           )}
         </div>
-        <span className="text-[11px] text-slate-500 hidden sm:inline">
+        <span className="text-[11px] text-slate-400 hidden sm:inline">
           💡 성취기준 코드를 클릭하면 세부 목표를 볼 수 있습니다
         </span>
       </div>
@@ -1629,7 +1629,7 @@ export const GameHub = () => {
           <div className="text-center py-20 text-slate-600 bg-slate-900/40 rounded-3xl border border-slate-800">
             <span className="text-5xl block mb-3">🔍</span>
             <p className="font-bold text-slate-400">해당 조건에 일치하는 게임이 없습니다.</p>
-            <p className="text-xs text-slate-500 mt-1">영역이나 학년군 필터를 변경해 보세요.</p>
+            <p className="text-xs text-slate-400 mt-1">영역이나 학년군 필터를 변경해 보세요.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
@@ -1699,7 +1699,7 @@ export const GameHub = () => {
                       <div className="text-[11px] font-bold text-slate-300 truncate">
                         🎯 {game.subCategory}
                       </div>
-                      <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                      <div className="text-[10px] text-slate-400 truncate mt-0.5">
                         {game.achievement.title}
                       </div>
                     </div>
@@ -1743,7 +1743,7 @@ export const GameHub = () => {
             <BookOpen className="w-4 h-4 text-cyan-400" /> 사용 설명서
           </Link>
         </div>
-        <p className="text-center text-slate-600 text-[11px] font-medium mt-4">
+        <p className="text-center text-slate-400 text-[11px] font-medium mt-4">
           땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
         </p>
       </div>

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Wind, AlertTriangle } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxFail, sfxPop } from '../../../../application/soundEffects';
+import type { SyncAction } from '../../../../application/useSyncQueue';
 
 interface Props {
   groupId: string;
-  enqueueAction: (action: any) => void;
+  enqueueAction: (action: SyncAction) => void;
 }
 
 export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
@@ -18,6 +19,18 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
   const angleRef = useRef(0);
   const windRef = useRef(0);
   const wipeoutRef = useRef(false);
+  const scoreRef = useRef(0);
+
+  const finishGame = useCallback(() => {
+    setFinished(true);
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: Math.min(200, scoreRef.current) },
+      timestamp: Date.now(),
+    });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     // 풍향 및 돌풍 시뮬레이션
@@ -56,7 +69,11 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
 
         // 안전 영역(-15 ~ +15도) 내 체공 점수 가산
         if (Math.abs(next) <= 15) {
-          setScore(s => s + 1);
+          setScore(s => {
+            const updated = s + 1;
+            scoreRef.current = updated;
+            return updated;
+          });
         }
         return next;
       });
@@ -81,18 +98,7 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
       clearInterval(windTimer);
       clearInterval(physicsTimer);
     };
-  }, []);
-
-  const finishGame = () => {
-    setFinished(true);
-    sfxSuccess();
-    enqueueAction({
-      id: Math.random().toString(),
-      type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: Math.min(200, score) },
-      timestamp: Date.now(),
-    });
-  };
+  }, [finishGame]);
 
   const steer = (delta: number) => {
     if (wipeout || finished) return;
