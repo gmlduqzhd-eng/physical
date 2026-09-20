@@ -57,7 +57,7 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (순발력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -73,7 +73,7 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (근력·근지구력)',
     achievement: { code: '[6체01-02]', title: '체력 측정 및 운동 수행', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -89,7 +89,7 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (심폐지구력)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -105,7 +105,7 @@ const GAMES: GameDef[] = [
     subCategory: '건강 체력 (코어 근력)',
     achievement: { code: '[6체01-05]', title: '체력 운동의 끈기 있는 수행', desc: '체력 운동을 끈기 있게 규칙적으로 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -137,7 +137,7 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (평형성)',
     achievement: { code: '[6체01-02]', title: '운동 체력(평형성) 측정', desc: '체력을 측정하고 자신의 수준에 맞는 운동을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -153,7 +153,7 @@ const GAMES: GameDef[] = [
     subCategory: '운동 체력 (평형성·조절)',
     achievement: { code: '[4체01-02]', title: '기본 체력운동 시도', desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -281,7 +281,7 @@ const GAMES: GameDef[] = [
     subCategory: '기본 움직임 (뻗기·버티기)',
     achievement: { code: '[4체01-05]', title: '안전한 기본 움직임', desc: '자신의 신체적 특징을 긍정적으로 인식하고 안전하게 운동한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -297,7 +297,7 @@ const GAMES: GameDef[] = [
     subCategory: '건강·운동 습관 (맨손체조)',
     achievement: { code: '[4체01-04]', title: '맨손체조 생활 실천', desc: '건강한 생활 습관을 이해하고 규칙적으로 실천한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '협동'
   },
   {
@@ -470,7 +470,7 @@ const GAMES: GameDef[] = [
     subCategory: '투기형 활동 (타격 기술)',
     achievement: { code: '[6체02-02]', title: '투기형 스포츠 기본 기능', desc: '기술형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -487,7 +487,7 @@ const GAMES: GameDef[] = [
     subCategory: '표적 제어 (조작 움직임)',
     achievement: { code: '[4체02-05]', title: '기술형 스포츠 조작 수행', desc: '기술형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '개인'
   },
   {
@@ -593,7 +593,7 @@ const GAMES: GameDef[] = [
     subCategory: '민속놀이 (정지와 이동 신체조절)',
     achievement: { code: '[4체02-07]', title: '생태형 민속놀이 움직임', desc: '생태형 스포츠에 적합한 기본 움직임을 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '협동'
   },
   {
@@ -610,7 +610,7 @@ const GAMES: GameDef[] = [
     subCategory: '민속 신체놀이 (규칙 준수)',
     achievement: { code: '[6체02-08]', title: '생태형 민속놀이 기능 수행', desc: '생태형 스포츠의 기본 기능을 파악하고 수행한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
+    devices: ['스마트폰','태블릿 PC'],
     playMode: '협동'
   },
   {
@@ -728,7 +728,7 @@ const GAMES: GameDef[] = [
     subCategory: '기초 신체 표현 (회전·비틀기)',
     achievement: { code: '[4체03-05]', title: '기본 움직임 리듬 표현', desc: '기본 움직임을 리듬에 맞춰 표현한다.' },
     grades: ['3~4학년군', '5~6학년군'],
-    devices: ['스마트폰','태블릿 PC'],
+    devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'
   },
 
