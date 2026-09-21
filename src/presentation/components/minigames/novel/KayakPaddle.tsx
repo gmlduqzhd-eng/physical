@@ -125,7 +125,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
         </div>
 
         {/* 결승선 배너 */}
-        <div className="absolute top-2 w-full flex items-center justify-center gap-1 text-xs text-yellow-300 font-bold bg-yellow-950/60 py-1 border-b border-yellow-500/30">
+        <div className="absolute top-2 w-full flex items-center justify-center gap-1 text-xs text-amber-200 font-bold bg-yellow-950/60 py-1 border-b border-yellow-500/30">
           🏁 100m 급류 탈출 지점
         </div>
       </div>

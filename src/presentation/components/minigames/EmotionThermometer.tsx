@@ -188,7 +188,7 @@ export const EmotionThermometer = () => {
                       onClick={() => setPeerGuessEmotion(emo.name)}
                       className={`py-2 px-1 rounded-xl border text-xs font-bold transition-all ${
                         peerGuessEmotion === emo.name
-                          ? 'bg-pink-950 border-pink-500 text-pink-300 shadow-md'
+                          ? 'bg-pink-950 border-pink-500 text-rose-200 shadow-md'
                           : 'bg-slate-900 border-slate-800 text-slate-400'
                       }`}
                     >
@@ -254,7 +254,7 @@ export const EmotionThermometer = () => {
                 </div>
 
                 <div className="pl-2">
-                  <span className="text-[10px] font-bold text-pink-400 block mb-1">
+                  <span className="text-[10px] font-bold text-rose-300 block mb-1">
                     👥 짝꿍이 느낀 감정
                   </span>
                   <div className="text-lg font-black text-white mb-1">

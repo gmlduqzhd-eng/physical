@@ -33,15 +33,15 @@ export const BodyTwist = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none text-white">
-      <div className="text-indigo-300 font-bold text-sm mb-1">{count} / {TARGET} 회</div>
+      <div className="text-blue-200 font-bold text-sm mb-1">{count} / {TARGET} 회</div>
       <h1 className="text-3xl font-black mb-2 text-center">🔄 몸 비틀기!</h1>
-      <p className="text-indigo-200 text-xs mb-8 text-center">허리를 좌우로 비틀면서 지시된 방향을 터치하세요!</p>
+      <p className="text-white text-xs mb-8 text-center">허리를 좌우로 비틀면서 지시된 방향을 터치하세요!</p>
 
       <div className="text-8xl mb-6 animate-pulse">
         {direction === 'LEFT' ? '⬅️' : '➡️'}
       </div>
 
-      <div className="text-2xl font-black mb-8 text-indigo-300">
+      <div className="text-2xl font-black mb-8 text-blue-200">
         {direction === 'LEFT' ? '왼쪽으로 비틀기!' : '오른쪽으로 비틀기!'}
       </div>
 

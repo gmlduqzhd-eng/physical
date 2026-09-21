@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, Sun, Moon, Edit3 } from 'lucide-react';
+import { useTheme } from '../application/ThemeContext';
+import { usePlayerProfile } from '../application/usePlayerProfile';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
@@ -1354,12 +1356,64 @@ const PLAY_MODE_FILTERS: { key: PlayModeFilter; label: string; emoji: string }[]
 
 export const GameHub = () => {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
+  const { profile, createProfile, updateNickname, hasProfile } = usePlayerProfile();
+  const [editingNickname, setEditingNickname] = useState(false);
+  const [nicknameInput, setNicknameInput] = useState('');
   const [gradeFilter, setGradeFilter] = useState<GradeGroup>('전체');
   const [domainFilter, setDomainFilter] = useState<PeDomain2022>('전체');
   const [sportFilter, setSportFilter] = useState<SportType>('전체');
   const [deviceFilter, setDeviceFilter] = useState<DeviceFilter>('전체');
   const [playModeFilter, setPlayModeFilter] = useState<PlayModeFilter>('전체');
   const [activeAchievement, setActiveAchievement] = useState<AchievementStandard | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem('physical_favorites') || '[]')); } catch { return new Set(); }
+  });
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [randomPick, setRandomPick] = useState<GameDef | null>(null);
+  const [isSpinning, setIsSpinning] = useState(false);
+
+  // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
+  const todayPicks = useMemo(() => {
+    const today = new Date();
+    const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    const shuffled = [...GAMES].sort((a, b) => {
+      const hashA = (seed * 31 + a.type.charCodeAt(0) * 17) % 10000;
+      const hashB = (seed * 31 + b.type.charCodeAt(0) * 17) % 10000;
+      return hashA - hashB;
+    });
+    // 각 영역에서 1개씩 추천
+    const picks: GameDef[] = [];
+    for (const domain of ['운동', '스포츠', '표현'] as const) {
+      const found = shuffled.find(g => g.domain === domain && !picks.includes(g));
+      if (found) picks.push(found);
+    }
+    return picks;
+  }, []);
+
+  const toggleFavorite = useCallback((type: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type); else next.add(type);
+      localStorage.setItem('physical_favorites', JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const handleRandomPick = useCallback(() => {
+    setIsSpinning(true);
+    setRandomPick(null);
+    let count = 0;
+    const interval = setInterval(() => {
+      setRandomPick(GAMES[Math.floor(Math.random() * GAMES.length)]);
+      count++;
+      if (count > 15) {
+        clearInterval(interval);
+        setIsSpinning(false);
+        setRandomPick(GAMES[Math.floor(Math.random() * GAMES.length)]);
+      }
+    }, 100);
+  }, []);
 
   const filtered = GAMES.filter(g => {
     const gradeMatch = gradeFilter === '전체' || g.grades.includes(gradeFilter);
@@ -1367,16 +1421,18 @@ export const GameHub = () => {
     const sportMatch = domainFilter !== '스포츠' || sportFilter === '전체' || g.sportType === sportFilter;
     const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
     const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch;
+    const favMatch = !showFavoritesOnly || favorites.has(g.type);
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch;
   });
 
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체';
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || showFavoritesOnly;
   const resetAllFilters = () => {
     setDomainFilter('전체');
     setSportFilter('전체');
     setGradeFilter('전체');
     setDeviceFilter('전체');
     setPlayModeFilter('전체');
+    setShowFavoritesOnly(false);
   };
 
   return (
@@ -1416,6 +1472,42 @@ export const GameHub = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 via-transparent to-transparent" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[220px] bg-cyan-500/10 rounded-full blur-[100px]" />
         <div className="relative z-10 flex flex-col items-center pt-8 pb-5 px-6">
+          {/* 우측 상단 버튼들 */}
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <button
+              onClick={() => navigate('/manual')}
+              className="h-10 px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-lg text-xs font-bold"
+              style={{
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
+                color: isDark ? '#67e8f9' : '#0891b2',
+              }}
+            >
+              <BookOpen className="w-3.5 h-3.5" /> 사용 설명서
+            </button>
+            <button
+              onClick={() => navigate('/manual?tab=lesson')}
+              className="h-10 px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-lg text-xs font-bold"
+              style={{
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                borderColor: isDark ? 'rgba(88, 28, 135, 0.6)' : 'rgba(192, 132, 252, 0.8)',
+                color: isDark ? '#d8b4fe' : '#7c3aed',
+              }}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> 지도안 생성기
+            </button>
+            <button
+              onClick={toggleTheme}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border shadow-lg"
+              style={{
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
+              }}
+              title={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+            >
+              {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
+            </button>
+          </div>
           <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full mb-3">
             <Award className="w-3.5 h-3.5 text-cyan-400" />
             <span className="text-xs font-bold text-cyan-300">2022 개정 교육과정 초등 체육과 연계</span>
@@ -1428,6 +1520,119 @@ export const GameHub = () => {
           </p>
         </div>
       </div>
+
+      {/* 📋 내 기록 */}
+      <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
+
+        {/* 🏆 내 기록 카드 */}
+        <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 mb-3">
+          {!hasProfile ? (
+            <div className="flex flex-col items-center gap-3">
+              <p className="text-slate-400 text-sm font-bold">👋 닉네임을 설정하면 게임 점수가 누적됩니다!</p>
+              <div className="flex gap-2 w-full max-w-xs">
+                <input
+                  value={nicknameInput}
+                  onChange={e => setNicknameInput(e.target.value)}
+                  placeholder="이름(학교명)을 입력하세요"
+                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  onKeyDown={e => { if (e.key === 'Enter' && nicknameInput.trim()) { createProfile(nicknameInput.trim()); setNicknameInput(''); } }}
+                />
+                <button
+                  onClick={() => { if (nicknameInput.trim()) { createProfile(nicknameInput.trim()); setNicknameInput(''); } }}
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm transition-colors"
+                >
+                  시작!
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-2xl shrink-0 shadow-lg">
+                {profile!.nickname.slice(0, 1)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  {editingNickname ? (
+                    <div className="flex gap-1.5">
+                      <input
+                        value={nicknameInput}
+                        onChange={e => setNicknameInput(e.target.value)}
+                        className="bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-cyan-500 w-32"
+                        autoFocus
+                        onKeyDown={e => { if (e.key === 'Enter' && nicknameInput.trim()) { updateNickname(nicknameInput.trim()); setEditingNickname(false); } }}
+                      />
+                      <button onClick={() => { if (nicknameInput.trim()) { updateNickname(nicknameInput.trim()); setEditingNickname(false); } }} className="px-2 py-1 bg-cyan-600 text-white rounded-lg text-xs font-bold">확인</button>
+                      <button onClick={() => setEditingNickname(false)} className="px-2 py-1 bg-slate-700 text-slate-300 rounded-lg text-xs font-bold">취소</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="font-black text-white text-sm">{profile!.nickname}</span>
+                      <button onClick={() => { setNicknameInput(profile!.nickname); setEditingNickname(true); }} className="text-slate-500 hover:text-cyan-400 transition-colors">
+                        <Edit3 className="w-3 h-3" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-500 font-bold">총 {profile!.totalPlays}회 플레이 · {Object.keys(profile!.playCounts).length}종 게임 경험</p>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">
+                  {profile!.totalScore.toLocaleString()}
+                </div>
+                <div className="text-[10px] text-slate-500 font-bold">누적 점수</div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 */}
+      <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-black text-yellow-400 flex items-center gap-1.5">
+            🌟 오늘의 추천 게임
+          </h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all border ${showFavoritesOnly ? 'bg-yellow-500 text-yellow-900 border-yellow-400' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
+              <Star className={`w-3 h-3 ${showFavoritesOnly ? 'fill-yellow-900' : ''}`} /> 즐겨찾기 {favorites.size > 0 && `(${favorites.size})`}
+            </button>
+            <button onClick={handleRandomPick} disabled={isSpinning} className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60">
+              <Shuffle className={`w-3 h-3 ${isSpinning ? 'animate-spin' : ''}`} /> 랜덤 뽑기
+            </button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {todayPicks.map(game => {
+            const domainColor = game.domain === '운동' ? 'border-emerald-500/40 bg-emerald-950/30' : game.domain === '스포츠' ? 'border-blue-500/40 bg-blue-950/30' : 'border-purple-500/40 bg-purple-950/30';
+            return (
+              <button key={game.type} onClick={() => navigate(`/play/${game.type}`)} className={`p-3 rounded-xl border ${domainColor} flex items-center gap-3 hover:scale-[1.02] transition-all text-left group`}>
+                <span className="text-3xl">{game.emoji}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white truncate group-hover:text-cyan-300 transition-colors">{game.name}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{game.subCategory}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 shrink-0" />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 랜덤 뽑기 결과 모달 */}
+      {randomPick && !isSpinning && (
+        <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setRandomPick(null)}>
+          <div className="bg-slate-900 border border-purple-500/40 rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+            <div className="text-7xl mb-4 animate-bounce">{randomPick.emoji}</div>
+            <h3 className="text-2xl font-black text-white mb-1">{randomPick.name}</h3>
+            <p className="text-sm text-slate-400 mb-2">{randomPick.desc}</p>
+            <p className="text-xs text-purple-300 font-bold mb-6">{randomPick.domain} · {randomPick.subCategory}</p>
+            <div className="flex gap-3">
+              <button onClick={() => navigate(`/play/${randomPick.type}`)} className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl font-black text-sm">바로 시작!</button>
+              <button onClick={handleRandomPick} className="flex-1 py-3 bg-slate-800 text-slate-300 rounded-xl font-bold text-sm border border-slate-700 hover:bg-slate-700">다시 뽑기</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 대영역 선택 (운동 · 스포츠 · 표현) */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-5 mb-4">
@@ -1728,6 +1933,9 @@ export const GameHub = () => {
                     >
                       시작 <ChevronRight className="w-3.5 h-3.5" />
                     </button>
+                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(game.type); }} className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors" title="즐겨찾기">
+                      <Star className={`w-4 h-4 ${favorites.has(game.type) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
+                    </button>
                   </div>
                 </div>
               );
@@ -1738,14 +1946,11 @@ export const GameHub = () => {
 
       {/* Footer */}
       <div className="px-4 md:px-8 pb-10 max-w-5xl mx-auto">
-        <div className="border-t border-slate-800/80 pt-6 flex justify-center items-center">
-          <Link to="/manual" className="flex items-center gap-1.5 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-cyan-300 rounded-xl text-xs font-bold transition-all border border-slate-800 shadow-md hover:border-cyan-500/40">
-            <BookOpen className="w-4 h-4 text-cyan-400" /> 사용 설명서
-          </Link>
+        <div className="border-t border-slate-800/80 pt-6">
+          <p className="text-center text-slate-400 text-[11px] font-medium">
+            땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
+          </p>
         </div>
-        <p className="text-center text-slate-400 text-[11px] font-medium mt-4">
-          땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
-        </p>
       </div>
     </div>
   );

@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 export const ScoreBoard = () => {
@@ -14,6 +14,40 @@ export const ScoreBoard = () => {
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
+  const [showQR, setShowQR] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const prevScoresRef = useRef<{id:string;score:number;rank:number}[]>([]);
+  const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number}[]>([]);
+
+  // 순위 역전 감지 토스트
+  useEffect(() => {
+    if (scores.length < 2) return;
+    const sorted = [...scores].sort((a, b) => b.score - a.score);
+    const currentRanks = sorted.map((s, i) => ({ id: s.id, score: s.score, rank: i + 1, name: s.group_name }));
+    const prev = prevScoresRef.current;
+    if (prev.length > 0) {
+      const prevFirst = prev.find(p => p.rank === 1);
+      const currFirst = currentRanks.find(c => c.rank === 1);
+      if (prevFirst && currFirst && prevFirst.id !== currFirst.id) {
+        setToast(`🔥 ${currFirst.name}이(가) 1등을 탈환!`);
+        setTimeout(() => setToast(null), 3500);
+      }
+    }
+    prevScoresRef.current = currentRanks.map(c => ({ id: c.id, score: c.score, rank: c.rank }));
+  }, [scores]);
+
+  // 게임 종료 시 컨페티
+  useEffect(() => {
+    if (gameRoom?.status === 'finished' && confetti.length === 0) {
+      const particles = Array.from({ length: 60 }, (_, i) => ({
+        id: i,
+        x: Math.random() * 100,
+        color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98'][i % 8],
+        delay: Math.random() * 2,
+      }));
+      setConfetti(particles);
+    }
+  }, [gameRoom?.status]);
   
   const isTsunami = gameRoom?.status === 'tsunami';
   const isPlankEvent = mins === '01' && secs === '00' && gameRoom?.status === 'playing';
@@ -39,6 +73,21 @@ export const ScoreBoard = () => {
       <div className="min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center py-12 px-8 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite] pointer-events-none"></div>
         
+        {/* 컨페티 애니메이션 */}
+        {confetti.map(p => (
+          <div key={p.id} className="fixed top-0 z-50 pointer-events-none" style={{
+            left: `${p.x}%`,
+            animation: `confettiFall ${3 + p.delay}s ease-in forwards`,
+            animationDelay: `${p.delay}s`,
+          }}>
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color, animation: `confettiSpin ${0.5 + Math.random()}s linear infinite` }} />
+          </div>
+        ))}
+        <style>{`
+          @keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+          @keyframes confettiSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+        `}</style>
+
         <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-12 drop-shadow-lg relative z-10 tracking-widest">🏆 최종 결과 발표 🏆</h1>
 
         <div className="flex items-end justify-center gap-6 h-80 mb-16 relative z-10 w-full max-w-5xl mt-12">
@@ -122,6 +171,18 @@ export const ScoreBoard = () => {
         </div>
       )}
 
+      {/* 순위 역전 토스트 알림 */}
+      {toast && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] bg-gradient-to-r from-orange-500 to-red-500 text-white px-10 py-5 rounded-2xl shadow-2xl text-3xl font-black animate-bounce border-2 border-yellow-300">
+          {toast}
+        </div>
+      )}
+
+      {/* 최종 1분 전체 화면 펄스 */}
+      {isDanger && !isTsunami && !isPlankEvent && (
+        <div className="fixed inset-0 z-[1] pointer-events-none border-8 border-red-500/40 animate-pulse" />
+      )}
+
       <header className="relative z-10 flex justify-between items-center px-12 py-8 bg-white/80 backdrop-blur-md border-b border-cyan-200">
         <div className="flex items-center gap-4">
           <Shield className="w-12 h-12 text-cyan-400" />
@@ -130,13 +191,31 @@ export const ScoreBoard = () => {
           </h1>
         </div>
 
-        <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-100 border-red-300 animate-pulse' : 'bg-white border-slate-200 shadow-sm'}`}>
-          <Clock className={`w-8 h-8 ${isDanger ? 'text-white' : 'text-red-500'}`} />
-          <span className={`text-5xl font-bold font-mono tracking-wider ${isDanger ? 'text-red-600' : 'text-red-500'}`}>
-            {mins}:{secs}
-          </span>
+        <div className="flex items-center gap-4">
+          {/* 미니 QR 코드 (지각생 입장용) */}
+          <button onClick={() => setShowQR(!showQR)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="QR 코드 표시">
+            <QrCode className="w-6 h-6 text-cyan-500" />
+          </button>
+          <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-100 border-red-300 animate-pulse' : 'bg-white border-slate-200 shadow-sm'}`}>
+            <Clock className={`w-8 h-8 ${isDanger ? 'text-white' : 'text-red-500'}`} />
+            <span className={`text-5xl font-bold font-mono tracking-wider ${isDanger ? 'text-red-600' : 'text-red-500'}`}>
+              {mins}:{secs}
+            </span>
+          </div>
         </div>
       </header>
+
+      {/* QR 코드 패널 */}
+      {showQR && (
+        <div className="relative z-10 px-12 py-4 bg-cyan-50 border-b border-cyan-200 flex items-center justify-center gap-6">
+          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${window.location.origin}/lobby`)}`} alt="입장 QR" className="w-24 h-24 border border-cyan-200 rounded-lg" />
+          <div>
+            <p className="text-lg font-black text-cyan-800">📱 지금 바로 참여하세요!</p>
+            <p className="text-sm text-cyan-600">QR 코드를 스캔하고 PIN을 입력하면 바로 입장!</p>
+            {gameRoom && <p className="text-2xl font-black text-cyan-700 mt-1 font-mono">PIN: {gameRoom.pin_code}</p>}
+          </div>
+        </div>
+      )}
 
       {gameRoom?.status === 'boss_raid' && (
         <div className="relative z-10 px-12 py-6 bg-slate-900 border-b border-slate-800 shadow-xl flex flex-col items-center justify-center">
@@ -160,7 +239,7 @@ export const ScoreBoard = () => {
         {scores.map((score) => {
           const AvatarIcon = (LucideIcons as unknown as Record<string, React.ElementType>)[score.avatar || 'Smile'] || LucideIcons.Smile;
           return (
-          <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 relative overflow-hidden ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
+          <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 relative overflow-hidden hover:scale-[1.02] hover:shadow-lg ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
             {score.item_buff_until && new Date(score.item_buff_until).getTime() > Date.now() && (
               <div className="absolute inset-0 bg-yellow-400/10 animate-pulse pointer-events-none"></div>
             )}

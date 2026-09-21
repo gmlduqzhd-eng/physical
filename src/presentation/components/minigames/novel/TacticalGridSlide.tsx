@@ -109,7 +109,7 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
           <span className="text-2xl">🏃‍♂️</span>
           <div className="text-xs">
             <span className="text-slate-400">침투 공격수: </span>
-            <span className="text-rose-400 font-bold">{strikerPos.col === 0 ? '왼쪽' : strikerPos.col === 1 ? '중앙' : '오른쪽'} 돌파!</span>
+            <span className="text-pink-300 font-bold">{strikerPos.col === 0 ? '왼쪽' : strikerPos.col === 1 ? '중앙' : '오른쪽'} 돌파!</span>
           </div>
         </div>
         <div className="text-sm font-mono font-bold text-yellow-300">

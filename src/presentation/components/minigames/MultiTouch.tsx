@@ -25,9 +25,9 @@ export const MultiTouch = ({ groupId, enqueueAction }: Props) => {
   };
   return (
     <div className="min-h-[100dvh] bg-violet-950 flex flex-col items-center p-4 relative overflow-hidden z-[9999] select-none">
-      <div className="text-violet-400 font-bold text-sm mb-1">{round}/{TOTAL} 라운드 | 점수: {score}</div>
+      <div className="text-purple-300 font-bold text-sm mb-1">{round}/{TOTAL} 라운드 | 점수: {score}</div>
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">🖐️ 양손 터치</h1>
-      <p className="text-violet-300 font-bold mb-2 text-center text-xs relative z-10">모든 버튼을 동시에(빠르게) 터치하세요!</p>
+      <p className="text-purple-200 font-bold mb-2 text-center text-xs relative z-10">모든 버튼을 동시에(빠르게) 터치하세요!</p>
       <div className="relative w-full flex-1 min-h-[70vh] z-10">
         {zones.map((z, i) => (
           <button key={`${round}-${i}`} onTouchStart={(e) => { e.preventDefault(); handleZoneTouch(i); }} onMouseDown={() => handleZoneTouch(i)}
@@ -37,6 +37,6 @@ export const MultiTouch = ({ groupId, enqueueAction }: Props) => {
           </button>
         ))}
       </div>
-      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-violet-400 mb-4">{score}점!</div><p className="text-xl text-white font-bold">양손 터치 완료!</p></div>}
+      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-purple-300 mb-4">{score}점!</div><p className="text-xl text-white font-bold">양손 터치 완료!</p></div>}
     </div>);
 };

@@ -11,6 +11,99 @@
   --font-sans: 'Maplestory', sans-serif;
 }
 
+/* ============================================ */
+/* 🎨 라이트/다크 테마 시스템 (CSS Variables)    */
+/* ============================================ */
+:root, .dark-theme {
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-card: rgba(15, 23, 42, 0.9);
+  --bg-card-hover: rgba(30, 41, 59, 0.9);
+  --bg-input: #1e293b;
+  --text-primary: #ffffff;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-primary: rgba(30, 41, 59, 0.8);
+  --border-secondary: rgba(51, 65, 85, 0.6);
+  --accent-cyan: #22d3ee;
+  --accent-blue: #3b82f6;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --filter-bg: rgba(15, 23, 42, 0.7);
+  --hero-glow: rgba(34, 211, 238, 0.1);
+  --badge-bg: rgba(30, 41, 59, 0.8);
+}
+
+.light-theme {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-hover: rgba(241, 245, 249, 0.95);
+  --bg-input: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border-primary: rgba(226, 232, 240, 0.9);
+  --border-secondary: rgba(203, 213, 225, 0.8);
+  --accent-cyan: #0891b2;
+  --accent-blue: #2563eb;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --filter-bg: rgba(255, 255, 255, 0.8);
+  --hero-glow: rgba(8, 145, 178, 0.08);
+  --badge-bg: rgba(241, 245, 249, 0.9);
+}
+
+/* 라이트 모드 글로벌 오버라이드 */
+.light-theme {
+  /* 주요 배경색 오버라이드 */
+  & .bg-slate-950 { background-color: var(--bg-primary) !important; }
+  & .bg-slate-900 { background-color: var(--bg-secondary) !important; }
+  & .bg-slate-900\/90, & .bg-slate-900\/80, & .bg-slate-900\/70 { background-color: var(--bg-card) !important; }
+  & .bg-slate-950\/80, & .bg-slate-950\/60 { background-color: var(--bg-secondary) !important; }
+  & .bg-slate-800 { background-color: #e2e8f0 !important; }
+  & .bg-slate-800\/80, & .bg-slate-800\/50, & .bg-slate-800\/90 { background-color: rgba(226, 232, 240, 0.8) !important; }
+
+  /* 텍스트 색상 오버라이드 */
+  & .text-white { color: var(--text-primary) !important; }
+  & .text-slate-400, & .text-slate-300 { color: var(--text-secondary) !important; }
+  & .text-slate-500, & .text-slate-600 { color: var(--text-muted) !important; }
+  
+  /* 강조 색상 유지 (브랜드 컬러는 보존) */
+  & .text-cyan-300, & .text-cyan-400 { color: var(--accent-cyan) !important; }
+  
+  /* 보더 오버라이드 */
+  & .border-slate-800, & .border-slate-700 { border-color: var(--border-primary) !important; }
+  & .border-slate-800\/80, & .border-slate-800\/90, & .border-slate-700\/80 { border-color: var(--border-secondary) !important; }
+  
+  /* 카드 그림자 */
+  & .shadow-lg, & .shadow-xl, & .shadow-2xl { box-shadow: 0 4px 24px var(--shadow-color) !important; }
+
+  /* 특수 배경 */
+  & .bg-cyan-950\/80, & .bg-cyan-950 { background-color: rgba(8, 145, 178, 0.08) !important; }
+  & .bg-emerald-950 { background-color: rgba(5, 150, 105, 0.08) !important; }
+  & .bg-blue-950 { background-color: rgba(37, 99, 235, 0.08) !important; }
+  & .bg-purple-950 { background-color: rgba(147, 51, 234, 0.08) !important; }
+  & .bg-orange-950\/50 { background-color: rgba(234, 88, 12, 0.06) !important; }
+  & .bg-red-950 { background-color: rgba(220, 38, 38, 0.06) !important; }
+  & .bg-amber-950\/80 { background-color: rgba(217, 119, 6, 0.08) !important; }
+  & .bg-cyan-500\/10 { background-color: rgba(8, 145, 178, 0.06) !important; }
+  & .bg-cyan-500\/20 { background-color: rgba(8, 145, 178, 0.1) !important; }
+
+  /* 영역 태그 밝은 버전 */
+  & .bg-emerald-950\/30 { background-color: rgba(5, 150, 105, 0.06) !important; }
+  & .bg-blue-950\/30 { background-color: rgba(37, 99, 235, 0.06) !important; }
+  & .bg-purple-950\/30 { background-color: rgba(147, 51, 234, 0.06) !important; }
+  & .bg-blue-950\/40 { background-color: rgba(37, 99, 235, 0.08) !important; }
+  
+  /* 입력 필드 */
+  & input, & select { background-color: white !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+
+  /* 그라디언트 텍스트 (유지) */
+  & .bg-gradient-to-r.from-cyan-300 { --tw-gradient-from: #0891b2; }
+  
+  /* 모달 배경 */
+  & .bg-black\/80 { background-color: rgba(0, 0, 0, 0.5) !important; }
+}
+
 /* 모바일 UI 제스처 통제 최적화 */
 html, body, #root { 
   height: 100dvh; 

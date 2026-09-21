@@ -107,18 +107,18 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
     <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
       <div className="w-full flex justify-between items-center px-2">
         <div className="flex items-center gap-2">
-          <Scale className="w-6 h-6 text-emerald-400" />
+          <Scale className="w-6 h-6 text-cyan-300" />
           <span className="text-white font-bold text-lg">균형 시소 버티기</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-emerald-400 font-mono font-bold text-lg">{timeLeft}s</span>
+          <span className="text-cyan-300 font-mono font-bold text-lg">{timeLeft}s</span>
           <span className="text-yellow-400 font-mono font-bold text-lg">{score}점</span>
         </div>
       </div>
 
       {/* 시소 및 밸런스 구슬 시각화 */}
       <div className="relative w-full h-72 bg-gradient-to-b from-slate-950 via-teal-950 to-slate-900 rounded-3xl overflow-hidden border-2 border-emerald-500/40 p-4 flex flex-col items-center justify-between shadow-2xl my-2">
-        <div className="text-xs text-emerald-300 font-bold bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30">
+        <div className="text-xs text-cyan-200 font-bold bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/30">
           중심 유지 상태: {isCentered ? '🟢 안전' : '🔴 미끄러짐 주의!'}
         </div>
 

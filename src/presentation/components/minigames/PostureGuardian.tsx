@@ -143,7 +143,7 @@ export const PostureGuardian = () => {
           {/* 현재 수리 부품 카드 */}
           <div className="text-center mb-6">
             <span className="text-5xl block mb-2">{current.emoji}</span>
-            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-950 text-indigo-300 border border-indigo-800 inline-block mb-2">
+            <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-indigo-950 text-blue-200 border border-indigo-800 inline-block mb-2">
               🛠️ 수리 부품: {current.part} ({currentIdx + 1}/5)
             </span>
             <h3 className="text-xl font-black text-white mb-2">{current.title}</h3>

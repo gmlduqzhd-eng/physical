@@ -213,12 +213,12 @@ export const PassGateRescue = () => {
           {/* Phase 4: 2라운드 활동 기록 */}
           {phaseStep === 4 && (
             <div className="py-2 text-center">
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-800 mb-2 inline-block">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-950 text-cyan-300 border border-emerald-800 mb-2 inline-block">
                 2라운드 (전략 적용)
               </span>
               <h3 className="text-xl font-black text-white mb-2">게이트 통과 패스 횟수</h3>
 
-              <div className="text-6xl font-black text-emerald-400 font-mono my-4">
+              <div className="text-6xl font-black text-cyan-300 font-mono my-4">
                 {round2Success}<span className="text-2xl ml-1 text-slate-400">회</span>
               </div>
 
@@ -243,7 +243,7 @@ export const PassGateRescue = () => {
                       onClick={() => setR2Participated(p => ({ ...p, [m]: !p[m] }))}
                       className={`p-2 rounded-xl border text-xs font-bold text-left flex items-center justify-between ${
                         r2Participated[m]
-                          ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+                          ? 'bg-emerald-950 border-emerald-500 text-cyan-200'
                           : 'bg-slate-900 border-slate-800 text-slate-500'
                       }`}
                     >
@@ -283,7 +283,7 @@ export const PassGateRescue = () => {
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-400 font-bold block mb-1">2라운드 성공</span>
-                  <span className="text-3xl font-black text-emerald-400 font-mono">{round2Success}회</span>
+                  <span className="text-3xl font-black text-cyan-300 font-mono">{round2Success}회</span>
                 </div>
               </div>
 
@@ -300,11 +300,11 @@ export const PassGateRescue = () => {
                 </div>
 
                 <div className="p-3 bg-slate-950 rounded-xl border border-emerald-500/30 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-cyan-300 flex items-center justify-center font-bold text-sm">
                     ⏳
                   </div>
                   <div>
-                    <h4 className="text-xs font-black text-emerald-300">서로 기다려 주기</h4>
+                    <h4 className="text-xs font-black text-cyan-200">서로 기다려 주기</h4>
                     <p className="text-[11px] text-slate-400">실수가 나와도 격려하며 다음 패스를 준비했습니다.</p>
                   </div>
                 </div>

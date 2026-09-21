@@ -13,9 +13,9 @@ export const LegacyQuizGame = ({ quiz, gameRoomId, groupId, enqueueAction, playV
   return (
     <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
       <div className="absolute inset-0 bg-indigo-600/20 animate-pulse mix-blend-screen"></div>
-      <LucideIcons.Gamepad2 className="w-24 h-24 text-indigo-400 mb-6 animate-bounce relative z-10" />
+      <LucideIcons.Gamepad2 className="w-24 h-24 text-blue-300 mb-6 animate-bounce relative z-10" />
       <h1 className="text-4xl font-black text-white mb-2 text-center relative z-10">돌발 체육 퀴즈!</h1>
-      <p className="text-indigo-300 font-bold mb-8 text-center relative z-10">가장 먼저 맞추는 조가 {quiz.reward}점을 차지합니다!</p>
+      <p className="text-blue-200 font-bold mb-8 text-center relative z-10">가장 먼저 맞추는 조가 {quiz.reward}점을 차지합니다!</p>
       
       <div className="bg-white/10 backdrop-blur border border-white/20 p-6 rounded-2xl w-full max-w-md relative z-10 mb-6 shadow-2xl">
         <h2 className="text-2xl font-bold text-white mb-6 text-center leading-relaxed">{quiz.question}</h2>

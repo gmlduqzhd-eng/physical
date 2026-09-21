@@ -75,6 +75,7 @@ import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGa
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
+import { usePlayerProfile } from '../application/usePlayerProfile';
 
 interface GameMeta {
   name: string;
@@ -185,10 +186,46 @@ export const GamePlayPage = () => {
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard' | null>(null);
+  const [, setTotalPlays] = useState(0);
+  const [newBadge, setNewBadge] = useState<string | null>(null);
+  const { addGameResult } = usePlayerProfile();
   const [standaloneTiming] = useState(() => ({
     startedAt: new Date().toISOString(),
     endTime: Date.now() + 10000,
   }));
+
+  const difficultyMultiplier = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.5 : 1;
+
+  // 업적 배지 체크
+  const checkBadges = useCallback((score: number) => {
+    const badges: Record<string, boolean> = JSON.parse(localStorage.getItem('physical_badges') || '{}');
+    const plays = parseInt(localStorage.getItem('physical_total_plays') || '0', 10) + 1;
+    localStorage.setItem('physical_total_plays', String(plays));
+    setTotalPlays(plays);
+
+    // 배지 조건 체크
+    const newBadges: string[] = [];
+    if (score >= 500 && !badges['high_scorer']) { badges['high_scorer'] = true; newBadges.push('🏅 하이스코어러'); }
+    if (plays >= 10 && !badges['veteran']) { badges['veteran'] = true; newBadges.push('🎖️ 베테랑 (10회 플레이)'); }
+    if (plays >= 50 && !badges['master']) { badges['master'] = true; newBadges.push('👑 마스터 (50회 플레이)'); }
+    if (difficulty === 'hard' && score > 0 && !badges['brave']) { badges['brave'] = true; newBadges.push('🦁 용감한 도전자'); }
+
+    // 다양한 게임 플레이 배지
+    const playedGames: string[] = JSON.parse(localStorage.getItem('physical_played_games') || '[]');
+    if (gameType && !playedGames.includes(gameType)) {
+      playedGames.push(gameType);
+      localStorage.setItem('physical_played_games', JSON.stringify(playedGames));
+    }
+    if (playedGames.length >= 10 && !badges['explorer']) { badges['explorer'] = true; newBadges.push('🌍 탐험가 (10종 플레이)'); }
+    if (playedGames.length >= 30 && !badges['collector']) { badges['collector'] = true; newBadges.push('💎 수집가 (30종 플레이)'); }
+
+    localStorage.setItem('physical_badges', JSON.stringify(badges));
+    if (newBadges.length > 0) {
+      setNewBadge(newBadges[0]);
+      setTimeout(() => setNewBadge(null), 4000);
+    }
+  }, [difficulty, gameType]);
 
   // BGM 시작/종료
   useEffect(() => {
@@ -198,7 +235,8 @@ export const GamePlayPage = () => {
 
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
   const localEnqueueAction = useCallback((action: { payload: { amount: number } }) => {
-    const earned = action.payload.amount;
+    const rawScore = action.payload.amount;
+    const earned = Math.round(rawScore * difficultyMultiplier);
     setLastEarnedScore(earned);
     setGameFinished(true);
     stopBgm();
@@ -218,12 +256,20 @@ export const GamePlayPage = () => {
         localStorage.setItem(bestKey, String(earned));
       }
     }
-  }, [gameType]);
+
+    // 플레이어 프로필에 점수 누적 저장
+    if (gameType && gameInfo) {
+      addGameResult(gameType, gameInfo.name, earned, difficulty || undefined);
+    }
+
+    checkBadges(earned);
+  }, [gameType, difficultyMultiplier, checkBadges]);
 
   const handleReplay = () => {
     setGameFinished(false);
     setLastEarnedScore(0);
     setKey(prev => prev + 1);
+    setDifficulty(null);
     startBgm();
   };
 
@@ -421,70 +467,89 @@ export const GamePlayPage = () => {
 
   return (
     <div className={`relative min-h-[100dvh] ${NOVEL_GAME_TYPES.has(gameType) ? 'bg-slate-950' : ''}`}>
-      {/* 게임 렌더링 */}
-      {renderGame()}
-
-      {/* 상단 네비게이션 & 2022 개정 교육과정 성취기준 뱃지 */}
-      <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
-        <button
-          onClick={() => navigate('/')}
-          className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white transition-colors pointer-events-auto shadow-lg"
-          title="대시보드로 돌아가기"
-        >
-          <Home className="w-5 h-5" />
-        </button>
-
-        <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-full shadow-lg">
-          <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-800/60">
-            {gameInfo.code}
-          </span>
-          <span className="text-[11px] font-bold text-slate-300 hidden xs:inline">
-            {gameInfo.target}
-          </span>
+      {/* 난이도 선택 화면 */}
+      {difficulty === null && !gameFinished && (
+        <div className="fixed inset-0 z-[10002] bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
+          <span className="text-7xl mb-4">{gameInfo.emoji}</span>
+          <h2 className="text-2xl font-black text-white mb-2">{gameInfo.name}</h2>
+          <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
+          <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">난이도를 선택하세요</p>
+          <div className="flex gap-3 w-full max-w-md">
+            <button onClick={() => setDifficulty('easy')} className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30">
+              <span className="text-2xl">🌱</span><span className="text-sm">쉬움</span><span className="text-[10px] text-emerald-200">×0.7 배율</span>
+            </button>
+            <button onClick={() => setDifficulty('normal')} className="flex-1 py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105">
+              <span className="text-2xl">⚡</span><span className="text-sm">보통</span><span className="text-[10px] text-blue-200">×1.0 배율</span>
+            </button>
+            <button onClick={() => setDifficulty('hard')} className="flex-1 py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30">
+              <span className="text-2xl">🔥</span><span className="text-sm">어려움</span><span className="text-[10px] text-red-200">×1.5 배율</span>
+            </button>
+          </div>
+          <button onClick={() => navigate('/')} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
         </div>
-      </div>
+      )}
+
+      {/* 게임 렌더링 */}
+      {difficulty !== null && renderGame()}
+
+      {/* 배지 획득 토스트 */}
+      {newBadge && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[10003] bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm animate-bounce border-2 border-yellow-300">
+          🎉 새 배지 획득! {newBadge}
+        </div>
+      )}
+
+      {/* 상단 네비게이션 */}
+      {difficulty !== null && (
+        <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
+          <button onClick={() => navigate('/')} className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white transition-colors pointer-events-auto shadow-lg" title="홈으로">
+            <Home className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-full shadow-lg">
+            <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-800/60">{gameInfo.code}</span>
+            <span className="text-[11px] font-bold text-slate-300 hidden xs:inline">{gameInfo.target}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-900 text-emerald-300' : difficulty === 'hard' ? 'bg-red-900 text-red-300' : 'bg-blue-900 text-blue-300'}`}>
+              {difficulty === 'easy' ? '🌱' : difficulty === 'hard' ? '🔥' : '⚡'}×{difficultyMultiplier}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* 게임 종료 결과 오버레이 */}
       {gameFinished && (
         <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 font-sans animate-in fade-in duration-200">
           <div className="bg-slate-900/95 border border-slate-700 rounded-3xl p-8 max-w-sm w-full flex flex-col items-center shadow-2xl">
-            {/* 2022 개정 성취기준 배지 */}
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
-              <span>{gameInfo.code}</span>
-              <span className="text-slate-500">|</span>
-              <span className="text-slate-300">{gameInfo.target}</span>
+              <span>{gameInfo.code}</span><span className="text-slate-500">|</span><span className="text-slate-300">{gameInfo.target}</span>
             </div>
-
             <span className="text-6xl mb-3">{gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-xs mb-5">2022 개정 초등 체육과 학습 완료!</p>
-
-            <div className="w-full bg-slate-800 rounded-2xl p-5 mb-5 flex flex-col items-center border border-slate-700">
+            <div className="w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">획득 점수</span>
               <span className={`text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
+              {difficulty && difficulty !== 'normal' && (
+                <span className={`text-xs mt-1 font-bold ${difficulty === 'hard' ? 'text-red-400' : 'text-emerald-400'}`}>
+                  난이도 {difficulty === 'easy' ? '쉬움' : '어려움'} (×{difficultyMultiplier} 배율)
+                </span>
+              )}
             </div>
-
-            <div className="w-full flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3 mb-6 border border-slate-700/50">
-              <div className="flex items-center gap-2 text-yellow-500">
-                <Trophy className="w-4 h-4" />
-                <span className="text-sm font-bold">최고 기록</span>
-              </div>
+            <div className="w-full flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3 mb-4 border border-slate-700/50">
+              <div className="flex items-center gap-2 text-yellow-500"><Trophy className="w-4 h-4" /><span className="text-sm font-bold">최고 기록</span></div>
               <span className="text-yellow-400 font-black">{bestScore}점</span>
             </div>
-
+            {lastEarnedScore > 300 && difficulty !== 'hard' && (
+              <div className="w-full bg-orange-950/50 border border-orange-500/30 rounded-xl px-4 py-2.5 mb-4 text-center">
+                <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 더 높은 난이도에 도전해 보세요!</p>
+              </div>
+            )}
             <div className="w-full flex gap-3">
-              <button
-                onClick={handleReplay}
-                className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg"
-              >
+              <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
-              <button
-                onClick={() => navigate('/')}
-                className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors"
-              >
+              <button onClick={() => navigate('/')} className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
                 <Home className="w-5 h-5" /> 홈으로
               </button>
             </div>
@@ -494,3 +559,4 @@ export const GamePlayPage = () => {
     </div>
   );
 };
+

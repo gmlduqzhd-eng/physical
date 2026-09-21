@@ -99,14 +99,14 @@ export const PartnerRobotLab = () => {
 
               {/* 다리 동작 */}
               <div className="mb-3">
-                <span className="text-[11px] font-bold text-emerald-400 block mb-1.5">🦿 2. 다리 동작</span>
+                <span className="text-[11px] font-bold text-cyan-300 block mb-1.5">🦿 2. 다리 동작</span>
                 <div className="grid grid-cols-3 gap-2">
                   {LEG_CARDS.map(card => (
                     <button
                       key={card.id}
                       onClick={() => { setLeg1(card); sfxCoin(); }}
                       className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        leg1.id === card.id ? 'bg-emerald-950 border-emerald-500 text-emerald-200' : 'bg-slate-950 border-slate-800 text-slate-400'
+                        leg1.id === card.id ? 'bg-emerald-950 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
                       <span className="text-lg block mb-0.5">{card.emoji}</span>
@@ -166,7 +166,7 @@ export const PartnerRobotLab = () => {
                 <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
                   <span className="text-2xl">{leg1.emoji}</span>
                   <div className="text-xs">
-                    <strong className="text-emerald-400 block mb-0.5">2단계 다리: {leg1.name}</strong>
+                    <strong className="text-cyan-300 block mb-0.5">2단계 다리: {leg1.name}</strong>
                     <span className="text-slate-300">{leg1.desc}</span>
                   </div>
                 </div>
@@ -240,14 +240,14 @@ export const PartnerRobotLab = () => {
 
               {/* 다리 동작 */}
               <div className="mb-3">
-                <span className="text-[11px] font-bold text-emerald-400 block mb-1.5">🦿 2. 다리 동작</span>
+                <span className="text-[11px] font-bold text-cyan-300 block mb-1.5">🦿 2. 다리 동작</span>
                 <div className="grid grid-cols-3 gap-2">
                   {LEG_CARDS.map(card => (
                     <button
                       key={card.id}
                       onClick={() => { setLeg2(card); sfxCoin(); }}
                       className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        leg2.id === card.id ? 'bg-emerald-950 border-emerald-500 text-emerald-200' : 'bg-slate-950 border-slate-800 text-slate-400'
+                        leg2.id === card.id ? 'bg-emerald-950 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
                       }`}
                     >
                       <span className="text-lg block mb-0.5">{card.emoji}</span>
@@ -307,7 +307,7 @@ export const PartnerRobotLab = () => {
                 <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
                   <span className="text-2xl">{leg2.emoji}</span>
                   <div className="text-xs">
-                    <strong className="text-emerald-400 block mb-0.5">2단계 다리: {leg2.name}</strong>
+                    <strong className="text-cyan-300 block mb-0.5">2단계 다리: {leg2.name}</strong>
                     <span className="text-slate-300">{leg2.desc}</span>
                   </div>
                 </div>

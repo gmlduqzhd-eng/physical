@@ -11,6 +11,7 @@ import { BoardEntry } from './presentation/BoardEntry';
 import { GameHub } from './presentation/GameHub';
 import { GamePlayPage } from './presentation/GamePlayPage';
 import { syncServerTime } from './application/timeSync';
+import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
   const hasSupabase = !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <KakaoInAppNotice />
       <Routes>
@@ -41,6 +43,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

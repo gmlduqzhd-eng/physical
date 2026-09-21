@@ -17,7 +17,7 @@ export const ZigZagTouch = ({ groupId, enqueueAction }: Props) => {
   return (
     <div className="min-h-[100dvh] bg-lime-950 flex flex-col items-center p-4 relative overflow-hidden z-[9999] select-none">
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">⚡ 지그재그 런!</h1>
-      <p className="text-lime-300 font-bold mb-2 text-center text-xs relative z-10">순서대로 빠르게 터치하세요! ({score}/{targets.length})</p>
+      <p className="text-yellow-200 font-bold mb-2 text-center text-xs relative z-10">순서대로 빠르게 터치하세요! ({score}/{targets.length})</p>
       <div className="relative w-full max-w-sm flex-1 min-h-[80vh] z-10">
         {targets.map((t, i) => (
           <button key={i} onClick={() => handleTouch(i)}
@@ -27,6 +27,6 @@ export const ZigZagTouch = ({ groupId, enqueueAction }: Props) => {
           </button>
         ))}
       </div>
-      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-lime-400 mb-4">완주! 🏃</div><p className="text-xl text-white font-bold">+500점</p></div>}
+      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-yellow-300 mb-4">완주! 🏃</div><p className="text-xl text-white font-bold">+500점</p></div>}
     </div>);
 };

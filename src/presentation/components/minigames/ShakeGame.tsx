@@ -76,14 +76,14 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
       <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>
       
       <div className="text-white text-2xl font-bold mb-2 relative z-10">남은 시간</div>
-      <div className="text-6xl font-black text-yellow-400 mb-8 relative z-10 font-mono">
+      <div className="text-6xl font-black text-amber-300 mb-8 relative z-10 font-mono">
         {timeLeft}초
       </div>
 
-      <LucideIcons.BatteryCharging className={`w-32 h-32 ${progress > 80 ? 'text-emerald-400' : progress > 40 ? 'text-yellow-400' : 'text-red-500'} mb-8 relative z-10 ${progress > 0 ? 'animate-bounce' : ''}`} />
+      <LucideIcons.BatteryCharging className={`w-32 h-32 ${progress > 80 ? 'text-emerald-400' : progress > 40 ? 'text-amber-300' : 'text-red-500'} mb-8 relative z-10 ${progress > 0 ? 'animate-bounce' : ''}`} />
 
       <h1 className="text-4xl font-black text-white mb-2 text-center relative z-10">바운스 충전!</h1>
-      <p className="text-yellow-200 font-bold mb-12 text-center relative z-10">스마트폰을 위아래로 흔들거나<br/>화면을 빠르게 연타해서 100%를 만드세요!</p>
+      <p className="text-white font-bold mb-12 text-center relative z-10">스마트폰을 위아래로 흔들거나<br/>화면을 빠르게 연타해서 100%를 만드세요!</p>
       
       <div className="w-full max-w-sm h-16 bg-black/50 rounded-2xl border-4 border-yellow-700 relative overflow-hidden z-10 mb-8 flex items-center justify-center p-1">
         <div 

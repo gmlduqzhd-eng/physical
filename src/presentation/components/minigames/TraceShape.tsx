@@ -50,11 +50,11 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
   return (
     <div className="min-h-[100dvh] bg-emerald-950 flex flex-col items-center justify-center p-4 relative overflow-hidden z-[9999] select-none">
       <div className="flex justify-between w-full max-w-sm mb-2 relative z-10">
-        <div><span className="text-emerald-400 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/3</div></div>
-        <div className="text-right"><span className="text-emerald-400 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
+        <div><span className="text-cyan-300 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/3</div></div>
+        <div className="text-right"><span className="text-cyan-300 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
       </div>
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">✏️ 도형 따라 그리기</h1>
-      <p className="text-emerald-300 font-bold mb-2 text-center text-xs relative z-10">{shape.name} 모양을 따라 그리세요!</p>
+      <p className="text-cyan-200 font-bold mb-2 text-center text-xs relative z-10">{shape.name} 모양을 따라 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-emerald-800 overflow-hidden z-10 touch-none"
         onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}
         onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd}>
@@ -63,7 +63,7 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
           {traced.length > 1 && <polyline fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" points={traced.map(p => `${p.x},${p.y}`).join(' ')} />}
         </svg>
       </div>
-      {roundScore !== null && <div className="mt-4 text-2xl font-black text-emerald-400">+{roundScore}점!</div>}
+      {roundScore !== null && <div className="mt-4 text-2xl font-black text-cyan-300">+{roundScore}점!</div>}
     </div>
   );
 };

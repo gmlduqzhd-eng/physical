@@ -27,7 +27,7 @@ export const OneLegBalance = ({ groupId, enqueueAction }: Props) => {
       <div className="w-full max-w-xs h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-4">
         <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${(holdTime / TARGET) * 100}%` }} />
       </div>
-      <p className={`font-black text-lg ${stable ? 'text-emerald-400' : 'text-orange-400'}`}>{stable ? '✅ 안정적!' : '⚠️ 흔들려요!'}</p>
-      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-emerald-400 mb-4">{holdTime}초 성공!</div><p className="text-xl text-white font-bold">+500점</p></div>}
+      <p className={`font-black text-lg ${stable ? 'text-cyan-300' : 'text-orange-400'}`}>{stable ? '✅ 안정적!' : '⚠️ 흔들려요!'}</p>
+      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 성공!</div><p className="text-xl text-white font-bold">+500점</p></div>}
     </div>);
 };

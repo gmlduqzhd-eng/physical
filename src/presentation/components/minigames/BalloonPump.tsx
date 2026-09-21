@@ -43,7 +43,7 @@ export const BalloonPump = ({ groupId, enqueueAction }: Props) => {
       <div className="absolute inset-0 bg-sky-500/5"></div>
       
       <h1 className="text-3xl font-black text-white mb-2 text-center relative z-10">풍선 불기</h1>
-      <p className="text-sky-300 font-bold mb-8 text-center relative z-10 text-sm">
+      <p className="text-cyan-200 font-bold mb-8 text-center relative z-10 text-sm">
         {popped ? '💥 펑! 풍선이 터졌습니다!' : cashedOut ? `🎉 ${Math.floor((size - 60) * 5)}점 획득!` : '펌프를 눌러 풍선을 불리고, 터지기 전에 수금하세요!'}
       </p>
 

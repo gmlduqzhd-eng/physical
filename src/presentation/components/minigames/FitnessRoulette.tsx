@@ -51,13 +51,13 @@ export const FitnessRoulette = ({ groupId, enqueueAction }: Props) => {
   return (
     <div className="min-h-[100dvh] bg-rose-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none text-white">
       <h1 className="text-3xl font-black mb-2 text-center">🎰 체력 룰렛</h1>
-      <p className="text-rose-300 text-xs mb-8 text-center">룰렛을 돌려 오늘의 랜덤 체육 미션을 완수하세요!</p>
+      <p className="text-pink-200 text-xs mb-8 text-center">룰렛을 돌려 오늘의 랜덤 체육 미션을 완수하세요!</p>
 
       <div className="w-72 h-72 rounded-3xl bg-slate-900 border-4 border-rose-500/50 flex flex-col items-center justify-center p-6 shadow-2xl mb-8 text-center">
         {selectedMission ? (
           <>
             <div className="text-7xl mb-4 animate-bounce">{selectedMission.emoji}</div>
-            <p className="text-lg font-black text-rose-200 mb-2">{selectedMission.task}</p>
+            <p className="text-lg font-black text-white mb-2">{selectedMission.task}</p>
             <span className="text-xs font-bold text-amber-400">보상: +{selectedMission.pts}점</span>
           </>
         ) : (
@@ -91,7 +91,7 @@ export const FitnessRoulette = ({ groupId, enqueueAction }: Props) => {
 
       {completed && (
         <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center">
-          <div className="text-5xl font-black text-rose-400 mb-2">🎉 미션 완수!</div>
+          <div className="text-5xl font-black text-pink-300 mb-2">🎉 미션 완수!</div>
           <p className="text-xl text-white font-bold mb-4">+{selectedMission?.pts}점 획득</p>
         </div>
       )}

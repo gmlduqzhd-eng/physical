@@ -253,7 +253,7 @@ export const OpenSpaceTactician = () => {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs text-emerald-300 font-bold animate-pulse">
+                <p className="text-xs text-cyan-200 font-bold animate-pulse">
                   &ldquo;수비수를 따돌리고 빈 공간으로 달려가 공을 부르세요!&rdquo;
                 </p>
               )}
@@ -270,7 +270,7 @@ export const OpenSpaceTactician = () => {
 
               {/* 잘된 점 */}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-4">
-                <span className="text-xs font-bold text-emerald-400 block mb-2">
+                <span className="text-xs font-bold text-cyan-300 block mb-2">
                   👏 오늘 우리 팀이 성공한 점은?
                 </span>
                 <div className="space-y-1.5 text-xs">
@@ -284,7 +284,7 @@ export const OpenSpaceTactician = () => {
                       onClick={() => setReflectionSuccess(opt)}
                       className={`w-full p-2.5 rounded-xl border text-left font-bold transition-all ${
                         reflectionSuccess === opt
-                          ? 'bg-emerald-950 border-emerald-500 text-emerald-300'
+                          ? 'bg-emerald-950 border-emerald-500 text-cyan-200'
                           : 'bg-slate-900 border-slate-800 text-slate-400'
                       }`}
                     >

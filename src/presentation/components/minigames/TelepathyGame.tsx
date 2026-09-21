@@ -57,10 +57,10 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
     <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" onTouchStart={handleTap} onMouseDown={handleTap}>
       <div className="absolute inset-0 bg-indigo-500/10 animate-pulse"></div>
       
-      <LucideIcons.Wifi className={`w-32 h-32 ${diff === null ? 'text-indigo-400 animate-pulse' : isPerfect ? 'text-emerald-400' : isGood ? 'text-yellow-400' : 'text-red-500'} mb-8 relative z-10`} />
+      <LucideIcons.Wifi className={`w-32 h-32 ${diff === null ? 'text-blue-300 animate-pulse' : isPerfect ? 'text-emerald-400' : isGood ? 'text-yellow-400' : 'text-red-500'} mb-8 relative z-10`} />
 
       <h1 className="text-4xl font-black text-white mb-2 text-center relative z-10">텔레파시 동기화</h1>
-      <p className="text-indigo-200 font-bold mb-12 text-center relative z-10">타이머가 정확히 0.00이 되는 순간 터치하세요!</p>
+      <p className="text-white font-bold mb-12 text-center relative z-10">타이머가 정확히 0.00이 되는 순간 터치하세요!</p>
       
       {diff === null ? (
         <div className="text-8xl font-black text-white mb-12 relative z-10 font-mono tracking-tighter">
@@ -74,13 +74,13 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
           <div className="text-2xl font-bold text-white font-mono">
             오차: {(diff / 1000).toFixed(2)}초
           </div>
-          <div className="text-lg text-indigo-300 mt-2 font-bold">
+          <div className="text-lg text-blue-200 mt-2 font-bold">
             {isPerfect ? '+500점 획득!' : isGood ? '+100점 획득!' : '점수 획득 실패'}
           </div>
         </div>
       )}
       
-      <div className="absolute bottom-10 text-indigo-300/50 text-sm font-bold">
+      <div className="absolute bottom-10 text-blue-200/50 text-sm font-bold">
         {diff === null ? '준비하시고...' : '잠시 후 화면이 닫힙니다'}
       </div>
     </div>

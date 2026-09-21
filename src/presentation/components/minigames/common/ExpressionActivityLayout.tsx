@@ -148,7 +148,7 @@ export const ExpressionActivityLayout = ({
               </button>
               <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold border ${
                 game.playMode === '협동'
-                  ? 'bg-amber-950/80 text-amber-300 border-amber-800/60'
+                  ? 'bg-amber-950/80 text-yellow-200 border-amber-800/60'
                   : 'bg-slate-800 text-slate-300 border-slate-700'
               }`}>
                 {game.playMode === '협동' ? '🤝 협동 활동' : '👤 개인 활동'}
@@ -312,7 +312,7 @@ export const ExpressionActivityLayout = ({
                         <Star
                           className={`w-5 h-5 ${
                             star <= ratings[idx]
-                              ? 'text-amber-400 fill-amber-400'
+                              ? 'text-yellow-300 fill-amber-400'
                               : 'text-slate-700'
                           }`}
                         />
@@ -369,7 +369,7 @@ export const ExpressionActivityLayout = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-center">
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
               <div className="text-xs text-slate-400 font-bold">성취 평가</div>
-              <div className="text-2xl font-black text-amber-400 mt-1">
+              <div className="text-2xl font-black text-yellow-300 mt-1">
                 {Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100)}점
               </div>
             </div>

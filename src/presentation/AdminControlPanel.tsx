@@ -245,6 +245,56 @@ export const AdminControlPanel = () => {
     }
   };
 
+  // #5 수업 리포트 생성
+  const generateReport = () => {
+    if (!currentRoom || roomGroups.length === 0) return;
+    const sorted = [...roomGroups].sort((a, b) => b.score - a.score);
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    
+    let report = `📋 땀방울 원정대 수업 결과 리포트\n`;
+    report += `═══════════════════════════\n`;
+    report += `📅 날짜: ${dateStr}\n`;
+    report += `🏫 방 이름: ${currentRoom.name}\n`;
+    report += `🔑 PIN: ${currentRoom.pin_code}\n`;
+    report += `⏱️ 상태: ${currentRoom.status}\n\n`;
+    report += `🏆 최종 순위\n`;
+    report += `───────────────────────────\n`;
+    sorted.forEach((g, i) => {
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+      const missions = g.completed_missions?.length || 0;
+      report += `${medal} ${g.group_name}: ${g.score}점 (미션 ${missions}회 완수)\n`;
+    });
+    report += `\n📊 통계 요약\n`;
+    report += `───────────────────────────\n`;
+    const totalScore = sorted.reduce((s, g) => s + g.score, 0);
+    const avgScore = Math.round(totalScore / sorted.length);
+    report += `  총 모둠 수: ${sorted.length}개\n`;
+    report += `  전체 합산 점수: ${totalScore}점\n`;
+    report += `  평균 점수: ${avgScore}점\n`;
+    report += `  최고 점수: ${sorted[0]?.score || 0}점 (${sorted[0]?.group_name})\n`;
+    report += `\n© 땀방울 원정대 - 2022 개정 초등 체육과 교육과정 연계\n`;
+
+    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `수업리포트_${dateStr}_${currentRoom.name}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // #8 모둠 대전 미니게임 발동
+  const triggerTeamBattle = async () => {
+    if (!currentRoom) return;
+    const battleDuration = 30; // 30초
+    const endTime = Date.now() + battleDuration * 1000;
+    await supabase.from('game_rooms').update({
+      active_minigame: { type: 'team_battle', end_time: endTime, duration: battleDuration }
+    }).eq('id', currentRoom.id);
+    alert(`⚔️ 30초 모둠 대전이 시작되었습니다!\n모든 학생 화면에 동일한 미니게임이 팝업됩니다.`);
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || '4321';
@@ -467,6 +517,16 @@ export const AdminControlPanel = () => {
 
             {/* 모둠별 QR코드 생성 패널 */}
             <QRCodePanel currentRoom={currentRoom} roomGroups={roomGroups} />
+
+            {/* #5 수업 리포트 & #8 모둠 대전 버튼 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button onClick={generateReport} className="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
+                📋 수업 결과 리포트 다운로드
+              </button>
+              <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+                ⚔️ 30초 모둠 대전 발동!
+              </button>
+            </div>
 
             <div className="bg-white shadow-sm p-4 rounded-xl border border-slate-200">
               <h2 className="text-lg font-bold text-slate-700 mb-2">실시간 라이브 공지 발송</h2>

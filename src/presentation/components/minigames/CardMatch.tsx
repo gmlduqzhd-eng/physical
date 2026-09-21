@@ -64,8 +64,8 @@ export const CardMatch = ({ groupId, enqueueAction }: Props) => {
       <div className="absolute inset-0 bg-purple-500/5"></div>
       
       <h1 className="text-3xl font-black text-white mb-2 text-center relative z-10">짝 맞추기</h1>
-      <p className="text-violet-300 font-bold mb-2 text-center relative z-10 text-sm">같은 그림의 카드 짝을 찾으세요!</p>
-      <div className="text-violet-400 font-bold mb-6 text-center relative z-10">시도 횟수: {moves}회</div>
+      <p className="text-purple-200 font-bold mb-2 text-center relative z-10 text-sm">같은 그림의 카드 짝을 찾으세요!</p>
+      <div className="text-purple-300 font-bold mb-6 text-center relative z-10">시도 횟수: {moves}회</div>
 
       <div className="grid grid-cols-4 gap-2.5 w-full max-w-xs relative z-10">
         {cards.map((emoji, i) => {
@@ -88,9 +88,9 @@ export const CardMatch = ({ groupId, enqueueAction }: Props) => {
 
       {finished && (
         <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm">
-          <div className="text-5xl font-black text-violet-400 mb-4">CLEAR!</div>
+          <div className="text-5xl font-black text-purple-300 mb-4">CLEAR!</div>
           <p className="text-white font-bold text-lg">{moves + 1}번 만에 완성!</p>
-          <p className="text-violet-300 font-bold mt-2">+{Math.max(0, 600 - (moves + 1) * 30)}점 획득!</p>
+          <p className="text-purple-200 font-bold mt-2">+{Math.max(0, 600 - (moves + 1) * 30)}점 획득!</p>
         </div>
       )}
     </div>

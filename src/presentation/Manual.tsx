@@ -1,26 +1,56 @@
-import { useNavigate } from 'react-router-dom';
-import { Home, Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Home, Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
+import { LessonPlanGeneratorV2 } from './components/LessonPlanGeneratorV2';
 
 export const Manual = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<'manual' | 'lesson'>(searchParams.get('tab') === 'lesson' ? 'lesson' : 'manual');
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-slate-100 p-4 md:p-10 font-sans pb-24 overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         {/* 상단 헤더 네비게이션 */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sticky top-0 bg-slate-950/90 backdrop-blur-md py-4 z-20 border-b border-slate-800">
-          <h1 className="text-2xl sm:text-3xl font-black text-cyan-400 flex items-center gap-2.5">
-            <span className="text-3xl">📖</span> 땀방울 원정대 공식 사용 설명서
-          </h1>
-          <button 
-            onClick={() => navigate('/')} 
-            className="shrink-0 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-cyan-500/50 shadow-md rounded-xl font-bold text-slate-300 hover:text-white flex items-center gap-2 transition-all active:scale-95"
-          >
-            <Home className="w-4 h-4 text-cyan-400"/> 홈으로 돌아가기
-          </button>
+        <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md py-4 z-20 border-b border-slate-800 space-y-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-cyan-400 flex items-center gap-2.5">
+              <span className="text-3xl">📖</span> 땀방울 원정대
+            </h1>
+            <button 
+              onClick={() => navigate('/')} 
+              className="shrink-0 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-cyan-500/50 shadow-md rounded-xl font-bold text-slate-300 hover:text-white flex items-center gap-2 transition-all active:scale-95"
+            >
+              <Home className="w-4 h-4 text-cyan-400"/> 홈으로 돌아가기
+            </button>
+          </div>
+          {/* 탭 전환 */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setActiveTab('manual')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-black flex items-center justify-center gap-1.5 transition-all border ${
+                activeTab === 'manual'
+                  ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-500/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" /> 사용 설명서
+            </button>
+            <button
+              onClick={() => setActiveTab('lesson')}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-black flex items-center justify-center gap-1.5 transition-all border ${
+                activeTab === 'lesson'
+                  ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20'
+                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" /> 수업 지도안 생성기
+            </button>
+          </div>
         </div>
 
-        {/* 본문 컨테이너 */}
+        {/* 사용 설명서 탭 */}
+        {activeTab === 'manual' && (
         <div className="bg-slate-900/90 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-10">
           
           {/* 타이틀 및 개요 */}
@@ -379,6 +409,59 @@ export const Manual = () => {
             </ul>
           </section>
 
+          {/* 7. 닉네임 & 점수 누적 시스템 */}
+          <section className="space-y-4">
+            <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">7</span>
+              🏆 닉네임 &amp; 점수 누적 시스템
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              회원가입이나 로그인 없이도 내 점수를 기기에 누적할 수 있습니다. 같은 기기·브라우저에서 접속하면 자동으로 이전 기록이 유지됩니다.
+            </p>
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                <li>
+                  <strong className="text-white">✏️ 닉네임 설정:</strong> 메인 화면 상단의 "내 기록" 카드에서 닉네임을 입력하면 프로필이 생성됩니다. (예: "3반 김민수")
+                </li>
+                <li>
+                  <strong className="text-white">📊 자동 점수 누적:</strong> 게임을 플레이할 때마다 획득 점수가 자동으로 누적됩니다. 총 점수, 플레이 횟수, 게임별 최고 기록이 모두 저장됩니다.
+                </li>
+                <li>
+                  <strong className="text-white">✏️ 닉네임 변경:</strong> 프로필 카드의 연필 아이콘(✏️)을 눌러 언제든 닉네임을 변경할 수 있습니다.
+                </li>
+                <li>
+                  <strong className="text-white">💾 저장 방식:</strong> 기기의 localStorage에 저장되므로 같은 기기·같은 브라우저에서만 기록이 유지됩니다. 다른 기기에서는 새 프로필이 생성됩니다.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* 8. 라이트/다크 모드 */}
+          <section className="space-y-4">
+            <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
+              <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">8</span>
+              🌗 라이트 / 다크 모드
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              메인 화면 헤더 우측 상단의 ☀️/🌙 버튼으로 라이트 모드와 다크 모드를 전환할 수 있습니다.
+            </p>
+            <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
+                <li>
+                  <strong className="text-white">🌙 다크 모드 (기본):</strong> 눈의 피로를 줄여주는 어두운 색상. 교실 내 조명이 어두운 환경에서 최적.
+                </li>
+                <li>
+                  <strong className="text-white">☀️ 라이트 모드:</strong> 밝은 교실이나 야외 환경에서 가독성이 높은 밝은 색상.
+                </li>
+                <li>
+                  <strong className="text-white">💾 설정 저장:</strong> 선택한 모드는 localStorage에 저장되어 다음 접속 시에도 유지됩니다.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          {/* #10 AI 수업 지도안 생성기 — 별도 탭으로 이동 */}
+
           {/* 하단 푸터 안내 */}
           <div className="pt-6 border-t border-slate-800 text-center">
             <p className="text-slate-400 text-xs font-medium">
@@ -387,6 +470,20 @@ export const Manual = () => {
           </div>
 
         </div>
+        )}
+
+        {/* 수업 지도안 생성기 탭 */}
+        {activeTab === 'lesson' && (
+        <div className="bg-slate-900/90 p-4 sm:p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
+          <div className="text-center pb-4 border-b border-slate-800">
+            <h2 className="text-xl sm:text-2xl font-black text-white">🤖 수업 지도안 생성기</h2>
+            <p className="text-sm text-slate-400 mt-2">2022 개정 교육과정 연계 · 땀방울 원정대 게임 활용 · 실전형 수업 설계</p>
+            <p className="text-xs text-slate-500 mt-1">학년군·영역·조건을 입력하면 교육과정 연계 수업 지도안을 자동으로 생성합니다.</p>
+          </div>
+          <LessonPlanGeneratorV2 />
+        </div>
+        )}
+
       </div>
     </div>
   );

@@ -51,7 +51,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       </div>
       <p className="text-sm font-bold">{failed ? '❌ 흔들렸습니다!' : stable ? '✅ 안정적! 계속 유지하세요!' : '⚠️ 수평을 유지하세요!'}</p>
       <p className="text-slate-500 text-xs mt-4 font-bold">목표: {TARGET}초</p>
-      {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-emerald-400 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{finished ? 500 : holdTime * 15}점</p></div>}
+      {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{finished ? 500 : holdTime * 15}점</p></div>}
     </div>
   );
 };

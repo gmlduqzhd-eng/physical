@@ -71,11 +71,11 @@ export const RollingCurling = () => {
             <div>
               {/* 상단 라운드 및 점수 */}
               <div className="flex justify-between items-center mb-4">
-                <span className="text-xs font-bold text-amber-400">
+                <span className="text-xs font-bold text-yellow-300">
                   시도: <strong className="text-base text-white">{currentRound}</strong> / 5회
                 </span>
                 <span className="text-xs font-bold text-slate-400">
-                  현재 누적: <strong className="text-amber-300 font-mono text-base">{totalScore}점</strong>
+                  현재 누적: <strong className="text-yellow-200 font-mono text-base">{totalScore}점</strong>
                 </span>
               </div>
 
@@ -87,7 +87,7 @@ export const RollingCurling = () => {
                 </div>
                 {/* 2점 중간 영역 */}
                 <div className="absolute inset-10 rounded-full bg-amber-900/50 border border-amber-600/50 flex items-start justify-center pt-2">
-                  <span className="text-[10px] font-bold text-amber-400">2점 구역</span>
+                  <span className="text-[10px] font-bold text-yellow-300">2점 구역</span>
                 </div>
                 {/* 3점 정중앙 버튼 */}
                 <div className="absolute inset-20 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg">
@@ -126,21 +126,21 @@ export const RollingCurling = () => {
                   className="py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
                 >
                   <span className="text-sm">🎯 중앙 표적 (3점)</span>
-                  <span className="text-[10px] text-amber-200">정확히 안착!</span>
+                  <span className="text-[10px] text-white">정확히 안착!</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('middle')}
                   className="py-3 bg-amber-700/80 hover:bg-amber-600 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
                 >
                   <span className="text-sm">🟡 중간 구역 (2점)</span>
-                  <span className="text-[10px] text-amber-200">표적 근처 접근</span>
+                  <span className="text-[10px] text-white">표적 근처 접근</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('outer')}
                   className="py-3 bg-amber-800/60 hover:bg-amber-700 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
                 >
                   <span className="text-sm">⚪ 바깥 구역 (1점)</span>
-                  <span className="text-[10px] text-amber-300">원 안에 들어옴</span>
+                  <span className="text-[10px] text-yellow-200">원 안에 들어옴</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('miss')}
@@ -156,7 +156,7 @@ export const RollingCurling = () => {
               <div className="text-center mb-4">
                 <span className="text-5xl block mb-2">🏆</span>
                 <h3 className="text-xl font-black text-white">5회 시도 완료!</h3>
-                <p className="text-xs text-amber-400 font-bold mt-1">
+                <p className="text-xs text-yellow-300 font-bold mt-1">
                   총 획득 점수: {totalScore}점 / 15점 만점
                 </p>
               </div>
@@ -169,7 +169,7 @@ export const RollingCurling = () => {
                 </div>
                 <div className="flex justify-between items-center text-slate-300">
                   <span>후반 (4~5회 시도 합계)</span>
-                  <span className="font-mono font-bold text-amber-400">{lateScore}점</span>
+                  <span className="font-mono font-bold text-yellow-300">{lateScore}점</span>
                 </div>
                 <div className="pt-2 border-t border-slate-800 text-center font-bold text-emerald-400">
                   {isImproved
@@ -190,7 +190,7 @@ export const RollingCurling = () => {
                       onClick={() => setForceReflection(opt)}
                       className={`p-2.5 rounded-xl border text-center font-bold transition-all ${
                         forceReflection === opt
-                          ? 'bg-amber-950 border-amber-500 text-amber-300'
+                          ? 'bg-amber-950 border-amber-500 text-yellow-200'
                           : 'bg-slate-900 border-slate-800 text-slate-400'
                       }`}
                     >

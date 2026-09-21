@@ -60,13 +60,13 @@ export const AnimalMove = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div className="min-h-[100dvh] bg-amber-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
-      <div className="text-amber-400 font-bold text-sm mb-2 relative z-10">{done + 1}/{TOTAL} 미션</div>
+      <div className="text-yellow-300 font-bold text-sm mb-2 relative z-10">{done + 1}/{TOTAL} 미션</div>
       <h1 className="text-2xl font-black text-white mb-4 text-center relative z-10">🐾 동물 체조</h1>
       {!finished && (
         <>
           <span className="text-8xl mb-4">{mission.emoji}</span>
-          <div className="text-3xl font-black text-amber-300 mb-2">{mission.name}</div>
-          <p className="text-amber-200 font-bold text-center mb-6">{mission.desc}</p>
+          <div className="text-3xl font-black text-yellow-200 mb-2">{mission.name}</div>
+          <p className="text-white font-bold text-center mb-6">{mission.desc}</p>
           <div className={`text-5xl font-black mb-6 ${countdown <= 2 ? 'text-red-500' : 'text-white'}`}>{countdown > 0 ? countdown : '시간 종료!'}</div>
           <div className="flex gap-4">
             <button onClick={handleDone} className="px-8 py-4 bg-emerald-600 rounded-2xl text-white font-black text-lg active:scale-95 transition-transform">✅ 완료!</button>
@@ -74,7 +74,7 @@ export const AnimalMove = ({ groupId, enqueueAction }: Props) => {
           </div>
         </>
       )}
-      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-amber-400 mb-4">{doneRef.current * 100}점!</div><p className="text-xl text-white font-bold">동물 체조 완료!</p></div>}
+      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-yellow-300 mb-4">{doneRef.current * 100}점!</div><p className="text-xl text-white font-bold">동물 체조 완료!</p></div>}
     </div>
   );
 };

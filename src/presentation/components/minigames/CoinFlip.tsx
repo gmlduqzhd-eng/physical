@@ -60,13 +60,13 @@ export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
       <div className="absolute inset-0 bg-yellow-500/5"></div>
       
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
-        <div><span className="text-amber-400 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/7</div></div>
-        <div className="text-center"><span className="text-amber-400 text-sm font-bold">연속 정답</span><div className="text-yellow-400 text-2xl font-black">🔥 {streak}</div></div>
-        <div className="text-right"><span className="text-amber-400 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
+        <div><span className="text-yellow-300 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/7</div></div>
+        <div className="text-center"><span className="text-yellow-300 text-sm font-bold">연속 정답</span><div className="text-yellow-400 text-2xl font-black">🔥 {streak}</div></div>
+        <div className="text-right"><span className="text-yellow-300 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
       </div>
 
       <h1 className="text-3xl font-black text-white mb-2 text-center relative z-10">동전 뒤집기</h1>
-      <p className="text-amber-300 font-bold mb-8 text-center relative z-10 text-sm">앞/뒤를 예측하세요! 연속 정답 시 배율 증가!</p>
+      <p className="text-yellow-200 font-bold mb-8 text-center relative z-10 text-sm">앞/뒤를 예측하세요! 연속 정답 시 배율 증가!</p>
 
       {/* 동전 */}
       <div className={`w-36 h-36 rounded-full flex items-center justify-center mb-8 relative z-10 border-4 transition-all duration-300 ${spinning ? 'animate-spin border-amber-400 bg-amber-700' : result ? 'border-amber-300 bg-gradient-to-br from-amber-400 to-yellow-600' : 'border-amber-600 bg-gradient-to-br from-amber-500 to-yellow-700'}`}>
@@ -100,7 +100,7 @@ export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
 
       {finished && (
         <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center backdrop-blur-sm">
-          <div className="text-6xl font-black text-amber-400 mb-4">총 {totalScore}점!</div>
+          <div className="text-6xl font-black text-yellow-300 mb-4">총 {totalScore}점!</div>
           <p className="text-white font-bold text-lg">{totalScore >= 300 ? '대박! 예언가!' : totalScore > 0 ? '나쁘지 않아요!' : '운이 따라주지 않았네요...'}</p>
         </div>
       )}

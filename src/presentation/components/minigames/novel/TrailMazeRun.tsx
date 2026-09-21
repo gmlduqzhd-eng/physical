@@ -198,9 +198,9 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
 
         {stumble && (
           <div className="absolute inset-0 bg-rose-950/80 flex flex-col items-center justify-center animate-shake">
-            <AlertCircle className="w-12 h-12 text-rose-400 mb-1 animate-bounce" />
+            <AlertCircle className="w-12 h-12 text-pink-300 mb-1 animate-bounce" />
             <span className="text-white font-bold text-lg">덤불에 발이 걸렸습니다!</span>
-            <span className="text-xs text-rose-300">출발선에서 다시 침착하게 달려보세요.</span>
+            <span className="text-xs text-pink-200">출발선에서 다시 침착하게 달려보세요.</span>
           </div>
         )}
       </div>

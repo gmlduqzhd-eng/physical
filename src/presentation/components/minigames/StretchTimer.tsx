@@ -51,12 +51,12 @@ export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div className="min-h-[100dvh] bg-teal-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none text-white">
-      <div className="text-teal-400 font-bold text-sm mb-2">{poseIdx + 1} / {POSES.length} 단계</div>
+      <div className="text-sky-300 font-bold text-sm mb-2">{poseIdx + 1} / {POSES.length} 단계</div>
       <h1 className="text-3xl font-black mb-1 text-center">🧘 스트레칭 타이머</h1>
-      <p className="text-teal-200 text-xs mb-8 text-center">몸을 유연하게 이완해 보세요!</p>
+      <p className="text-white text-xs mb-8 text-center">몸을 유연하게 이완해 보세요!</p>
 
       <div className="text-8xl mb-6 animate-bounce">{current.emoji}</div>
-      <h2 className="text-2xl font-black text-teal-300 mb-2">{current.name}</h2>
+      <h2 className="text-2xl font-black text-sky-200 mb-2">{current.name}</h2>
       <p className="text-slate-200 text-sm mb-6 text-center max-w-xs">{current.desc}</p>
 
       <div className="text-7xl font-black text-white mb-6">
@@ -72,7 +72,7 @@ export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
 
       {finished && (
         <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center">
-          <div className="text-5xl font-black text-teal-400 mb-2">✨ 스트레칭 완료!</div>
+          <div className="text-5xl font-black text-sky-300 mb-2">✨ 스트레칭 완료!</div>
           <p className="text-xl text-white font-bold mb-4">+500점 획득</p>
         </div>
       )}

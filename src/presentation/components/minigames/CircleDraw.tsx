@@ -64,11 +64,11 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
   return (
     <div className="min-h-[100dvh] bg-rose-950 flex flex-col items-center justify-center p-4 relative overflow-hidden z-[9999] select-none">
       <div className="flex justify-between w-full max-w-sm mb-2 relative z-10">
-        <div><span className="text-rose-400 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/3</div></div>
-        <div className="text-right"><span className="text-rose-400 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
+        <div><span className="text-pink-300 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/3</div></div>
+        <div className="text-right"><span className="text-pink-300 text-sm font-bold">총 점수</span><div className="text-white text-2xl font-black">{totalScore}</div></div>
       </div>
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">⭕ 원 그리기 대결</h1>
-      <p className="text-rose-300 font-bold mb-2 text-center text-xs relative z-10">팔을 크게 뻗어 완벽한 원을 그리세요!</p>
+      <p className="text-pink-200 font-bold mb-2 text-center text-xs relative z-10">팔을 크게 뻗어 완벽한 원을 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-rose-800 overflow-hidden z-10 touch-none"
         onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}
         onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd}>
