@@ -4,6 +4,7 @@ import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, S
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
+import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
 import { WarmupRoulette } from './components/WarmupRoulette';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
@@ -1279,6 +1280,55 @@ const GAMES: GameDef[] = [
     devices: eg.devices,
     playMode: eg.playMode,
   })),
+  ...Object.values(CURRICULUM_GAMES_META).map(cg => {
+    let domain: '운동' | '스포츠' | '표현' = '운동';
+    let color = 'from-cyan-600 to-blue-700';
+    let border = 'border-cyan-400/40';
+    let glow = 'hover:shadow-cyan-500/30';
+    let sportType: '기술형' | '전략형' | '생태형' | undefined = undefined;
+
+    if (cg.domain === '스포츠') {
+      domain = '스포츠';
+      color = 'from-amber-500 to-orange-700';
+      border = 'border-amber-400/40';
+      glow = 'hover:shadow-amber-500/30';
+      sportType = '전략형';
+    } else if (cg.domain === '표현') {
+      domain = '표현';
+      color = 'from-purple-500 to-pink-600';
+      border = 'border-purple-400/40';
+      glow = 'hover:shadow-purple-500/30';
+    } else if (cg.domain === '안전') {
+      domain = '표현';
+      color = 'from-rose-600 to-red-700';
+      border = 'border-rose-400/40';
+      glow = 'hover:shadow-rose-500/30';
+    }
+
+    return {
+      type: cg.id,
+      name: cg.name,
+      emoji: cg.emoji,
+      desc: cg.target,
+      color,
+      border,
+      glow,
+      difficulty: 2,
+      domain,
+      sportType,
+      subCategory: `${cg.domain} 교육과정 신규 특화 (${cg.code})`,
+      achievement: {
+        code: cg.code,
+        title: cg.name,
+        desc: cg.target,
+      },
+      grades: ['1~2학년', '3~4학년군', '5~6학년군'] as ('1~2학년' | '3~4학년군' | '5~6학년군')[],
+      durationMinutes: Math.round(cg.duration / 60) || 1,
+      physicalActivity: true,
+      devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'] as ('스마트폰' | '태블릿 PC' | '데스크톱 PC')[],
+      playMode: '개인' as const,
+    };
+  }),
 ];
 
 const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [

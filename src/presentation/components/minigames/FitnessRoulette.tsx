@@ -4,12 +4,101 @@ import { sfxSuccess, sfxClick } from '../../../application/soundEffects';
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 const MISSIONS = [
-  { task: '제자리에서 10번 높이 점프하기!', emoji: '🦘', pts: 300 },
-  { task: '팔벌려뛰기 10회 실시하기!', emoji: '⭐', pts: 350 },
-  { task: '무릎 높여 제자리 뛰기 15초!', emoji: '🏃', pts: 400 },
-  { task: '발끝 닿기 스트레칭 10초 유지!', emoji: '🧘', pts: 250 },
-  { task: '투명 줄넘기 20회 빠르게 회전!', emoji: '⚡', pts: 400 },
+  { id: 'jump', task: '제자리에서 10번 높이 점프하기!', pts: 300 },
+  { id: 'jumping_jack', task: '팔벌려뛰기 10회 실시하기!', pts: 350 },
+  { id: 'high_knee', task: '무릎 높여 제자리 뛰기 15초!', pts: 400 },
+  { id: 'toe_touch', task: '발끝 닿기 스트레칭 10초 유지!', pts: 250 },
+  { id: 'jump_rope', task: '투명 줄넘기 20회 빠르게 회전!', pts: 400 },
 ];
+
+const MissionIllustration = ({ missionId }: { missionId: string }) => {
+  if (missionId === 'jumping_jack') {
+    // 팔벌려뛰기(점핑잭): 양팔을 머리 위로 V자로 벌리고 양다리를 넓게 벌린 동작
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-md">
+        <circle cx="50" cy="22" r="10" fill="#FDE047" />
+        <line x1="50" y1="32" x2="50" y2="62" stroke="#38BDF8" strokeWidth="8" strokeLinecap="round" />
+        {/* 양팔 위로 벌림 */}
+        <line x1="50" y1="38" x2="22" y2="15" stroke="#38BDF8" strokeWidth="6.5" strokeLinecap="round" />
+        <circle cx="21" cy="14" r="3.5" fill="#FDE047" />
+        <line x1="50" y1="38" x2="78" y2="15" stroke="#38BDF8" strokeWidth="6.5" strokeLinecap="round" />
+        <circle cx="79" cy="14" r="3.5" fill="#FDE047" />
+        {/* 양다리 옆으로 벌림 */}
+        <line x1="50" y1="62" x2="26" y2="92" stroke="#818CF8" strokeWidth="7" strokeLinecap="round" />
+        <line x1="50" y1="62" x2="74" y2="92" stroke="#818CF8" strokeWidth="7" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (missionId === 'toe_touch') {
+    // 발끝 닿기: 상체를 깊이 숙여 양손으로 발끝을 터치하는 스트레칭 자세
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-md">
+        <line x1="38" y1="92" x2="38" y2="52" stroke="#818CF8" strokeWidth="7" strokeLinecap="round" />
+        <line x1="46" y1="92" x2="46" y2="52" stroke="#818CF8" strokeWidth="7" strokeLinecap="round" />
+        {/* 상체 숙임 */}
+        <path d="M 42 52 Q 46 36 60 55" stroke="#38BDF8" strokeWidth="8" strokeLinecap="round" fill="none" />
+        <circle cx="64" cy="62" r="8" fill="#FDE047" />
+        {/* 손으로 발끝 터치 */}
+        <path d="M 52 48 L 44 86" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="43" cy="88" r="3" fill="#FDE047" />
+        <path d="M 40 92 L 48 92" stroke="#F43F5E" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (missionId === 'jump_rope') {
+    // 투명 줄넘기: 공중에 떠서 발을 모으고 양옆에 줄넘기 곡선
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-md">
+        {/* 줄넘기 줄 (타원형 아치) */}
+        <path d="M 20 55 C 10 10, 90 10, 80 55 C 75 88, 25 88, 20 55" stroke="#FBBF24" strokeWidth="3" strokeDasharray="3 2" fill="none" />
+        <circle cx="50" cy="28" r="9" fill="#FDE047" />
+        <line x1="50" y1="37" x2="50" y2="65" stroke="#38BDF8" strokeWidth="7.5" strokeLinecap="round" />
+        {/* 양손 손잡이 */}
+        <path d="M 50 44 L 28 52" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+        <path d="M 50 44 L 72 52" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+        {/* 공중으로 모은 발 */}
+        <line x1="50" y1="65" x2="45" y2="84" stroke="#818CF8" strokeWidth="6.5" strokeLinecap="round" />
+        <line x1="50" y1="65" x2="55" y2="84" stroke="#818CF8" strokeWidth="6.5" strokeLinecap="round" />
+        {/* 바닥 바운스 효과선 */}
+        <path d="M 40 92 L 60 92" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (missionId === 'high_knee') {
+    // 무릎 높여 뛰기: 한쪽 무릎을 높이 치켜올린 역동적인 러닝 자세
+    return (
+      <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-md">
+        <circle cx="50" cy="20" r="9" fill="#FDE047" />
+        <line x1="50" y1="29" x2="50" y2="58" stroke="#38BDF8" strokeWidth="7.5" strokeLinecap="round" />
+        {/* 오른팔 앞으로, 왼팔 뒤로 */}
+        <path d="M 50 36 L 68 44" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+        <path d="M 50 36 L 32 46" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+        {/* 지지하는 다리 */}
+        <line x1="50" y1="58" x2="44" y2="90" stroke="#818CF8" strokeWidth="7" strokeLinecap="round" />
+        {/* 높이 올린 무릎 */}
+        <path d="M 50 58 L 70 52 L 66 74" stroke="#F43F5E" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      </svg>
+    );
+  }
+
+  // 기본 점프
+  return (
+    <svg viewBox="0 0 100 100" className="w-24 h-24 drop-shadow-md animate-bounce">
+      <circle cx="50" cy="22" r="9" fill="#FDE047" />
+      <line x1="50" y1="31" x2="50" y2="60" stroke="#38BDF8" strokeWidth="7.5" strokeLinecap="round" />
+      {/* 위로 뻗은 양팔 */}
+      <path d="M 50 38 L 30 20" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+      <path d="M 50 38 L 70 20" stroke="#38BDF8" strokeWidth="6" strokeLinecap="round" />
+      {/* 굽힌 무릎 점프 */}
+      <path d="M 50 60 L 38 74 L 42 88" stroke="#818CF8" strokeWidth="6.5" strokeLinecap="round" fill="none" />
+      <path d="M 50 60 L 62 74 L 58 88" stroke="#818CF8" strokeWidth="6.5" strokeLinecap="round" fill="none" />
+    </svg>
+  );
+};
+
 
 export const FitnessRoulette = ({ groupId, enqueueAction }: Props) => {
   const [spinning, setSpinning] = useState(false);
@@ -56,7 +145,9 @@ export const FitnessRoulette = ({ groupId, enqueueAction }: Props) => {
       <div className="w-72 h-72 rounded-3xl bg-slate-900 border-4 border-rose-500/50 flex flex-col items-center justify-center p-6 shadow-2xl mb-8 text-center">
         {selectedMission ? (
           <>
-            <div className="text-7xl mb-4 animate-bounce">{selectedMission.emoji}</div>
+            <div className="mb-2 flex items-center justify-center">
+              <MissionIllustration missionId={selectedMission.id} />
+            </div>
             <p className="text-lg font-black text-white mb-2">{selectedMission.task}</p>
             <span className="text-xs font-bold text-amber-400">보상: +{selectedMission.pts}점</span>
           </>

@@ -42,15 +42,41 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
   }, [failed]);
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors ${stable ? 'bg-emerald-950' : 'bg-red-950'}`}>
-      <h1 className="text-3xl font-black text-white mb-2 text-center">🧘 플랭크 챌린지</h1>
-      <p className="text-slate-300 font-bold mb-6 text-center text-sm">폰을 등 위에 올리고 플랭크 자세를 유지하세요!</p>
-      <div className="text-8xl font-black text-white mb-4">{holdTime}<span className="text-3xl">초</span></div>
-      <div className="w-full max-w-xs h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-4">
+    <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none transition-colors ${stable ? 'bg-emerald-950' : 'bg-red-950'}`}>
+      <h1 className="text-3xl font-black text-white mb-2 text-center">💪 코어 플랭크 챌린지</h1>
+      <p className="text-slate-300 font-bold mb-4 text-center text-sm">폰을 등 위에 올리고 일직선 플랭크 자세를 유지하세요!</p>
+
+      {/* 정확한 플랭크 자세 SVG 일러스트 */}
+      <div className="mb-4 flex items-center justify-center">
+        <svg viewBox="0 0 160 80" className="w-52 h-26 drop-shadow-xl">
+          {/* 바닥선 */}
+          <line x1="10" y1="68" x2="150" y2="68" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
+          {/* 머리 */}
+          <circle cx="130" cy="38" r="10" fill="#FDE047" />
+          {/* 몸통 & 다리 (완벽한 일직선 라인) */}
+          <line x1="30" y1="48" x2="122" y2="44" stroke="#38BDF8" strokeWidth="12" strokeLinecap="round" />
+          {/* 발끝 지지 */}
+          <line x1="30" y1="48" x2="26" y2="68" stroke="#818CF8" strokeWidth="8" strokeLinecap="round" />
+          {/* 팔꿈치 및 전완 지지 (90도 직각) */}
+          <line x1="112" y1="46" x2="112" y2="68" stroke="#38BDF8" strokeWidth="8" strokeLinecap="round" />
+          <line x1="112" y1="68" x2="128" y2="68" stroke="#38BDF8" strokeWidth="8" strokeLinecap="round" />
+          {/* 등 위에 올려진 스마트폰 */}
+          <rect x="65" y="28" width="24" height="12" rx="3" fill="#1E293B" stroke="#34D399" strokeWidth="2.5" />
+          <circle cx="85" cy="34" r="1.5" fill="#34D399" />
+          {/* 수평 상태 체크 표시 */}
+          <text x="63" y="22" fill={stable ? '#34D399' : '#F87171'} fontSize="9" fontWeight="900">
+            {stable ? '● 수평 유지' : '▲ 균형 흔들림'}
+          </text>
+        </svg>
+      </div>
+
+      <div className="text-7xl font-black text-white mb-3">{holdTime}<span className="text-2xl font-bold ml-1">초</span></div>
+      <div className="w-full max-w-xs h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-3">
         <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${(holdTime / TARGET) * 100}%` }} />
       </div>
-      <p className="text-sm font-bold">{failed ? '❌ 흔들렸습니다!' : stable ? '✅ 안정적! 계속 유지하세요!' : '⚠️ 수평을 유지하세요!'}</p>
-      <p className="text-slate-500 text-xs mt-4 font-bold">목표: {TARGET}초</p>
+      <p className="text-sm font-black">{failed ? '❌ 흔들렸습니다!' : stable ? '✅ 훌륭합니다! 코어를 단단히 유지하세요!' : '⚠️ 등 위의 폰이 떨어지지 않게 수평을 유지하세요!'}</p>
+      <p className="text-slate-400 text-xs mt-3 font-bold">목표: {TARGET}초</p>
+
       {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{finished ? 500 : holdTime * 15}점</p></div>}
     </div>
   );

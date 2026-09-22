@@ -3,14 +3,111 @@ import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
-const POSES = [
-  { name: '하늘 위로!', emoji: '🙆', desc: '팔을 머리 위로 올리세요' },
-  { name: '앞으로 뻗어!', emoji: '🤸', desc: '팔을 앞으로 쭉 뻗으세요' },
-  { name: '왼쪽으로!', emoji: '🤾', desc: '몸을 왼쪽으로 기울이세요' },
-  { name: '오른쪽으로!', emoji: '🤾', desc: '몸을 오른쪽으로 기울이세요' },
-  { name: '아래로 숙여!', emoji: '🙇', desc: '몸을 숙이세요' },
-  { name: '뒤로 젖혀!', emoji: '🧘', desc: '몸을 살짝 뒤로 젖히세요' },
+interface DancePoseItem {
+  id: 'sky' | 'front' | 'tilt_left' | 'tilt_right' | 'bow' | 'back';
+  name: string;
+  desc: string;
+}
+
+const POSES: DancePoseItem[] = [
+  { id: 'sky', name: '하늘 위로!', desc: '팔을 머리 위로 힘차게 뻗으세요!' },
+  { id: 'front', name: '앞으로 뻗어!', desc: '두 팔을 앞으로 곧게 뻗으세요!' },
+  { id: 'tilt_left', name: '왼쪽으로 틸트!', desc: '상체를 왼쪽으로 슉 기울이세요!' },
+  { id: 'tilt_right', name: '오른쪽으로 틸트!', desc: '상체를 오른쪽으로 슉 기울이세요!' },
+  { id: 'bow', name: '아래로 숙여!', desc: '허리를 숙여 손을 발 방향으로 내리세요!' },
+  { id: 'back', name: '가슴 펴고 젖혀!', desc: '가슴을 활짝 펴고 상체를 살짝 젖히세요!' },
 ];
+
+const DanceIllustration = ({ poseId }: { poseId: DancePoseItem['id'] }) => {
+  return (
+    <div className="flex items-center justify-center mb-3">
+      <svg viewBox="0 0 120 120" className="w-36 h-36 drop-shadow-xl animate-pulse">
+        {/* 포즈별 그래픽 */}
+        {poseId === 'sky' && (
+          <>
+            <circle cx="60" cy="28" r="12" fill="#FDE047" />
+            <line x1="60" y1="40" x2="60" y2="80" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" />
+            {/* 두 팔 위로 */}
+            <path d="M 60 48 L 32 14" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            <path d="M 60 48 L 88 14" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            {/* 다리 */}
+            <line x1="60" y1="80" x2="45" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="60" y1="80" x2="75" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+          </>
+        )}
+        {poseId === 'front' && (
+          <>
+            <circle cx="60" cy="30" r="12" fill="#FDE047" />
+            <line x1="60" y1="42" x2="60" y2="80" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" />
+            {/* 팔 앞으로 나란히 (정면 뻗기) */}
+            <line x1="60" y1="52" x2="60" y2="70" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            <circle cx="46" cy="52" r="8" fill="#F472B6" />
+            <circle cx="74" cy="52" r="8" fill="#F472B6" />
+            {/* 다리 */}
+            <line x1="60" y1="80" x2="46" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="60" y1="80" x2="74" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+          </>
+        )}
+        {poseId === 'tilt_left' && (
+          <>
+            {/* 머리 좌측 기울기 */}
+            <circle cx="44" cy="30" r="12" fill="#FDE047" />
+            {/* 몸통 좌측 기울기 */}
+            <line x1="44" y1="42" x2="60" y2="80" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" />
+            {/* 팔 좌측 뻗기 */}
+            <path d="M 50 50 L 16 38" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            <path d="M 50 50 L 82 66" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            {/* 다리 지지 */}
+            <line x1="60" y1="80" x2="44" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="60" y1="80" x2="76" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <path d="M 24 20 L 14 30 L 24 40" stroke="#38BDF8" strokeWidth="3" strokeLinecap="round" fill="none" />
+          </>
+        )}
+        {poseId === 'tilt_right' && (
+          <>
+            {/* 머리 우측 기울기 */}
+            <circle cx="76" cy="30" r="12" fill="#FDE047" />
+            {/* 몸통 우측 기울기 */}
+            <line x1="76" y1="42" x2="60" y2="80" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" />
+            {/* 팔 우측 뻗기 */}
+            <path d="M 70 50 L 104 38" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            <path d="M 70 50 L 38 66" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            {/* 다리 지지 */}
+            <line x1="60" y1="80" x2="44" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="60" y1="80" x2="76" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <path d="M 96 20 L 106 30 L 96 40" stroke="#38BDF8" strokeWidth="3" strokeLinecap="round" fill="none" />
+          </>
+        )}
+        {poseId === 'bow' && (
+          <>
+            {/* 숙인 자세 */}
+            <circle cx="76" cy="52" r="11" fill="#FDE047" />
+            <path d="M 48 78 Q 50 48 70 50" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" fill="none" />
+            {/* 아래로 내린 팔 */}
+            <line x1="64" y1="56" x2="68" y2="92" stroke="#E879F9" strokeWidth="7.5" strokeLinecap="round" />
+            {/* 다리 */}
+            <line x1="48" y1="78" x2="44" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="48" y1="78" x2="56" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+          </>
+        )}
+        {poseId === 'back' && (
+          <>
+            {/* 뒤로 젖힌 자세 */}
+            <circle cx="48" cy="26" r="12" fill="#FDE047" />
+            <path d="M 60 80 Q 70 52 52 38" stroke="#E879F9" strokeWidth="10" strokeLinecap="round" fill="none" />
+            {/* 가슴 활짝 */}
+            <path d="M 60 48 L 86 52" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            <path d="M 60 48 L 34 52" stroke="#E879F9" strokeWidth="8" strokeLinecap="round" />
+            {/* 다리 */}
+            <line x1="60" y1="80" x2="46" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+            <line x1="60" y1="80" x2="74" y2="112" stroke="#A855F7" strokeWidth="9" strokeLinecap="round" />
+          </>
+        )}
+      </svg>
+    </div>
+  );
+};
+
 
 export const DancePose = ({ groupId, enqueueAction }: Props) => {
   const [round, setRound] = useState(0);
@@ -67,7 +164,7 @@ export const DancePose = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-2xl font-black text-white mb-4 text-center relative z-10">💃 댄스 포즈</h1>
       {!finished && (
         <>
-          <span className="text-8xl mb-4">{pose.emoji}</span>
+          <DanceIllustration poseId={pose.id} />
           <div className="text-3xl font-black text-pink-200 mb-2 text-center">{pose.name}</div>
           <p className="text-pink-300 font-bold text-sm mb-6">{pose.desc}</p>
           <div className={`text-5xl font-black mb-6 ${timePerPose <= 1 ? 'text-red-500' : 'text-white'}`}>{timePerPose}</div>

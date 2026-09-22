@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { GameRoom } from '../domain/types';
 import { VolcanoGame } from './components/minigames/VolcanoGame';
@@ -73,6 +73,8 @@ import { MirrorMotionInvert } from './components/minigames/novel/MirrorMotionInv
 import { SeesawBalanceTap } from './components/minigames/novel/SeesawBalanceTap';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
+import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
+import { CurriculumGameRouter } from './components/minigames/curriculum/CurriculumGameRouter';
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
@@ -80,14 +82,14 @@ import { usePlayerProfile } from '../application/usePlayerProfile';
 interface GameMeta {
   name: string;
   emoji: string;
-  domain: '운동' | '스포츠' | '표현';
+  domain: '운동' | '스포츠' | '표현' | '안전';
   code: string;
   target: string;
 }
 
 const GAME_TITLES: Record<string, GameMeta> = {
   volcano: { name: '화산 폭발', emoji: '🌋', domain: '운동', code: '[6체01-01]', target: '순발력 운동 체력' },
-  whack_a_mole: { name: '별 두더지 잡기', emoji: '⭐', domain: '스포츠', code: '[6체02-02]', target: '기술형 표적 활동' },
+  whack_a_mole: { name: '두더지 잡기', emoji: '🐹', domain: '스포츠', code: '[6체02-02]', target: '기술형 표적 활동' },
   stopwatch: { name: '스탑워치 눈치', emoji: '⏱️', domain: '스포츠', code: '[6체02-02]', target: '기술형 기록 활동' },
   memory: { name: '컬러 패턴 기억', emoji: '🧠', domain: '스포츠', code: '[6체02-06]', target: '전략형 인지 게임' },
   number_grid: { name: '순차적 암호 해제', emoji: '🔢', domain: '스포츠', code: '[4체02-06]', target: '전략형 공간 탐색' },
@@ -115,7 +117,7 @@ const GAME_TITLES: Record<string, GameMeta> = {
   circle_draw: { name: '원 그리기 대결', emoji: '⭕', domain: '표현', code: '[4체03-02]', target: '움직임 궤적 표현' },
   trace_shape: { name: '도형 따라 그리기', emoji: '✏️', domain: '표현', code: '[4체03-06]', target: '도구 및 형태 표현' },
   punch: { name: '에어 펀치!', emoji: '🥊', domain: '스포츠', code: '[6체02-02]', target: '투기형 타격 기술' },
-  plank: { name: '플랭크 챌린지', emoji: '🧘', domain: '운동', code: '[6체01-05]', target: '코어 근력 버티기' },
+  plank: { name: '플랭크 챌린지', emoji: '💪', domain: '운동', code: '[6체01-05]', target: '코어 근력 버티기' },
   animal: { name: '동물 체조', emoji: '🐾', domain: '표현', code: '[4체03-03]', target: '사물·자연 모방 표현' },
   tilt_race: { name: '기울기 레이스', emoji: '📱', domain: '스포츠', code: '[4체02-05]', target: '기술형 조작 제어' },
   freeze: { name: '얼음 땡!', emoji: '🧊', domain: '스포츠', code: '[6체02-08]', target: '생태형 신체 정지' },
@@ -123,7 +125,7 @@ const GAME_TITLES: Record<string, GameMeta> = {
   speed_circle: { name: '빙글빙글!', emoji: '🌀', domain: '운동', code: '[4체01-02]', target: '가동성 체력운동' },
   zigzag: { name: '지그재그 런!', emoji: '⚡', domain: '스포츠', code: '[4체02-04]', target: '복합 이동 움직임' },
   multi_touch: { name: '양손 터치', emoji: '🖐️', domain: '운동', code: '[6체01-02]', target: '양손 협응성 발달' },
-  stretch: { name: '스트레칭 타이머', emoji: '🧘', domain: '운동', code: '[4체01-04]', target: '유연성 생활 습관' },
+  stretch: { name: '스트레칭 타이머', emoji: '🙆', domain: '운동', code: '[4체01-04]', target: '유연성 생활 습관' },
   one_leg: { name: '한 발 서기', emoji: '🦩', domain: '운동', code: '[6체01-02]', target: '평형성 체력 측정' },
   fitness: { name: '체력 룰렛', emoji: '🎰', domain: '운동', code: '[4체01-06]', target: '체력 운동 실천' },
   body_twist: { name: '몸 비틀기!', emoji: '🔄', domain: '표현', code: '[4체03-05]', target: '리듬 신체 표현' },
@@ -154,7 +156,7 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'head-shoulders-knees': { name: '머리 어깨 무릎 발 바디 비트', emoji: '🧢', domain: '운동', code: '[2체01-01]', target: '기본 움직임 신체 지각' },
   'animal-hop-step': { name: '동물 발자국 깡충 스텝', emoji: '🐾', domain: '운동', code: '[2체01-02]', target: '이동 움직임 징검다리' },
   'bicycle-pedal-crank': { name: '자전거 크랭크 페달', emoji: '🚲', domain: '운동', code: '[2체01-03]', target: '체력 가동성 페달링' },
-  'double-under-rope': { name: '이단 줄넘기 더블 탭', emoji: '⚡', domain: '운동', code: '[4체01-02]', target: '체력 도약 2단 쌩쌩이' },
+  'double-under-rope': { name: '이단 줄넘기 더블 탭', emoji: '🪢', domain: '운동', code: '[4체01-02]', target: '체력 도약 2단 쌩쌩이' },
   'mirror-motion-invert': { name: '거울 모드 동작 반전', emoji: '🪞', domain: '운동', code: '[2체01-04]', target: '신경 협응 거울 공간' },
   'seesaw-balance-tap': { name: '균형 시소 버티기', emoji: '⚖️', domain: '운동', code: '[2체01-02]', target: '비이동 평형성 시소' },
 };
@@ -170,6 +172,17 @@ EXPRESSION_GAMES.forEach(eg => {
   };
 });
 
+// 30종 교육과정 차별화 미니게임 메타 자동 등록
+Object.values(CURRICULUM_GAMES_META).forEach(cm => {
+  GAME_TITLES[cm.id] = {
+    name: cm.name,
+    emoji: cm.emoji,
+    domain: cm.domain,
+    code: cm.code,
+    target: cm.target,
+  };
+});
+
 const NOVEL_GAME_TYPES = new Set([
   'compass-azimuth', 'kayak-paddle', 'wind-surf-balance', 'tent-peg-hammer',
   'trail-maze-run', 'alpine-glider', 'campfire-breath', 'crevasse-jump',
@@ -178,6 +191,7 @@ const NOVEL_GAME_TYPES = new Set([
   'juggling-bounce-paddle', 'head-shoulders-knees', 'animal-hop-step',
   'bicycle-pedal-crank', 'double-under-rope', 'mirror-motion-invert',
   'seesaw-balance-tap',
+  ...Object.keys(CURRICULUM_GAMES_META),
 ]);
 
 export const GamePlayPage = () => {
@@ -191,10 +205,18 @@ export const GamePlayPage = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const { addGameResult } = usePlayerProfile();
-  const [standaloneTiming] = useState(() => ({
+  const standaloneTiming = useRef({
     startedAt: new Date().toISOString(),
     endTime: Date.now() + 10000,
-  }));
+  });
+
+  const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
+    standaloneTiming.current = {
+      startedAt: new Date().toISOString(),
+      endTime: Date.now() + 10000,
+    };
+    setDifficulty(selected);
+  };
 
   const difficultyMultiplier = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.5 : 1;
 
@@ -293,13 +315,13 @@ export const GamePlayPage = () => {
     pin_code: '0000',
     name: 'Standalone',
     status: 'playing' as const,
-    started_at: standaloneTiming.startedAt,
+    started_at: standaloneTiming.current.startedAt,
     global_time_modifier: 0,
-    active_minigame: { type: gameType, end_time: standaloneTiming.endTime },
+    active_minigame: { type: gameType, end_time: standaloneTiming.current.endTime },
     template_id: null,
     flash_sale: false,
     announcement: null,
-    created_at: standaloneTiming.startedAt,
+    created_at: standaloneTiming.current.startedAt,
   };
 
   const dummyGroupId = 'standalone-player';
@@ -449,6 +471,17 @@ export const GamePlayPage = () => {
       case 'seesaw-balance-tap':
         return <SeesawBalanceTap key={key} {...commonProps} />;
       default: {
+        if (gameType && CURRICULUM_GAMES_META[gameType]) {
+          return (
+            <CurriculumGameRouter
+              key={key}
+              gameType={gameType}
+              groupId={dummyGroupId}
+              enqueueAction={localEnqueueAction}
+              onExit={() => navigate('/')}
+            />
+          );
+        }
         const isExpressionGame = EXPRESSION_GAMES.some(eg => eg.id === gameType);
         if (isExpressionGame && gameType) {
           return (
@@ -477,13 +510,13 @@ export const GamePlayPage = () => {
           <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
           <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">난이도를 선택하세요</p>
           <div className="flex gap-3 w-full max-w-md">
-            <button onClick={() => setDifficulty('easy')} className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30">
+            <button onClick={() => handleSelectDifficulty('easy')} className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30">
               <span className="text-2xl">🌱</span><span className="text-sm">쉬움</span><span className="text-[10px] text-emerald-200">×0.7 배율</span>
             </button>
-            <button onClick={() => setDifficulty('normal')} className="flex-1 py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105">
+            <button onClick={() => handleSelectDifficulty('normal')} className="flex-1 py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105">
               <span className="text-2xl">⚡</span><span className="text-sm">보통</span><span className="text-[10px] text-blue-200">×1.0 배율</span>
             </button>
-            <button onClick={() => setDifficulty('hard')} className="flex-1 py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30">
+            <button onClick={() => handleSelectDifficulty('hard')} className="flex-1 py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30">
               <span className="text-2xl">🔥</span><span className="text-sm">어려움</span><span className="text-[10px] text-red-200">×1.5 배율</span>
             </button>
           </div>
@@ -504,13 +537,13 @@ export const GamePlayPage = () => {
       {/* 상단 네비게이션 */}
       {difficulty !== null && (
         <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
-          <button onClick={() => navigate('/')} className="w-11 h-11 bg-white/20 hover:bg-white/40 backdrop-blur-md border-2 border-white/60 rounded-full flex items-center justify-center text-white transition-all pointer-events-auto shadow-[0_0_12px_rgba(255,255,255,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] active:scale-90" title="홈으로">
-            <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+          <button onClick={() => navigate('/')} className="w-11 h-11 bg-black/80 hover:bg-black text-white backdrop-blur-md border-2 border-white/60 hover:border-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] active:scale-90" title="홈으로">
+            <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
           </button>
-          <div className="flex items-center gap-1.5 pointer-events-auto bg-black/60 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full shadow-lg">
-            <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-800/60">{gameInfo.code}</span>
-            <span className="text-[11px] font-bold text-white/90 hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{gameInfo.target}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-900 text-emerald-300' : difficulty === 'hard' ? 'bg-red-900 text-red-300' : 'bg-blue-900 text-blue-300'}`}>
+          <div className="flex items-center gap-1.5 pointer-events-auto bg-black/80 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+            <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded-md border border-cyan-700/80">{gameInfo.code}</span>
+            <span className="text-[11px] font-bold text-white hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{gameInfo.target}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50' : difficulty === 'hard' ? 'bg-red-950 text-red-300 border border-red-500/50' : 'bg-blue-950 text-blue-300 border border-blue-500/50'}`}>
               {difficulty === 'easy' ? '🌱' : difficulty === 'hard' ? '🔥' : '⚡'}×{difficultyMultiplier}
             </span>
           </div>
