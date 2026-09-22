@@ -81,7 +81,7 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
       {/* 색깔 선택 버튼 */}
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm relative z-10">
         {COLORS.map((c, i) => (
-          <button key={i} onClick={() => handleAnswer(i)} className="py-5 rounded-2xl font-black text-xl text-white bg-slate-800 border-2 border-slate-700 active:scale-95 transition-transform hover:bg-slate-700">
+          <button key={i} onClick={() => handleAnswer(i)} className="py-5 rounded-2xl font-black text-xl text-white bg-slate-800 border-2 border-white/20 active:scale-95 transition-transform hover:bg-slate-700 hover:border-white/40 shadow-md">
             <span className={c.className}>●</span> {c.name}
           </button>
         ))}

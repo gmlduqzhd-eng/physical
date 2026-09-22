@@ -104,7 +104,7 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-3xl font-black text-white mb-4 text-center relative z-10">방향 스와이프</h1>
       <p className="text-slate-400 font-bold mb-12 text-center relative z-10">화살표 방향으로 스와이프하세요!</p>
 
-      <div className={`w-40 h-40 rounded-3xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center relative z-10 mb-8 ${flash === 'correct' ? '!border-emerald-400 !bg-emerald-900/50' : flash === 'wrong' ? '!border-red-500 !bg-red-900/50' : ''}`}>
+      <div className={`w-40 h-40 rounded-3xl bg-slate-800 border-4 border-white/30 flex items-center justify-center relative z-10 mb-8 shadow-lg ${flash === 'correct' ? '!border-emerald-400 !bg-emerald-900/50' : flash === 'wrong' ? '!border-red-500 !bg-red-900/50' : ''}`}>
         <Icon className={`w-24 h-24 ${COLORS[current]}`} />
       </div>
 

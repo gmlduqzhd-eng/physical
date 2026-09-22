@@ -91,13 +91,13 @@ export const MathSprint = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-2xl font-black text-white mb-2 text-center relative z-10">⚡ 계산왕 스프린트</h1>
       <p className="text-sky-200 font-bold mb-8 text-center relative z-10 text-sm">정답을 빠르게 터치하세요!</p>
 
-      <div className="w-full max-w-sm h-28 bg-slate-900 rounded-2xl border-2 border-teal-800 flex items-center justify-center mb-8 relative z-10">
+      <div className="w-full max-w-sm h-28 bg-slate-900 rounded-2xl border-2 border-white/20 flex items-center justify-center mb-8 relative z-10 shadow-lg">
         <span className="text-5xl font-black text-white">{problem.text}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm relative z-10">
         {problem.choices.map((c, i) => (
-          <button key={`${c}-${i}`} onClick={() => handleAnswer(c)} className="py-6 rounded-2xl font-black text-3xl text-white bg-teal-800/80 border-2 border-teal-700 active:scale-95 hover:bg-teal-700 transition-all">
+          <button key={`${c}-${i}`} onClick={() => handleAnswer(c)} className="py-6 rounded-2xl font-black text-3xl text-white bg-slate-800/90 border-2 border-white/20 active:scale-95 hover:bg-slate-700 hover:border-white/40 transition-all shadow-md">
             {c}
           </button>
         ))}

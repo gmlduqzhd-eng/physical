@@ -504,12 +504,12 @@ export const GamePlayPage = () => {
       {/* 상단 네비게이션 */}
       {difficulty !== null && (
         <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
-          <button onClick={() => navigate('/')} className="w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm border border-white/20 rounded-full flex items-center justify-center text-white transition-colors pointer-events-auto shadow-lg" title="홈으로">
-            <Home className="w-5 h-5" />
+          <button onClick={() => navigate('/')} className="w-11 h-11 bg-white/20 hover:bg-white/40 backdrop-blur-md border-2 border-white/60 rounded-full flex items-center justify-center text-white transition-all pointer-events-auto shadow-[0_0_12px_rgba(255,255,255,0.3)] hover:shadow-[0_0_20px_rgba(255,255,255,0.5)] active:scale-90" title="홈으로">
+            <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
           </button>
-          <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/80 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-full shadow-lg">
+          <div className="flex items-center gap-1.5 pointer-events-auto bg-black/60 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full shadow-lg">
             <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950/80 px-2 py-0.5 rounded-md border border-cyan-800/60">{gameInfo.code}</span>
-            <span className="text-[11px] font-bold text-slate-300 hidden xs:inline">{gameInfo.target}</span>
+            <span className="text-[11px] font-bold text-white/90 hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{gameInfo.target}</span>
             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-900 text-emerald-300' : difficulty === 'hard' ? 'bg-red-900 text-red-300' : 'bg-blue-900 text-blue-300'}`}>
               {difficulty === 'easy' ? '🌱' : difficulty === 'hard' ? '🔥' : '⚡'}×{difficultyMultiplier}
             </span>
