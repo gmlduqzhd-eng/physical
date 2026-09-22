@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
+import { GameResultOverlay } from './GameResultOverlay';
 
 interface GameProps {
   groupId: string;
@@ -10,12 +11,20 @@ interface GameProps {
 /* =========================================================================
    1. 🌬️ breath-pacer-478 (4-7-8 자율신경 이완 페이서)
    ========================================================================= */
-export const BreathPacer478 = ({ groupId, enqueueAction }: GameProps) => {
+export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [cycle, setCycle] = useState(1);
   const [countdown, setCountdown] = useState(4);
   const [finished, setFinished] = useState(false);
   const finishedRef = useRef(false);
+
+  const handleRestart = () => {
+    finishedRef.current = false;
+    setPhase('inhale');
+    setCycle(1);
+    setCountdown(4);
+    setFinished(false);
+  };
 
   useEffect(() => {
     if (finished) return;
@@ -68,7 +77,6 @@ export const BreathPacer478 = ({ groupId, enqueueAction }: GameProps) => {
         가슴을 펴고 화면의 원이 커지고 작아지는 리듬에 맞춰 숨을 쉬세요.
       </p>
 
-      {/* 호흡 펄스 원 */}
       <div className="relative w-64 h-64 flex items-center justify-center mb-8">
         <div
           className={`absolute rounded-full transition-all ease-in-out duration-1000 ${
@@ -92,10 +100,14 @@ export const BreathPacer478 = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🌿 심신 이완 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (건강 자율신경 회복)</p>
-        </div>
+        <GameResultOverlay
+          title="🌿 심신 이완 완주!"
+          subtitle="4-7-8 자율신경 조절 호흡을 마스터했습니다."
+          score={500}
+          badge="자율신경 호흡 마스터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -104,14 +116,13 @@ export const BreathPacer478 = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    2. 👁️ peripheral-vision-360 (360° 주변시야 동체인식)
    ========================================================================= */
-export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
+export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [activeDirection, setActiveDirection] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
 
-  // 8방향 시계방향: 0:상, 1:우상, 2:우, 3:우하, 4:하, 5:좌하, 6:좌, 7:좌상
   const DIRS = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
 
   const spawnTarget = () => {
@@ -119,8 +130,20 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
     setActiveDirection(next);
   };
 
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setScore(0);
+    setTimeLeft(20);
+    setFinished(false);
+    spawnTarget();
+  };
+
   useEffect(() => {
     spawnTarget();
+  }, []);
+
+  useEffect(() => {
+    if (finished) return;
     const timer = setInterval(() => {
       setTimeLeft(t => {
         if (t <= 1) {
@@ -130,7 +153,7 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
           enqueueAction({
             id: Math.random().toString(),
             type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: scoreRef.current * 40 },
+            payload: { id: groupId, amount: Math.max(200, scoreRef.current * 40) },
             timestamp: Date.now()
           });
           return 0;
@@ -139,7 +162,7 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [finished, groupId, enqueueAction]);
 
   const handleHit = (idx: number) => {
     if (finished) return;
@@ -166,16 +189,14 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
         중앙 십자(+)를 똑바로 쳐다본 채, 외곽에서 깜빡이는 방향을 즉각 터치하세요!
       </p>
 
-      {/* 8방향 360도 원형 나침반 터치 그리드 */}
       <div className="relative w-72 h-72 rounded-full border-2 border-slate-800 bg-slate-900/60 flex items-center justify-center">
-        {/* 정중앙 고정 시선 타깃 */}
         <div className="w-16 h-16 rounded-full bg-cyan-950 border-2 border-cyan-400/80 flex items-center justify-center text-cyan-300 text-xl font-black shadow-[0_0_20px_rgba(34,211,238,0.4)]">
           +
         </div>
 
         {DIRS.map((dir, idx) => {
           const angle = (idx * 45 - 90) * (Math.PI / 180);
-          const r = 108; // 반지름
+          const r = 108;
           const x = Math.cos(angle) * r;
           const y = Math.sin(angle) * r;
           const isActive = activeDirection === idx;
@@ -198,10 +219,14 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-cyan-400 mb-2">{score}회 감지!</div>
-          <p className="text-lg text-white font-bold mb-4">+{score * 40}점 획득 (주변시야 탁월)</p>
-        </div>
+        <GameResultOverlay
+          title={`👁️ ${score}회 동체 포착!`}
+          subtitle="주변시야 및 시각 신경 반응 협응 능력이 뛰어납니다."
+          score={Math.max(200, score * 40)}
+          badge="동체시력 에이스"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -210,7 +235,7 @@ export const PeripheralVision360 = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    3. 🏃 shuttle-run-beep (셔틀런 삑 비트 인터벌)
    ========================================================================= */
-export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
+export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [level, setLevel] = useState(1);
   const [shuttleCount, setShuttleCount] = useState(0);
   const [runnerPos, setRunnerPos] = useState<'A' | 'B'>('A');
@@ -218,21 +243,28 @@ export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
   const [finished, setFinished] = useState(false);
   const countRef = useRef(0);
 
-  // 단계별 셔틀 주행 시간 (초) - 점점 빨라짐
   const LAP_TIME = Math.max(1.2, 3.2 - level * 0.2);
+
+  const handleRestart = () => {
+    countRef.current = 0;
+    setLevel(1);
+    setShuttleCount(0);
+    setRunnerPos('A');
+    setTimeLeftInLap(3.0);
+    setFinished(false);
+  };
 
   useEffect(() => {
     if (finished) return;
     const interval = setInterval(() => {
       setTimeLeftInLap(t => {
         if (t <= 0.1) {
-          // 삑 소리 발생 및 실패 체크 (시간 초과)
           sfxPop();
           setFinished(true);
           enqueueAction({
             id: Math.random().toString(),
             type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: countRef.current * 50 },
+            payload: { id: groupId, amount: Math.max(200, countRef.current * 50) },
             timestamp: Date.now()
           });
           return 0;
@@ -241,7 +273,7 @@ export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
       });
     }, 100);
     return () => clearInterval(interval);
-  }, [finished, LAP_TIME]);
+  }, [finished, LAP_TIME, groupId, enqueueAction]);
 
   const handleRunLap = () => {
     if (finished) return;
@@ -270,14 +302,12 @@ export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
         삑! 신호음이 울리기 전에 반대편 콘으로 달려가 터치하세요! 속도가 빨라집니다.
       </p>
 
-      {/* 20m 셔틀런 코트 비주얼 */}
       <div className="w-full max-w-sm h-36 bg-indigo-900/60 border-2 border-indigo-700 rounded-3xl p-4 flex items-center justify-between relative mb-8">
         <div className={`w-14 h-24 rounded-2xl flex flex-col items-center justify-center font-black ${runnerPos === 'A' ? 'bg-amber-400 text-amber-950 shadow-lg scale-105' : 'bg-slate-800 text-slate-400'}`}>
           <span>🚩</span>
           <span className="text-xs">A 콘</span>
         </div>
 
-        {/* 러너 애니메이션 */}
         <div className={`transition-all duration-300 text-4xl ${runnerPos === 'A' ? '-translate-x-12' : 'translate-x-12'}`}>
           🏃‍♂️💨
         </div>
@@ -296,10 +326,14 @@ export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{shuttleCount}회 완주!</div>
-          <p className="text-lg text-white font-bold mb-4">+{shuttleCount * 50}점 (심폐지구력 레벨 {level})</p>
-        </div>
+        <GameResultOverlay
+          title={`🏃 ${shuttleCount}회 완주 달성!`}
+          subtitle={`심폐지구력 레벨 ${level}단계까지 페이스를 유지했습니다.`}
+          score={Math.max(200, shuttleCount * 50)}
+          badge="셔틀런 지구력 철인"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -308,11 +342,17 @@ export const ShuttleRunBeep = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    4. 🧘 mobility-joint-circle (관절 가동성 스무스 서클)
    ========================================================================= */
-export const MobilityJointCircle = ({ groupId, enqueueAction }: GameProps) => {
+export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [progress, setProgress] = useState(0);
   const [finished, setFinished] = useState(false);
   const [currentAngle, setCurrentAngle] = useState(0);
   const isDragging = useRef(false);
+
+  const handleRestart = () => {
+    setProgress(0);
+    setCurrentAngle(0);
+    setFinished(false);
+  };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging.current || finished) return;
@@ -359,7 +399,6 @@ export const MobilityJointCircle = ({ groupId, enqueueAction }: GameProps) => {
           <div className="text-2xl font-black text-emerald-400 font-mono mt-1">{Math.floor(progress)}%</div>
         </div>
 
-        {/* 궤적 추적 핸들러 포인트 */}
         <div
           style={{
             transform: `rotate(${currentAngle}deg) translate(116px) rotate(-${currentAngle}deg)`
@@ -373,10 +412,14 @@ export const MobilityJointCircle = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🎉 관절 가동성 완성!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (유연성 & 부상 예방)</p>
-        </div>
+        <GameResultOverlay
+          title="🎉 관절 가동성 100% 달성!"
+          subtitle="부드러운 관절 가동 범위를 회복하여 부상을 예방합니다."
+          score={500}
+          badge="관절 유연성 마스터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -385,12 +428,19 @@ export const MobilityJointCircle = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    5. ⚖️ foot-center-balance (족저압 무게중심 센서)
    ========================================================================= */
-export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
+export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
   const [stableTime, setStableTime] = useState(0);
   const [finished, setFinished] = useState(false);
   const TARGET_SEC = 10;
+
+  const handleRestart = () => {
+    setStableTime(0);
+    setPosX(0);
+    setPosY(0);
+    setFinished(false);
+  };
 
   useEffect(() => {
     const handleOrientation = (e: DeviceOrientationEvent) => {
@@ -401,7 +451,6 @@ export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
     };
     window.addEventListener('deviceorientation', handleOrientation);
 
-    // 디바이스 센서 미지원 시 자동 미세 진동 시뮬레이션
     const simTimer = setInterval(() => {
       setPosX(x => Math.max(-70, Math.min(70, x + (Math.random() * 20 - 10))));
       setPosY(y => Math.max(-70, Math.min(70, y + (Math.random() * 20 - 10))));
@@ -436,7 +485,7 @@ export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [isCentered, finished]);
+  }, [isCentered, finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -445,16 +494,13 @@ export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
         양 발바닥의 중심을 정중앙 그린 서클에 맞추고 10초간 균형을 유지하세요!
       </p>
 
-      {/* 십자 무게중심 판 */}
       <div className="relative w-64 h-64 rounded-3xl bg-slate-900 border-4 border-blue-700/80 flex items-center justify-center overflow-hidden mb-6 shadow-2xl">
         <div className="absolute w-full h-[2px] bg-blue-700/40" />
         <div className="absolute h-full w-[2px] bg-blue-700/40" />
-        {/* 중앙 목표 서클 */}
         <div className={`w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center ${isCentered ? 'bg-emerald-500/20 border-emerald-400' : 'border-blue-500/40'}`}>
           <span className="text-xs font-bold text-emerald-300 font-mono">TARGET</span>
         </div>
 
-        {/* 무게중심 볼 */}
         <div
           style={{ transform: `translate(${posX}px, ${posY}px)` }}
           className={`absolute w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform duration-100 ${
@@ -473,10 +519,14 @@ export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🏆 평형성 완벽 마스터!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (고유수용성 감각)</p>
-        </div>
+        <GameResultOverlay
+          title="🏆 평형성 완벽 유지!"
+          subtitle="고유수용성 감각과 신체 정렬 중심축을 성공적으로 지켜냈습니다."
+          score={500}
+          badge="균형 감각 스페셜리스트"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -485,13 +535,12 @@ export const FootCenterBalance = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    6. ⚡ agility-dot-drill (5점 닷 드릴 풋워크 시퀀서)
    ========================================================================= */
-export const AgilityDotDrill = ({ groupId, enqueueAction }: GameProps) => {
+export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [round, setRound] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [finished, setFinished] = useState(false);
   const TOTAL_ROUNDS = 6;
 
-  // 닷 드릴 패턴: 1:좌상, 2:우상, 3:중앙, 4:좌하, 5:우하
   const PATTERNS = [
     [1, 2, 3, 4, 5],
     [4, 5, 3, 1, 2],
@@ -499,6 +548,12 @@ export const AgilityDotDrill = ({ groupId, enqueueAction }: GameProps) => {
   ];
 
   const currentPattern = PATTERNS[round % PATTERNS.length];
+
+  const handleRestart = () => {
+    setRound(0);
+    setCurrentStep(0);
+    setFinished(false);
+  };
 
   const handleDotClick = (dotId: number) => {
     if (finished) return;
@@ -540,7 +595,6 @@ export const AgilityDotDrill = ({ groupId, enqueueAction }: GameProps) => {
         빛나는 번호 발판을 발로 밟듯 빠르게 순서대로 터치하세요!
       </p>
 
-      {/* 5점 주사위형 닷 드릴 매트 */}
       <div className="w-72 h-72 bg-amber-900/60 border-4 border-amber-600 rounded-3xl p-6 grid grid-cols-3 grid-rows-3 gap-3 mb-6 shadow-2xl">
         <button onClick={() => handleDotClick(1)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 1 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>1</button>
         <div />
@@ -554,10 +608,14 @@ export const AgilityDotDrill = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">⚡ 초고속 풋워크 클리어!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (민첩성 최고 등급)</p>
-        </div>
+        <GameResultOverlay
+          title="⚡ 번개 풋워크 완주!"
+          subtitle="정확하고 빠른 발놀림으로 6개 라운드의 닷 드릴을 통과했습니다."
+          score={500}
+          badge="민첩성 풋워크 왕"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -566,11 +624,17 @@ export const AgilityDotDrill = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    7. 💪 eccentric-isom-push (등척성 파워 게이지 홀드)
    ========================================================================= */
-export const EccentricIsomPush = ({ groupId, enqueueAction }: GameProps) => {
+export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [power, setPower] = useState(0);
   const [holdSec, setHoldSec] = useState(0);
   const [finished, setFinished] = useState(false);
   const isPressing = useRef(false);
+
+  const handleRestart = () => {
+    setPower(0);
+    setHoldSec(0);
+    setFinished(false);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -608,7 +672,7 @@ export const EccentricIsomPush = ({ groupId, enqueueAction }: GameProps) => {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [inTargetZone, finished]);
+  }, [inTargetZone, finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -617,14 +681,11 @@ export const EccentricIsomPush = ({ groupId, enqueueAction }: GameProps) => {
         양손을 가슴 앞에서 서로 맞대고 밀며, 녹색 목표 존(75~90%)에 정확히 힘을 유지하세요!
       </p>
 
-      {/* 수직 게이지 바 */}
       <div className="relative w-28 h-64 bg-slate-900 border-4 border-stone-700 rounded-3xl overflow-hidden p-2 flex flex-col justify-end mb-6 shadow-2xl">
-        {/* 목표 존 (75% ~ 90%) */}
         <div className="absolute left-2 right-2 bottom-[75%] top-[10%] bg-emerald-500/30 border-2 border-emerald-400 rounded-xl flex items-center justify-center">
           <span className="text-[10px] font-black text-emerald-300">목표 힘 존</span>
         </div>
 
-        {/* 현재 파워 바 */}
         <div
           style={{ height: `${power}%` }}
           className={`w-full rounded-xl transition-all duration-75 ${
@@ -646,10 +707,14 @@ export const EccentricIsomPush = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🦾 근지구력 파워 마스터!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (근신경 제어력)</p>
-        </div>
+        <GameResultOverlay
+          title="🦾 8초 파워 홀드 성공!"
+          subtitle="등척성 근력과 근지구력 게이지를 목표 영역에 정확히 통제했습니다."
+          score={500}
+          badge="등척성 코어 마스터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -658,13 +723,20 @@ export const EccentricIsomPush = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    8. 🧗 posture-spine-align (척추 중립 정렬 축 얼라인)
    ========================================================================= */
-export const PostureSpineAlign = ({ groupId, enqueueAction }: GameProps) => {
+export const PostureSpineAlign: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [headOffset, setHeadOffset] = useState(-30);
   const [shoulderOffset, setShoulderOffset] = useState(25);
   const [pelvisOffset, setPelvisOffset] = useState(-20);
   const [finished, setFinished] = useState(false);
 
   const isAligned = Math.abs(headOffset) < 8 && Math.abs(shoulderOffset) < 8 && Math.abs(pelvisOffset) < 8;
+
+  const handleRestart = () => {
+    setHeadOffset(-30);
+    setShoulderOffset(25);
+    setPelvisOffset(-20);
+    setFinished(false);
+  };
 
   const handleFinish = () => {
     if (!isAligned || finished) return;
@@ -685,26 +757,20 @@ export const PostureSpineAlign = ({ groupId, enqueueAction }: GameProps) => {
         귀-어깨-골반이 일직선이 되도록 슬라이더를 움직여 바른 자세 축을 완성하세요!
       </p>
 
-      {/* 척추 중심선 시각화 */}
       <div className="relative w-64 h-64 bg-slate-900 rounded-3xl border-2 border-slate-700 flex items-center justify-center mb-6 overflow-hidden">
-        {/* 기준 수직선 (초록색 타깃) */}
         <div className="absolute h-full w-1 bg-emerald-500/40" />
 
-        {/* 머리 노드 */}
         <div style={{ transform: `translate(${headOffset}px, -70px)` }} className="absolute w-10 h-10 rounded-full bg-amber-400 border-2 border-white flex items-center justify-center text-xs font-black text-amber-950 shadow-md">
           머리
         </div>
-        {/* 어깨 노드 */}
         <div style={{ transform: `translate(${shoulderOffset}px, -10px)` }} className="absolute w-12 h-10 rounded-2xl bg-cyan-400 border-2 border-white flex items-center justify-center text-xs font-black text-cyan-950 shadow-md">
           어깨
         </div>
-        {/* 골반 노드 */}
         <div style={{ transform: `translate(${pelvisOffset}px, 60px)` }} className="absolute w-14 h-10 rounded-2xl bg-indigo-400 border-2 border-white flex items-center justify-center text-xs font-black text-indigo-950 shadow-md">
           골반
         </div>
       </div>
 
-      {/* 슬라이더 컨트롤러 */}
       <div className="w-full max-w-xs flex flex-col gap-3 mb-6">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold w-12">머리 위치</span>
@@ -731,10 +797,14 @@ export const PostureSpineAlign = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🧘 척추 정렬 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (평생 바른 자세 습관)</p>
-        </div>
+        <GameResultOverlay
+          title="🧘 척추 중립 정렬 완성!"
+          subtitle="머리-어깨-골반을 중립 축에 정렬하는 바른 신체 자세를 익혔습니다."
+          score={500}
+          badge="바른 자세 지킴이"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -743,11 +813,18 @@ export const PostureSpineAlign = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    9. 💓 pulse-zone-target (목표 심박수 트레이닝 존)
    ========================================================================= */
-export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
+export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [bpm, setBpm] = useState(80);
   const [inTargetSec, setInTargetSec] = useState(0);
   const [finished, setFinished] = useState(false);
   const tapTimes = useRef<number[]>([]);
+
+  const handleRestart = () => {
+    setBpm(80);
+    setInTargetSec(0);
+    tapTimes.current = [];
+    setFinished(false);
+  };
 
   const handleHeartTap = () => {
     if (finished) return;
@@ -768,7 +845,6 @@ export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
     }
   };
 
-  // 목표 존: 130 ~ 150 BPM (유산소 타깃 존)
   const isTargetZone = bpm >= 130 && bpm <= 150;
 
   useEffect(() => {
@@ -792,7 +868,7 @@ export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [isTargetZone, finished]);
+  }, [isTargetZone, finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-rose-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -801,7 +877,6 @@ export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
         유산소 지방 연소 존(130~150 BPM)에 맞추어 심장 버튼을 일정한 박자로 탭하세요!
       </p>
 
-      {/* 심박수 표시기 */}
       <div className="relative w-64 h-64 rounded-full border-4 border-rose-700 bg-rose-900/60 flex flex-col items-center justify-center mb-6 shadow-2xl">
         <button
           onClick={handleHeartTap}
@@ -821,10 +896,14 @@ export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-rose-400 mb-2">🫀 유산소 존 트레이닝 성공!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (체력 운동 계획 역량)</p>
-        </div>
+        <GameResultOverlay
+          title="🫀 유산소 심박 타깃존 완주!"
+          subtitle="130~150 BPM 유산소 영역에 도달하여 인터벌 심폐 능력을 강화했습니다."
+          score={500}
+          badge="심박 인터벌 트레이너"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -833,17 +912,22 @@ export const PulseZoneTarget = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    10. 🧩 cross-lateral-brain (좌우 교차 크로스 브레인짐)
    ========================================================================= */
-export const CrossLateralBrain = ({ groupId, enqueueAction }: GameProps) => {
+export const CrossLateralBrain: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [leftAction, setLeftAction] = useState<'tap' | 'hold'>('tap');
   const [rightAction, setRightAction] = useState<'tap' | 'hold'>('hold');
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
-  const scoreRef = useRef(0);
 
   const switchBrainMissions = () => {
     const isSwap = Math.random() > 0.5;
     setLeftAction(isSwap ? 'hold' : 'tap');
     setRightAction(isSwap ? 'tap' : 'hold');
+  };
+
+  const handleRestart = () => {
+    setScore(0);
+    setFinished(false);
+    switchBrainMissions();
   };
 
   const handleCheck = () => {
@@ -852,7 +936,6 @@ export const CrossLateralBrain = ({ groupId, enqueueAction }: GameProps) => {
     hapticTap();
     const nextScore = score + 1;
     setScore(nextScore);
-    scoreRef.current = nextScore;
     if (nextScore >= 5) {
       setFinished(true);
       sfxSuccess();
@@ -875,14 +958,12 @@ export const CrossLateralBrain = ({ groupId, enqueueAction }: GameProps) => {
       </p>
 
       <div className="flex gap-4 w-full max-w-sm mb-8">
-        {/* 왼손 영역 */}
         <div className="flex-1 bg-purple-900/60 border-2 border-purple-600 rounded-3xl p-4 flex flex-col items-center text-center">
           <span className="text-xs font-bold text-purple-300 mb-2">왼손 미션</span>
           <div className="text-4xl mb-2">{leftAction === 'tap' ? '👆' : '✊'}</div>
           <span className="text-sm font-black text-amber-300">{leftAction === 'tap' ? '3번 톡톡 탭!' : '꾹 누르고 있기!'}</span>
         </div>
 
-        {/* 오른손 영역 */}
         <div className="flex-1 bg-purple-900/60 border-2 border-purple-600 rounded-3xl p-4 flex flex-col items-center text-center">
           <span className="text-xs font-bold text-purple-300 mb-2">오른손 미션</span>
           <div className="text-4xl mb-2">{rightAction === 'tap' ? '👆' : '✊'}</div>
@@ -898,10 +979,14 @@ export const CrossLateralBrain = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-purple-300 mb-2">🧠 양뇌 신경망 활성화!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (복합 신체 협응력)</p>
-        </div>
+        <GameResultOverlay
+          title="🧠 양뇌 교차 협응 성공!"
+          subtitle="좌우 비대칭 운동 신경 전달로 두뇌 집중력을 극대화했습니다."
+          score={500}
+          badge="브레인짐 마스터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );

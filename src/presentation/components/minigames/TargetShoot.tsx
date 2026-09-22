@@ -58,7 +58,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
   const ringColor = ringSize <= 30 ? 'border-red-500 shadow-red-500/50' : ringSize <= 60 ? 'border-orange-500 shadow-orange-500/30' : ringSize <= 100 ? 'border-yellow-500' : 'border-cyan-500';
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" onClick={handleShoot}>
+    <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden select-none" onClick={handleShoot}>
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
         <div><span className="text-slate-400 text-sm font-bold">라운드</span><div className="text-white text-2xl font-black">{round}/5</div></div>
         <div className="text-right"><span className="text-slate-400 text-sm font-bold">총 점수</span><div className="text-cyan-400 text-2xl font-black">{score}</div></div>

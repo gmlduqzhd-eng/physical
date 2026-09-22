@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
+import { GameResultOverlay } from './GameResultOverlay';
 
 interface GameProps {
   groupId: string;
@@ -10,10 +11,10 @@ interface GameProps {
 /* =========================================================================
    11. 🏹 wind-archery-pro (풍향·풍속 탄도학 윈드 양궁)
    ========================================================================= */
-export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
-  const [windSpeed, setWindSpeed] = useState(5); // m/s
+export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [windSpeed, setWindSpeed] = useState(5);
   const [windDir, setWindDir] = useState<'left' | 'right'>('left');
-  const [aimOffset, setAimOffset] = useState(0); // 사용자 조준 오프셋 (-50 ~ 50)
+  const [aimOffset, setAimOffset] = useState(0);
   const [arrowResult, setArrowResult] = useState<number | null>(null);
   const [round, setRound] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
@@ -21,7 +22,7 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
   const scoreRef = useRef(0);
 
   const resetWind = () => {
-    const spd = Math.floor(Math.random() * 8) + 3; // 3~10 m/s
+    const spd = Math.floor(Math.random() * 8) + 3;
     const dir = Math.random() > 0.5 ? 'left' : 'right';
     setWindSpeed(spd);
     setWindDir(dir);
@@ -29,14 +30,20 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
     setArrowResult(null);
   };
 
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setRound(1);
+    setTotalScore(0);
+    setFinished(false);
+    resetWind();
+  };
+
   const handleShoot = () => {
     if (arrowResult !== null || finished) return;
     sfxTap();
     hapticTap();
 
-    // 바람이 공을 미는 픽셀 오프셋: left면 -spd*4, right면 +spd*4
     const windPush = windDir === 'left' ? -windSpeed * 4 : windSpeed * 4;
-    // 최종 착탄 위치 (0이 정중앙 10점)
     const finalImpact = aimOffset + windPush;
     const distance = Math.abs(finalImpact);
 
@@ -61,7 +68,7 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
         enqueueAction({
           id: Math.random().toString(),
           type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: scoreRef.current },
+          payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
           timestamp: Date.now()
         });
       } else {
@@ -83,7 +90,6 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
         바람의 방향과 세기를 읽고, 바람의 반대쪽으로 조준선을 옮겨 쏘세요!
       </p>
 
-      {/* 바람 안내판 */}
       <div className="bg-slate-900/80 border border-emerald-600 rounded-2xl px-5 py-2.5 flex items-center gap-3 mb-6 shadow-lg">
         <span className="text-xs font-bold text-slate-300">현재 바람:</span>
         <span className="text-xl font-black text-cyan-300">
@@ -91,9 +97,7 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
         </span>
       </div>
 
-      {/* 양궁 과녁 시각화 */}
       <div className="relative w-64 h-64 rounded-full bg-slate-900 border-4 border-emerald-800 flex items-center justify-center overflow-hidden mb-6 shadow-2xl">
-        {/* 과녁 동심원 */}
         <div className="w-56 h-56 rounded-full border-2 border-white/20 bg-white flex items-center justify-center">
           <div className="w-44 h-44 rounded-full bg-black flex items-center justify-center">
             <div className="w-32 h-32 rounded-full bg-blue-500 flex items-center justify-center">
@@ -106,7 +110,6 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
           </div>
         </div>
 
-        {/* 조준 십자선 (사용자가 오프셋 조절) */}
         <div
           style={{ transform: `translateX(${aimOffset}px)` }}
           className="absolute w-8 h-8 border-2 border-dashed border-cyan-400 rounded-full flex items-center justify-center pointer-events-none shadow-[0_0_15px_rgba(34,211,238,0.9)]"
@@ -114,7 +117,6 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
           <div className="w-2 h-2 bg-cyan-400 rounded-full" />
         </div>
 
-        {/* 화살 착탄 결과 표시 */}
         {arrowResult !== null && (
           <div className="absolute text-3xl font-black text-amber-300 animate-bounce">
             🎯 {arrowResult}점!
@@ -122,7 +124,6 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
         )}
       </div>
 
-      {/* 조준선 슬라이더 */}
       <div className="w-full max-w-xs flex flex-col gap-2 mb-6">
         <div className="flex justify-between text-xs font-bold text-emerald-300">
           <span>◀ 왼쪽 조준</span>
@@ -149,10 +150,14 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">총 {totalScore}점 명중!</div>
-          <p className="text-lg text-white font-bold mb-4">+{scoreRef.current}점 획득 (환경 극복 조준력)</p>
-        </div>
+        <GameResultOverlay
+          title={`🎯 총 ${totalScore}점 명중!`}
+          subtitle="바람의 방향과 세기를 계산하여 정밀한 탄도 오프셋 사격을 완수했습니다."
+          score={Math.max(200, scoreRef.current)}
+          badge="환경 극복 명사수"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -161,57 +166,66 @@ export const WindArcheryPro = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    12. 🏐 volleyball-apex-set (배구 정점 포물선 토스·스파이크)
    ========================================================================= */
-export const VolleyballApexSet = ({ groupId, enqueueAction }: GameProps) => {
-  const [ballY, setBallY] = useState(100); // 0 (정점) ~ 100 (바닥)
+export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [ballHeight, setBallHeight] = useState(0);
   const [direction, setDirection] = useState<'up' | 'down'>('up');
   const [hits, setHits] = useState(0);
   const [finished, setFinished] = useState(false);
   const hitsRef = useRef(0);
+  const TARGET_HITS = 5;
+
+  const handleRestart = () => {
+    hitsRef.current = 0;
+    setBallHeight(0);
+    setDirection('up');
+    setHits(0);
+    setFinished(false);
+  };
 
   useEffect(() => {
     if (finished) return;
     const interval = setInterval(() => {
-      setBallY(y => {
+      setBallHeight(h => {
         if (direction === 'up') {
-          if (y <= 5) {
+          if (h >= 90) {
             setDirection('down');
-            return 5;
+            return 90;
           }
-          return y - 5;
+          return h + 4;
         } else {
-          if (y >= 95) {
+          if (h <= 10) {
             setDirection('up');
-            return 95;
+            return 10;
           }
-          return y + 5;
+          return h - 4;
         }
       });
     }, 40);
     return () => clearInterval(interval);
   }, [direction, finished]);
 
-  const isApex = ballY <= 20;
+  const isApex = ballHeight >= 82 && ballHeight <= 94;
 
-  const handleHit = () => {
+  const handleSpike = () => {
     if (finished) return;
     if (isApex) {
-      sfxCoin();
+      sfxSuccess();
       hapticTap();
-      const nextHits = hits + 1;
-      setHits(nextHits);
-      hitsRef.current = nextHits;
-      setBallY(95);
-      setDirection('up');
+      const next = hits + 1;
+      setHits(next);
+      hitsRef.current = next;
 
-      if (nextHits >= 5) {
+      if (next >= TARGET_HITS) {
         setFinished(true);
-        sfxSuccess();
         enqueueAction({
           id: Math.random().toString(),
           type: 'INCREMENT_SCORE',
           payload: { id: groupId, amount: 500 },
           timestamp: Date.now()
         });
+      } else {
+        setBallHeight(10);
+        setDirection('up');
       }
     } else {
       sfxPop();
@@ -221,48 +235,46 @@ export const VolleyballApexSet = ({ groupId, enqueueAction }: GameProps) => {
   return (
     <div className="min-h-[100dvh] bg-sky-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-sky-300 text-xs font-bold">스파이크 성공</span><div className="text-2xl font-black">{hits} / 5회</div></div>
-        <div className="text-right"><span className="text-sky-300 text-xs font-bold">목표</span><div className="text-2xl font-black text-amber-400">포물선 정점 타격!</div></div>
+        <div><span className="text-sky-300 text-xs font-bold">스파이크 성공</span><div className="text-2xl font-black">{hits} / {TARGET_HITS}회</div></div>
+        <div className="text-right"><span className="text-sky-300 text-xs font-bold">정점 판정</span><div className={`text-xl font-black ${isApex ? 'text-amber-400 animate-pulse' : 'text-slate-500'}`}>{isApex ? 'APEX! 정점!' : '궤적 상승/하강 중'}</div></div>
       </div>
 
-      <h1 className="text-2xl font-black mb-1">🏐 배구 정점 토스 & 스파이크</h1>
+      <h1 className="text-2xl font-black mb-1">🏐 배구 정점 포물선 스파이크</h1>
       <p className="text-xs text-sky-200 mb-6 text-center max-w-xs">
-        공이 포물선의 최고 정점(초록색 존)에 도달하는 찰나에 강스파이크를 날리세요!
+        토스된 공이 꼭짓점(정점)에서 멈추는 찰나에 강스파이크 버튼을 누르세요!
       </p>
 
-      {/* 배구 네트 & 공 궤적 박스 */}
-      <div className="relative w-64 h-72 bg-slate-900 border-4 border-sky-700 rounded-3xl overflow-hidden p-4 flex flex-col justify-between mb-8 shadow-2xl">
-        {/* 최고 정점 타깃 존 (상단 0~25%) */}
-        <div className={`w-full h-16 rounded-2xl border-2 border-dashed flex items-center justify-center ${isApex ? 'bg-emerald-500/30 border-emerald-400 animate-pulse' : 'bg-sky-500/10 border-sky-500/30'}`}>
-          <span className="text-xs font-black text-emerald-300">💥 최고 타점 APEX ZONE</span>
+      <div className="relative w-64 h-72 bg-slate-900 border-4 border-sky-600 rounded-3xl p-4 flex flex-col justify-between mb-6 shadow-2xl overflow-hidden">
+        <div className="absolute top-4 left-4 right-4 h-12 bg-amber-500/20 border-2 border-dashed border-amber-400 rounded-2xl flex items-center justify-center pointer-events-none">
+          <span className="text-xs font-black text-amber-300">최적 타격 정점 존 (APEX)</span>
         </div>
 
-        {/* 배구공 위치 */}
         <div
-          style={{ top: `${ballY * 0.7}%` }}
-          className="absolute left-1/2 -translate-x-1/2 text-5xl transition-all duration-75 pointer-events-none drop-shadow-xl"
+          style={{ bottom: `${ballHeight}%` }}
+          className="absolute left-1/2 -translate-x-1/2 text-5xl transition-all duration-75 drop-shadow-[0_0_15px_rgba(255,255,255,0.7)]"
         >
           🏐
-        </div>
-
-        {/* 하단 배구 네트 */}
-        <div className="w-full h-8 bg-white/20 border-t-2 border-white flex items-center justify-center text-xs font-bold text-slate-300">
-          배구 네트
         </div>
       </div>
 
       <button
-        onClick={handleHit}
-        className="w-full max-w-xs py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform"
+        onClick={handleSpike}
+        className={`w-full max-w-xs py-6 rounded-3xl font-black text-2xl transition-all shadow-2xl active:scale-95 ${
+          isApex ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-amber-950 animate-bounce ring-4 ring-white' : 'bg-slate-800 text-slate-400'
+        }`}
       >
-        ⚡ 타이밍 강스파이크!
+        {isApex ? '💥 지금 정점 스파이크!!' : '정점 도달을 기다리세요'}
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🏐 퍼펙트 스파이크 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (궤적 예측 및 임팩트)</p>
-        </div>
+        <GameResultOverlay
+          title="🏐 환상의 정점 스파이크 완주!"
+          subtitle="중력과 포물선 궤적의 꼭짓점을 순간 포착하는 타이밍 감각을 증명했습니다."
+          score={500}
+          badge="배구 정점 타격왕"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -271,118 +283,113 @@ export const VolleyballApexSet = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    13. ⚾ strike-zone-vision (140km/h 스트라이크존 선구안)
    ========================================================================= */
-export const StrikeZoneVision = ({ groupId, enqueueAction }: GameProps) => {
-  const [pitch, setPitch] = useState<{ isStrike: boolean; type: string; x: number; y: number } | null>(null);
-  const [decision, setDecision] = useState<'swing' | 'take' | null>(null);
+export const StrikeZoneVision: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [pitch, setPitch] = useState<{ isStrike: boolean; x: number; y: number } | null>(null);
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const TOTAL_ROUNDS = 6;
 
-  const nextPitch = () => {
+  const throwPitch = () => {
     const isStrike = Math.random() > 0.45;
-    const types = ['직구 142km/h', '슬라이더 130km/h', '낙차 큰 커브 118km/h'];
-    const chosenType = types[Math.floor(Math.random() * types.length)];
-    // 존 안(-40~40) 또는 존 밖(-80~-50, 50~80)
-    const x = isStrike ? (Math.random() * 60 - 30) : (Math.random() > 0.5 ? Math.random() * 30 + 55 : -Math.random() * 30 - 55);
-    const y = isStrike ? (Math.random() * 60 - 30) : (Math.random() > 0.5 ? Math.random() * 30 + 55 : -Math.random() * 30 - 55);
-    setPitch({ isStrike, type: chosenType, x, y });
-    setDecision(null);
+    const x = isStrike ? Math.random() * 80 - 40 : (Math.random() > 0.5 ? 65 : -65);
+    const y = isStrike ? Math.random() * 80 - 40 : (Math.random() > 0.5 ? 65 : -65);
+    setPitch({ isStrike, x, y });
+  };
+
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setRound(1);
+    setScore(0);
+    setFinished(false);
+    throwPitch();
   };
 
   useEffect(() => {
-    nextPitch();
+    throwPitch();
   }, []);
 
-  const handleDecision = (userChoice: 'swing' | 'take') => {
-    if (decision !== null || !pitch || finished) return;
-    setDecision(userChoice);
+  const handleDecision = (userChoice: 'strike' | 'ball') => {
+    if (!pitch || finished) return;
+    const isCorrect = (userChoice === 'strike' && pitch.isStrike) || (userChoice === 'ball' && !pitch.isStrike);
 
-    const isCorrect = (userChoice === 'swing' && pitch.isStrike) || (userChoice === 'take' && !pitch.isStrike);
     if (isCorrect) {
       sfxCoin();
       hapticTap();
-      setScore(s => s + 1);
-      scoreRef.current += 100;
+      const next = score + 1;
+      setScore(next);
+      scoreRef.current = next * 90;
     } else {
       sfxPop();
     }
 
-    setTimeout(() => {
-      if (round >= 5) {
-        setFinished(true);
-        sfxSuccess();
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: scoreRef.current },
-          timestamp: Date.now()
-        });
-      } else {
-        setRound(r => r + 1);
-        nextPitch();
-      }
-    }, 1000);
+    if (round >= TOTAL_ROUNDS) {
+      setFinished(true);
+      sfxSuccess();
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
+        timestamp: Date.now()
+      });
+    } else {
+      setRound(r => r + 1);
+      throwPitch();
+    }
   };
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-slate-400 text-xs font-bold">투구</span><div className="text-2xl font-black">{round} / 5 구</div></div>
-        <div className="text-right"><span className="text-slate-400 text-xs font-bold">판정 성공</span><div className="text-2xl font-black text-amber-400">{score}개</div></div>
+        <div><span className="text-slate-400 text-xs font-bold">투구 수</span><div className="text-2xl font-black">{round} / {TOTAL_ROUNDS}구</div></div>
+        <div className="text-right"><span className="text-slate-400 text-xs font-bold">선구안 적중</span><div className="text-2xl font-black text-cyan-400">{score}개</div></div>
       </div>
 
       <h1 className="text-2xl font-black mb-1">⚾ 140km/h 스트라이크존 선구안</h1>
       <p className="text-xs text-slate-400 mb-6 text-center max-w-xs">
-        포수 시점에서 날아온 공이 네모난 스트라이크 존 안인지 밖인지 순간 판정하세요!
+        홈플레이트 상공으로 들어오는 공이 존 안쪽인지 바깥쪽인지 판독하세요!
       </p>
 
-      {/* 9분할 스트라이크 존 박스 */}
       <div className="relative w-64 h-64 bg-slate-900 border-4 border-slate-700 rounded-3xl flex items-center justify-center mb-6 shadow-2xl">
-        {/* 9분할 스트라이크 존 (가운데 3x3) */}
-        <div className="w-36 h-36 border-4 border-amber-400/80 bg-amber-400/10 grid grid-cols-3 grid-rows-3 gap-0">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="border border-amber-400/30" />
-          ))}
+        <div className="w-32 h-40 border-4 border-dashed border-cyan-400 rounded-xl flex items-center justify-center bg-cyan-950/20">
+          <span className="text-[10px] font-black text-cyan-300">STRIKE ZONE</span>
         </div>
 
-        {/* 투구 궤적 착탄 위치 */}
         {pitch && (
           <div
             style={{ transform: `translate(${pitch.x}px, ${pitch.y}px)` }}
-            className="absolute text-4xl animate-in zoom-in-50 duration-200"
+            className="absolute text-3xl animate-in zoom-in-50 duration-200"
           >
             ⚾
           </div>
         )}
       </div>
 
-      <div className="text-sm font-bold text-cyan-300 mb-6">
-        구종: {pitch?.type}
-      </div>
-
       <div className="flex gap-4 w-full max-w-xs">
         <button
-          onClick={() => handleDecision('swing')}
-          disabled={decision !== null}
-          className="flex-1 py-5 bg-red-600 hover:bg-red-500 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-transform"
+          onClick={() => handleDecision('strike')}
+          className="flex-1 py-5 bg-gradient-to-r from-red-600 to-rose-600 active:scale-95 rounded-2xl font-black text-xl text-white shadow-xl transition-all"
         >
-          💥 스트라이크! (스윙)
+          🔴 스트라이크!
         </button>
         <button
-          onClick={() => handleDecision('take')}
-          disabled={decision !== null}
-          className="flex-1 py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-transform"
+          onClick={() => handleDecision('ball')}
+          className="flex-1 py-5 bg-gradient-to-r from-emerald-600 to-teal-600 active:scale-95 rounded-2xl font-black text-xl text-white shadow-xl transition-all"
         >
-          👀 볼! (참기)
+          🟢 볼! (참기)
         </button>
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{score}개 정답!</div>
-          <p className="text-lg text-white font-bold mb-4">+{scoreRef.current}점 획득 (프로급 동체시력 선구안)</p>
-        </div>
+        <GameResultOverlay
+          title={`⚾ ${score}개 완벽 판정 선구안!`}
+          subtitle="광속 투구의 궤적을 순식간에 판단하는 최고 수준의 동체시력을 입증했습니다."
+          score={Math.max(200, score * 90)}
+          badge="특급 선구안 타자"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -391,160 +398,178 @@ export const StrikeZoneVision = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    14. ⚽ offside-breaker-pass (3:2 오프사이드 트랩 브레이커)
    ========================================================================= */
-export const OffsideBreakerPass = ({ groupId, enqueueAction }: GameProps) => {
-  const [defenseLineX, setDefenseLineX] = useState(50); // 수비수 최종 라인
-  const [strikerX, setStrikerX] = useState(20); // 우리 공격수 침투 위치
-  const [passResult, setPassResult] = useState<string | null>(null);
-  const [round, setRound] = useState(1);
+export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [defLinePos, setDefLinePos] = useState(50);
+  const [passStatus, setPassStatus] = useState<'ready' | 'success' | 'offside'>('ready');
   const [score, setScore] = useState(0);
+  const [round, setRound] = useState(1);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
 
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setRound(1);
+    setScore(0);
+    setPassStatus('ready');
+    setFinished(false);
+  };
+
   useEffect(() => {
-    if (finished || passResult !== null) return;
-    const interval = setInterval(() => {
-      setDefenseLineX(d => Math.max(35, Math.min(75, d + (Math.random() * 12 - 6))));
-      setStrikerX(s => (s >= 80 ? 20 : s + 4));
-    }, 150);
-    return () => clearInterval(interval);
-  }, [finished, passResult]);
+    if (finished) return;
+    const timer = setInterval(() => {
+      setDefLinePos(pos => {
+        const next = pos + (Math.random() * 16 - 8);
+        return Math.max(20, Math.min(80, next));
+      });
+    }, 200);
+    return () => clearInterval(timer);
+  }, [finished]);
 
   const handlePass = () => {
-    if (passResult !== null || finished) return;
-    sfxTap();
-    hapticTap();
+    if (passStatus !== 'ready' || finished) return;
+    const FW_POS = 55;
+    const isOffside = FW_POS > defLinePos;
 
-    // 공격수가 수비 라인보다 뒤에 있거나 같으면 온사이드!
-    const isOnside = strikerX <= defenseLineX + 2;
-    if (isOnside) {
-      sfxCoin();
-      setPassResult('⚽ 완벽한 온사이드 스루패스! 1:1 찬스 골!');
-      setScore(s => s + 1);
-      scoreRef.current += 120;
+    if (!isOffside) {
+      sfxSuccess();
+      hapticTap();
+      setPassStatus('success');
+      const next = score + 1;
+      setScore(next);
+      scoreRef.current = next * 170;
     } else {
       sfxPop();
-      setPassResult('🚩 깃발 번쩍! 오프사이드 반칙!');
+      setPassStatus('offside');
     }
 
     setTimeout(() => {
-      if (round >= 4) {
+      if (round >= 3) {
         setFinished(true);
-        sfxSuccess();
         enqueueAction({
           id: Math.random().toString(),
           type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: scoreRef.current },
+          payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
           timestamp: Date.now()
         });
       } else {
         setRound(r => r + 1);
-        setPassResult(null);
-        setStrikerX(20);
+        setPassStatus('ready');
       }
-    }, 1200);
+    }, 1000);
   };
 
   return (
     <div className="min-h-[100dvh] bg-emerald-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-emerald-300 text-xs font-bold">공격 찬스</span><div className="text-2xl font-black">{round} / 4 라운드</div></div>
-        <div className="text-right"><span className="text-emerald-300 text-xs font-bold">골 성공</span><div className="text-2xl font-black text-amber-400">{score}골</div></div>
+        <div><span className="text-emerald-300 text-xs font-bold">공격 찬스</span><div className="text-2xl font-black">{round} / 3회</div></div>
+        <div className="text-right"><span className="text-emerald-300 text-xs font-bold">침투 성공</span><div className="text-2xl font-black text-amber-400">{score}골</div></div>
       </div>
 
-      <h1 className="text-2xl font-black mb-1">⚽ 오프사이드 트랩 브레이커</h1>
+      <h1 className="text-2xl font-black mb-1">⚽ 3:2 오프사이드 트랩 브레이커</h1>
       <p className="text-xs text-emerald-200 mb-6 text-center max-w-xs">
-        우리 공격수가 수비 라인을 넘어서기 직전 찰나에 킬패스를 찔러 넣으세요!
+        수비수의 최종 라인이 우리 공격수보다 뒤에 있을 때 칼같은 스루패스를 찔러주세요!
       </p>
 
-      {/* 축구 잔디 피치 */}
-      <div className="relative w-full max-w-sm h-56 bg-emerald-900 border-4 border-white/40 rounded-3xl overflow-hidden p-4 flex flex-col justify-between mb-6 shadow-2xl">
-        {/* 잔디 줄무늬 */}
-        <div className="absolute inset-0 grid grid-cols-6 opacity-20 pointer-events-none">
-          <div className="bg-white/20" /><div /><div className="bg-white/20" /><div /><div className="bg-white/20" /><div />
-        </div>
-
-        {/* 수비수 최종 라인 (적색 가상선) */}
+      <div className="relative w-72 h-72 bg-emerald-900 border-4 border-emerald-600 rounded-3xl p-4 overflow-hidden mb-6 shadow-2xl">
         <div
-          style={{ left: `${defenseLineX}%` }}
-          className="absolute top-0 bottom-0 w-1 bg-red-500 shadow-[0_0_15px_rgba(239,68,68,1)] z-10"
+          style={{ top: `${defLinePos}%` }}
+          className="absolute left-0 right-0 h-[3px] bg-red-400 border-t border-dashed border-white flex items-center justify-between px-2"
         >
-          <span className="text-[10px] bg-red-600 px-1 rounded absolute top-2 -translate-x-1/2">수비라인</span>
-          <div className="absolute top-12 -translate-x-1/2 text-2xl">🛡️</div>
-          <div className="absolute bottom-12 -translate-x-1/2 text-2xl">🛡️</div>
+          <span className="text-[10px] text-red-200 font-bold">🛡️ 수비 오프사이드 라인</span>
+          <span className="text-lg">🏃‍♂️</span>
         </div>
 
-        {/* 침투하는 우리 공격수 */}
-        <div
-          style={{ left: `${strikerX}%` }}
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 text-3xl z-20 transition-all duration-75"
-        >
-          🏃‍♂️
+        <div style={{ top: '55%' }} className="absolute right-8 text-2xl flex items-center gap-1">
+          <span>🏃</span>
+          <span className="text-[10px] font-bold text-cyan-300">우리 공격수</span>
         </div>
 
-        {/* 우리 미드필더 패서 */}
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-3xl z-20">
-          👟⚽
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-3xl">
+          ⚽ (미드필더)
         </div>
+
+        {passStatus === 'success' && (
+          <div className="absolute inset-0 bg-emerald-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+            <span className="text-4xl font-black text-amber-300">⚽ GOAL! 온사이드 돌파!</span>
+          </div>
+        )}
+        {passStatus === 'offside' && (
+          <div className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+            <span className="text-4xl font-black text-red-400">🚩 OFFSIDE! 깃발 업!</span>
+          </div>
+        )}
       </div>
-
-      {passResult && (
-        <div className="text-sm font-black text-amber-300 mb-4 animate-bounce">
-          {passResult}
-        </div>
-      )}
 
       <button
         onClick={handlePass}
-        disabled={passResult !== null}
-        className="w-full max-w-xs py-5 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform disabled:opacity-50"
+        disabled={passStatus !== 'ready'}
+        className="w-full max-w-xs py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform disabled:opacity-50"
       >
-        ⚡ 스루패스 찌르기!
+        👟 스루패스 찌르기!
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">{score}골 폭풍 득점!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (공간 침투 전술 감각)</p>
-        </div>
+        <GameResultOverlay
+          title={`⚽ ${score}회 온사이드 찬스 성공!`}
+          subtitle="수비 라인의 전후진 오프사이드 트랩을 정확히 읽고 킬패스를 연결했습니다."
+          score={Math.max(200, scoreRef.current)}
+          badge="오프사이드 브레이커"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
 };
 
 /* =========================================================================
-   15. 🏸 badminton-drop-clear (셔틀콕 드롭 vs 클리어 선택)
+   15. 🏸 badminton-drop-clear (배드민턴 드롭샷 & 하이클리어 코스)
    ========================================================================= */
-export const BadmintonDropClear = ({ groupId, enqueueAction }: GameProps) => {
-  const [oppPosition, setOppPosition] = useState<'back' | 'front'>('back');
+export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [oppPos, setOppPos] = useState<'front' | 'back'>('front');
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const TOTAL_ROUNDS = 5;
 
   const nextOpp = () => {
-    setOppPosition(Math.random() > 0.5 ? 'back' : 'front');
+    setOppPos(Math.random() > 0.5 ? 'front' : 'back');
   };
 
-  const handleShot = (shot: 'drop' | 'clear') => {
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setRound(1);
+    setScore(0);
+    setFinished(false);
+    nextOpp();
+  };
+
+  useEffect(() => {
+    nextOpp();
+  }, []);
+
+  const handleShot = (shotType: 'drop' | 'clear') => {
     if (finished) return;
-    // 상대가 뒤에 있으면 네트 앞 '드롭'이 정답, 앞에 있으면 엔드라인 뒤 '클리어'가 정답
-    const isSuccess = (oppPosition === 'back' && shot === 'drop') || (oppPosition === 'front' && shot === 'clear');
-    if (isSuccess) {
+    const isCorrect = (oppPos === 'back' && shotType === 'drop') || (oppPos === 'front' && shotType === 'clear');
+
+    if (isCorrect) {
       sfxCoin();
       hapticTap();
-      setScore(s => s + 1);
-      scoreRef.current += 100;
+      const next = score + 1;
+      setScore(next);
+      scoreRef.current = next * 100;
     } else {
       sfxPop();
     }
 
-    if (round >= 5) {
+    if (round >= TOTAL_ROUNDS) {
       setFinished(true);
       sfxSuccess();
       enqueueAction({
         id: Math.random().toString(),
         type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: scoreRef.current },
+        payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
         timestamp: Date.now()
       });
     } else {
@@ -556,66 +581,77 @@ export const BadmintonDropClear = ({ groupId, enqueueAction }: GameProps) => {
   return (
     <div className="min-h-[100dvh] bg-teal-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-teal-300 text-xs font-bold">랠리</span><div className="text-2xl font-black">{round} / 5 구</div></div>
-        <div className="text-right"><span className="text-teal-300 text-xs font-bold">점수</span><div className="text-2xl font-black text-amber-400">{score}득점</div></div>
+        <div><span className="text-teal-300 text-xs font-bold">랠리</span><div className="text-2xl font-black">{round} / {TOTAL_ROUNDS}회</div></div>
+        <div className="text-right"><span className="text-teal-300 text-xs font-bold">빈 코스 득점</span><div className="text-2xl font-black text-amber-400">{score}점</div></div>
       </div>
 
-      <h1 className="text-2xl font-black mb-1">🏸 셔틀콕 드롭 vs 클리어</h1>
+      <h1 className="text-2xl font-black mb-1">🏸 배드민턴 드롭 & 클리어 코스</h1>
       <p className="text-xs text-teal-200 mb-6 text-center max-w-xs">
-        상대 수비수의 위치를 보고 빈 공간으로 셔틀콕을 떨어뜨리세요!
+        상대방이 뒤에 있으면 네트 앞 드롭샷! 앞에 쏠려있으면 엔드라인 클리어!
       </p>
 
-      {/* 배드민턴 코트 탑뷰 */}
-      <div className="relative w-64 h-72 bg-emerald-800 border-4 border-white rounded-3xl p-3 flex flex-col justify-between mb-6 shadow-2xl">
-        {/* 상대 코트 (상단) */}
-        <div className="h-1/2 border-b-2 border-white flex flex-col justify-between relative">
-          <span className="text-[10px] text-white/50">상대 엔드라인</span>
-          {oppPosition === 'back' && <div className="text-3xl text-center animate-bounce">🏃 (뒤쪽 수비)</div>}
-          {oppPosition === 'front' && <div className="text-3xl text-center animate-bounce">🏃 (네트 앞 대기)</div>}
-          <div className="w-full h-1 bg-white/70" />
+      <div className="relative w-64 h-64 bg-teal-900 border-4 border-teal-600 rounded-3xl p-3 flex flex-col justify-between mb-6 shadow-2xl">
+        <div className="h-1/2 border-b-2 border-white flex flex-col justify-center items-center relative">
+          <span className="text-[10px] text-teal-300">상대 후위 코트</span>
+          {oppPos === 'back' && <div className="text-3xl animate-bounce">🏃 (상대 뒤에 위치!)</div>}
         </div>
 
-        {/* 우리 코트 (하단) */}
-        <div className="h-1/2 flex flex-col justify-end items-center">
-          <div className="text-4xl">🏸 (나)</div>
+        <div className="h-1/2 flex flex-col justify-center items-center relative">
+          <span className="text-[10px] text-teal-300">상대 전위 코트 (네트 앞)</span>
+          {oppPos === 'front' && <div className="text-3xl animate-bounce">🏃 (상대 앞에 전진!)</div>}
         </div>
       </div>
 
-      <div className="flex gap-4 w-full max-w-xs">
+      <div className="flex gap-3 w-full max-w-xs">
         <button
           onClick={() => handleShot('drop')}
-          className="flex-1 py-5 bg-sky-600 hover:bg-sky-500 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-transform"
+          className="flex-1 py-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black text-base rounded-2xl shadow-xl active:scale-95 transition-all"
         >
           ⬇️ 네트 앞 드롭샷!
         </button>
         <button
           onClick={() => handleShot('clear')}
-          className="flex-1 py-5 bg-orange-600 hover:bg-orange-500 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-transform"
+          className="flex-1 py-5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-black text-base rounded-2xl shadow-xl active:scale-95 transition-all"
         >
-          ⬆️ 후방 하이클리어!
+          ⬆️ 깊은 하이클리어!
         </button>
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{score}득점 승리!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (빈 공간 공략 전술)</p>
-        </div>
+        <GameResultOverlay
+          title={`🏸 ${score}회 빈 코스 공략 성공!`}
+          subtitle="상대의 코트 포지셔닝을 실시간 간파하여 최적의 공격 코스로 공략했습니다."
+          score={Math.max(200, scoreRef.current)}
+          badge="배드민턴 코스 전술가"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
 };
 
 /* =========================================================================
-   16. 🏀 basketball-free-throw (포물선 각도·파워 자유투)
+   16. 🏀 basketball-free-throw (포물선 각도 자유투)
    ========================================================================= */
-export const BasketballFreeThrow = ({ groupId, enqueueAction }: GameProps) => {
-  const [power, setPower] = useState(50);
+export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [angle, setAngle] = useState(45);
   const [isShooting, setIsShooting] = useState(false);
-  const [baskets, setBaskets] = useState(0);
-  const [round, setRound] = useState(1);
+  const [result, setResult] = useState<'goal' | 'miss' | null>(null);
+  const [score, setScore] = useState(0);
+  const [shots, setShots] = useState(0);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const TOTAL_SHOTS = 3;
+
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setScore(0);
+    setShots(0);
+    setIsShooting(false);
+    setResult(null);
+    setFinished(false);
+  };
 
   const handleShoot = () => {
     if (isShooting || finished) return;
@@ -623,90 +659,106 @@ export const BasketballFreeThrow = ({ groupId, enqueueAction }: GameProps) => {
     sfxTap();
     hapticTap();
 
-    // 완벽한 힘 구간: 65 ~ 75
-    const isGoal = power >= 65 && power <= 75;
+    const isGoal = angle >= 48 && angle <= 54;
 
     setTimeout(() => {
+      setIsShooting(false);
+      setResult(isGoal ? 'goal' : 'miss');
       if (isGoal) {
-        sfxCoin();
-        setBaskets(b => b + 1);
-        scoreRef.current += 150;
+        sfxSuccess();
+        const next = score + 1;
+        setScore(next);
+        scoreRef.current = next * 170;
       } else {
         sfxPop();
       }
 
-      if (round >= 3) {
-        setFinished(true);
-        sfxSuccess();
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: scoreRef.current },
-          timestamp: Date.now()
-        });
+      const nextShots = shots + 1;
+      setShots(nextShots);
+
+      if (nextShots >= TOTAL_SHOTS) {
+        setTimeout(() => {
+          setFinished(true);
+          enqueueAction({
+            id: Math.random().toString(),
+            type: 'INCREMENT_SCORE',
+            payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
+            timestamp: Date.now()
+          });
+        }, 800);
       } else {
-        setRound(r => r + 1);
-        setIsShooting(false);
+        setTimeout(() => setResult(null), 900);
       }
-    }, 1000);
+    }, 800);
   };
 
   return (
-    <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
+    <div className="min-h-[100dvh] bg-orange-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-stone-400 text-xs font-bold">시도</span><div className="text-2xl font-black">{round} / 3 슛</div></div>
-        <div className="text-right"><span className="text-stone-400 text-xs font-bold">골 성공</span><div className="text-2xl font-black text-amber-400">{baskets}개</div></div>
+        <div><span className="text-orange-300 text-xs font-bold">시도</span><div className="text-2xl font-black">{shots} / {TOTAL_SHOTS}회</div></div>
+        <div className="text-right"><span className="text-orange-300 text-xs font-bold">클린 슛</span><div className="text-2xl font-black text-amber-400">{score}골</div></div>
       </div>
 
-      <h1 className="text-2xl font-black mb-1">🏀 포물선 각도·파워 자유투</h1>
-      <p className="text-xs text-stone-300 mb-6 text-center max-w-xs">
-        포물선 파워 게이지를 림 거리(65~75%)에 정확히 맞추어 슛을 쏘세요!
+      <h1 className="text-2xl font-black mb-1">🏀 포물선 각도 자유투</h1>
+      <p className="text-xs text-orange-200 mb-6 text-center max-w-xs">
+        림에 가장 부드럽게 들어가는 최적 포물선 발사각(48~54°)을 맞춰 슛을 쏘세요!
       </p>
 
-      {/* 농구 림 & 백보드 비주얼 */}
-      <div className="relative w-64 h-64 bg-slate-900 border-4 border-orange-800 rounded-3xl p-4 flex flex-col justify-between items-center mb-6 shadow-2xl">
-        {/* 농구 림 */}
-        <div className="w-20 h-10 border-b-4 border-orange-500 rounded-b-full flex items-center justify-center relative">
-          <div className="w-16 h-12 border-dashed border-2 border-white/50 -mt-2" />
+      <div className="relative w-64 h-64 bg-slate-900 border-4 border-orange-700 rounded-3xl p-4 flex flex-col justify-between mb-6 shadow-2xl overflow-hidden">
+        <div className="absolute top-6 right-6 text-3xl">
+          🗑️ (백보드 & 림)
         </div>
 
-        {/* 슛 궤적 애니메이션 농구공 */}
-        <div className={`text-5xl transition-all duration-700 ${isShooting ? '-translate-y-36 scale-75' : 'translate-y-0 scale-100'}`}>
+        <div className={`absolute bottom-6 left-6 text-4xl transition-all duration-700 ${isShooting ? 'translate-x-32 -translate-y-32' : ''}`}>
           🏀
         </div>
+
+        {result === 'goal' && (
+          <div className="absolute inset-0 bg-emerald-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+            <span className="text-4xl font-black text-amber-300">✨ SWISH! 클린 슛!</span>
+          </div>
+        )}
+        {result === 'miss' && (
+          <div className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+            <span className="text-4xl font-black text-red-400">💥 림 튕김! 각도 재조정!</span>
+          </div>
+        )}
       </div>
 
-      {/* 파워 슬라이더 */}
       <div className="w-full max-w-xs flex flex-col gap-2 mb-6">
-        <div className="flex justify-between text-xs font-bold text-amber-300">
-          <span>약함</span>
-          <span className="text-emerald-400 font-black">목표 파워 존 (65~75%)</span>
-          <span>강함</span>
+        <div className="flex justify-between text-xs font-bold text-orange-300">
+          <span>낮은 탄도 (30°)</span>
+          <span className="text-amber-300 font-mono text-base">{angle}°</span>
+          <span>높은 탄도 (70°)</span>
         </div>
         <input
           type="range"
-          min="10"
-          max="100"
-          value={power}
-          onChange={e => setPower(Number(e.target.value))}
+          min="30"
+          max="70"
+          value={angle}
+          onChange={e => setAngle(Number(e.target.value))}
           disabled={isShooting}
-          className="w-full accent-orange-500"
+          className="w-full accent-amber-500"
         />
       </div>
 
       <button
         onClick={handleShoot}
         disabled={isShooting}
-        className="w-full max-w-xs py-5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform disabled:opacity-50"
+        className="w-full max-w-xs py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform disabled:opacity-50"
       >
-        🏀 클린 슛 발사!
+        🏀 포물선 슛 발사!
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-orange-400 mb-2">{baskets}개 슛 림 통과!</div>
-          <p className="text-lg text-white font-bold mb-4">+{scoreRef.current}점 획득 (투사체 포물선 조절력)</p>
-        </div>
+        <GameResultOverlay
+          title={`🏀 ${score}골 자유투 성공!`}
+          subtitle="공기역학과 이상적인 포물선 투사 각도로 림을 정확히 갈랐습니다."
+          score={Math.max(200, scoreRef.current)}
+          badge="자유투 명사수"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -715,12 +767,19 @@ export const BasketballFreeThrow = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    17. 🥌 curling-weight-control (컬링 하우스 힘 조절 스톤)
    ========================================================================= */
-export const CurlingWeightControl = ({ groupId, enqueueAction }: GameProps) => {
+export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [chargeTime, setChargeTime] = useState(0);
-  const [stonePos, setStonePos] = useState(0); // 0 ~ 100
+  const [stonePos, setStonePos] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
   const [finished, setFinished] = useState(false);
   const pressStart = useRef(0);
+
+  const handleRestart = () => {
+    setChargeTime(0);
+    setStonePos(0);
+    setIsSliding(false);
+    setFinished(false);
+  };
 
   const handlePointerDown = () => {
     if (isSliding || finished) return;
@@ -735,7 +794,6 @@ export const CurlingWeightControl = ({ groupId, enqueueAction }: GameProps) => {
     setChargeTime(duration);
     setIsSliding(true);
 
-    // 슬라이딩 거리 계산 (duration이 약 800~1100ms일 때 하우스 중앙 50% 안착)
     const targetDistance = Math.min(100, Math.max(10, Math.floor((duration / 1000) * 50)));
 
     let cur = 0;
@@ -771,18 +829,15 @@ export const CurlingWeightControl = ({ groupId, enqueueAction }: GameProps) => {
         발사 버튼을 적절한 시간(약 1초) 동안 꾹 누르고 떼어 하우스 중앙 버튼에 스톤을 멈추세요!
       </p>
 
-      {/* 컬링 아이스 시트 */}
       <div className="relative w-72 h-64 bg-slate-900 border-4 border-cyan-800 rounded-3xl p-4 flex items-center mb-6 overflow-hidden shadow-2xl">
-        {/* 하우스 타깃 (우측 50% 지점) */}
-        <div className="absolute left-[40%] w-24 h-24 rounded-full border-4 border-red-500 bg-red-500/20 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full border-4 border-white bg-white/20 flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-[10px] font-black">
-              정앙
+        <div className="absolute right-4 w-44 h-44 rounded-full border-4 border-blue-500 bg-blue-900/40 flex items-center justify-center">
+          <div className="w-28 h-28 rounded-full border-4 border-white bg-white/20 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-red-600 flex items-center justify-center text-[10px] font-bold text-white shadow-lg">
+              버튼
             </div>
           </div>
         </div>
 
-        {/* 컬링 스톤 */}
         <div
           style={{ left: `${stonePos}%` }}
           className="absolute text-4xl transition-all duration-75 drop-shadow-xl"
@@ -804,10 +859,14 @@ export const CurlingWeightControl = ({ groupId, enqueueAction }: GameProps) => {
       )}
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-cyan-400 mb-2">하우스 안착 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (빙판 마찰력 조절)</p>
-        </div>
+        <GameResultOverlay
+          title="🥌 하우스 중앙 안착 완료!"
+          subtitle="빙판의 마찰력과 투구 지속 압력을 정밀하게 컨트롤했습니다."
+          score={500}
+          badge="빙판 전략 컬링 마스터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -816,12 +875,19 @@ export const CurlingWeightControl = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    18. 🥋 taekwondo-counter-kick (태권도 반격 발차기 패링)
    ========================================================================= */
-export const TaekwondoCounterKick = ({ groupId, enqueueAction }: GameProps) => {
+export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [oppState, setOppState] = useState<'idle' | 'warning' | 'attack'>('idle');
   const [counters, setCounters] = useState(0);
   const [round, setRound] = useState(1);
   const [finished, setFinished] = useState(false);
   const countersRef = useRef(0);
+
+  const handleRestart = () => {
+    countersRef.current = 0;
+    setRound(1);
+    setCounters(0);
+    setFinished(false);
+  };
 
   useEffect(() => {
     if (finished) return;
@@ -831,118 +897,152 @@ export const TaekwondoCounterKick = ({ groupId, enqueueAction }: GameProps) => {
     const warnTimer = setTimeout(() => {
       setOppState('warning');
       sfxTap();
+
       const attackTimer = setTimeout(() => {
         setOppState('attack');
         hapticTap();
-      }, 500);
+
+        const expireTimer = setTimeout(() => {
+          if (round >= 3) {
+            setFinished(true);
+            sfxSuccess();
+            enqueueAction({
+              id: Math.random().toString(),
+              type: 'INCREMENT_SCORE',
+              payload: { id: groupId, amount: Math.max(200, countersRef.current * 170) },
+              timestamp: Date.now()
+            });
+          } else {
+            setRound(r => r + 1);
+          }
+        }, 400);
+
+        return () => clearTimeout(expireTimer);
+      }, 600);
+
       return () => clearTimeout(attackTimer);
     }, delay);
 
     return () => clearTimeout(warnTimer);
-  }, [round, finished]);
+  }, [round, finished, groupId, enqueueAction]);
 
-  const handleCounter = () => {
-    if (finished) return;
-    if (oppState === 'attack') {
-      sfxCoin();
+  const handleParry = () => {
+    if (oppState === 'attack' && !finished) {
+      sfxSuccess();
       hapticTap();
       const next = counters + 1;
       setCounters(next);
       countersRef.current = next;
+      setOppState('idle');
+
+      if (round >= 3) {
+        setFinished(true);
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: Math.max(200, next * 170) },
+          timestamp: Date.now()
+        });
+      } else {
+        setRound(r => r + 1);
+      }
     } else {
       sfxPop();
-    }
-
-    if (round >= 5) {
-      setFinished(true);
-      sfxSuccess();
-      enqueueAction({
-        id: Math.random().toString(),
-        type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: countersRef.current * 100 },
-        timestamp: Date.now()
-      });
-    } else {
-      setRound(r => r + 1);
     }
   };
 
   return (
     <div className="min-h-[100dvh] bg-red-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-red-300 text-xs font-bold">대결 라운드</span><div className="text-2xl font-black">{round} / 5 회</div></div>
-        <div className="text-right"><span className="text-red-300 text-xs font-bold">카운터 적중</span><div className="text-2xl font-black text-amber-400">{counters}회</div></div>
+        <div><span className="text-red-300 text-xs font-bold">라운드</span><div className="text-2xl font-black">{round} / 3 라운드</div></div>
+        <div className="text-right"><span className="text-red-300 text-xs font-bold">카운터 킥</span><div className="text-2xl font-black text-amber-400">{counters}회</div></div>
       </div>
 
       <h1 className="text-2xl font-black mb-1">🥋 태권도 반격 발차기 패링</h1>
       <p className="text-xs text-red-200 mb-6 text-center max-w-xs">
-        상대방이 공격해오는 0.3초 순간을 노려 번개 같은 뒤후리기 카운터를 차세요!
+        상대가 공격 예비 동작 후 번쩍 빛날 때 즉시 뒤후려차기 반격 버튼을 탭하세요!
       </p>
 
-      {/* 겨루기 매트 비주얼 */}
-      <div className={`relative w-64 h-64 rounded-3xl border-4 flex flex-col items-center justify-center mb-6 shadow-2xl transition-colors duration-100 ${
-        oppState === 'attack' ? 'bg-red-800 border-red-400 animate-pulse' : oppState === 'warning' ? 'bg-amber-900 border-amber-400' : 'bg-slate-900 border-red-800'
+      <div className={`relative w-64 h-64 rounded-3xl border-4 flex flex-col items-center justify-center mb-6 shadow-2xl transition-colors ${
+        oppState === 'attack' ? 'bg-red-600 border-white animate-ping' : oppState === 'warning' ? 'bg-amber-800 border-amber-400' : 'bg-slate-900 border-red-800'
       }`}>
         <div className="text-7xl mb-2">
-          {oppState === 'attack' ? '💥🥋' : oppState === 'warning' ? '⚠️🥋' : '🥋'}
+          {oppState === 'attack' ? '💥' : oppState === 'warning' ? '⚠️' : '🥋'}
         </div>
-        <div className="text-sm font-black">
-          {oppState === 'attack' ? '지금 카운터 차기!' : oppState === 'warning' ? '공격 준비 중...' : '기회 엿보기...'}
-        </div>
+        <span className="text-sm font-black">
+          {oppState === 'attack' ? '지금 공격해옵니다!!' : oppState === 'warning' ? '발차기 준비 중...' : '대치 상태 (호흡 조절)'}
+        </span>
       </div>
 
       <button
-        onClick={handleCounter}
-        className="w-full max-w-xs py-5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform"
+        onClick={handleParry}
+        className={`w-full max-w-xs py-6 rounded-3xl font-black text-2xl transition-all shadow-2xl active:scale-95 ${
+          oppState === 'attack' ? 'bg-amber-400 text-amber-950 animate-bounce ring-4 ring-white' : 'bg-slate-800 text-slate-500'
+        }`}
       >
-        ⚡ 전광석화 반격 발차기!
+        {oppState === 'attack' ? '⚡ 전광석화 카운터 뒤후리기!' : '상대 공격을 기다리세요'}
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{counters}회 카운터 적중!</div>
-          <p className="text-lg text-white font-bold mb-4">+{counters * 100}점 획득 (투기형 반격 타이밍)</p>
-        </div>
+        <GameResultOverlay
+          title={`🥋 ${counters}회 번개 반격 성공!`}
+          subtitle="상대의 예비 동작을 읽고 찰나의 순간에 카운터 공격을 적중시켰습니다."
+          score={Math.max(200, countersRef.current * 170)}
+          badge="태권도 전광석화 카운터"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
 };
 
 /* =========================================================================
-   19. 🏓 tabletennis-spin-read (탁구 커트/탑스핀 회전 판독)
+   19. 🏓 tabletennis-spin-read (탁구 회전 드라이브 판독)
    ========================================================================= */
-export const TabletennisSpinRead = ({ groupId, enqueueAction }: GameProps) => {
-  const [spin, setSpin] = useState<'topspin' | 'backspin'>('topspin');
-  const [score, setScore] = useState(0);
+export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [spinType, setSpinType] = useState<'top' | 'back'>('top');
   const [round, setRound] = useState(1);
+  const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const TOTAL_ROUNDS = 5;
 
   const nextSpin = () => {
-    setSpin(Math.random() > 0.5 ? 'topspin' : 'backspin');
+    setSpinType(Math.random() > 0.5 ? 'top' : 'back');
   };
 
-  const handleReturn = (racketAngle: 'close' | 'open') => {
-    if (finished) return;
-    // 탑스핀(전진회전)은 라켓을 숙여서(close) 쳐야 하고, 백스핀(커트)은 라켓을 열어서(open) 쳐야 함!
-    const isCorrect = (spin === 'topspin' && racketAngle === 'close') || (spin === 'backspin' && racketAngle === 'open');
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setRound(1);
+    setScore(0);
+    setFinished(false);
+    nextSpin();
+  };
 
-    if (isCorrect) {
+  useEffect(() => {
+    nextSpin();
+  }, []);
+
+  const handleReceive = (selected: 'top' | 'back') => {
+    if (finished) return;
+    if (selected === spinType) {
       sfxCoin();
       hapticTap();
-      setScore(s => s + 1);
-      scoreRef.current += 100;
+      const next = score + 1;
+      setScore(next);
+      scoreRef.current = next * 100;
     } else {
       sfxPop();
     }
 
-    if (round >= 5) {
+    if (round >= TOTAL_ROUNDS) {
       setFinished(true);
       sfxSuccess();
       enqueueAction({
         id: Math.random().toString(),
         type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: scoreRef.current },
+        payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
         timestamp: Date.now()
       });
     } else {
@@ -952,180 +1052,159 @@ export const TabletennisSpinRead = ({ groupId, enqueueAction }: GameProps) => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
+    <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-blue-300 text-xs font-bold">랠리</span><div className="text-2xl font-black">{round} / 5 구</div></div>
-        <div className="text-right"><span className="text-blue-300 text-xs font-bold">리턴 성공</span><div className="text-2xl font-black text-amber-400">{score}개</div></div>
+        <div><span className="text-slate-400 text-xs font-bold">리시브 시도</span><div className="text-2xl font-black">{round} / {TOTAL_ROUNDS}회</div></div>
+        <div className="text-right"><span className="text-slate-400 text-xs font-bold">판독 성공</span><div className="text-2xl font-black text-cyan-400">{score}점</div></div>
       </div>
 
-      <h1 className="text-2xl font-black mb-1">🏓 탁구 회전 판독 리턴</h1>
-      <p className="text-xs text-blue-200 mb-6 text-center max-w-xs">
-        공의 회전 방향을 읽고, 탑스핀은 숙이고(Close), 백스핀은 눕혀서(Open) 받으세요!
+      <h1 className="text-2xl font-black mb-1">🏓 탁구 회전 드라이브 판독</h1>
+      <p className="text-xs text-slate-400 mb-6 text-center max-w-xs">
+        상대방의 라켓 마찰 궤적을 보고 전진 탑스핀인지 후진 백스핀(커트)인지 맞추세요!
       </p>
 
-      {/* 탁구대 시각화 */}
-      <div className="relative w-64 h-64 bg-blue-900 border-4 border-white rounded-3xl p-4 flex flex-col items-center justify-center mb-6 shadow-2xl">
-        <div className="text-5xl mb-2 animate-spin-slow">
+      <div className="relative w-64 h-64 bg-slate-900 border-4 border-blue-600 rounded-3xl p-4 flex flex-col items-center justify-center mb-6 shadow-2xl">
+        <div className="text-7xl mb-2 animate-spin-slow">
           🏓
         </div>
-        <div className="text-lg font-black text-amber-300 mb-1">
-          {spin === 'topspin' ? '🌀 전진 탑스핀 (위로 감김)' : '🔄 역회전 백스핀 (커트)'}
+        <div className="text-lg font-black text-amber-300">
+          {spinType === 'top' ? '⬆️ 라켓이 위로 긁어올려짐!' : '⬇️ 라켓이 아래로 깎아내려짐!'}
         </div>
-        <span className="text-xs text-blue-200">
-          {spin === 'topspin' ? '공이 튀어오릅니다!' : '공이 네트에 걸리기 쉽습니다!'}
-        </span>
+        <span className="text-xs text-slate-400 mt-1">공의 회전 방향을 읽으세요!</span>
       </div>
 
       <div className="flex gap-4 w-full max-w-xs">
         <button
-          onClick={() => handleReturn('close')}
-          className="flex-1 py-5 bg-cyan-600 hover:bg-cyan-500 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform"
+          onClick={() => handleReceive('top')}
+          className="flex-1 py-5 bg-gradient-to-r from-red-600 to-rose-600 active:scale-95 rounded-2xl font-black text-sm text-white shadow-xl transition-all flex flex-col items-center gap-1"
         >
-          ↘️ 라켓 숙이기 (탑스핀 대응)
+          <span>⬆️ 탑스핀</span>
+          <span className="text-[10px] opacity-80">(라켓 면 닫고 블록)</span>
         </button>
         <button
-          onClick={() => handleReturn('open')}
-          className="flex-1 py-5 bg-amber-600 hover:bg-amber-500 rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-transform"
+          onClick={() => handleReceive('back')}
+          className="flex-1 py-5 bg-gradient-to-r from-blue-600 to-cyan-600 active:scale-95 rounded-2xl font-black text-sm text-white shadow-xl transition-all flex flex-col items-center gap-1"
         >
-          ↗️ 라켓 눕히기 (백스핀 대응)
+          <span>⬇️ 백스핀 (커트)</span>
+          <span className="text-[10px] opacity-80">(라켓 면 열고 푸시)</span>
         </button>
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{score}개 리턴 성공!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (회전 물리 역학 이해)</p>
-        </div>
+        <GameResultOverlay
+          title={`🏓 ${score}회 회전 판독 성공!`}
+          subtitle="탁구 러버의 마찰 궤적으로 탑스핀과 백스핀을 구분해 완벽히 리시브했습니다."
+          score={Math.max(200, scoreRef.current)}
+          badge="탁구 스핀 판독기"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
 };
 
 /* =========================================================================
-   20. ⚾ baseball-bunt-defense (번트 타구 대시 & 1루 송구 수비)
+   20. ⚾ baseball-bunt-defense (번트 대시 1루 송구 수비)
    ========================================================================= */
-export const BaseballBuntDefense = ({ groupId, enqueueAction }: GameProps) => {
-  const [buntProgress, setBuntProgress] = useState(0); // 0 (포구) ~ 100 (1루 도달)
-  const [pickedUp, setPickedUp] = useState(false);
-  const [throwGauge, setThrowGauge] = useState(50);
-  const [outs, setOuts] = useState(0);
-  const [round, setRound] = useState(1);
+export const BaseballBuntDefense: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [buntCatch, setBuntCatch] = useState(false);
+  const [throwAcc, setThrowAcc] = useState(50);
   const [finished, setFinished] = useState(false);
-  const outsRef = useRef(0);
 
-  useEffect(() => {
-    if (finished || pickedUp) return;
-    const interval = setInterval(() => {
-      setBuntProgress(p => {
-        if (p >= 100) {
-          // 주자 세이프 (실패)
-          sfxPop();
-          return 100;
-        }
-        return p + 5;
-      });
-    }, 100);
-    return () => clearInterval(interval);
-  }, [pickedUp, finished]);
+  const handleRestart = () => {
+    setBuntCatch(false);
+    setThrowAcc(50);
+    setFinished(false);
+  };
 
-  const handlePickUp = () => {
-    if (pickedUp || finished) return;
+  const handleCatch = () => {
+    if (buntCatch || finished) return;
     sfxTap();
     hapticTap();
-    setPickedUp(true);
+    setBuntCatch(true);
   };
 
   const handleThrow = () => {
-    if (!pickedUp || finished) return;
-    // 완벽 송구: 50~70%
-    const isOut = throwGauge >= 50 && throwGauge <= 70;
+    if (!buntCatch || finished) return;
+    const isOut = Math.abs(throwAcc - 50) <= 12;
+
     if (isOut) {
-      sfxCoin();
+      sfxSuccess();
       hapticTap();
-      const next = outs + 1;
-      setOuts(next);
-      outsRef.current = next;
     } else {
       sfxPop();
     }
 
-    if (round >= 3) {
-      setFinished(true);
-      sfxSuccess();
-      enqueueAction({
-        id: Math.random().toString(),
-        type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: outsRef.current * 160 },
-        timestamp: Date.now()
-      });
-    } else {
-      setRound(r => r + 1);
-      setPickedUp(false);
-      setBuntProgress(0);
-    }
+    setFinished(true);
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: isOut ? 500 : 250 },
+      timestamp: Date.now()
+    });
   };
 
   return (
-    <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
-      <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-stone-400 text-xs font-bold">수비 기회</span><div className="text-2xl font-black">{round} / 3 이닝</div></div>
-        <div className="text-right"><span className="text-stone-400 text-xs font-bold">아웃 카운트</span><div className="text-2xl font-black text-amber-400">{outs}개</div></div>
-      </div>
-
-      <h1 className="text-2xl font-black mb-1">⚾ 번트 타구 대시 & 1루 송구</h1>
-      <p className="text-xs text-stone-300 mb-6 text-center max-w-xs">
-        굴러가는 번트공을 쫓아가 낚아채고, 1루로 정확한 파워로 레이저 송구하세요!
+    <div className="min-h-[100dvh] bg-amber-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
+      <h1 className="text-2xl font-black mb-1">⚾ 기습 번트 대시 1루 송구</h1>
+      <p className="text-xs text-amber-200 mb-6 text-center max-w-xs">
+        굴러오는 번트 타구에 즉시 대시해 잡고, 게이지 중앙을 맞춰 1루로 송구하세요!
       </p>
 
-      {/* 다이아몬드 그라운드 비주얼 */}
-      <div className="relative w-64 h-64 bg-amber-950/80 border-4 border-amber-800 rounded-3xl p-4 flex flex-col justify-between mb-6 shadow-2xl">
-        <div className="flex justify-between items-center text-xs font-bold text-amber-300">
-          <span>3루</span>
-          <span>2루</span>
-          <span>1루 🏃</span>
-        </div>
+      <div className="relative w-64 h-64 bg-slate-900 border-4 border-amber-700 rounded-3xl p-4 flex flex-col items-center justify-between mb-6 shadow-2xl">
+        <span className="text-xs font-bold text-amber-300">내야 다이아몬드 잔디</span>
 
-        {/* 주자 달리는 게이지 */}
-        <div className="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
-          <div style={{ width: `${buntProgress}%` }} className="bg-red-500 h-full transition-all duration-100" />
-        </div>
+        <button
+          onClick={handleCatch}
+          disabled={buntCatch}
+          className={`text-5xl transition-transform active:scale-90 ${buntCatch ? 'opacity-30' : 'animate-bounce cursor-pointer'}`}
+        >
+          ⚾
+        </button>
 
-        <div className="text-center text-4xl">
-          {pickedUp ? '🧤 공 포구 완료! (송구 준비)' : '⚾ 떼구르르... 번트 타구!'}
-        </div>
+        <span className="text-xs text-slate-300">
+          {buntCatch ? '✅ 타구 포구 완료! 1루수 글러브로 송구!' : '굴러오는 야구공을 터치해 포구하세요!'}
+        </span>
       </div>
 
-      {!pickedUp ? (
-        <button
-          onClick={handlePickUp}
-          className="w-full max-w-xs py-5 bg-amber-600 hover:bg-amber-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform"
-        >
-          🏃‍♂️ 번트공으로 대시 & 맨손 포구!
-        </button>
-      ) : (
-        <div className="w-full max-w-xs flex flex-col gap-3">
+      {buntCatch && (
+        <div className="w-full max-w-xs flex flex-col gap-2 mb-6 animate-in fade-in">
+          <div className="flex justify-between text-xs font-bold text-amber-300">
+            <span>악송구 (좌)</span>
+            <span className="text-emerald-400">1루수 미트 (중앙 50)</span>
+            <span>악송구 (우)</span>
+          </div>
           <input
             type="range"
-            min="10"
+            min="0"
             max="100"
-            value={throwGauge}
-            onChange={e => setThrowGauge(Number(e.target.value))}
-            className="w-full accent-red-500"
+            value={throwAcc}
+            onChange={e => setThrowAcc(Number(e.target.value))}
+            className="w-full accent-amber-400"
           />
-          <button
-            onClick={handleThrow}
-            className="w-full py-5 bg-red-600 hover:bg-red-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform"
-          >
-            🎯 1루로 전광석화 송구!
-          </button>
         </div>
       )}
 
+      <button
+        onClick={handleThrow}
+        disabled={!buntCatch}
+        className={`w-full max-w-xs py-5 rounded-2xl font-black text-xl transition-all shadow-xl active:scale-95 ${
+          buntCatch ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-4 ring-white' : 'bg-slate-800 text-slate-500'
+        }`}
+      >
+        {buntCatch ? '🎯 1루로 정확히 송구!!' : '공을 먼저 잡으세요'}
+      </button>
+
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">{outs}명 아웃 성공!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (필드형 민첩 수비)</p>
-        </div>
+        <GameResultOverlay
+          title="⚾ 타자 주자 1루 아웃!"
+          subtitle="기습 번트 타구에 즉각 전진 대시하여 1루수로 정확한 노바운드 송구를 성공시켰습니다."
+          score={Math.abs(throwAcc - 50) <= 12 ? 500 : 250}
+          badge="철벽 내야 수비수"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );

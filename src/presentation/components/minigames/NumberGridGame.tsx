@@ -58,7 +58,7 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
+    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden select-none">
       <div className="absolute inset-0 bg-red-900/10 animate-pulse"></div>
       
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">

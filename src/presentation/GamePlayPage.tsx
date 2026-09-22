@@ -207,13 +207,13 @@ export const GamePlayPage = () => {
   const { addGameResult } = usePlayerProfile();
   const standaloneTiming = useRef({
     startedAt: new Date().toISOString(),
-    endTime: Date.now() + 10000,
+    endTime: Date.now() + 90000,
   });
 
   const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
     standaloneTiming.current = {
       startedAt: new Date().toISOString(),
-      endTime: Date.now() + 10000,
+      endTime: Date.now() + 90000,
     };
     setDifficulty(selected);
   };

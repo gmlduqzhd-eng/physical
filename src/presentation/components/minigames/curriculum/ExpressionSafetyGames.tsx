@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
+import { GameResultOverlay } from './GameResultOverlay';
 
 interface GameProps {
   groupId: string;
@@ -10,13 +11,21 @@ interface GameProps {
 /* =========================================================================
    21. 🚨 cpr-compression-110 (골든타임 CPR 100~120 BPM 압박)
    ========================================================================= */
-export const CprCompression110 = ({ groupId, enqueueAction }: GameProps) => {
+export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [compressions, setCompressions] = useState(0);
   const [bpm, setBpm] = useState(110);
   const [heartHealth, setHeartHealth] = useState(20);
   const [finished, setFinished] = useState(false);
   const pressHistory = useRef<number[]>([]);
   const TARGET_COUNT = 30;
+
+  const handleRestart = () => {
+    pressHistory.current = [];
+    setCompressions(0);
+    setBpm(110);
+    setHeartHealth(20);
+    setFinished(false);
+  };
 
   const handleCompress = () => {
     if (finished) return;
@@ -62,9 +71,7 @@ export const CprCompression110 = ({ groupId, enqueueAction }: GameProps) => {
         가슴뼈 아래 1/2 지점을 깍지 낀 손으로 분당 100~120회의 일정한 박자로 압박하세요!
       </p>
 
-      {/* 심장 & 흉부 압박 위치 그래픽 */}
       <div className="relative w-64 h-64 rounded-full bg-slate-900 border-4 border-red-700 flex flex-col items-center justify-center mb-6 shadow-2xl overflow-hidden">
-        {/* 심장 박동 게이지 배경 */}
         <div style={{ height: `${heartHealth}%` }} className="absolute bottom-0 w-full bg-red-600/30 transition-all duration-200" />
 
         <div className={`text-6xl mb-2 transition-transform duration-100 ${isBpmGood ? 'scale-110' : 'scale-95'}`}>
@@ -82,10 +89,14 @@ export const CprCompression110 = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">🎉 골든타임 생명 구조!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (CPR 심폐소생술 마스터)</p>
-        </div>
+        <GameResultOverlay
+          title="🎉 골든타임 생명 구조 성공!"
+          subtitle="가슴 압박 30회를 100~120 BPM 템포로 완수하여 소중한 생명을 살렸습니다."
+          score={500}
+          badge="골든타임 CPR 구조대원"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -94,11 +105,18 @@ export const CprCompression110 = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    22. ⚡ aed-defibrillator-pad (자동심장충격기 AED 패드 부착)
    ========================================================================= */
-export const AedDefibrillatorPad = ({ groupId, enqueueAction }: GameProps) => {
-  const [pad1Attached, setPad1Attached] = useState(false); // 우측 쇄골 아래
-  const [pad2Attached, setPad2Attached] = useState(false); // 좌측 젖꼭지 아래
+export const AedDefibrillatorPad: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [pad1Attached, setPad1Attached] = useState(false);
+  const [pad2Attached, setPad2Attached] = useState(false);
   const [shockReady, setShockReady] = useState(false);
   const [finished, setFinished] = useState(false);
+
+  const handleRestart = () => {
+    setPad1Attached(false);
+    setPad2Attached(false);
+    setShockReady(false);
+    setFinished(false);
+  };
 
   useEffect(() => {
     if (pad1Attached && pad2Attached && !shockReady) {
@@ -128,29 +146,25 @@ export const AedDefibrillatorPad = ({ groupId, enqueueAction }: GameProps) => {
         패드 1은 오른쪽 쇄골 아래, 패드 2는 왼쪽 젖꼭지 아래에 정확히 부착하세요!
       </p>
 
-      {/* 인체 상체 실루엣 */}
       <div className="relative w-64 h-72 bg-slate-900 border-4 border-amber-600 rounded-3xl p-4 flex flex-col items-center justify-between mb-6 shadow-2xl">
-        {/* 머리 */}
         <div className="w-14 h-14 rounded-full bg-slate-800 border-2 border-slate-700 -mt-2" />
 
-        {/* 패드 1 부착 위치 (우측 쇄골 아래 - 화면상 왼쪽 위) */}
         <button
           onClick={() => { setPad1Attached(true); sfxTap(); }}
           className={`absolute top-16 left-8 w-20 h-16 rounded-2xl border-2 font-bold text-xs flex flex-col items-center justify-center transition-all ${
             pad1Attached ? 'bg-amber-400 text-amber-950 border-white shadow-lg' : 'bg-slate-800/80 border-dashed border-amber-400 text-amber-300 animate-pulse'
           }`}
         >
-          {pad1Attached ? '✅ 패드 1 부착' : '패드 1 부착 (우측 쇄골)'}
+          {pad1Attached ? '✅ 패드 1 부착' : '패드 1 (우측 쇄골)'}
         </button>
 
-        {/* 패드 2 부착 위치 (좌측 옆구리/젖꼭지 아래 - 화면상 오른쪽 아래) */}
         <button
           onClick={() => { setPad2Attached(true); sfxTap(); }}
           className={`absolute bottom-16 right-8 w-20 h-16 rounded-2xl border-2 font-bold text-xs flex flex-col items-center justify-center transition-all ${
             pad2Attached ? 'bg-amber-400 text-amber-950 border-white shadow-lg' : 'bg-slate-800/80 border-dashed border-amber-400 text-amber-300 animate-pulse'
           }`}
         >
-          {pad2Attached ? '✅ 패드 2 부착' : '패드 2 부착 (좌측 옆구리)'}
+          {pad2Attached ? '✅ 패드 2 부착' : '패드 2 (좌측 옆구리)'}
         </button>
       </div>
 
@@ -168,10 +182,14 @@ export const AedDefibrillatorPad = ({ groupId, enqueueAction }: GameProps) => {
       )}
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">⚡ 제세동 정상 충격 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (AED 응급 구조 역량)</p>
-        </div>
+        <GameResultOverlay
+          title="⚡ 제세동 정상 충격 완료!"
+          subtitle="전극 패드 2곳의 정확한 위치 부착 및 안전 수칙을 완벽히 이행했습니다."
+          score={500}
+          badge="AED 심장 지킴이"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -180,12 +198,17 @@ export const AedDefibrillatorPad = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    23. 🛟 water-rescue-throw (물놀이 안전 익수자 구명환 투척)
    ========================================================================= */
-export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
+export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [distance, setDistance] = useState(50);
   const [isThrowing, setIsThrowing] = useState(false);
   const [finished, setFinished] = useState(false);
-  // 익수자 위치: 65 ~ 80
   const TARGET_LOC = 70;
+
+  const handleRestart = () => {
+    setIsThrowing(false);
+    setDistance(50);
+    setFinished(false);
+  };
 
   const handleThrow = () => {
     if (isThrowing || finished) return;
@@ -205,10 +228,10 @@ export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
       enqueueAction({
         id: Math.random().toString(),
         type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: isAccurate ? 500 : 200 },
+        payload: { id: groupId, amount: isAccurate ? 500 : 250 },
         timestamp: Date.now()
       });
-    }, 1000);
+    }, 900);
   };
 
   return (
@@ -218,16 +241,13 @@ export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
         직접 뛰어들지 말고, 물에 빠진 친구의 바로 앞 위치로 튜브를 던지세요!
       </p>
 
-      {/* 강물/수영장 시각화 */}
       <div className="relative w-72 h-64 bg-blue-900 border-4 border-sky-600 rounded-3xl p-4 flex flex-col justify-between mb-6 overflow-hidden shadow-2xl">
         <span className="text-[10px] text-sky-300">물결 유속 🌊</span>
 
-        {/* 익수자 위치 */}
         <div style={{ left: `${TARGET_LOC}%` }} className="absolute top-1/2 -translate-y-1/2 text-3xl animate-bounce">
           🏊 (도와줘요!)
         </div>
 
-        {/* 날아가는 구명환 */}
         <div
           style={{ left: isThrowing ? `${distance}%` : '10%' }}
           className="absolute bottom-6 text-4xl transition-all duration-700"
@@ -236,11 +256,10 @@ export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
         </div>
       </div>
 
-      {/* 거리 슬라이더 */}
       <div className="w-full max-w-xs flex flex-col gap-2 mb-6">
         <div className="flex justify-between text-xs font-bold text-sky-300">
           <span>가까이 던지기</span>
-          <span>익수자 위치 조준</span>
+          <span>익수자 조준</span>
           <span>멀리 던지기</span>
         </div>
         <input
@@ -263,10 +282,14 @@ export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-emerald-400 mb-2">구조 튜브 전달 완료!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (수상 안전 구조 원칙)</p>
-        </div>
+        <GameResultOverlay
+          title="🛟 구조 튜브 투척 성공!"
+          subtitle="물놀이 익수 사고 시 뛰어들지 않고 도구를 활용하는 안전 원칙을 지켰습니다."
+          score={Math.abs(distance - TARGET_LOC) <= 8 ? 500 : 250}
+          badge="수상 안전 라이프가드"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -275,7 +298,7 @@ export const WaterRescueThrow = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    24. ☀️ heatwave-pm25-shield (폭염·미세먼지 체육 안전 디시전)
    ========================================================================= */
-export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
+export const HeatwavePm25Shield: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [scenarioIdx, setScenarioIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -299,6 +322,13 @@ export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
     }
   ];
 
+  const handleRestart = () => {
+    scoreRef.current = 0;
+    setScenarioIdx(0);
+    setScore(0);
+    setFinished(false);
+  };
+
   const current = SCENARIOS[scenarioIdx];
 
   const handleChoice = (choice: string) => {
@@ -319,7 +349,7 @@ export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
       enqueueAction({
         id: Math.random().toString(),
         type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: scoreRef.current },
+        payload: { id: groupId, amount: 500 },
         timestamp: Date.now()
       });
     } else {
@@ -334,14 +364,12 @@ export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
         가상 기상 특보를 보고 건강을 지키는 올바른 체육 활동 대처법을 선택하세요!
       </p>
 
-      {/* 기상 특보 카드 */}
       <div className="w-full max-w-sm bg-slate-900 border-2 border-amber-500 rounded-3xl p-5 mb-6 text-center shadow-2xl">
         <span className="text-xs font-bold text-amber-400">기상 경보 상황</span>
         <div className="text-lg font-black text-white mt-1 mb-2">{current.condition}</div>
         <p className="text-xs text-slate-300">이 상황에서 가장 바람직한 체육 수업 방법은?</p>
       </div>
 
-      {/* 4지선다 선택지 */}
       <div className="w-full max-w-sm flex flex-col gap-2.5 mb-6">
         {current.choices.map((c, i) => (
           <button
@@ -355,10 +383,14 @@ export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">안전 방패 완성!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (환경 기상 안전 대처)</p>
-        </div>
+        <GameResultOverlay
+          title="☀️ 환경 안전 디시전 완벽 통과!"
+          subtitle="폭염, 한파, 미세먼지 등 기후 변화에 맞는 현명한 체육 대처법을 선택했습니다."
+          score={500}
+          badge="환경 기상 안전 박사"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -367,8 +399,8 @@ export const HeatwavePm25Shield = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    25. 🩹 rice-treatment-firstaid (발목 염좌 RICE 4단계 응급처치)
    ========================================================================= */
-export const RiceTreatmentFirstaid = ({ groupId, enqueueAction }: GameProps) => {
-  const [step, setStep] = useState(0); // 0:R, 1:I, 2:C, 3:E
+export const RiceTreatmentFirstaid: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+  const [step, setStep] = useState(0);
   const [finished, setFinished] = useState(false);
 
   const RICE_STEPS = [
@@ -377,6 +409,11 @@ export const RiceTreatmentFirstaid = ({ groupId, enqueueAction }: GameProps) => 
     { key: 'C', name: 'Compression (압박)', desc: '부종을 방지하기 위해 탄력 붕대로 적절히 감기', icon: '🩹' },
     { key: 'E', name: 'Elevation (올림)', desc: '심장보다 높게 다리를 올려 피가 몰리는 것 방지하기', icon: '⬆️' },
   ];
+
+  const handleRestart = () => {
+    setStep(0);
+    setFinished(false);
+  };
 
   const current = RICE_STEPS[step];
 
@@ -410,7 +447,6 @@ export const RiceTreatmentFirstaid = ({ groupId, enqueueAction }: GameProps) => 
         체육 수업 중 발목을 삐었을 때 R-I-C-E 원칙에 따라 순서대로 처치하세요!
       </p>
 
-      {/* RICE 카드 */}
       <div className="w-full max-w-sm bg-slate-900 border-2 border-teal-500 rounded-3xl p-6 flex flex-col items-center text-center mb-6 shadow-2xl">
         <div className="text-6xl mb-3 animate-bounce">{current.icon}</div>
         <h2 className="text-xl font-black text-teal-300 mb-2">{current.name}</h2>
@@ -425,10 +461,14 @@ export const RiceTreatmentFirstaid = ({ groupId, enqueueAction }: GameProps) => 
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-teal-400 mb-2">🩹 응급처치 완벽 숙지!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (스포츠 상해 대처)</p>
-        </div>
+        <GameResultOverlay
+          title="🩹 R.I.C.E 처치 완성!"
+          subtitle="Rest-Ice-Compression-Elevation 4단계 응급처치 원칙을 완벽히 마스터했습니다."
+          score={500}
+          badge="응급처치 안전 요원"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -437,17 +477,22 @@ export const RiceTreatmentFirstaid = ({ groupId, enqueueAction }: GameProps) => 
 /* =========================================================================
    26. 🕺 step-mania-4lane (4레인 댄스 스텝 콤보 시퀀서)
    ========================================================================= */
-export const StepMania4Lane = ({ groupId, enqueueAction }: GameProps) => {
+export const StepMania4Lane: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [combo, setCombo] = useState(0);
   const [activeLane, setActiveLane] = useState<number>(0);
   const [finished, setFinished] = useState(false);
-  const comboRef = useRef(0);
   const TARGET_COMBO = 12;
 
   const LANES = ['◀ 좌측', '▲ 전방', '▼ 후방', '▶ 우측'];
 
   const nextStep = () => {
     setActiveLane(Math.floor(Math.random() * 4));
+  };
+
+  const handleRestart = () => {
+    setCombo(0);
+    setFinished(false);
+    nextStep();
   };
 
   useEffect(() => {
@@ -461,7 +506,6 @@ export const StepMania4Lane = ({ groupId, enqueueAction }: GameProps) => {
       hapticTap();
       const next = combo + 1;
       setCombo(next);
-      comboRef.current = next;
 
       if (next >= TARGET_COMBO) {
         setFinished(true);
@@ -493,7 +537,6 @@ export const StepMania4Lane = ({ groupId, enqueueAction }: GameProps) => {
         빛나는 방향 레인의 스텝 발판을 박자에 맞추어 콤보로 밟으세요!
       </p>
 
-      {/* 4레인 스텝 발판 */}
       <div className="grid grid-cols-4 gap-2 w-full max-w-sm h-64 bg-slate-900 border-4 border-fuchsia-700 rounded-3xl p-3 mb-6 shadow-2xl">
         {LANES.map((label, idx) => (
           <button
@@ -512,10 +555,14 @@ export const StepMania4Lane = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-pink-400 mb-2">🔥 12 COMBO 피버 클리어!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (리듬 스텝 협응력)</p>
-        </div>
+        <GameResultOverlay
+          title="🔥 12 COMBO 피버 클리어!"
+          subtitle="박자에 맞는 완벽한 방향 전환과 스텝 협응력을 보여주었습니다."
+          score={500}
+          badge="리듬 스텝 댄서"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -524,13 +571,18 @@ export const StepMania4Lane = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    27. 👥 shadow-pose-sculpture (신체 실루엣 섀도우 조형 매칭)
    ========================================================================= */
-export const ShadowPoseSculpture = ({ groupId, enqueueAction }: GameProps) => {
+export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [armAngle, setArmAngle] = useState(45);
   const [legAngle, setLegAngle] = useState(60);
   const [finished, setFinished] = useState(false);
 
-  // 정답 타깃 각도: arm: 80~100 (양팔 수평), leg: 30~50 (다리 뻗음)
   const isMatched = Math.abs(armAngle - 90) <= 12 && Math.abs(legAngle - 40) <= 12;
+
+  const handleRestart = () => {
+    setArmAngle(45);
+    setLegAngle(60);
+    setFinished(false);
+  };
 
   const handleMatch = () => {
     if (!isMatched || finished) return;
@@ -551,20 +603,15 @@ export const ShadowPoseSculpture = ({ groupId, enqueueAction }: GameProps) => {
         배경의 황금빛 무용수 실루엣과 동일한 신체 선이 되도록 관절 각도를 맞추세요!
       </p>
 
-      {/* 조형 실루엣 캔버스 */}
       <div className="relative w-64 h-64 bg-slate-900 border-4 border-amber-500/60 rounded-3xl flex items-center justify-center mb-6 shadow-2xl overflow-hidden">
-        {/* 황금빛 실루엣 가이드 */}
         <div className="text-8xl opacity-30 text-amber-300 pointer-events-none">
           🤸
         </div>
 
-        {/* 내 신체 포즈 실루엣 SVG */}
         <svg viewBox="0 0 100 100" className="absolute w-44 h-44">
           <circle cx="50" cy="25" r="9" fill="#38BDF8" />
           <line x1="50" y1="34" x2="50" y2="65" stroke="#38BDF8" strokeWidth="8" strokeLinecap="round" />
-          {/* 팔 각도 */}
           <line x1="50" y1="42" x2={50 + Math.cos(armAngle * Math.PI / 180) * 35} y2={42 - Math.sin(armAngle * Math.PI / 180) * 35} stroke="#F43F5E" strokeWidth="7" strokeLinecap="round" />
-          {/* 다리 각도 */}
           <line x1="50" y1="65" x2={50 + Math.cos(legAngle * Math.PI / 180) * 35} y2={65 + Math.sin(legAngle * Math.PI / 180) * 35} stroke="#34D399" strokeWidth="7" strokeLinecap="round" />
         </svg>
       </div>
@@ -591,10 +638,14 @@ export const ShadowPoseSculpture = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-amber-400 mb-2">🎭 조형 예술 포즈 완성!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (신체 표현 조형성)</p>
-        </div>
+        <GameResultOverlay
+          title="🎭 조형 예술 포즈 완성!"
+          subtitle="공간과 신체 선의 심미적 조화를 이루어 예술적 포즈를 완성했습니다."
+          score={500}
+          badge="신체 조형 예술가"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -603,11 +654,16 @@ export const ShadowPoseSculpture = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    28. 🌊 ribbon-wave-stream (리듬체조 리본 나선형 궤적)
    ========================================================================= */
-export const RibbonWaveStream = ({ groupId, enqueueAction }: GameProps) => {
+export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [trailCount, setTrailCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const isTracing = useRef(false);
   const TARGET_TRAIL = 20;
+
+  const handleRestart = () => {
+    setTrailCount(0);
+    setFinished(false);
+  };
 
   const handlePointerMove = () => {
     if (!isTracing.current || finished) return;
@@ -634,7 +690,6 @@ export const RibbonWaveStream = ({ groupId, enqueueAction }: GameProps) => {
         손가락을 멈추지 않고 연속으로 둥글게 나선형을 그리며 리본 파동을 만드세요!
       </p>
 
-      {/* 리본 궤적 드로잉 영역 */}
       <div
         onPointerDown={() => { isTracing.current = true; sfxTap(); }}
         onPointerUp={() => { isTracing.current = false; }}
@@ -647,10 +702,14 @@ export const RibbonWaveStream = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-pink-400 mb-2">🎀 우아한 리본 체조 완성!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (도구 표현 연속성)</p>
-        </div>
+        <GameResultOverlay
+          title="🎀 우아한 리본 체조 완성!"
+          subtitle="도구와 신체의 흐름을 끊김 없이 연결하여 나선 궤적을 연출했습니다."
+          score={500}
+          badge="리듬체조 리본 요정"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -659,9 +718,8 @@ export const RibbonWaveStream = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    29. 🎭 emotion-freeze-mime (희로애락 감정 마임 정지 포즈)
    ========================================================================= */
-export const EmotionFreezeMime = ({ groupId, enqueueAction }: GameProps) => {
+export const EmotionFreezeMime: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [themeIdx, setThemeIdx] = useState(0);
-  const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
   const THEMES = [
@@ -671,14 +729,17 @@ export const EmotionFreezeMime = ({ groupId, enqueueAction }: GameProps) => {
     { name: '당당함(勇)', emoji: '🦁', desc: '가슴을 내밀고 허리에 두 손을 얹은 영웅 포즈!' },
   ];
 
+  const handleRestart = () => {
+    setThemeIdx(0);
+    setFinished(false);
+  };
+
   const current = THEMES[themeIdx];
 
   const handlePerform = () => {
     if (finished) return;
     sfxCoin();
     hapticTap();
-    const nextScore = score + 1;
-    setScore(nextScore);
 
     if (themeIdx + 1 >= THEMES.length) {
       setFinished(true);
@@ -701,7 +762,6 @@ export const EmotionFreezeMime = ({ groupId, enqueueAction }: GameProps) => {
         제시된 감정 테마를 신체 전체로 표현하고 3초간 정지 포즈를 취하세요!
       </p>
 
-      {/* 감정 카드 */}
       <div className="w-full max-w-sm bg-slate-900 border-4 border-indigo-600 rounded-3xl p-6 flex flex-col items-center text-center mb-6 shadow-2xl">
         <div className="text-7xl mb-3 animate-bounce">{current.emoji}</div>
         <h2 className="text-2xl font-black text-amber-300 mb-1">{current.name}</h2>
@@ -716,10 +776,14 @@ export const EmotionFreezeMime = ({ groupId, enqueueAction }: GameProps) => {
       </button>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-indigo-300 mb-2">🎭 최고의 연기 마임!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (감정 신체 극대화)</p>
-        </div>
+        <GameResultOverlay
+          title="🎭 감정 신체 극장 완성!"
+          subtitle="희로애락의 감정을 몸짓과 정지 포즈로 극대화하여 풍부하게 표현했습니다."
+          score={500}
+          badge="신체 마임 예술가"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
@@ -728,7 +792,7 @@ export const EmotionFreezeMime = ({ groupId, enqueueAction }: GameProps) => {
 /* =========================================================================
    30. 🪞 partner-mirror-duet (거울 짝 듀엣 무용 타이밍 매칭)
    ========================================================================= */
-export const PartnerMirrorDuet = ({ groupId, enqueueAction }: GameProps) => {
+export const PartnerMirrorDuet: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [partnerMotion, setPartnerMotion] = useState<'wave' | 'spin' | 'bow'>('wave');
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -742,6 +806,12 @@ export const PartnerMirrorDuet = ({ groupId, enqueueAction }: GameProps) => {
   const nextMotion = () => {
     const list: ('wave' | 'spin' | 'bow')[] = ['wave', 'spin', 'bow'];
     setPartnerMotion(list[Math.floor(Math.random() * list.length)]);
+  };
+
+  const handleRestart = () => {
+    setScore(0);
+    setFinished(false);
+    nextMotion();
   };
 
   useEffect(() => {
@@ -779,7 +849,6 @@ export const PartnerMirrorDuet = ({ groupId, enqueueAction }: GameProps) => {
         거울 속 파트너 무용수의 동작과 100% 호흡을 맞추어 동일한 동작을 선택하세요!
       </p>
 
-      {/* 거울 속 파트너 박스 */}
       <div className="w-full max-w-sm bg-slate-900 border-4 border-cyan-500 rounded-3xl p-6 flex flex-col items-center text-center mb-6 shadow-2xl">
         <span className="text-xs font-bold text-cyan-300 mb-2">거울 속 파트너 무용수</span>
         <div className="text-6xl mb-2 animate-pulse">
@@ -804,10 +873,14 @@ export const PartnerMirrorDuet = ({ groupId, enqueueAction }: GameProps) => {
       </div>
 
       {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center p-6 animate-in fade-in">
-          <div className="text-5xl font-black text-cyan-400 mb-2">✨ 환상의 듀엣 무용!</div>
-          <p className="text-lg text-white font-bold mb-4">+500점 획득 (파트너 협력 표현)</p>
-        </div>
+        <GameResultOverlay
+          title="✨ 환상의 듀엣 무용 성공!"
+          subtitle="파트너와 호흡을 맞추어 일체감 있는 무용 동작을 조화롭게 이끌어냈습니다."
+          score={500}
+          badge="듀엣 무용 호흡왕"
+          onRestart={handleRestart}
+          onExit={onExit}
+        />
       )}
     </div>
   );
