@@ -1532,51 +1532,63 @@ export const GameHub = () => {
       <div className="relative overflow-hidden border-b border-slate-800/80">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 via-transparent to-transparent" />
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[220px] bg-cyan-500/10 rounded-full blur-[100px]" />
-        <div className="relative z-10 flex flex-col items-center pt-8 pb-5 px-6">
-          {/* 우측 상단 버튼들 */}
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+
+        {/* 상단 네비게이션 Row (버튼과 배지 겹침 원천 방지) */}
+        <div className="relative z-20 w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-center justify-between gap-2">
+          {/* 2022 개정 배지 */}
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full shrink-0">
+            <Award className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+            <span className="text-[11px] font-bold text-cyan-300 whitespace-nowrap">2022 개정 체육과 연계</span>
+          </div>
+
+          {/* 우측 상단 액션 버튼들 */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => navigate('/manual')}
-              className="h-10 px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-lg text-xs font-bold"
+              className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
               style={{
-                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                 borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
                 color: isDark ? '#67e8f9' : '#0891b2',
               }}
             >
-              <BookOpen className="w-3.5 h-3.5" /> 사용 설명서
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xs:inline">사용 설명서</span>
+              <span className="xs:hidden">설명서</span>
             </button>
             <button
               onClick={() => navigate('/manual?tab=lesson')}
-              className="h-10 px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-lg text-xs font-bold"
+              className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
               style={{
-                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                 borderColor: isDark ? 'rgba(88, 28, 135, 0.6)' : 'rgba(192, 132, 252, 0.8)',
                 color: isDark ? '#d8b4fe' : '#7c3aed',
               }}
             >
-              <Sparkles className="w-3.5 h-3.5" /> 지도안 생성기
+              <Sparkles className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xs:inline">지도안 생성기</span>
+              <span className="xs:hidden">지도안</span>
             </button>
             <button
               onClick={toggleTheme}
-              className="w-10 h-10 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border shadow-lg"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border shadow-md shrink-0"
               style={{
-                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.8)' : 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)',
                 borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
               }}
               title={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
             >
-              {isDark ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
+              {isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             </button>
           </div>
-          <div className="flex items-center gap-2 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full mb-3">
-            <Award className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-xs font-bold text-cyan-300">2022 개정 교육과정 초등 체육과 연계</span>
-          </div>
-          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 text-center">
+        </div>
+
+        {/* Hero Title & Desc */}
+        <div className="relative z-10 flex flex-col items-center pt-2 pb-5 px-6">
+          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 text-center whitespace-nowrap">
             땀방울 원정대
           </h1>
-          <p className="text-slate-400 font-medium mt-1.5 text-center text-xs md:text-sm max-w-xl">
+          <p className="text-slate-400 font-medium mt-1.5 text-center text-xs md:text-sm max-w-xl break-keep leading-relaxed">
             초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400 font-bold">운동</span> · <span className="text-blue-400 font-bold">스포츠</span> · <span className="text-purple-400 font-bold">표현</span>) 및 성취기준에 맞춘 스마트 체육 미니게임 플랫폼
           </p>
         </div>
@@ -1586,21 +1598,21 @@ export const GameHub = () => {
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
 
         {/* 🏆 내 기록 카드 */}
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 mb-3">
+        <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 mb-3 shadow-lg">
           {!hasProfile ? (
             <div className="flex flex-col items-center gap-3">
-              <p className="text-slate-400 text-sm font-bold">👋 닉네임을 설정하면 게임 점수가 누적됩니다!</p>
-              <div className="flex gap-2 w-full max-w-xs">
+              <p className="text-slate-400 text-sm font-bold text-center break-keep">👋 닉네임을 설정하면 게임 점수가 누적됩니다!</p>
+              <div className="flex gap-2 w-full max-w-sm">
                 <input
                   value={nicknameInput}
                   onChange={e => setNicknameInput(e.target.value)}
                   placeholder="이름(학교명)을 입력하세요"
-                  className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
+                  className="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   onKeyDown={e => { if (e.key === 'Enter' && nicknameInput.trim()) { createProfile(nicknameInput.trim()); setNicknameInput(''); } }}
                 />
                 <button
                   onClick={() => { if (nicknameInput.trim()) { createProfile(nicknameInput.trim()); setNicknameInput(''); } }}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-sm transition-colors"
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-sm whitespace-nowrap shrink-0 transition-transform active:scale-95 shadow-md"
                 >
                   시작!
                 </button>
@@ -1622,25 +1634,25 @@ export const GameHub = () => {
                         autoFocus
                         onKeyDown={e => { if (e.key === 'Enter' && nicknameInput.trim()) { updateNickname(nicknameInput.trim()); setEditingNickname(false); } }}
                       />
-                      <button onClick={() => { if (nicknameInput.trim()) { updateNickname(nicknameInput.trim()); setEditingNickname(false); } }} className="px-2 py-1 bg-cyan-600 text-white rounded-lg text-xs font-bold">확인</button>
-                      <button onClick={() => setEditingNickname(false)} className="px-2 py-1 bg-slate-700 text-slate-300 rounded-lg text-xs font-bold">취소</button>
+                      <button onClick={() => { if (nicknameInput.trim()) { updateNickname(nicknameInput.trim()); setEditingNickname(false); } }} className="px-2 py-1 bg-cyan-600 text-white rounded-lg text-xs font-bold whitespace-nowrap">확인</button>
+                      <button onClick={() => setEditingNickname(false)} className="px-2 py-1 bg-slate-700 text-slate-300 rounded-lg text-xs font-bold whitespace-nowrap">취소</button>
                     </div>
                   ) : (
                     <>
-                      <span className="font-black text-white text-sm">{profile!.nickname}</span>
-                      <button onClick={() => { setNicknameInput(profile!.nickname); setEditingNickname(true); }} className="text-slate-500 hover:text-cyan-400 transition-colors">
-                        <Edit3 className="w-3 h-3" />
+                      <span className="font-black text-white text-sm truncate">{profile!.nickname}</span>
+                      <button onClick={() => { setNicknameInput(profile!.nickname); setEditingNickname(true); }} className="text-slate-500 hover:text-cyan-400 transition-colors shrink-0">
+                        <Edit3 className="w-3.5 h-3.5" />
                       </button>
                     </>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-500 font-bold">총 {profile!.totalPlays}회 플레이 · {Object.keys(profile!.playCounts).length}종 게임 경험</p>
+                <p className="text-[10px] text-slate-500 font-bold whitespace-nowrap">총 {profile!.totalPlays}회 플레이 · {Object.keys(profile!.playCounts).length}종 게임 경험</p>
               </div>
               <div className="text-right shrink-0">
                 <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">
                   {profile!.totalScore.toLocaleString()}
                 </div>
-                <div className="text-[10px] text-slate-500 font-bold">누적 점수</div>
+                <div className="text-[10px] text-slate-500 font-bold whitespace-nowrap">누적 점수</div>
               </div>
             </div>
           )}
@@ -1666,11 +1678,11 @@ export const GameHub = () => {
           <div className="px-4 md:px-8 max-w-5xl mx-auto pt-2 pb-1">
             <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-black text-amber-400 flex items-center gap-1.5">
+                <h3 className="text-sm font-black text-amber-400 flex items-center gap-1.5 whitespace-nowrap">
                   🏆 성취 뱃지 <span className="text-[10px] font-bold text-slate-500">({earnedCount}/{BADGE_DEFS.length})</span>
                 </h3>
                 {earnedCount === BADGE_DEFS.length && (
-                  <span className="px-2.5 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-950 text-[10px] font-black rounded-full shadow-lg animate-pulse">
+                  <span className="px-2.5 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-950 text-[10px] font-black rounded-full shadow-lg animate-pulse whitespace-nowrap">
                     🎉 ALL CLEAR!
                   </span>
                 )}
@@ -1689,7 +1701,7 @@ export const GameHub = () => {
                       title={earned ? `${b.name}: ${b.desc}` : `🔒 ${b.desc}`}
                     >
                       <span className={`text-2xl ${earned ? '' : 'opacity-50'}`}>{b.emoji}</span>
-                      <span className={`text-[10px] font-black text-center leading-tight ${earned ? 'text-white' : 'text-slate-600'}`}>
+                      <span className={`text-[10px] font-black text-center whitespace-nowrap ${earned ? 'text-white' : 'text-slate-600'}`}>
                         {b.name}
                       </span>
                       {!earned && (
@@ -1704,21 +1716,37 @@ export const GameHub = () => {
         );
       })()}
 
-      {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 */}
+      {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 (모바일 줄바꿈 방지) */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-black text-yellow-400 flex items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 mb-3">
+          <h2 className="text-sm sm:text-base font-black text-yellow-400 flex items-center gap-1.5 whitespace-nowrap">
             🌟 오늘의 추천 게임
           </h2>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowFavoritesOnly(!showFavoritesOnly)} className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all border ${showFavoritesOnly ? 'bg-yellow-500 text-yellow-900 border-yellow-400' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
-              <Star className={`w-3 h-3 ${showFavoritesOnly ? 'fill-yellow-900' : ''}`} /> 즐겨찾기 {favorites.size > 0 && `(${favorites.size})`}
+          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2">
+            <button
+              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+              className={`px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition-all border shrink-0 ${
+                showFavoritesOnly
+                  ? 'bg-yellow-500 text-yellow-900 border-yellow-400'
+                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
+              }`}
+            >
+              <Star className={`w-3.5 h-3.5 shrink-0 ${showFavoritesOnly ? 'fill-yellow-900' : ''}`} />
+              <span>즐겨찾기{favorites.size > 0 ? ` (${favorites.size})` : ''}</span>
             </button>
-            <button onClick={handleRandomPick} disabled={isSpinning} className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60">
-              <Shuffle className={`w-3 h-3 ${isSpinning ? 'animate-spin' : ''}`} /> 랜덤 뽑기
+            <button
+              onClick={handleRandomPick}
+              disabled={isSpinning}
+              className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60 shrink-0"
+            >
+              <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isSpinning ? 'animate-spin' : ''}`} />
+              <span>랜덤 뽑기</span>
             </button>
-            <button onClick={() => setShowWarmupRoulette(true)} className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-gradient-to-r from-amber-600 to-orange-600 text-white border border-amber-400/30 hover:from-amber-500 hover:to-orange-500 transition-all">
-              🎯 워밍업 룰렛
+            <button
+              onClick={() => setShowWarmupRoulette(true)}
+              className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-amber-600 to-orange-600 text-white border border-amber-400/30 hover:from-amber-500 hover:to-orange-500 transition-all shrink-0"
+            >
+              <span>🎯 워밍업 룰렛</span>
             </button>
           </div>
         </div>
@@ -1727,10 +1755,10 @@ export const GameHub = () => {
             const domainColor = game.domain === '운동' ? 'border-emerald-500/40 bg-emerald-950/30' : game.domain === '스포츠' ? 'border-blue-500/40 bg-blue-950/30' : 'border-purple-500/40 bg-purple-950/30';
             return (
               <button key={game.type} onClick={() => navigate(`/play/${game.type}`)} className={`p-3 rounded-xl border ${domainColor} flex items-center gap-3 hover:scale-[1.02] transition-all text-left group`}>
-                <span className="text-3xl">{game.emoji}</span>
+                <span className="text-3xl shrink-0">{game.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white truncate group-hover:text-cyan-300 transition-colors">{game.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate">{game.subCategory}</p>
+                  <p className="font-bold text-sm text-white truncate group-hover:text-cyan-300 transition-colors whitespace-nowrap">{game.name}</p>
+                  <p className="text-[10px] text-slate-400 truncate whitespace-nowrap">{game.subCategory}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 shrink-0" />
               </button>
@@ -1757,11 +1785,11 @@ export const GameHub = () => {
 
       {/* 대영역 선택 (운동 · 스포츠 · 표현) */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-5 mb-4">
-        <div className="flex items-center justify-between mb-2 px-1">
-          <h2 className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-yellow-400" /> 2022 개정 체육과 영역
+        <div className="flex items-center justify-between mb-2 px-1 gap-2">
+          <h2 className="text-xs font-bold text-slate-400 flex items-center gap-1.5 whitespace-nowrap">
+            <Sparkles className="w-3.5 h-3.5 text-yellow-400 shrink-0" /> 2022 개정 체육과 영역
           </h2>
-          <span className="text-[11px] text-slate-400">교육부 고시 제2022-33호 기반</span>
+          <span className="text-[11px] text-slate-400 whitespace-nowrap">교육부 고시 제2022-33호 기반</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {PE_DOMAINS.map(d => {

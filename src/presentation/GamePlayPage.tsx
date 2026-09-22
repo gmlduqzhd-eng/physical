@@ -509,15 +509,15 @@ export const GamePlayPage = () => {
           <h2 className="text-2xl font-black text-white mb-2">{gameInfo.name}</h2>
           <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
           <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">난이도를 선택하세요</p>
-          <div className="flex gap-3 w-full max-w-md">
-            <button onClick={() => handleSelectDifficulty('easy')} className="flex-1 py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30">
-              <span className="text-2xl">🌱</span><span className="text-sm">쉬움</span><span className="text-[10px] text-emerald-200">×0.7 배율</span>
+          <div className="flex gap-2 sm:gap-3 w-full max-w-md">
+            <button onClick={() => handleSelectDifficulty('easy')} className="flex-1 py-4 sm:py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30 shrink-0">
+              <span className="text-2xl">🌱</span><span className="text-sm whitespace-nowrap">쉬움</span><span className="text-[10px] text-emerald-200 whitespace-nowrap">×0.7 배율</span>
             </button>
-            <button onClick={() => handleSelectDifficulty('normal')} className="flex-1 py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105">
-              <span className="text-2xl">⚡</span><span className="text-sm">보통</span><span className="text-[10px] text-blue-200">×1.0 배율</span>
+            <button onClick={() => handleSelectDifficulty('normal')} className="flex-1 py-4 sm:py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105 shrink-0">
+              <span className="text-2xl">⚡</span><span className="text-sm whitespace-nowrap">보통</span><span className="text-[10px] text-blue-200 whitespace-nowrap">×1.0 배율</span>
             </button>
-            <button onClick={() => handleSelectDifficulty('hard')} className="flex-1 py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30">
-              <span className="text-2xl">🔥</span><span className="text-sm">어려움</span><span className="text-[10px] text-red-200">×1.5 배율</span>
+            <button onClick={() => handleSelectDifficulty('hard')} className="flex-1 py-4 sm:py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30 shrink-0">
+              <span className="text-2xl">🔥</span><span className="text-sm whitespace-nowrap">어려움</span><span className="text-[10px] text-red-200 whitespace-nowrap">×1.5 배율</span>
             </button>
           </div>
           <button onClick={() => navigate('/')} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
