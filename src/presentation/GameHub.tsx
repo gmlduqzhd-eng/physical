@@ -1379,11 +1379,20 @@ export const GameHub = () => {
   const todayPicks = useMemo(() => {
     const today = new Date();
     const seed = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+
+    // 문자열 전체를 사용하는 해시 함수 (djb2 변형)
+    const hashStr = (str: string, s: number) => {
+      let h = s;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+      }
+      return h >>> 0; // unsigned
+    };
+
     const shuffled = [...GAMES].sort((a, b) => {
-      const hashA = (seed * 31 + a.type.charCodeAt(0) * 17) % 10000;
-      const hashB = (seed * 31 + b.type.charCodeAt(0) * 17) % 10000;
-      return hashA - hashB;
+      return hashStr(a.type, seed) - hashStr(b.type, seed);
     });
+
     // 각 영역에서 1개씩 추천
     const picks: GameDef[] = [];
     for (const domain of ['운동', '스포츠', '표현'] as const) {

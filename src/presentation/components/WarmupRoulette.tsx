@@ -1,13 +1,20 @@
 import { useState, useRef, useCallback } from 'react';
-import { X, RotateCcw } from 'lucide-react';
+import { X, RotateCcw, Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { hapticHeavy, hapticTap, sfxSuccess } from '../../application/soundEffects';
 
-// 룰렛 섹터 데이터
+// 룰렛에서 사용하는 게임 정보 (type = 라우트 경로)
+interface RouletteGame {
+  type: string;
+  name: string;
+  emoji: string;
+}
+
 interface RouletteSection {
   label: string;
   emoji: string;
   color: string;
-  games: string[];
+  games: RouletteGame[];
 }
 
 const SECTIONS: RouletteSection[] = [
@@ -15,31 +22,56 @@ const SECTIONS: RouletteSection[] = [
     label: '상체',
     emoji: '💪',
     color: '#06b6d4',
-    games: ['에어 펀치!', '하늘 높이!', '좌우 흔들기', '양손 터치'],
+    games: [
+      { type: 'punch', name: '에어 펀치', emoji: '🥊' },
+      { type: 'arm_raise', name: '하늘 높이', emoji: '🙌' },
+      { type: 'wave', name: '좌우 흔들기', emoji: '👋' },
+      { type: 'multi_touch', name: '양손 터치', emoji: '🖐️' },
+    ],
   },
   {
     label: '하체',
     emoji: '🦵',
     color: '#8b5cf6',
-    games: ['점프왕!', '스쿼트 챌린지', '제자리 달리기', '지그재그 런!'],
+    games: [
+      { type: 'jump', name: '점프왕', emoji: '🦘' },
+      { type: 'squat', name: '스쿼트 챌린지', emoji: '🏋️' },
+      { type: 'run', name: '제자리 달리기', emoji: '🏃' },
+      { type: 'zigzag', name: '지그재그 런', emoji: '⚡' },
+    ],
   },
   {
     label: '전신',
     emoji: '🏃',
     color: '#f59e0b',
-    games: ['바운스 충전', '동물 체조', '화산 폭발', '얼음 땡!'],
+    games: [
+      { type: 'shake', name: '바운스 충전', emoji: '📳' },
+      { type: 'animal', name: '동물 체조', emoji: '🐻' },
+      { type: 'volcano', name: '화산 폭발', emoji: '🌋' },
+      { type: 'freeze', name: '얼음 땡', emoji: '🧊' },
+    ],
   },
   {
     label: '코어',
     emoji: '🧘',
     color: '#10b981',
-    games: ['플랭크 챌린지', '균형 잡기', '한 발 서기', '몸 비틀기!'],
+    games: [
+      { type: 'plank', name: '플랭크 챌린지', emoji: '💪' },
+      { type: 'tilt_balance', name: '균형 잡기', emoji: '⚖️' },
+      { type: 'one_leg', name: '한 발 서기', emoji: '🦩' },
+      { type: 'body_twist', name: '몸 비틀기', emoji: '🌀' },
+    ],
   },
   {
     label: '스트레칭',
     emoji: '🤸',
     color: '#ec4899',
-    games: ['스트레칭 타이머', '빙글빙글!', '원 그리기 대결', '댄스 포즈'],
+    games: [
+      { type: 'stretch', name: '스트레칭 타이머', emoji: '🧘' },
+      { type: 'speed_circle', name: '빙글빙글', emoji: '🔄' },
+      { type: 'circle_draw', name: '원 그리기 대결', emoji: '⭕' },
+      { type: 'dance_pose', name: '댄스 포즈', emoji: '💃' },
+    ],
   },
 ];
 
@@ -49,10 +81,11 @@ interface WarmupRouletteProps {
 }
 
 export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
+  const navigate = useNavigate();
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<RouletteSection | null>(null);
-  const [recommendedGame, setRecommendedGame] = useState<string | null>(null);
+  const [recommendedGame, setRecommendedGame] = useState<RouletteGame | null>(null);
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sectionAngle = 360 / SECTIONS.length; // 72° per section
@@ -74,13 +107,13 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
     // 회전 멈춘 뒤 결과 계산 (CSS transition 3.5초 대기)
     spinTimeoutRef.current = setTimeout(() => {
       // 멈춘 각도 → 어떤 섹션에 해당하는지 계산
-      // 포인터가 12시 방향(위쪽)에 있으므로 정규화
       const normalizedAngle = (360 - (totalRotation % 360) + 90) % 360;
       const sectionIndex = Math.floor(normalizedAngle / sectionAngle) % SECTIONS.length;
       const selected = SECTIONS[sectionIndex];
 
       setResult(selected);
-      setRecommendedGame(selected.games[Math.floor(Math.random() * selected.games.length)]);
+      const pick = selected.games[Math.floor(Math.random() * selected.games.length)];
+      setRecommendedGame(pick);
       setSpinning(false);
       hapticHeavy();
       sfxSuccess();
@@ -91,6 +124,13 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
     setResult(null);
     setRecommendedGame(null);
     setRotation(0);
+  };
+
+  const handlePlayGame = () => {
+    if (recommendedGame) {
+      onClose();
+      navigate(`/play/${recommendedGame.type}`);
+    }
   };
 
   if (!isOpen) return null;
@@ -228,16 +268,40 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
               <h3 className="text-xl font-black text-white mb-1">
                 오늘의 워밍업: <span style={{ color: result.color }}>{result.label}</span>
               </h3>
-              <div className="bg-slate-900 rounded-xl px-4 py-3 mt-3 border border-slate-700">
-                <p className="text-[11px] text-slate-400 font-bold mb-1">추천 미니게임</p>
-                <p className="text-lg font-black text-cyan-300">{recommendedGame}</p>
-              </div>
+
+              {/* 추천 미니게임 — 클릭하면 바로 실행 */}
               <button
-                onClick={handleReset}
-                className="mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-300 flex items-center gap-1.5 mx-auto transition-colors"
+                onClick={handlePlayGame}
+                className="w-full bg-slate-900 hover:bg-slate-800 rounded-xl px-4 py-3.5 mt-3 border border-cyan-500/40 hover:border-cyan-400 transition-all group cursor-pointer text-left"
               >
-                <RotateCcw className="w-3 h-3" /> 다시 돌리기
+                <p className="text-[11px] text-slate-400 font-bold mb-1">추천 미니게임 (탭하여 바로 시작!)</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{recommendedGame?.emoji}</span>
+                    <span className="text-lg font-black text-cyan-300 group-hover:text-cyan-200 transition-colors">
+                      {recommendedGame?.name}
+                    </span>
+                  </div>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Play className="w-4 h-4 text-white ml-0.5" />
+                  </div>
+                </div>
               </button>
+
+              <div className="flex gap-2 mt-3">
+                <button
+                  onClick={handleReset}
+                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-bold text-slate-300 flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <RotateCcw className="w-3 h-3" /> 다시 돌리기
+                </button>
+                <button
+                  onClick={handlePlayGame}
+                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 rounded-xl text-xs font-black text-white flex items-center justify-center gap-1.5 transition-all shadow-md active:scale-95"
+                >
+                  <Play className="w-3.5 h-3.5" /> 게임 시작!
+                </button>
+              </div>
             </div>
           )}
         </div>
