@@ -635,20 +635,47 @@ export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction
    16. 🏀 basketball-free-throw (포물선 각도 자유투)
    ========================================================================= */
 export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
-  const [angle, setAngle] = useState(45);
+  const [angle, setAngle] = useState(51); // 최적 초기값 51도
   const [isShooting, setIsShooting] = useState(false);
-  const [result, setResult] = useState<'goal' | 'miss' | null>(null);
+  const [ballPos, setBallPos] = useState<{ x: number; y: number; rot: number }>({ x: 45, y: 175, rot: 0 });
+  const [swishNet, setSwishNet] = useState(false);
+  const [result, setResult] = useState<'goal' | 'rim_hit' | null>(null);
   const [score, setScore] = useState(0);
   const [shots, setShots] = useState(0);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const animFrameId = useRef<number | null>(null);
   const TOTAL_SHOTS = 3;
+
+  // 농구장 좌표계: viewBox="0 0 300 230"
+  // 출발점 (45, 175) -> 림 중심 (235, 78)
+  const calculateY = (x: number, thetaDeg: number) => {
+    const x0 = 45;
+    const y0 = 175;
+    const dx = x - x0;
+    const rad = (thetaDeg * Math.PI) / 180;
+    const k = 0.00381; // 51도에서 정확히 (235, 78) 림 중심을 통과하는 포물선 계수
+    return y0 - Math.tan(rad) * dx + k * dx * dx;
+  };
+
+  // 실시간 점선 궤적 포인트 생성
+  const trajectoryPath = (() => {
+    let d = `M 45 175`;
+    const step = 8;
+    for (let x = 45 + step; x <= 265; x += step) {
+      const y = calculateY(x, angle);
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+    return d;
+  })();
 
   const handleRestart = () => {
     scoreRef.current = 0;
     setScore(0);
     setShots(0);
     setIsShooting(false);
+    setBallPos({ x: 45, y: 175, rot: 0 });
+    setSwishNet(false);
     setResult(null);
     setFinished(false);
   };
@@ -656,81 +683,218 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
   const handleShoot = () => {
     if (isShooting || finished) return;
     setIsShooting(true);
+    setResult(null);
+    setSwishNet(false);
     sfxTap();
     hapticTap();
 
-    const isGoal = angle >= 48 && angle <= 54;
+    const isGoal = angle >= 49 && angle <= 53;
+    const startTime = performance.now();
+    const duration = 900; // ms
 
-    setTimeout(() => {
-      setIsShooting(false);
-      setResult(isGoal ? 'goal' : 'miss');
-      if (isGoal) {
-        sfxSuccess();
-        const next = score + 1;
-        setScore(next);
-        scoreRef.current = next * 170;
+    const animateFlight = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(1, elapsed / duration);
+
+      // t: 0 -> 1 동안 x축 이동 (45 -> 목표 X)
+      // 골인이면 235(림 중심), 빗나가면 각도에 따라 착탄
+      const targetX = isGoal ? 235 : angle < 49 ? 215 : 255;
+      const currentX = 45 + (targetX - 45) * progress;
+      const currentY = calculateY(currentX, angle);
+      const currentRot = progress * -540; // 백스핀 회전
+
+      setBallPos({ x: currentX, y: currentY, rot: currentRot });
+
+      if (progress < 1) {
+        animFrameId.current = requestAnimationFrame(animateFlight);
       } else {
-        sfxPop();
-      }
+        // 비행 완료 후 림 통과 또는 튕김 연출
+        if (isGoal) {
+          sfxSuccess();
+          hapticTap();
+          setSwishNet(true);
+          setResult('goal');
+          const nextScore = score + 1;
+          setScore(nextScore);
+          scoreRef.current = nextScore * 170;
 
-      const nextShots = shots + 1;
-      setShots(nextShots);
+          // 공이 그물 밑으로 쑥 떨어짐
+          setTimeout(() => {
+            setBallPos({ x: 235, y: 115, rot: -720 });
+          }, 150);
+        } else {
+          sfxPop();
+          setResult('rim_hit');
+          // 림 맞고 튕겨 굴러떨어짐
+          setBallPos({ x: targetX > 235 ? 248 : 205, y: 150, rot: -600 });
+        }
 
-      if (nextShots >= TOTAL_SHOTS) {
+        const nextShots = shots + 1;
+        setShots(nextShots);
+
         setTimeout(() => {
-          setFinished(true);
-          enqueueAction({
-            id: Math.random().toString(),
-            type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
-            timestamp: Date.now()
-          });
-        }, 800);
-      } else {
-        setTimeout(() => setResult(null), 900);
+          setIsShooting(false);
+          setSwishNet(false);
+          if (nextShots >= TOTAL_SHOTS) {
+            setFinished(true);
+            enqueueAction({
+              id: Math.random().toString(),
+              type: 'INCREMENT_SCORE',
+              payload: { id: groupId, amount: Math.max(200, scoreRef.current) },
+              timestamp: Date.now(),
+            });
+          } else {
+            // 다음 슛을 위해 공 위치 복귀
+            setBallPos({ x: 45, y: 175, rot: 0 });
+            setResult(null);
+          }
+        }, 1200);
       }
-    }, 800);
+    };
+
+    animFrameId.current = requestAnimationFrame(animateFlight);
   };
 
+  useEffect(() => {
+    return () => {
+      if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
+    };
+  }, []);
+
   return (
-    <div className="min-h-[100dvh] bg-orange-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
-      <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-orange-300 text-xs font-bold">시도</span><div className="text-2xl font-black">{shots} / {TOTAL_SHOTS}회</div></div>
-        <div className="text-right"><span className="text-orange-300 text-xs font-bold">클린 슛</span><div className="text-2xl font-black text-amber-400">{score}골</div></div>
+    <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-4 pt-16 relative select-none">
+      {/* 상단 경기 상태바 */}
+      <div className="flex justify-between w-full max-w-sm mb-3">
+        <div>
+          <span className="text-amber-300 text-xs font-bold">시도 횟수</span>
+          <div className="text-2xl font-black">{shots} / {TOTAL_SHOTS}회</div>
+        </div>
+        <div className="text-right">
+          <span className="text-amber-300 text-xs font-bold">클린 슛 득점</span>
+          <div className="text-2xl font-black text-emerald-400 font-mono">{score}골</div>
+        </div>
       </div>
 
       <h1 className="text-2xl font-black mb-1">🏀 포물선 각도 자유투</h1>
-      <p className="text-xs text-orange-200 mb-6 text-center max-w-xs">
-        림에 가장 부드럽게 들어가는 최적 포물선 발사각(48~54°)을 맞춰 슛을 쏘세요!
+      <p className="text-xs text-amber-200/90 mb-4 text-center max-w-xs leading-relaxed">
+        슬라이더로 발사각을 조절하여 림 안으로 쏙 들어가는 최적 포물선 궤적을 만드세요!
       </p>
 
-      <div className="relative w-64 h-64 bg-slate-900 border-4 border-orange-700 rounded-3xl p-4 flex flex-col justify-between mb-6 shadow-2xl overflow-hidden">
-        <div className="absolute top-6 right-6 text-3xl">
-          🗑️ (백보드 & 림)
-        </div>
+      {/* 2D 농구장 & 포물선 물리 시뮬레이션 캔버스 */}
+      <div className="relative w-full max-w-sm h-64 bg-gradient-to-b from-slate-900 via-slate-900 to-amber-950/40 border-4 border-amber-600/70 rounded-3xl p-1 overflow-hidden shadow-2xl mb-4 flex items-center justify-center">
+        <svg viewBox="0 0 300 230" className="w-full h-full">
+          <defs>
+            {/* 체육관 원목 코트 패턴 */}
+            <linearGradient id="woodFloor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#78350F" />
+              <stop offset="100%" stopColor="#451A03" />
+            </linearGradient>
+            {/* 백보드 유리 그라데이션 */}
+            <linearGradient id="glassBoard" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+              <stop offset="100%" stopColor="rgba(148,163,184,0.1)" />
+            </linearGradient>
+          </defs>
 
-        <div className={`absolute bottom-6 left-6 text-4xl transition-all duration-700 ${isShooting ? 'translate-x-32 -translate-y-32' : ''}`}>
-          🏀
-        </div>
+          {/* 원목 코트 바닥 */}
+          <rect x="0" y="195" width="300" height="35" fill="url(#woodFloor)" />
+          <line x1="0" y1="195" x2="300" y2="195" stroke="#F59E0B" strokeWidth="2" />
+          {/* 자유투 라인 & 3점 라인 호 */}
+          <ellipse cx="60" cy="195" rx="55" ry="12" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
 
-        {result === 'goal' && (
-          <div className="absolute inset-0 bg-emerald-950/80 flex flex-col items-center justify-center animate-in zoom-in">
-            <span className="text-4xl font-black text-amber-300">✨ SWISH! 클린 슛!</span>
-          </div>
-        )}
-        {result === 'miss' && (
-          <div className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center animate-in zoom-in">
-            <span className="text-4xl font-black text-red-400">💥 림 튕김! 각도 재조정!</span>
-          </div>
-        )}
+          {/* ================= 농구 골대 구조 ================= */}
+          {/* 지지대 기둥 */}
+          <line x1="265" y1="30" x2="265" y2="195" stroke="#475569" strokeWidth="6" />
+          <line x1="250" y1="80" x2="265" y2="80" stroke="#64748B" strokeWidth="4" />
+
+          {/* 투명 백보드 */}
+          <rect x="248" y="32" width="6" height="75" rx="2" fill="url(#glassBoard)" stroke="#CBD5E1" strokeWidth="1.5" />
+          {/* 백보드 조준 사각형 */}
+          <rect x="246" y="55" width="3" height="30" fill="none" stroke="#EF4444" strokeWidth="2" />
+
+          {/* 림 지지 브래킷 */}
+          <line x1="240" y1="78" x2="248" y2="78" stroke="#DC2626" strokeWidth="3.5" />
+
+          {/* 그물망 (Net) - 골인 시 스위시 애니메이션 */}
+          <g className={swishNet ? 'animate-bounce' : ''}>
+            <polygon
+              points="218,78 244,78 238,105 224,105"
+              fill="rgba(255,255,255,0.2)"
+              stroke="#FFFFFF"
+              strokeWidth="1.2"
+              strokeDasharray="2 2"
+            />
+            <line x1="222" y1="78" x2="228" y2="105" stroke="#FFFFFF" strokeWidth="1" opacity="0.6" />
+            <line x1="240" y1="78" x2="234" y2="105" stroke="#FFFFFF" strokeWidth="1" opacity="0.6" />
+          </g>
+
+          {/* 주황색 림 (Rim 링) */}
+          <ellipse cx="231" cy="78" rx="14" ry="4" fill="none" stroke="#EA580C" strokeWidth="3" />
+
+          {/* 림 타깃 스팟 가이드 */}
+          <circle cx="231" cy="78" r="7" fill="none" stroke={angle >= 49 && angle <= 53 ? '#10B981' : '#F59E0B'} strokeWidth="1.5" strokeDasharray="2 2" opacity="0.8" />
+
+          {/* ================= 포물선 궤적 가이드 ================= */}
+          {!isShooting && (
+            <path
+              d={trajectoryPath}
+              fill="none"
+              stroke={angle >= 49 && angle <= 53 ? '#34D399' : '#F59E0B'}
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              opacity="0.85"
+            />
+          )}
+
+          {/* 슈터 서있는 위치 표시 */}
+          <circle cx="45" cy="195" r="14" fill="#0284C7" opacity="0.3" />
+          <text x="35" y="210" fill="#93C5FD" fontSize="9" fontWeight="bold">슈팅존</text>
+
+          {/* ================= 비행 농구공 ================= */}
+          <g transform={`translate(${ballPos.x}, ${ballPos.y}) rotate(${ballPos.rot})`}>
+            {/* 농구공 본체 */}
+            <circle cx="0" cy="0" r="12" fill="#EA580C" stroke="#7C2D12" strokeWidth="1.5" />
+            {/* 농구공 홈 라인 */}
+            <line x1="-12" y1="0" x2="12" y2="0" stroke="#000000" strokeWidth="1.2" opacity="0.8" />
+            <line x1="0" y1="-12" x2="0" y2="12" stroke="#000000" strokeWidth="1.2" opacity="0.8" />
+            <path d="M -8 -8 Q 0 0 -8 8" fill="none" stroke="#000000" strokeWidth="1" opacity="0.7" />
+            <path d="M 8 -8 Q 0 0 8 8" fill="none" stroke="#000000" strokeWidth="1" opacity="0.7" />
+          </g>
+
+          {/* 결과 시각 피드백 */}
+          {result === 'goal' && (
+            <g transform="translate(185, 45)">
+              <rect x="0" y="0" width="100" height="24" rx="8" fill="#065F46" opacity="0.9" />
+              <text x="50" y="16" fill="#6EE7B7" fontSize="11" fontWeight="900" textAnchor="middle">
+                ✨ SWISH! 클린 슛!
+              </text>
+            </g>
+          )}
+          {result === 'rim_hit' && (
+            <g transform="translate(185, 45)">
+              <rect x="0" y="0" width="100" height="24" rx="8" fill="#991B1B" opacity="0.9" />
+              <text x="50" y="16" fill="#FCA5A5" fontSize="11" fontWeight="900" textAnchor="middle">
+                💥 림 튕김! 각도 조절!
+              </text>
+            </g>
+          )}
+        </svg>
       </div>
 
-      <div className="w-full max-w-xs flex flex-col gap-2 mb-6">
-        <div className="flex justify-between text-xs font-bold text-orange-300">
-          <span>낮은 탄도 (30°)</span>
-          <span className="text-amber-300 font-mono text-base">{angle}°</span>
-          <span>높은 탄도 (70°)</span>
+      {/* 포물선 발사각 컨트롤러 */}
+      <div className="w-full max-w-sm bg-slate-900/90 border border-slate-700 rounded-2xl p-4 flex flex-col gap-2 mb-4 shadow-xl">
+        <div className="flex justify-between items-center text-xs font-bold">
+          <span className="text-slate-400">낮은 탄도 (30°)</span>
+          <div className="flex items-center gap-1.5 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-500/40">
+            <span className="text-slate-300 text-xs">선택 각도:</span>
+            <span className="text-amber-400 font-mono text-lg font-black">{angle}°</span>
+            {angle >= 49 && angle <= 53 && (
+              <span className="text-emerald-400 text-[10px] font-black ml-1">🎯 적정각!</span>
+            )}
+          </div>
+          <span className="text-slate-400">높은 탄도 (70°)</span>
         </div>
+
         <input
           type="range"
           min="30"
@@ -738,22 +902,30 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
           value={angle}
           onChange={e => setAngle(Number(e.target.value))}
           disabled={isShooting}
-          className="w-full accent-amber-500"
+          className="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
         />
+
+        <div className="flex justify-between text-[11px] text-slate-400 px-1">
+          <span>평사포 (림 앞 충돌)</span>
+          <span className="text-emerald-400 font-bold">권장 자유투각: 49~53°</span>
+          <span>고각포 (백보드 초과)</span>
+        </div>
       </div>
 
+      {/* 발사 버튼 */}
       <button
         onClick={handleShoot}
         disabled={isShooting}
-        className="w-full max-w-xs py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform disabled:opacity-50"
+        className="w-full max-w-sm py-5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-400 hover:to-orange-500 text-white font-black text-xl rounded-2xl shadow-xl shadow-orange-950/50 active:scale-98 transition-all disabled:opacity-50"
       >
-        🏀 포물선 슛 발사!
+        {isShooting ? '포물선 궤적 비행 중... 🏀' : '🏀 포물선 슛 발사!'}
       </button>
 
+      {/* 경기 종료 결과 오버레이 */}
       {finished && (
         <GameResultOverlay
           title={`🏀 ${score}골 자유투 성공!`}
-          subtitle="공기역학과 이상적인 포물선 투사 각도로 림을 정확히 갈랐습니다."
+          subtitle="최적 포물선 발사각과 투사체 역학을 적용하여 림을 완벽히 갈랐습니다."
           score={Math.max(200, scoreRef.current)}
           badge="자유투 명사수"
           onRestart={handleRestart}
