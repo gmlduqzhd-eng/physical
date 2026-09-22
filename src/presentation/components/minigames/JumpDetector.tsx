@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { sfxCoin } from '../../../application/soundEffects';
+import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -22,16 +22,25 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
       if (delta > 15) {
         cooldown.current = true;
         sfxCoin();
+        hapticTap();
         setJumps(j => { const n = j + 1; jumpsRef.current = n; return n; });
         setLastJump(true);
         setTimeout(() => { setLastJump(false); cooldown.current = false; }, 600);
       }
     };
     window.addEventListener('devicemotion', handler);
+    let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: jumpsRef.current * 30 }, timestamp: Date.now() }); return 0; }
-        return prev - 1;
+        // 10초 미만 경고음
+        const next = prev - 1;
+        if (next > 0 && next < 10 && next !== lastWarnSec) {
+          lastWarnSec = next;
+          sfxTimerTick(next);
+          if (next === 3) sfxUrgentWarning();
+        }
+        return next;
       });
     }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
@@ -41,6 +50,7 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
     if (cooldown.current || finished) return;
     cooldown.current = true;
     sfxCoin();
+    hapticTap();
     setJumps(j => { const n = j + 1; jumpsRef.current = n; return n; });
     setLastJump(true);
     setTimeout(() => { setLastJump(false); cooldown.current = false; }, 300);

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { sfxClick } from '../../../application/soundEffects';
+import { sfxClick, hapticTap } from '../../../application/soundEffects';
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 export const SpeedCircle = ({ groupId, enqueueAction }: Props) => {
   const [laps, setLaps] = useState(0); const [drawing, setDrawing] = useState(false); const [finished, setFinished] = useState(false);
@@ -15,7 +15,7 @@ export const SpeedCircle = ({ groupId, enqueueAction }: Props) => {
     const angle = getAngle(e); let delta = angle - lastAngle.current;
     if (delta > Math.PI) delta -= 2 * Math.PI; if (delta < -Math.PI) delta += 2 * Math.PI;
     totalAngle.current += Math.abs(delta); lastAngle.current = angle; angleRef.current = angle;
-    if (totalAngle.current >= Math.PI * 2) { totalAngle.current -= Math.PI * 2; sfxClick();
+    if (totalAngle.current >= Math.PI * 2) { totalAngle.current -= Math.PI * 2; sfxClick(); hapticTap();
       setLaps(l => { const n = l + 1; lapsRef.current = n;
         if (n >= TARGET) { enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() }); setFinished(true); }
         return n; }); } };

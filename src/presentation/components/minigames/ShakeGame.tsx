@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -15,6 +16,7 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => {
     if (finished) return;
 
+    let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -24,7 +26,13 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
-        return prev - 1;
+        const next = prev - 1;
+        if (next > 0 && next < 10 && next !== lastWarnSec) {
+          lastWarnSec = next;
+          sfxTimerTick(next);
+          if (next === 3) sfxUrgentWarning();
+        }
+        return next;
       });
     }, 1000);
 
@@ -49,6 +57,7 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
 
   const handleProgress = (amount: number = 5) => {
     if (finished) return;
+    hapticTap();
     
     setProgress((p) => {
       if (p >= 100) return 100;

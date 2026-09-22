@@ -189,6 +189,7 @@ export const GamePlayPage = () => {
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard' | null>(null);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
+  const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const { addGameResult } = usePlayerProfile();
   const [standaloneTiming] = useState(() => ({
     startedAt: new Date().toISOString(),
@@ -257,7 +258,7 @@ export const GamePlayPage = () => {
       }
     }
 
-    // 플레이어 프로필에 점수 누적 저장
+    // 플레이어 프로필에 점수 누적 저장 (RPE는 나중에 별도 저장)
     if (gameType && gameInfo) {
       addGameResult(gameType, gameInfo.name, earned, difficulty || undefined);
     }
@@ -268,6 +269,7 @@ export const GamePlayPage = () => {
   const handleReplay = () => {
     setGameFinished(false);
     setLastEarnedScore(0);
+    setRpeSelected(null);
     setKey(prev => prev + 1);
     setDifficulty(null);
     startBgm();
@@ -545,6 +547,54 @@ export const GamePlayPage = () => {
                 <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 더 높은 난이도에 도전해 보세요!</p>
               </div>
             )}
+
+            {/* RPE 운동 자각도 이모지 평가 */}
+            <div className="w-full bg-slate-800/60 rounded-2xl px-4 py-4 mb-4 border border-slate-700/50">
+              <p className="text-sm font-bold text-slate-300 text-center mb-3">오늘의 활동은 얼마나 힘들었나요?</p>
+              <div className="flex justify-center gap-2">
+                {[
+                  { emoji: '😆', label: '너무 쉬움', value: 1 },
+                  { emoji: '😃', label: '쉬움', value: 2 },
+                  { emoji: '😐', label: '보통', value: 3 },
+                  { emoji: '😓', label: '힘들었음', value: 4 },
+                  { emoji: '🥵', label: '매우 힘듦', value: 5 },
+                ].map(({ emoji, label, value }) => (
+                  <button
+                    key={value}
+                    onClick={() => {
+                      setRpeSelected(value);
+                      // RPE 값을 최근 기록에 업데이트
+                      if (gameType && gameInfo) {
+                        const profileRaw = localStorage.getItem('physical_player_profile');
+                        if (profileRaw) {
+                          try {
+                            const profile = JSON.parse(profileRaw);
+                            if (profile.recentGames && profile.recentGames.length > 0) {
+                              profile.recentGames[0].rpe = value;
+                              localStorage.setItem('physical_player_profile', JSON.stringify(profile));
+                            }
+                          } catch { /* ignore */ }
+                        }
+                      }
+                    }}
+                    className={`flex flex-col items-center gap-1 px-2.5 py-2 rounded-xl transition-all border-2 ${
+                      rpeSelected === value
+                        ? 'bg-cyan-600/30 border-cyan-400 scale-110 shadow-lg shadow-cyan-900/50'
+                        : 'bg-slate-900/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800/80'
+                    }`}
+                  >
+                    <span className={`text-2xl transition-transform ${rpeSelected === value ? 'scale-125' : ''}`}>{emoji}</span>
+                    <span className={`text-[10px] font-bold ${rpeSelected === value ? 'text-cyan-300' : 'text-slate-500'}`}>{label}</span>
+                  </button>
+                ))}
+              </div>
+              {rpeSelected && (
+                <p className="text-center text-[11px] text-cyan-400/80 font-bold mt-2 animate-in fade-in duration-200">
+                  ✅ 자각도 {rpeSelected}/5 기록 완료!
+                </p>
+              )}
+            </div>
+
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기

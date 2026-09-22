@@ -4,6 +4,7 @@ import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, S
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
+import { WarmupRoulette } from './components/WarmupRoulette';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
@@ -1372,6 +1373,7 @@ export const GameHub = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<GameDef | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+  const [showWarmupRoulette, setShowWarmupRoulette] = useState(false);
 
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
@@ -1586,6 +1588,63 @@ export const GameHub = () => {
         </div>
       </div>
 
+      {/* 🏆 성취 뱃지 진열장 */}
+      {hasProfile && (() => {
+        const badges: Record<string, boolean> = (() => {
+          try { return JSON.parse(localStorage.getItem('physical_badges') || '{}'); } catch { return {}; }
+        })();
+        const BADGE_DEFS = [
+          { id: 'high_scorer', emoji: '🏅', name: '하이스코어러', desc: '1회 500점 이상 달성', color: 'from-yellow-500 to-amber-600', border: 'border-yellow-500/50' },
+          { id: 'veteran', emoji: '🎖️', name: '베테랑', desc: '10회 이상 플레이', color: 'from-cyan-500 to-blue-600', border: 'border-cyan-500/50' },
+          { id: 'master', emoji: '👑', name: '마스터', desc: '50회 이상 플레이', color: 'from-purple-500 to-indigo-600', border: 'border-purple-500/50' },
+          { id: 'brave', emoji: '🦁', name: '용감한 도전자', desc: '어려움 난이도 클리어', color: 'from-red-500 to-orange-600', border: 'border-red-500/50' },
+          { id: 'explorer', emoji: '🌍', name: '탐험가', desc: '10종 게임 플레이', color: 'from-emerald-500 to-teal-600', border: 'border-emerald-500/50' },
+          { id: 'collector', emoji: '💎', name: '수집가', desc: '30종 게임 플레이', color: 'from-pink-500 to-rose-600', border: 'border-pink-500/50' },
+        ];
+        const earnedCount = BADGE_DEFS.filter(b => badges[b.id]).length;
+
+        return (
+          <div className="px-4 md:px-8 max-w-5xl mx-auto pt-2 pb-1">
+            <div className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-black text-amber-400 flex items-center gap-1.5">
+                  🏆 성취 뱃지 <span className="text-[10px] font-bold text-slate-500">({earnedCount}/{BADGE_DEFS.length})</span>
+                </h3>
+                {earnedCount === BADGE_DEFS.length && (
+                  <span className="px-2.5 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-950 text-[10px] font-black rounded-full shadow-lg animate-pulse">
+                    🎉 ALL CLEAR!
+                  </span>
+                )}
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {BADGE_DEFS.map(b => {
+                  const earned = !!badges[b.id];
+                  return (
+                    <div
+                      key={b.id}
+                      className={`relative flex flex-col items-center gap-1 p-3 rounded-xl border transition-all ${
+                        earned
+                          ? `bg-gradient-to-br ${b.color} bg-opacity-20 ${b.border} shadow-lg`
+                          : 'bg-slate-950/60 border-slate-800 opacity-40 grayscale'
+                      }`}
+                      title={earned ? `${b.name}: ${b.desc}` : `🔒 ${b.desc}`}
+                    >
+                      <span className={`text-2xl ${earned ? '' : 'opacity-50'}`}>{b.emoji}</span>
+                      <span className={`text-[10px] font-black text-center leading-tight ${earned ? 'text-white' : 'text-slate-600'}`}>
+                        {b.name}
+                      </span>
+                      {!earned && (
+                        <span className="absolute top-1 right-1 text-[10px]">🔒</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
         <div className="flex items-center justify-between mb-3">
@@ -1598,6 +1657,9 @@ export const GameHub = () => {
             </button>
             <button onClick={handleRandomPick} disabled={isSpinning} className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60">
               <Shuffle className={`w-3 h-3 ${isSpinning ? 'animate-spin' : ''}`} /> 랜덤 뽑기
+            </button>
+            <button onClick={() => setShowWarmupRoulette(true)} className="px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 bg-gradient-to-r from-amber-600 to-orange-600 text-white border border-amber-400/30 hover:from-amber-500 hover:to-orange-500 transition-all">
+              🎯 워밍업 룰렛
             </button>
           </div>
         </div>
@@ -1943,6 +2005,9 @@ export const GameHub = () => {
           </div>
         )}
       </div>
+
+      {/* 워밍업 룰렛 모달 */}
+      <WarmupRoulette isOpen={showWarmupRoulette} onClose={() => setShowWarmupRoulette(false)} />
 
       {/* Footer */}
       <div className="px-4 md:px-8 pb-10 max-w-5xl mx-auto">

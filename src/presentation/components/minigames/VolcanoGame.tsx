@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
 import type { GameRoom } from '../../../domain/types';
-import { sfxTap } from '../../../application/soundEffects';
+import { sfxTap, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 
 interface Props {
   gameRoom: GameRoom;
@@ -20,9 +20,17 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   useEffect(() => {
     const end = minigame.end_time || Date.now() + 10000;
     
+    let lastWarnSec = -1;
     const timer = setInterval(() => {
       const remaining = Math.max(0, Math.floor((end - Date.now()) / 1000));
       setTimeLeft(remaining);
+
+      // 10초 미만 경고음 + 3초 긴급 경고
+      if (remaining > 0 && remaining < 10 && remaining !== lastWarnSec) {
+        lastWarnSec = remaining;
+        sfxTimerTick(remaining);
+        if (remaining === 3) sfxUrgentWarning();
+      }
       
       if (remaining <= 0 && !finishedRef.current) {
         clearInterval(timer);
@@ -40,6 +48,7 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   const handleTap = () => {
     if (timeLeft > 0 && !finished) {
       sfxTap();
+      hapticTap();
       setTaps(t => {
         const next = t + 1;
         tapsRef.current = next;

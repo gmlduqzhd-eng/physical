@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { sfxCoin } from '../../../application/soundEffects';
+import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -20,15 +20,23 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
       if (phase === 'down' && z > 5 && lastZ.current <= 5) {
         setPhase('up');
         sfxCoin();
+        hapticTap();
         setSquats(s => { const n = s + 1; squatsRef.current = n; return n; });
       }
       lastZ.current = z;
     };
     window.addEventListener('devicemotion', handler);
+    let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: squatsRef.current * 40 }, timestamp: Date.now() }); return 0; }
-        return prev - 1;
+        const next = prev - 1;
+        if (next > 0 && next < 10 && next !== lastWarnSec) {
+          lastWarnSec = next;
+          sfxTimerTick(next);
+          if (next === 3) sfxUrgentWarning();
+        }
+        return next;
       });
     }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
@@ -41,6 +49,7 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
     } else {
       setPhase('up');
       sfxCoin();
+      hapticTap();
       setSquats(s => { const n = s + 1; squatsRef.current = n; return n; });
     }
   };

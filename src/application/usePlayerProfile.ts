@@ -6,6 +6,7 @@ export interface GameRecord {
   score: number;
   playedAt: number; // timestamp
   difficulty?: string;
+  rpe?: number; // 운동 자각도 1~5 (1=너무 쉬움, 5=너무 힘듦)
 }
 
 export interface PlayerProfile {
@@ -59,7 +60,7 @@ export const usePlayerProfile = () => {
     });
   }, []);
 
-  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string) => {
+  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number) => {
     setProfile(prev => {
       const current = prev || {
         nickname: '익명 원정대원',
@@ -71,7 +72,7 @@ export const usePlayerProfile = () => {
         createdAt: Date.now(),
       };
 
-      const record: GameRecord = { gameType, gameName, score, playedAt: Date.now(), difficulty };
+      const record: GameRecord = { gameType, gameName, score, playedAt: Date.now(), difficulty, rpe };
       const newHighScores = { ...current.highScores };
       if (!newHighScores[gameType] || score > newHighScores[gameType]) {
         newHighScores[gameType] = score;

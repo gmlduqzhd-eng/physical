@@ -102,6 +102,56 @@ export function sfxClick() {
   playTone(1200, 0.03, 'square', 0.06);
 }
 
+// === 햅틱(진동) 피드백 ===
+
+/** 짧은 탭 진동 (50ms) — 카운트 증가, 터치 액션 등 */
+export function hapticTap() {
+  try { navigator?.vibrate?.(50); } catch { /* unsupported */ }
+}
+
+/** 무거운 진동 (100ms) — 게임 종료, 중요 이벤트 */
+export function hapticHeavy() {
+  try { navigator?.vibrate?.(100); } catch { /* unsupported */ }
+}
+
+/** 커스텀 패턴 진동 — [vibrate, pause, vibrate, ...] */
+export function hapticPattern(pattern: number[]) {
+  try { navigator?.vibrate?.(pattern); } catch { /* unsupported */ }
+}
+
+/** 더블 탭 진동 — 배지 획득, 레벨업 등 */
+export function hapticDouble() {
+  try { navigator?.vibrate?.([40, 60, 40]); } catch { /* unsupported */ }
+}
+
+// === 타이머 경고음 ===
+
+/** 10초 미만 틱 사운드 — remainSec이 작을수록 높은 피치 + 빠른 템포 */
+export function sfxTimerTick(remainSec: number) {
+  const pitch = 600 + (10 - Math.max(0, remainSec)) * 80; // 600Hz → 1400Hz
+  const vol = 0.06 + (10 - Math.max(0, remainSec)) * 0.012; // 점점 커짐
+  playTone(pitch, 0.06, 'square', Math.min(vol, 0.18));
+  hapticTap();
+}
+
+/** 3초 남았을 때 긴급 경고음 (빠른 연속 비프 3회) */
+export function sfxUrgentWarning() {
+  const ctx = getCtx();
+  for (let i = 0; i < 3; i++) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1200 + i * 200, ctx.currentTime + i * 0.12);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.08);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + i * 0.12);
+    osc.stop(ctx.currentTime + i * 0.12 + 0.08);
+  }
+  hapticPattern([30, 30, 30, 30, 60]);
+}
+
 // === BGM (귀여운 8비트 루프) ===
 
 const BGM_NOTES = [

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react';
-import { Search, Sparkles, ChevronDown, ChevronUp, Printer, Copy, Check, RotateCcw, ExternalLink, Play, Shield, BookOpen, Target, Heart } from 'lucide-react';
+import { Search, Sparkles, ChevronDown, ChevronUp, Printer, Copy, Check, RotateCcw, ExternalLink, Play, Shield, BookOpen, Target, Heart, Download } from 'lucide-react';
 import { LESSON_GAME_CATALOG } from '../../data/lessonGameCatalog';
 import type { LessonGameMeta } from '../../data/lessonGameCatalog';
 import { findStandards, LOW_GRADE_THEMES, CORE_COMPETENCIES } from '../../data/curriculumStandards';
@@ -499,6 +499,23 @@ export const LessonPlanGeneratorV2 = () => {
   // 인쇄
   const handlePrint = () => { window.print(); };
 
+  // 마크다운 다운로드
+  const handleDownloadMd = () => {
+    if (!plan) return;
+    const md = planToMarkdown(plan);
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    a.href = url;
+    a.download = `지도안_${dateStr}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   // ─── 렌더링 ───
   return (
     <div className="space-y-6">
@@ -511,6 +528,7 @@ export const LessonPlanGeneratorV2 = () => {
             <button onClick={handleRerollGame} className="px-4 py-2 bg-purple-900/50 hover:bg-purple-800/50 rounded-xl text-sm font-bold text-purple-300 flex items-center gap-1.5 transition-all border border-purple-700/50"><Sparkles className="w-3.5 h-3.5" /> 다른 게임 추천</button>
             <button onClick={handleCopyAll} className="px-4 py-2 bg-cyan-900/50 hover:bg-cyan-800/50 rounded-xl text-sm font-bold text-cyan-300 flex items-center gap-1.5 transition-all border border-cyan-700/50">{copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? '복사됨!' : '전체 복사'}</button>
             <button onClick={handlePrint} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-300 flex items-center gap-1.5 transition-all border border-slate-700"><Printer className="w-3.5 h-3.5" /> 인쇄</button>
+            <button onClick={handleDownloadMd} className="px-4 py-2 bg-emerald-900/50 hover:bg-emerald-800/50 rounded-xl text-sm font-bold text-emerald-300 flex items-center gap-1.5 transition-all border border-emerald-700/50"><Download className="w-3.5 h-3.5" /> 지도안 다운로드</button>
           </div>
 
           {/* 📋 수업 개요 */}
@@ -967,4 +985,135 @@ function planToText(plan: GeneratedPlan): string {
 
   t += `© 땀방울 원정대 수업 지도안 생성기\n`;
   return t;
+}
+
+function planToMarkdown(plan: GeneratedPlan): string {
+  let md = '';
+
+  md += `# 📋 수업 지도안\n\n`;
+  md += `> 땀방울 원정대 · 2022 개정 초등 체육과 교육과정 연계\n\n`;
+
+  // 수업 개요
+  md += `## 📋 수업 개요\n\n`;
+  md += `| 항목 | 내용 |\n|------|------|\n`;
+  md += `| 학년군 | ${plan.overview.gradeGroup} |\n`;
+  md += `| 수업 시간 | ${plan.overview.duration}분 |\n`;
+  md += `| 단원/주제 | ${plan.overview.unit} |\n`;
+  md += `| 교육과정 영역 | ${plan.overview.domain} |\n`;
+  md += `| 활동 형태 | ${plan.overview.activityMode} |\n`;
+  md += `| 학생 수 | ${plan.overview.studentCount}명 |\n`;
+  md += `| 장소 | ${plan.overview.space} |\n\n`;
+
+  // 교육과정 연계
+  md += `## 🎯 교육과정 연계\n\n`;
+  if (plan.curriculum.isLowGrade) {
+    md += `**통합교과(즐거운 생활) 연계 신체활동**\n\n`;
+    md += `- 테마: ${plan.curriculum.lowGradeTheme}\n`;
+    md += `- ※ 1~2학년은 독립된 체육 교과가 없으므로 성취기준 코드를 별도로 제시하지 않습니다.\n\n`;
+  } else if (plan.curriculum.standards.length > 0) {
+    plan.curriculum.standards.forEach(s => { md += `- **${s.code}** ${s.text}\n`; });
+    md += '\n';
+  }
+  md += `**핵심 역량:** ${plan.curriculum.competencies.join(', ')}\n\n`;
+  md += `| 지식·이해 | 과정·기능 | 가치·태도 |\n|-----------|----------|----------|\n`;
+  md += `| ${plan.curriculum.knowledge} | ${plan.curriculum.process} | ${plan.curriculum.attitude} |\n\n`;
+
+  // 학습 목표
+  md += `## 🌱 학습 목표\n\n`;
+  plan.learningGoals.goals.forEach(g => { md += `- 📌 ${g}\n`; });
+  md += `\n### 성공 기준\n\n`;
+  plan.learningGoals.successCriteria.forEach(c => { md += `- [ ] ${c}\n`; });
+  md += '\n';
+
+  // 추천 게임
+  if (plan.recommendedGame) {
+    md += `## 🎮 추천 게임\n\n`;
+    md += `**${plan.recommendedGame.game.emoji} ${plan.recommendedGame.game.title}**\n\n`;
+    md += `- 추천 이유: ${plan.recommendedGame.reason}\n`;
+    md += `- 수업 속 역할: ${plan.recommendedGame.role}\n`;
+    md += `- 권장 사용 시간: ${plan.recommendedGame.usageTime}분\n\n`;
+  }
+
+  // 수업 흐름
+  md += `## 🗺 수업 흐름\n\n`;
+  md += `| 단계 | 시간 | 교수·학습 활동 | 교사 활동 | 학생 활동 | 안전 유의점 |\n`;
+  md += `|------|------|---------------|----------|----------|------------|\n`;
+  plan.lessonFlow.forEach(f => {
+    md += `| ${f.stage} | ${f.time}분 | ${f.activity.replace(/\n/g, ' ')} | ${f.teacherActivity.replace(/\n/g, ' ')} | ${f.studentActivity.replace(/\n/g, ' ')} | ${f.safety.replace(/\n/g, ' ')} |\n`;
+  });
+  md += `\n⏱ **총 수업 시간:** ${plan.lessonFlow.reduce((a, f) => a + f.time, 0)}분\n\n`;
+
+  // 게임 활용 상세
+  if (plan.gameDetail) {
+    md += `## 🎮 게임 활용 상세\n\n`;
+    md += `- **준비:** ${plan.gameDetail.preparation}\n`;
+    md += `- **배치:** ${plan.gameDetail.arrangement}\n`;
+    md += `- **역할 순환:** ${plan.gameDetail.rotation}\n`;
+    md += `- **기기 운영:** ${plan.gameDetail.deviceOps}\n`;
+    md += `- **난이도:** ${plan.gameDetail.difficulty}\n\n`;
+    md += `### 진행 순서\n\n`;
+    plan.gameDetail.procedure.forEach((p, i) => { md += `${i + 1}. ${p}\n`; });
+    md += '\n';
+  }
+
+  // 안전 지도
+  md += `## 🛡 안전 지도\n\n`;
+  plan.safety.forEach(s => { md += `- ${s}\n`; });
+  md += '\n';
+
+  // 평가
+  md += `## 🔍 과정 중심 평가\n\n`;
+  md += `**평가 요소:** ${plan.evaluation.elements.join(', ')}\n\n`;
+  md += `### 관찰 체크리스트\n\n`;
+  plan.evaluation.checklist.forEach(c => { md += `- [ ] ${c}\n`; });
+  md += '\n';
+
+  // 자기평가
+  md += `## 🙋 학생 자기평가\n\n`;
+  plan.selfEval.items.forEach(it => { md += `- [ ] ${it}\n`; });
+  md += '\n';
+
+  // 수준별
+  md += `## 🔄 수준별 활동 조정\n\n`;
+  md += `### 🌱 도움이 필요한 학생\n\n`;
+  plan.levelAdjust.needHelp.forEach(it => { md += `- ${it}\n`; });
+  md += `\n### 🌿 일반 학생\n\n`;
+  plan.levelAdjust.general.forEach(it => { md += `- ${it}\n`; });
+  md += `\n### 🌳 도전이 필요한 학생\n\n`;
+  plan.levelAdjust.challenge.forEach(it => { md += `- ${it}\n`; });
+  md += '\n';
+
+  // 포용
+  md += `## ♿ 모두가 참여하는 수업\n\n`;
+  plan.inclusion.forEach(s => { md += `- ${s}\n`; });
+  md += '\n';
+
+  // 교사 TIP
+  md += `## 💡 교사 TIP\n\n`;
+  plan.teacherTips.forEach(t => {
+    md += `**❓ ${t.problem}**\n\n→ ${t.solution}\n\n`;
+  });
+
+  // 게임 변형
+  if (plan.gameVariations.length > 0) {
+    md += `## 🎮 게임 변형 수업\n\n`;
+    plan.gameVariations.forEach(v => {
+      md += `**[${v.level}]** ${v.description}\n\n`;
+    });
+  }
+
+  // 대안
+  md += `## 🔀 이렇게 바꿔도 좋아요\n\n`;
+  plan.alternatives.forEach(a => {
+    md += `**📌 ${a.scenario}**\n\n${a.solution}\n\n`;
+  });
+
+  // NO DEVICE
+  md += `## 📵 NO DEVICE 대체 활동\n\n`;
+  md += `${plan.noDeviceActivity}\n\n`;
+
+  md += `---\n\n`;
+  md += `*© 땀방울 원정대 수업 지도안 생성기 · 2022 개정 초등 체육과 교육과정 연계*\n`;
+
+  return md;
 }
