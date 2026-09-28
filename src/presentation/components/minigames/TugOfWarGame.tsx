@@ -55,7 +55,7 @@ export const TugOfWarGame = ({ groupId, enqueueAction }: Props) => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" onTouchStart={handleTap} onMouseDown={handleTap}>
+    <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none touch-manipulation cursor-pointer" onPointerDown={handleTap}>
       <LucideIcons.Grab className="w-24 h-24 text-slate-400 mb-6 relative z-10 animate-bounce" />
       
       <h1 className="text-4xl font-black text-white mb-2 text-center relative z-10">스마트 줄다리기!</h1>

@@ -60,8 +60,8 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div
-      className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-200 ${isGreen ? 'bg-emerald-900' : 'bg-red-900'}`}
-      onMouseDown={handleTap} onTouchStart={handleTap}
+      className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-200 touch-manipulation cursor-pointer ${isGreen ? 'bg-emerald-900' : 'bg-red-900'}`}
+      onPointerDown={handleTap}
     >
       {!eliminated && !finished && (
         <>

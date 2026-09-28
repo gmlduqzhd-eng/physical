@@ -44,7 +44,7 @@ export const ReactionTest = ({ groupId, enqueueAction }: Props) => {
   const bgColor = phase === 'wait' ? 'bg-red-600' : phase === 'go' ? 'bg-emerald-500' : phase === 'too_early' ? 'bg-yellow-600' : 'bg-slate-900';
 
   return (
-    <div className={`min-h-[100dvh] ${bgColor} flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-100`} onMouseDown={handleTap} onTouchStart={handleTap}>
+    <div className={`min-h-[100dvh] ${bgColor} flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-100 touch-manipulation cursor-pointer`} onPointerDown={handleTap}>
       {phase === 'ready' && (
         <>
           <span className="text-7xl mb-6">⚡</span>

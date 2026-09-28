@@ -5,15 +5,22 @@ export const useAudio = () => {
   const audioCtx = useRef<AudioContext | null>(null);
   const lastSirenPlay = useRef(0);
 
+  const getAudioCtx = () => {
+    if (!audioCtx.current) {
+      const AudioCtxConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtxConstructor) {
+        audioCtx.current = new AudioCtxConstructor();
+      }
+    }
+    if (audioCtx.current && audioCtx.current.state === 'suspended') {
+      audioCtx.current.resume().catch(() => {});
+    }
+    return audioCtx.current;
+  };
+
   useEffect(() => {
-    // 사용자 제스처 전까지는 AudioContext를 생성하지 않거나 suspend 상태임
     const initAudio = () => {
-      if (!audioCtx.current) {
-        audioCtx.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      if (audioCtx.current.state === 'suspended') {
-        audioCtx.current.resume();
-      }
+      getAudioCtx();
     };
     
     window.addEventListener('click', initAudio, { once: true });
@@ -25,31 +32,32 @@ export const useAudio = () => {
   }, []);
 
   const playBeep = () => {
-    if (!audioCtx.current) return;
-    const osc = audioCtx.current.createOscillator();
-    const gain = audioCtx.current.createGain();
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     osc.connect(gain);
-    gain.connect(audioCtx.current.destination);
+    gain.connect(ctx.destination);
     
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, audioCtx.current.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.current.currentTime + 0.1);
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
     
-    gain.gain.setValueAtTime(0, audioCtx.current.currentTime);
-    gain.gain.linearRampToValueAtTime(0.3, audioCtx.current.currentTime + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.current.currentTime + 0.3);
+    gain.gain.setValueAtTime(0, ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
     
     osc.start();
-    osc.stop(audioCtx.current.currentTime + 0.3);
+    osc.stop(ctx.currentTime + 0.3);
   };
 
   const playSiren = () => {
-    if (!audioCtx.current) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     // 6초 이내 중복 재생 방지 (청각 테러 차단)
     if (Date.now() - lastSirenPlay.current < 6000) return;
     lastSirenPlay.current = Date.now();
     
-    const ctx = audioCtx.current;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
@@ -72,8 +80,8 @@ export const useAudio = () => {
   };
 
   const playVictory = () => {
-    if (!audioCtx.current) return;
-    const ctx = audioCtx.current;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     // 아르페지오 팡파레
     const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
     freqs.forEach((freq, i) => {

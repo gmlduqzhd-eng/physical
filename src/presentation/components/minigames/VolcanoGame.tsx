@@ -58,7 +58,7 @@ export const VolcanoGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-orange-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" onTouchStart={handleTap} onMouseDown={handleTap}>
+    <div className="min-h-[100dvh] bg-orange-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none touch-manipulation cursor-pointer" onPointerDown={handleTap}>
       <div className="absolute inset-0 bg-red-600/20 animate-pulse mix-blend-screen"></div>
       
       <div className="text-white text-2xl font-bold mb-4 relative z-10">남은 시간</div>

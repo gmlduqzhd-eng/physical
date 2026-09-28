@@ -8,7 +8,9 @@ function getCtx() {
   const AudioContextConstructor = window.AudioContext || audioWindow.webkitAudioContext;
   if (!AudioContextConstructor) throw new Error('Web Audio API is not supported in this browser.');
   if (!audioCtx) audioCtx = new AudioContextConstructor();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioCtx.state === 'suspended') {
+    void audioCtx.resume().catch(() => {});
+  }
   return audioCtx;
 }
 

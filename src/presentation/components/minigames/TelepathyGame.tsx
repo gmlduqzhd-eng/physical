@@ -54,7 +54,7 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
   const isGood = diff !== null && diff > 300 && diff <= 1000;
 
   return (
-    <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" onTouchStart={handleTap} onMouseDown={handleTap}>
+    <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none touch-manipulation cursor-pointer" onPointerDown={handleTap}>
       <div className="absolute inset-0 bg-indigo-500/10 animate-pulse"></div>
       
       <LucideIcons.Wifi className={`w-32 h-32 ${diff === null ? 'text-blue-300 animate-pulse' : isPerfect ? 'text-emerald-400' : isGood ? 'text-yellow-400' : 'text-red-500'} mb-8 relative z-10`} />

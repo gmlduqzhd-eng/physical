@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import * as LucideIcons from 'lucide-react';
+import { sfxTap, sfxSuccess, sfxFail, hapticTap } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -29,6 +30,7 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
           clearInterval(timer);
           setFinished(true);
           setWon(false);
+          sfxFail();
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
@@ -43,17 +45,20 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
     if (finished) return;
     
     if (num === currentStep) {
+      hapticTap();
       if (num === 9) {
         if (lockRef.current) return;
         lockRef.current = true;
         setFinished(true);
         setWon(true);
+        sfxSuccess();
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
       } else {
+        sfxTap();
         setCurrentStep(s => s + 1);
       }
     } else {
-      // Penalty for wrong tap? Maybe just ignore.
+      sfxFail();
     }
   };
 
