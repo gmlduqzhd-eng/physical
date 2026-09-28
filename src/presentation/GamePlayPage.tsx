@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { GameRoom } from '../domain/types';
+import { useVoiceCoach } from '../application/useVoiceCoach';
+import { useTamagotchi } from '../application/useTamagotchi';
 import { VolcanoGame } from './components/minigames/VolcanoGame';
 import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
 import { StopwatchGame } from './components/minigames/StopwatchGame';
@@ -205,6 +207,8 @@ export const GamePlayPage = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const { addGameResult } = usePlayerProfile();
+  const { speak } = useVoiceCoach();
+  const { addXpAndCoins } = useTamagotchi();
   const standaloneTiming = useRef({
     startedAt: new Date().toISOString(),
     endTime: Date.now() + 90000,
@@ -267,9 +271,14 @@ export const GamePlayPage = () => {
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
+      speak(`게임 완료! 멋져요! ${earned}점을 획득했습니다!`, true);
     } else {
       sfxFail();
+      speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
     }
+
+    // 땀방이 다마고치 경험치 및 코인 적립
+    addXpAndCoins(15, 20);
 
     // 최고 기록 저장
     if (gameType) {

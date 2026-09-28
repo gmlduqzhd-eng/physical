@@ -1,11 +1,21 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, Sun, Moon, Edit3 } from 'lucide-react';
+import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
+import { useVoiceCoach } from '../application/useVoiceCoach';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
 import { WarmupRoulette } from './components/WarmupRoulette';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
+import { DailyStreakModal } from './components/DailyStreakModal';
+import { DambangTamagotchiModal } from './components/DambangTamagotchiModal';
+import { PhysicalMbtiTest } from './components/PhysicalMbtiTest';
+import { SplitBattleGame } from './components/SplitBattleGame';
+import { ClassPlaylistPlayer } from './components/ClassPlaylistPlayer';
+import { StationCircuitMode } from './components/StationCircuitMode';
+import { QuickPinClassroom } from './components/QuickPinClassroom';
+import { MotionCamChallenge } from './components/MotionCamChallenge';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
@@ -1425,6 +1435,17 @@ export const GameHub = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [showWarmupRoulette, setShowWarmupRoulette] = useState(false);
 
+  // 10대 신규 기능 모달 상태
+  const { enabled: voiceEnabled, toggleEnabled: toggleVoice } = useVoiceCoach();
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [showTamagotchiModal, setShowTamagotchiModal] = useState(false);
+  const [showMbtiModal, setShowMbtiModal] = useState(false);
+  const [showSplitBattle, setShowSplitBattle] = useState(false);
+  const [showClassPlaylist, setShowClassPlaylist] = useState(false);
+  const [showStationCircuit, setShowStationCircuit] = useState(false);
+  const [showQuickPin, setShowQuickPin] = useState(false);
+  const [showMotionCam, setShowMotionCam] = useState(false);
+
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
     const today = new Date();
@@ -1580,6 +1601,17 @@ export const GameHub = () => {
             >
               {isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
             </button>
+            <button
+              onClick={toggleVoice}
+              className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110 active:scale-95 border shadow-md shrink-0"
+              style={{
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+                borderColor: voiceEnabled ? 'rgba(6, 182, 212, 0.8)' : (isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)'),
+              }}
+              title={voiceEnabled ? '음성 코칭 켜짐' : '음성 코칭 꺼짐'}
+            >
+              {voiceEnabled ? <Volume2 className="w-4 h-4 text-cyan-400" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+            </button>
           </div>
         </div>
 
@@ -1715,6 +1747,138 @@ export const GameHub = () => {
           </div>
         );
       })()}
+
+      {/* 🚀 스마트 체육 특별 테마존 (8대 신규 모드) */}
+      <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-1">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm sm:text-base font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 flex items-center gap-1.5 whitespace-nowrap">
+            ⚡ 신나는 스마트 체육 특별 테마존
+          </h2>
+          <span className="text-[11px] font-bold text-slate-500 hidden sm:inline">터치하여 특별 모드 실행</span>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          {/* 1. 오늘의 3분 챌린지 */}
+          <button
+            onClick={() => setShowStreakModal(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/40 hover:border-amber-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-amber-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">🔥</span>
+              <span className="text-[10px] font-black bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                스트릭
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-amber-300 transition-colors">3분 땀방울 챌린지</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">매일 루틴 & 불꽃 스탬프</p>
+          </button>
+
+          {/* 2. 내 땀방이 키우기 */}
+          <button
+            onClick={() => setShowTamagotchiModal(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-500/10 border border-cyan-500/40 hover:border-cyan-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-cyan-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">💧</span>
+              <span className="text-[10px] font-black bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">
+                다마고치
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-cyan-300 transition-colors">내 땀방이 키우기</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">캐릭터 육성 & 아이템 룸</p>
+          </button>
+
+          {/* 3. 2인 배틀 스플릿 모드 */}
+          <button
+            onClick={() => setShowSplitBattle(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-rose-500/20 to-pink-500/10 border border-rose-500/40 hover:border-rose-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-rose-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">⚔️</span>
+              <span className="text-[10px] font-black bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/30">
+                1기기 2인
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-rose-300 transition-colors">2인 배틀 대결</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">화면 분할 줄다리기·연타</p>
+          </button>
+
+          {/* 4. 체육 MBTI 동물 페르소나 */}
+          <button
+            onClick={() => setShowMbtiModal(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-purple-500/20 to-indigo-500/10 border border-purple-500/40 hover:border-purple-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-purple-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">🦁</span>
+              <span className="text-[10px] font-black bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30">
+                성향 테스트
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-purple-300 transition-colors">나의 체육 MBTI</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">1분 동물 페르소나 찾기</p>
+          </button>
+
+          {/* 5. 40분 수업 플레이어 */}
+          <button
+            onClick={() => setShowClassPlaylist(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border border-emerald-500/40 hover:border-emerald-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-emerald-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">⏱️</span>
+              <span className="text-[10px] font-black bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                선생님용
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-emerald-300 transition-colors">40분 수업 플레이어</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">도입-전개-정리 원스톱</p>
+          </button>
+
+          {/* 6. 체육관 QR 서킷 스테이션 */}
+          <button
+            onClick={() => setShowStationCircuit(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/40 hover:border-blue-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-blue-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">🏟️</span>
+              <span className="text-[10px] font-black bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/30">
+                서킷 트레이닝
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-blue-300 transition-colors">QR 스테이션 서킷</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">4구역 순환 미션 스탬프</p>
+          </button>
+
+          {/* 7. 4자리 PIN 학급 배틀 */}
+          <button
+            onClick={() => setShowQuickPin(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/40 hover:border-violet-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-violet-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">🔢</span>
+              <span className="text-[10px] font-black bg-violet-500/20 text-violet-300 px-2 py-0.5 rounded-full border border-violet-500/30">
+                무로그인
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-violet-300 transition-colors">4자리 PIN 학급대항전</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">청팀 vs 백팀 즉시 대결</p>
+          </button>
+
+          {/* 8. 모션 감지 캠 챌린지 */}
+          <button
+            onClick={() => setShowMotionCam(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-teal-500/20 to-cyan-500/10 border border-teal-500/40 hover:border-teal-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-teal-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">📷</span>
+              <span className="text-[10px] font-black bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded-full border border-teal-500/30">
+                AI 모션
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-teal-300 transition-colors">모션 감지 캠 챌린지</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">카메라 앞 핸즈프리 점프</p>
+          </button>
+        </div>
+      </div>
 
       {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 (모바일 줄바꿈 방지) */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
@@ -2095,6 +2259,54 @@ export const GameHub = () => {
 
       {/* 워밍업 룰렛 모달 */}
       <WarmupRoulette isOpen={showWarmupRoulette} onClose={() => setShowWarmupRoulette(false)} />
+
+      {/* 10대 신규 기능 모달들 */}
+      <DailyStreakModal
+        isOpen={showStreakModal}
+        onClose={() => setShowStreakModal(false)}
+        onLaunchGame={(type) => navigate(`/play/${type}`)}
+      />
+
+      <DambangTamagotchiModal
+        isOpen={showTamagotchiModal}
+        onClose={() => setShowTamagotchiModal(false)}
+      />
+
+      <PhysicalMbtiTest
+        isOpen={showMbtiModal}
+        onClose={() => setShowMbtiModal(false)}
+        onSelectGame={(type) => navigate(`/play/${type}`)}
+      />
+
+      <SplitBattleGame
+        isOpen={showSplitBattle}
+        onClose={() => setShowSplitBattle(false)}
+      />
+
+      <ClassPlaylistPlayer
+        isOpen={showClassPlaylist}
+        onClose={() => setShowClassPlaylist(false)}
+      />
+
+      <StationCircuitMode
+        isOpen={showStationCircuit}
+        onClose={() => setShowStationCircuit(false)}
+        onLaunchGame={(type) => navigate(`/play/${type}`)}
+      />
+
+      <QuickPinClassroom
+        isOpen={showQuickPin}
+        onClose={() => setShowQuickPin(false)}
+        onStartGame={(type) => navigate(`/play/${type}`)}
+      />
+
+      <MotionCamChallenge
+        isOpen={showMotionCam}
+        onClose={() => setShowMotionCam(false)}
+      />
+
+      {/* PWA 설치 유도 배너 */}
+      <PwaInstallBanner />
 
       {/* Footer */}
       <div className="px-4 md:px-8 pb-10 max-w-5xl mx-auto">
