@@ -72,10 +72,34 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
     }
   }, [speak]);
 
+  const stop = useCallback(() => {
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    } catch {
+      // 브라우저 예외 무시
+    }
+  }, []);
+
+  // 훅을 사용하는 컴포넌트 언마운트 시 음성 자동 중단
+  useEffect(() => {
+    return () => {
+      try {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      } catch {
+        // 브라우저 예외 무시
+      }
+    };
+  }, []);
+
   return {
     enabled,
     toggleEnabled,
     speak,
-    speakCountdown
+    speakCountdown,
+    stop
   };
 };

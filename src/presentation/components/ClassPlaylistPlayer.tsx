@@ -60,11 +60,26 @@ const DEFAULT_LESSON_STEPS: StepInfo[] = [
 
 export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen, onClose }) => {
   const { playBeep } = useAudio();
-  const { speak } = useVoiceCoach();
+  const { speak, stop } = useVoiceCoach();
 
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DEFAULT_LESSON_STEPS[0].durationSec);
   const [isRunning, setIsRunning] = useState(false);
+
+  // 모달 닫힘 감지 시 음성 및 타이머 즉시 정지
+  useEffect(() => {
+    if (!isOpen) {
+      stop();
+      setIsRunning(false);
+    }
+  }, [isOpen, stop]);
+
+  // 컴포넌트 언마운트 시 음성 완전 정지
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
 
   const step = DEFAULT_LESSON_STEPS[currentStepIdx];
 
@@ -100,6 +115,12 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
     return () => clearInterval(timer);
   }, [isRunning, timeLeft, handleNextStep, playBeep, speak]);
 
+  const handleClose = () => {
+    stop();
+    setIsRunning(false);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const handlePrevStep = () => {
@@ -130,7 +151,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
           </div>
         </div>
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white"
         >
           <X className="w-6 h-6" />
@@ -210,8 +231,11 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
 
         <button
           onClick={() => {
-            setIsRunning(!isRunning);
-            if (!isRunning) {
+            if (isRunning) {
+              stop();
+              setIsRunning(false);
+            } else {
+              setIsRunning(true);
               speak('수업 타이머를 시작합니다.');
             }
           }}
