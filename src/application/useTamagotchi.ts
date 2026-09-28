@@ -38,7 +38,9 @@ export const useTamagotchi = () => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch {
+      // localStorage 접근 불가 시 기본값 사용
+    }
     return {
       name: '땀방이',
       xp: 120,
@@ -58,7 +60,9 @@ export const useTamagotchi = () => {
     setState(nextState);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-    } catch {}
+    } catch {
+      // localStorage 저장 실패 무시
+    }
   };
 
   const addXpAndCoins = useCallback((xpGain: number, coinGain: number) => {
@@ -70,7 +74,9 @@ export const useTamagotchi = () => {
       };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {}
+      } catch {
+        // localStorage 저장 실패 무시
+      }
       return next;
     });
   }, []);

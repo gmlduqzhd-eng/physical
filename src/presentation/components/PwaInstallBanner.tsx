@@ -8,22 +8,26 @@ interface BeforeInstallPromptEvent extends Event {
 
 export const PwaInstallBanner: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showBanner, setShowBanner] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
+  const [isIOS] = useState(() => {
+    if (typeof navigator === 'undefined') return false;
+    return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  });
+  const [showBanner, setShowBanner] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const isDismissed = sessionStorage.getItem('pwa_banner_dismissed') === '1';
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
+    if (isDismissed || isStandalone) return false;
+    return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+  });
   const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   useEffect(() => {
-    // 이미 설치되었거나 닫은 상태인지 확인
     const isDismissed = sessionStorage.getItem('pwa_banner_dismissed') === '1';
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
 
     if (isDismissed || isStandalone) {
       return;
     }
-
-    const ua = navigator.userAgent.toLowerCase();
-    const isApple = /iphone|ipad|ipod/.test(ua);
-    setIsIOS(isApple);
 
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
@@ -32,10 +36,6 @@ export const PwaInstallBanner: React.FC = () => {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-
-    if (isApple && !isStandalone) {
-      setShowBanner(true);
-    }
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);

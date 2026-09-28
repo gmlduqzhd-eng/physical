@@ -41,7 +41,7 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
         speak('카메라 모션 감지가 시작되었습니다. 2미터 뒤로 물러서서 몸을 움직여보세요!', true);
         startMotionTracking();
       }
-    } catch (err) {
+    } catch {
       setErrorMsg('카메라 권한을 허용해야 핸즈프리 모션 감지를 할 수 있습니다.');
     }
   };

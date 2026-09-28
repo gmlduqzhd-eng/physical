@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X, Play, Pause, SkipForward, Clock, CheckCircle } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
 import { useVoiceCoach } from '../../application/useVoiceCoach';
@@ -68,6 +68,18 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
 
   const step = DEFAULT_LESSON_STEPS[currentStepIdx];
 
+  const handleNextStep = useCallback(() => {
+    if (currentStepIdx < DEFAULT_LESSON_STEPS.length - 1) {
+      const nextIdx = currentStepIdx + 1;
+      setCurrentStepIdx(nextIdx);
+      setTimeLeft(DEFAULT_LESSON_STEPS[nextIdx].durationSec);
+      speak(`${DEFAULT_LESSON_STEPS[nextIdx].phase}, ${DEFAULT_LESSON_STEPS[nextIdx].title}을 시작합니다.`, true);
+    } else {
+      setIsRunning(false);
+      speak('모든 체육 수업이 성공적으로 끝났습니다. 수고하셨습니다!', true);
+    }
+  }, [currentStepIdx, speak]);
+
   useEffect(() => {
     let timer: number;
     if (isRunning && timeLeft > 0) {
@@ -86,21 +98,9 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft, currentStepIdx]);
+  }, [isRunning, timeLeft, handleNextStep, playBeep, speak]);
 
   if (!isOpen) return null;
-
-  const handleNextStep = () => {
-    if (currentStepIdx < DEFAULT_LESSON_STEPS.length - 1) {
-      const nextIdx = currentStepIdx + 1;
-      setCurrentStepIdx(nextIdx);
-      setTimeLeft(DEFAULT_LESSON_STEPS[nextIdx].durationSec);
-      speak(`${DEFAULT_LESSON_STEPS[nextIdx].phase}, ${DEFAULT_LESSON_STEPS[nextIdx].title}을 시작합니다.`, true);
-    } else {
-      setIsRunning(false);
-      speak('모든 체육 수업이 성공적으로 끝났습니다. 수고하셨습니다!', true);
-    }
-  };
 
   const handlePrevStep = () => {
     if (currentStepIdx > 0) {

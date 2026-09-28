@@ -54,7 +54,9 @@ export const useDailyStreak = () => {
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
-      } catch {}
+      } catch (e) {
+        console.warn('LocalStorage save failed', e);
+      }
 
       return nextData;
     });
