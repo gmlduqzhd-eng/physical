@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { sfxCoin } from '../../../application/soundEffects';
 
 interface Props {
@@ -12,18 +12,20 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
   const [timeLeft, setTimeLeft] = useState(15);
   const [finished, setFinished] = useState(false);
   const [won, setWon] = useState(false);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
-    if (finished) return;
-
     // Timer
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          setWon(false);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+          if (!finishedRef.current) {
+            finishedRef.current = true;
+            setFinished(true);
+            setWon(false);
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+          }
           return 0;
         }
         return prev - 1;
@@ -32,6 +34,7 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
 
     // Mole Spawner
     const moleInterval = setInterval(() => {
+      if (finishedRef.current) return;
       const r = Math.floor(Math.random() * 9);
       setActiveMole(r);
       
@@ -43,18 +46,18 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
       clearInterval(timer);
       clearInterval(moleInterval);
     };
-  }, [finished]);
+  }, [groupId, enqueueAction]);
 
   const handleWhack = (index: number) => {
-    if (finished || index !== activeMole) return;
+    if (finishedRef.current || finished || index !== activeMole) return;
 
     // Hit successful
     setActiveMole(null); // Hide immediately
     sfxCoin();
     setHits(h => {
-      if (h >= 15) return 15;
       const next = h + 1;
-      if (next >= 15) {
+      if (next >= 15 && !finishedRef.current) {
+        finishedRef.current = true;
         setFinished(true);
         setWon(true);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });

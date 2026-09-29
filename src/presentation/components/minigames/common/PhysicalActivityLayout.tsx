@@ -20,6 +20,8 @@ interface Props {
   instructions: string[];
   safetyItems?: SafetyItem[];
   colorTheme?: string;
+  onFinish?: (score: number) => void;
+  onExit?: () => void;
   children: (props: {
     phase: 'activity' | 'result';
     onComplete: (summary?: string) => void;
@@ -38,6 +40,8 @@ export const PhysicalActivityLayout = ({
   expectedMinutes,
   equipment = [],
   instructions,
+  onFinish,
+  onExit,
   children,
 }: Props) => {
   const navigate = useNavigate();
@@ -65,6 +69,9 @@ export const PhysicalActivityLayout = ({
   const handleActivityComplete = (summary?: string) => {
     if (summary) setCompletionSummary(summary);
     setStep('completed');
+    if (onFinish) {
+      onFinish(500);
+    }
   };
 
   const handleReplay = () => {
@@ -225,7 +232,7 @@ export const PhysicalActivityLayout = ({
                 <RotateCcw className="w-4 h-4" /> 다시 하기
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => { if (onExit) onExit(); else navigate('/'); }}
                 type="button"
                 className="flex-1 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-lg"
               >

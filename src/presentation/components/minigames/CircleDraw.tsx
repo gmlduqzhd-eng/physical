@@ -37,8 +37,12 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleEnd = () => {
-    if (!drawing || points.length < 10) return;
+    if (!drawing) return;
     setDrawing(false);
+    if (points.length < 10) {
+      setPoints([]);
+      return;
+    }
     // 원형도 계산
     const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
     const cy = points.reduce((s, p) => s + p.y, 0) / points.length;

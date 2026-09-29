@@ -3,7 +3,13 @@ import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Heart, Activity, Play, Check } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
 
-export const PulseDetective = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const PulseDetective = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 안정 시 측정, 2: 안정 시 입력, 3: 30초 운동, 4: 운동 직후 측정, 5: 직후 입력, 6: 45초 회복, 7: 회복 후 측정, 8: 회복 후 입력, 9: 결과 그래프
   const [subStep, setSubStep] = useState<number>(1);
   const [timer, setTimer] = useState<number>(15);
@@ -86,6 +92,8 @@ export const PulseDetective = () => {
         '운동 직후와 1분 휴식 후 맥박을 다시 측정해 변화를 관찰합니다.',
       ]}
       colorTheme="cyan"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

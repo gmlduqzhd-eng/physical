@@ -28,12 +28,16 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
         if (diff === null && remaining < -2000) {
           // Missed it completely
           setDiff(9999);
+          if (!lockRef.current) {
+            lockRef.current = true;
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+          }
         }
       }
     }, 10);
 
     return () => clearInterval(timer);
-  }, [minigame.target_time, diff]);
+  }, [minigame.target_time, diff, groupId, enqueueAction]);
 
   const handleTap = () => {
     if (lockRef.current) return;
@@ -47,6 +51,8 @@ export const TelepathyGame = ({ gameRoom, groupId, enqueueAction }: Props) => {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
     } else if (currentDiff <= 1000) {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 100 }, timestamp: Date.now() });
+    } else {
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
     }
   };
 

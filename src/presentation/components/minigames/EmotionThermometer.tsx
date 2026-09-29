@@ -11,7 +11,13 @@ const EMOTIONS = [
   { key: 'calm', name: '차분함', emoji: '🍃', desc: '잔잔한 호수처럼 평화롭고 고요한 숨결' },
 ];
 
-export const EmotionThermometer = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 감정 & 온도 선택, 2: 15초 신체 표현 타이머, 3: 짝 감상 선택, 4: 감상 공유 리포트
   const [phase, setPhase] = useState<number>(1);
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0]>(EMOTIONS[0]);
@@ -26,19 +32,18 @@ export const EmotionThermometer = () => {
   useEffect(() => {
     if (!isTimerRunning) return;
     const interval = setInterval(() => {
-      setExpressTimer(t => {
-        if (t <= 1) {
-          clearInterval(interval);
-          setIsTimerRunning(false);
-          setPhase(3);
-          sfxSuccess();
-          return 0;
-        }
-        return t - 1;
-      });
+      setExpressTimer(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [isTimerRunning]);
+
+  useEffect(() => {
+    if (isTimerRunning && expressTimer === 0) {
+      setIsTimerRunning(false);
+      setPhase(3);
+      sfxSuccess();
+    }
+  }, [isTimerRunning, expressTimer]);
 
   const handleStartExpress = () => {
     setExpressTimer(15);
@@ -62,6 +67,8 @@ export const EmotionThermometer = () => {
         '서로의 생각이 같거나 달라도 좋습니다! 느낌의 다양성을 나누어 보세요.',
       ]}
       colorTheme="purple"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

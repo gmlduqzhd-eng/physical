@@ -9,15 +9,22 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
   const [phase, setPhase] = useState<'up' | 'down'>('up');
   const squatsRef = useRef(0);
+  const phaseRef = useRef<'up' | 'down'>('up');
+  const finishedRef = useRef(false);
   const lastZ = useRef(0);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
+      if (finishedRef.current) return;
       const acc = e.accelerationIncludingGravity;
       if (!acc) return;
       const z = acc.z ?? 0;
-      if (phase === 'up' && z < -2 && lastZ.current >= -2) { setPhase('down'); }
-      if (phase === 'down' && z > 5 && lastZ.current <= 5) {
+      if (phaseRef.current === 'up' && z < -2 && lastZ.current >= -2) {
+        phaseRef.current = 'down';
+        setPhase('down');
+      }
+      if (phaseRef.current === 'down' && z > 5 && lastZ.current <= 5) {
+        phaseRef.current = 'up';
         setPhase('up');
         sfxCoin();
         hapticTap();
@@ -29,7 +36,15 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
     let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: squatsRef.current * 40 }, timestamp: Date.now() }); return 0; }
+        if (prev <= 1) {
+          clearInterval(timer);
+          if (!finishedRef.current) {
+            finishedRef.current = true;
+            setFinished(true);
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: squatsRef.current * 40 }, timestamp: Date.now() });
+          }
+          return 0;
+        }
         const next = prev - 1;
         if (next > 0 && next < 10 && next !== lastWarnSec) {
           lastWarnSec = next;
@@ -40,13 +55,15 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
-  }, [phase]);
+  }, [groupId, enqueueAction]);
 
   const triggerSquat = () => {
-    if (finished) return;
-    if (phase === 'up') {
+    if (finishedRef.current || finished) return;
+    if (phaseRef.current === 'up') {
+      phaseRef.current = 'down';
       setPhase('down');
     } else {
+      phaseRef.current = 'up';
       setPhase('up');
       sfxCoin();
       hapticTap();

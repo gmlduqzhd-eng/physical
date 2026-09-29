@@ -21,7 +21,13 @@ const BODY_CARDS = [
   { id: 'balance', name: '자이로 센서 균형', emoji: '⚖️', desc: '한 발로 중심을 잡으며 상체를 좌우로 기울이기' },
 ];
 
-export const PartnerRobotLab = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 1라운드 설계, 2: 1라운드 로봇 표현, 3: 역할 교대 안내, 4: 2라운드 설계, 5: 2라운드 표현, 6: 최종 창의 칭찬
   const [labStep, setLabStep] = useState<number>(1);
 
@@ -52,7 +58,7 @@ export const PartnerRobotLab = () => {
         { id: 'no_overbend', text: '관절을 무리하게 꺾거나 위험한 동작은 제외하고 안전하게 움직이나요?' },
         { id: 'space', text: '두 사람이 팔다리를 뻗어도 주변 벽이나 다른 모둠과 부딪히지 않는 공간이 있나요?' },
         { id: 'respect', text: '친구의 신체 조건과 표현 방식을 존중하며 즐겁게 참여할 준비가 되었나요?' },
-        { id: 'ready', text: '몸에 불편함이 생기면 언제든 즉시 멈추고 신호를 보낼 수 있나요?' },
+        { id: 'ready', text: '몸에 불편함이 생기면 언제든 즉시멈추고 신호를 보낼 수 있나요?' },
       ]}
       instructions={[
         '두 친구가 [연구원(설계자)]과 [로봇] 역할을 나눕니다.',
@@ -61,6 +67,8 @@ export const PartnerRobotLab = () => {
         '자동으로 역할을 바꾸어 2라운드를 진행하고 서로의 창의성을 칭찬합니다.',
       ]}
       colorTheme="purple"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

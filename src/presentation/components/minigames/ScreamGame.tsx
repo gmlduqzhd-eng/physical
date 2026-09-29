@@ -20,6 +20,8 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const finishedRef = useRef(false);
+
   useEffect(() => {
     let animationFrame: number;
 
@@ -44,7 +46,7 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
         dataArrayRef.current = dataArray;
 
         const checkVolume = () => {
-          if (finished) return;
+          if (finishedRef.current) return;
           
           analyser.getByteFrequencyData(dataArray);
           let sum = 0;
@@ -57,16 +59,15 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
           const volPercent = Math.min(100, Math.max(0, (average / 150) * 100));
           
           setVolume(volPercent);
-          setMaxVolume(prev => {
-            if (prev >= 95) return prev;
-            const nextMax = Math.max(prev, volPercent);
-            if (nextMax >= 95 && !finished) {
-              setFinished(true);
-              setWon(true);
-              enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-            }
-            return nextMax;
-          });
+          setMaxVolume(prev => Math.max(prev, volPercent));
+
+          if (volPercent >= 95 && !finishedRef.current) {
+            finishedRef.current = true;
+            setFinished(true);
+            setWon(true);
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+            return;
+          }
           
           animationFrame = requestAnimationFrame(checkVolume);
         };
@@ -84,9 +85,12 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          setWon(false);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+          if (!finishedRef.current) {
+            finishedRef.current = true;
+            setFinished(true);
+            setWon(false);
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+          }
           return 0;
         }
         return prev - 1;
@@ -103,15 +107,15 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
         audioContextRef.current.close();
       }
     };
-  }, [finished]);
+  }, [groupId, enqueueAction]);
 
   const handleFallbackTap = () => {
-    if (finished) return;
+    if (finishedRef.current) return;
     setMaxVolume(prev => {
-      if (prev >= 100) return 100;
-      const nextMax = prev + 5;
+      const nextMax = Math.min(100, prev + 8);
       setVolume(nextMax);
-      if (nextMax >= 100) {
+      if (nextMax >= 95 && !finishedRef.current) {
+        finishedRef.current = true;
         setFinished(true);
         setWon(true);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });

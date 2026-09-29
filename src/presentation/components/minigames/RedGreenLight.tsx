@@ -14,34 +14,43 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
   const isGreenRef = useRef(true);
+  const signalTimerRef = useRef<any>(null);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     // 신호 전환 타이머
     const switchSignal = () => {
+      if (finishedRef.current) return;
       const nextGreen = !isGreenRef.current;
       isGreenRef.current = nextGreen;
       setIsGreen(nextGreen);
       const delay = nextGreen ? (1500 + Math.random() * 2500) : (800 + Math.random() * 2000);
-      return setTimeout(switchSignal, delay);
+      signalTimerRef.current = setTimeout(switchSignal, delay);
     };
-    const signalTimer = switchSignal();
+    signalTimerRef.current = setTimeout(switchSignal, 2000);
 
     // 게임 타이머
     const gameTimer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(gameTimer);
-          clearTimeout(signalTimer);
-          setFinished(true);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current * 30 }, timestamp: Date.now() });
+          if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
+          if (!finishedRef.current) {
+            finishedRef.current = true;
+            setFinished(true);
+            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current * 30 }, timestamp: Date.now() });
+          }
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
-    return () => { clearInterval(gameTimer); clearTimeout(signalTimer); };
-  }, []);
+    return () => {
+      clearInterval(gameTimer);
+      if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
+    };
+  }, [groupId, enqueueAction]);
 
   const handleTap = () => {
     if (finished || eliminated) return;

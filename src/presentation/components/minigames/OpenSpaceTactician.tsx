@@ -8,7 +8,13 @@ interface Point {
   y: number;
 }
 
-export const OpenSpaceTactician = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const OpenSpaceTactician = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 전술판 설계, 2: 실제 코트 실행(60초), 3: 전술 성찰
   const [tacticsStep, setTacticsStep] = useState<number>(1);
   const [selectedPlayer, setSelectedPlayer] = useState<'A' | 'B' | null>(null);
@@ -36,19 +42,18 @@ export const OpenSpaceTactician = () => {
   useEffect(() => {
     if (!isTimerActive) return;
     const interval = setInterval(() => {
-      setExecTimer(t => {
-        if (t <= 1) {
-          clearInterval(interval);
-          setIsTimerActive(false);
-          setTacticsStep(3);
-          sfxSuccess();
-          return 0;
-        }
-        return t - 1;
-      });
+      setExecTimer(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [isTimerActive]);
+
+  useEffect(() => {
+    if (isTimerActive && execTimer === 0) {
+      setIsTimerActive(false);
+      setTacticsStep(3);
+      sfxSuccess();
+    }
+  }, [isTimerActive, execTimer]);
 
   const handleFieldClick = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -88,6 +93,8 @@ export const OpenSpaceTactician = () => {
         '활동 후 빈 공간 활용과 호흡이 어땠는지 성공점과 보완점을 성찰합니다.',
       ]}
       colorTheme="cyan"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

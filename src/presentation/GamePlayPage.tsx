@@ -425,21 +425,21 @@ export const GamePlayPage = () => {
       case 'body_twist':
         return <BodyTwist key={key} {...commonProps} />;
       case 'pulse-detective':
-        return <PulseDetective key={key} />;
+        return <PulseDetective key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'posture-guardian':
-        return <PostureGuardian key={key} />;
+        return <PostureGuardian key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'rolling-curling':
-        return <RollingCurling key={key} />;
+        return <RollingCurling key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'pass-gate-rescue':
-        return <PassGateRescue key={key} />;
+        return <PassGateRescue key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'dribble-rhythm':
-        return <DribbleRhythm key={key} />;
+        return <DribbleRhythm key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'open-space-tactician':
-        return <OpenSpaceTactician key={key} />;
+        return <OpenSpaceTactician key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'emotion-thermometer':
-        return <EmotionThermometer key={key} />;
+        return <EmotionThermometer key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'partner-robot-lab':
-        return <PartnerRobotLab key={key} />;
+        return <PartnerRobotLab key={key} {...commonProps} onExit={() => navigate('/')} />;
       case 'compass-azimuth':
         return <CompassAzimuth key={key} {...commonProps} />;
       case 'kayak-paddle':

@@ -30,8 +30,12 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
   const handleStart = (e: React.TouchEvent | React.MouseEvent) => { e.preventDefault(); const p = getPos(e); if (p) { setTracing(true); setTraced([p]); setRoundScore(null); } };
   const handleMove = (e: React.TouchEvent | React.MouseEvent) => { if (!tracing) return; e.preventDefault(); const p = getPos(e); if (p) setTraced(prev => [...prev, p]); };
   const handleEnd = () => {
-    if (!tracing || traced.length < 5) return;
+    if (!tracing) return;
     setTracing(false);
+    if (traced.length < 5) {
+      setTraced([]);
+      return;
+    }
     sfxClick();
     const pts = Math.min(500, Math.floor(traced.length * 3));
     setRoundScore(pts);

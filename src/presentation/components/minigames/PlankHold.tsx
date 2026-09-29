@@ -8,41 +8,84 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
   const [failed, setFailed] = useState(false);
   const [finished, setFinished] = useState(false);
   const holdRef = useRef(0);
+  const stableRef = useRef(false);
+  const failedRef = useRef(false);
+  const finishedRef = useRef(false);
+  const isPointerHolding = useRef(false);
   const TARGET = 30;
 
   useEffect(() => {
     const handler = (e: DeviceOrientationEvent) => {
+      if (failedRef.current || finishedRef.current) return;
       const beta = e.beta ?? 0;
       const gamma = e.gamma ?? 0;
       const isLevel = Math.abs(beta) < 25 && Math.abs(gamma) < 25;
-      setStable(isLevel);
-      if (!isLevel && holdRef.current > 3) { setFailed(true); }
+      const currentStable = isLevel || isPointerHolding.current;
+      stableRef.current = currentStable;
+      setStable(currentStable);
+      if (!currentStable && holdRef.current > 3 && !failedRef.current && !finishedRef.current) {
+        failedRef.current = true;
+        finishedRef.current = true;
+        setFailed(true);
+        setFinished(true);
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: holdRef.current * 15 },
+          timestamp: Date.now()
+        });
+      }
     };
     window.addEventListener('deviceorientation', handler);
-    const timer = setInterval(() => {
-      if (failed || finished) return;
-      setHoldTime(prev => {
-        if (!stable) return prev;
-        const next = prev + 1;
-        holdRef.current = next;
-        if (next >= TARGET) {
-          setFinished(true);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-        }
-        return next;
-      });
-    }, 1000);
-    return () => { window.removeEventListener('deviceorientation', handler); clearInterval(timer); };
-  }, [stable, failed, finished]);
 
-  useEffect(() => {
-    if (failed && !finished) {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: holdRef.current * 15 }, timestamp: Date.now() });
-    }
-  }, [failed]);
+    const timer = setInterval(() => {
+      if (failedRef.current || finishedRef.current) return;
+      if (!stableRef.current) return;
+
+      const next = holdRef.current + 1;
+      holdRef.current = next;
+      setHoldTime(next);
+
+      if (next >= TARGET && !finishedRef.current) {
+        finishedRef.current = true;
+        setFinished(true);
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: 500 },
+          timestamp: Date.now()
+        });
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('deviceorientation', handler);
+      clearInterval(timer);
+    };
+  }, [groupId, enqueueAction]);
+
+  const handlePointerDown = () => {
+    if (failedRef.current || finishedRef.current) return;
+    isPointerHolding.current = true;
+    stableRef.current = true;
+    setStable(true);
+  };
+
+  const handlePointerUp = () => {
+    isPointerHolding.current = false;
+    stableRef.current = false;
+    setStable(false);
+  };
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none transition-colors ${stable ? 'bg-emerald-950' : 'bg-red-950'}`}>
+    <div
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+      className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer touch-none ${
+        stable ? 'bg-emerald-950' : 'bg-red-950'
+      }`}
+    >
       <h1 className="text-3xl font-black text-white mb-2 text-center">💪 코어 플랭크 챌린지</h1>
       <p className="text-slate-300 font-bold mb-4 text-center text-sm">폰을 등 위에 올리고 일직선 플랭크 자세를 유지하세요!</p>
 

@@ -3,7 +3,13 @@ import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Users, CheckCircle2 } from 'lucide-react';
 import { sfxCoin } from '../../../application/soundEffects';
 
-export const PassGateRescue = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const PassGateRescue = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 모둠원 등록, 2: 1라운드 활동, 3: 전략 조정, 4: 2라운드 활동, 5: 협력 결과
   const [phaseStep, setPhaseStep] = useState<number>(1);
   const [members, setMembers] = useState<string[]>(['모둠원 1', '모둠원 2']);
@@ -60,6 +66,8 @@ export const PassGateRescue = () => {
         '1라운드 후 전략 회의를 거쳐 게이트 위치를 바꾸고 2라운드에 도전합니다.',
       ]}
       colorTheme="blue"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

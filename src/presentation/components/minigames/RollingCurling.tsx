@@ -9,7 +9,13 @@ interface Attempt {
   score: number;
 }
 
-export const RollingCurling = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [forceReflection, setForceReflection] = useState<string>('');
   const [showSummary, setShowSummary] = useState<boolean>(false);
@@ -64,6 +70,8 @@ export const RollingCurling = () => {
         '매 시도마다 힘의 세기를 미세하게 조절하며 중앙에 가깝게 보내보세요.',
       ]}
       colorTheme="amber"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

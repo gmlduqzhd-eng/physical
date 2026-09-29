@@ -3,7 +3,13 @@ import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Volume2, VolumeX, Play, RotateCcw, CheckCircle2 } from 'lucide-react';
 import { sfxSuccess } from '../../../application/soundEffects';
 
-export const DribbleRhythm = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const DribbleRhythm = ({ groupId, enqueueAction, onExit }: Props) => {
   const [bpm, setBpm] = useState<number>(90);
   const [dribbleMode, setDribbleMode] = useState<'hand' | 'foot'>('hand');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -61,19 +67,18 @@ export const DribbleRhythm = () => {
   useEffect(() => {
     if (!isPlaying) return;
     const timerInterval = setInterval(() => {
-      setActivityTimer(t => {
-        if (t <= 1) {
-          clearInterval(timerInterval);
-          setIsPlaying(false);
-          setFinished20s(true);
-          sfxSuccess();
-          return 0;
-        }
-        return t - 1;
-      });
+      setActivityTimer(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(timerInterval);
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (isPlaying && activityTimer === 0) {
+      setIsPlaying(false);
+      setFinished20s(true);
+      sfxSuccess();
+    }
+  }, [isPlaying, activityTimer]);
 
   const handleStartActivity = () => {
     setActivityTimer(20);
@@ -99,6 +104,8 @@ export const DribbleRhythm = () => {
         '화면을 보지 않아도 박자에 몸을 맡기며 공을 통제하는 감각을 길러보세요.',
       ]}
       colorTheme="orange"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl text-center">

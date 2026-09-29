@@ -13,11 +13,16 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
   const scoreRef = useRef(0);
   const phaseRef = useRef<'move' | 'freeze'>('move');
   const TOTAL_ROUNDS = 6;
+  const innerTimerRef = useRef<any>(null);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     if (round > TOTAL_ROUNDS) {
-      setFinished(true);
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() });
+      if (!finishedRef.current) {
+        finishedRef.current = true;
+        setFinished(true);
+        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() });
+      }
       return;
     }
     phaseRef.current = 'move';
@@ -27,14 +32,20 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
     const freezeTimer = setTimeout(() => {
       phaseRef.current = 'freeze';
       setPhase('freeze');
-      setTimeout(() => {
+      innerTimerRef.current = setTimeout(() => {
         sfxCoin();
-        setScore(s => { const n = s + 50; scoreRef.current = n; return n; });
+        const next = scoreRef.current + 50;
+        scoreRef.current = next;
+        setScore(next);
         setRound(r => r + 1);
       }, 2000);
     }, moveTime);
-    return () => clearTimeout(freezeTimer);
-  }, [round]);
+
+    return () => {
+      clearTimeout(freezeTimer);
+      if (innerTimerRef.current) clearTimeout(innerTimerRef.current);
+    };
+  }, [round, groupId, enqueueAction]);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {

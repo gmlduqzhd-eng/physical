@@ -46,7 +46,13 @@ const POSTURE_MISSIONS = [
   },
 ];
 
-export const PostureGuardian = () => {
+interface Props {
+  groupId?: string;
+  enqueueAction?: (a: any) => void;
+  onExit?: () => void;
+}
+
+export const PostureGuardian = ({ groupId, enqueueAction, onExit }: Props) => {
   const [mode, setMode] = useState<'self' | 'peer'>('self');
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [holdTimer, setHoldTimer] = useState<number>(10);
@@ -58,18 +64,17 @@ export const PostureGuardian = () => {
   useEffect(() => {
     if (!isHolding) return;
     const interval = setInterval(() => {
-      setHoldTimer(t => {
-        if (t <= 1) {
-          clearInterval(interval);
-          setIsHolding(false);
-          sfxCoin();
-          return 0;
-        }
-        return t - 1;
-      });
+      setHoldTimer(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(interval);
   }, [isHolding]);
+
+  useEffect(() => {
+    if (isHolding && holdTimer === 0) {
+      setIsHolding(false);
+      sfxCoin();
+    }
+  }, [isHolding, holdTimer]);
 
   const startHold = () => {
     setHoldTimer(10);
@@ -108,6 +113,8 @@ export const PostureGuardian = () => {
         '5가지 부품을 모두 고쳐 튼튼한 수호 로봇을 완성해 보세요!',
       ]}
       colorTheme="indigo"
+      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onExit={onExit}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">

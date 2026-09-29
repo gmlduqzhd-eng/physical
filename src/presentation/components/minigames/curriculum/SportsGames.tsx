@@ -167,16 +167,16 @@ export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, on
    ========================================================================= */
 export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
   const [ballHeight, setBallHeight] = useState(0);
-  const [direction, setDirection] = useState<'up' | 'down'>('up');
   const [hits, setHits] = useState(0);
   const [finished, setFinished] = useState(false);
   const hitsRef = useRef(0);
+  const dirRef = useRef<'up' | 'down'>('up');
   const TARGET_HITS = 5;
 
   const handleRestart = () => {
     hitsRef.current = 0;
+    dirRef.current = 'up';
     setBallHeight(0);
-    setDirection('up');
     setHits(0);
     setFinished(false);
   };
@@ -185,15 +185,15 @@ export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction,
     if (finished) return;
     const interval = setInterval(() => {
       setBallHeight(h => {
-        if (direction === 'up') {
+        if (dirRef.current === 'up') {
           if (h >= 90) {
-            setDirection('down');
+            dirRef.current = 'down';
             return 90;
           }
           return h + 4;
         } else {
           if (h <= 10) {
-            setDirection('up');
+            dirRef.current = 'up';
             return 10;
           }
           return h - 4;
@@ -201,7 +201,7 @@ export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction,
       });
     }, 40);
     return () => clearInterval(interval);
-  }, [direction, finished]);
+  }, [finished]);
 
   const isApex = ballHeight >= 82 && ballHeight <= 94;
 
@@ -224,7 +224,7 @@ export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction,
         });
       } else {
         setBallHeight(10);
-        setDirection('up');
+        dirRef.current = 'up';
       }
     } else {
       sfxPop();
@@ -427,7 +427,9 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
   const handlePass = () => {
     if (passStatus !== 'ready' || finished) return;
     const FW_POS = 55;
-    const isOffside = FW_POS > defLinePos;
+    // top 0%가 상대 골대이므로, 수비 라인이 공격수보다 뒤에 머물 때(defLinePos > FW_POS) 공격수가 오프사이드 위치에 있게 됩니다.
+    // 수비 라인이 공격수보다 앞선 위치(defLinePos <= FW_POS)에 있을 때만 온사이드 침투 성공입니다.
+    const isOffside = defLinePos > FW_POS;
 
     if (!isOffside) {
       sfxSuccess();
@@ -620,7 +622,7 @@ export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction
         <GameResultOverlay
           title={`🏸 ${score}회 빈 코스 공략 성공!`}
           subtitle="상대의 코트 포지셔닝을 실시간 간파하여 최적의 공격 코스로 공략했습니다."
-          score={Math.max(200, score)}
+          score={Math.max(200, scoreRef.current)}
           badge="배드민턴 코스 전술가"
           onRestart={handleRestart}
           onExit={onExit}
@@ -925,7 +927,7 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
         <GameResultOverlay
           title={`🏀 ${score}골 자유투 성공!`}
           subtitle="최적 포물선 발사각과 투사체 역학을 적용하여 림을 완벽히 갈랐습니다."
-          score={Math.max(200, score)}
+          score={Math.max(200, scoreRef.current)}
           badge="자유투 명사수"
           onRestart={handleRestart}
           onExit={onExit}
@@ -943,12 +945,14 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
   const [stonePos, setStonePos] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [finalScore, setFinalScore] = useState(500);
   const pressStart = useRef(0);
 
   const handleRestart = () => {
     setChargeTime(0);
     setStonePos(0);
     setIsSliding(false);
+    setFinalScore(500);
     setFinished(false);
   };
 
@@ -980,6 +984,7 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
           : distFromCenter <= 30 ? 200
           : 100;
 
+        setFinalScore(scoreEarned);
         setFinished(true);
         if (scoreEarned >= 350) sfxSuccess(); else sfxPop();
         enqueueAction({
@@ -1030,9 +1035,9 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
 
       {finished && (
         <GameResultOverlay
-          title="🥌 하우스 중앙 안착 완료!"
+          title={finalScore >= 500 ? "🥌 하우스 정중앙 안착 성공!" : finalScore >= 350 ? "🥌 하우스 내부 안착 성공!" : "🥌 투구 완료"}
           subtitle="빙판의 마찰력과 투구 지속 압력을 정밀하게 컨트롤했습니다."
-          score={500}
+          score={finalScore}
           badge="빙판 전략 컬링 마스터"
           onRestart={handleRestart}
           onExit={onExit}
@@ -1051,8 +1056,18 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
   const [round, setRound] = useState(1);
   const [finished, setFinished] = useState(false);
   const countersRef = useRef(0);
+  const warnTimerRef = useRef<any>(null);
+  const attackTimerRef = useRef<any>(null);
+  const expireTimerRef = useRef<any>(null);
+
+  const clearAllTimers = () => {
+    if (warnTimerRef.current) { clearTimeout(warnTimerRef.current); warnTimerRef.current = null; }
+    if (attackTimerRef.current) { clearTimeout(attackTimerRef.current); attackTimerRef.current = null; }
+    if (expireTimerRef.current) { clearTimeout(expireTimerRef.current); expireTimerRef.current = null; }
+  };
 
   const handleRestart = () => {
+    clearAllTimers();
     countersRef.current = 0;
     setRound(1);
     setCounters(0);
@@ -1060,19 +1075,20 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
   };
 
   useEffect(() => {
+    clearAllTimers();
     if (finished) return;
     setOppState('idle');
     const delay = Math.random() * 2000 + 1000;
 
-    const warnTimer = setTimeout(() => {
+    warnTimerRef.current = setTimeout(() => {
       setOppState('warning');
       sfxTap();
 
-      const attackTimer = setTimeout(() => {
+      attackTimerRef.current = setTimeout(() => {
         setOppState('attack');
         hapticTap();
 
-        const expireTimer = setTimeout(() => {
+        expireTimerRef.current = setTimeout(() => {
           if (round >= 3) {
             setFinished(true);
             sfxSuccess();
@@ -1085,19 +1101,16 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
           } else {
             setRound(r => r + 1);
           }
-        }, 400);
-
-        return () => clearTimeout(expireTimer);
+        }, 500);
       }, 600);
-
-      return () => clearTimeout(attackTimer);
     }, delay);
 
-    return () => clearTimeout(warnTimer);
+    return () => clearAllTimers();
   }, [round, finished, groupId, enqueueAction]);
 
   const handleParry = () => {
     if (oppState === 'attack' && !finished) {
+      clearAllTimers();
       sfxSuccess();
       hapticTap();
       const next = counters + 1;
@@ -1264,7 +1277,7 @@ export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueActio
         <GameResultOverlay
           title={`🏓 ${score}회 회전 판독 성공!`}
           subtitle="탁구 러버의 마찰 궤적으로 탑스핀과 백스핀을 구분해 완벽히 리시브했습니다."
-          score={Math.max(200, score)}
+          score={Math.max(200, scoreRef.current)}
           badge="탁구 스핀 판독기"
           onRestart={handleRestart}
           onExit={onExit}
