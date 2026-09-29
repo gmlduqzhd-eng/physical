@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ExternalLink, X, Smartphone, AlertTriangle } from 'lucide-react';
 
 export const KakaoInAppNotice: React.FC = () => {
-  const [isKakao, setIsKakao] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
+  const [isKakao] = useState(() => {
+    if (typeof navigator === 'undefined') return false;
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
-    if (/KAKAOTALK/i.test(ua)) {
-      setIsKakao(true);
-    }
-  }, []);
+    return /KAKAOTALK/i.test(ua);
+  });
+  const [dismissed, setDismissed] = useState(false);
 
   if (!isKakao || dismissed) return null;
 

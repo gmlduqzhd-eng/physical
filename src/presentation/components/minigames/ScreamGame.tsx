@@ -22,7 +22,6 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
 
   useEffect(() => {
     let animationFrame: number;
-    let timer: any;
 
     const startMic = async () => {
       try {
@@ -81,7 +80,7 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
 
     startMic();
 
-    timer = setInterval(() => {
+    const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);

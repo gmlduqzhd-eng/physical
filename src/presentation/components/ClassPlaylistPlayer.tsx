@@ -66,11 +66,10 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
   const [timeLeft, setTimeLeft] = useState(DEFAULT_LESSON_STEPS[0].durationSec);
   const [isRunning, setIsRunning] = useState(false);
 
-  // 모달 닫힘 감지 시 음성 및 타이머 즉시 정지
+  // 모달 닫힘 감지 시 음성 즉시 정지
   useEffect(() => {
     if (!isOpen) {
       stop();
-      setIsRunning(false);
     }
   }, [isOpen, stop]);
 

@@ -47,12 +47,11 @@ export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, on
     const finalImpact = aimOffset + windPush;
     const distance = Math.abs(finalImpact);
 
-    let points = 0;
-    if (distance <= 8) points = 10;
-    else if (distance <= 20) points = 9;
-    else if (distance <= 35) points = 8;
-    else if (distance <= 50) points = 7;
-    else points = 5;
+    const points = distance <= 8 ? 10
+      : distance <= 20 ? 9
+      : distance <= 35 ? 8
+      : distance <= 50 ? 7
+      : 5;
 
     setArrowResult(points);
     if (points >= 9) sfxCoin(); else sfxPop();
@@ -621,7 +620,7 @@ export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction
         <GameResultOverlay
           title={`🏸 ${score}회 빈 코스 공략 성공!`}
           subtitle="상대의 코트 포지셔닝을 실시간 간파하여 최적의 공격 코스로 공략했습니다."
-          score={Math.max(200, scoreRef.current)}
+          score={Math.max(200, score)}
           badge="배드민턴 코스 전술가"
           onRestart={handleRestart}
           onExit={onExit}
@@ -926,7 +925,7 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
         <GameResultOverlay
           title={`🏀 ${score}골 자유투 성공!`}
           subtitle="최적 포물선 발사각과 투사체 역학을 적용하여 림을 완벽히 갈랐습니다."
-          score={Math.max(200, scoreRef.current)}
+          score={Math.max(200, score)}
           badge="자유투 명사수"
           onRestart={handleRestart}
           onExit={onExit}
@@ -976,11 +975,10 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
         clearInterval(timer);
         setIsSliding(false);
         const distFromCenter = Math.abs(cur - 50);
-        let scoreEarned = 0;
-        if (distFromCenter <= 6) scoreEarned = 500;
-        else if (distFromCenter <= 15) scoreEarned = 350;
-        else if (distFromCenter <= 30) scoreEarned = 200;
-        else scoreEarned = 100;
+        const scoreEarned = distFromCenter <= 6 ? 500
+          : distFromCenter <= 15 ? 350
+          : distFromCenter <= 30 ? 200
+          : 100;
 
         setFinished(true);
         if (scoreEarned >= 350) sfxSuccess(); else sfxPop();
@@ -1159,7 +1157,7 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
         <GameResultOverlay
           title={`🥋 ${counters}회 번개 반격 성공!`}
           subtitle="상대의 예비 동작을 읽고 찰나의 순간에 카운터 공격을 적중시켰습니다."
-          score={Math.max(200, countersRef.current * 170)}
+          score={Math.max(200, counters * 170)}
           badge="태권도 전광석화 카운터"
           onRestart={handleRestart}
           onExit={onExit}
@@ -1266,7 +1264,7 @@ export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueActio
         <GameResultOverlay
           title={`🏓 ${score}회 회전 판독 성공!`}
           subtitle="탁구 러버의 마찰 궤적으로 탑스핀과 백스핀을 구분해 완벽히 리시브했습니다."
-          score={Math.max(200, scoreRef.current)}
+          score={Math.max(200, score)}
           badge="탁구 스핀 판독기"
           onRestart={handleRestart}
           onExit={onExit}

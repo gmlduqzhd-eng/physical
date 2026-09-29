@@ -38,14 +38,17 @@ export const ScoreBoard = () => {
 
   // 게임 종료 시 컨페티
   useEffect(() => {
-    if (gameRoom?.status === 'finished' && confetti.length === 0) {
-      const particles = Array.from({ length: 60 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98'][i % 8],
-        delay: Math.random() * 2,
-      }));
-      setConfetti(particles);
+    if (gameRoom?.status === 'finished') {
+      setConfetti(prev => {
+        if (prev.length > 0) return prev;
+        return Array.from({ length: 60 }, (_, i) => ({
+          id: i,
+          x: Math.random() * 100,
+          color: ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98FB98'][i % 8],
+          delay: Math.random() * 2,
+          spinDuration: 0.5 + Math.random(),
+        }));
+      });
     }
   }, [gameRoom?.status]);
   
@@ -80,7 +83,7 @@ export const ScoreBoard = () => {
             animation: `confettiFall ${3 + p.delay}s ease-in forwards`,
             animationDelay: `${p.delay}s`,
           }}>
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color, animation: `confettiSpin ${0.5 + Math.random()}s linear infinite` }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color, animation: `confettiSpin ${(p as any).spinDuration || 1}s linear infinite` }} />
           </div>
         ))}
         <style>{`
@@ -236,35 +239,37 @@ export const ScoreBoard = () => {
       )}
 
       <main className="relative z-10 p-12 grid grid-cols-2 lg:grid-cols-3 gap-8">
-        {scores.map((score) => {
-          const AvatarIcon = (LucideIcons as unknown as Record<string, React.ElementType>)[score.avatar || 'Smile'] || LucideIcons.Smile;
-          return (
-          <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 relative overflow-hidden hover:scale-[1.02] hover:shadow-lg ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
-            {score.item_buff_until && new Date(score.item_buff_until).getTime() > Date.now() && (
-              <div className="absolute inset-0 bg-yellow-400/10 animate-pulse pointer-events-none"></div>
-            )}
-            <div className="flex justify-between items-start mb-4 relative z-10">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-slate-100 rounded-lg text-slate-600 border border-slate-200 shadow-sm relative">
-                  <AvatarIcon className="w-6 h-6" />
-                  {(() => {
-                    const cnt = score.completed_missions?.length || 0;
-                    const pet = cnt >= 20 ? '🔥' : cnt >= 10 ? '🐔' : cnt >= 5 ? '🐥' : '🥚';
-                    return <span className="absolute -top-2 -right-2 text-xl drop-shadow-md">{pet}</span>;
-                  })()}
-                </div>
-                <h2 className="text-2xl font-bold text-slate-800">{score.group_name}</h2>
-              </div>
-              {score.is_defused ? (
-                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded">해체 완료</span>
-              ) : score.is_hacked ? (
-                <span className="px-3 py-1 bg-red-500/20 text-red-400 text-sm font-bold rounded">해킹됨</span>
-              ) : score.item_buff_until && new Date(score.item_buff_until).getTime() > Date.now() ? (
-                <span className="px-3 py-1 bg-yellow-500/20 text-yellow-500 text-sm font-bold rounded flex items-center gap-1"><LucideIcons.Zap className="w-3 h-3" /> 점수 2배!</span>
-              ) : (
-                <span className="px-3 py-1 bg-slate-100 text-slate-500 text-sm font-bold rounded">작전 중</span>
+        {(() => {
+          const now = Date.now();
+          return scores.map((score) => {
+            const AvatarIcon = (LucideIcons as unknown as Record<string, React.ElementType>)[score.avatar || 'Smile'] || LucideIcons.Smile;
+            return (
+            <div key={score.id} className={`flex flex-col bg-white/90 backdrop-blur border-2 rounded-2xl p-6 shadow-md transition-all duration-500 relative overflow-hidden hover:scale-[1.02] hover:shadow-lg ${score.is_defused ? 'border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : score.is_hacked ? 'border-red-400 animate-pulse' : 'border-slate-200'}`}>
+              {score.item_buff_until && new Date(score.item_buff_until).getTime() > now && (
+                <div className="absolute inset-0 bg-yellow-400/10 animate-pulse pointer-events-none"></div>
               )}
-            </div>
+              <div className="flex justify-between items-start mb-4 relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-slate-100 rounded-lg text-slate-600 border border-slate-200 shadow-sm relative">
+                    <AvatarIcon className="w-6 h-6" />
+                    {(() => {
+                      const cnt = score.completed_missions?.length || 0;
+                      const pet = cnt >= 20 ? '🔥' : cnt >= 10 ? '🐔' : cnt >= 5 ? '🐥' : '🥚';
+                      return <span className="absolute -top-2 -right-2 text-xl drop-shadow-md">{pet}</span>;
+                    })()}
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-800">{score.group_name}</h2>
+                </div>
+                {score.is_defused ? (
+                  <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm font-bold rounded">해체 완료</span>
+                ) : score.is_hacked ? (
+                  <span className="px-3 py-1 bg-red-500/20 text-red-400 text-sm font-bold rounded">해킹됨</span>
+                ) : score.item_buff_until && new Date(score.item_buff_until).getTime() > now ? (
+                  <span className="px-3 py-1 bg-yellow-500/20 text-yellow-500 text-sm font-bold rounded flex items-center gap-1"><LucideIcons.Zap className="w-3 h-3" /> 점수 2배!</span>
+                ) : (
+                  <span className="px-3 py-1 bg-slate-100 text-slate-500 text-sm font-bold rounded">작전 중</span>
+                )}
+              </div>
             
             <div className="flex-1 flex flex-col items-center justify-center py-6 relative z-10">
               <span className={`text-6xl font-black font-mono ${score.is_hacked ? 'text-red-500 glitch-text' : 'text-transparent bg-clip-text bg-gradient-to-b from-slate-900 to-slate-500'}`}>
@@ -276,9 +281,10 @@ export const ScoreBoard = () => {
             <div className="w-full bg-slate-100 rounded-full h-3 mb-2 overflow-hidden border border-slate-200 relative z-10">
               <div className={`h-full rounded-full transition-all duration-1000 ${score.is_defused ? 'bg-emerald-500' : 'bg-gradient-to-r from-cyan-500 to-blue-500'}`} style={{ width: `${Math.min(100, (score.score / 1000) * 100)}%` }}></div>
             </div>
-          </div>
-          );
-        })}
+            </div>
+            );
+          });
+        })()}
         {scores.length === 0 && <p className="text-slate-500 col-span-full text-center text-xl">아직 접속한 모둠이 없습니다.</p>}
       </main>
     </div>

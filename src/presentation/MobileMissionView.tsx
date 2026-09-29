@@ -374,6 +374,7 @@ export const MobileMissionView = () => {
   const handleBingoCompleteRef = useRef(handleBingoComplete);
   useEffect(() => { handleBingoCompleteRef.current = handleBingoComplete; });
 
+  const [activeCoopCount, setActiveCoopCount] = useState(0);
   const activeCoopCountRef = useRef(0);
   const handleCoopTouchStart = async (missionId: string) => {
     if (channelRef.current) {
@@ -435,6 +436,7 @@ export const MobileMissionView = () => {
       }
       activeDefuseCountRef.current = defusePressingCount;
       activeCoopCountRef.current = pressingCount;
+      setActiveCoopCount(pressingCount);
 
       deviceIds.sort();
       if (deviceIds[0] === deviceId && gameRoom?.status === 'mafia') {
@@ -1110,7 +1112,7 @@ export const MobileMissionView = () => {
                       
                       {isCoopTile && !isCompleted && activeDevicesCount > 1 && (
                         <div className="absolute bottom-1 w-[80%] h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${(activeCoopCountRef.current / activeDevicesCount) * 100}%` }}></div>
+                          <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${(activeCoopCount / activeDevicesCount) * 100}%` }}></div>
                         </div>
                       )}
                     </button>
