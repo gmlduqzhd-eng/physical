@@ -104,6 +104,48 @@ export function sfxClick() {
   playTone(1200, 0.03, 'square', 0.06);
 }
 
+/** 체육관 교사용 호루라기/휘슬 음향 (Fox40 듀얼 톤 LFO 모듈레이션) */
+export function sfxWhistle() {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+
+    lfo.frequency.setValueAtTime(32, now); // 32Hz 트릴
+    lfoGain.gain.setValueAtTime(70, now);
+    lfo.connect(osc1.frequency);
+    lfo.connect(osc2.frequency);
+
+    osc1.type = 'sine';
+    osc2.type = 'triangle';
+    osc1.frequency.setValueAtTime(2550, now);
+    osc2.frequency.setValueAtTime(2880, now);
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.28, now + 0.04);
+    gain.gain.setValueAtTime(0.28, now + 0.65);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    lfo.start(now);
+    osc1.start(now);
+    osc2.start(now);
+
+    lfo.stop(now + 0.85);
+    osc1.stop(now + 0.85);
+    osc2.stop(now + 0.85);
+  } catch {
+    /* ignore audio errors */
+  }
+}
+
 // === 햅틱(진동) 피드백 ===
 
 /** 짧은 탭 진동 (50ms) — 카운트 증가, 터치 액션 등 */

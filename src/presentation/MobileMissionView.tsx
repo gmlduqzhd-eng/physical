@@ -11,6 +11,7 @@ import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { sfxWhistle } from '../application/soundEffects';
 
 const SHOP_ITEMS = [
   { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 원정대 미션 점수가 2배가 됩니다.', icon: LucideIcons.Zap, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
@@ -42,9 +43,40 @@ export const MobileMissionView = () => {
   const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
   const { isOutdoorMode, toggleOutdoorMode } = useOutdoorMode();
+  const [isStandMode, setIsStandMode] = useState(() => localStorage.getItem('physical_stand_mode') === 'true');
+  const [currentRunner, setCurrentRunner] = useState(1);
   const [studentName] = useState(() => localStorage.getItem('physical_student_name') || '');
   const [role, setRole] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
   const [showFlash, setShowFlash] = useState(false);
+
+  const isWhistleActive = gameRoom?.announcement === 'WHISTLE';
+  const whistlePlayedRef = useRef(false);
+
+  useEffect(() => {
+    if (isWhistleActive && !whistlePlayedRef.current) {
+      sfxWhistle();
+      try { navigator?.vibrate?.([200, 100, 200, 100, 400]); } catch { /* ignore */ }
+      whistlePlayedRef.current = true;
+    } else if (!isWhistleActive) {
+      whistlePlayedRef.current = false;
+    }
+  }, [isWhistleActive]);
+
+  const toggleStandMode = () => {
+    setIsStandMode(prev => {
+      const next = !prev;
+      localStorage.setItem('physical_stand_mode', String(next));
+      return next;
+    });
+  };
+
+  const nextRunner = () => {
+    setCurrentRunner(prev => {
+      const next = prev >= 4 ? 1 : prev + 1;
+      try { navigator?.vibrate?.(80); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const [combo, setCombo] = useState(0);
   const [lastMissionTime, setLastMissionTime] = useState(0);
@@ -843,17 +875,58 @@ export const MobileMissionView = () => {
   }
 
   return (
-    <div className={`min-h-[100dvh] flex flex-col relative overflow-hidden select-none mobile-mission-root ${isOutdoorMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'}`}>
+    <div className={`min-h-[100dvh] flex flex-col relative overflow-hidden select-none mobile-mission-root ${
+      isStandMode ? 'bg-black text-amber-300' : isOutdoorMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'
+    }`}>
       {/* 화면 플래시 효과 */}
       {showFlash && <div className="fixed inset-0 z-[200] bg-cyan-400 animate-screen-flash" />}
 
-      {/* 야외 모드 토글 */}
-      <button
-        onClick={toggleOutdoorMode}
-        className={`outdoor-toggle fixed top-4 right-14 z-50 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-md border-2 ${isOutdoorMode ? 'bg-yellow-400 border-yellow-300 text-black' : 'bg-white/80 border-slate-200 text-slate-600'}`}
-      >
-        {isOutdoorMode ? '☀️' : '🌙'}
-      </button>
+      {/* 🚨 교사 호루라기/휘슬 전원 집중 모달 */}
+      {isWhistleActive && (
+        <div className="fixed inset-0 z-[9999] bg-red-600/95 text-white flex flex-col items-center justify-center p-6 text-center select-none animate-in fade-in duration-200 backdrop-blur-md">
+          <div className="w-24 h-24 rounded-full bg-white text-red-600 flex items-center justify-center mb-6 animate-bounce shadow-2xl">
+            <LucideIcons.Volume2 className="w-14 h-14" />
+          </div>
+          <span className="px-4 py-1.5 rounded-full bg-white/20 text-yellow-300 font-black text-sm uppercase tracking-widest mb-3 border border-white/30">
+            📢 체육관 전체 집중 신호
+          </span>
+          <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight drop-shadow-lg">
+            선생님을<br/>바라보세요!
+          </h1>
+          <p className="text-lg text-red-100 max-w-sm font-bold">
+            호루라기가 울렸습니다.<br/>하던 활동을 멈추고 교사의 지시에 집중하세요.
+          </p>
+        </div>
+      )}
+
+      {/* 상단 퀵 컨트롤 (주자 교대 + 스탠드 모드 + 야외 모드) */}
+      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
+        <button
+          onClick={nextRunner}
+          className="px-2.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-xs font-black shadow-md border border-cyan-400 active:scale-95 flex items-center gap-1"
+          title="터치하여 다음 주자 교대"
+        >
+          <span>🏃 {currentRunner}번 주자</span>
+        </button>
+        <button
+          onClick={toggleStandMode}
+          className={`px-2.5 py-1.5 rounded-full text-xs font-black shadow-md border-2 active:scale-95 flex items-center gap-1 ${
+            isStandMode
+              ? 'bg-amber-400 border-amber-300 text-slate-950 shadow-amber-400/40'
+              : 'bg-white/90 border-slate-200 text-slate-700'
+          }`}
+          title="체육관 바닥/콘 거치용 대형 고대비 스탠드 모드"
+        >
+          <span>{isStandMode ? '🎛️ 스탠드 ON' : '📱 폰'}</span>
+        </button>
+        <button
+          onClick={toggleOutdoorMode}
+          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md border-2 ${isOutdoorMode ? 'bg-yellow-400 border-yellow-300 text-black' : 'bg-white/80 border-slate-200 text-slate-600'}`}
+          title="야외 시인성 모드"
+        >
+          {isOutdoorMode ? '☀️' : '🌙'}
+        </button>
+      </div>
       {combo > 1 && (
         <div className="absolute top-1/4 right-8 z-40 transform rotate-12 animate-bounce flex flex-col items-center pointer-events-none">
           <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 drop-shadow-lg italic">
@@ -915,8 +988,14 @@ export const MobileMissionView = () => {
       )}
       
       <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none">
-        <div className={`status-badge flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border shadow-sm ${isOutdoorMode ? 'bg-black/80 border-slate-700 text-white' : 'bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700'}`}>
-          <LucideIcons.Clock className="w-4 h-4" /> <span className="font-mono">{mins}:{secs}</span>
+        <div className={`status-badge flex items-center gap-2 rounded-full border shadow-sm transition-all ${
+          isStandMode
+            ? 'px-4 py-2 bg-amber-400 text-slate-950 border-amber-300 font-mono text-2xl font-black shadow-lg shadow-amber-400/20'
+            : isOutdoorMode
+            ? 'px-3 py-1.5 bg-black/80 border-slate-700 text-white text-xs font-bold'
+            : 'px-3 py-1.5 bg-white/80 backdrop-blur-sm border-slate-200 text-slate-700 text-xs font-bold'
+        }`}>
+          <LucideIcons.Clock className={isStandMode ? 'w-6 h-6 text-slate-950' : 'w-4 h-4'} /> <span className="font-mono">{mins}:{secs}</span>
         </div>
         {!isOnline && (
           <div className="status-badge flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-orange-100/90 backdrop-blur-sm border-orange-300 text-orange-800 shadow-sm animate-pulse">
@@ -956,12 +1035,24 @@ export const MobileMissionView = () => {
           </div>
         )}
 
-        <div className={`score-card shrink-0 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${isZombie ? 'opacity-80' : ''} ${isOutdoorMode ? 'bg-black/80 border-2 border-cyan-600' : 'bg-white border border-slate-200'}`}>
+        <div className={`score-card shrink-0 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${
+          isStandMode
+            ? 'bg-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.25)]'
+            : isZombie
+            ? 'opacity-80'
+            : isOutdoorMode
+            ? 'bg-black/80 border-2 border-cyan-600'
+            : 'bg-white border border-slate-200'
+        }`}>
           {hasBuff && <div className="absolute inset-0 bg-yellow-100/30 animate-pulse"></div>}
-          <span className={`score-label font-bold tracking-widest text-sm mb-1 relative z-10 ${isOutdoorMode ? 'text-slate-300' : 'text-slate-500'}`}>
+          <span className={`score-label font-bold tracking-widest text-sm mb-1 relative z-10 ${
+            isStandMode ? 'text-amber-300 font-black' : isOutdoorMode ? 'text-slate-300' : 'text-slate-500'
+          }`}>
             {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : '현재 에너지 충전율'} {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
           </span>
-          <span className={`score-value text-7xl font-black font-mono transition-transform relative z-10 ${isOutdoorMode ? 'text-cyan-400' : 'text-slate-900'}`}>
+          <span className={`score-value font-black font-mono transition-transform relative z-10 ${
+            isStandMode ? 'text-amber-400 text-8xl drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]' : isOutdoorMode ? 'text-cyan-400 text-7xl' : 'text-slate-900 text-7xl'
+          }`}>
             {displayScore}
           </span>
           

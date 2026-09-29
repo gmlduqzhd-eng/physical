@@ -16,6 +16,7 @@ import { ClassPlaylistPlayer } from './components/ClassPlaylistPlayer';
 import { StationCircuitMode } from './components/StationCircuitMode';
 import { QuickPinClassroom } from './components/QuickPinClassroom';
 import { MotionCamChallenge } from './components/MotionCamChallenge';
+import { BadgeArchiveModal } from './components/BadgeArchiveModal';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
@@ -1445,6 +1446,11 @@ export const GameHub = () => {
   const [showStationCircuit, setShowStationCircuit] = useState(false);
   const [showQuickPin, setShowQuickPin] = useState(false);
   const [showMotionCam, setShowMotionCam] = useState(false);
+  const [showBadgeArchive, setShowBadgeArchive] = useState(false);
+
+  // 스마트 체육 현장 맞춤 필터 (장소 · 센서)
+  const [placeFilter, setPlaceFilter] = useState<'전체' | '교실' | '강당' | '운동장'>('전체');
+  const [sensorFilter, setSensorFilter] = useState<'전체' | '터치' | '모션' | '자이로' | '음성'>('전체');
 
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
@@ -1497,6 +1503,19 @@ export const GameHub = () => {
     }, 100);
   }, []);
 
+  const getGameSensor = (type: string): '터치' | '모션' | '자이로' | '음성' => {
+    if (type === 'scream' || type === 'balloon' || type === 'campfire-breath') return '음성';
+    if (type.includes('motion') || type.includes('cam') || type.includes('dance')) return '모션';
+    if (['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'body_twist', 'fitness_roulette', 'crevasse-jump', 'bicycle-pedal-crank', 'double-under-rope'].includes(type)) return '자이로';
+    return '터치';
+  };
+
+  const getGamePlace = (type: string, domain: string): '교실' | '강당' | '운동장' => {
+    if (['run', 'jump', 'trail-maze-run', 'slingshot-archery', 'crevasse-jump', 'bicycle-pedal-crank'].includes(type)) return '운동장';
+    if (domain === '표현' || ['tug_of_war', 'badminton-smash-rhythm', 'basketball-free-throw', 'taekwondo-counter-kick', 'tabletennis-spin-read', 'spike-block-wall', 'rolling-curling', 'curling-weight-control'].includes(type)) return '강당';
+    return '교실';
+  };
+
   const filtered = GAMES.filter(g => {
     const gradeMatch = gradeFilter === '전체' || g.grades.includes(gradeFilter);
     const domainMatch = domainFilter === '전체' || g.domain === domainFilter;
@@ -1504,16 +1523,20 @@ export const GameHub = () => {
     const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
     const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
     const favMatch = !showFavoritesOnly || favorites.has(g.type);
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch;
+    const placeMatch = placeFilter === '전체' || getGamePlace(g.type, g.domain) === placeFilter;
+    const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch;
   });
 
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || showFavoritesOnly;
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly;
   const resetAllFilters = () => {
     setDomainFilter('전체');
     setSportFilter('전체');
     setGradeFilter('전체');
     setDeviceFilter('전체');
     setPlayModeFilter('전체');
+    setPlaceFilter('전체');
+    setSensorFilter('전체');
     setShowFavoritesOnly(false);
   };
 
@@ -1877,6 +1900,36 @@ export const GameHub = () => {
             <p className="font-extrabold text-sm text-white group-hover:text-teal-300 transition-colors">모션 감지 캠 챌린지</p>
             <p className="text-[11px] text-slate-400 mt-0.5">카메라 앞 핸즈프리 점프</p>
           </button>
+
+          {/* 9. 📱 교사용 스마트폰 리모컨 */}
+          <button
+            onClick={() => navigate('/remote')}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-red-500/20 to-rose-500/10 border border-red-500/40 hover:border-red-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-red-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">📱</span>
+              <span className="text-[10px] font-black bg-red-500/20 text-red-300 px-2 py-0.5 rounded-full border border-red-500/30">
+                선생님용
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-red-300 transition-colors">교사 스마트 리모컨</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">호루라기 휘슬 & 타이머 통제</p>
+          </button>
+
+          {/* 10. 🏆 체육 배지 도감 */}
+          <button
+            onClick={() => setShowBadgeArchive(true)}
+            className="p-3.5 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-amber-500/10 border border-yellow-500/40 hover:border-yellow-400 hover:scale-[1.03] transition-all text-left group shadow-lg shadow-yellow-500/5"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-2xl group-hover:scale-110 transition-transform">🏆</span>
+              <span className="text-[10px] font-black bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500/30">
+                명예의 전당
+              </span>
+            </div>
+            <p className="font-extrabold text-sm text-white group-hover:text-yellow-300 transition-colors">체육 배지 도감</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">수집한 배지 및 업적 현황</p>
+          </button>
         </div>
       </div>
 
@@ -2120,6 +2173,86 @@ export const GameHub = () => {
             </div>
           </div>
         </div>
+
+        {/* 현장 맞춤 필터 (수업 장소 & 측정 센서) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 overflow-hidden pt-1">
+          {/* 장소별 스마트 필터 */}
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
+            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
+              <span>📍</span> 수업 장소 맞춤 (교실 · 강당 · 운동장)
+            </h2>
+            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
+              {([
+                { key: '전체', label: '전체 장소', emoji: '🗺️' },
+                { key: '교실', label: '교실(좁은공간)', emoji: '🏫' },
+                { key: '강당', label: '강당(넓은공간)', emoji: '🏟️' },
+                { key: '운동장', label: '운동장(야외)', emoji: '🏃' },
+              ] as const).map(p => {
+                const count = p.key === '전체'
+                  ? GAMES.length
+                  : GAMES.filter(g => getGamePlace(g.type, g.domain) === p.key).length;
+                const isSelected = placeFilter === p.key;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => setPlaceFilter(p.key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-teal-600 to-emerald-600 border-teal-400 text-white shadow-md shadow-teal-900/30'
+                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{p.emoji}</span>
+                    <span>{p.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 센서별 스마트 필터 */}
+          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
+            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
+              <span>📱</span> 측정 센서 분류 (터치 · 카메라 · 자이로 · 마이크)
+            </h2>
+            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
+              {([
+                { key: '전체', label: '전체 센서', emoji: '⚡' },
+                { key: '터치', label: '터치·버튼', emoji: '👆' },
+                { key: '모션', label: '카메라 모션', emoji: '📷' },
+                { key: '자이로', label: '자이로·가속도', emoji: '🧭' },
+                { key: '음성', label: '마이크 음성', emoji: '🎤' },
+              ] as const).map(s => {
+                const count = s.key === '전체'
+                  ? GAMES.length
+                  : GAMES.filter(g => getGameSensor(g.type) === s.key).length;
+                const isSelected = sensorFilter === s.key;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    onClick={() => setSensorFilter(s.key)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-400 text-white shadow-md shadow-indigo-900/30'
+                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{s.emoji}</span>
+                    <span>{s.label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 결과 카운트 및 안내 */}
@@ -2303,6 +2436,11 @@ export const GameHub = () => {
       <MotionCamChallenge
         isOpen={showMotionCam}
         onClose={() => setShowMotionCam(false)}
+      />
+
+      <BadgeArchiveModal
+        isOpen={showBadgeArchive}
+        onClose={() => setShowBadgeArchive(false)}
       />
 
       {/* PWA 설치 유도 배너 */}

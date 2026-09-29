@@ -80,6 +80,7 @@ import { CurriculumGameRouter } from './components/minigames/curriculum/Curricul
 import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
+import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 
 interface GameMeta {
   name: string;
@@ -203,6 +204,7 @@ export const GamePlayPage = () => {
   const [gameFinished, setGameFinished] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard' | null>(null);
+  const [isCountingDown, setIsCountingDown] = useState(false);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
@@ -220,6 +222,7 @@ export const GamePlayPage = () => {
       endTime: Date.now() + 90000,
     };
     setDifficulty(selected);
+    setIsCountingDown(true);
   };
 
   const difficultyMultiplier = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.5 : 1;
@@ -533,8 +536,16 @@ export const GamePlayPage = () => {
         </div>
       )}
 
+      {/* 3초 움직임 준비 카운트다운 */}
+      {isCountingDown && (
+        <ReadyCountdownOverlay
+          onComplete={() => setIsCountingDown(false)}
+          message={`${gameInfo.name} 시작 준비! 스마트폰을 거치하거나 손에 쥐세요.`}
+        />
+      )}
+
       {/* 게임 렌더링 */}
-      {difficulty !== null && renderGame()}
+      {difficulty !== null && !isCountingDown && renderGame()}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (

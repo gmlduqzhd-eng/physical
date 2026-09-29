@@ -14,6 +14,8 @@ import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 
+import { TeacherRemote } from './presentation/TeacherRemote';
+
 function App() {
   useEffect(() => {
     syncServerTime();
@@ -39,6 +41,8 @@ function App() {
         <Route path="/board/:roomId" element={hasSupabase ? <ScoreBoard /> : <SupabaseRequired />} />
         <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <MobileMissionView /> : <SupabaseRequired />} />
         <Route path="/admin" element={hasSupabase ? <AdminControlPanel /> : <SupabaseRequired />} />
+        <Route path="/remote" element={hasSupabase ? <TeacherRemote /> : <SupabaseRequired />} />
+        <Route path="/remote/:roomId" element={hasSupabase ? <TeacherRemote /> : <SupabaseRequired />} />
         <Route path="/kiosk" element={hasSupabase ? <KioskRelayView /> : <SupabaseRequired />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

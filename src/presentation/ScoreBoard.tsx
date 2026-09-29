@@ -3,8 +3,9 @@ import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+import { ClassReportModal } from './components/ClassReportModal';
 
 export const ScoreBoard = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -15,6 +16,7 @@ export const ScoreBoard = () => {
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
   const [showQR, setShowQR] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const prevScoresRef = useRef<{id:string;score:number;rank:number}[]>([]);
   const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number}[]>([]);
@@ -150,6 +152,23 @@ export const ScoreBoard = () => {
             </div>
           ))}
         </div>
+
+        <div className="mt-8 relative z-10 flex items-center gap-3">
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-base shadow-xl active:scale-95 transition-all"
+          >
+            <FileText className="w-5 h-5" />
+            <span>📊 수업 성취도 리포트 & 인쇄</span>
+          </button>
+        </div>
+
+        <ClassReportModal
+          isOpen={showReportModal}
+          onClose={() => setShowReportModal(false)}
+          gameRoom={gameRoom}
+          scores={scores}
+        />
       </div>
     );
   }
@@ -195,6 +214,10 @@ export const ScoreBoard = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* 수업 결과 리포트 버튼 */}
+          <button onClick={() => setShowReportModal(true)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="수업 결과 리포트">
+            <FileText className="w-6 h-6 text-cyan-600" />
+          </button>
           {/* 미니 QR 코드 (지각생 입장용) */}
           <button onClick={() => setShowQR(!showQR)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="QR 코드 표시">
             <QrCode className="w-6 h-6 text-cyan-500" />
@@ -287,6 +310,13 @@ export const ScoreBoard = () => {
         })()}
         {scores.length === 0 && <p className="text-slate-500 col-span-full text-center text-xl">아직 접속한 모둠이 없습니다.</p>}
       </main>
+
+      <ClassReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        gameRoom={gameRoom}
+        scores={scores}
+      />
     </div>
   );
 };
