@@ -34,11 +34,27 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     `[스포츠맨십 및 규칙 준수] 스마트 체육 환경에서 안전 수칙을 준수하고 상대 모둠과 상호 격려하며 즐겁게 수업에 임함.`
   ];
 
-  const handleCopyComments = () => {
+  const handleCopyComments = async () => {
     const text = generatedComments.join('\n\n');
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback or ignore
+    }
   };
 
   const handlePrint = () => {

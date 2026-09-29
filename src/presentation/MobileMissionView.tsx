@@ -217,8 +217,8 @@ export const MobileMissionView = () => {
       if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
     }
 
-    let x = 0; let y = 0;
-    if ('touches' in e) {
+    let x = window.innerWidth / 2; let y = window.innerHeight / 2;
+    if ('touches' in e && (e as React.TouchEvent).touches && (e as React.TouchEvent).touches.length > 0) {
       x = (e as React.TouchEvent).touches[0].clientX; y = (e as React.TouchEvent).touches[0].clientY;
     } else if ('clientX' in e) {
       x = (e as React.MouseEvent).clientX; y = (e as React.MouseEvent).clientY;
@@ -759,7 +759,7 @@ export const MobileMissionView = () => {
         <p className="text-xl font-bold mb-8 text-slate-300 relative z-10">최종 순위: {myRank}위</p>
         
         <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center relative z-10 mb-8">
-          <span className="text-6xl font-black font-mono text-yellow-400 mb-6">{myGroup.score}점</span>
+          <span className="text-6xl font-black font-mono text-yellow-400 mb-6">{myGroup?.score ?? 0}점</span>
           <div className="text-center font-bold text-slate-500 text-sm mt-4 pb-12">
             선생님이 시작 버튼을 누를 때까지 대기하세요.
           </div>
@@ -831,7 +831,7 @@ export const MobileMissionView = () => {
     );
   }
 
-  if (myGroup.is_defused) {
+  if (myGroup?.is_defused) {
     return (
       <div className="min-h-[100dvh] bg-emerald-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent animate-[pulse_2s_ease-in-out_infinite]"></div>
@@ -842,7 +842,7 @@ export const MobileMissionView = () => {
     );
   }
 
-  const isBlinded = myGroup.is_blinded_until ? new Date(myGroup.is_blinded_until).getTime() > Date.now() : false;
+  const isBlinded = myGroup?.is_blinded_until ? new Date(myGroup.is_blinded_until).getTime() > Date.now() : false;
   if (isBlinded) {
     return (
       <div className="min-h-[100dvh] bg-stone-950 flex flex-col items-center justify-center p-6 relative overflow-hidden pointer-events-none z-[9999]">
@@ -853,9 +853,9 @@ export const MobileMissionView = () => {
     );
   }
 
-  const displayScore = myGroup.score;
+  const displayScore = myGroup?.score ?? 0;
 
-  if (myGroup.is_hacked) {
+  if (myGroup?.is_hacked) {
     return (
       <div className="min-h-[100dvh] bg-red-50 flex flex-col items-center justify-center p-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-red-100/50 mix-blend-multiply animate-[pulse_0.1s_ease-in-out_infinite]"></div>
@@ -949,7 +949,8 @@ export const MobileMissionView = () => {
             if (globalChannelRef.current) {
               globalChannelRef.current.send({ type: 'broadcast', event: 'boss_damage', payload: { amount: 1 } });
             }
-            const x = e.touches[0].clientX; const y = e.touches[0].clientY;
+            const x = e.touches?.[0]?.clientX ?? (window.innerWidth / 2);
+            const y = e.touches?.[0]?.clientY ?? (window.innerHeight / 2);
             const clickId = Date.now() + Math.random();
             setClicks(prev => [...prev, { id: clickId, x, y, val: -1 }]);
             setTimeout(() => { setClicks(prev => prev.filter(c => c.id !== clickId)); }, 800);
@@ -1076,7 +1077,7 @@ export const MobileMissionView = () => {
               <div id="reader" className="flex-1 w-full bg-black" style={{ minHeight: '300px' }}></div>
             </div>
           )}
-          {isLocked && !myGroup.is_hacked && (
+          {isLocked && !myGroup?.is_hacked && (
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center border border-slate-200 shadow-sm">
               <LucideIcons.Lock className="w-10 h-10 text-slate-400 mb-2" />
               <p className="text-red-500 font-bold text-center text-lg">

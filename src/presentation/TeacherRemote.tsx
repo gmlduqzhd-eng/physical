@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import type { GameRoom, RoomGroup } from '../domain/types';
@@ -73,7 +73,6 @@ export const TeacherRemote: React.FC = () => {
     fetchRooms();
   }, []);
 
-  const prevRoomIdRef = useRef(selectedRoomId);
   useEffect(() => {
     if (selectedRoomId) {
       fetchRoomDetails(selectedRoomId);
@@ -97,10 +96,6 @@ export const TeacherRemote: React.FC = () => {
       };
     }
   }, [selectedRoomId]);
-
-  if (selectedRoomId !== prevRoomIdRef.current) {
-    prevRoomIdRef.current = selectedRoomId;
-  }
 
   // --- 1. 원터치 휘슬 (집중 모드) ---
   const handleToggleWhistle = async () => {

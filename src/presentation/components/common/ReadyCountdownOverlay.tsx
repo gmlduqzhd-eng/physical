@@ -20,28 +20,24 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
   }, [onComplete]);
 
   useEffect(() => {
+    if (count <= 0) {
+      sfxSuccess();
+      hapticHeavy();
+      const t = window.setTimeout(() => {
+        onCompleteRef.current();
+      }, 300);
+      return () => window.clearTimeout(t);
+    }
+
     sfxCountdown();
     hapticTap();
 
-    const interval = window.setInterval(() => {
-      setCount(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          sfxSuccess();
-          hapticHeavy();
-          setTimeout(() => {
-            onCompleteRef.current();
-          }, 300);
-          return 0;
-        }
-        sfxCountdown();
-        hapticTap();
-        return prev - 1;
-      });
+    const timer = window.setTimeout(() => {
+      setCount(prev => prev - 1);
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => window.clearTimeout(timer);
+  }, [count]);
 
   return (
     <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white text-center select-none animate-in fade-in duration-200">
