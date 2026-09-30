@@ -283,8 +283,12 @@ export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction, 
 
       {finished && (
         <GameResultOverlay
-          title="🛟 구조 튜브 투척 성공!"
-          subtitle="물놀이 익수 사고 시 뛰어들지 않고 도구를 활용하는 안전 원칙을 지켰습니다."
+          title={Math.abs(distance - TARGET_LOC) <= 8 ? "🛟 구조 튜브 투척 성공!" : "🛟 투척 거리 빗나감 (재도전)"}
+          subtitle={
+            Math.abs(distance - TARGET_LOC) <= 8
+              ? "물놀이 익수 사고 시 직접 뛰어들지 않고 구명환을 활용하는 안전 원칙을 완벽히 지켰습니다."
+              : "구명환이 익수자의 손에 닿지 않았습니다. 거리를 침착하게 조절해 다시 던져보세요."
+          }
           score={Math.abs(distance - TARGET_LOC) <= 8 ? 500 : 250}
           badge="수상 안전 라이프가드"
           onRestart={handleRestart}

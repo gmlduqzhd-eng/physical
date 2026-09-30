@@ -467,16 +467,30 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
       </div>
 
       <h1 className="text-2xl font-black mb-1">⚽ 3:2 오프사이드 트랩 브레이커</h1>
-      <p className="text-xs text-emerald-200 mb-6 text-center max-w-xs">
-        수비수의 최종 라인이 우리 공격수보다 뒤에 있을 때 칼같은 스루패스를 찔러주세요!
+      <p className="text-xs text-emerald-200 mb-6 text-center max-w-xs leading-relaxed">
+        수비 라인이 공격수보다 골대 쪽(화면 위)으로 물러나 <strong>온사이드(🟢)</strong>일 때 칼같은 스루패스를 찔러주세요!
       </p>
 
       <div className="relative w-72 h-72 bg-emerald-900 border-4 border-emerald-600 rounded-3xl p-4 overflow-hidden mb-6 shadow-2xl">
+        {/* 상대 골대 */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-white/25 border-b-2 border-x-2 border-white/60 rounded-b-lg px-3 py-0.5 text-[10px] font-black text-amber-300 shadow flex items-center gap-1 z-10">
+          🥅 상대 골대
+        </div>
+
+        {/* 실시간 침투 판정 인디케이터 */}
+        <div className="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full z-10 shadow-sm border border-emerald-500/50 bg-slate-950/80">
+          {defLinePos <= 55 ? (
+            <span className="text-emerald-300">🟢 온사이드 찬스!</span>
+          ) : (
+            <span className="text-rose-400">🔴 오프사이드 트랩!</span>
+          )}
+        </div>
+
         <div
           style={{ top: `${defLinePos}%` }}
-          className="absolute left-0 right-0 h-[3px] bg-red-400 border-t border-dashed border-white flex items-center justify-between px-2"
+          className="absolute left-0 right-0 h-[3px] bg-red-400 border-t border-dashed border-white flex items-center justify-between px-2 transition-all duration-150"
         >
-          <span className="text-[10px] text-red-200 font-bold">🛡️ 수비 오프사이드 라인</span>
+          <span className="text-[10px] text-red-200 font-bold">🛡️ 수비 최종 라인</span>
           <span className="text-lg">🏃‍♂️</span>
         </div>
 
@@ -490,12 +504,12 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
         </div>
 
         {passStatus === 'success' && (
-          <div className="absolute inset-0 bg-emerald-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+          <div className="absolute inset-0 bg-emerald-950/80 flex flex-col items-center justify-center animate-in zoom-in z-20">
             <span className="text-4xl font-black text-amber-300">⚽ GOAL! 온사이드 돌파!</span>
           </div>
         )}
         {passStatus === 'offside' && (
-          <div className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center animate-in zoom-in">
+          <div className="absolute inset-0 bg-red-950/80 flex flex-col items-center justify-center animate-in zoom-in z-20">
             <span className="text-4xl font-black text-red-400">🚩 OFFSIDE! 깃발 업!</span>
           </div>
         )}
@@ -947,14 +961,27 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
   const [finished, setFinished] = useState(false);
   const [finalScore, setFinalScore] = useState(500);
   const pressStart = useRef(0);
+  const slideTimerRef = useRef<any>(null);
+
+  const clearSlideTimer = () => {
+    if (slideTimerRef.current) {
+      clearInterval(slideTimerRef.current);
+      slideTimerRef.current = null;
+    }
+  };
 
   const handleRestart = () => {
+    clearSlideTimer();
     setChargeTime(0);
     setStonePos(0);
     setIsSliding(false);
     setFinalScore(500);
     setFinished(false);
   };
+
+  useEffect(() => {
+    return () => clearSlideTimer();
+  }, []);
 
   const handlePointerDown = () => {
     if (isSliding || finished) return;
@@ -968,15 +995,16 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
     pressStart.current = 0;
     setChargeTime(duration);
     setIsSliding(true);
+    clearSlideTimer();
 
     const targetDistance = Math.min(100, Math.max(10, Math.floor((duration / 1000) * 50)));
 
     let cur = 0;
-    const timer = setInterval(() => {
+    slideTimerRef.current = setInterval(() => {
       cur += 2;
       setStonePos(cur);
       if (cur >= targetDistance) {
-        clearInterval(timer);
+        clearSlideTimer();
         setIsSliding(false);
         const distFromCenter = Math.abs(cur - 50);
         const scoreEarned = distFromCenter <= 6 ? 500
@@ -1024,8 +1052,10 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
       <button
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         disabled={isSliding}
-        className="w-full max-w-xs py-6 bg-gradient-to-r from-cyan-500 to-blue-500 active:from-cyan-600 active:to-blue-600 text-white font-black text-xl rounded-3xl shadow-xl active:scale-95 transition-transform"
+        className="w-full max-w-xs py-6 bg-gradient-to-r from-cyan-500 to-blue-500 active:from-cyan-600 active:to-blue-600 text-white font-black text-xl rounded-3xl shadow-xl active:scale-95 transition-transform touch-none"
       >
         {isSliding ? '미끄러지는 중... 🧊' : '꾹 눌러서 힘 모으고 떼기!'}
       </button>
@@ -1381,8 +1411,12 @@ export const BaseballBuntDefense: React.FC<GameProps> = ({ groupId, enqueueActio
 
       {finished && (
         <GameResultOverlay
-          title="⚾ 타자 주자 1루 아웃!"
-          subtitle="기습 번트 타구에 즉각 전진 대시하여 1루수로 정확한 노바운드 송구를 성공시켰습니다."
+          title={Math.abs(throwAcc - 50) <= 12 ? "⚾ 타자 주자 1루 아웃!" : "⚾ 악송구! 타자 주자 세이프"}
+          subtitle={
+            Math.abs(throwAcc - 50) <= 12
+              ? "기습 번트 타구에 즉각 전진 대시하여 1루수로 정확한 노바운드 송구를 성공시켰습니다."
+              : "송구 각도가 다소 빗나갔지만, 빠른 전진 포구로 적극적인 수비 센스를 보여주었습니다."
+          }
           score={Math.abs(throwAcc - 50) <= 12 ? 500 : 250}
           badge="철벽 내야 수비수"
           onRestart={handleRestart}

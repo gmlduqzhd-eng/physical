@@ -463,38 +463,62 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
   }, []);
 
   const isCentered = Math.abs(posX) < 25 && Math.abs(posY) < 25;
+  const isCenteredRef = useRef(false);
+  isCenteredRef.current = isCentered;
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     if (finished) return;
     const timer = setInterval(() => {
-      if (isCentered) {
+      if (isCenteredRef.current && !finishedRef.current) {
         setStableTime(t => {
           const next = t + 1;
-          if (next >= TARGET_SEC) {
-            setFinished(true);
-            sfxSuccess();
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: 500 },
-              timestamp: Date.now()
-            });
+          if (next >= TARGET_SEC && !finishedRef.current) {
+            finishedRef.current = true;
+            setTimeout(() => {
+              setFinished(true);
+              sfxSuccess();
+              enqueueAction({
+                id: Math.random().toString(),
+                type: 'INCREMENT_SCORE',
+                payload: { id: groupId, amount: 500 },
+                timestamp: Date.now()
+              });
+            }, 0);
           }
-          return next;
+          return Math.min(TARGET_SEC, next);
         });
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [isCentered, finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <h1 className="text-2xl font-black mb-1">⚖️ 족저압 무게중심 센서</h1>
       <p className="text-xs text-blue-300 mb-6 text-center max-w-xs">
-        양 발바닥의 중심을 정중앙 그린 서클에 맞추고 10초간 균형을 유지하세요!
+        양 발바닥의 중심을 정중앙 그린 서클에 맞추고 10초간 균형을 유지하세요! (기기 기울기 또는 터치 드래그)
       </p>
 
-      <div className="relative w-64 h-64 rounded-3xl bg-slate-900 border-4 border-blue-700/80 flex items-center justify-center overflow-hidden mb-6 shadow-2xl">
+      <div
+        onPointerDown={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          setPosX(Math.max(-65, Math.min(65, e.clientX - cx)));
+          setPosY(Math.max(-65, Math.min(65, e.clientY - cy)));
+        }}
+        onPointerMove={(e) => {
+          if (e.buttons === 1) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            setPosX(Math.max(-65, Math.min(65, e.clientX - cx)));
+            setPosY(Math.max(-65, Math.min(65, e.clientY - cy)));
+          }
+        }}
+        className="relative w-64 h-64 rounded-3xl bg-slate-900 border-4 border-blue-700/80 flex items-center justify-center overflow-hidden mb-4 shadow-2xl cursor-pointer touch-none"
+      >
         <div className="absolute w-full h-[2px] bg-blue-700/40" />
         <div className="absolute h-full w-[2px] bg-blue-700/40" />
         <div className={`w-20 h-20 rounded-full border-2 border-dashed flex items-center justify-center ${isCentered ? 'bg-emerald-500/20 border-emerald-400' : 'border-blue-500/40'}`}>
@@ -511,11 +535,20 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
         </div>
       </div>
 
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => { setPosX(0); setPosY(0); }}
+          className="px-4 py-2 bg-blue-800/80 hover:bg-blue-700 rounded-xl text-xs font-bold text-white border border-blue-600 active:scale-95 transition-transform"
+        >
+          🎯 정중앙 맞추기
+        </button>
+      </div>
+
       <div className="text-4xl font-black font-mono mb-2">
         {stableTime} / {TARGET_SEC}초
       </div>
       <div className={`text-xs font-bold ${isCentered ? 'text-emerald-400' : 'text-amber-400'}`}>
-        {isCentered ? '✅ 중심 유지 중! 버티세요!' : '⚠️ 중심이 벗어났습니다! 스마트폰을 수평으로 조절하세요!'}
+        {isCentered ? '✅ 중심 유지 중! 버티세요!' : '⚠️ 중심이 벗어났습니다! 스마트폰을 수평으로 조절하거나 중앙을 터치하세요!'}
       </div>
 
       {finished && (
@@ -650,29 +683,35 @@ export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction,
   }, []);
 
   const inTargetZone = power >= 75 && power <= 90;
+  const inTargetZoneRef = useRef(false);
+  inTargetZoneRef.current = inTargetZone;
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     if (finished) return;
     const timer = setInterval(() => {
-      if (inTargetZone) {
+      if (inTargetZoneRef.current && !finishedRef.current) {
         setHoldSec(s => {
           const next = s + 1;
-          if (next >= 8) {
-            setFinished(true);
-            sfxSuccess();
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: 500 },
-              timestamp: Date.now()
-            });
+          if (next >= 8 && !finishedRef.current) {
+            finishedRef.current = true;
+            setTimeout(() => {
+              setFinished(true);
+              sfxSuccess();
+              enqueueAction({
+                id: Math.random().toString(),
+                type: 'INCREMENT_SCORE',
+                payload: { id: groupId, amount: 500 },
+                timestamp: Date.now()
+              });
+            }, 0);
           }
-          return next;
+          return Math.min(8, next);
         });
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [inTargetZone, finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -701,7 +740,9 @@ export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction,
       <button
         onPointerDown={() => { isPressing.current = true; sfxTap(); }}
         onPointerUp={() => { isPressing.current = false; }}
-        className="w-full max-w-xs py-6 bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 rounded-3xl text-xl font-black shadow-2xl active:scale-95 transition-all"
+        onPointerLeave={() => { isPressing.current = false; }}
+        onPointerCancel={() => { isPressing.current = false; }}
+        className="w-full max-w-xs py-6 bg-gradient-to-r from-red-600 to-rose-600 active:from-red-700 active:to-rose-700 rounded-3xl text-xl font-black shadow-2xl active:scale-95 transition-all touch-none"
       >
         ✊ 꾹 눌러서 힘 조절하기!
       </button>
@@ -846,29 +887,35 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, o
   };
 
   const isTargetZone = bpm >= 130 && bpm <= 150;
+  const isTargetZoneRef = useRef(false);
+  isTargetZoneRef.current = isTargetZone;
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     if (finished) return;
     const timer = setInterval(() => {
-      if (isTargetZone) {
+      if (isTargetZoneRef.current && !finishedRef.current) {
         setInTargetSec(s => {
           const next = s + 1;
-          if (next >= 6) {
-            setFinished(true);
-            sfxSuccess();
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: 500 },
-              timestamp: Date.now()
-            });
+          if (next >= 6 && !finishedRef.current) {
+            finishedRef.current = true;
+            setTimeout(() => {
+              setFinished(true);
+              sfxSuccess();
+              enqueueAction({
+                id: Math.random().toString(),
+                type: 'INCREMENT_SCORE',
+                payload: { id: groupId, amount: 500 },
+                timestamp: Date.now()
+              });
+            }, 0);
           }
-          return next;
+          return Math.min(6, next);
         });
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [isTargetZone, finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction]);
 
   return (
     <div className="min-h-[100dvh] bg-rose-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
