@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { GameRoom } from '../domain/types';
 import { useVoiceCoach } from '../application/useVoiceCoach';
 import { useTamagotchi } from '../application/useTamagotchi';
+import { useWakeLock } from '../application/useWakeLock';
+import { useMotionPermission } from '../application/useMotionPermission';
+import { CooldownTimerModal } from './components/CooldownTimerModal';
+import { Heart } from 'lucide-react';
 import { VolcanoGame } from './components/minigames/VolcanoGame';
 import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
 import { StopwatchGame } from './components/minigames/StopwatchGame';
@@ -208,9 +212,14 @@ export const GamePlayPage = () => {
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
+  const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
+
   const { addGameResult } = usePlayerProfile();
   const { speak } = useVoiceCoach();
   const { addXpAndCoins } = useTamagotchi();
+  useWakeLock(true);
+  const { isGranted: isMotionGranted, requestPermission: requestMotionPermission } = useMotionPermission();
+
   const standaloneTiming = useRef({
     startedAt: new Date().toISOString(),
     endTime: Date.now() + 90000,
@@ -263,6 +272,8 @@ export const GamePlayPage = () => {
     return () => stopBgm();
   }, []);
 
+  const gameInfo = GAME_TITLES[gameType || ''];
+
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
   const localEnqueueAction = useCallback((action: { payload: { amount: number } }) => {
     const rawScore = action.payload.amount;
@@ -298,7 +309,7 @@ export const GamePlayPage = () => {
     }
 
     checkBadges(earned);
-  }, [gameType, difficultyMultiplier, checkBadges]);
+  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges]);
 
   const handleReplay = () => {
     setGameFinished(false);
@@ -309,7 +320,6 @@ export const GamePlayPage = () => {
     startBgm();
   };
 
-  const gameInfo = GAME_TITLES[gameType || ''];
   if (!gameType || !gameInfo) {
     return (
       <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
@@ -648,6 +658,15 @@ export const GamePlayPage = () => {
               )}
             </div>
 
+            {/* 🫀 쿨다운 & 심박수 정리운동 버튼 */}
+            <button
+              onClick={() => setShowCooldownModal(true)}
+              className="w-full mb-4 py-3 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+            >
+              <Heart className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+              <span>🫀 운동 후 쿨다운 & 심박수 회복 루틴</span>
+            </button>
+
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
@@ -657,6 +676,28 @@ export const GamePlayPage = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 🫀 쿨다운 모달 */}
+      <CooldownTimerModal
+        isOpen={showCooldownModal}
+        onClose={() => setShowCooldownModal(false)}
+      />
+
+      {/* iOS 모션 권한 안내 배너 */}
+      {!isMotionGranted && (
+        <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
+          <div className="text-xs">
+            <span className="font-bold text-amber-400 block mb-0.5">⚠️ 아이폰 센서 권한 필요</span>
+            <span>움직임 인식을 위해 모션 센서 접근을 허용해 주세요.</span>
+          </div>
+          <button
+            onClick={requestMotionPermission}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md shrink-0 active:scale-95"
+          >
+            센서 허용하기
+          </button>
         </div>
       )}
     </div>

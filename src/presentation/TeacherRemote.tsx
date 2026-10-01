@@ -39,7 +39,7 @@ export const TeacherRemote: React.FC = () => {
   };
 
   // 방 목록 가져오기
-  const fetchRooms = async () => {
+  const fetchRooms = React.useCallback(async () => {
     const { data } = await supabase
       .from('game_rooms')
       .select('*')
@@ -51,10 +51,10 @@ export const TeacherRemote: React.FC = () => {
         setSelectedRoomId(data[0].id);
       }
     }
-  };
+  }, [selectedRoomId]);
 
   // 선택된 방 세부 정보 가져오기
-  const fetchRoomDetails = async (id: string) => {
+  const fetchRoomDetails = React.useCallback(async (id: string) => {
     const { data: room } = await supabase.from('game_rooms').select('*').eq('id', id).single();
     if (room) {
       setCurrentRoom(room);
@@ -67,11 +67,11 @@ export const TeacherRemote: React.FC = () => {
       .eq('room_id', id)
       .order('score', { ascending: false });
     if (groups) setRoomGroups(groups);
-  };
+  }, []);
 
   useEffect(() => {
     fetchRooms();
-  }, []);
+  }, [fetchRooms]);
 
   useEffect(() => {
     if (selectedRoomId) {
@@ -95,7 +95,7 @@ export const TeacherRemote: React.FC = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [selectedRoomId]);
+  }, [selectedRoomId, fetchRoomDetails]);
 
   // --- 1. 원터치 휘슬 (집중 모드) ---
   const handleToggleWhistle = async () => {
@@ -136,7 +136,7 @@ export const TeacherRemote: React.FC = () => {
   };
 
   // --- 3. 긴급 이벤트 발동 ---
-  const handleTriggerEvent = async (type: 'tsunami' | 'boss_raid' | 'zombie' | 'buff' | 'finish') => {
+  const handleTriggerEvent = async (type: 'tsunami' | 'boss_raid' | 'zombie' | 'buff' | 'underdog' | 'fever' | 'finish') => {
     if (!currentRoom) return;
     sfxSuccess();
     hapticHeavy();
@@ -162,6 +162,27 @@ export const TeacherRemote: React.FC = () => {
       const buffUntil = new Date(Date.now() + 60000).toISOString();
       await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('room_id', currentRoom.id);
       showFeedback('⚡ 전원 1분간 점수 2배 버프 지급!');
+    } else if (type === 'underdog') {
+      // 하위 50% 모둠 역전 찬스 (점수 3배 버프)
+      if (roomGroups.length >= 2) {
+        const sorted = [...roomGroups].sort((a, b) => b.score - a.score);
+        const halfIdx = Math.floor(sorted.length / 2);
+        const underdogs = sorted.slice(halfIdx);
+        const buffUntil = new Date(Date.now() + 90000).toISOString();
+        for (const u of underdogs) {
+          await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('id', u.id);
+        }
+        await supabase.from('game_rooms').update({ announcement: '🌟 언더독 역전 찬스 발동! 하위 모둠 1분 30초간 점수 3배!' }).eq('id', currentRoom.id);
+        showFeedback('🌟 언더독 역전 골든벨 발동!');
+      } else {
+        showFeedback('모둠이 2개 이상일 때 발동 가능합니다.');
+      }
+    } else if (type === 'fever') {
+      // 학급 전체 초특급 피버 타임
+      const buffUntil = new Date(Date.now() + 60000).toISOString();
+      await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('room_id', currentRoom.id);
+      await supabase.from('game_rooms').update({ announcement: '🔥 [FEVER TIME] 전원 1분간 점수 2배 + 쿨다운 삭제!' }).eq('id', currentRoom.id);
+      showFeedback('🔥 학급 전체 피버 타임 발동!');
     } else if (type === 'finish') {
       if (confirm('게임을 종료하고 전광판 시상대 결과를 발표하시겠습니까?')) {
         await supabase.from('game_rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
@@ -355,6 +376,20 @@ export const TeacherRemote: React.FC = () => {
           </h3>
 
           <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => handleTriggerEvent('fever')}
+              className="py-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-white font-black animate-pulse"
+            >
+              <Sparkles className="w-4 h-4 fill-white" />
+              <span>전체 피버 타임 (1분)</span>
+            </button>
+            <button
+              onClick={() => handleTriggerEvent('underdog')}
+              className="py-3 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"
+            >
+              <Trophy className="w-4 h-4 fill-slate-950" />
+              <span>언더독 역전 찬스</span>
+            </button>
             <button
               onClick={() => handleTriggerEvent('buff')}
               className="py-3 bg-gradient-to-r from-yellow-600 to-amber-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"

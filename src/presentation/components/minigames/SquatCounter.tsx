@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
+import { useWakeLock } from '../../../application/useWakeLock';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -12,6 +13,21 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
   const phaseRef = useRef<'up' | 'down'>('up');
   const finishedRef = useRef(false);
   const lastZ = useRef(0);
+  const lastPhaseChangeTime = useRef(Date.now());
+
+  useWakeLock(true);
+
+  const completeSquat = useCallback(() => {
+    phaseRef.current = 'up';
+    setPhase('up');
+    sfxCoin();
+    hapticTap();
+    setSquats(s => {
+      const n = s + 1;
+      squatsRef.current = n;
+      return n;
+    });
+  }, []);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
@@ -19,20 +35,30 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
       const acc = e.accelerationIncludingGravity;
       if (!acc) return;
       const z = acc.z ?? 0;
+      const now = Date.now();
+
+      // 스쿼트 앉기 -> 일어서기는 인체 구조상 최소 600ms 이상 소요됨
       if (phaseRef.current === 'up' && z < -2 && lastZ.current >= -2) {
-        phaseRef.current = 'down';
-        setPhase('down');
+        if (now - lastPhaseChangeTime.current > 400) {
+          phaseRef.current = 'down';
+          setPhase('down');
+          lastPhaseChangeTime.current = now;
+        }
       }
       if (phaseRef.current === 'down' && z > 5 && lastZ.current <= 5) {
-        phaseRef.current = 'up';
-        setPhase('up');
-        sfxCoin();
-        hapticTap();
-        setSquats(s => { const n = s + 1; squatsRef.current = n; return n; });
+        if (now - lastPhaseChangeTime.current > 500) {
+          completeSquat();
+          lastPhaseChangeTime.current = now;
+        }
       }
       lastZ.current = z;
     };
+
     window.addEventListener('devicemotion', handler);
+    return () => window.removeEventListener('devicemotion', handler);
+  }, [completeSquat]);
+
+  useEffect(() => {
     let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
@@ -41,7 +67,12 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
           if (!finishedRef.current) {
             finishedRef.current = true;
             setFinished(true);
-            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: squatsRef.current * 40 }, timestamp: Date.now() });
+            enqueueAction({
+              id: Math.random().toString(),
+              type: 'INCREMENT_SCORE',
+              payload: { id: groupId, amount: squatsRef.current * 40 },
+              timestamp: Date.now()
+            });
           }
           return 0;
         }
@@ -54,7 +85,8 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
         return next;
       });
     }, 1000);
-    return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
+
+    return () => clearInterval(timer);
   }, [groupId, enqueueAction]);
 
   const triggerSquat = () => {
@@ -63,11 +95,7 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
       phaseRef.current = 'down';
       setPhase('down');
     } else {
-      phaseRef.current = 'up';
-      setPhase('up');
-      sfxCoin();
-      hapticTap();
-      setSquats(s => { const n = s + 1; squatsRef.current = n; return n; });
+      completeSquat();
     }
   };
 
@@ -84,7 +112,13 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-3xl font-black text-white mb-2 text-center">스쿼트 챌린지</h1>
       <p className="text-purple-300 font-bold mb-4 text-center text-sm">폰을 가슴에 대고 스쿼트하거나 화면을 터치하세요!</p>
       <div className="text-2xl font-black text-purple-400">{phase === 'down' ? '⬇️ 내려가는 중... (다시 터치하여 일어나기)' : '⬆️ 올라오세요! (터치하여 앉기)'}</div>
-      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-6xl font-black text-purple-400 mb-4">{squats}회!</div><p className="text-xl text-white font-bold">+{squats * 40}점</p></div>}
+      <p className="text-purple-400/80 text-xs mt-3 font-medium">화면 꺼짐 방지 활성 • 정상 스쿼트 템포 자동 보정</p>
+      {finished && (
+        <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center animate-in fade-in">
+          <div className="text-6xl font-black text-purple-400 mb-4">{squats}회!</div>
+          <p className="text-xl text-white font-bold">+{squats * 40}점</p>
+        </div>
+      )}
     </div>
   );
 };

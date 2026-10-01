@@ -13,6 +13,7 @@ import { GamePlayPage } from './presentation/GamePlayPage';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
+import { TeacherAuthGuard } from './presentation/components/TeacherAuthGuard';
 
 import { TeacherRemote } from './presentation/TeacherRemote';
 
@@ -33,16 +34,16 @@ function App() {
         <Route path="/" element={<GameHub />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 
-        {/* 교사 관리 & 수업용 (Supabase 필요) */}
+        {/* 교사 관리 & 수업용 (Supabase 필요 & 교사 PIN 인증) */}
         <Route path="/lobby" element={hasSupabase ? <Lobby /> : <SupabaseRequired />} />
         <Route path="/join" element={hasSupabase ? <QuickJoin /> : <SupabaseRequired />} />
         <Route path="/manual" element={<Manual />} />
         <Route path="/board" element={hasSupabase ? <BoardEntry /> : <SupabaseRequired />} />
         <Route path="/board/:roomId" element={hasSupabase ? <ScoreBoard /> : <SupabaseRequired />} />
         <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <MobileMissionView /> : <SupabaseRequired />} />
-        <Route path="/admin" element={hasSupabase ? <AdminControlPanel /> : <SupabaseRequired />} />
-        <Route path="/remote" element={hasSupabase ? <TeacherRemote /> : <SupabaseRequired />} />
-        <Route path="/remote/:roomId" element={hasSupabase ? <TeacherRemote /> : <SupabaseRequired />} />
+        <Route path="/admin" element={hasSupabase ? <TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard> : <SupabaseRequired />} />
+        <Route path="/remote" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
+        <Route path="/remote/:roomId" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/kiosk" element={hasSupabase ? <KioskRelayView /> : <SupabaseRequired />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

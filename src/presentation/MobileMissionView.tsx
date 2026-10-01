@@ -5,10 +5,12 @@ import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
 import { useOutdoorMode } from '../application/useOutdoorMode';
+import { useWakeLock } from '../application/useWakeLock';
 import * as LucideIcons from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
+import { ObserverRefereeMode } from './components/ObserverRefereeMode';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { sfxWhistle } from '../application/soundEffects';
@@ -33,6 +35,7 @@ const ROLE_OPTIONS = [
   { id: 'warrior', name: '전사', desc: '미션 점수 +20% 보너스', icon: LucideIcons.Sword, color: 'text-red-600' },
   { id: 'thief', name: '도적', desc: '도둑 고양이 비용 50% 할인', icon: LucideIcons.Ghost, color: 'text-purple-600' },
   { id: 'priest', name: '사제', desc: '기부 천사 효과 2배 (400점)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600' },
+  { id: 'observer', name: '심판/기록관(견학생)', desc: '자세 판정 및 퀴즈로 팀 보너스 기여', icon: LucideIcons.Eye, color: 'text-amber-500' },
 ];
 
 export const MobileMissionView = () => {
@@ -43,6 +46,7 @@ export const MobileMissionView = () => {
   const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
   const { isOutdoorMode, toggleOutdoorMode } = useOutdoorMode();
+  const { isActive: isWakeLockActive } = useWakeLock(true);
   const [isStandMode, setIsStandMode] = useState(() => localStorage.getItem('physical_stand_mode') === 'true');
   const [currentRunner, setCurrentRunner] = useState(1);
   const [studentName] = useState(() => localStorage.getItem('physical_student_name') || '');
@@ -55,7 +59,10 @@ export const MobileMissionView = () => {
   useEffect(() => {
     if (isWhistleActive && !whistlePlayedRef.current) {
       sfxWhistle();
-      try { navigator?.vibrate?.([200, 100, 200, 100, 400]); } catch { /* ignore */ }
+      try { 
+        // 체육관 소음 극복을 위한 강력한 5단 햅틱 진동
+        navigator?.vibrate?.([300, 100, 300, 100, 600]); 
+      } catch { /* ignore */ }
       whistlePlayedRef.current = true;
     } else if (!isWhistleActive) {
       whistlePlayedRef.current = false;
@@ -84,7 +91,9 @@ export const MobileMissionView = () => {
   const [cooldownTime, setCooldownTime] = useState(0);
   const cooldown = cooldownTime > 0;
   const [maxCooldownTime, setMaxCooldownTime] = useState(1);
-  const [activeTab, setActiveTab] = useState<'mission' | 'shop' | 'bingo'>('mission');
+  const [activeTab, setActiveTab] = useState<'mission' | 'shop' | 'bingo' | 'observer'>(
+    role === 'observer' ? 'observer' : 'mission'
+  );
   const [holdProgress, setHoldProgress] = useState(0);
   
   const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
@@ -919,6 +928,11 @@ export const MobileMissionView = () => {
         >
           <span>{isStandMode ? '🎛️ 스탠드 ON' : '📱 폰'}</span>
         </button>
+        {isWakeLockActive && (
+          <span className="px-2 py-1 bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-full text-[10px] font-black flex items-center gap-1 shadow-sm" title="화면 꺼짐 방지 활성">
+            🔆 켜짐유지
+          </span>
+        )}
         <button
           onClick={toggleOutdoorMode}
           className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md border-2 ${isOutdoorMode ? 'bg-yellow-400 border-yellow-300 text-black' : 'bg-white/80 border-slate-200 text-slate-600'}`}
@@ -927,6 +941,14 @@ export const MobileMissionView = () => {
           {isOutdoorMode ? '☀️' : '🌙'}
         </button>
       </div>
+
+      {/* 🌟 학급 전체 피버타임 및 긴급 공지 띠 배너 */}
+      {gameRoom?.announcement && gameRoom.announcement !== 'WHISTLE' && (
+        <div className="mx-4 mt-2 mb-1 p-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg animate-pulse border border-yellow-300">
+          <LucideIcons.Sparkles className="w-4 h-4 fill-slate-950" />
+          <span>{gameRoom.announcement}</span>
+        </div>
+      )}
       {combo > 1 && (
         <div className="absolute top-1/4 right-8 z-40 transform rotate-12 animate-bounce flex flex-col items-center pointer-events-none">
           <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 drop-shadow-lg italic">
@@ -1213,6 +1235,19 @@ export const MobileMissionView = () => {
               </div>
 
             </div>
+          ) : activeTab === 'observer' ? (
+            <div className="pb-32 overflow-y-auto">
+              <ObserverRefereeMode
+                groupName={myGroup?.group_name || '우리'}
+                isBuffActive={hasBuff}
+                onAwardBonus={async (amount, _reason) => {
+                  if (!groupId) return;
+                  const currentScore = myGroup?.score || 0;
+                  const newScore = currentScore + amount;
+                  await supabase.from('room_groups').update({ score: newScore }).eq('id', groupId);
+                }}
+              />
+            </div>
           ) : (
             <div className="flex flex-col gap-3 overflow-y-auto pb-32 custom-scrollbar pr-2 h-full">
               {/* 직업 변경 섹션 */}
@@ -1281,16 +1316,24 @@ export const MobileMissionView = () => {
         </div>
       </div>
 
+      {/* 🚨 체육관 소음 극복을 위한 비주얼 스트로브 플래시 오버레이 */}
+      {isWhistleActive && (
+        <div className="fixed inset-0 z-50 pointer-events-none bg-red-600/35 animate-ping border-[12px] border-red-500" />
+      )}
+
       {/* 하단 고정 탭바 */}
       <div className={`tab-bar fixed bottom-0 left-0 right-0 z-50 flex gap-2 p-3 border-t shadow-lg safe-area-bottom ${isOutdoorMode ? 'bg-black/95 border-slate-800' : 'bg-white/95 backdrop-blur-md border-slate-200'}`}>
-        <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'bg-cyan-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.Shield className="w-5 h-5" /> 미션
+        <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'bg-cyan-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.Shield className="w-4 h-4" /> <span className="text-xs">미션</span>
         </button>
-        <button onClick={() => setActiveTab('bingo')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'bingo' ? `tab-active ${isOutdoorMode ? 'bg-orange-700 text-white' : 'bg-orange-500 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.Grid className="w-5 h-5" /> 빙고
+        <button onClick={() => setActiveTab('bingo')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'bingo' ? `tab-active ${isOutdoorMode ? 'bg-orange-700 text-white' : 'bg-orange-500 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.Grid className="w-4 h-4" /> <span className="text-xs">빙고</span>
         </button>
-        <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-2 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.ShoppingCart className="w-5 h-5" /> 상점
+        <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
+          <LucideIcons.ShoppingCart className="w-4 h-4" /> <span className="text-xs">상점</span>
+        </button>
+        <button onClick={() => setActiveTab('observer')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'observer' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : (isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-amber-400' : 'bg-amber-50 border border-amber-200 text-amber-700')}`}>
+          <LucideIcons.Eye className="w-4 h-4" /> <span className="text-xs">심판</span>
         </button>
       </div>
     </div>
