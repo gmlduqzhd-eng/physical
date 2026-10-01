@@ -29,12 +29,24 @@ export const ArmRaise = ({ groupId, enqueueAction }: Props) => {
     window.addEventListener('deviceorientation', handler);
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: countRef.current * 30 }, timestamp: Date.now() }); return 0; }
+        if (prev <= 1) { clearInterval(timer); return 0; }
         return prev - 1;
       });
     }, 1000);
     return () => { window.removeEventListener('deviceorientation', handler); clearInterval(timer); };
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: countRef.current * 30 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   return (
     <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors ${isUp ? 'bg-yellow-900' : 'bg-orange-950'}`}>

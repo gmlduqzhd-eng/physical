@@ -28,10 +28,6 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          setWon(false);
-          sfxFail();
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
         return prev - 1;
@@ -40,6 +36,20 @@ export const NumberGridGame = ({ groupId, enqueueAction }: Props) => {
 
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      setWon(false);
+      sfxFail();
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: 0 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleTap = (num: number) => {
     if (finished) return;

@@ -79,7 +79,6 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(timer);
           clearInterval(physics);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -90,7 +89,13 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
       clearInterval(physics);
       clearInterval(timer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const handlePump = (side: 'left' | 'right') => {
     if (fallOff || finished) return;

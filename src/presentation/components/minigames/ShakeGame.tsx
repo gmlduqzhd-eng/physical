@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import * as LucideIcons from 'lucide-react';
-import { hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
+import { hapticTap, sfxTimerTick, sfxUrgentWarning, sfxSuccess } from '../../../application/soundEffects';
 
 interface Props {
   groupId: string;
@@ -12,27 +12,41 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(10);
   const [won, setWon] = useState(false);
+  const progressRef = useRef(0);
+
+  const submitScore = useCallback(() => {
+    sfxSuccess();
+    enqueueAction({
+      id: Math.random().toString(),
+      type: 'INCREMENT_SCORE',
+      payload: { id: groupId, amount: 500 },
+      timestamp: Date.now()
+    });
+  }, [enqueueAction, groupId]);
+
+  const handleProgress = useCallback((amount: number = 5) => {
+    if (finished) return;
+    hapticTap();
+    const next = Math.min(100, progressRef.current + amount);
+    progressRef.current = next;
+    setProgress(next);
+    if (next >= 100) {
+      setFinished(true);
+      setWon(true);
+      submitScore();
+    }
+  }, [finished, submitScore]);
 
   useEffect(() => {
     if (finished) return;
 
-    let lastWarnSec = -1;
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          setWon(false);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
           return 0;
         }
-        const next = prev - 1;
-        if (next > 0 && next < 10 && next !== lastWarnSec) {
-          lastWarnSec = next;
-          sfxTimerTick(next);
-          if (next === 3) sfxUrgentWarning();
-        }
-        return next;
+        return prev - 1;
       });
     }, 1000);
 
@@ -53,28 +67,23 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
       clearInterval(timer);
       window.removeEventListener('devicemotion', handleMotion);
     };
-  }, [finished]);
+  }, [finished, handleProgress]);
 
-  const handleProgress = (amount: number = 5) => {
-    if (finished) return;
-    hapticTap();
-    
-    setProgress((p) => {
-      if (p >= 100) return 100;
-      const next = p + amount;
-      if (next >= 100) {
-        setFinished(true);
-        setWon(true);
-        submitScore();
-        return 100;
-      }
-      return next;
-    });
-  };
-
-  const submitScore = () => {
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-  };
+  useEffect(() => {
+    if (timeLeft > 0 && timeLeft < 10) {
+      sfxTimerTick(timeLeft);
+      if (timeLeft === 3) sfxUrgentWarning();
+    } else if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      setWon(false);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: 0 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   return (
     <div 

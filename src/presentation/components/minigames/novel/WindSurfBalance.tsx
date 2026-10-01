@@ -86,7 +86,6 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
           clearInterval(gameTimer);
           clearInterval(windTimer);
           clearInterval(physicsTimer);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -98,7 +97,13 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
       clearInterval(windTimer);
       clearInterval(physicsTimer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const steer = (delta: number) => {
     if (wipeout || finished) return;

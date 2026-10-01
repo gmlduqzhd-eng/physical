@@ -33,19 +33,24 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
+      // 물살 저항 (매초 약간씩 뒤로 밀림)
+      setDistance(d => Math.max(0, d - 1.5));
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          finishGame();
           return 0;
         }
-        // 물살 저항 (매초 약간씩 뒤로 밀림)
-        setDistance(d => Math.max(0, d - 1.5));
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const handlePaddle = (side: 'left' | 'right') => {
     if (finished) return;

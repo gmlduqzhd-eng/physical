@@ -63,7 +63,6 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
           clearInterval(gameTimer);
           clearInterval(gateTimer);
           clearInterval(physicsTimer);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -75,7 +74,13 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
       clearInterval(gateTimer);
       clearInterval(physicsTimer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const handlePointerDown = () => {
     isHolding.current = true;

@@ -85,12 +85,6 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            setWon(false);
-            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
-          }
           return 0;
         }
         return prev - 1;
@@ -107,7 +101,21 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
         audioContextRef.current.close();
       }
     };
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished && !finishedRef.current) {
+      finishedRef.current = true;
+      setFinished(true);
+      setWon(false);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: 0 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleFallbackTap = () => {
     if (finishedRef.current) return;

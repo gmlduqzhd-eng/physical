@@ -26,12 +26,24 @@ export const TiltBalance = ({ groupId, enqueueAction }: Props) => {
     window.addEventListener('deviceorientation', handler);
     const timer = setInterval(() => {
       setTimeLeft(prev => {
-        if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: Math.floor(scoreRef.current / 2) }, timestamp: Date.now() }); return 0; }
+        if (prev <= 1) { clearInterval(timer); return 0; }
         return prev - 1;
       });
     }, 1000);
     return () => { window.removeEventListener('deviceorientation', handler); clearInterval(timer); };
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: Math.floor(scoreRef.current / 2) },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const inZone = ballX > 30 && ballX < 70 && ballY > 30 && ballY < 70;
 

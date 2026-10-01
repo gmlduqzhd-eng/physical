@@ -37,16 +37,6 @@ export const TiltRace = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: collectedRef.current * 50 },
-              timestamp: Date.now()
-            });
-          }
           return 0;
         }
         return prev - 1;
@@ -57,7 +47,20 @@ export const TiltRace = ({ groupId, enqueueAction }: Props) => {
       window.removeEventListener('deviceorientation', handler);
       clearInterval(timer);
     };
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished && !finishedRef.current) {
+      finishedRef.current = true;
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: collectedRef.current * 50 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const moveBall = (delta: number) => {
     if (finishedRef.current) return;

@@ -11,9 +11,21 @@ export const WaveCounter = ({ groupId, enqueueAction }: Props) => {
       if (dir.current === 'left' && x > 5) { dir.current = 'right'; cooldown.current = true; sfxCoin(); setWaves(w => { const n = w + 1; wavesRef.current = n; return n; }); setTimeout(() => { cooldown.current = false; }, 200); }
       prevX.current = x; };
     window.addEventListener('devicemotion', handler);
-    const timer = setInterval(() => { setTimeLeft(prev => { if (prev <= 1) { clearInterval(timer); setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: wavesRef.current * 15 }, timestamp: Date.now() }); return 0; } return prev - 1; }); }, 1000);
+    const timer = setInterval(() => { setTimeLeft(prev => { if (prev <= 1) { clearInterval(timer); return 0; } return prev - 1; }); }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: wavesRef.current * 15 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
   return (
     <div className="min-h-[100dvh] bg-pink-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">

@@ -20,12 +20,6 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            setWon(false);
-            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
-          }
           return 0;
         }
         return prev - 1;
@@ -46,7 +40,21 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
       clearInterval(timer);
       clearInterval(moleInterval);
     };
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished && !finishedRef.current) {
+      finishedRef.current = true;
+      setFinished(true);
+      setWon(false);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: 0 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleWhack = (index: number) => {
     if (finishedRef.current || finished || index !== activeMole) return;

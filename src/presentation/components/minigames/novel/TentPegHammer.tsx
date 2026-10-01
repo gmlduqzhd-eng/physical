@@ -52,7 +52,6 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(gameTimer);
           clearInterval(animInterval);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -63,7 +62,13 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       clearInterval(animInterval);
       clearInterval(gameTimer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const handleHammerHit = () => {
     if (finished) return;

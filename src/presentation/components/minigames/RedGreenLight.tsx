@@ -35,11 +35,6 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(gameTimer);
           if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current * 30 }, timestamp: Date.now() });
-          }
           return 0;
         }
         return prev - 1;
@@ -50,7 +45,20 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
       clearInterval(gameTimer);
       if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
     };
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished && !finishedRef.current) {
+      finishedRef.current = true;
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: scoreRef.current * 30 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleTap = () => {
     if (finished || eliminated) return;

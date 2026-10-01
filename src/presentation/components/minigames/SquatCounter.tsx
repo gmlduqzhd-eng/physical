@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
-import { useWakeLock } from '../../../application/useWakeLock';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -14,8 +13,6 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
   const finishedRef = useRef(false);
   const lastZ = useRef(0);
   const lastPhaseChangeTime = useRef(Date.now());
-
-  useWakeLock(true);
 
   const completeSquat = useCallback(() => {
     phaseRef.current = 'up';
@@ -59,35 +56,34 @@ export const SquatCounter = ({ groupId, enqueueAction }: Props) => {
   }, [completeSquat]);
 
   useEffect(() => {
-    let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          if (!finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: squatsRef.current * 40 },
-              timestamp: Date.now()
-            });
-          }
           return 0;
         }
-        const next = prev - 1;
-        if (next > 0 && next < 10 && next !== lastWarnSec) {
-          lastWarnSec = next;
-          sfxTimerTick(next);
-          if (next === 3) sfxUrgentWarning();
-        }
-        return next;
+        return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft > 0 && timeLeft < 10) {
+      sfxTimerTick(timeLeft);
+      if (timeLeft === 3) sfxUrgentWarning();
+    } else if (timeLeft === 0 && !finished && !finishedRef.current) {
+      finishedRef.current = true;
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: squatsRef.current * 40 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const triggerSquat = () => {
     if (finishedRef.current || finished) return;

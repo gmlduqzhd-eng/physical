@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 import { BiomechanicalMotionDetector } from '../../../application/motionFilter';
-import { useWakeLock } from '../../../application/useWakeLock';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -21,8 +20,6 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
       maxFrequencyPerSec: 3 // 초당 3회 초과 시 손목 털기 편법 감지
     })
   );
-
-  useWakeLock(true);
 
   const doJump = useCallback(() => {
     if (cooldown.current || finished) return;
@@ -67,32 +64,33 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
   }, [doJump, finished]);
 
   useEffect(() => {
-    let lastWarnSec = -1;
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          enqueueAction({
-            id: Math.random().toString(),
-            type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: jumpsRef.current * 30 },
-            timestamp: Date.now()
-          });
           return 0;
         }
-        const next = prev - 1;
-        if (next > 0 && next < 10 && next !== lastWarnSec) {
-          lastWarnSec = next;
-          sfxTimerTick(next);
-          if (next === 3) sfxUrgentWarning();
-        }
-        return next;
+        return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [groupId, enqueueAction]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft > 0 && timeLeft < 10) {
+      sfxTimerTick(timeLeft);
+      if (timeLeft === 3) sfxUrgentWarning();
+    } else if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: jumpsRef.current * 30 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   return (
     <div 

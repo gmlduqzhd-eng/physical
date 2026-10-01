@@ -234,6 +234,10 @@ export const GamePlayPage = () => {
     setIsCountingDown(true);
   };
 
+  const handleCountdownComplete = useCallback(() => {
+    setIsCountingDown(false);
+  }, []);
+
   const difficultyMultiplier = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.5 : 1;
 
   // 업적 배지 체크
@@ -549,7 +553,7 @@ export const GamePlayPage = () => {
       {/* 3초 움직임 준비 카운트다운 */}
       {isCountingDown && (
         <ReadyCountdownOverlay
-          onComplete={() => setIsCountingDown(false)}
+          onComplete={handleCountdownComplete}
           message={`${gameInfo.name} 시작 준비! 스마트폰을 거치하거나 손에 쥐세요.`}
         />
       )}

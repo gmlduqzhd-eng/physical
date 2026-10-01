@@ -56,8 +56,6 @@ export const MathSprint = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current * 50 }, timestamp: Date.now() });
           return 0;
         }
         return prev - 1;
@@ -65,6 +63,18 @@ export const MathSprint = ({ groupId, enqueueAction }: Props) => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: scoreRef.current * 50 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleAnswer = (choice: number) => {
     if (finished) return;

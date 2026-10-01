@@ -52,7 +52,6 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(timer);
           clearInterval(anim);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -63,7 +62,13 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const handleSmash = () => {
     if (finished) return;

@@ -125,31 +125,37 @@ export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          sfxCoin();
-          if (poseIdx + 1 >= POSES.length) {
-            if (!finishedRef.current) {
-              finishedRef.current = true;
-              setFinished(true);
-              sfxSuccess();
-              enqueueAction({
-                id: Math.random().toString(),
-                type: 'INCREMENT_SCORE',
-                payload: { id: groupId, amount: 500 },
-                timestamp: Date.now()
-              });
-            }
-            return 0;
-          } else {
-            setPoseIdx(p => p + 1);
-            return POSES[poseIdx + 1].duration;
-          }
+          return 0;
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [poseIdx, finished, groupId, enqueueAction]);
+  }, [finished]);
+
+  useEffect(() => {
+    if (finished || timeLeft > 0) return;
+
+    sfxCoin();
+    if (poseIdx + 1 >= POSES.length) {
+      if (!finishedRef.current) {
+        finishedRef.current = true;
+        setFinished(true);
+        sfxSuccess();
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: 500 },
+          timestamp: Date.now()
+        });
+      }
+    } else {
+      const nextIdx = poseIdx + 1;
+      setPoseIdx(nextIdx);
+      setTimeLeft(POSES[nextIdx].duration);
+    }
+  }, [timeLeft, poseIdx, finished, groupId, enqueueAction]);
 
   const current = POSES[poseIdx] || POSES[0];
 

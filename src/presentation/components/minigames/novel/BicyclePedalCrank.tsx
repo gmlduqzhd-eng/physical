@@ -43,7 +43,6 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(timer);
           clearInterval(decayTimer);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -54,7 +53,13 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
       clearInterval(timer);
       clearInterval(decayTimer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const calculateAngle = (clientX: number, clientY: number) => {
     if (!dialRef.current) return;

@@ -92,7 +92,6 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
         if (prev <= 1) {
           clearInterval(timer);
           clearInterval(anim);
-          finishGame();
           return 0;
         }
         return prev - 1;
@@ -103,7 +102,13 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, [finishGame]);
+  }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      finishGame();
+    }
+  }, [timeLeft, finished, finishGame]);
 
   const movePaddle = (dir: 'left' | 'right') => {
     if (finished) return;

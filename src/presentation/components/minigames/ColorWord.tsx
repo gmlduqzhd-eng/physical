@@ -36,8 +36,6 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          setFinished(true);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current * 50 }, timestamp: Date.now() });
           return 0;
         }
         return prev - 1;
@@ -45,6 +43,18 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (timeLeft === 0 && !finished) {
+      setFinished(true);
+      enqueueAction({
+        id: Math.random().toString(),
+        type: 'INCREMENT_SCORE',
+        payload: { id: groupId, amount: scoreRef.current * 50 },
+        timestamp: Date.now()
+      });
+    }
+  }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleAnswer = (idx: number) => {
     if (finished) return;
