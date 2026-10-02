@@ -209,6 +209,19 @@ export const GameHub = () => {
           {/* 우측 상단 액션 버튼들 */}
           <div className="flex items-center gap-1.5 shrink-0">
             <button
+              onClick={() => navigate('/')}
+              className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
+              style={{
+                backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+                borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
+                color: isDark ? '#f8fafc' : '#334155',
+              }}
+              title="서비스 소개 페이지로 이동"
+            >
+              <span>💦</span>
+              <span className="hidden sm:inline">소개 보기</span>
+            </button>
+            <button
               onClick={() => navigate('/manual')}
               className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
               style={{
@@ -261,7 +274,11 @@ export const GameHub = () => {
 
         {/* Hero Title & Desc */}
         <div className="relative z-10 flex flex-col items-center pt-2 pb-5 px-6">
-          <h1 className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 text-center whitespace-nowrap">
+          <h1
+            onClick={() => navigate('/')}
+            className="text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-300 to-purple-300 text-center whitespace-nowrap cursor-pointer hover:opacity-90 transition-opacity"
+            title="소개 페이지로 이동"
+          >
             땀방울 원정대
           </h1>
           <p className="text-slate-400 font-medium mt-1.5 text-center text-xs md:text-sm max-w-xl break-keep leading-relaxed">

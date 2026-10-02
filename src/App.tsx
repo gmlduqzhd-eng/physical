@@ -8,6 +8,7 @@ import { Manual } from './presentation/Manual';
 import { KioskRelayView } from './presentation/KioskRelayView';
 import { QuickJoin } from './presentation/QuickJoin';
 import { BoardEntry } from './presentation/BoardEntry';
+import { IntroLandingPage } from './presentation/IntroLandingPage';
 import { GameHub } from './presentation/GameHub';
 import { GamePlayPage } from './presentation/GamePlayPage';
 import { syncServerTime } from './application/timeSync';
@@ -30,8 +31,10 @@ function App() {
     <BrowserRouter>
       <KakaoInAppNotice />
       <Routes>
-        {/* 메인: 게임 허브 */}
-        <Route path="/" element={<GameHub />} />
+        {/* 메인: 소개 페이지가 먼저 노출되고, '게임하기' 클릭 시 게임 허브(/hub)로 이동 */}
+        <Route path="/" element={<IntroLandingPage />} />
+        <Route path="/hub" element={<GameHub />} />
+        <Route path="/games" element={<GameHub />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 
         {/* 교사 관리 & 수업용 (Supabase 필요 & 교사 PIN 인증) */}
