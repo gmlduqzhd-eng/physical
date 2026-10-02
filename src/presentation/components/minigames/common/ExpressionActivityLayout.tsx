@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useGameTimeouts } from './useGameTimeouts';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Award } from 'lucide-react';
 import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
@@ -15,6 +16,7 @@ export const ExpressionActivityLayout = ({
   onComplete,
   onExit,
 }: ExpressionActivityLayoutProps) => {
+  const scheduleTimeout = useGameTimeouts();
   // 단계: 'countdown' -> 'active' -> 'rubric' -> 'result'
   const [phase, setPhase] = useState<'countdown' | 'active' | 'rubric' | 'result'>('countdown');
   const [countdown, setCountdown] = useState<number>(3);
@@ -27,42 +29,39 @@ export const ExpressionActivityLayout = ({
   const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 5));
   const [selfReflection, setSelfReflection] = useState<string>('친구들과 함께 멋진 표현을 완성하여 보람찼습니다!');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
+  const completedRef = useRef(false);
 
   // 카운트다운 3초
   useEffect(() => {
     if (phase !== 'countdown') return;
     if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(c => c - 1), 1000);
+      const timer = scheduleTimeout(() => setCountdown(c => c - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setPhase('active');
       setTimeLeft(game.steps[0]?.durationSeconds || 30);
       setIsTimerRunning(true);
     }
-  }, [phase, countdown, game.steps]);
+  }, [phase, countdown, game.steps, scheduleTimeout]);
 
   // 활동 타이머
   useEffect(() => {
     if (phase !== 'active' || !isTimerRunning) return;
-    const interval = setInterval(() => {
+    const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
-      setTimeLeft(t => {
-        if (t <= 1) {
-          // 다음 단계 자동 전환 또는 루브릭 이동
-          if (currentStepIdx < game.steps.length - 1) {
-            setCurrentStepIdx(s => s + 1);
-            return game.steps[currentStepIdx + 1]?.durationSeconds || 30;
-          } else {
-            // 마지막 단계 완료 -> 루브릭 평가 단계
-            setPhase('rubric');
-            return 0;
-          }
-        }
-        return t - 1;
-      });
+      if (timeLeft > 1) {
+        setTimeLeft(timeLeft - 1);
+      } else if (currentStepIdx < game.steps.length - 1) {
+        const nextIdx = currentStepIdx + 1;
+        setCurrentStepIdx(nextIdx);
+        setTimeLeft(game.steps[nextIdx]?.durationSeconds || 30);
+      } else {
+        setPhase('rubric');
+        setTimeLeft(0);
+      }
     }, 1000);
-    return () => clearInterval(interval);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps]);
+    return () => clearTimeout(timer);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
@@ -84,6 +83,8 @@ export const ExpressionActivityLayout = ({
 
   // 루브릭 평가 제출 및 완료
   const handleFinishRubric = () => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     sfxSuccess();
     setPhase('result');
     const avgScore = Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100);
@@ -398,10 +399,15 @@ export const ExpressionActivityLayout = ({
             <button
               type="button"
               onClick={() => {
+                completedRef.current = false;
+                setTotalElapsedTime(0);
+                setRatings(game.rubric.map(() => 5));
+                setSelfReflection('친구들과 함께 멋진 표현을 완성하여 보람찼습니다!');
+                setIsTimerRunning(true);
                 setPhase('countdown');
                 setCountdown(3);
                 setCurrentStepIdx(0);
-                setTimeLeft(game.steps[0].durationSeconds);
+                setTimeLeft(game.steps[0]?.durationSeconds || 30);
               }}
               className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors flex items-center gap-1.5"
             >

@@ -1,5 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useGameTimeouts } from './common/useGameTimeouts';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxClick, sfxPop } from '../../../application/soundEffects';
+
+const EMOJIS = ['🏀', '⚽', '🎾', '🏐', '🏈', '🥊', '⛳', '🎯', '🏸', '🥏'];
 
 interface Props {
   groupId: string;
@@ -7,6 +10,7 @@ interface Props {
 }
 
 export const LeftRight = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
   const [finished, setFinished] = useState(false);
@@ -15,12 +19,10 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
   const [flash, setFlash] = useState<'correct' | 'wrong' | null>(null);
   const scoreRef = useRef(0);
 
-  const EMOJIS = ['🏀', '⚽', '🎾', '🏐', '🏈', '🥊', '⛳', '🎯', '🏸', '🥏'];
-
-  const nextTarget = () => {
+  const nextTarget = useCallback(() => {
     setTargetSide(Math.random() > 0.5 ? 'left' : 'right');
     setTargetEmoji(EMOJIS[Math.floor(Math.random() * EMOJIS.length)]);
-  };
+  }, []);
 
   useEffect(() => {
     nextTarget();
@@ -34,7 +36,7 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [nextTarget]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {
@@ -59,7 +61,7 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
       sfxPop();
       setFlash('wrong');
     }
-    setTimeout(() => setFlash(null), 100);
+    scheduleTimeout(() => setFlash(null), 100);
     nextTarget();
   };
 
@@ -86,15 +88,15 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
       {/* 좌우 버튼 */}
       <div className="flex w-full max-w-sm gap-4 relative z-10">
         <button
-          onMouseDown={() => handleTap('left')}
-          onTouchStart={(e) => { e.preventDefault(); handleTap('left'); }}
+          onPointerDown={() => handleTap('left')}
+          onClick={e => { if (e.detail === 0) handleTap('left'); }}
           className="flex-1 py-10 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-2xl text-white font-black text-2xl shadow-[0_6px_0_rgba(29,78,216,1)] active:shadow-none active:translate-y-[6px] transition-all"
         >
           ◀ 왼쪽
         </button>
         <button
-          onMouseDown={() => handleTap('right')}
-          onTouchStart={(e) => { e.preventDefault(); handleTap('right'); }}
+          onPointerDown={() => handleTap('right')}
+          onClick={e => { if (e.detail === 0) handleTap('right'); }}
           className="flex-1 py-10 bg-orange-600 hover:bg-orange-500 active:bg-orange-700 rounded-2xl text-white font-black text-2xl shadow-[0_6px_0_rgba(194,65,12,1)] active:shadow-none active:translate-y-[6px] transition-all"
         >
           오른쪽 ▶

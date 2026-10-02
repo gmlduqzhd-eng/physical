@@ -82,6 +82,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer touch-none ${
         stable ? 'bg-emerald-950' : 'bg-red-950'
       }`}
@@ -120,7 +121,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       <p className="text-sm font-black">{failed ? '❌ 흔들렸습니다!' : stable ? '✅ 훌륭합니다! 코어를 단단히 유지하세요!' : '⚠️ 등 위의 폰이 떨어지지 않게 수평을 유지하세요!'}</p>
       <p className="text-slate-400 text-xs mt-3 font-bold">목표: {TARGET}초</p>
 
-      {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{finished ? 500 : holdTime * 15}점</p></div>}
+      {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{failed ? holdTime * 15 : 500}점</p></div>}
     </div>
   );
 };

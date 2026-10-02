@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Smile } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -19,6 +20,7 @@ const BODY_PARTS: { id: BodyPart; label: string; emoji: string; color: string }[
 ];
 
 export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(25);
   const [currentTarget, setCurrentTarget] = useState<BodyPart>(() => BODY_PART_IDS[Math.floor(Math.random() * BODY_PART_IDS.length)]);
@@ -77,7 +79,7 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
       sfxFail();
       setFeedback('😅 다시 찾아보세요!');
     }
-    setTimeout(() => setFeedback(null), 500);
+    scheduleTimeout(() => setFeedback(null), 500);
   };
 
   const targetObj = BODY_PARTS.find(p => p.id === currentTarget)!;

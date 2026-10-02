@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useModalDialog } from '../../application/useModalDialog';
 import { X, Trophy, Swords, RotateCcw } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
 import { useVoiceCoach } from '../../application/useVoiceCoach';
@@ -11,6 +12,10 @@ interface SplitBattleGameProps {
 type BattleType = 'tug' | 'flag' | 'tap';
 
 export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClose }) => {
+  const dialogRef = useModalDialog(isOpen, onClose);
+  const ended = useRef(false);
+  const rope = useRef(0);
+  const counts = useRef({ p1: 0, p2: 0 });
   const { playBeep } = useAudio();
   const { speak } = useVoiceCoach();
 
@@ -25,13 +30,25 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
   const [flagVisible, setFlagVisible] = useState(false);
   const flagTimer = useRef<number | null>(null);
 
-  // 3. 스피드 15회 연타 대결
+  // 3. 스피드 25회 연타 대결
   const [p1Count, setP1Count] = useState(0);
   const [p2Count, setP2Count] = useState(0);
 
+  useEffect(() => () => { if (flagTimer.current) clearTimeout(flagTimer.current); }, []);
   if (!isOpen) return null;
+  const finish = (player: 'p1' | 'p2') => {
+    if (ended.current) return;
+    ended.current = true;
+    setWinner(player);
+    setGameState('ended');
+    speak(`${player === 'p1' ? '플레이어 1' : '플레이어 2'} 승리!`, true);
+  };
 
   const startBattle = (type: BattleType) => {
+    if (flagTimer.current) clearTimeout(flagTimer.current);
+    ended.current = false;
+    rope.current = 0;
+    counts.current = {p1: 0, p2: 0};
     setBattleType(type);
     setRopePos(0);
     setP1Count(0);
@@ -55,19 +72,11 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
   const handleTug = (player: 'p1' | 'p2') => {
     if (gameState !== 'playing' || battleType !== 'tug') return;
     playBeep();
-    setRopePos(prev => {
-      const next = player === 'p1' ? prev - 5 : prev + 5;
-      if (next <= -45) {
-        setWinner('p1');
-        setGameState('ended');
-        speak('플레이어 1 승리!', true);
-      } else if (next >= 45) {
-        setWinner('p2');
-        setGameState('ended');
-        speak('플레이어 2 승리!', true);
-      }
-      return next;
-    });
+    if (ended.current) return;
+    rope.current += player === 'p1' ? -5 : 5;
+    setRopePos(rope.current);
+    if (rope.current <= -45) finish('p1');
+    else if (rope.current >= 45) finish('p2');
   };
 
   // 깃발 터치
@@ -77,44 +86,32 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
       // 헛손질 페널티
       return;
     }
-    setWinner(player);
-    setGameState('ended');
-    speak(`${player === 'p1' ? '플레이어 1' : '플레이어 2'} 승리!`, true);
+    finish(player);
   };
 
   // 스피드 연타
   const handleTap = (player: 'p1' | 'p2') => {
     if (gameState !== 'playing' || battleType !== 'tap') return;
     playBeep();
-    if (player === 'p1') {
-      setP1Count(prev => {
-        const next = prev + 1;
-        if (next >= 25) {
-          setWinner('p1');
-          setGameState('ended');
-          speak('플레이어 1 승리!', true);
-        }
-        return next;
-      });
-    } else {
-      setP2Count(prev => {
-        const next = prev + 1;
-        if (next >= 25) {
-          setWinner('p2');
-          setGameState('ended');
-          speak('플레이어 2 승리!', true);
-        }
-        return next;
-      });
-    }
+    if (ended.current) return;
+    const next = ++counts.current[player];
+    if (player === 'p1') setP1Count(next); else setP2Count(next);
+    if (next >= 25) finish(player);
+  };
+
+  const activatePlayer = (player: 'p1' | 'p2') => {
+    if (battleType === 'tug') handleTug(player);
+    if (battleType === 'flag') handleFlagCatch(player);
+    if (battleType === 'tap') handleTap(player);
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col justify-between text-white select-none overflow-hidden">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="2인 화면분할 배틀" tabIndex={-1} className="fixed inset-0 z-[10005] bg-black flex flex-col justify-between text-white select-none overflow-hidden">
       {/* 닫기 및 메뉴 바 */}
       <div className="absolute top-4 right-4 z-50 flex items-center gap-2">
         <button
           onClick={onClose}
+          aria-label="닫기"
           className="p-2.5 bg-slate-800/80 hover:bg-slate-700 rounded-full border border-slate-600 shadow-xl"
         >
           <X className="w-5 h-5 text-slate-300" />
@@ -122,7 +119,7 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
       </div>
 
       {gameState === 'menu' ? (
-        <div className="flex-1 flex flex-col items-center justify-center p-6 bg-slate-950 text-center">
+        <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center p-4 bg-slate-950 text-center">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center mb-4 shadow-xl shadow-rose-500/30 animate-bounce">
             <Swords className="w-8 h-8 text-white" />
           </div>
@@ -171,12 +168,10 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
         <div className="flex-1 flex flex-col relative w-full h-full">
           {/* 상단 플레이어 (P1 - 180도 회전되어 마주 보는 구조) */}
           <div
-            onClick={() => {
-              if (battleType === 'tug') handleTug('p1');
-              if (battleType === 'flag') handleFlagCatch('p1');
-              if (battleType === 'tap') handleTap('p1');
-            }}
-            className="flex-1 bg-gradient-to-b from-blue-900 to-blue-950 flex flex-col items-center justify-center rotate-180 cursor-pointer active:brightness-125 transition-all border-b-2 border-slate-700/60 p-4"
+            role="button" tabIndex={0} aria-label="플레이어 1" aria-disabled={gameState !== 'playing'}
+            onPointerDown={() => activatePlayer('p1')}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activatePlayer('p1'); } }}
+            className="touch-none flex-1 bg-gradient-to-b from-blue-900 to-blue-950 flex flex-col items-center justify-center rotate-180 cursor-pointer active:brightness-125 transition-all border-b-2 border-slate-700/60 p-4"
           >
             <div className="text-center">
               <span className="px-3 py-1 bg-blue-500 text-slate-950 text-xs font-black rounded-full">
@@ -232,12 +227,10 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
 
           {/* 하단 플레이어 (P2 - 정상 시점) */}
           <div
-            onClick={() => {
-              if (battleType === 'tug') handleTug('p2');
-              if (battleType === 'flag') handleFlagCatch('p2');
-              if (battleType === 'tap') handleTap('p2');
-            }}
-            className="flex-1 bg-gradient-to-b from-rose-950 to-rose-900 flex flex-col items-center justify-center cursor-pointer active:brightness-125 transition-all p-4"
+            role="button" tabIndex={0} aria-label="플레이어 2" aria-disabled={gameState !== 'playing'}
+            onPointerDown={() => activatePlayer('p2')}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); activatePlayer('p2'); } }}
+            className="touch-none flex-1 bg-gradient-to-b from-rose-950 to-rose-900 flex flex-col items-center justify-center cursor-pointer active:brightness-125 transition-all p-4"
           >
             <div className="text-center">
               <span className="px-3 py-1 bg-rose-500 text-slate-950 text-xs font-black rounded-full">

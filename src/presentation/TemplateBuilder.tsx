@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../data/supabase';
 import type { MissionButton, MissionTemplate } from '../domain/types';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from './icons';
 
 const ICONS = [
   'Footprints', 'Activity', 'Users', 'Flame', 'Shield', 
@@ -35,12 +35,12 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
   if (initialTemplate?.id !== prevTemplateId) {
     setPrevTemplateId(initialTemplate?.id);
     setName(initialTemplate?.name || '');
-    setButtons(initialTemplate?.buttons || []);
+    setButtons((initialTemplate?.buttons || []).map(button => ({ ...button })));
   }
 
   const addButton = () => {
     const newButton: MissionButton = {
-      id: `mission-${Date.now()}`,
+      id: `mission-${crypto.randomUUID()}`,
       title: '새로운 미션',
       desc: '미션 설명을 입력하세요',
       amount: 10,
@@ -60,8 +60,7 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
 
   const updateTheme = (index: number, themeIndex: number) => {
     const newButtons = [...buttons];
-    newButtons[index].color = THEMES[themeIndex].color;
-    newButtons[index].bg = THEMES[themeIndex].bg;
+    newButtons[index] = { ...newButtons[index], color: THEMES[themeIndex].color, bg: THEMES[themeIndex].bg };
     setButtons(newButtons);
   };
 
@@ -85,20 +84,23 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
   };
 
   const handleSave = async () => {
+    if (loading) return;
     if (!name.trim()) return alert('템플릿 이름을 입력해주세요.');
     if (buttons.length === 0) return alert('최소 1개 이상의 미션 버튼을 추가해주세요.');
+    if (buttons.some(button => !button.title.trim() || !Number.isSafeInteger(button.amount) || button.amount < 1 || button.amount > 1000000 || !Number.isFinite(button.cooldown) || button.cooldown < 0 || button.cooldown > 3600)) return alert('미션 이름, 1~1,000,000점의 정수 점수, 0~3,600초의 대기 시간을 확인해주세요.');
+    if (buttons.some(button => button.prerequisiteMissionId && !buttons.some(other => other.id === button.prerequisiteMissionId && other.id !== button.id))) return alert('삭제되었거나 자기 자신인 선행 미션이 있습니다. 선행 미션을 다시 선택해주세요.');
     
     setLoading(true);
     
     let error;
     if (initialTemplate) {
       const { error: updateErr } = await supabase.from('mission_templates')
-        .update({ name, buttons })
+        .update({ name: name.trim(), buttons })
         .eq('id', initialTemplate.id);
       error = updateErr;
     } else {
       const { error: insertErr } = await supabase.from('mission_templates')
-        .insert([{ name, buttons }]);
+        .insert([{ name: name.trim(), buttons }]);
       error = insertErr;
     }
 

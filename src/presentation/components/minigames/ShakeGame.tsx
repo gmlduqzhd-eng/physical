@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 import { hapticTap, sfxTimerTick, sfxUrgentWarning, sfxSuccess } from '../../../application/soundEffects';
 
 interface Props {
@@ -13,6 +13,7 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
   const [timeLeft, setTimeLeft] = useState(10);
   const [won, setWon] = useState(false);
   const progressRef = useRef(0);
+  const finishedRef = useRef(false);
 
   const submitScore = useCallback(() => {
     sfxSuccess();
@@ -25,17 +26,18 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
   }, [enqueueAction, groupId]);
 
   const handleProgress = useCallback((amount: number = 5) => {
-    if (finished) return;
+    if (finishedRef.current) return;
     hapticTap();
     const next = Math.min(100, progressRef.current + amount);
     progressRef.current = next;
     setProgress(next);
     if (next >= 100) {
+      finishedRef.current = true;
       setFinished(true);
       setWon(true);
       submitScore();
     }
-  }, [finished, submitScore]);
+  }, [submitScore]);
 
   useEffect(() => {
     if (finished) return;
@@ -74,6 +76,8 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
       sfxTimerTick(timeLeft);
       if (timeLeft === 3) sfxUrgentWarning();
     } else if (timeLeft === 0 && !finished) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       setWon(false);
       enqueueAction({
@@ -88,8 +92,7 @@ export const ShakeGame = ({ groupId, enqueueAction }: Props) => {
   return (
     <div 
       className="min-h-[100dvh] bg-yellow-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none" 
-      onTouchStart={() => handleProgress(5)} 
-      onMouseDown={() => handleProgress(5)}
+      onPointerDown={() => handleProgress(5)}
     >
       <div className="absolute inset-0 bg-yellow-500/10 animate-pulse"></div>
       

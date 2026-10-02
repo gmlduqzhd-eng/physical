@@ -1,5 +1,6 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 
 interface Props {
   groupId: string;
@@ -14,11 +15,13 @@ const COLORS = [
 ];
 
 export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [phase, setPhase] = useState<'memorize' | 'input' | 'success' | 'fail'>('memorize');
   const [sequence, setSequence] = useState<number[]>([]);
   const [userInputs, setUserInputs] = useState<number[]>([]);
   const [activeColorIndex, setActiveColorIndex] = useState<number | null>(null);
   const lockRef = useRef(false);
+  const userInputsRef = useRef<number[]>([]);
 
   useEffect(() => {
     // Generate sequence
@@ -39,7 +42,7 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
       setActiveColorIndex(seq[step]);
       
       // Turn off color after 400ms
-      setTimeout(() => {
+      scheduleTimeout(() => {
         setActiveColorIndex(null);
       }, 400);
 
@@ -47,21 +50,23 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [scheduleTimeout]);
 
   const handleColorTap = (index: number) => {
-    if (phase !== 'input') return;
+    if (phase !== 'input' || lockRef.current) return;
 
-    const newInputs = [...userInputs, index];
+    const newInputs = [...userInputsRef.current, index];
+    userInputsRef.current = newInputs;
     setUserInputs(newInputs);
 
     // Flash tapped color briefly
     setActiveColorIndex(index);
-    setTimeout(() => setActiveColorIndex(null), 200);
+    scheduleTimeout(() => setActiveColorIndex(null), 200);
 
     // Check correctness
     const currentStep = newInputs.length - 1;
     if (newInputs[currentStep] !== sequence[currentStep]) {
+      lockRef.current = true;
       setPhase('fail');
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
       return;
@@ -93,6 +98,7 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
           return (
             <button
               key={i}
+              aria-label={c.name}
               onClick={() => handleColorTap(i)}
               disabled={phase !== 'input'}
               className={`rounded-2xl transition-all duration-200 ${isActive ? c.activeBg : c.bg} ${isActive ? c.shadow : ''} ${isActive ? 'scale-105' : 'scale-100'} ${phase === 'input' ? 'active:scale-95' : ''}`}

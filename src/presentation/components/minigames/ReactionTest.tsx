@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef, useEffect } from 'react';
 
 interface Props {
@@ -6,6 +7,7 @@ interface Props {
 }
 
 export const ReactionTest = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [phase, setPhase] = useState<'ready' | 'wait' | 'go' | 'done' | 'too_early'>('ready');
   const [reactionTime, setReactionTime] = useState(0);
   const goTimeRef = useRef(0);
@@ -14,7 +16,7 @@ export const ReactionTest = ({ groupId, enqueueAction }: Props) => {
   const startRound = () => {
     setPhase('wait');
     const delay = 2000 + Math.random() * 4000; // 2~6초 랜덤 대기
-    timerRef.current = setTimeout(() => {
+    timerRef.current = scheduleTimeout(() => {
       goTimeRef.current = Date.now();
       setPhase('go');
     }, delay);

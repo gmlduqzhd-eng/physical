@@ -1,9 +1,11 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxClick } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [steps, setSteps] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [finished, setFinished] = useState(false);
@@ -11,11 +13,12 @@ export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
   const lastMag = useRef(0);
   const rising = useRef(false);
   const cooldown = useRef(false);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
       const a = e.accelerationIncludingGravity;
-      if (!a || cooldown.current) return;
+      if (!a || cooldown.current || finishedRef.current) return;
       const mag = Math.sqrt((a.x ?? 0) ** 2 + (a.y ?? 0) ** 2 + (a.z ?? 0) ** 2);
       if (!rising.current && mag > 13) { rising.current = true; }
       if (rising.current && mag < 8) {
@@ -23,7 +26,7 @@ export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
         cooldown.current = true;
         sfxClick();
         setSteps(s => { const n = s + 1; stepsRef.current = n; return n; });
-        setTimeout(() => { cooldown.current = false; }, 200);
+        scheduleTimeout(() => { cooldown.current = false; }, 200);
       }
       lastMag.current = mag;
     };
@@ -35,10 +38,12 @@ export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       enqueueAction({
         id: Math.random().toString(),
@@ -50,7 +55,7 @@ export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
   }, [timeLeft, finished, groupId, enqueueAction]);
 
   const triggerStep = () => {
-    if (finished) return;
+    if (finishedRef.current) return;
     sfxClick();
     setSteps(s => { const n = s + 1; stepsRef.current = n; return n; });
   };

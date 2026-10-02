@@ -20,6 +20,8 @@ export const AnimalMove = ({ groupId, enqueueAction }: Props) => {
   const [done, setDone] = useState(0);
   const [finished, setFinished] = useState(false);
   const doneRef = useRef(0);
+  const missionIdxRef = useRef(0);
+  const finishedRef = useRef(false);
   const TOTAL = 5;
 
   const [missions] = useState(() => {
@@ -29,6 +31,8 @@ export const AnimalMove = ({ groupId, enqueueAction }: Props) => {
 
   useEffect(() => {
     if (done >= TOTAL) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: doneRef.current * 100 }, timestamp: Date.now() });
       return;
@@ -41,26 +45,30 @@ export const AnimalMove = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [done]);
+  }, [done, missionIdx, missions, enqueueAction, groupId]);
 
   const handleDone = () => {
+    if (finishedRef.current || missionIdxRef.current >= TOTAL) return;
     sfxClick();
-    setDone(d => { const n = d + 1; doneRef.current = n; return n; });
-    setMissionIdx(i => i + 1);
+    doneRef.current += 1;
+    missionIdxRef.current += 1;
+    setDone(missionIdxRef.current);
+    setMissionIdx(missionIdxRef.current);
   };
 
   const handleSkip = () => {
+    if (finishedRef.current || missionIdxRef.current >= TOTAL) return;
     sfxPop();
-    setMissionIdx(i => i + 1);
-    setDone(d => d + 1);
-    doneRef.current += 0; // skip = no points
+    missionIdxRef.current += 1;
+    setMissionIdx(missionIdxRef.current);
+    setDone(missionIdxRef.current);
   };
 
   const mission = missions[Math.min(missionIdx, TOTAL - 1)];
 
   return (
     <div className="min-h-[100dvh] bg-amber-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
-      <div className="text-yellow-300 font-bold text-sm mb-2 relative z-10">{done + 1}/{TOTAL} 미션</div>
+      <div className="text-yellow-300 font-bold text-sm mb-2 relative z-10">{Math.min(done + 1, TOTAL)}/{TOTAL} 미션</div>
       <h1 className="text-2xl font-black text-white mb-4 text-center relative z-10">🐾 동물 체조</h1>
       {!finished && (
         <>

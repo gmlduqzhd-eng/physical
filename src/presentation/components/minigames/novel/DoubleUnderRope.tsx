@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Zap } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxWhoosh } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const DoubleUnderRope = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [ropeAngle, setRopeAngle] = useState(0); // 0 to 360 degrees
   const [jumps, setJumps] = useState(0);
   const [combo, setCombo] = useState(0);
@@ -99,7 +101,7 @@ export const DoubleUnderRope = ({ groupId, enqueueAction }: Props) => {
         setFeedback('⚠️ 박자가 느렸습니다! 따닥! 더블 탭하세요.');
       }
     }
-    setTimeout(() => setFeedback(null), 600);
+    scheduleTimeout(() => setFeedback(null), 600);
   };
 
   return (

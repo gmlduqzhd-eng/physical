@@ -17,18 +17,23 @@ export const ScoreRepository = {
     return data || [];
   },
 
-  async incrementScore(id: string, amount: number): Promise<boolean> {
+  async incrementScore(id: string, amount: number, actionId?: string): Promise<boolean> {
+    return (await ScoreRepository.saveScoreAction(id, amount, actionId)) === 'saved';
+  },
+
+  async saveScoreAction(id: string, amount: number, actionId?: string): Promise<'saved' | 'obsolete' | 'retry'> {
     // 오로지 RPC 호출에만 의존하여 동시성(Race Condition)을 방지합니다.
-    const { error } = await supabase.rpc('increment_score', {
+    const { error } = await supabase.rpc('increment_classroom_score', {
       row_id: id,
-      amount: amount
+      amount,
+      action_id: actionId || crypto.randomUUID(),
     });
     
     if (error) {
-      console.error('RPC increment_score failed:', error.message);
-      return false;
+      console.error('Score save failed:', error.code);
+      return error.code === '23503' ? 'obsolete' : 'retry';
     }
     
-    return true;
+    return 'saved';
   }
 };

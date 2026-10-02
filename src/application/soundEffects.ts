@@ -4,22 +4,26 @@ let bgmInterval: ReturnType<typeof setInterval> | null = null;
 let bgmGain: GainNode | null = null;
 
 function getCtx() {
+  try {
   const audioWindow = window as Window & { webkitAudioContext?: typeof AudioContext };
   const AudioContextConstructor = window.AudioContext || audioWindow.webkitAudioContext;
-  if (!AudioContextConstructor) throw new Error('Web Audio API is not supported in this browser.');
-  if (!audioCtx) audioCtx = new AudioContextConstructor();
+  if (!AudioContextConstructor) return null;
+  if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextConstructor();
   if (audioCtx.state === 'suspended') {
     void audioCtx.resume().catch(() => {});
   }
   return audioCtx;
+  } catch { return null; }
 }
 
 export function unlockAudio() {
-  void getCtx().resume();
+  const ctx = getCtx();
+  if (ctx) void ctx.resume().catch(() => {});
 }
 
 function playTone(freq: number, duration: number, type: OscillatorType = 'square', volume = 0.15, delay = 0) {
   const ctx = getCtx();
+  if (!ctx) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -30,6 +34,7 @@ function playTone(freq: number, duration: number, type: OscillatorType = 'square
   gain.connect(ctx.destination);
   osc.start(ctx.currentTime + delay);
   osc.stop(ctx.currentTime + delay + duration);
+  osc.onended = () => { osc.disconnect(); gain.disconnect(); };
 }
 
 // === 효과음 ===
@@ -57,6 +62,7 @@ export function sfxCountdown() {
 
 export function sfxPop() {
   const ctx = getCtx();
+  if (!ctx) return;
   const bufferSize = ctx.sampleRate * 0.1;
   const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
   const data = buffer.getChannelData(0);
@@ -70,6 +76,7 @@ export function sfxPop() {
   source.connect(gain);
   gain.connect(ctx.destination);
   source.start();
+  source.onended = () => { source.disconnect(); gain.disconnect(); };
 }
 
 export function sfxCoin() {
@@ -84,18 +91,19 @@ export function sfxWhoosh() {
 
 export function sfxDirectionalBell(pan: -1 | 0 | 1) {
   const ctx = getCtx();
+  if (!ctx) return;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-  const panner = ctx.createStereoPanner();
+  const panner = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
   osc.type = 'sine';
   osc.frequency.setValueAtTime(620, ctx.currentTime);
   osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.35);
   gain.gain.setValueAtTime(0.16, ctx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
-  panner.pan.value = pan;
+  if (panner) panner.pan.value = pan;
   osc.connect(gain);
-  gain.connect(panner);
-  panner.connect(ctx.destination);
+  if (panner) { gain.connect(panner); panner.connect(ctx.destination); }
+  else gain.connect(ctx.destination);
   osc.start();
   osc.stop(ctx.currentTime + 0.45);
 }
@@ -108,6 +116,7 @@ export function sfxClick() {
 export function sfxWhistle() {
   try {
     const ctx = getCtx();
+    if (!ctx) return;
     const now = ctx.currentTime;
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
@@ -181,6 +190,7 @@ export function sfxTimerTick(remainSec: number) {
 /** 3초 남았을 때 긴급 경고음 (빠른 연속 비프 3회) */
 export function sfxUrgentWarning() {
   const ctx = getCtx();
+  if (!ctx) return;
   for (let i = 0; i < 3; i++) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -208,6 +218,7 @@ const BGM_NOTES = [
 export function startBgm() {
   stopBgm();
   const ctx = getCtx();
+  if (!ctx) return;
   bgmGain = ctx.createGain();
   bgmGain.gain.value = 0.06;
   bgmGain.connect(ctx.destination);

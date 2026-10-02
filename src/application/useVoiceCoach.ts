@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { readStorage, writeStorage } from './browserStorage';
 
 export interface VoiceCoachOptions {
   enabled?: boolean;
@@ -8,7 +9,7 @@ export interface VoiceCoachOptions {
 
 export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
   const [enabled, setEnabled] = useState<boolean>(() => {
-    const saved = localStorage.getItem('voice_coach_enabled');
+    const saved = readStorage('voice_coach_enabled');
     return saved !== null ? saved === 'true' : true;
   });
   const synth = useRef<SpeechSynthesis | null>(null);
@@ -27,16 +28,16 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
       };
 
       loadVoices();
-      if (synth.current.onvoiceschanged !== undefined) {
-        synth.current.onvoiceschanged = loadVoices;
-      }
+      const speech = synth.current;
+      speech.addEventListener('voiceschanged', loadVoices);
+      return () => { speech.removeEventListener('voiceschanged', loadVoices); };
     }
   }, []);
 
   const toggleEnabled = useCallback(() => {
     setEnabled(prev => {
       const next = !prev;
-      localStorage.setItem('voice_coach_enabled', String(next));
+      writeStorage('voice_coach_enabled', String(next));
       if (!next && synth.current) {
         synth.current.cancel();
       }
@@ -45,7 +46,7 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
   }, []);
 
   const speak = useCallback((text: string, priority = false) => {
-    if (!enabled || !synth.current) return;
+    if (!enabled || options.enabled === false || !synth.current) return;
 
     try {
       if (priority) {
@@ -62,7 +63,7 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
     } catch {
       // 일부 브라우저 예외 무시
     }
-  }, [enabled, options.rate, options.pitch]);
+  }, [enabled, options.enabled, options.rate, options.pitch]);
 
   const speakCountdown = useCallback((count: number) => {
     if (count > 0) {

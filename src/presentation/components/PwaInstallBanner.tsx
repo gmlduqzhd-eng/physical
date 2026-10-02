@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Download, X, Smartphone } from 'lucide-react';
+import { readStorage, writeStorage } from '../../application/browserStorage';
+import { useModalDialog } from '../../application/useModalDialog';
+
+const isAppleMobile = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -10,19 +14,21 @@ export const PwaInstallBanner: React.FC = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isIOS] = useState(() => {
     if (typeof navigator === 'undefined') return false;
-    return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+    return isAppleMobile();
   });
   const [showBanner, setShowBanner] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const isDismissed = sessionStorage.getItem('pwa_banner_dismissed') === '1';
+    const isDismissed = readStorage('pwa_banner_dismissed', 'session') === '1';
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
     if (isDismissed || isStandalone) return false;
-    return /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+    return isAppleMobile();
   });
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
+  const guideRef = useModalDialog(showIOSGuide, () => setShowIOSGuide(false));
 
   useEffect(() => {
-    const isDismissed = sessionStorage.getItem('pwa_banner_dismissed') === '1';
+    const isDismissed = readStorage('pwa_banner_dismissed', 'session') === '1';
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as unknown as { standalone?: boolean }).standalone;
 
     if (isDismissed || isStandalone) {
@@ -36,20 +42,30 @@ export const PwaInstallBanner: React.FC = () => {
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    const handleInstalled = () => { setShowBanner(false); setShowIOSGuide(false); setDeferredPrompt(null); };
+    window.addEventListener('appinstalled', handleInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleInstalled);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
-      if (choiceResult.outcome === 'accepted') {
+      if (isInstalling) return;
+      setIsInstalling(true);
+      try {
+        await deferredPrompt.prompt();
+        const choiceResult = await deferredPrompt.userChoice;
+        if (choiceResult.outcome === 'dismissed') writeStorage('pwa_banner_dismissed', '1', 'session');
+      } catch {
+        // A browser prompt can be consumed only once; wait for a fresh event.
+      } finally {
         setShowBanner(false);
+        setDeferredPrompt(null);
+        setIsInstalling(false);
       }
-      setDeferredPrompt(null);
     } else if (isIOS) {
       setShowIOSGuide(true);
     }
@@ -57,7 +73,7 @@ export const PwaInstallBanner: React.FC = () => {
 
   const handleDismiss = () => {
     setShowBanner(false);
-    sessionStorage.setItem('pwa_banner_dismissed', '1');
+    writeStorage('pwa_banner_dismissed', '1', 'session');
   };
 
   if (!showBanner) return null;
@@ -78,6 +94,7 @@ export const PwaInstallBanner: React.FC = () => {
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleInstallClick}
+              disabled={isInstalling}
               className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1"
             >
               <Download className="w-3.5 h-3.5" />
@@ -95,7 +112,7 @@ export const PwaInstallBanner: React.FC = () => {
       </div>
 
       {showIOSGuide && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+        <div ref={guideRef} role="dialog" aria-modal="true" aria-label="아이폰 및 아이패드 앱 설치 방법" tabIndex={-1} className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
           <div className="bg-slate-900 text-white rounded-2xl p-6 max-w-sm w-full border border-slate-700 shadow-2xl">
             <h3 className="text-lg font-bold mb-2 text-cyan-400">아이폰 / 아이패드 설치 방법</h3>
             <p className="text-sm text-slate-300 mb-4 leading-relaxed">

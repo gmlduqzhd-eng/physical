@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxClick, sfxPop } from '../../../application/soundEffects';
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [isGreen, setIsGreen] = useState(true);
   const [score, setScore] = useState(0);
   const [eliminated, setEliminated] = useState(false);
@@ -25,12 +27,13 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
       isGreenRef.current = nextGreen;
       setIsGreen(nextGreen);
       const delay = nextGreen ? (1500 + Math.random() * 2500) : (800 + Math.random() * 2000);
-      signalTimerRef.current = setTimeout(switchSignal, delay);
+      signalTimerRef.current = scheduleTimeout(switchSignal, delay);
     };
-    signalTimerRef.current = setTimeout(switchSignal, 2000);
+    signalTimerRef.current = scheduleTimeout(switchSignal, 2000);
 
     // 게임 타이머
     const gameTimer = setInterval(() => {
+      if (finishedRef.current) return;
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(gameTimer);
@@ -45,7 +48,7 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
       clearInterval(gameTimer);
       if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
     };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished && !finishedRef.current) {
@@ -61,7 +64,7 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
   }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleTap = () => {
-    if (finished || eliminated) return;
+    if (finishedRef.current || finished || eliminated) return;
 
     if (isGreenRef.current) {
       sfxClick();
@@ -69,6 +72,8 @@ export const RedGreenLight = ({ groupId, enqueueAction }: Props) => {
       scoreRef.current += 1;
     } else {
       // 빨간불에 터치 → 탈락!
+      finishedRef.current = true;
+      if (signalTimerRef.current) clearTimeout(signalTimerRef.current);
       sfxPop();
       setEliminated(true);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });

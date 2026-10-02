@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Home, Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
+import { GAMES } from '../domain/gamesData';
 import { LessonPlanGeneratorV2 } from './components/LessonPlanGeneratorV2';
 
 export const Manual = () => {
@@ -9,7 +10,7 @@ export const Manual = () => {
   const [activeTab, setActiveTab] = useState<'manual' | 'lesson'>(searchParams.get('tab') === 'lesson' ? 'lesson' : 'manual');
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 p-4 md:p-10 font-sans pb-24 overflow-y-auto">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 p-4 md:p-10 font-sans pb-24 overflow-y-auto select-text">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         {/* 상단 헤더 네비게이션 */}
         <div className="sticky top-0 bg-slate-950/90 backdrop-blur-md py-4 z-20 border-b border-slate-800 space-y-3">
@@ -18,7 +19,7 @@ export const Manual = () => {
               <span className="text-3xl">📖</span> 땀방울 원정대
             </h1>
             <button 
-              onClick={() => navigate('/')} 
+              onClick={() => navigate('/hub')}
               className="shrink-0 px-4 py-2 bg-slate-900 border border-slate-700 hover:border-cyan-500/50 shadow-md rounded-xl font-bold text-slate-300 hover:text-white flex items-center gap-2 transition-all active:scale-95"
             >
               <Home className="w-4 h-4 text-cyan-400"/> 홈으로 돌아가기
@@ -59,7 +60,7 @@ export const Manual = () => {
               <Sparkles className="w-3.5 h-3.5" /> 2022 개정 초등 체육과 교육과정 연계
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
-              총 100종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
+              총 {GAMES.length}종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
             </h2>
             <p className="text-sm text-slate-400 mt-2 max-w-2xl mx-auto leading-relaxed">
               화면 터치형 센서 미니게임부터 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동, 그리고 유튜브 영상 연계 댄스·표현 활동까지!
@@ -71,17 +72,17 @@ export const Manual = () => {
           <section className="space-y-4">
             <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">1</span>
-              2022 개정 체육과 3대 영역 (총 100종 게임)
+              2022 개정 체육과 3대 영역 (총 {GAMES.length}종 게임)
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              2022 개정 교육과정 기준에 맞추어 <strong className="text-emerald-400">운동 (26종)</strong>, <strong className="text-blue-400">스포츠 (37종)</strong>, <strong className="text-purple-400">표현 (37종)</strong>의 3개 대영역으로 체계적으로 분류되어 있으며, 모든 활동 카드에서 학년군별 성취기준 코드와 세부 목표를 열람할 수 있습니다.
+              2022 개정 교육과정 기준에 맞추어 <strong className="text-emerald-400">운동 ({GAMES.filter(game => game.domain === '운동').length}종)</strong>, <strong className="text-blue-400">스포츠 ({GAMES.filter(game => game.domain === '스포츠').length}종)</strong>, <strong className="text-purple-400">표현 ({GAMES.filter(game => game.domain === '표현').length}종)</strong>의 3개 대영역으로 체계적으로 분류되어 있으며, 모든 활동 카드에서 학년군별 성취기준 코드와 세부 목표를 열람할 수 있습니다.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-2">
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-emerald-500/30">
                 <div className="font-black text-emerald-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">🏃 운동 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">26종</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">{GAMES.filter(game => game.domain === '운동').length}종</span>
                 </div>
                 <p className="text-slate-400 text-xs leading-relaxed">
                   자신의 체력 수준을 이해하고 건강 체력(근력, 유연성, 심폐지구력) 및 운동 체력(순발력, 민첩성, 평형성)을 기르는 활동
@@ -94,7 +95,7 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-blue-500/30">
                 <div className="font-black text-blue-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">⚽ 스포츠 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">37종</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">{GAMES.filter(game => game.domain === '스포츠').length}종</span>
                 </div>
                 <p className="text-slate-400 text-xs leading-relaxed">
                   기술형(표적·기록·투기), 전략형(영역·필드·네트), 생태형(민속·놀이) 스포츠 기능과 공간 전술, 규칙과 협동심 실천
@@ -107,7 +108,7 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-purple-500/30">
                 <div className="font-black text-purple-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">🎭 표현 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">37종</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">{GAMES.filter(game => game.domain === '표현').length}종</span>
                 </div>
                 <p className="text-slate-400 text-xs leading-relaxed">
                   신체 움직임을 통해 생각과 정서를 창의적으로 나타내고, 유튜브 영상 연계 댄스·탈춤·치어리딩 및 심미적 가치를 감상하는 활동

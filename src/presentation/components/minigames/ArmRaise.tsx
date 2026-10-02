@@ -10,9 +10,11 @@ export const ArmRaise = ({ groupId, enqueueAction }: Props) => {
   const [isUp, setIsUp] = useState(false);
   const countRef = useRef(0);
   const wasDown = useRef(true);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     const handler = (e: DeviceOrientationEvent) => {
+      if (finishedRef.current || e.beta === null) return;
       const beta = e.beta ?? 0;
       if (beta < -30 && wasDown.current) {
         // 팔을 위로 올림
@@ -38,6 +40,8 @@ export const ArmRaise = ({ groupId, enqueueAction }: Props) => {
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       enqueueAction({
         id: Math.random().toString(),
@@ -48,6 +52,14 @@ export const ArmRaise = ({ groupId, enqueueAction }: Props) => {
     }
   }, [timeLeft, finished, groupId, enqueueAction]);
 
+  const toggleArms = () => {
+    if (finishedRef.current) return;
+    const nextUp = wasDown.current;
+    wasDown.current = !nextUp;
+    setIsUp(nextUp);
+    if (nextUp) { countRef.current += 1; setCount(countRef.current); sfxCoin(); }
+  };
+
   return (
     <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors ${isUp ? 'bg-yellow-900' : 'bg-orange-950'}`}>
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
@@ -57,6 +69,8 @@ export const ArmRaise = ({ groupId, enqueueAction }: Props) => {
       <span className={`text-8xl mb-4 transition-transform duration-300 ${isUp ? '-translate-y-12 scale-110' : ''}`}>🙌</span>
       <h1 className="text-3xl font-black text-white mb-2 text-center">하늘 높이!</h1>
       <p className="text-orange-300 font-bold text-center text-sm">{isUp ? '⬆️ 올렸어요! 다시 내리세요!' : '⬇️ 팔을 하늘 높이 올리세요!'}</p>
+      <button onClick={toggleArms} disabled={finished} className="relative z-10 mt-6 px-8 py-4 bg-orange-600 rounded-2xl font-black text-white">{isUp ? '팔 내리기' : '팔 올리기'}</button>
+      <p className="mt-2 text-xs text-orange-200">센서를 사용할 수 없으면 버튼으로 진행하세요.</p>
       {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-6xl font-black text-orange-400 mb-4">{count}회!</div><p className="text-xl text-white font-bold">+{count * 30}점</p></div>}
     </div>
   );

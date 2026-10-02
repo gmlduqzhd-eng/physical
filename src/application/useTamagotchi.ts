@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { isRecord, nonnegativeNumber, readJsonStorage, writeStorage } from './browserStorage';
 
 export interface TamagotchiItem {
   id: string;
@@ -33,77 +34,73 @@ export interface TamagotchiState {
 
 const STORAGE_KEY = 'dambang_tamagotchi_v1';
 
+export const normalizeTamagotchiState = (value: unknown): TamagotchiState => {
+  if (!isRecord(value)) return {
+    name: '땀방이', xp: 120, coins: 350, equippedHat: 'sweatband', equippedAccessory: '', equippedMedal: 'bronze',
+    inventory: ['sweatband', 'bronze', 'sunglasses'],
+  };
+  const inventory = Array.isArray(value.inventory)
+    ? [...new Set(value.inventory.filter((id): id is string => typeof id === 'string' && TAMAGOTCHI_ITEMS.some(item => item.id === id)))]
+    : ['sweatband', 'bronze', 'sunglasses'];
+  const equipped = (id: unknown, category: TamagotchiItem['category']) =>
+    typeof id === 'string' && inventory.includes(id) && TAMAGOTCHI_ITEMS.some(item => item.id === id && item.category === category) ? id : '';
+  return {
+    name: typeof value.name === 'string' && value.name.trim() ? value.name.trim().slice(0, 20) : '땀방이',
+    xp: nonnegativeNumber(value.xp, 120), coins: nonnegativeNumber(value.coins, 350), inventory,
+    equippedHat: equipped(value.equippedHat, 'hat'),
+    equippedAccessory: equipped(value.equippedAccessory, 'accessory'),
+    equippedMedal: equipped(value.equippedMedal, 'medal'),
+  };
+};
+
 export const useTamagotchi = () => {
-  const [state, setState] = useState<TamagotchiState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // localStorage 접근 불가 시 기본값 사용
-    }
-    return {
-      name: '땀방이',
-      xp: 120,
-      coins: 350,
-      equippedHat: 'sweatband',
-      equippedAccessory: '',
-      equippedMedal: 'bronze',
-      inventory: ['sweatband', 'bronze', 'sunglasses']
-    };
-  });
+  const [state, setState] = useState<TamagotchiState>(() => normalizeTamagotchiState(readJsonStorage(STORAGE_KEY)));
+  const stateRef = useRef(state);
 
   const level = Math.min(10, Math.floor(state.xp / 100) + 1);
-  const currentLevelXp = state.xp % 100;
+  const currentLevelXp = level === 10 ? 100 : state.xp % 100;
   const nextLevelXp = 100;
 
-  const save = (nextState: TamagotchiState) => {
+  const save = useCallback((nextState: TamagotchiState) => {
+    stateRef.current = nextState;
     setState(nextState);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-    } catch {
-      // localStorage 저장 실패 무시
-    }
-  };
-
-  const addXpAndCoins = useCallback((xpGain: number, coinGain: number) => {
-    setState(prev => {
-      const next = {
-        ...prev,
-        xp: prev.xp + xpGain,
-        coins: prev.coins + coinGain
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // localStorage 저장 실패 무시
-      }
-      return next;
-    });
+    writeStorage(STORAGE_KEY, JSON.stringify(nextState));
   }, []);
 
+  const addXpAndCoins = useCallback((xpGain: number, coinGain: number) => {
+    if (!Number.isFinite(xpGain) || !Number.isFinite(coinGain) || xpGain < 0 || coinGain < 0) return;
+    const current = stateRef.current;
+    save({ ...current, xp: current.xp + xpGain, coins: current.coins + coinGain });
+  }, [save]);
+
   const buyItem = useCallback((item: TamagotchiItem) => {
-    if (state.coins < item.cost || state.inventory.includes(item.id)) return false;
+    const current = stateRef.current;
+    const catalogItem = TAMAGOTCHI_ITEMS.find(candidate => candidate.id === item.id);
+    if (!catalogItem || current.coins < catalogItem.cost || current.inventory.includes(item.id)
+      || Math.floor(current.xp / 100) + 1 < catalogItem.requiredLevel) return false;
     const next: TamagotchiState = {
-      ...state,
-      coins: state.coins - item.cost,
-      inventory: [...state.inventory, item.id]
+      ...current,
+      coins: current.coins - catalogItem.cost,
+      inventory: [...current.inventory, item.id]
     };
     save(next);
     return true;
-  }, [state]);
+  }, [save]);
 
   const equipItem = useCallback((item: TamagotchiItem) => {
-    if (!state.inventory.includes(item.id)) return;
-    const next: TamagotchiState = { ...state };
-    if (item.category === 'hat') {
+    const current = stateRef.current;
+    const catalogItem = TAMAGOTCHI_ITEMS.find(candidate => candidate.id === item.id);
+    if (!catalogItem || !current.inventory.includes(item.id)) return;
+    const next: TamagotchiState = { ...current };
+    if (catalogItem.category === 'hat') {
       next.equippedHat = next.equippedHat === item.id ? '' : item.id;
-    } else if (item.category === 'accessory') {
+    } else if (catalogItem.category === 'accessory') {
       next.equippedAccessory = next.equippedAccessory === item.id ? '' : item.id;
-    } else if (item.category === 'medal') {
+    } else if (catalogItem.category === 'medal') {
       next.equippedMedal = next.equippedMedal === item.id ? '' : item.id;
     }
     save(next);
-  }, [state]);
+  }, [save]);
 
   return {
     state,

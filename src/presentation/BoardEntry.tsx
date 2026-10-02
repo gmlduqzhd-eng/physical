@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../data/supabase';
+import { findRoomByPin, classroomError } from '../data/classroomRepository';
 import { Monitor, Home } from 'lucide-react';
 
 export const BoardEntry = () => {
@@ -11,6 +11,7 @@ export const BoardEntry = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     if (!pinCode.trim()) {
       setError('핀 번호를 입력해주세요.');
       return;
@@ -18,19 +19,11 @@ export const BoardEntry = () => {
     setLoading(true);
     setError('');
 
-    const { data, error: fetchError } = await supabase
-      .from('game_rooms')
-      .select('id')
-      .eq('pin_code', pinCode.trim())
-      .single();
-
-    if (fetchError || !data) {
-      setError('존재하지 않는 핀 번호입니다.');
-      setLoading(false);
-      return;
-    }
-
-    navigate(`/board/${data.id}`);
+    try {
+      const room = await findRoomByPin(pinCode);
+      navigate(`/board/${room.id}`);
+    } catch (cause) { setError(classroomError(cause, '방 확인에 실패했습니다.')); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -50,9 +43,10 @@ export const BoardEntry = () => {
           <input
             type="text"
             placeholder="PIN 번호"
-            maxLength={6}
+            inputMode="numeric"
+            maxLength={4}
             value={pinCode}
-            onChange={e => setPinCode(e.target.value)}
+            onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
             className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"
           />
           {error && <p className="text-red-400 text-sm font-bold text-center">{error}</p>}

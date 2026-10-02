@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Volume2, VolumeX, Play, RotateCcw, CheckCircle2 } from 'lucide-react';
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const DribbleRhythm = ({ groupId, enqueueAction, onExit }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [bpm, setBpm] = useState<number>(90);
   const [dribbleMode, setDribbleMode] = useState<'hand' | 'foot'>('hand');
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -58,10 +60,10 @@ export const DribbleRhythm = ({ groupId, enqueueAction, onExit }: Props) => {
     const interval = setInterval(() => {
       setPulseScale(true);
       playBeatSound();
-      setTimeout(() => setPulseScale(false), 120);
+      scheduleTimeout(() => setPulseScale(false), 120);
     }, intervalMs);
     return () => clearInterval(interval);
-  }, [isPlaying, bpm, playBeatSound]);
+  }, [isPlaying, bpm, playBeatSound, scheduleTimeout]);
 
   // 20초 활동 타이머
   useEffect(() => {

@@ -5,6 +5,7 @@
   src: url('/fonts/MaplestoryB.ttf') format('truetype');
   font-weight: bold;
   font-style: normal;
+  font-display: swap;
 }
 
 @theme {
@@ -133,6 +134,18 @@ body, button, p, h1, h2, h3, h4, h5, h6, span {
 
 button {
   white-space: nowrap;
+}
+
+/* Short controls stay on one line; descriptions and explicit multi-line controls wrap. */
+button.whitespace-normal,
+button p:not(.truncate):not(.whitespace-nowrap),
+button h3:not(.truncate):not(.whitespace-nowrap) {
+  white-space: normal;
+}
+
+input, textarea, [contenteditable="true"], .select-text, .select-text * {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* 모바일 UI 제스처 통제 최적화 */

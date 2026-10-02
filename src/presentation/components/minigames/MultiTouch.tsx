@@ -1,26 +1,30 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef } from 'react';
 import { sfxCoin } from '../../../application/soundEffects';
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
+const COLORS = ['bg-red-500','bg-blue-500','bg-green-500','bg-yellow-500','bg-purple-500','bg-pink-500'];
+const createZones = (round: number) => {
+  const count = Math.min(2 + Math.floor(round / 3), 4);
+  return Array.from({length: count}, (_, i) => ({ top: `${15 + Math.random() * 60}%`, left: `${5 + (i * (80/count)) + Math.random() * 10}%`, color: COLORS[i % COLORS.length] }));
+};
 export const MultiTouch = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0); const [round, setRound] = useState(1); const [finished, setFinished] = useState(false);
-  const [zones, setZones] = useState<{top: string; left: string; color: string}[]>([]);
+  const [zones, setZones] = useState(() => createZones(1));
   const [touched, setTouched] = useState<Set<number>>(new Set());
   const scoreRef = useRef(0); const TOTAL = 8;
-  const COLORS = ['bg-red-500','bg-blue-500','bg-green-500','bg-yellow-500','bg-purple-500','bg-pink-500'];
-  useState(() => { generateRound(); });
-  function generateRound() {
-    const count = Math.min(2 + Math.floor(round / 3), 4);
-    const z = Array.from({length: count}, (_, i) => ({ top: `${15 + Math.random() * 60}%`, left: `${5 + (i * (80/count)) + Math.random() * 10}%`, color: COLORS[i % COLORS.length] }));
-    setZones(z); setTouched(new Set());
-  }
+  const touchedRef = useRef(new Set<number>());
+  const roundLockedRef = useRef(false);
   const handleZoneTouch = (idx: number) => {
-    if (finished || touched.has(idx)) return;
-    const newTouched = new Set(touched); newTouched.add(idx);
+    if (finished || roundLockedRef.current || touchedRef.current.has(idx)) return;
+    const newTouched = new Set(touchedRef.current); newTouched.add(idx);
+    touchedRef.current = newTouched;
     setTouched(newTouched); sfxCoin();
     if (newTouched.size >= zones.length) {
-      const pts = 50; setScore(s => { const n = s + pts; scoreRef.current = n; return n; });
+      roundLockedRef.current = true;
+      const pts = 50; scoreRef.current += pts; setScore(scoreRef.current);
       if (round >= TOTAL) { setFinished(true); enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() }); }
-      else { setTimeout(() => { setRound(r => r + 1); const count = Math.min(2 + Math.floor((round+1)/3), 4); const z = Array.from({length: count}, (_, i) => ({ top: `${15 + Math.random() * 60}%`, left: `${5 + (i * (80/count)) + Math.random() * 10}%`, color: COLORS[i % COLORS.length] })); setZones(z); setTouched(new Set()); }, 500); }
+      else { scheduleTimeout(() => { setRound(round + 1); setZones(createZones(round + 1)); touchedRef.current = new Set(); setTouched(new Set()); roundLockedRef.current = false; }, 500); }
     }
   };
   return (
@@ -30,7 +34,7 @@ export const MultiTouch = ({ groupId, enqueueAction }: Props) => {
       <p className="text-purple-200 font-bold mb-2 text-center text-xs relative z-10">모든 버튼을 동시에(빠르게) 터치하세요!</p>
       <div className="relative w-full flex-1 min-h-[70vh] z-10">
         {zones.map((z, i) => (
-          <button key={`${round}-${i}`} onTouchStart={(e) => { e.preventDefault(); handleZoneTouch(i); }} onMouseDown={() => handleZoneTouch(i)}
+          <button key={`${round}-${i}`} onPointerDown={() => handleZoneTouch(i)} aria-label={`${i + 1}번 터치 구역`}
             className={`absolute w-20 h-20 rounded-full font-black text-white text-2xl flex items-center justify-center transition-all ${touched.has(i) ? 'bg-slate-700 scale-75 opacity-50' : `${z.color} animate-pulse shadow-lg`}`}
             style={{ top: z.top, left: z.left }}>
             {touched.has(i) ? '✅' : '👆'}

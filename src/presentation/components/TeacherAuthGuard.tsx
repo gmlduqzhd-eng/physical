@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, KeyRound, ShieldCheck, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 
 interface TeacherAuthGuardProps {
   children: React.ReactNode;
@@ -13,37 +14,56 @@ export const TeacherAuthGuard: React.FC<TeacherAuthGuardProps> = ({ children }) 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSettingNewPin, setIsSettingNewPin] = useState<boolean>(false);
   const [newPin, setNewPin] = useState<string>('');
+  const [currentPin, setCurrentPin] = useState('');
 
-  const defaultPin = localStorage.getItem('teacher_master_pin') || '1234';
+  const defaultPin = readStorage('teacher_master_pin') || '1234';
 
   useEffect(() => {
-    const authStatus = sessionStorage.getItem('teacher_session_auth');
-    if (authStatus === 'true') {
+    const authStatus = readStorage('teacher_session_auth', 'session');
+    if (authStatus === defaultPin) {
       setIsAuthenticated(true);
     }
-  }, []);
+    const invalidate = (event: StorageEvent) => {
+      if (event.key === 'teacher_master_pin') {
+        removeStorage('teacher_session_auth', 'session');
+        setIsAuthenticated(false);
+      }
+    };
+    window.addEventListener('storage', invalidate);
+    return () => window.removeEventListener('storage', invalidate);
+  }, [defaultPin]);
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin === defaultPin || pin === '0000') {
-      sessionStorage.setItem('teacher_session_auth', 'true');
+    if (pin === defaultPin) {
+      writeStorage('teacher_session_auth', defaultPin, 'session');
       setIsAuthenticated(true);
       setErrorMsg(null);
     } else {
-      setErrorMsg('비밀번호(PIN)가 일치하지 않습니다. (기본: 1234)');
+      setErrorMsg('비밀번호(PIN)가 일치하지 않습니다.');
       setPin('');
     }
   };
 
   const handleChangePin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newPin.length >= 4) {
-      localStorage.setItem('teacher_master_pin', newPin);
-      alert(`교사 마스터 PIN이 [${newPin}]으로 변경되었습니다.`);
+    if (currentPin !== defaultPin) {
+      setErrorMsg('현재 교사 PIN이 일치하지 않습니다.');
+      return;
+    }
+    if (/^\d{4,8}$/.test(newPin)) {
+      if (!writeStorage('teacher_master_pin', newPin)) {
+        setErrorMsg('이 브라우저에서 PIN을 저장할 수 없습니다. 저장 권한을 확인해주세요.');
+        return;
+      }
+      removeStorage('teacher_session_auth', 'session');
+      alert('이 기기의 교사 PIN이 변경되었습니다. 새 PIN으로 로그인해주세요.');
       setIsSettingNewPin(false);
       setNewPin('');
+      setCurrentPin('');
+      setErrorMsg(null);
     } else {
-      alert('PIN은 4자리 이상이어야 합니다.');
+      setErrorMsg('PIN은 4~8자리 숫자여야 합니다.');
     }
   };
 
@@ -65,10 +85,10 @@ export const TeacherAuthGuard: React.FC<TeacherAuthGuardProps> = ({ children }) 
           <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-inner">
             <Lock className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-black tracking-tight text-white">교사용 보안 인증</h2>
+          <h2 className="text-2xl font-black tracking-tight text-white">교사용 화면 잠금</h2>
           <p className="text-sm text-slate-400 mt-2">
-            수업 제어 및 학생 평가 권한을 보호하기 위해<br />
-            교사 마스터 PIN을 입력해 주세요.
+            이 기기의 교사 화면을 열려면<br />
+            교사 PIN을 입력해 주세요. PIN은 기기별로 저장됩니다.
           </p>
         </div>
 
@@ -76,7 +96,7 @@ export const TeacherAuthGuard: React.FC<TeacherAuthGuardProps> = ({ children }) 
           <form onSubmit={handleVerify} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">
-                마스터 PIN (초기값: 1234)
+                교사 PIN {defaultPin === '1234' ? '(초기값: 1234)' : ''}
               </label>
               <div className="relative">
                 <input
@@ -109,7 +129,7 @@ export const TeacherAuthGuard: React.FC<TeacherAuthGuardProps> = ({ children }) 
             <div className="pt-2 text-center">
               <button
                 type="button"
-                onClick={() => setIsSettingNewPin(true)}
+                onClick={() => { setIsSettingNewPin(true); setErrorMsg(null); }}
                 className="text-xs text-slate-500 hover:text-slate-300 underline"
               >
                 교사 전용 PIN 번호 변경하기
@@ -118,6 +138,11 @@ export const TeacherAuthGuard: React.FC<TeacherAuthGuardProps> = ({ children }) 
           </form>
         ) : (
           <form onSubmit={handleChangePin} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-400 mb-2">현재 교사 PIN</label>
+              <input type="password" inputMode="numeric" maxLength={8} value={currentPin} onChange={e => setCurrentPin(e.target.value)} placeholder="현재 PIN 입력" className="w-full px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-center text-xl font-mono text-cyan-400" />
+            </div>
+            {errorMsg && <p role="alert" className="text-sm text-red-400 text-center">{errorMsg}</p>}
             <div>
               <label className="block text-xs font-bold text-slate-400 mb-2">새 교사 PIN (4자리 이상)</label>
               <input

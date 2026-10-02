@@ -1,67 +1,69 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef } from 'react';
 import { sfxClick } from '../../../application/soundEffects';
+import { calculateCircleScore } from './common/drawingScores';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState<number | null>(null);
-  const [drawing, setDrawing] = useState(false);
   const [points, setPoints] = useState<{x: number; y: number}[]>([]);
   const [round, setRound] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const totalRef = useRef(0);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const drawingRef = useRef(false);
+  const roundLockedRef = useRef(false);
+  const pointsRef = useRef<{x: number; y: number}[]>([]);
 
-  const getPos = (e: React.TouchEvent | React.MouseEvent) => {
+  const getPos = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return null;
-    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
     return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
-  const handleStart = (e: React.TouchEvent | React.MouseEvent) => {
+  const handleStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (roundLockedRef.current || !e.isPrimary) return;
     e.preventDefault();
     const pos = getPos(e);
     if (!pos) return;
-    setDrawing(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+    drawingRef.current = true;
+    pointsRef.current = [pos];
     setPoints([pos]);
     setScore(null);
   };
 
-  const handleMove = (e: React.TouchEvent | React.MouseEvent) => {
-    if (!drawing) return;
+  const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drawingRef.current || !e.isPrimary) return;
     e.preventDefault();
     const pos = getPos(e);
-    if (pos) setPoints(prev => [...prev, pos]);
+    if (pos) { pointsRef.current.push(pos); setPoints([...pointsRef.current]); }
   };
 
   const handleEnd = () => {
-    if (!drawing) return;
-    setDrawing(false);
-    if (points.length < 10) {
+    if (!drawingRef.current || roundLockedRef.current) return;
+    drawingRef.current = false;
+    if (pointsRef.current.length < 10) {
       setPoints([]);
       return;
     }
-    // 원형도 계산
-    const cx = points.reduce((s, p) => s + p.x, 0) / points.length;
-    const cy = points.reduce((s, p) => s + p.y, 0) / points.length;
-    const dists = points.map(p => Math.sqrt((p.x - cx) ** 2 + (p.y - cy) ** 2));
-    const avgR = dists.reduce((s, d) => s + d, 0) / dists.length;
-    const variance = dists.reduce((s, d) => s + (d - avgR) ** 2, 0) / dists.length;
-    const circularity = Math.max(0, 100 - Math.sqrt(variance) * 2);
-    const pts = Math.round(circularity * 5);
+    roundLockedRef.current = true;
+    const pts = calculateCircleScore(pointsRef.current);
     setScore(pts);
     sfxClick();
     setTotalScore(s => s + pts);
     totalRef.current += pts;
 
     if (round >= 3) {
-      setTimeout(() => {
+      scheduleTimeout(() => {
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: totalRef.current }, timestamp: Date.now() });
       }, 1000);
     } else {
-      setTimeout(() => { setRound(r => r + 1); setPoints([]); setScore(null); }, 1200);
+      scheduleTimeout(() => { setRound(r => r + 1); setPoints([]); setScore(null); roundLockedRef.current = false; }, 1200);
     }
   };
 
@@ -74,8 +76,8 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">⭕ 원 그리기 대결</h1>
       <p className="text-pink-200 font-bold mb-2 text-center text-xs relative z-10">팔을 크게 뻗어 완벽한 원을 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-rose-800 overflow-hidden z-10 touch-none"
-        onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}
-        onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd}>
+        onPointerDown={handleStart} onPointerMove={handleMove} onPointerUp={handleEnd}
+        onPointerCancel={() => { drawingRef.current = false; setPoints([]); }}>
         {/* 가이드 원 */}
         <div className="absolute inset-[15%] border-2 border-dashed border-rose-700/30 rounded-full" />
         {/* 그린 경로 */}

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Wind, CheckCircle, X, Activity } from 'lucide-react';
 import { sfxSuccess, sfxTap } from '../../application/soundEffects';
+import { useModalDialog } from '../../application/useModalDialog';
 
 interface CooldownTimerModalProps {
   isOpen: boolean;
@@ -11,14 +12,18 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
   const [mode, setMode] = useState<'breath' | 'pulse' | 'stretch'>('breath');
 
   // 1. 호흡 사이클 상태 (4초 들이마심 -> 7초 멈춤 -> 8초 내쉼)
-  const [breathPhase, setBreathPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
-  const [breathCounter, setBreathCounter] = useState<number>(4);
+  const [breathing, setBreathing] = useState<{ phase: 'inhale' | 'hold' | 'exhale'; counter: number }>({ phase: 'inhale', counter: 4 });
+  const { phase: breathPhase, counter: breathCounter } = breathing;
 
   // 2. 맥박 측정 상태
   const [isPulseTiming, setIsPulseTiming] = useState(false);
   const [pulseSecondsLeft, setPulseSecondsLeft] = useState(15);
   const [pulseCountInput, setPulseCountInput] = useState('');
   const [calculatedBpm, setCalculatedBpm] = useState<number | null>(null);
+  const [pulseError, setPulseError] = useState('');
+  const pulseDeadline = useRef<number | null>(null);
+  const handleClose = () => { setIsPulseTiming(false); pulseDeadline.current = null; onClose(); };
+  const dialogRef = useModalDialog(isOpen, handleClose);
 
   // 3. 스트레칭 체크
   const [stretches, setStretches] = useState<Record<string, boolean>>({
@@ -33,64 +38,68 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
     if (!isOpen || mode !== 'breath') return;
 
     const timer = setInterval(() => {
-      setBreathCounter(prev => {
-        if (prev <= 1) {
-          if (breathPhase === 'inhale') {
-            setBreathPhase('hold');
-            return 7;
-          } else if (breathPhase === 'hold') {
-            setBreathPhase('exhale');
-            return 8;
-          } else {
-            setBreathPhase('inhale');
-            return 4;
-          }
+      setBreathing(prev => {
+        if (prev.counter <= 1) {
+          if (prev.phase === 'inhale') return { phase: 'hold', counter: 7 };
+          if (prev.phase === 'hold') return { phase: 'exhale', counter: 8 };
+          return { phase: 'inhale', counter: 4 };
         }
-        return prev - 1;
+        return { ...prev, counter: prev.counter - 1 };
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, mode, breathPhase]);
+  }, [isOpen, mode]);
 
   // 맥박 15초 타이머
   useEffect(() => {
-    if (!isPulseTiming) return;
-    if (pulseSecondsLeft <= 0) {
+    if (!isOpen || mode !== 'pulse') {
       setIsPulseTiming(false);
-      sfxSuccess();
+      pulseDeadline.current = null;
       return;
     }
+    if (!isPulseTiming) return;
     const t = setInterval(() => {
-      setPulseSecondsLeft(s => s - 1);
-    }, 1000);
+      const remaining = Math.max(0, Math.ceil(((pulseDeadline.current ?? Date.now()) - Date.now()) / 1000));
+      setPulseSecondsLeft(remaining);
+      if (remaining === 0) {
+        pulseDeadline.current = null;
+        setIsPulseTiming(false);
+        sfxSuccess();
+      }
+    }, 250);
     return () => clearInterval(t);
-  }, [isPulseTiming, pulseSecondsLeft]);
+  }, [isOpen, mode, isPulseTiming]);
 
   const startPulseTimer = () => {
     setPulseSecondsLeft(15);
     setIsPulseTiming(true);
     setCalculatedBpm(null);
+    setPulseCountInput('');
+    setPulseError('');
+    pulseDeadline.current = Date.now() + 15000;
     sfxTap();
   };
 
   const handleCalculatePulse = (e: React.FormEvent) => {
     e.preventDefault();
-    const count = parseInt(pulseCountInput, 10);
-    if (!isNaN(count) && count > 0) {
+    const count = Number(pulseCountInput);
+    if (Number.isInteger(count) && count > 0 && count <= 100) {
       const bpm = count * 4;
       setCalculatedBpm(bpm);
       sfxSuccess();
-    }
+      setPulseError('');
+    } else { setPulseError('15초 동안 센 횟수를 1~100 사이의 정수로 입력해 주세요.'); setCalculatedBpm(null); }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-emerald-500/30 w-full max-w-lg rounded-3xl p-6 shadow-2xl relative text-white">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="쿨다운과 심박수 회복 루틴" tabIndex={-1} className="fixed inset-0 z-[10010] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-emerald-500/30 w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-3xl p-4 sm:p-6 shadow-2xl relative text-white">
         <button
-          onClick={onClose}
+          onClick={handleClose}
+          aria-label="쿨다운 루틴 닫기"
           className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition-colors"
         >
           <X className="w-5 h-5" />
@@ -193,7 +202,12 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                 value={pulseCountInput}
                 onChange={e => setPulseCountInput(e.target.value)}
                 placeholder="15초간 잰 맥박수 입력"
-                className="flex-1 px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-center text-white"
+                aria-label="15초 동안 센 맥박 횟수"
+                min={1}
+                max={100}
+                step={1}
+                required
+                className="flex-1 min-w-0 px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-center text-white"
               />
               <button
                 type="submit"
@@ -202,15 +216,14 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                 계산
               </button>
             </form>
+            {pulseError && <p role="alert" className="text-xs text-rose-300">{pulseError}</p>}
 
             {calculatedBpm !== null && (
               <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-center">
                 <span className="text-xs text-slate-400">1분당 추정 심박수</span>
                 <div className="text-3xl font-black text-emerald-400 mt-0.5">{calculatedBpm} BPM</div>
                 <p className="text-xs text-slate-300 mt-1">
-                  {calculatedBpm <= 100
-                    ? '🟢 정상 안정 심박수 상태로 잘 회복되었습니다!'
-                    : '🟡 아직 활동 후 회복 중입니다. 4-7-8 호흡을 2~3회 더 진행해 주세요.'}
+                  15초 동안 센 횟수를 4배로 환산한 값입니다. 편안히 쉬면서 활동 전후의 변화를 확인해 보세요.
                 </p>
               </div>
             )}
@@ -249,7 +262,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
         )}
 
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="w-full mt-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-sm transition-colors"
         >
           확인 완료

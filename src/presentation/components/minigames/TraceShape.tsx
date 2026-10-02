@@ -1,5 +1,7 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef } from 'react';
 import { sfxClick } from '../../../application/soundEffects';
+import { calculateTraceScore } from './common/drawingScores';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -10,41 +12,53 @@ const SHAPES = [
 ];
 
 export const TraceShape = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [shapeIdx, setShapeIdx] = useState(0);
-  const [tracing, setTracing] = useState(false);
   const [traced, setTraced] = useState<{x:number;y:number}[]>([]);
   const [round, setRound] = useState(1);
   const [totalScore, setTotalScore] = useState(0);
   const [roundScore, setRoundScore] = useState<number|null>(null);
   const totalRef = useRef(0);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const tracingRef = useRef(false);
+  const roundLockedRef = useRef(false);
+  const tracedRef = useRef<{x:number;y:number}[]>([]);
 
-  const getPos = (e: React.TouchEvent | React.MouseEvent) => {
+  const getPos = (e: React.PointerEvent<HTMLDivElement>) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return null;
-    const cx = 'touches' in e ? e.touches[0].clientX : e.clientX;
-    const cy = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const cx = e.clientX;
+    const cy = e.clientY;
     return { x: ((cx - rect.left)/rect.width)*100, y: ((cy - rect.top)/rect.height)*100 };
   };
 
-  const handleStart = (e: React.TouchEvent | React.MouseEvent) => { e.preventDefault(); const p = getPos(e); if (p) { setTracing(true); setTraced([p]); setRoundScore(null); } };
-  const handleMove = (e: React.TouchEvent | React.MouseEvent) => { if (!tracing) return; e.preventDefault(); const p = getPos(e); if (p) setTraced(prev => [...prev, p]); };
+  const handleStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (roundLockedRef.current || !e.isPrimary) return;
+    e.preventDefault(); const p = getPos(e);
+    if (p) { e.currentTarget.setPointerCapture(e.pointerId); tracingRef.current = true; tracedRef.current = [p]; setTraced([p]); setRoundScore(null); }
+  };
+  const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!tracingRef.current || !e.isPrimary) return;
+    e.preventDefault(); const p = getPos(e);
+    if (p) { tracedRef.current.push(p); setTraced([...tracedRef.current]); }
+  };
   const handleEnd = () => {
-    if (!tracing) return;
-    setTracing(false);
-    if (traced.length < 5) {
+    if (!tracingRef.current || roundLockedRef.current) return;
+    tracingRef.current = false;
+    if (tracedRef.current.length < 5) {
       setTraced([]);
       return;
     }
     sfxClick();
-    const pts = Math.min(500, Math.floor(traced.length * 3));
+    roundLockedRef.current = true;
+    const pts = calculateTraceScore(tracedRef.current, SHAPES[shapeIdx].points);
     setRoundScore(pts);
     setTotalScore(s => s + pts);
     totalRef.current += pts;
     if (round >= 3) {
-      setTimeout(() => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: totalRef.current }, timestamp: Date.now() }), 1000);
+      scheduleTimeout(() => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: totalRef.current }, timestamp: Date.now() }), 1000);
     } else {
-      setTimeout(() => { setRound(r => r + 1); setShapeIdx(s => (s + 1) % SHAPES.length); setTraced([]); setRoundScore(null); }, 1200);
+      scheduleTimeout(() => { setRound(r => r + 1); setShapeIdx(s => (s + 1) % SHAPES.length); setTraced([]); setRoundScore(null); roundLockedRef.current = false; }, 1200);
     }
   };
 
@@ -60,8 +74,8 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
       <h1 className="text-2xl font-black text-white mb-1 text-center relative z-10">✏️ 도형 따라 그리기</h1>
       <p className="text-cyan-200 font-bold mb-2 text-center text-xs relative z-10">{shape.name} 모양을 따라 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-emerald-800 overflow-hidden z-10 touch-none"
-        onTouchStart={handleStart} onTouchMove={handleMove} onTouchEnd={handleEnd}
-        onMouseDown={handleStart} onMouseMove={handleMove} onMouseUp={handleEnd}>
+        onPointerDown={handleStart} onPointerMove={handleMove} onPointerUp={handleEnd}
+        onPointerCancel={() => { tracingRef.current = false; setTraced([]); }}>
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
           <path d={svgPath} fill="none" stroke="rgba(52,211,153,0.3)" strokeWidth="2" strokeDasharray="4" />
           {traced.length > 1 && <polyline fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" points={traced.map(p => `${p.x},${p.y}`).join(' ')} />}

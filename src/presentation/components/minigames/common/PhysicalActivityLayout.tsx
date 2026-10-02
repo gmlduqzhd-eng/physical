@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useGameTimeouts } from './useGameTimeouts';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Play, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,29 +45,33 @@ export const PhysicalActivityLayout = ({
   onExit,
   children,
 }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const navigate = useNavigate();
   // flow: 'intro' -> 'countdown' -> 'active' -> 'completed'
   const [step, setStep] = useState<'intro' | 'countdown' | 'active' | 'completed'>('intro');
   const [countdown, setCountdown] = useState(3);
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [completionSummary, setCompletionSummary] = useState<string>('');
+  const completedRef = useRef(false);
+
+  useEffect(() => {
+    if (step !== 'countdown') return;
+    const timer = scheduleTimeout(() => {
+      if (countdown <= 1) setStep('active');
+      else setCountdown(countdown - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [step, countdown, scheduleTimeout]);
 
   const handleStartActivity = () => {
+    completedRef.current = false;
     setStep('countdown');
     setCountdown(3);
-    const interval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setStep('active');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   const handleActivityComplete = (summary?: string) => {
+    if (completedRef.current) return;
+    completedRef.current = true;
     if (summary) setCompletionSummary(summary);
     setStep('completed');
     if (onFinish) {
@@ -75,20 +80,11 @@ export const PhysicalActivityLayout = ({
   };
 
   const handleReplay = () => {
+    completedRef.current = false;
     setSelfRating(null);
     setCompletionSummary('');
     setStep('countdown');
     setCountdown(3);
-    const interval = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setStep('active');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
   };
 
   return (

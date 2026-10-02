@@ -1,28 +1,36 @@
-import { useState, useEffect, useRef } from 'react';
+import { useGameTimeouts } from './common/useGameTimeouts';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 export const PunchCounter = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [punches, setPunches] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
   const [finished, setFinished] = useState(false);
   const [flash, setFlash] = useState(false);
   const punchRef = useRef(0);
   const cooldown = useRef(false);
+  const finishedRef = useRef(false);
+  const punch = useCallback(() => {
+    if (finishedRef.current || cooldown.current) return;
+    cooldown.current = true;
+    sfxCoin();
+    punchRef.current += 1;
+    setPunches(punchRef.current);
+    setFlash(true);
+    scheduleTimeout(() => { setFlash(false); cooldown.current = false; }, 300);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
-      if (cooldown.current) return;
+      if (finishedRef.current || cooldown.current) return;
       const a = e.acceleration;
       if (!a) return;
       const forward = Math.abs(a.z ?? 0);
       if (forward > 10) {
-        cooldown.current = true;
-        sfxCoin();
-        setPunches(p => { const n = p + 1; punchRef.current = n; return n; });
-        setFlash(true);
-        setTimeout(() => { setFlash(false); cooldown.current = false; }, 300);
+        punch();
       }
     };
     window.addEventListener('devicemotion', handler);
@@ -33,10 +41,12 @@ export const PunchCounter = ({ groupId, enqueueAction }: Props) => {
       });
     }, 1000);
     return () => { window.removeEventListener('devicemotion', handler); clearInterval(timer); };
-  }, []);
+  }, [punch]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       enqueueAction({
         id: Math.random().toString(),
@@ -56,6 +66,7 @@ export const PunchCounter = ({ groupId, enqueueAction }: Props) => {
       <span className={`text-8xl mb-4 transition-transform ${flash ? 'scale-125 rotate-12' : ''}`}>🥊</span>
       <h1 className="text-3xl font-black text-white mb-2 text-center">에어 펀치!</h1>
       <p className="text-red-300 font-bold text-center text-sm">폰을 들고 허공에 주먹을 뻗으세요!</p>
+      <button onClick={punch} disabled={finished} className="relative z-10 mt-6 px-8 py-4 bg-red-600 rounded-2xl font-black text-white">🥊 펀치! (화면 터치)</button>
       <div className="w-full max-w-xs h-4 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mt-6">
         <div className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all" style={{ width: `${Math.min(100, punches * 3)}%` }} />
       </div>

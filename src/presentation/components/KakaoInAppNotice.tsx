@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExternalLink, X, Smartphone, AlertTriangle } from 'lucide-react';
+import { readStorage, writeStorage } from '../../application/browserStorage';
 
 export const KakaoInAppNotice: React.FC = () => {
   const [isKakao] = useState(() => {
@@ -7,22 +8,13 @@ export const KakaoInAppNotice: React.FC = () => {
     const ua = navigator.userAgent || navigator.vendor || (window as any).opera || '';
     return /KAKAOTALK/i.test(ua);
   });
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => readStorage('kakao_notice_dismissed', 'session') === '1');
 
   if (!isKakao || dismissed) return null;
 
   const openInExternalBrowser = () => {
     const currentUrl = window.location.href;
-    const ua = navigator.userAgent || '';
-    const isAndroid = /Android/i.test(ua);
-
-    if (isAndroid) {
-      // 안드로이드: 카카오톡 외부 브라우저 스키마 및 크롬 인텐트 시도
-      window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(currentUrl)}`;
-    } else {
-      // iOS: 카카오톡 외부 브라우저 스키마 (사파리 호출)
-      window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(currentUrl)}`;
-    }
+    window.location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(currentUrl)}`;
   };
 
   return (
@@ -43,7 +35,7 @@ export const KakaoInAppNotice: React.FC = () => {
             <span>크롬/사파리로 열기</span>
           </button>
           <button
-            onClick={() => setDismissed(true)}
+            onClick={() => { setDismissed(true); writeStorage('kakao_notice_dismissed', '1', 'session'); }}
             className="p-1.5 hover:bg-amber-600/30 rounded-lg text-amber-950 transition-colors"
             title="닫기"
             aria-label="닫기"

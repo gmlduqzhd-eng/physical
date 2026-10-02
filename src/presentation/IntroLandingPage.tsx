@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -21,6 +21,7 @@ import {
   QrCode,
   ChevronDown
 } from 'lucide-react';
+import { GAMES } from '../domain/gamesData';
 import { useTheme } from '../application/ThemeContext';
 import { sfxTap, sfxCoin, sfxSuccess } from '../application/soundEffects';
 
@@ -42,18 +43,22 @@ export const IntroLandingPage = () => {
   const [simScore, setSimScore] = useState(0);
   const [simFeedback, setSimFeedback] = useState<string | null>(null);
 
+  const simStepRef = useRef(0);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
+
   const handleSimTap = () => {
     sfxTap();
-    const nextSteps = simSteps + 1;
-    const nextScore = simScore + 15;
+    const nextSteps = ++simStepRef.current;
     setSimSteps(nextSteps);
-    setSimScore(nextScore);
+    setSimScore(score => score + 15);
 
     if (nextSteps % 5 === 0) {
       sfxCoin();
       setSimFeedback('🔥 콤보 달성! +50 보너스');
       setSimScore(s => s + 50);
-      setTimeout(() => setSimFeedback(null), 1000);
+      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+      feedbackTimer.current = setTimeout(() => setSimFeedback(null), 1000);
     }
   };
 
@@ -66,7 +71,7 @@ export const IntroLandingPage = () => {
       emoji: '🦘',
       badge: '초등 3~6학년',
       code: '[4체01-02]',
-      desc: '스마트폰을 쥐고 점프! 체공 시간과 수직 도약을 실시간 감지',
+      desc: '스마트폰을 쥐고 점프! 가속도 센서로 움직임을 감지하거나 버튼으로 점프 횟수를 기록',
       gradient: 'from-amber-500 to-orange-600',
     },
     {
@@ -76,7 +81,7 @@ export const IntroLandingPage = () => {
       emoji: '🏋️',
       badge: '근력·근지구력',
       code: '[6체01-02]',
-      desc: '자이로 센서로 무릎 각도와 자세를 정밀 판정하는 피트니스 대결',
+      desc: '스마트폰의 움직임을 감지하거나 버튼으로 횟수를 기록하는 스쿼트 활동',
       gradient: 'from-cyan-500 to-blue-600',
     },
     {
@@ -196,7 +201,7 @@ export const IntroLandingPage = () => {
 
             {/* 교사용 수업방 바로가기 */}
             <button
-              onClick={() => navigate('/lobby')}
+              onClick={() => navigate('/admin')}
               className={`hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap shrink-0 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-slate-600' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-100'}`}
             >
               <Users className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
@@ -244,7 +249,7 @@ export const IntroLandingPage = () => {
               {/* 상세 설명 */}
               <p className={`text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 break-keep font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                 별도의 센서 장비 없이 스마트폰의 자이로·가속도 모션 센서만으로 즐기는 초·중등 디지털 체육 플랫폼입니다.
-                <strong className={isDark ? 'text-white' : 'text-slate-900'}> 50여 종의 신체활동 미니게임</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>실시간 모둠 전광판</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>교사 스마트 리모컨</strong>, 그리고 <strong className={isDark ? 'text-white' : 'text-slate-900'}>NEIS 생기부 세특 자동 생성</strong>까지 원스톱으로 지원합니다.
+                <strong className={isDark ? 'text-white' : 'text-slate-900'}> {GAMES.length}종의 신체활동 미니게임</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>실시간 모둠 전광판</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>교사 스마트 리모컨</strong>, 그리고 <strong className={isDark ? 'text-white' : 'text-slate-900'}>NEIS 생기부 세특 자동 생성</strong>까지 원스톱으로 지원합니다.
               </p>
 
               {/* 메인 액션 버튼 모음: PC/태블릿/모바일 어떤 환경에서도 줄바꿈 방지 */}
@@ -263,7 +268,7 @@ export const IntroLandingPage = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate('/lobby')}
+                  onClick={() => navigate('/admin')}
                   className={`w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-base border transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
                     isDark
                       ? 'bg-slate-900 border-slate-700 hover:border-cyan-500 text-slate-100 hover:text-white'
@@ -290,7 +295,7 @@ export const IntroLandingPage = () => {
               {/* 핵심 지표 뱃지 4선 */}
               <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
                 {[
-                  { label: '미니게임 라인업', val: '50+ 종', icon: '🎮' },
+                  { label: '미니게임 라인업', val: `${GAMES.length}종`, icon: '🎮' },
                   { label: '교육과정 핵심영역', val: '3대 영역', icon: '🏃' },
                   { label: '앱 설치 소요시간', val: '0초 (Web)', icon: '⚡' },
                   { label: 'NEIS 세특 생성', val: '원클릭 자동', icon: '📝' },
@@ -747,7 +752,7 @@ export const IntroLandingPage = () => {
               }}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 !text-white font-bold text-sm shadow-md transition-all self-start md:self-auto whitespace-nowrap shrink-0"
             >
-              <span className="whitespace-nowrap !text-white">전체 50+ 게임 목록 보기</span>
+              <span className="whitespace-nowrap !text-white">전체 {GAMES.length}개 게임 목록 보기</span>
               <ArrowRight className="w-4 h-4 !text-white shrink-0" />
             </button>
           </div>
@@ -756,6 +761,10 @@ export const IntroLandingPage = () => {
             {FEATURED_GAMES.map((game) => (
               <div
                 key={game.id}
+                role="link"
+                tabIndex={0}
+                aria-label={`${game.name} 게임 시작`}
+                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(`/play/${game.id}`); } }}
                 onClick={() => navigate(`/play/${game.id}`)}
                 className={`group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer relative overflow-hidden ${
                   isDark ? 'bg-slate-900/90 border-slate-800 hover:border-cyan-500/50' : 'bg-white border-2 border-slate-200 hover:border-cyan-500 shadow-md'
@@ -774,7 +783,7 @@ export const IntroLandingPage = () => {
                   </div>
                 </div>
 
-                <h4 className={`text-xl font-black transition-colors mb-2 whitespace-nowrap ${isDark ? 'text-white group-hover:text-cyan-400' : 'text-slate-900 group-hover:text-cyan-600'}`}>
+                <h4 className={`text-xl font-black transition-colors mb-2 whitespace-normal ${isDark ? 'text-white group-hover:text-cyan-400' : 'text-slate-900 group-hover:text-cyan-600'}`}>
                   {game.name}
                 </h4>
                 <p className={`text-xs sm:text-sm leading-relaxed mb-4 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
@@ -876,8 +885,10 @@ export const IntroLandingPage = () => {
                   }`}
                 >
                   <button
+                    aria-expanded={isOpen}
+                    aria-controls={`faq-${index}`}
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full p-5 text-left flex justify-between items-center gap-4 focus:outline-none"
+                    className="w-full whitespace-normal p-5 text-left flex justify-between items-center gap-4 focus:outline-none"
                   >
                     <span className="font-black text-base sm:text-lg flex items-center gap-3 break-keep">
                       <HelpCircle className="w-5 h-5 text-cyan-600 dark:text-cyan-400 shrink-0" />
@@ -890,7 +901,7 @@ export const IntroLandingPage = () => {
                     />
                   </button>
                   {isOpen && (
-                    <div className={`px-5 pb-5 pt-1 text-sm sm:text-base leading-relaxed border-t break-keep ${isDark ? 'text-slate-300 border-slate-800/80' : 'text-slate-700 border-slate-200'}`}>
+                    <div id={`faq-${index}`} className={`px-5 pb-5 pt-1 text-sm sm:text-base leading-relaxed border-t break-keep ${isDark ? 'text-slate-300 border-slate-800/80' : 'text-slate-700 border-slate-200'}`}>
                       {faq.a}
                     </div>
                   )}
@@ -962,7 +973,7 @@ export const IntroLandingPage = () => {
             <button onClick={() => navigate('/manual?tab=lesson')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
               수업 지도안
             </button>
-            <button onClick={() => navigate('/lobby')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
+            <button onClick={() => navigate('/admin')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
               교사용 로비
             </button>
             <button onClick={() => navigate('/hub')} className="text-cyan-600 dark:text-cyan-400 font-bold hover:underline whitespace-nowrap">

@@ -44,8 +44,7 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => {
     // 공 물리 업데이트 루프
     const anim = setInterval(() => {
-      setBalls(prevBalls => {
-        const nextBalls = prevBalls.map(b => {
+        const nextBalls = ballsRef.current.map(b => {
           let nx = b.x + b.vx;
           let ny = b.y + b.vy;
           let nvx = b.vx;
@@ -64,7 +63,7 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
 
           // 패들 충돌 판정 (y >= 82% 이고 x가 패들 폭 ±16% 이내)
           const pX = paddleRef.current;
-          if (ny >= 82 && ny <= 88 && Math.abs(nx - pX) <= 18) {
+          if (nvy > 0 && ny >= 82 && ny <= 88 && Math.abs(nx - pX) <= 18) {
             nvy = -Math.abs(nvy) * 1.02; // 위로 튕겨 올림
             bouncesRef.current += 1;
             setBounces(bouncesRef.current);
@@ -83,8 +82,7 @@ export const JugglingBouncePaddle = ({ groupId, enqueueAction }: Props) => {
         });
 
         ballsRef.current = nextBalls;
-        return nextBalls;
-      });
+        setBalls(nextBalls);
     }, 35);
 
     const timer = setInterval(() => {

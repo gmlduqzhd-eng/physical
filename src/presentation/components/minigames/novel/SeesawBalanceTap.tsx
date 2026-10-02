@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Scale, AlertTriangle } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [tiltAngle, setTiltAngle] = useState(0); // -30 (left drop) to +30 (right drop)
   const [ballPos, setBallPos] = useState(0); // -100 to +100
   const [score, setScore] = useState(0);
@@ -62,7 +64,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
         fallRef.current = true;
         setFallOff(true);
         sfxFail();
-        setTimeout(() => {
+        scheduleTimeout(() => {
           ballPosRef.current = 0;
           ballVelRef.current = 0;
           tiltRef.current = 0;
@@ -89,7 +91,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
       clearInterval(physics);
       clearInterval(timer);
     };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {

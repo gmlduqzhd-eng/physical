@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef } from 'react';
 import { sfxClick, sfxCoin } from '../../../application/soundEffects';
 
@@ -9,6 +10,7 @@ interface Props {
 const EMOJIS = ['🏀', '⚽', '🎾', '🏐', '🏈', '🥎'];
 
 export const CardMatch = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [cards] = useState(() => {
     const pairs = EMOJIS.slice(0, 6);
     const deck = [...pairs, ...pairs];
@@ -51,7 +53,7 @@ export const CardMatch = ({ groupId, enqueueAction }: Props) => {
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() });
         }
       } else {
-        setTimeout(() => {
+        scheduleTimeout(() => {
           setFlipped([]);
           lockRef.current = false;
         }, 600);

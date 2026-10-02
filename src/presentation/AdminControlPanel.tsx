@@ -1,14 +1,16 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { useGameLogic } from '../application/useGameLogic';
+import { createClassroom, classroomError } from '../data/classroomRepository';
+import { timeOffset } from '../application/timeSync';
 import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
 import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home } from 'lucide-react';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { QuickStart } from './components/admin/QuickStart';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from './icons';
 
 const QUIZ_LIST = [
   { question: "다음 중 달리기 전 가장 알맞은 준비운동은?", options: ["가만히 누워있기", "가볍게 걷기와 스트레칭", "전력 질주하기", "물 1리터 원샷하기"], answer: 1, reward: 300 },
@@ -18,8 +20,6 @@ const QUIZ_LIST = [
 ];
 
 export const AdminControlPanel = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
   const [activeTab, setActiveTab] = useState<'rooms' | 'templates' | 'create_template' | 'treasures'>('rooms');
   const navigate = useNavigate();
   
@@ -30,11 +30,10 @@ export const AdminControlPanel = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   
   // Selected Room Data
-  const [roomGroups, setRoomGroups] = useState<RoomGroup[]>([]);
-  const [currentRoom, setCurrentRoom] = useState<GameRoom | null>(null);
+  const { scores: roomGroups, gameRoom: currentRoom, error: roomError, refresh: refreshRoom } = useGameLogic(selectedRoomId || undefined);
   const [announcementText, setAnnouncementText] = useState('');
 
-  const { mins, secs, isDanger } = useGameTimer(currentRoom);
+  const { mins, secs, isDanger, timeLeft } = useGameTimer(currentRoom);
 
   const fetchTemplates = async () => {
     const { data } = await supabase.from('mission_templates').select('*').order('created_at', { ascending: false });
@@ -46,89 +45,39 @@ export const AdminControlPanel = () => {
     if (data) setRooms(data);
   };
 
-  const fetchRoomDetails = async (id: string) => {
-    const { data: room } = await supabase.from('game_rooms').select('*').eq('id', id).single();
-    if (room) setCurrentRoom(room);
-    
-    const { data: groups } = await supabase.from('room_groups').select('*').eq('room_id', id).order('score', { ascending: false });
-    if (groups) setRoomGroups(groups);
-  };
-
-  useEffect(() => {
-    fetchTemplates();
-    fetchRooms();
-  }, []);
-
-  const [prevSelectedRoomId, setPrevSelectedRoomId] = useState(selectedRoomId);
-  if (selectedRoomId !== prevSelectedRoomId) {
-    setPrevSelectedRoomId(selectedRoomId);
-    if (!selectedRoomId) {
-      setCurrentRoom(null);
-      setRoomGroups([]);
-    }
-  }
-
-  useEffect(() => {
-    if (selectedRoomId) {
-      fetchRoomDetails(selectedRoomId);
-      
-      const channelName = `admin_room_groups_${selectedRoomId}`;
-      const sub = supabase.channel(channelName)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: `room_id=eq.${selectedRoomId}` }, () => {
-          fetchRoomDetails(selectedRoomId);
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${selectedRoomId}` }, () => {
-          fetchRoomDetails(selectedRoomId);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(sub);
-      };
-    }
-  }, [selectedRoomId]);
+  useEffect(() => { void fetchTemplates(); void fetchRooms(); }, []);
 
   const createRoom = async (templateId: string) => {
-    // eslint-disable-next-line react-hooks/purity
-    const pin = Math.floor(1000 + Math.random() * 9000).toString(); // 4자리 랜덤 핀
     const name = prompt('새로운 방의 이름을 입력하세요', '오늘의 원정대');
-    if (!name) return;
-    
-    await supabase.from('game_rooms').insert([{ pin_code: pin, name, template_id: templateId }]);
-    fetchRooms();
+    if (!name?.trim()) return;
+    try {
+      const room = await createClassroom(name, templateId, Array.from({ length: 8 }, (_, index) => (index + 1) + '모둠'));
+      await fetchRooms(); setSelectedRoomId(room.id);
+    } catch (cause) { alert(classroomError(cause, '방 생성에 실패했습니다.')); }
+  };
+
+  const updateRoom = async (updates: Record<string, unknown>) => {
+    if (!currentRoom) return false;
+    if (updates.active_minigame && typeof updates.active_minigame === 'object') {
+      updates.active_minigame = { ...updates.active_minigame, run_id: crypto.randomUUID() };
+    }
+    const result = await supabase.from('game_rooms').update(updates).eq('id', currentRoom.id).select('id');
+    if (result.error || !result.data?.length) { alert('수업 제어에 실패했습니다. 인터넷 연결과 방 상태를 확인해주세요.'); return false; }
+    refreshRoom(); return true;
   };
 
   // --- Room Control Actions ---
   const handleStatusChange = async (status: 'playing' | 'paused') => {
     if (!currentRoom) return;
-    if (status === 'playing') {
-      const updates: Record<string, string> = { status: 'playing' };
-      if (!currentRoom.started_at) updates.started_at = new Date().toISOString();
-      await supabase.from('game_rooms').update(updates).eq('id', currentRoom.id);
-    } else {
-      await supabase.from('game_rooms').update({ status: 'paused' }).eq('id', currentRoom.id);
-    }
+    const updates: Record<string, unknown> = { status };
+    if (status === 'playing' && !currentRoom.started_at) updates.started_at = new Date(Date.now() + timeOffset).toISOString();
+    if (status === 'paused') { updates.started_at = null; updates.global_time_modifier = timeLeft - 300; }
+    await updateRoom(updates);
   };
-
   const handleTimeModifier = async (amount: number) => {
     if (!currentRoom) return;
-    
-    let overshoot = 0;
-    if (currentRoom.started_at) {
-      const start = new Date(currentRoom.started_at).getTime();
-      const now = Date.now(); // Assuming rough time is fine for this click
-      const elapsed = Math.floor((now - start) / 1000);
-      const remaining = 300 - elapsed + currentRoom.global_time_modifier;
-      if (remaining < 0) {
-        overshoot = -remaining;
-      }
-    }
-    
-    const actualAmount = (amount > 0 && overshoot > 0) ? amount + overshoot : amount;
-
-    await supabase.from('game_rooms')
-      .update({ global_time_modifier: currentRoom.global_time_modifier + actualAmount })
-      .eq('id', currentRoom.id);
+    const correction = amount > 0 && currentRoom.started_at ? Math.max(0, Math.floor((Date.now() + timeOffset - Date.parse(currentRoom.started_at)) / 1000) - 300 - currentRoom.global_time_modifier) : 0;
+    await updateRoom({ global_time_modifier: currentRoom.global_time_modifier + amount + correction });
   };
 
   const triggerTsunami = async () => {
@@ -154,70 +103,56 @@ export const AdminControlPanel = () => {
     roomGroupsRef.current = roomGroups;
   }, [roomGroups]);
 
+  const currentRoomRef = useRef(currentRoom);
+  useEffect(() => { currentRoomRef.current = currentRoom; }, [currentRoom]);
+  const controlledRoomId = currentRoom?.id;
   useEffect(() => {
-    if (!currentRoom) return;
-    
-    // Boss HP tracking
-    const bossHpRef = { current: currentRoom.boss_hp || 10000 };
-    
-    const channel = supabase.channel(`room:${currentRoom.id}:global`)
-      .on('broadcast', { event: 'boss_damage' }, (e) => {
-        bossHpRef.current -= (e.payload.amount || 1);
-      }).subscribe();
-      
-    const interval = setInterval(() => {
-      if (currentRoom.status === 'boss_raid') {
-        supabase.from('game_rooms').update({ boss_hp: bossHpRef.current }).eq('id', currentRoom.id).then();
-        if (bossHpRef.current <= 0) {
-          supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id).then();
-          alert('🎉 보스 레이드 토벌 성공! 모든 학생들의 화면이 원래대로 돌아갑니다.');
+    if (!controlledRoomId) return;
+    const controllerId = crypto.randomUUID();
+    let active = true;
+    let working = false;
+    let pendingDamage = 0;
+    const channel = supabase.channel('room:' + controlledRoomId + ':global', { config: { presence: { key: controllerId } } })
+      .on('broadcast', { event: 'boss_damage' }, event => {
+        const amount = Number(event.payload.amount);
+        if (Number.isFinite(amount) && amount > 0) pendingDamage += Math.min(100000, Math.floor(amount));
+      }).subscribe(status => { if (status === 'SUBSCRIBED') void channel.track({ role: 'teacher-controller' }); });
+    const isLeader = () => Object.entries(channel.presenceState<{ role: string }>()).filter(([, clients]) => clients.some(client => client.role === 'teacher-controller')).map(([id]) => id).sort()[0] === controllerId;
+    const interval = window.setInterval(async () => {
+      const room = currentRoomRef.current;
+      if (!active || working || !room || !isLeader()) return;
+      working = true;
+      try {
+        if (room.status === 'boss_raid' && pendingDamage > 0 && room.boss_hp != null && room.boss_hp > 0) {
+          const damage = pendingDamage; pendingDamage = 0;
+          const result = await supabase.rpc('damage_classroom_boss', { room_uuid: controlledRoomId, amount: damage });
+          if (result.error) pendingDamage += damage;
         }
-      }
-    }, 1000);
-
-    const defenseInterval = setInterval(() => {
-      if (currentRoom.status === 'defense') {
-        roomGroupsRef.current.forEach((g: RoomGroup) => {
-          supabase.rpc('increment_score', { row_id: g.id, amount: -5 }).then();
-        });
-      }
-      
-      if (currentRoom.active_minigame?.type === 'bomb') {
-        const bomb = currentRoom.active_minigame;
-        if (Date.now() >= bomb.explodesAt) {
-          // 폭발!
-          supabase.from('game_rooms').update({ active_minigame: null }).eq('id', currentRoom.id).then();
-          supabase.rpc('increment_score', { row_id: bomb.holderId, amount: -bomb.penalty }).then();
-          alert(`💥 폭탄이 터졌습니다! 페널티: -${bomb.penalty}점`);
+        if (room.status === 'defense') await Promise.all(roomGroupsRef.current.map(group => supabase.rpc('increment_classroom_score', { row_id: group.id, amount: -5 })));
+        const bomb = room.active_minigame;
+        if (bomb?.type === 'bomb' && Date.now() >= bomb.explodesAt) {
+          const claimed = await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId).eq('active_minigame', JSON.stringify(bomb)).select('id');
+          if (!claimed.error && claimed.data?.length) {
+            const awarded = await supabase.rpc('increment_classroom_score', { row_id: bomb.holderId, amount: -bomb.penalty });
+            if (!awarded.error) alert('💥 폭탄이 터졌습니다! 페널티: -' + bomb.penalty + '점');
+          }
         }
-      }
-
-      if (currentRoom.status === 'boss_raid' && currentRoom.boss_hp != null && currentRoom.boss_hp <= 0) {
-        supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id).then();
-        roomGroupsRef.current.forEach((g: RoomGroup) => {
-          supabase.rpc('increment_score', { row_id: g.id, amount: 2000 }).then();
-        });
-        alert(`🎉 보스 레이드 성공! 모든 학생에게 2000점이 지급되었습니다!`);
-      }
+      } catch { console.error('수업 이벤트 동기화 실패'); }
+      finally { working = false; }
     }, 2000);
-
-    return () => {
-      supabase.removeChannel(channel);
-      clearInterval(interval);
-      clearInterval(defenseInterval);
-    };
-  }, [currentRoom]);
+    return () => { active = false; clearInterval(interval); void supabase.removeChannel(channel); };
+  }, [controlledRoomId]);
 
   const sendMinigame = async () => {
     if (!currentRoom) return;
     const randomQuiz = QUIZ_LIST[Math.floor(Math.random() * QUIZ_LIST.length)];
-    await supabase.from('game_rooms').update({ active_minigame: randomQuiz }).eq('id', currentRoom.id);
+    if (!await updateRoom({ active_minigame: randomQuiz })) return;
     alert('돌발 퀴즈가 발송되었습니다!');
   };
 
   const clearMinigame = async () => {
     if (!currentRoom) return;
-    await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', currentRoom.id);
+    await updateRoom({ active_minigame: null });
   };
 
   const toggleHack = async (groupId: string, isHacked: boolean) => {
@@ -289,21 +224,10 @@ export const AdminControlPanel = () => {
     if (!currentRoom) return;
     const battleDuration = 30; // 30초
     const endTime = Date.now() + battleDuration * 1000;
-    await supabase.from('game_rooms').update({
+    if (!await updateRoom({
       active_minigame: { type: 'team_battle', end_time: endTime, duration: battleDuration }
-    }).eq('id', currentRoom.id);
+    })) return;
     alert(`⚔️ 30초 모둠 대전이 시작되었습니다!\n모든 학생 화면에 동일한 미니게임이 팝업됩니다.`);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || '4321';
-    if (passwordInput === adminPassword) {
-      setIsAuthenticated(true);
-    } else {
-      alert('비밀번호가 틀렸습니다.');
-      setPasswordInput('');
-    }
   };
 
   const handleCleanupRooms = async () => {
@@ -326,33 +250,6 @@ export const AdminControlPanel = () => {
     }
   };
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
-        <button onClick={() => navigate('/')} className="absolute top-6 left-6 px-4 py-2 bg-white border border-slate-200 shadow-sm rounded-lg font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors">
-          <Home className="w-4 h-4"/> 홈으로 돌아가기
-        </button>
-        <form onSubmit={handleLogin} className="bg-white p-8 rounded-2xl shadow-xl border border-slate-200 flex flex-col gap-6 max-w-sm w-full">
-          <div className="flex flex-col items-center mb-2">
-            <ShieldAlert className="w-16 h-16 text-cyan-600 mb-4" />
-            <h1 className="text-2xl font-black text-slate-900">교사 제어 패널</h1>
-            <p className="text-slate-500 mt-2">비밀번호를 입력하세요.</p>
-          </div>
-          <input 
-            type="password" 
-            value={passwordInput}
-            onChange={e => setPasswordInput(e.target.value)}
-            placeholder="비밀번호 4자리"
-            className="w-full bg-slate-50 border border-slate-300 p-4 rounded-xl text-center text-xl tracking-[0.5em] focus:outline-none focus:border-cyan-500 text-slate-900"
-          />
-          <button type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-lg">
-            접속하기
-          </button>
-        </form>
-      </div>
-    );
-  }
-
   const pendingApprovals: { group: RoomGroup, mission: import('../domain/types').MissionButton }[] = [];
   if (currentRoom) {
     const template = templates.find(t => t.id === currentRoom.template_id);
@@ -373,6 +270,7 @@ export const AdminControlPanel = () => {
   return (
     <div className="min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
+        {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 mb-8">
           <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-600">
             <ShieldAlert className="w-10 h-10 text-cyan-500" /> 땀방울 원정대 - 교사 제어 패널
@@ -576,13 +474,9 @@ export const AdminControlPanel = () => {
                       <div className="flex gap-2">
                         <button 
                           onClick={async () => {
-                            const newPending = req.group.pending_missions?.filter(id => id !== req.mission.id) || [];
-                            const newCompleted = [...(req.group.completed_missions || []), req.mission.id];
-                            await supabase.from('room_groups').update({ 
-                              pending_missions: newPending, 
-                              completed_missions: newCompleted,
-                              score: req.group.score + req.mission.amount
-                            }).eq('id', req.group.id);
+                            const { error } = await supabase.rpc('review_classroom_mission', { row_id: req.group.id, mission_id: req.mission.id, approve: true });
+                            if (error) alert('미션 승인에 실패했습니다. 다시 시도해주세요.');
+                            refreshRoom();
                           }}
                           className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-sm shadow-sm"
                         >
@@ -590,8 +484,9 @@ export const AdminControlPanel = () => {
                         </button>
                         <button 
                           onClick={async () => {
-                            const newPending = req.group.pending_missions?.filter(id => id !== req.mission.id) || [];
-                            await supabase.from('room_groups').update({ pending_missions: newPending }).eq('id', req.group.id);
+                            const { error } = await supabase.rpc('review_classroom_mission', { row_id: req.group.id, mission_id: req.mission.id, approve: false });
+                            if (error) alert('미션 반려에 실패했습니다. 다시 시도해주세요.');
+                            refreshRoom();
                           }}
                           className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded font-bold text-sm shadow-sm"
                         >
@@ -619,19 +514,19 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-emerald-700 mb-4">학생들 스마트폰에 10~15초짜리 짧은 단체 미니게임 팝업을 강제 발동합니다.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000 } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000 } })}
                   className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Flame className="w-5 h-5" /> 화산폭발 (광클러시)
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000 } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Wifi className="w-5 h-5" /> 텔레파시 (동시터치)
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'tug_of_war' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'tug_of_war' } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Grab className="w-5 h-5" /> 줄다리기 (무한당기기)
@@ -662,25 +557,25 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-cyan-700 mb-4">순발력과 기억력을 요하는 짧은 개인/단체 미니게임을 발동합니다.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'shake' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'shake' } })}
                   className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.BatteryCharging className="w-5 h-5" /> 바운스 충전
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'number_grid' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'number_grid' } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.ShieldAlert className="w-5 h-5" /> 순차적 암호해제
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'memory' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'memory' } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Brain className="w-5 h-5" /> 컬러 패턴 기억
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'stopwatch' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch' } })}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Timer className="w-5 h-5" /> 7.00초 스탑워치
@@ -711,19 +606,19 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-purple-700 mb-4">운과 활력을 불어넣는 액티비티형 숏폼 미니게임입니다.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'fate_card' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'fate_card' } })}
                   className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Dices className="w-5 h-5" /> 운명의 잭팟 카드
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'whack_a_mole' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'whack_a_mole' } })}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Target className="w-5 h-5" /> 별 두더지 잡기
                 </button>
                 <button 
-                  onClick={async () => await supabase.from('game_rooms').update({ active_minigame: { type: 'scream' } }).eq('id', currentRoom.id)}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'scream' } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Mic2 className="w-5 h-5" /> 소리질러 (데시벨)
@@ -790,7 +685,7 @@ export const AdminControlPanel = () => {
                       explodesAt: Date.now() + 60000,
                       penalty: 500
                     };
-                    await supabase.from('game_rooms').update({ active_minigame: bombData }).eq('id', currentRoom.id);
+                    await updateRoom({ active_minigame: bombData });
                   }}
                   className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
                 >

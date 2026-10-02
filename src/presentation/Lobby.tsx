@@ -1,31 +1,45 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { findRoomByPin, joinClassroomGroup, classroomError } from '../data/classroomRepository';
+import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { RotateCcw } from 'lucide-react';
 
 
 export const Lobby = () => {
   const [pinCode, setPinCode] = useState('');
-  const [studentName, setStudentName] = useState(() => localStorage.getItem('physical_student_name') || '');
+  const [studentName, setStudentName] = useState(() => readStorage('physical_student_name') || '');
   const [groupName, setGroupName] = useState('1모둠');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   // 이전 접속 정보 확인
-  const lastRoom = localStorage.getItem('physical_last_room');
-  const lastGroup = localStorage.getItem('physical_last_group');
-  const lastGroupName = localStorage.getItem('physical_last_group_name');
-  const lastName = localStorage.getItem('physical_student_name');
+  const lastRoom = readStorage('physical_last_room');
+  const lastGroup = readStorage('physical_last_group');
+  const lastGroupName = readStorage('physical_last_group_name');
+  const lastName = readStorage('physical_student_name');
 
-  const handleResume = () => {
+  const handleResume = async () => {
     if (lastRoom && lastGroup) {
-      navigate(`/mobile/${lastRoom}/${lastGroup}`);
+      if (loading) return;
+      setLoading(true); setError('');
+      try {
+        const { data, error: lookupError } = await supabase.from('room_groups').select('id').eq('room_id', lastRoom).eq('id', lastGroup).maybeSingle();
+        if (lookupError) throw new Error('이전 수업을 확인할 수 없습니다. 연결 상태를 확인해주세요.');
+        if (!data) {
+          ['physical_last_room', 'physical_last_group', 'physical_last_group_name'].forEach(key => removeStorage(key));
+          throw new Error('이전 수업이 삭제되었습니다. 새 PIN으로 입장해주세요.');
+        }
+        navigate(`/mobile/${lastRoom}/${lastGroup}`);
+      } catch (cause) { setError(classroomError(cause, '이전 수업 접속에 실패했습니다.')); }
+      finally { setLoading(false); }
     }
   };
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     if (!pinCode) {
       setError('핀 번호를 입력해주세요.');
       return;
@@ -37,61 +51,17 @@ export const Lobby = () => {
     setLoading(true);
     setError('');
 
-    // 1. 방 존재 여부 확인
-    const cleanedPin = pinCode.trim();
-    const { data: roomData, error: roomError } = await supabase
-      .from('game_rooms')
-      .select('id')
-      .eq('pin_code', cleanedPin)
-      .single();
-
-    if (roomError || !roomData) {
-      setError('존재하지 않는 핀 번호입니다.');
-      setLoading(false);
-      return;
-    }
-
-    const roomId = roomData.id;
-
-    // 2. 모둠 접속 처리 (Upsert or Insert)
-    const { data: groupData, error: groupError } = await supabase
-      .from('room_groups')
-      .select('id')
-      .eq('room_id', roomId)
-      .eq('group_name', groupName)
-      .single();
-
-    let groupId: string;
-    const avatar = 'Smile'; // Default fallback
-
-    if (groupError || !groupData) {
-      // 그룹이 없으면 생성
-      const { data: newGroup, error: insertError } = await supabase
-        .from('room_groups')
-        .insert([{ room_id: roomId, group_name: groupName, avatar }])
-        .select('id')
-        .single();
-      
-      if (insertError || !newGroup) {
-        setError('모둠 생성에 실패했습니다.');
-        setLoading(false);
-        return;
-      }
-      groupId = newGroup.id;
-    } else {
-      groupId = groupData.id;
-      await supabase.from('room_groups').update({ avatar }).eq('id', groupId);
-    }
-
-    // 이름 및 접속 정보 로컬 저장
-    localStorage.setItem('physical_student_name', studentName.trim());
-    localStorage.setItem('physical_student_role', 'novice');
-    localStorage.setItem('physical_last_room', roomId);
-    localStorage.setItem('physical_last_group', groupId);
-    localStorage.setItem('physical_last_group_name', groupName);
-
-    // 접속 성공 시 이동
-    navigate(`/mobile/${roomId}/${groupId}`);
+    try {
+      const room = await findRoomByPin(pinCode);
+      const groupId = await joinClassroomGroup(room.id, groupName);
+      writeStorage('physical_student_name', studentName.trim());
+      writeStorage('physical_student_role', 'novice');
+      writeStorage('physical_last_room', room.id);
+      writeStorage('physical_last_group', groupId);
+      writeStorage('physical_last_group_name', groupName);
+      navigate(`/mobile/${room.id}/${groupId}`);
+    } catch (cause) { setError(classroomError(cause, '입장에 실패했습니다. 다시 시도해주세요.')); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -103,6 +73,7 @@ export const Lobby = () => {
       {lastRoom && lastGroup && lastName && (
         <button
           onClick={handleResume}
+          disabled={loading}
           className="w-full max-w-sm py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
         >
           <RotateCcw className="w-5 h-5" />
@@ -115,9 +86,11 @@ export const Lobby = () => {
           <label className="block text-slate-700 text-sm font-bold mb-2">핀 번호 (PIN)</label>
           <input 
             type="text" 
+            inputMode="numeric"
+            maxLength={4}
             placeholder="예: 1234" 
             value={pinCode}
-            onChange={(e) => setPinCode(e.target.value)}
+            onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-xl font-mono text-center tracking-[0.5em] focus:outline-none focus:border-cyan-500"
           />
         </div>

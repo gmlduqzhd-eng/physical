@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Wind, AlertTriangle } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxFail, sfxPop } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [boardAngle, setBoardAngle] = useState(0); // -45 to +45 deg
   const [windForce, setWindForce] = useState(0); // -3 to +3
   const [score, setScore] = useState(0);
@@ -47,9 +49,9 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
     const physicsTimer = setInterval(() => {
       if (wipeoutRef.current) return;
 
-      setBoardAngle(prev => {
+      {
         // 바람 영향 + 자연 복원력
-        const next = prev + windRef.current * 0.4;
+        const next = angleRef.current + windRef.current * 0.4;
         angleRef.current = next;
 
         if (Math.abs(next) >= 42) {
@@ -57,26 +59,24 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
           wipeoutRef.current = true;
           setWipeout(true);
           sfxFail();
-          setTimeout(() => {
+          scheduleTimeout(() => {
             // 1.5초 후 복구
             wipeoutRef.current = false;
             setWipeout(false);
             setBoardAngle(0);
             angleRef.current = 0;
           }, 1500);
-          return next > 0 ? 45 : -45;
+          setBoardAngle(next > 0 ? 45 : -45);
+          return;
         }
 
         // 안전 영역(-15 ~ +15도) 내 체공 점수 가산
         if (Math.abs(next) <= 15) {
-          setScore(s => {
-            const updated = s + 1;
-            scoreRef.current = updated;
-            return updated;
-          });
+          scoreRef.current += 1;
+          setScore(scoreRef.current);
         }
-        return next;
-      });
+        setBoardAngle(next);
+      }
     }, 50);
 
     // 전체 게임 타이머
@@ -97,7 +97,7 @@ export const WindSurfBalance = ({ groupId, enqueueAction }: Props) => {
       clearInterval(windTimer);
       clearInterval(physicsTimer);
     };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {

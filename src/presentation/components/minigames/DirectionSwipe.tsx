@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 import { sfxWhoosh, sfxPop } from '../../../application/soundEffects';
@@ -14,6 +15,7 @@ const ICONS = { up: ArrowUp, down: ArrowDown, left: ArrowLeft, right: ArrowRight
 const COLORS = { up: 'text-cyan-400', down: 'text-orange-400', left: 'text-emerald-400', right: 'text-purple-400' };
 
 export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0);
   const [current, setCurrent] = useState<Dir>('up');
   const [timeLeft, setTimeLeft] = useState(15);
@@ -22,6 +24,7 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
   const scoreRef = useRef(0);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
+  const pointerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setCurrent(DIRS[Math.floor(Math.random() * 4)]);
@@ -49,25 +52,17 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
     }
   }, [timeLeft, finished, groupId, enqueueAction]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    startXRef.current = e.touches[0].clientX;
-    startYRef.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (finished) return;
-    const dx = e.changedTouches[0].clientX - startXRef.current;
-    const dy = e.changedTouches[0].clientY - startYRef.current;
-    processSwipe(dx, dy);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (finished || !e.isPrimary) return;
+    pointerRef.current = e.pointerId;
+    e.currentTarget.setPointerCapture(e.pointerId);
     startXRef.current = e.clientX;
     startYRef.current = e.clientY;
   };
 
-  const handleMouseUp = (e: React.MouseEvent) => {
-    if (finished) return;
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (finished || pointerRef.current !== e.pointerId) return;
+    pointerRef.current = null;
     const dx = e.clientX - startXRef.current;
     const dy = e.clientY - startYRef.current;
     processSwipe(dx, dy);
@@ -94,7 +89,7 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
       sfxPop();
       setFlash('wrong');
     }
-    setTimeout(() => setFlash(null), 200);
+    scheduleTimeout(() => setFlash(null), 200);
     setCurrent(DIRS[Math.floor(Math.random() * 4)]);
   };
 
@@ -102,9 +97,9 @@ export const DirectionSwipe = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div
-      className={`min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-100 ${flash === 'correct' ? '!bg-emerald-900' : flash === 'wrong' ? '!bg-red-900' : ''}`}
-      onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown} onMouseUp={handleMouseUp}
+      className={`min-h-[100dvh] bg-slate-900 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none touch-none transition-colors duration-100 ${flash === 'correct' ? '!bg-emerald-900' : flash === 'wrong' ? '!bg-red-900' : ''}`}
+      onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}
+      onPointerCancel={() => { pointerRef.current = null; }}
     >
       <div className="flex justify-between w-full max-w-sm mb-8 relative z-10">
         <div><span className="text-slate-400 text-sm font-bold">점수</span><div className="text-white text-3xl font-black">{score}</div></div>

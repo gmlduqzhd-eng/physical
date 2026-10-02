@@ -17,29 +17,39 @@ interface YouTubeExpressionPlayerProps {
 }
 
 // YouTube IFrame API 스크립트 로드 (앱 전체에서 1회만)
-let ytApiLoaded = false;
-let ytApiCallbacks: (() => void)[] = [];
+let ytApiPromise: Promise<void> | null = null;
+const PLAYBACK_SPEEDS = [1.0, 0.75, 0.5];
 
 function loadYouTubeAPI(): Promise<void> {
-  return new Promise((resolve) => {
-    if (window.YT && window.YT.Player) {
+  if (window.YT?.Player) return Promise.resolve();
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve, reject) => {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    const previousReady = window.onYouTubeIframeAPIReady;
+    const cleanup = () => {
+      clearTimeout(timeout);
+      tag.onerror = null;
+      if (window.onYouTubeIframeAPIReady === ready) window.onYouTubeIframeAPIReady = previousReady;
+    };
+    const fail = () => {
+      cleanup();
+      tag.remove();
+      ytApiPromise = null;
+      reject(new Error('YouTube player API unavailable'));
+    };
+    const ready = () => {
+      cleanup();
       resolve();
-      return;
-    }
-    ytApiCallbacks.push(resolve);
-    if (!ytApiLoaded) {
-      ytApiLoaded = true;
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.async = true;
-      const firstScript = document.getElementsByTagName('script')[0];
-      firstScript.parentNode?.insertBefore(tag, firstScript);
-      window.onYouTubeIframeAPIReady = () => {
-        ytApiCallbacks.forEach(cb => cb());
-        ytApiCallbacks = [];
-      };
-    }
+      previousReady?.();
+    };
+    const timeout = setTimeout(fail, 15000);
+    tag.onerror = fail;
+    window.onYouTubeIframeAPIReady = ready;
+    document.head.append(tag);
   });
+  return ytApiPromise;
 }
 
 export const YouTubeExpressionPlayer = ({
@@ -54,9 +64,11 @@ export const YouTubeExpressionPlayer = ({
   const [currentBeat, setCurrentBeat] = useState(1);
   const [bpm] = useState(defaultBpm);
   const [showUrlInput, setShowUrlInput] = useState(false);
+  const [playerError, setPlayerError] = useState(false);
 
   // 배속 & 구간 반복 상태
   const [playbackRate, setPlaybackRate] = useState(1.0);
+  const playbackRateRef = useRef(playbackRate);
   const [pointA, setPointA] = useState<number | null>(null);
   const [pointB, setPointB] = useState<number | null>(null);
   const [loopActive, setLoopActive] = useState(false);
@@ -90,7 +102,7 @@ export const YouTubeExpressionPlayer = ({
 
     const initPlayer = async () => {
       await loadYouTubeAPI();
-      if (destroyed) return;
+      if (destroyed || !containerRef.current) return;
 
       // 기존 플레이어 제거
       if (playerRef.current) {
@@ -98,7 +110,12 @@ export const YouTubeExpressionPlayer = ({
         playerRef.current = null;
       }
 
-      playerRef.current = new window.YT.Player(playerContainerId.current, {
+      // The API destroys its mount element, so recreate it when changing videos.
+      const mount = document.createElement('div');
+      mount.id = playerContainerId.current;
+      mount.className = 'w-full h-full';
+      containerRef.current.replaceChildren(mount);
+      playerRef.current = new window.YT.Player(mount, {
         videoId: activeVideoId,
         playerVars: {
           autoplay: 0,
@@ -110,13 +127,16 @@ export const YouTubeExpressionPlayer = ({
         },
         events: {
           onReady: (event: any) => {
-            event.target.setPlaybackRate(playbackRate);
+            if (destroyed) return;
+            setPlayerError(false);
+            event.target.setPlaybackRate(playbackRateRef.current);
           },
+          onError: () => { if (!destroyed) setPlayerError(true); },
         },
       });
     };
 
-    initPlayer();
+    void initPlayer().catch(() => { if (!destroyed) setPlayerError(true); });
 
     return () => {
       destroyed = true;
@@ -129,6 +149,7 @@ export const YouTubeExpressionPlayer = ({
 
   // 배속 변경 시 플레이어에 적용
   useEffect(() => {
+    playbackRateRef.current = playbackRate;
     if (playerRef.current?.setPlaybackRate) {
       playerRef.current.setPlaybackRate(playbackRate);
     }
@@ -164,11 +185,10 @@ export const YouTubeExpressionPlayer = ({
   }, [loopActive, pointA, pointB]);
 
   // 배속 토글 핸들러
-  const speeds = [1.0, 0.75, 0.5];
   const handleSpeedToggle = useCallback(() => {
     setPlaybackRate(prev => {
-      const idx = speeds.indexOf(prev);
-      return speeds[(idx + 1) % speeds.length];
+      const idx = PLAYBACK_SPEEDS.indexOf(prev);
+      return PLAYBACK_SPEEDS[(idx + 1) % PLAYBACK_SPEEDS.length];
     });
   }, []);
 
@@ -377,10 +397,10 @@ export const YouTubeExpressionPlayer = ({
 
       {/* 16:9 반응형 비디오 - YouTube IFrame Player API */}
       <div
-        ref={containerRef}
         className={`relative w-full aspect-video bg-black overflow-hidden group transition-transform duration-300 ${isMirrored ? 'scale-x-[-1]' : ''}`}
       >
-        <div id={playerContainerId.current} className="w-full h-full" />
+        <div ref={containerRef} className="w-full h-full" />
+        {playerError && <div role="status" className="absolute inset-0 flex items-center justify-center p-4 bg-slate-900 text-sm text-white text-center">영상을 불러오지 못했습니다. 영상 변경 또는 YouTube에서 열기를 이용해 주세요.</div>}
 
         {/* 거울 모드 워터마크 표시 */}
         {isMirrored && (
@@ -399,7 +419,7 @@ export const YouTubeExpressionPlayer = ({
             <span>배속:</span>
           </div>
           <div className="flex gap-1">
-            {speeds.map(speed => (
+            {PLAYBACK_SPEEDS.map(speed => (
               <button
                 key={speed}
                 type="button"

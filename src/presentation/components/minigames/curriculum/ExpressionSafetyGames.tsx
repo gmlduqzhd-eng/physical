@@ -1,3 +1,5 @@
+import { useGameScoreSubmission } from '../common/useGameScoreSubmission';
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
 import { GameResultOverlay } from './GameResultOverlay';
@@ -11,7 +13,8 @@ interface GameProps {
 /* =========================================================================
    21. 🚨 cpr-compression-110 (골든타임 CPR 100~120 BPM 압박)
    ========================================================================= */
-export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [compressions, setCompressions] = useState(0);
   const [bpm, setBpm] = useState(110);
   const [heartHealth, setHeartHealth] = useState(20);
@@ -20,6 +23,7 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction,
   const TARGET_COUNT = 30;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     pressHistory.current = [];
     setCompressions(0);
     setBpm(110);
@@ -105,13 +109,16 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    22. ⚡ aed-defibrillator-pad (자동심장충격기 AED 패드 부착)
    ========================================================================= */
-export const AedDefibrillatorPad: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const AedDefibrillatorPad: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [pad1Attached, setPad1Attached] = useState(false);
   const [pad2Attached, setPad2Attached] = useState(false);
   const [shockReady, setShockReady] = useState(false);
   const [finished, setFinished] = useState(false);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setPad1Attached(false);
     setPad2Attached(false);
     setShockReady(false);
@@ -121,10 +128,10 @@ export const AedDefibrillatorPad: React.FC<GameProps> = ({ groupId, enqueueActio
   useEffect(() => {
     if (pad1Attached && pad2Attached && !shockReady) {
       sfxCoin();
-      const timer = setTimeout(() => setShockReady(true), 800);
+      const timer = scheduleTimeout(() => setShockReady(true), 800);
       return () => clearTimeout(timer);
     }
-  }, [pad1Attached, pad2Attached, shockReady]);
+  }, [pad1Attached, pad2Attached, shockReady, scheduleTimeout]);
 
   const handleShock = () => {
     if (!shockReady || finished) return;
@@ -198,13 +205,16 @@ export const AedDefibrillatorPad: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    23. 🛟 water-rescue-throw (물놀이 안전 익수자 구명환 투척)
    ========================================================================= */
-export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [distance, setDistance] = useState(50);
   const [isThrowing, setIsThrowing] = useState(false);
   const [finished, setFinished] = useState(false);
   const TARGET_LOC = 70;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setIsThrowing(false);
     setDistance(50);
     setFinished(false);
@@ -218,7 +228,7 @@ export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction, 
 
     const isAccurate = Math.abs(distance - TARGET_LOC) <= 8;
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       if (isAccurate) {
         sfxSuccess();
       } else {
@@ -302,7 +312,8 @@ export const WaterRescueThrow: React.FC<GameProps> = ({ groupId, enqueueAction, 
 /* =========================================================================
    24. ☀️ heatwave-pm25-shield (폭염·미세먼지 체육 안전 디시전)
    ========================================================================= */
-export const HeatwavePm25Shield: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const HeatwavePm25Shield: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [scenarioIdx, setScenarioIdx] = useState(0);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -327,6 +338,7 @@ export const HeatwavePm25Shield: React.FC<GameProps> = ({ groupId, enqueueAction
   ];
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setScenarioIdx(0);
     setScore(0);
@@ -403,7 +415,8 @@ export const HeatwavePm25Shield: React.FC<GameProps> = ({ groupId, enqueueAction
 /* =========================================================================
    25. 🩹 rice-treatment-firstaid (발목 염좌 RICE 4단계 응급처치)
    ========================================================================= */
-export const RiceTreatmentFirstaid: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const RiceTreatmentFirstaid: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [step, setStep] = useState(0);
   const [finished, setFinished] = useState(false);
 
@@ -415,6 +428,7 @@ export const RiceTreatmentFirstaid: React.FC<GameProps> = ({ groupId, enqueueAct
   ];
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setStep(0);
     setFinished(false);
   };
@@ -481,7 +495,8 @@ export const RiceTreatmentFirstaid: React.FC<GameProps> = ({ groupId, enqueueAct
 /* =========================================================================
    26. 🕺 step-mania-4lane (4레인 댄스 스텝 콤보 시퀀서)
    ========================================================================= */
-export const StepMania4Lane: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const StepMania4Lane: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [combo, setCombo] = useState(0);
   const [activeLane, setActiveLane] = useState<number>(0);
   const [finished, setFinished] = useState(false);
@@ -494,6 +509,7 @@ export const StepMania4Lane: React.FC<GameProps> = ({ groupId, enqueueAction, on
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setCombo(0);
     setFinished(false);
     nextStep();
@@ -575,7 +591,8 @@ export const StepMania4Lane: React.FC<GameProps> = ({ groupId, enqueueAction, on
 /* =========================================================================
    27. 👥 shadow-pose-sculpture (신체 실루엣 섀도우 조형 매칭)
    ========================================================================= */
-export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [armAngle, setArmAngle] = useState(45);
   const [legAngle, setLegAngle] = useState(60);
   const [finished, setFinished] = useState(false);
@@ -583,6 +600,7 @@ export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueActio
   const isMatched = Math.abs(armAngle - 90) <= 12 && Math.abs(legAngle - 40) <= 12;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setArmAngle(45);
     setLegAngle(60);
     setFinished(false);
@@ -658,13 +676,15 @@ export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    28. 🌊 ribbon-wave-stream (리듬체조 리본 나선형 궤적)
    ========================================================================= */
-export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [trailCount, setTrailCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const isTracing = useRef(false);
   const TARGET_TRAIL = 20;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setTrailCount(0);
     setFinished(false);
   };
@@ -695,7 +715,8 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction, 
       </p>
 
       <div
-        onPointerDown={() => { isTracing.current = true; sfxTap(); }}
+        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isTracing.current = true; sfxTap(); }}
+        onPointerCancel={() => { isTracing.current = false; }}
         onPointerUp={() => { isTracing.current = false; }}
         onPointerMove={handlePointerMove}
         className="w-72 h-72 rounded-3xl bg-purple-900/60 border-4 border-dashed border-pink-400 flex flex-col items-center justify-center touch-none mb-6 shadow-2xl cursor-pointer"
@@ -722,7 +743,8 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction, 
 /* =========================================================================
    29. 🎭 emotion-freeze-mime (희로애락 감정 마임 정지 포즈)
    ========================================================================= */
-export const EmotionFreezeMime: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const EmotionFreezeMime: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [themeIdx, setThemeIdx] = useState(0);
   const [finished, setFinished] = useState(false);
 
@@ -734,6 +756,7 @@ export const EmotionFreezeMime: React.FC<GameProps> = ({ groupId, enqueueAction,
   ];
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setThemeIdx(0);
     setFinished(false);
   };
@@ -796,7 +819,8 @@ export const EmotionFreezeMime: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    30. 🪞 partner-mirror-duet (거울 짝 듀엣 무용 타이밍 매칭)
    ========================================================================= */
-export const PartnerMirrorDuet: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const PartnerMirrorDuet: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [partnerMotion, setPartnerMotion] = useState<'wave' | 'spin' | 'bow'>('wave');
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -813,6 +837,7 @@ export const PartnerMirrorDuet: React.FC<GameProps> = ({ groupId, enqueueAction,
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setScore(0);
     setFinished(false);
     nextMotion();

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Heart, Activity, Play, Check } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
+import { useGameTimeouts } from './common/useGameTimeouts';
 
 interface Props {
   groupId?: string;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export const PulseDetective = ({ groupId, enqueueAction, onExit }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   // 1: 안정 시 측정, 2: 안정 시 입력, 3: 30초 운동, 4: 운동 직후 측정, 5: 직후 입력, 6: 45초 회복, 7: 회복 후 측정, 8: 회복 후 입력, 9: 결과 그래프
   const [subStep, setSubStep] = useState<number>(1);
   const [timer, setTimer] = useState<number>(15);
@@ -22,33 +24,18 @@ export const PulseDetective = ({ groupId, enqueueAction, onExit }: Props) => {
 
   useEffect(() => {
     if (!isTimerRunning) return;
-    const interval = setInterval(() => {
-      setTimer(t => {
-        if (t <= 1) {
-          clearInterval(interval);
+    const interval = scheduleTimeout(() => {
+        if (timer <= 1) {
           setIsTimerRunning(false);
           sfxCoin();
-          setSubStep(s => {
-            if (s === 1) return 2;
-            if (s === 3) {
-              setTimer(15);
-              return 4;
-            }
-            if (s === 4) return 5;
-            if (s === 6) {
-              setTimer(15);
-              return 7;
-            }
-            if (s === 7) return 8;
-            return s;
-          });
-          return 0;
+          setSubStep(subStep + 1);
+          setTimer(subStep === 3 || subStep === 6 ? 15 : 0);
+          return;
         }
-        return t - 1;
-      });
+        setTimer(timer - 1);
     }, 1000);
-    return () => clearInterval(interval);
-  }, [isTimerRunning]);
+    return () => clearTimeout(interval);
+  }, [isTimerRunning, timer, subStep, scheduleTimeout]);
 
   const startMeasurement = (seconds: number) => {
     setTimer(seconds);

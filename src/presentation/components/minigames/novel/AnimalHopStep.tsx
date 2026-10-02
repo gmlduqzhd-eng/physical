@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Footprints } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -29,6 +30,7 @@ const ANIMALS: { type: AnimalType; name: string; emoji: string; color: string }[
 ];
 
 export const AnimalHopStep = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [stones] = useState<SteppingStone[]>(createTrack);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -89,7 +91,7 @@ export const AnimalHopStep = ({ groupId, enqueueAction }: Props) => {
       sfxFail();
       setFeedback('💦 발자국이 맞지 않아요! 돌다리를 잘 살펴보세요.');
     }
-    setTimeout(() => setFeedback(null), 500);
+    scheduleTimeout(() => setFeedback(null), 500);
   };
 
   return (

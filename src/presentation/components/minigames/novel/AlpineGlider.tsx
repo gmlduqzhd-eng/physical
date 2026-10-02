@@ -41,13 +41,13 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
 
     // 물리 루프
     const physicsTimer = setInterval(() => {
-      setAltitude(prev => {
+      {
         // 누르고 있으면 상승, 놓으면 중력으로 활강 하강
-        let next = isHolding.current ? prev + 1.8 : prev - 1.4;
+        let next = isHolding.current ? altRef.current + 1.8 : altRef.current - 1.4;
         next = Math.max(5, Math.min(95, next));
         altRef.current = next;
-        return next;
-      });
+        setAltitude(next);
+      }
 
       // 타겟 기류존 내 체공 시 점수 가산
       if (Math.abs(altRef.current - targetYRef.current) < 18) {
@@ -158,6 +158,7 @@ export const AlpineGlider = ({ groupId, enqueueAction }: Props) => {
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         disabled={finished}
         className="w-full py-8 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 active:brightness-125 text-white font-black text-xl rounded-2xl shadow-2xl border-2 border-sky-300 transition-all flex flex-col items-center justify-center gap-1 touch-none"
       >

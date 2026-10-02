@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 import type { GameRoom } from '../../../domain/types';
 import { sfxTap, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 

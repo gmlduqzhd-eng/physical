@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/purity, react-hooks/set-state-in-effect */
 import React, { useState, useRef, useEffect } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
@@ -6,13 +5,14 @@ import { useSyncQueue } from '../application/useSyncQueue';
 import { useAudio } from '../application/useAudio';
 import { useOutdoorMode } from '../application/useOutdoorMode';
 import { useWakeLock } from '../application/useWakeLock';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from './icons';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
 import { ObserverRefereeMode } from './components/ObserverRefereeMode';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
 
 const SHOP_ITEMS = [
@@ -41,16 +41,16 @@ const ROLE_OPTIONS = [
 export const MobileMissionView = () => {
   const { roomId, groupId } = useParams<{ roomId: string, groupId: string }>();
   const navigate = useNavigate();
-  const { scores, gameRoom, template } = useGameLogic(roomId);
+  const { scores, gameRoom, template, loading: roomLoading, error: roomError, refresh: refreshRoom } = useGameLogic(roomId);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
-  const { enqueueAction, isOnline, queueLength, isSyncing } = useSyncQueue();
+  const { enqueueAction, isOnline, queueLength, isSyncing, storageAvailable, syncWarning } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
   const { isOutdoorMode, toggleOutdoorMode } = useOutdoorMode();
   const { isActive: isWakeLockActive } = useWakeLock(true);
-  const [isStandMode, setIsStandMode] = useState(() => localStorage.getItem('physical_stand_mode') === 'true');
+  const [isStandMode, setIsStandMode] = useState(() => readStorage('physical_stand_mode') === 'true');
   const [currentRunner, setCurrentRunner] = useState(1);
-  const [studentName] = useState(() => localStorage.getItem('physical_student_name') || '');
-  const [role, setRole] = useState(() => localStorage.getItem('physical_student_role') || 'novice');
+  const [studentName] = useState(() => readStorage('physical_student_name') || '');
+  const [role, setRole] = useState(() => readStorage('physical_student_role') || 'novice');
   const [showFlash, setShowFlash] = useState(false);
 
   const isWhistleActive = gameRoom?.announcement === 'WHISTLE';
@@ -72,7 +72,7 @@ export const MobileMissionView = () => {
   const toggleStandMode = () => {
     setIsStandMode(prev => {
       const next = !prev;
-      localStorage.setItem('physical_stand_mode', String(next));
+      writeStorage('physical_stand_mode', String(next));
       return next;
     });
   };
@@ -95,12 +95,13 @@ export const MobileMissionView = () => {
     role === 'observer' ? 'observer' : 'mission'
   );
   const [holdProgress, setHoldProgress] = useState(0);
+  const holdProgressRef = useRef(0);
   
   const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
 
-  const [hasDrone, setHasDrone] = useState(() => localStorage.getItem(`has_drone_${roomId}_${groupId}`) === 'true');
-  const [hasCooldown, setHasCooldown] = useState(() => localStorage.getItem(`has_cooldown_${roomId}_${groupId}`) === 'true');
-  const [hasBonus, setHasBonus] = useState(() => localStorage.getItem(`has_bonus_${roomId}_${groupId}`) === 'true');
+  const [hasDrone, setHasDrone] = useState(() => readStorage(`has_drone_${roomId}_${groupId}`) === 'true');
+  const [hasCooldown, setHasCooldown] = useState(() => readStorage(`has_cooldown_${roomId}_${groupId}`) === 'true');
+  const [hasBonus, setHasBonus] = useState(() => readStorage(`has_bonus_${roomId}_${groupId}`) === 'true');
   
   const holdInterval = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastMotionPenalty = useRef<number>(0);
@@ -114,7 +115,7 @@ export const MobileMissionView = () => {
 
   const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
   const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
-  const isLocked = isTimeUp || !activeStatuses.includes(gameRoom?.status || '') || myGroup?.is_hacked;
+  const isLocked = isTimeUp || !activeStatuses.includes(gameRoom?.status || '') || myGroup?.is_hacked || (Boolean(roomError) && isOnline) || isWhistleActive;
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
   const highestScore = scores.length > 0 ? Math.max(...scores.map(s => s.score)) : 0;
@@ -126,18 +127,52 @@ export const MobileMissionView = () => {
   const mySurvivorCode = myGroup?.id.substring(0, 4).toUpperCase() || '';
   const [infectCode, setInfectCode] = useState('');
 
-  const globalChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-
+  const pendingBossDamage = useRef(0);
+  const bossDamageBatch = useRef<{ id: string; amount: number; retryAt: number } | null>(null);
+  const bossDamageInFlight = useRef(false);
+  const [bossSyncError, setBossSyncError] = useState<string | null>(null);
   useEffect(() => {
-    if (!roomId) return;
-    const globalChannel = supabase.channel(`room:${roomId}:global`);
-    globalChannel.subscribe();
-    globalChannelRef.current = globalChannel;
-    return () => { supabase.removeChannel(globalChannel); globalChannelRef.current = null; };
-  }, [roomId]);
+    if (gameRoom?.status !== 'boss_raid') {
+      pendingBossDamage.current = 0; bossDamageBatch.current = null; setBossSyncError(null);
+    }
+  }, [roomId, gameRoom?.status]);
+  useEffect(() => {
+    if (!roomId || gameRoom?.status !== 'boss_raid' || isLocked) return;
+    let active = true;
+    const interval = window.setInterval(async () => {
+      if (bossDamageInFlight.current || !navigator.onLine) return;
+      if (!bossDamageBatch.current && pendingBossDamage.current > 0) {
+        const amount = Math.min(1000000, pendingBossDamage.current);
+        pendingBossDamage.current -= amount;
+        bossDamageBatch.current = { id: crypto.randomUUID(), amount, retryAt: 0 };
+      }
+      const batch = bossDamageBatch.current;
+      if (!batch || batch.retryAt > Date.now()) return;
+      bossDamageInFlight.current = true;
+      try {
+        const result = await supabase.rpc('apply_classroom_boss_damage', { room_uuid: roomId, amount: batch.amount, action_id: batch.id });
+        if (result.error) throw result.error;
+        if (bossDamageBatch.current?.id === batch.id) bossDamageBatch.current = null;
+        if (active) setBossSyncError(null);
+      } catch {
+        batch.retryAt = Date.now() + 2000;
+        if (active) setBossSyncError('보스 공격을 저장하고 있습니다. 연결이 복구되면 다시 전송합니다.');
+      } finally { bossDamageInFlight.current = false; }
+    }, 250);
+    return () => { active = false; window.clearInterval(interval); };
+  }, [roomId, gameRoom?.status, isLocked]);
+  const handleBossTap = (event: React.PointerEvent) => {
+    event.preventDefault();
+    if (isLocked) return;
+    pendingBossDamage.current += 1;
+    const clickId = Date.now() + Math.random();
+    setClicks(previous => [...previous, { id: clickId, x: event.clientX, y: event.clientY, val: -1 }]);
+    setTimeout(() => setClicks(previous => previous.filter(click => click.id !== clickId)), 800);
+    navigator.vibrate?.(20);
+  };
 
   const handleInfect = async () => {
-    if (!infectCode || infectCode.length !== 4 || !groupId) return;
+    if (isLocked || gameRoom?.status !== 'zombie' || !infectCode || infectCode.length !== 4 || !groupId) return;
     const targetGroup = scores.find(s => s.id.substring(0,4).toUpperCase() === infectCode.toUpperCase() && s.id !== groupId);
     if (!targetGroup) {
       alert('유효하지 않은 코드이거나 존재하지 않는 생존자입니다.');
@@ -151,7 +186,7 @@ export const MobileMissionView = () => {
     const newBadges = [...(targetGroup.badges || []), 'zombie'];
     await supabase.from('room_groups').update({ badges: newBadges }).eq('id', targetGroup.id);
     
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+    enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
     enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: targetGroup.id, amount: -300 }, timestamp: Date.now() });
 
     alert(`🧟 [${targetGroup.group_name}] 조를 감염시켰습니다! 보너스 500점 획득!`);
@@ -160,6 +195,7 @@ export const MobileMissionView = () => {
 
   const handleMissionComplete = async (mission: import('../domain/types').MissionButton, e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
+    if (!groupId || isTimeUp || isWhistleActive || (roomError && isOnline) || !activeStatuses.includes(gameRoom?.status || '')) return;
     if (mission.prerequisiteMissionId && !myGroup?.completed_missions?.includes(mission.prerequisiteMissionId)) {
       alert('이전 단계 미션을 먼저 완료해야 합니다!');
       return;
@@ -181,14 +217,14 @@ export const MobileMissionView = () => {
       if (myGroup?.pending_missions?.includes(mission.id)) {
         return alert('이미 승인 대기 중입니다!');
       }
-      const newPending = [...(myGroup?.pending_missions || []), mission.id];
-      await supabase.from('room_groups').update({ pending_missions: newPending }).eq('id', groupId);
+      const result = await supabase.rpc('submit_classroom_mission', { row_id: groupId, mission_id: mission.id });
+      if (result.error) return alert('미션 승인 요청에 실패했습니다. 다시 시도해주세요.');
       alert('선생님 승인 대기 중입니다! 선생님이 승인하면 점수가 반영됩니다.');
       return;
     }
 
-    const MotionEvent = DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
-    if (typeof MotionEvent.requestPermission === 'function') {
+    const MotionEvent = typeof DeviceMotionEvent === 'undefined' ? null : DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
+    if (typeof MotionEvent?.requestPermission === 'function') {
       MotionEvent.requestPermission().catch(() => {});
     }
     
@@ -197,8 +233,9 @@ export const MobileMissionView = () => {
     // 화면 플래시 효과
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 400);
-    const cdSecs = mission.cooldown || 5;
-    const finalCdSecs = hasCooldown ? cdSecs / 2 : cdSecs;
+    const cdSecs = mission.cooldown ?? 5;
+    const feverActive = hasBuff && gameRoom?.announcement?.startsWith('🔥 [FEVER TIME]');
+    const finalCdSecs = feverActive ? 0 : hasCooldown ? cdSecs / 2 : cdSecs;
     setCooldownTime(finalCdSecs * 1000);
     setMaxCooldownTime(finalCdSecs * 1000);
     
@@ -250,15 +287,14 @@ export const MobileMissionView = () => {
     }
 
     if (gameRoom?.status === 'boss_raid' && gameRoom.boss_hp) {
-      const newHp = Math.max(0, gameRoom.boss_hp - Math.abs(actualAmount));
-      await supabase.from('game_rooms').update({ boss_hp: newHp }).eq('id', gameRoom.id);
+      await supabase.rpc('damage_classroom_boss', { room_uuid: gameRoom.id, amount: Math.abs(actualAmount) });
       const dmgClickId = Date.now() + Math.random();
       setClicks(prev => [...prev, { id: dmgClickId, x: window.innerWidth/2, y: 100, val: -Math.abs(actualAmount) }]);
       setTimeout(() => setClicks(prev => prev.filter(c => c.id !== dmgClickId)), 800);
     }
 
     enqueueAction({
-      id: Math.random().toString(),
+      id: crypto.randomUUID(),
       type: 'INCREMENT_SCORE',
       payload: { id: groupId as string, amount: actualAmount }, 
       timestamp: Date.now()
@@ -287,7 +323,7 @@ export const MobileMissionView = () => {
   useEffect(() => { handleMissionCompleteRef.current = handleMissionComplete; });
 
   const handleTreasureFound = async (treasureId: string) => {
-    if (!groupId || !myGroup) return;
+    if (isLocked || !groupId || !myGroup) return;
     const foundTreasures = (myGroup.stats?.found_treasures as string[]) || [];
     if (foundTreasures.includes(treasureId)) {
       alert('❌ 우리 조가 이미 획득한 보물입니다!');
@@ -307,16 +343,17 @@ export const MobileMissionView = () => {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 1000 }, timestamp: Date.now() });
       alert('🎉 대박 보물 발견! 1000점 획득!');
     } else if (treasureId === 'TREASURE_ITEM_DOUBLE') {
-      await supabase.rpc('buy_buff', { row_id: groupId });
+      const result = await supabase.from('room_groups').update({ item_buff_until: new Date(Date.now() + 60000).toISOString() }).eq('id', groupId);
+      if (result.error) return alert('물약 저장에 실패했습니다. 다시 시도해주세요.');
       alert('🎉 점수 2배 물약 획득! 1분간 점수가 2배가 됩니다.');
     } else if (treasureId === 'TREASURE_ITEM_DRONE') {
-      setHasDrone(true); localStorage.setItem(`has_drone_${roomId}_${groupId}`, 'true');
+      setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
       alert('🎉 자동 채굴 드론 획득!');
     } else if (treasureId === 'TREASURE_ITEM_COOLDOWN') {
-      setHasCooldown(true); localStorage.setItem(`has_cooldown_${roomId}_${groupId}`, 'true');
+      setHasCooldown(true); writeStorage(`has_cooldown_${roomId}_${groupId}`, 'true');
       alert('🎉 쿨다운 감소 버프 획득!');
     } else if (treasureId === 'TREASURE_ITEM_BONUS') {
-      setHasBonus(true); localStorage.setItem(`has_bonus_${roomId}_${groupId}`, 'true');
+      setHasBonus(true); writeStorage(`has_bonus_${roomId}_${groupId}`, 'true');
       alert('🎉 보너스 요정 획득!');
     } else if (treasureId === 'TREASURE_BOMB_DEFUSE') {
       await supabase.from('room_groups').update({ is_defused: true, is_hacked: false }).eq('id', groupId);
@@ -337,10 +374,13 @@ export const MobileMissionView = () => {
 
   useEffect(() => {
     if (showScanner) {
+      let handled = false;
       const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: { width: 250, height: 250 } }, false);
       scanner.render(
         (decodedText) => {
-          scanner.clear();
+          if (handled) return;
+          handled = true;
+          void scanner.clear().catch(() => {});
           setShowScanner(false);
           
           if (decodedText.startsWith('TREASURE_')) {
@@ -363,7 +403,7 @@ export const MobileMissionView = () => {
   }, [showScanner, template]);
 
   const handleBingoComplete = async (missionId: string, baseAmount: number, isCoop: boolean) => {
-    if (!myGroup || !groupId) return;
+    if (isLocked || !myGroup || !groupId) return;
     const currentCompleted = myGroup.completed_missions || [];
     if (currentCompleted.includes(missionId)) return;
 
@@ -372,8 +412,8 @@ export const MobileMissionView = () => {
       if (myGroup?.pending_missions?.includes(missionId)) {
         return alert('이미 승인 대기 중입니다!');
       }
-      const newPending = [...(myGroup?.pending_missions || []), missionId];
-      await supabase.from('room_groups').update({ pending_missions: newPending }).eq('id', groupId);
+      const result = await supabase.rpc('submit_classroom_mission', { row_id: groupId, mission_id: missionId });
+      if (result.error) return alert('미션 승인 요청에 실패했습니다. 다시 시도해주세요.');
       alert('선생님 승인 대기 중입니다! 선생님이 승인하면 빙고판에 반영됩니다.');
       return;
     }
@@ -431,9 +471,9 @@ export const MobileMissionView = () => {
 
   useEffect(() => {
     if (gameRoom && gameRoom.status === 'waiting') {
-      localStorage.removeItem(`has_drone_${roomId}_${groupId}`);
-      localStorage.removeItem(`has_cooldown_${roomId}_${groupId}`);
-      localStorage.removeItem(`has_bonus_${roomId}_${groupId}`);
+      removeStorage(`has_drone_${roomId}_${groupId}`);
+      removeStorage(`has_cooldown_${roomId}_${groupId}`);
+      removeStorage(`has_bonus_${roomId}_${groupId}`);
       setHasDrone(false);
       setHasCooldown(false);
       setHasBonus(false);
@@ -441,7 +481,9 @@ export const MobileMissionView = () => {
   }, [gameRoom, gameRoom?.status, roomId, groupId]);
 
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const coopTriggered = useRef(false);
+  const coopTriggered = useRef<string | null>(null);
+  const presenceContext = useRef({ gameRoom, scores });
+  useEffect(() => { presenceContext.current = { gameRoom, scores }; }, [gameRoom, scores]);
 
   useEffect(() => {
     if (!roomId || !groupId) return;
@@ -458,6 +500,7 @@ export const MobileMissionView = () => {
       const keys = Object.keys(state);
       setActiveDevicesCount(keys.length);
 
+      const pressingByMission = new Map<string, number>();
       let pressingCount = 0;
       let targetMissionId: string | null = null;
       let defusePressingCount = 0;
@@ -468,31 +511,33 @@ export const MobileMissionView = () => {
         const presenceData = state[key][0] as Record<string, unknown>;
         if (presenceData?.deviceId) deviceIds.push(presenceData.deviceId as string);
         if (presenceData?.pressingCoop) {
-          pressingCount++;
-          targetMissionId = presenceData.pressingCoop as string;
+          const missionId = presenceData.pressingCoop as string;
+          pressingByMission.set(missionId, (pressingByMission.get(missionId) || 0) + 1);
         }
         if (presenceData?.pressingDefuse) {
           defusePressingCount++;
         }
       }
+      for (const [missionId, count] of pressingByMission) {
+        if (count > pressingCount) { pressingCount = count; targetMissionId = missionId; }
+      }
+      if (pressingCount < 2) coopTriggered.current = null;
       activeDefuseCountRef.current = defusePressingCount;
       activeCoopCountRef.current = pressingCount;
       setActiveCoopCount(pressingCount);
 
       deviceIds.sort();
-      if (deviceIds[0] === deviceId && gameRoom?.status === 'mafia') {
-        const myGroupNow = scores.find(s => s.id === groupId);
+      if (deviceIds[0] === myDeviceId && presenceContext.current.gameRoom?.status === 'mafia') {
+        const myGroupNow = presenceContext.current.scores.find(group => group.id === groupId);
         if (myGroupNow && !myGroupNow.spy_device_id && deviceIds.length > 0) {
           const randomSpy = deviceIds[Math.floor(Math.random() * deviceIds.length)];
           supabase.from('room_groups').update({ spy_device_id: randomSpy }).eq('id', groupId).then();
         }
       }
 
-      if (pressingCount >= 2 && targetMissionId && !coopTriggered.current) {
-        coopTriggered.current = true;
-        handleBingoCompleteRef.current(targetMissionId, 500, true);
-        playVictory();
-        alert('🎉 깍두기 크로스 성공! 2명이 동시에 눌러 미션이 완료되었습니다!');
+      if (deviceIds[0] === myDeviceId && pressingCount >= 2 && targetMissionId && coopTriggered.current !== targetMissionId) {
+        coopTriggered.current = targetMissionId;
+        void handleBingoCompleteRef.current(targetMissionId, 500, true);
       }
     }).subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
@@ -505,7 +550,7 @@ export const MobileMissionView = () => {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, [roomId, groupId]);
+  }, [roomId, groupId, deviceId]);
 
   useEffect(() => {
     if (hasDrone && gameRoom?.status === 'playing' && !isTimeUp) {
@@ -572,7 +617,7 @@ export const MobileMissionView = () => {
     if (updated) {
       supabase.from('room_groups').update({ badges: newBadges }).eq('id', groupId).then();
     }
-  }, [myGroup?.score, myGroup?.stats, myGroup?.badges, groupId]);
+  }, [myGroup, groupId]);
 
   useEffect(() => {
     if (cooldownTime > 0) {
@@ -582,7 +627,12 @@ export const MobileMissionView = () => {
   }, [cooldownTime]);
 
   const buyItem = async (item: typeof SHOP_ITEMS[0]) => {
-    if (!myGroup || !groupId) return;
+    if (isLocked || !isOnline || queueLength > 0 || !myGroup || !groupId) return alert('게임 진행 중이며 점수 동기화가 완료된 상태에서 구매해주세요.');
+    if ((item.id === 'drone' && hasDrone) || (item.id === 'cooldown' && hasCooldown) || (item.id === 'bonus' && hasBonus)) return alert('이미 보유한 아이템입니다.');
+    const others = scores.filter(group => group.id !== groupId);
+    if (['donate', 'steal', 'blind', 'tsunami'].includes(item.id) && others.length === 0) return alert('다른 모둠이 참여한 뒤 이용해주세요.');
+    if (item.id === 'donate' && scores.every(group => myGroup.score <= group.score)) return alert('우리 조가 꼴등입니다. 점수는 차감되지 않았습니다.');
+    if (['steal', 'blind', 'tsunami'].includes(item.id) && scores.every(group => myGroup.score >= group.score)) return alert('우리 조가 이미 1등입니다. 점수는 차감되지 않았습니다.');
     const currentScore = myGroup.score;
     let actualCost = gameRoom?.flash_sale && item.id !== 'allin' ? Math.floor(item.cost / 2) : item.cost;
     if (role === 'thief' && item.id === 'steal') actualCost = Math.floor(actualCost / 2);
@@ -620,10 +670,11 @@ export const MobileMissionView = () => {
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -300 }, timestamp: Date.now() });
           alert('💀 함정 당첨! 300점을 잃었습니다.');
         } else if (rand < 0.5) {
-          await supabase.rpc('buy_buff', { row_id: groupId });
+          const result = await supabase.from('room_groups').update({ item_buff_until: new Date(Date.now() + 60000).toISOString() }).eq('id', groupId);
+          if (result.error) return alert('물약 저장에 실패했습니다.');
           alert('🔥 버프 당첨! 1분간 점수 2배!');
         } else if (rand < 0.7) {
-          setHasDrone(true); localStorage.setItem(`has_drone_${roomId}_${groupId}`, 'true');
+          setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
           alert('🤖 드론 당첨! 자동 채굴 드론 획득!');
         } else {
           enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 100 }, timestamp: Date.now() });
@@ -637,9 +688,10 @@ export const MobileMissionView = () => {
       if (currentScore < actualCost) return alert('점수가 부족합니다!');
       if (hasBuff) return alert('이미 버프가 적용 중입니다!');
       if(window.confirm(`${actualCost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) {
-        await supabase.rpc('buy_buff', { row_id: groupId });
+        const { data, error } = await supabase.rpc('purchase_classroom_buff', { row_id: groupId });
+        if (error || !data) return alert('물약 구매에 실패했습니다. 잔액이나 적용 중인 물약을 확인해주세요.');
         playBeep();
-        trackPurchase();
+        await trackPurchase();
       }
       return;
     }
@@ -647,16 +699,18 @@ export const MobileMissionView = () => {
     if (currentScore < actualCost) return alert('점수가 부족합니다!');
     if (!window.confirm(`${actualCost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) return;
 
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -actualCost }, timestamp: Date.now() });
-    playBeep();
-    trackPurchase();
+    if (item.id !== 'tsunami') {
+      enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -actualCost }, timestamp: Date.now() });
+      playBeep();
+      await trackPurchase();
+    }
 
     if (item.id === 'drone') {
-      setHasDrone(true); localStorage.setItem(`has_drone_${roomId}_${groupId}`, 'true');
+      setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
     } else if (item.id === 'cooldown') {
-      setHasCooldown(true); localStorage.setItem(`has_cooldown_${roomId}_${groupId}`, 'true');
+      setHasCooldown(true); writeStorage(`has_cooldown_${roomId}_${groupId}`, 'true');
     } else if (item.id === 'bonus') {
-      setHasBonus(true); localStorage.setItem(`has_bonus_${roomId}_${groupId}`, 'true');
+      setHasBonus(true); writeStorage(`has_bonus_${roomId}_${groupId}`, 'true');
     } else if (item.id === 'lucky') {
       if (Math.random() < 0.2) {
         setTimeout(() => {
@@ -735,14 +789,22 @@ export const MobileMissionView = () => {
         holdInterval.current = null;
       }
     }
-  }, [isBossMode]);
+    return () => { if (holdInterval.current) { clearInterval(holdInterval.current); holdInterval.current = null; } };
+  }, [isBossMode, isLocked]);
 
   const handleRoleChange = (newRole: string) => {
     setRole(newRole);
-    localStorage.setItem('physical_student_role', newRole);
+    writeStorage('physical_student_role', newRole);
   };
 
-  if (!groupId || !myGroup || !template) return <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex justify-center items-center">데이터를 불러오는 중...</div>;
+  if (!groupId || !myGroup || !template || (roomError && isOnline)) return (
+    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col justify-center items-center p-6 gap-4 text-center">
+      <p role={roomError ? 'alert' : undefined}>{roomError || (roomLoading ? '수업 정보를 불러오는 중...' : !myGroup ? '모둠 정보가 없습니다. PIN으로 다시 입장해주세요.' : '등록된 미션이 없습니다. 선생님에게 템플릿을 확인해달라고 요청해주세요.')}</p>
+      {!roomLoading && <button onClick={refreshRoom} className="py-3 px-5 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button>}
+      <button onClick={() => navigate('/lobby')} className="py-3 px-5 rounded-xl bg-slate-200 font-bold">PIN으로 다시 입장</button>
+      {!storageAvailable && queueLength > 0 && <p className="text-rose-600">이 브라우저는 점수를 기기에 저장할 수 없습니다. 동기화가 끝날 때까지 화면을 닫지 마세요.</p>}
+    </div>
+  );
 
   // 대기 화면 — 게임 시작 전
   if (gameRoom?.status === 'waiting' || gameRoom?.status === 'paused') {
@@ -800,20 +862,21 @@ export const MobileMissionView = () => {
     if (isLocked || holdProgress >= 100 || holdInterval.current) return;
     playBeep();
     if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: true });
-    holdInterval.current = setInterval(() => {
+    holdProgressRef.current = 0;
+    holdInterval.current = setInterval(async () => {
       if (activeDevicesCount > 1 && activeDefuseCountRef.current < activeDevicesCount) return;
-      setHoldProgress(p => {
-        if(p >= 100) {
-          clearInterval(holdInterval.current as number);
-          holdInterval.current = null;
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 2000 }, timestamp: Date.now() });
-          supabase.from('room_groups').update({ is_defused: true }).eq('id', groupId).then();
-          playVictory();
-          if (channelRef.current) channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
-          return 100;
-        }
-        return p + 2; 
-      });
+      const progress = Math.min(100, holdProgressRef.current + 2);
+      holdProgressRef.current = progress; setHoldProgress(progress);
+      if (progress < 100) return;
+      if (holdInterval.current) clearInterval(holdInterval.current);
+      holdInterval.current = null;
+      const claimed = await supabase.from('room_groups').update({ is_defused: true }).eq('id', groupId).eq('is_defused', false).select('id');
+      if (claimed.error) { alert('해체 결과 저장에 실패했습니다. 다시 시도해주세요.'); setHoldProgress(0); holdProgressRef.current = 0; return; }
+      if (claimed.data?.length) {
+        enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 2000 }, timestamp: Date.now() });
+        playVictory();
+      }
+      if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
     }, 100);
   };
 
@@ -822,7 +885,7 @@ export const MobileMissionView = () => {
       clearInterval(holdInterval.current);
       holdInterval.current = null;
     }
-    if(holdProgress < 100) setHoldProgress(0);
+    if (holdProgressRef.current < 100) { holdProgressRef.current = 0; setHoldProgress(0); }
     if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
   };
 
@@ -942,6 +1005,8 @@ export const MobileMissionView = () => {
         </button>
       </div>
 
+      {syncWarning && <p role="status" className="mx-4 p-3 bg-amber-100 text-amber-900 rounded-xl text-xs">{syncWarning}</p>}
+      {!storageAvailable && queueLength > 0 && <p role="alert" className="mx-4 p-3 bg-rose-100 text-rose-800 rounded-xl text-xs">기기에 점수를 저장할 수 없습니다. 동기화가 끝날 때까지 화면을 닫지 마세요.</p>}
       {/* 🌟 학급 전체 피버타임 및 긴급 공지 띠 배너 */}
       {gameRoom?.announcement && gameRoom.announcement !== 'WHISTLE' && (
         <div className="mx-4 mt-2 mb-1 p-2.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg animate-pulse border border-yellow-300">
@@ -967,29 +1032,11 @@ export const MobileMissionView = () => {
       {gameRoom?.status === 'boss_raid' && (
         <div 
           className="absolute inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 touch-none"
-          onTouchStart={(e) => {
-            if (globalChannelRef.current) {
-              globalChannelRef.current.send({ type: 'broadcast', event: 'boss_damage', payload: { amount: 1 } });
-            }
-            const x = e.touches?.[0]?.clientX ?? (window.innerWidth / 2);
-            const y = e.touches?.[0]?.clientY ?? (window.innerHeight / 2);
-            const clickId = Date.now() + Math.random();
-            setClicks(prev => [...prev, { id: clickId, x, y, val: -1 }]);
-            setTimeout(() => { setClicks(prev => prev.filter(c => c.id !== clickId)); }, 800);
-            if (navigator.vibrate) navigator.vibrate(20);
-          }}
-          onMouseDown={(e) => {
-            if (globalChannelRef.current) {
-              globalChannelRef.current.send({ type: 'broadcast', event: 'boss_damage', payload: { amount: 1 } });
-            }
-            const x = e.clientX; const y = e.clientY;
-            const clickId = Date.now() + Math.random();
-            setClicks(prev => [...prev, { id: clickId, x, y, val: -1 }]);
-            setTimeout(() => { setClicks(prev => prev.filter(c => c.id !== clickId)); }, 800);
-          }}
+          onPointerDown={handleBossTap}
         >
           <LucideIcons.Swords className="w-32 h-32 text-red-500 mb-8 animate-bounce" />
           <h1 className="text-4xl font-black text-white mb-2">보스 레이드 발동!</h1>
+          {bossSyncError && <p role="alert" className="text-amber-300 text-sm mb-4">{bossSyncError}</p>}
           <p className="text-red-300 font-bold mb-10 text-center">전체 조가 협력하여 보스를 물리치세요!<br/>화면을 빠르게 탭하세요!</p>
           
           <div className="w-full bg-slate-800 rounded-full h-8 border-2 border-slate-700 overflow-hidden relative">
@@ -1241,10 +1288,8 @@ export const MobileMissionView = () => {
                 groupName={myGroup?.group_name || '우리'}
                 isBuffActive={hasBuff}
                 onAwardBonus={async (amount, _reason) => {
-                  if (!groupId) return;
-                  const currentScore = myGroup?.score || 0;
-                  const newScore = currentScore + amount;
-                  await supabase.from('room_groups').update({ score: newScore }).eq('id', groupId);
+                  if (!groupId || isLocked) return;
+                  enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount }, timestamp: Date.now() });
                 }}
               />
             </div>

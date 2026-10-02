@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Sparkles, ChevronDown, ChevronUp, Printer, Copy, Check, RotateCcw, ExternalLink, Play, Shield, BookOpen, Target, Heart, Download } from 'lucide-react';
 import { LESSON_GAME_CATALOG } from '../../data/lessonGameCatalog';
 import type { LessonGameMeta } from '../../data/lessonGameCatalog';
@@ -433,6 +433,10 @@ export const LessonPlanGeneratorV2 = () => {
   const [plan, setPlan] = useState<GeneratedPlan | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedSection, setCopiedSection] = useState('');
+  const [copyError, setCopyError] = useState('');
+  const [formError, setFormError] = useState('');
+  const copyTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  useEffect(() => () => copyTimers.current.forEach(clearTimeout), []);
 
   // 1~2학년 도메인 옵션
   const isLowGrade = grade === '1~2학년 · 즐거운 생활 연계';
@@ -461,7 +465,11 @@ export const LessonPlanGeneratorV2 = () => {
 
   // 생성
   const handleGenerate = () => {
-    const d = durationMode === 'custom' ? (parseInt(customDuration) || 40) : duration;
+    const d = durationMode === 'custom' ? Number(customDuration) : duration;
+    if (!Number.isInteger(d) || d < 6 || d > 480) { setFormError('수업 시간을 6~480분 사이의 정수로 입력해 주세요.'); return; }
+    if (!Number.isInteger(studentCount) || studentCount < 1 || studentCount > 200) { setFormError('학생 수를 1~200명 사이로 입력해 주세요.'); return; }
+    if (gameSelectMode === 'manual' && !selectedGame) { setFormError('직접 선택할 게임을 먼저 골라 주세요.'); return; }
+    setFormError('');
     const result = generateLessonPlan(grade, d, domain, unit, actMode, studentCount, space, device, focuses, gameSelectMode === 'manual' ? selectedGame : null, gameSelectMode);
     setPlan(result);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -482,18 +490,24 @@ export const LessonPlanGeneratorV2 = () => {
   };
 
   // 복사
-  const handleCopyAll = () => {
+  const handleCopyAll = async () => {
     if (!plan) return;
     const text = planToText(plan);
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError('');
+      setCopied(true);
+      copyTimers.current.push(setTimeout(() => setCopied(false), 2000));
+    } catch { setCopyError('복사 권한을 확인하거나 지도안 다운로드를 이용해 주세요.'); }
   };
 
-  const handleCopySection = (section: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedSection(section);
-    setTimeout(() => setCopiedSection(''), 2000);
+  const handleCopySection = async (section: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError('');
+      setCopiedSection(section);
+      copyTimers.current.push(setTimeout(() => setCopiedSection(''), 2000));
+    } catch { setCopyError('복사 권한을 확인하거나 지도안 다운로드를 이용해 주세요.'); }
   };
 
   // 인쇄
@@ -519,6 +533,8 @@ export const LessonPlanGeneratorV2 = () => {
   // ─── 렌더링 ───
   return (
     <div className="space-y-6">
+      {formError && <p role="alert" className="rounded-xl border border-amber-700 p-3 text-sm text-amber-300">{formError}</p>}
+      {copyError && <p role="alert" className="rounded-xl border border-amber-700 p-3 text-sm text-amber-300">{copyError}</p>}
       {/* 생성된 결과가 있으면 결과 먼저 표시 */}
       {plan ? (
         <div ref={printRef} className="print-area space-y-4">

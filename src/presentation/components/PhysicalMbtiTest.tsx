@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useModalDialog } from '../../application/useModalDialog';
 import { X, ArrowRight, RotateCcw, Play } from 'lucide-react';
 
 interface PhysicalMbtiTestProps {
@@ -30,7 +31,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     strengths: ['초고속 반사신경', '폭발적인 순간 스피드', '순간 판단력'],
     recommendedGames: [
       { name: '반응속도 테스트', type: 'reaction' },
-      { name: '방향 스와이프', type: 'swipe' },
+      { name: '방향 스와이프', type: 'direction' },
       { name: '타깃 슈팅', type: 'target' }
     ],
     color: 'from-amber-500 to-orange-600'
@@ -57,8 +58,8 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '물 흐르듯 부드러운 유연성과 정확한 리듬 감각을 지녔어요! 댄스, 균형 유지, 표현 운동에 두각을 나타냅니다.',
     strengths: ['탁월한 신체 균형', '정확한 템포 감각', '유연한 관절 가동성'],
     recommendedGames: [
-      { name: '댄스 포즈 따라하기', type: 'dance' },
-      { name: '외발 서기 균형', type: 'balance' },
+      { name: '댄스 포즈 따라하기', type: 'dance_pose' },
+      { name: '외발 서기 균형', type: 'one_leg' },
       { name: '스트레칭 타이머', type: 'stretch' }
     ],
     color: 'from-cyan-500 to-blue-600'
@@ -71,8 +72,8 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '흔들리지 않는 고도의 집중력과 눈과 손의 협응력이 뛰어납니다! 정교한 조준과 두뇌 회전 종목의 마스터예요.',
     strengths: ['흔들림 없는 집중력', '손-눈 협응력', '침착한 상황 제어'],
     recommendedGames: [
-      { name: '농구 자유투', type: 'basketball' },
-      { name: '컬러 워드 매치', type: 'color' },
+      { name: '농구 자유투', type: 'basketball-free-throw' },
+      { name: '컬러 워드 매치', type: 'color_word' },
       { name: '얼음 땡 게임', type: 'freeze' }
     ],
     color: 'from-purple-500 to-indigo-700'
@@ -80,6 +81,9 @@ const PERSONAS: Record<string, AnimalPersona> = {
 };
 
 export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onClose, onSelectGame }) => {
+  const dialogRef = useModalDialog(isOpen, onClose);
+  const tapTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const tapDeadline = useRef(0);
   const [step, setStep] = useState<Step>('intro');
   
   // 테스트 결과 저장
@@ -102,10 +106,15 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
   const swStartTime = useRef<number>(0);
   const [swElapsed, setSwElapsed] = useState<number>(0);
 
+  useEffect(() => () => {
+    if (rxTimer.current) clearTimeout(rxTimer.current);
+    if (tapTimer.current) clearInterval(tapTimer.current);
+  }, []);
   if (!isOpen) return null;
 
   // 1단계 시작
   const startStep1 = () => {
+    if (rxTimer.current) clearTimeout(rxTimer.current);
     setRxState('waiting');
     const delay = Math.floor(Math.random() * 2000) + 1500;
     rxTimer.current = window.setTimeout(() => {
@@ -133,20 +142,21 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
     setTapScore(0);
     setTapRunning(true);
 
-    const interval = setInterval(() => {
-      setTapTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setTapRunning(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    if (tapTimer.current) clearInterval(tapTimer.current);
+    tapDeadline.current = Date.now() + 5000;
+    tapTimer.current = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((tapDeadline.current - Date.now()) / 1000));
+      setTapTimeLeft(remaining);
+      if (remaining === 0) {
+        if (tapTimer.current) clearInterval(tapTimer.current);
+        tapTimer.current = null;
+        setTapRunning(false);
+      }
+    }, 100);
   };
 
   const handleTap = () => {
-    if (!tapRunning) return;
+    if (!tapRunning || Date.now() >= tapDeadline.current) return;
     tapCount.current += 1;
     setTapScore(tapCount.current);
   };
@@ -186,9 +196,11 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-purple-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="체육 MBTI 테스트" tabIndex={-1}
+      className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-purple-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
+          aria-label="닫기"
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
         >
           <X className="w-5 h-5" />
