@@ -1,5 +1,6 @@
 import { supabase } from '../../../data/supabase';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
+import { useRef, useState } from 'react';
 
 interface Props {
   quiz: any;
@@ -10,6 +11,32 @@ interface Props {
 }
 
 export const LegacyQuizGame = ({ quiz, gameRoomId, groupId, enqueueAction, playVictory }: Props) => {
+  const lockedRef = useRef(false);
+  const [locked, setLocked] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const submitAnswer = async (index: number) => {
+    if (lockedRef.current) return;
+    lockedRef.current = true;
+    setLocked(true);
+    if (index !== quiz.answer) { setFeedback('❌ 오답입니다. 다른 조의 답변을 기다려 주세요.'); return; }
+    try {
+      // Only the first answer for this exact quiz can claim the room row.
+      const { data, error } = await supabase.from('game_rooms')
+        .update({ active_minigame: null })
+        .eq('id', gameRoomId)
+        .eq('active_minigame', JSON.stringify(quiz))
+        .select('id');
+      if (error) throw error;
+      if (!data?.length) { setFeedback('다른 조가 먼저 정답을 맞혔습니다.'); return; }
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: quiz.reward }, timestamp: Date.now() });
+      playVictory();
+      setFeedback(`🎉 정답입니다! ${quiz.reward}점 획득!`);
+    } catch {
+      lockedRef.current = false;
+      setLocked(false);
+      setFeedback('답변을 전송하지 못했습니다. 연결을 확인하고 다시 눌러 주세요.');
+    }
+  };
   return (
     <div className="min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">
       <div className="absolute inset-0 bg-indigo-600/20 animate-pulse mix-blend-screen"></div>
@@ -23,22 +50,15 @@ export const LegacyQuizGame = ({ quiz, gameRoomId, groupId, enqueueAction, playV
           {quiz.options.map((opt: string, idx: number) => (
             <button 
               key={idx}
-              onClick={async () => {
-                if (idx === quiz.answer) {
-                  enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: quiz.reward }, timestamp: Date.now() });
-                  await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', gameRoomId);
-                  playVictory();
-                  alert(`🎉 정답입니다! ${quiz.reward}점 획득!`);
-                } else {
-                  alert('❌ 오답입니다! 다른 조에게 기회가 넘어갑니다.');
-                }
-              }}
+              onClick={() => submitAnswer(idx)}
+              disabled={locked}
               className="w-full p-4 bg-white/5 hover:bg-white/20 border border-white/20 rounded-xl text-white font-bold text-lg text-left transition-colors"
             >
               {idx + 1}. {opt}
             </button>
           ))}
         </div>
+        {feedback && <p role="status" className="mt-4 text-center font-bold text-blue-200">{feedback}</p>}
       </div>
     </div>
   );

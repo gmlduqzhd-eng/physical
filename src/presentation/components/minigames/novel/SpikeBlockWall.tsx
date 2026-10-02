@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Shield } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxWhoosh } from '../../../../application/soundEffects';
@@ -12,6 +13,7 @@ type Lane = 'left' | 'center' | 'right';
 const LANES: Lane[] = ['left', 'center', 'right'];
 
 export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(1);
   const [spikeLane, setSpikeLane] = useState<Lane>('center');
   const [isSpiking, setIsSpiking] = useState(false);
@@ -36,12 +38,12 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
   }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timer = scheduleTimeout(() => {
       const target = LANES[Math.floor(Math.random() * LANES.length)];
       setSpikeLane(target);
       setIsSpiking(true);
       sfxWhoosh();
-      resolveTimeoutRef.current = setTimeout(() => {
+      resolveTimeoutRef.current = scheduleTimeout(() => {
         const blocked = blockedLanesRef.current.includes(target);
         if (blocked) {
           sfxSuccess();
@@ -52,7 +54,7 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
           sfxFail();
           setFeedback(`💥 스파이크 허용! (${target === 'left' ? '왼쪽' : target === 'center' ? '중앙' : '오른쪽'} 코트)`);
         }
-        advanceTimeoutRef.current = setTimeout(() => {
+        advanceTimeoutRef.current = scheduleTimeout(() => {
           if (round >= 5) finishGame(scoreRef.current);
           else {
             setIsSpiking(false);
@@ -68,7 +70,7 @@ export const SpikeBlockWall = ({ groupId, enqueueAction }: Props) => {
       if (resolveTimeoutRef.current) clearTimeout(resolveTimeoutRef.current);
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     };
-  }, [finishGame, round]);
+  }, [finishGame, round, scheduleTimeout]);
 
   const toggleLane = (lane: Lane) => {
     if (isSpiking || finished) return;

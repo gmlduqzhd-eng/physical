@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
@@ -44,6 +45,7 @@ function generateProblem() {
 }
 
 export const MathSprint = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [finished, setFinished] = useState(false);
@@ -87,7 +89,7 @@ export const MathSprint = ({ groupId, enqueueAction }: Props) => {
       sfxPop();
       setFlash('wrong');
     }
-    setTimeout(() => setFlash(null), 150);
+    scheduleTimeout(() => setFlash(null), 150);
     setProblem(generateProblem());
   };
 

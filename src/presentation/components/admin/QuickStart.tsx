@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../../../data/supabase';
+import { createClassroom, classroomError } from '../../../data/classroomRepository';
 import type { MissionTemplate } from '../../../domain/types';
 import { Zap, Loader2, X, Copy, Check, ExternalLink } from 'lucide-react';
 
@@ -23,51 +23,33 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
   const [copied, setCopied] = useState(false);
 
   const handleQuickStart = async () => {
+    if (loading) return;
+    if (!templates.some(template => template.buttons.length > 0)) {
+      alert('먼저 미션이 있는 템플릿을 만들어주세요.');
+      return;
+    }
     setLoading(true);
 
-    const recentTemplate = templates.length > 0 ? templates[0] : null;
+    const recentTemplate = templates.find(template => template.buttons.length > 0)!;
     const now = new Date();
     const dateStr = `${now.getMonth() + 1}/${now.getDate()}`;
     const roomName = `오늘의 원정대 (${dateStr})`;
-    const pin = Math.floor(1000 + Math.random() * 9000).toString();
     const groupCount = 8;
 
-    const { data, error } = await supabase.from('game_rooms')
-      .insert([{ pin_code: pin, name: roomName, template_id: recentTemplate?.id || null }])
-      .select('id')
-      .single();
-
-    if (error || !data) {
-      setLoading(false);
-      alert('방 생성에 실패했습니다.');
-      return;
-    }
-
-    // 기본 모둠 자동 생성
-    const groups = Array.from({ length: groupCount }, (_, i) => ({
-      room_id: data.id,
-      group_name: `${i + 1}모둠`,
-      avatar: 'Smile'
-    }));
-    await supabase.from('room_groups').insert(groups);
-
-    setLoading(false);
-    onRefresh();
-    onRoomCreated(data.id);
-
-    setCreatedRoom({
-      id: data.id,
-      name: roomName,
-      pin,
-      templateName: recentTemplate?.name || '(기본 템플릿 없음)',
-      groupCount,
-    });
+    try {
+      const room = await createClassroom(roomName, recentTemplate.id, Array.from({ length: groupCount }, (_, i) => `${i + 1}모둠`));
+      onRefresh(); onRoomCreated(room.id);
+      setCreatedRoom({ id: room.id, name: roomName, pin: room.pin_code, templateName: recentTemplate.name, groupCount });
+    } catch (cause) { alert(classroomError(cause, '방 생성에 실패했습니다.')); }
+    finally { setLoading(false); }
   };
 
-  const handleCopyPin = () => {
-    navigator.clipboard.writeText(createdRoom?.pin || '');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopyPin = async () => {
+    try {
+      await navigator.clipboard.writeText(createdRoom?.pin || '');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch { alert(`PIN: ${createdRoom?.pin || ''} — 직접 복사해주세요.`); }
   };
 
   const baseUrl = window.location.origin;

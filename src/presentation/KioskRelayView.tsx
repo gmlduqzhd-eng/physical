@@ -1,59 +1,45 @@
-import React, { useState } from 'react';
-import { supabase } from '../data/supabase';
-import type { GameRoom, RoomGroup, MissionTemplate } from '../domain/types';
-import * as LucideIcons from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { useGameLogic } from '../application/useGameLogic';
+import { useGameTimer } from '../application/useGameTimer';
+import { ScoreRepository } from '../data/scoreRepository';
+import { findRoomByPin, classroomError } from '../data/classroomRepository';
+import type { RoomGroup } from '../domain/types';
+import { GameIcons as LucideIcons } from './icons';
 import { useNavigate } from 'react-router-dom';
 
 export const KioskRelayView = () => {
   const [pinCode, setPinCode] = useState('');
-  const [room, setRoom] = useState<GameRoom | null>(null);
-  const [groups, setGroups] = useState<RoomGroup[]>([]);
-  const [template, setTemplate] = useState<MissionTemplate | null>(null);
+  const [roomId, setRoomId] = useState<string | undefined>();
+  const { gameRoom: room, scores: groups, template, error: roomError, loading: roomLoading, refresh } = useGameLogic(roomId);
+  const { isTimeUp } = useGameTimer(room);
+  const isActive = Boolean(room && ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'].includes(room.status) && !isTimeUp);
   const [selectedGroup, setSelectedGroup] = useState<RoomGroup | null>(null);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [error, setError] = useState('');
+  const submitting = useRef(false);
   const navigate = useNavigate();
 
   const handleEnterRoom = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     setLoading(true);
-    const { data: rooms } = await supabase.from('game_rooms').select('*').eq('pin_code', pinCode).single();
-    if (!rooms) {
-      alert('방을 찾을 수 없습니다.');
-      setLoading(false);
-      return;
-    }
-    setRoom(rooms as GameRoom);
-    
-    if (rooms.template_id) {
-      const { data: t } = await supabase.from('mission_templates').select('*').eq('id', rooms.template_id).single();
-      if (t) setTemplate(t as MissionTemplate);
-    }
-
-    const { data: groupData } = await supabase.from('room_groups').select('*').eq('room_id', rooms.id).order('group_name');
-    if (groupData) setGroups(groupData as RoomGroup[]);
-    
-    setLoading(false);
+    setError('');
+    try { const found = await findRoomByPin(pinCode); setRoomId(found.id); }
+    catch (cause) { setError(classroomError(cause, '방 접속에 실패했습니다.')); }
+    finally { setLoading(false); }
   };
 
   const handleMissionComplete = async (amount: number) => {
-    if (!selectedGroup) return;
-    
-    // give points via rpc or just direct update for simplicity, since it's a relay kiosk
-    // Actually, incrementing score directly in JS is prone to race conditions if not using RPC.
-    // Let's use RPC if possible, but we don't have an increment_score RPC.
-    // Instead we can just do a standard read/write, since Kiosk is used sequentially!
-    const { data } = await supabase.from('room_groups').select('score').eq('id', selectedGroup.id).single();
-    if (data) {
-      await supabase.rpc('increment_score', { row_id: selectedGroup.id, amount });
-    }
-    
-    setSuccessMsg(`🎉 [${selectedGroup.group_name}] 조에 ${amount}점이 지급되었습니다! 다음 주자에게 패드를 넘기세요!`);
-    setSelectedGroup(null);
-    
-    setTimeout(() => {
-      setSuccessMsg('');
-    }, 5000);
+    if (!selectedGroup || !isActive || submitting.current) return;
+    submitting.current = true; setLoading(true); setError('');
+    try {
+      if (!await ScoreRepository.incrementScore(selectedGroup.id, amount)) throw new Error('점수를 저장하지 못했습니다. 다시 시도해주세요.');
+      setSuccessMsg(`🎉 [${selectedGroup.group_name}] 조에 ${amount}점이 지급되었습니다! 다음 주자에게 패드를 넘기세요!`);
+      setSelectedGroup(null); refresh();
+      setTimeout(() => setSuccessMsg(''), 5000);
+    } catch (cause) { setError(classroomError(cause, '미션 저장에 실패했습니다.')); }
+    finally { submitting.current = false; setLoading(false); }
   };
 
   if (!room) {
@@ -70,14 +56,16 @@ export const KioskRelayView = () => {
             <input 
               type="text" 
               placeholder="PIN 번호" 
-              maxLength={6}
+              inputMode="numeric"
+              maxLength={4}
               value={pinCode}
-              onChange={e => setPinCode(e.target.value)}
+              onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
               className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"
             />
             <button disabled={loading} type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-colors">
-              {loading ? '확인 중...' : '스테이션 시작'}
+              {loading || (roomId && roomLoading) ? '확인 중...' : '스테이션 시작'}
             </button>
+            {(error || (roomId && roomError)) && <p role="alert" className="text-rose-300 text-sm text-center">{error || roomError}</p>}
           </form>
         </div>
       </div>
@@ -86,6 +74,10 @@ export const KioskRelayView = () => {
 
   return (
     <div className="min-h-[100dvh] bg-slate-900 text-white p-6 pt-12 pb-24 flex flex-col items-center relative font-sans overflow-y-auto">
+      <button onClick={() => { setRoomId(undefined); setSelectedGroup(null); }} className="mb-4 px-4 py-2 rounded-xl bg-white/10">다른 수업 입장</button>
+      {(error || roomError) && <p role="alert" className="mb-4 text-rose-300">{error || roomError}</p>}
+      {!isActive && <p className="mb-4 text-amber-300 font-bold">{room.status === 'finished' ? '수업이 종료되었습니다.' : isTimeUp ? '제한 시간이 끝났습니다.' : '선생님이 수업을 시작하거나 재개할 때까지 기다려주세요.'}</p>}
+      {!template?.buttons.length && <p className="mb-4 text-amber-300">등록된 미션이 없습니다. 선생님에게 템플릿을 확인해달라고 요청해주세요.</p>}
       {successMsg && (
         <div className="absolute inset-0 z-50 bg-emerald-600 flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
           <LucideIcons.CheckCircle className="w-32 h-32 text-white mb-6 animate-bounce" />
@@ -126,6 +118,7 @@ export const KioskRelayView = () => {
                   <button 
                     key={i}
                     onClick={() => handleMissionComplete(m.amount * 3)}
+                    disabled={!isActive || loading}
                     className={`w-full p-4 rounded-2xl flex items-center justify-between border-2 border-transparent transition-transform active:scale-95 ${m.bg} shadow-lg`}
                   >
                     <div className="flex items-center gap-4">

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Flame, Heart } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop } from '../../../../application/soundEffects';
 import type { SyncAction } from '../../../../application/useSyncQueue';
+import { useGameTimeouts } from '../common/useGameTimeouts';
 
 interface Props {
   groupId: string;
@@ -11,6 +12,7 @@ interface Props {
 type BreathPhase = 'inhale' | 'hold' | 'exhale';
 
 export const CampfireBreath = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [phase, setPhase] = useState<BreathPhase>('inhale');
   const [phaseTime, setPhaseTime] = useState(4); // 4 seconds per phase
   const [cyclesCompleted, setCyclesCompleted] = useState(0);
@@ -18,10 +20,12 @@ export const CampfireBreath = ({ groupId, enqueueAction }: Props) => {
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
 
-  const phaseRef = useRef<BreathPhase>('inhale');
   const scoreRef = useRef(0);
+  const finishedRef = useRef(false);
 
   const finishGame = useCallback((earned: number) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     setFinished(true);
     sfxSuccess();
     enqueueAction({
@@ -33,52 +37,41 @@ export const CampfireBreath = ({ groupId, enqueueAction }: Props) => {
   }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    const breathTimer = setInterval(() => {
-      setPhaseTime(prev => {
-        if (prev <= 1) {
-          // 페이즈 전환
-          if (phaseRef.current === 'inhale') {
-            phaseRef.current = 'hold';
-            setPhase('hold');
-            sfxPop();
-            return 4;
-          } else if (phaseRef.current === 'hold') {
-            phaseRef.current = 'exhale';
-            setPhase('exhale');
-            sfxWhoosh();
-            return 4;
-          } else {
-            // 사이클 1회 완료
-            phaseRef.current = 'inhale';
-            setPhase('inhale');
-            setCyclesCompleted(c => {
-              const next = c + 1;
-              if (next >= 3) {
-                // 3사이클 완료 시 종료
-                finishGame(next * 50);
-              }
-              return next;
-            });
-            return 4;
-          }
+    if (finished) return;
+    const breathTimer = scheduleTimeout(() => {
+      if (phaseTime > 1) {
+        setPhaseTime(phaseTime - 1);
+        return;
+      }
+      if (phase === 'inhale') {
+        setPhase('hold');
+        sfxPop();
+      } else if (phase === 'hold') {
+        setPhase('exhale');
+        sfxWhoosh();
+      } else {
+        const nextCycle = cyclesCompleted + 1;
+        setCyclesCompleted(nextCycle);
+        if (nextCycle >= 3) {
+          finishGame(nextCycle * 50);
+          setPhaseTime(0);
+          return;
         }
-        return prev - 1;
-      });
+        setPhase('inhale');
+      }
+      setPhaseTime(4);
     }, 1000);
 
-    return () => clearInterval(breathTimer);
-  }, [finishGame]);
+    return () => clearTimeout(breathTimer);
+  }, [phase, phaseTime, cyclesCompleted, finished, finishGame, scheduleTimeout]);
 
   const handleBreatheTap = () => {
-    if (finished) return;
+    if (finishedRef.current) return;
     if (phase === 'exhale') {
       sfxWhoosh();
       setFlameLevel(f => Math.min(100, f + 15));
-      setScore(s => {
-        const next = s + 20;
-        scoreRef.current = next;
-        return next;
-      });
+      scoreRef.current += 20;
+      setScore(scoreRef.current);
     } else {
       sfxPop();
       setFlameLevel(f => Math.min(100, f + 5));

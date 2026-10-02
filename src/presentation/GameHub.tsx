@@ -1,4 +1,6 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
+import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
@@ -49,11 +51,18 @@ export const GameHub = () => {
   const [playModeFilter, setPlayModeFilter] = useState<PlayModeFilter>('전체');
   const [activeAchievement, setActiveAchievement] = useState<AchievementStandard | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
-    try { return new Set(JSON.parse(localStorage.getItem('physical_favorites') || '[]')); } catch { return new Set(); }
+    const saved = readJsonStorage('physical_favorites');
+    return new Set(Array.isArray(saved) ? saved.filter((type): type is string => typeof type === 'string' && GAMES.some(game => game.type === type)) : []);
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const spinInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => { writeStorage('physical_favorites', JSON.stringify([...favorites])); }, [favorites]);
+  useEffect(() => () => { if (spinInterval.current) clearInterval(spinInterval.current); }, []);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<GameDef | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
+  const achievementDialogRef = useModalDialog(!!activeAchievement, () => setActiveAchievement(null));
+  const randomDialogRef = useModalDialog(!!randomPick && !isSpinning, () => setRandomPick(null));
   const [showWarmupRoulette, setShowWarmupRoulette] = useState(false);
 
   // 10대 신규 기능 모달 상태
@@ -64,7 +73,7 @@ export const GameHub = () => {
   const [showSplitBattle, setShowSplitBattle] = useState(false);
   const [showClassPlaylist, setShowClassPlaylist] = useState(false);
   const [showStationCircuit, setShowStationCircuit] = useState(false);
-  const [showQuickPin, setShowQuickPin] = useState(false);
+  const [showQuickPin, setShowQuickPin] = useState(() => new URLSearchParams(window.location.search).has('battle'));
   const [showMotionCam, setShowMotionCam] = useState(false);
   const [showBadgeArchive, setShowBadgeArchive] = useState(false);
   const [showCooldownModal, setShowCooldownModal] = useState(false);
@@ -104,30 +113,13 @@ export const GameHub = () => {
     setFavorites(prev => {
       const next = new Set(prev);
       if (next.has(type)) next.delete(type); else next.add(type);
-      localStorage.setItem('physical_favorites', JSON.stringify([...next]));
       return next;
     });
   }, []);
 
-  const handleRandomPick = useCallback(() => {
-    setIsSpinning(true);
-    setRandomPick(null);
-    let count = 0;
-    const interval = setInterval(() => {
-      setRandomPick(GAMES[Math.floor(Math.random() * GAMES.length)]);
-      count++;
-      if (count > 15) {
-        clearInterval(interval);
-        setIsSpinning(false);
-        setRandomPick(GAMES[Math.floor(Math.random() * GAMES.length)]);
-      }
-    }, 100);
-  }, []);
-
   const getGameSensor = (type: string): '터치' | '모션' | '자이로' | '음성' => {
-    if (type === 'scream' || type === 'balloon' || type === 'campfire-breath') return '음성';
-    if (type.includes('motion') || type.includes('cam') || type.includes('dance')) return '모션';
-    if (['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'body_twist', 'fitness_roulette', 'crevasse-jump', 'bicycle-pedal-crank', 'double-under-rope'].includes(type)) return '자이로';
+    if (type === 'scream') return '음성';
+    if (['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(type)) return '자이로';
     return '터치';
   };
 
@@ -146,10 +138,28 @@ export const GameHub = () => {
     const favMatch = !showFavoritesOnly || favorites.has(g.type);
     const placeMatch = placeFilter === '전체' || getGamePlace(g.type, g.domain) === placeFilter;
     const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch;
+    const query = searchQuery.trim().toLocaleLowerCase();
+    const searchMatch = !query || `${g.name} ${g.desc} ${g.subCategory} ${g.achievement.code} ${g.achievement.title}`.toLocaleLowerCase().includes(query);
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch;
   });
 
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly;
+  const handleRandomPick = () => {
+    if (spinInterval.current || filtered.length === 0) return;
+    const candidates = [...filtered];
+    setIsSpinning(true);
+    setRandomPick(null);
+    let count = 0;
+    spinInterval.current = setInterval(() => {
+      setRandomPick(candidates[Math.floor(Math.random() * candidates.length)]);
+      if (++count >= 16) {
+        if (spinInterval.current) clearInterval(spinInterval.current);
+        spinInterval.current = null;
+        setIsSpinning(false);
+      }
+    }, 100);
+  };
+
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly || !!searchQuery;
   const resetAllFilters = () => {
     setDomainFilter('전체');
     setSportFilter('전체');
@@ -159,6 +169,7 @@ export const GameHub = () => {
     setPlaceFilter('전체');
     setSensorFilter('전체');
     setShowFavoritesOnly(false);
+    setSearchQuery('');
   };
 
   return (
@@ -170,7 +181,8 @@ export const GameHub = () => {
           onClick={() => setActiveAchievement(null)}
         >
           <div
-            className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl relative"
+            ref={achievementDialogRef} role="dialog" aria-modal="true" aria-label="성취기준 상세" tabIndex={-1}
+            className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
             <div className="flex items-center gap-2 mb-3">
@@ -199,7 +211,7 @@ export const GameHub = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[220px] bg-cyan-500/10 rounded-full blur-[100px]" />
 
         {/* 상단 네비게이션 Row (버튼과 배지 겹침 원천 방지) */}
-        <div className="relative z-20 w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex items-center justify-between gap-2">
+        <div className="relative z-20 w-full max-w-5xl mx-auto px-4 pt-3 pb-1 flex flex-wrap items-center justify-between gap-2">
           {/* 2022 개정 배지 */}
           <div className="flex items-center gap-1.5 px-3 py-1 bg-cyan-500/10 border border-cyan-500/30 rounded-full shrink-0">
             <Award className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
@@ -355,7 +367,7 @@ export const GameHub = () => {
       {/* 🏆 성취 뱃지 진열장 */}
       {hasProfile && (() => {
         const badges: Record<string, boolean> = (() => {
-          try { return JSON.parse(localStorage.getItem('physical_badges') || '{}'); } catch { return {}; }
+          const saved = readJsonStorage('physical_badges'); return isRecord(saved) ? Object.fromEntries(Object.entries(saved).filter(([, value]) => value === true).map(([name]) => [name, true])) : {};
         })();
         const BADGE_DEFS = [
           { id: 'high_scorer', emoji: '🏅', name: '하이스코어러', desc: '1회 500점 이상 달성', color: 'from-yellow-500 to-amber-600', border: 'border-yellow-500/50' },
@@ -606,7 +618,7 @@ export const GameHub = () => {
             </button>
             <button
               onClick={handleRandomPick}
-              disabled={isSpinning}
+              disabled={isSpinning || filtered.length === 0}
               className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60 shrink-0"
             >
               <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isSpinning ? 'animate-spin' : ''}`} />
@@ -640,7 +652,8 @@ export const GameHub = () => {
       {/* 랜덤 뽑기 결과 모달 */}
       {randomPick && !isSpinning && (
         <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setRandomPick(null)}>
-          <div className="bg-slate-900 border border-purple-500/40 rounded-3xl max-w-sm w-full p-8 shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+          <div ref={randomDialogRef} role="dialog" aria-modal="true" aria-label="랜덤 게임 추천" tabIndex={-1} className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-purple-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+            <button type="button" onClick={() => setRandomPick(null)} className="mb-3 px-3 py-1 rounded-lg border border-slate-700 text-sm text-slate-300">닫기</button>
             <div className="text-7xl mb-4 animate-bounce">{randomPick.emoji}</div>
             <h3 className="text-2xl font-black text-white mb-1">{randomPick.name}</h3>
             <p className="text-sm text-slate-400 mb-2">{randomPick.desc}</p>
@@ -908,9 +921,13 @@ export const GameHub = () => {
         </div>
       </div>
 
+      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4">
+        <label htmlFor="game-search" className="block mb-2 text-sm font-bold text-slate-300">게임 검색</label>
+        <input id="game-search" type="search" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="게임 이름, 활동, 성취기준 검색" className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-400" />
+      </div>
       {/* 결과 카운트 및 안내 */}
       <div className="px-5 md:px-9 max-w-5xl mx-auto mb-3 flex items-center justify-between text-xs text-slate-400">
-        <div className="font-bold flex items-center gap-2">
+        <div className="font-bold flex flex-wrap items-center gap-2">
           <span>검색 결과 <strong className="text-cyan-400 font-black text-sm">{filtered.length}</strong> / {GAMES.length}개 게임</span>
           {hasActiveFilter && (
             <button
@@ -989,7 +1006,7 @@ export const GameHub = () => {
                         {game.emoji}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-base text-white truncate group-hover:text-cyan-300 transition-colors">
+                        <h3 className="font-black text-base text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
                           {game.name}
                         </h3>
                         <p className="text-slate-400 text-xs font-medium line-clamp-1 mt-0.5">
@@ -1044,62 +1061,62 @@ export const GameHub = () => {
       </div>
 
       {/* 워밍업 룰렛 모달 */}
-      <WarmupRoulette isOpen={showWarmupRoulette} onClose={() => setShowWarmupRoulette(false)} />
+      {showWarmupRoulette && (<WarmupRoulette isOpen={showWarmupRoulette} onClose={() => setShowWarmupRoulette(false)} />)}
 
       {/* 10대 신규 기능 모달들 */}
-      <DailyStreakModal
+      {showStreakModal && (<DailyStreakModal
         isOpen={showStreakModal}
         onClose={() => setShowStreakModal(false)}
         onLaunchGame={(type) => navigate(`/play/${type}`)}
-      />
+      />)}
 
-      <DambangTamagotchiModal
+      {showTamagotchiModal && (<DambangTamagotchiModal
         isOpen={showTamagotchiModal}
         onClose={() => setShowTamagotchiModal(false)}
-      />
+      />)}
 
-      <PhysicalMbtiTest
+      {showMbtiModal && (<PhysicalMbtiTest
         isOpen={showMbtiModal}
         onClose={() => setShowMbtiModal(false)}
         onSelectGame={(type) => navigate(`/play/${type}`)}
-      />
+      />)}
 
-      <SplitBattleGame
+      {showSplitBattle && (<SplitBattleGame
         isOpen={showSplitBattle}
         onClose={() => setShowSplitBattle(false)}
-      />
+      />)}
 
-      <ClassPlaylistPlayer
+      {showClassPlaylist && (<ClassPlaylistPlayer
         isOpen={showClassPlaylist}
         onClose={() => setShowClassPlaylist(false)}
-      />
+      />)}
 
-      <StationCircuitMode
+      {showStationCircuit && (<StationCircuitMode
         isOpen={showStationCircuit}
         onClose={() => setShowStationCircuit(false)}
         onLaunchGame={(type) => navigate(`/play/${type}`)}
-      />
+      />)}
 
-      <QuickPinClassroom
+      {showQuickPin && (<QuickPinClassroom
         isOpen={showQuickPin}
         onClose={() => setShowQuickPin(false)}
-        onStartGame={(type) => navigate(`/play/${type}`)}
-      />
+        onStartGame={(type, context) => navigate(`/play/${type}${context ? `?room=${encodeURIComponent(context.roomId)}&group=${encodeURIComponent(context.groupId)}` : ''}`)}
+      />)}
 
-      <MotionCamChallenge
+      {showMotionCam && (<MotionCamChallenge
         isOpen={showMotionCam}
         onClose={() => setShowMotionCam(false)}
-      />
+      />)}
 
-      <BadgeArchiveModal
+      {showBadgeArchive && (<BadgeArchiveModal
         isOpen={showBadgeArchive}
         onClose={() => setShowBadgeArchive(false)}
-      />
+      />)}
 
-      <CooldownTimerModal
+      {showCooldownModal && (<CooldownTimerModal
         isOpen={showCooldownModal}
         onClose={() => setShowCooldownModal(false)}
-      />
+      />)}
 
       {/* PWA 설치 유도 배너 */}
       <PwaInstallBanner />

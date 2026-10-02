@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { useModalDialog } from '../../application/useModalDialog';
 import { X, RotateCcw, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { hapticHeavy, hapticTap, sfxSuccess } from '../../application/soundEffects';
@@ -82,16 +83,19 @@ interface WarmupRouletteProps {
 
 export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
   const navigate = useNavigate();
+  const dialogRef = useModalDialog(isOpen, onClose);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [result, setResult] = useState<RouletteSection | null>(null);
   const [recommendedGame, setRecommendedGame] = useState<RouletteGame | null>(null);
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => () => { if (spinTimeoutRef.current) clearTimeout(spinTimeoutRef.current); }, []);
+
   const sectionAngle = 360 / SECTIONS.length; // 72° per section
 
   const handleSpin = useCallback(() => {
-    if (spinning) return;
+    if (spinTimeoutRef.current) return;
     setSpinning(true);
     setResult(null);
     setRecommendedGame(null);
@@ -107,10 +111,11 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
     // 회전 멈춘 뒤 결과 계산 (CSS transition 3.5초 대기)
     spinTimeoutRef.current = setTimeout(() => {
       // 멈춘 각도 → 어떤 섹션에 해당하는지 계산
-      const normalizedAngle = (360 - (totalRotation % 360) + 90) % 360;
+      const normalizedAngle = (360 - (totalRotation % 360)) % 360;
       const sectionIndex = Math.floor(normalizedAngle / sectionAngle) % SECTIONS.length;
       const selected = SECTIONS[sectionIndex];
 
+      spinTimeoutRef.current = null;
       setResult(selected);
       const pick = selected.games[Math.floor(Math.random() * selected.games.length)];
       setRecommendedGame(pick);
@@ -118,7 +123,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
       hapticHeavy();
       sfxSuccess();
     }, 3600);
-  }, [spinning, rotation, sectionAngle]);
+  }, [rotation, sectionAngle]);
 
   const handleReset = () => {
     setResult(null);
@@ -199,12 +204,14 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
       onClick={onClose}
     >
       <div
-        className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative flex flex-col items-center"
+        ref={dialogRef} role="dialog" aria-modal="true" aria-label="오늘의 워밍업" tabIndex={-1}
+        className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl relative flex flex-col items-center"
         onClick={e => e.stopPropagation()}
       >
         {/* 닫기 버튼 */}
         <button
           onClick={onClose}
+          aria-label="닫기"
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-400 hover:text-white transition-colors border border-slate-700"
         >
           <X className="w-4 h-4" />
@@ -214,7 +221,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
         <p className="text-xs text-slate-400 font-bold mb-4">어떤 부위를 워밍업할까요?</p>
 
         {/* 포인터 (12시 방향 삼각형) */}
-        <div className="relative">
+        <div className="relative w-full max-w-[300px] shrink-0">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-10">
             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-yellow-400 drop-shadow-lg" />
           </div>
@@ -228,7 +235,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
               transitionTimingFunction: 'cubic-bezier(0.17, 0.67, 0.12, 0.99)',
             }}
           >
-            <svg width="300" height="300" viewBox="0 0 300 300" className="drop-shadow-2xl">
+            <svg viewBox="0 0 300 300" className="w-full h-auto drop-shadow-2xl">
               {/* 외곽 링 */}
               <circle cx={center} cy={center} r={radius + 8} fill="none" stroke="#334155" strokeWidth="4" />
               <circle cx={center} cy={center} r={radius} fill="#0f172a" />

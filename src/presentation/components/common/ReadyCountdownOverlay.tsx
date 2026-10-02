@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCountdown, sfxSuccess, hapticTap, hapticHeavy } from '../../../application/soundEffects';
 import { FastForward, Smartphone, Volume2 } from 'lucide-react';
 
@@ -15,6 +15,12 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
 }) => {
   const [count, setCount] = useState(seconds);
   const onCompleteRef = useRef(onComplete);
+  const completedRef = useRef(false);
+  const finish = useCallback(() => {
+    if (completedRef.current) return;
+    completedRef.current = true;
+    onCompleteRef.current();
+  }, []);
   useEffect(() => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
@@ -24,7 +30,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
       sfxSuccess();
       hapticHeavy();
       const t = window.setTimeout(() => {
-        onCompleteRef.current();
+        finish();
       }, 300);
       return () => window.clearTimeout(t);
     }
@@ -37,10 +43,11 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [count]);
+  }, [count, finish]);
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white text-center select-none animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[10001] overflow-y-auto bg-slate-950/90 backdrop-blur-md flex flex-col items-center p-4 text-white text-center select-none animate-in fade-in duration-200">
+      <div className="my-auto shrink-0 flex flex-col items-center">
       <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold mb-6">
         <Smartphone className="w-4 h-4 animate-bounce" />
         <span>움직임 준비 카운트다운</span>
@@ -66,7 +73,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
         <button
           onClick={() => {
             sfxSuccess();
-            onCompleteRef.current();
+            finish();
           }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs active:scale-95 transition-all shadow-md"
         >
@@ -78,6 +85,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
       <div className="mt-8 flex items-center gap-1.5 text-slate-500 text-xs font-medium">
         <Volume2 className="w-3.5 h-3.5" />
         <span>소리를 켜면 신호음이 함께 들립니다</span>
+      </div>
       </div>
     </div>
   );

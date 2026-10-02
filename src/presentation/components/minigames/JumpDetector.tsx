@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin, hapticTap, sfxTimerTick, sfxUrgentWarning } from '../../../application/soundEffects';
 import { BiomechanicalMotionDetector } from '../../../application/motionFilter';
@@ -5,6 +6,7 @@ import { BiomechanicalMotionDetector } from '../../../application/motionFilter';
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [jumps, setJumps] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [finished, setFinished] = useState(false);
@@ -32,11 +34,11 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
       return n;
     });
     setLastJump(true);
-    setTimeout(() => {
+    scheduleTimeout(() => {
       setLastJump(false);
       cooldown.current = false;
     }, 400);
-  }, [finished]);
+  }, [finished, scheduleTimeout]);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
@@ -53,7 +55,7 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
         doJump();
       } else if (result.reason === 'cheat_shake') {
         setCheatWarning(true);
-        setTimeout(() => setCheatWarning(false), 1200);
+        scheduleTimeout(() => setCheatWarning(false), 1200);
       }
     };
 
@@ -61,7 +63,7 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
     return () => {
       window.removeEventListener('devicemotion', handler);
     };
-  }, [doJump, finished]);
+  }, [doJump, finished, scheduleTimeout]);
 
   useEffect(() => {
     const timer = setInterval(() => {

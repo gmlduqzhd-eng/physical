@@ -1,4 +1,4 @@
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 import type { MissionButton } from '../../../domain/types';
 
 interface Props {

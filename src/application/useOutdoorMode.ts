@@ -1,41 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
+import { readStorage, writeStorage } from './browserStorage';
+import { useWakeLock } from './useWakeLock';
 
 export const useOutdoorMode = () => {
   const [isOutdoorMode, setIsOutdoorMode] = useState(() => {
-    return localStorage.getItem('physical_outdoor_mode') === 'true';
+    return readStorage('physical_outdoor_mode') === 'true';
   });
 
-  // Wake Lock - 화면 자동 꺼짐 방지
-  useEffect(() => {
-    let wakeLock: WakeLockSentinel | null = null;
-
-    const requestWakeLock = async () => {
-      if (isOutdoorMode && 'wakeLock' in navigator) {
-        try {
-          wakeLock = await navigator.wakeLock.request('screen');
-        } catch { /* 무시 */ }
-      }
-    };
-
-    requestWakeLock();
-
-    // 탭 전환 후 복귀 시 재요청
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && isOutdoorMode) {
-        requestWakeLock();
-      }
-    };
-    document.addEventListener('visibilitychange', handleVisibility);
-
-    return () => {
-      wakeLock?.release();
-      document.removeEventListener('visibilitychange', handleVisibility);
-    };
-  }, [isOutdoorMode]);
+  useWakeLock(isOutdoorMode);
 
   // 고대비 클래스 토글
   useEffect(() => {
-    localStorage.setItem('physical_outdoor_mode', String(isOutdoorMode));
+    writeStorage('physical_outdoor_mode', String(isOutdoorMode));
     if (isOutdoorMode) {
       document.documentElement.classList.add('outdoor-mode');
     } else {
@@ -48,7 +24,7 @@ export const useOutdoorMode = () => {
   // 진동 피드백
   const vibrate = useCallback((pattern: number | number[] = 100) => {
     if (isOutdoorMode && navigator.vibrate) {
-      navigator.vibrate(pattern);
+      try { navigator.vibrate(pattern); } catch { /* Vibration is optional. */ }
     }
   }, [isOutdoorMode]);
 
@@ -64,6 +40,7 @@ export const useOutdoorMode = () => {
   // TTS 음성 안내
   const speak = useCallback((text: string) => {
     if (isOutdoorMode && 'speechSynthesis' in window) {
+      try {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ko-KR';
       utterance.rate = 1.1;
@@ -71,6 +48,7 @@ export const useOutdoorMode = () => {
       utterance.volume = 1.0;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
+      } catch { /* Voice guidance is optional. */ }
     }
   }, [isOutdoorMode]);
 

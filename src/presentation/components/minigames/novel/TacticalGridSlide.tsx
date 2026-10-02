@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Shield } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(1);
   const [strikerPos, setStrikerPos] = useState(() => ({ row: 0, col: Math.floor(Math.random() * 3) }));
   const [defenders, setDefenders] = useState<number[]>([4, 7]); // tile indices (0 to 8)
@@ -20,8 +22,12 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
   const scoreRef = useRef(0);
   const targetColRef = useRef(strikerPos.col);
   const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const finishedRef = useRef(false);
+  const roundResolvedRef = useRef(false);
 
   const finishGame = useCallback(() => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     setFinished(true);
     sfxSuccess();
     enqueueAction({
@@ -33,10 +39,11 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
   }, [enqueueAction, groupId]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setRoundTime(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
+    if (finished || roundTime <= 0 || roundResolvedRef.current) return;
+    const timer = scheduleTimeout(() => {
+        if (roundTime <= 1) {
+          roundResolvedRef.current = true;
+          setRoundTime(0);
           const blocked = defendersRef.current.some(idx => idx % 3 === targetColRef.current);
           if (blocked) {
             sfxSuccess();
@@ -47,7 +54,7 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
             sfxFail();
             setFeedback('⚽ 수비 빈틈으로 실점 허용!');
           }
-          advanceTimeoutRef.current = setTimeout(() => {
+          advanceTimeoutRef.current = scheduleTimeout(() => {
             if (round >= 4) {
               finishGame();
             } else {
@@ -56,25 +63,22 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
               setStrikerPos({ row: 0, col: nextCol });
               setRoundTime(5);
               setFeedback('공격수의 슛 코스를 예측하여 수비수를 배치하세요!');
-              setRound(r => r + 1);
+              roundResolvedRef.current = false;
+              setRound(round + 1);
             }
           }, 1200);
-          return 0;
+          return;
         }
-        return prev - 1;
-      });
+        setRoundTime(roundTime - 1);
     }, 1000);
 
-    return () => {
-      clearInterval(timer);
-      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-    };
-  }, [finishGame, round]);
+    return () => clearTimeout(timer);
+  }, [finishGame, round, roundTime, finished, scheduleTimeout]);
 
   const handleTileClick = (idx: number) => {
-    if (finished) return;
+    if (finishedRef.current || roundResolvedRef.current) return;
     sfxTap();
-    setDefenders(prev => {
+    const prev = defendersRef.current;
       let next: number[];
       if (prev.includes(idx)) {
         next = prev.filter(i => i !== idx);
@@ -86,8 +90,7 @@ export const TacticalGridSlide = ({ groupId, enqueueAction }: Props) => {
         }
       }
       defendersRef.current = next;
-      return next;
-    });
+      setDefenders(next);
   };
 
   return (

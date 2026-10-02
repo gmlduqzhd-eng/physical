@@ -1,10 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { GameIcons as LucideIcons } from '../../icons';
 
-interface Props {
-  groupId: string;
-  enqueueAction: (action: any) => void;
-}
+interface Props { groupId: string; enqueueAction: (action: any) => void; }
 
 export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
   const [volume, setVolume] = useState(0);
@@ -13,123 +10,96 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
   const [finished, setFinished] = useState(false);
   const [won, setWon] = useState(false);
   const [micFailed, setMicFailed] = useState(false);
-
+  const [started, setStarted] = useState(false);
+  const [requesting, setRequesting] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const dataArrayRef = useRef<Uint8Array | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
-
+  const animationRef = useRef<number | null>(null);
   const finishedRef = useRef(false);
+  const maxVolumeRef = useRef(0);
+  const sessionRef = useRef(0);
 
-  useEffect(() => {
-    let animationFrame: number;
-
-    const startMic = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-        
-        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-        audioContextRef.current = audioCtx;
-        
-        const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyserRef.current = analyser;
-        
-        const source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
-        sourceRef.current = source;
-        
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        dataArrayRef.current = dataArray;
-
-        const checkVolume = () => {
-          if (finishedRef.current) return;
-          
-          analyser.getByteFrequencyData(dataArray);
-          let sum = 0;
-          for (let i = 0; i < bufferLength; i++) {
-            sum += dataArray[i];
-          }
-          const average = sum / bufferLength;
-          
-          // Map 0-150 range to 0-100% roughly
-          const volPercent = Math.min(100, Math.max(0, (average / 150) * 100));
-          
-          setVolume(volPercent);
-          setMaxVolume(prev => Math.max(prev, volPercent));
-
-          if (volPercent >= 95 && !finishedRef.current) {
-            finishedRef.current = true;
-            setFinished(true);
-            setWon(true);
-            enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-            return;
-          }
-          
-          animationFrame = requestAnimationFrame(checkVolume);
-        };
-        
-        checkVolume();
-      } catch (err) {
-        console.error('Mic error:', err);
-        setMicFailed(true);
-      }
-    };
-
-    startMic();
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      cancelAnimationFrame(animationFrame);
-      clearInterval(timer);
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
+  const stopMicrophone = useCallback(() => {
+    if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
+    animationRef.current = null;
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
+    void audioContextRef.current?.close().catch(() => {});
+    audioContextRef.current = null;
   }, []);
 
+  useEffect(() => () => { sessionRef.current += 1; stopMicrophone(); }, [stopMicrophone]);
+
+  const finishGame = useCallback((victory: boolean) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    sessionRef.current += 1;
+    stopMicrophone();
+    setFinished(true);
+    setWon(victory);
+    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: victory ? 500 : 0 }, timestamp: Date.now() });
+  }, [enqueueAction, groupId, stopMicrophone]);
+
   useEffect(() => {
-    if (timeLeft === 0 && !finished && !finishedRef.current) {
-      finishedRef.current = true;
-      setFinished(true);
-      setWon(false);
-      enqueueAction({
-        id: Math.random().toString(),
-        type: 'INCREMENT_SCORE',
-        payload: { id: groupId, amount: 0 },
-        timestamp: Date.now()
-      });
+    if (!started || finished) return;
+    const timer = setInterval(() => setTimeLeft(prev => Math.max(0, prev - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [started, finished]);
+
+  useEffect(() => { if (started && timeLeft === 0) finishGame(false); }, [started, timeLeft, finishGame]);
+
+  const startFallback = () => {
+    sessionRef.current += 1;
+    stopMicrophone();
+    setRequesting(false);
+    setMicFailed(true);
+    setStarted(true);
+  };
+
+  const startMic = async () => {
+    if (requesting || started || finishedRef.current) return;
+    const session = ++sessionRef.current;
+    setRequesting(true);
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Microphone unavailable');
+      const AudioContextConstructor = window.AudioContext || (window as any).webkitAudioContext;
+      const audioCtx = new AudioContextConstructor() as AudioContext;
+      audioContextRef.current = audioCtx;
+      await audioCtx.resume();
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (session !== sessionRef.current || finishedRef.current) { stream.getTracks().forEach(track => track.stop()); return; }
+      streamRef.current = stream;
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 256;
+      audioCtx.createMediaStreamSource(stream).connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      setRequesting(false);
+      setStarted(true);
+      const checkVolume = () => {
+        if (session !== sessionRef.current || finishedRef.current) return;
+        analyser.getByteFrequencyData(data);
+        const average = data.reduce((sum, value) => sum + value, 0) / data.length;
+        const percent = Math.min(100, Math.max(0, average / 150 * 100));
+        maxVolumeRef.current = Math.max(maxVolumeRef.current, percent);
+        setVolume(percent);
+        setMaxVolume(maxVolumeRef.current);
+        if (percent >= 95) { finishGame(true); return; }
+        animationRef.current = requestAnimationFrame(checkVolume);
+      };
+      checkVolume();
+    } catch {
+      if (session !== sessionRef.current || finishedRef.current) return;
+      startFallback();
     }
-  }, [timeLeft, finished, groupId, enqueueAction]);
+  };
 
   const handleFallbackTap = () => {
-    if (finishedRef.current) return;
-    setMaxVolume(prev => {
-      const nextMax = Math.min(100, prev + 8);
-      setVolume(nextMax);
-      if (nextMax >= 95 && !finishedRef.current) {
-        finishedRef.current = true;
-        setFinished(true);
-        setWon(true);
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-      }
-      return nextMax;
-    });
+    if (!started || finishedRef.current) return;
+    const next = Math.min(100, maxVolumeRef.current + 8);
+    maxVolumeRef.current = next;
+    setVolume(next);
+    setMaxVolume(next);
+    if (next >= 95) finishGame(true);
   };
 
   return (
@@ -157,12 +127,21 @@ export const ScreamGame = ({ groupId, enqueueAction }: Props) => {
         </span>
       </div>
 
-      {micFailed && (
+      {!started && (
+        <div className="relative z-10 flex flex-col gap-3 w-full max-w-xs">
+          <button onClick={startMic} disabled={requesting} className="px-6 py-4 bg-blue-600 rounded-xl text-white font-black disabled:opacity-60">
+            {requesting ? '마이크 권한을 확인하고 있어요…' : '마이크로 시작하기'}
+          </button>
+          <button onClick={startFallback} className="px-6 py-3 bg-slate-700 rounded-xl text-white font-bold">화면 터치로 시작하기</button>
+          <p className="text-xs text-blue-200 text-center">시작하면 10초 동안 도전합니다.</p>
+        </div>
+      )}
+      {micFailed && started && (
         <button 
           onClick={handleFallbackTap}
           className="relative z-10 px-6 py-4 bg-red-600 rounded-xl text-white font-black animate-bounce"
         >
-          마이크 접근 실패! 여기를 빠르게 연타하세요!
+          여기를 빠르게 연타하세요!
         </button>
       )}
 

@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useSyncQueue } from '../application/useSyncQueue';
 import type { GameRoom } from '../domain/types';
 import { useVoiceCoach } from '../application/useVoiceCoach';
 import { useTamagotchi } from '../application/useTamagotchi';
@@ -85,6 +86,7 @@ import { Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
+import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
 
 interface GameMeta {
   name: string;
@@ -203,7 +205,20 @@ const NOVEL_GAME_TYPES = new Set([
 
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
+  const [searchParams] = useSearchParams();
+  return <GamePlaySession key={`${gameType}:${searchParams.get('room')}:${searchParams.get('group')}`} />;
+};
+
+const GamePlaySession = () => {
+  const { gameType } = useParams<{ gameType: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const battleRoomId = searchParams.get('room');
+  const battleGroupId = searchParams.get('group');
+  const hasBattle = !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
+  const hubPath = hasBattle ? '/hub?battle=1' : '/hub';
+  const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
@@ -213,8 +228,11 @@ export const GamePlayPage = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
+  const completionRef = useRef(false);
+  const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
 
-  const { addGameResult } = usePlayerProfile();
+  const { addGameResult, updateLatestRpe } = usePlayerProfile();
   const { speak } = useVoiceCoach();
   const { addXpAndCoins } = useTamagotchi();
   useWakeLock(true);
@@ -226,15 +244,13 @@ export const GamePlayPage = () => {
   });
 
   const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
-    standaloneTiming.current = {
-      startedAt: new Date().toISOString(),
-      endTime: Date.now() + 90000,
-    };
     setDifficulty(selected);
     setIsCountingDown(true);
   };
 
   const handleCountdownComplete = useCallback(() => {
+    completionRef.current = false;
+    standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
     setIsCountingDown(false);
   }, []);
 
@@ -242,31 +258,35 @@ export const GamePlayPage = () => {
 
   // 업적 배지 체크
   const checkBadges = useCallback((score: number) => {
-    const badges: Record<string, boolean> = JSON.parse(localStorage.getItem('physical_badges') || '{}');
-    const plays = parseInt(localStorage.getItem('physical_total_plays') || '0', 10) + 1;
-    localStorage.setItem('physical_total_plays', String(plays));
+    const savedBadges = readJsonStorage('physical_badges');
+    const badges: Record<string, boolean> = isRecord(savedBadges) ? Object.fromEntries(Object.entries(savedBadges).filter(([, value]) => value === true).map(([name]) => [name, true])) : {};
+    const plays = nonnegativeNumber(Number(readStorage('physical_total_plays'))) + 1;
+    writeStorage('physical_total_plays', String(plays));
     setTotalPlays(plays);
 
     // 배지 조건 체크
     const newBadges: string[] = [];
+    if (plays >= 1 && !badges['first_play']) { badges['first_play'] = true; newBadges.push('🌱 첫 발자국'); }
     if (score >= 500 && !badges['high_scorer']) { badges['high_scorer'] = true; newBadges.push('🏅 하이스코어러'); }
     if (plays >= 10 && !badges['veteran']) { badges['veteran'] = true; newBadges.push('🎖️ 베테랑 (10회 플레이)'); }
     if (plays >= 50 && !badges['master']) { badges['master'] = true; newBadges.push('👑 마스터 (50회 플레이)'); }
     if (difficulty === 'hard' && score > 0 && !badges['brave']) { badges['brave'] = true; newBadges.push('🦁 용감한 도전자'); }
 
     // 다양한 게임 플레이 배지
-    const playedGames: string[] = JSON.parse(localStorage.getItem('physical_played_games') || '[]');
+    const savedGames = readJsonStorage('physical_played_games');
+    const playedGames: string[] = Array.isArray(savedGames) ? [...new Set(savedGames.filter((type): type is string => typeof type === 'string' && !!GAME_TITLES[type]))] : [];
     if (gameType && !playedGames.includes(gameType)) {
       playedGames.push(gameType);
-      localStorage.setItem('physical_played_games', JSON.stringify(playedGames));
+      writeStorage('physical_played_games', JSON.stringify(playedGames));
     }
     if (playedGames.length >= 10 && !badges['explorer']) { badges['explorer'] = true; newBadges.push('🌍 탐험가 (10종 플레이)'); }
     if (playedGames.length >= 30 && !badges['collector']) { badges['collector'] = true; newBadges.push('💎 수집가 (30종 플레이)'); }
 
-    localStorage.setItem('physical_badges', JSON.stringify(badges));
+    writeStorage('physical_badges', JSON.stringify(badges));
     if (newBadges.length > 0) {
       setNewBadge(newBadges[0]);
-      setTimeout(() => setNewBadge(null), 4000);
+      if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current);
+      badgeTimerRef.current = setTimeout(() => setNewBadge(null), 4000);
     }
   }, [difficulty, gameType]);
 
@@ -280,8 +300,13 @@ export const GamePlayPage = () => {
 
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
   const localEnqueueAction = useCallback((action: { payload: { amount: number } }) => {
+    if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
+    completionRef.current = true;
     const rawScore = action.payload.amount;
     const earned = Math.round(rawScore * difficultyMultiplier);
+    if (hasBattle && battleGroupId) {
+      enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: earned, roomId: battleRoomId }, timestamp: Date.now() });
+    }
     setLastEarnedScore(earned);
     setGameFinished(true);
     stopBgm();
@@ -301,9 +326,9 @@ export const GamePlayPage = () => {
     // 최고 기록 저장
     if (gameType) {
       const bestKey = `physical_best_${gameType}`;
-      const currentBest = parseInt(localStorage.getItem(bestKey) || '0', 10);
+      const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
       if (earned > currentBest) {
-        localStorage.setItem(bestKey, String(earned));
+        writeStorage(bestKey, String(earned));
       }
     }
 
@@ -313,9 +338,10 @@ export const GamePlayPage = () => {
     }
 
     checkBadges(earned);
-  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges]);
+  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore]);
 
   const handleReplay = () => {
+    completionRef.current = false;
     setGameFinished(false);
     setLastEarnedScore(0);
     setRpeSelected(null);
@@ -328,12 +354,12 @@ export const GamePlayPage = () => {
     return (
       <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
-        <button onClick={() => navigate('/')} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
+        <button onClick={() => navigate(hubPath)} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
       </div>
     );
   }
 
-  const bestScore = parseInt(localStorage.getItem(`physical_best_${gameType}`) || '0', 10);
+  const bestScore = nonnegativeNumber(Number(readStorage(`physical_best_${gameType}`)));
 
   // 화산 게임은 gameRoom을 필요로 하므로 더미 gameRoom 생성
   const dummyGameRoom: GameRoom = {
@@ -439,21 +465,21 @@ export const GamePlayPage = () => {
       case 'body_twist':
         return <BodyTwist key={key} {...commonProps} />;
       case 'pulse-detective':
-        return <PulseDetective key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <PulseDetective key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'posture-guardian':
-        return <PostureGuardian key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <PostureGuardian key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'rolling-curling':
-        return <RollingCurling key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <RollingCurling key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'pass-gate-rescue':
-        return <PassGateRescue key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <PassGateRescue key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'dribble-rhythm':
-        return <DribbleRhythm key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <DribbleRhythm key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'open-space-tactician':
-        return <OpenSpaceTactician key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <OpenSpaceTactician key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'emotion-thermometer':
-        return <EmotionThermometer key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <EmotionThermometer key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'partner-robot-lab':
-        return <PartnerRobotLab key={key} {...commonProps} onExit={() => navigate('/')} />;
+        return <PartnerRobotLab key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       case 'compass-azimuth':
         return <CompassAzimuth key={key} {...commonProps} />;
       case 'kayak-paddle':
@@ -504,7 +530,7 @@ export const GamePlayPage = () => {
               gameType={gameType}
               groupId={dummyGroupId}
               enqueueAction={localEnqueueAction}
-              onExit={() => navigate('/')}
+              onExit={() => navigate(hubPath)}
             />
           );
         }
@@ -516,7 +542,7 @@ export const GamePlayPage = () => {
                 key={key}
                 gameType={gameType}
                 onComplete={(score) => localEnqueueAction({ payload: { amount: score } })}
-                onExit={() => navigate('/')}
+                onExit={() => navigate(hubPath)}
               />
             </div>
           );
@@ -530,7 +556,8 @@ export const GamePlayPage = () => {
     <div className={`relative min-h-[100dvh] ${NOVEL_GAME_TYPES.has(gameType) ? 'bg-slate-950' : ''}`}>
       {/* 난이도 선택 화면 */}
       {difficulty === null && !gameFinished && (
-        <div className="fixed inset-0 z-[10002] bg-slate-950 flex flex-col items-center justify-center p-6 font-sans">
+        <div className="fixed inset-0 z-[10002] bg-slate-950 flex flex-col items-center overflow-y-auto p-4 font-sans">
+          <div className="w-full max-w-md my-auto shrink-0 flex flex-col items-center text-center">
           <span className="text-7xl mb-4">{gameInfo.emoji}</span>
           <h2 className="text-2xl font-black text-white mb-2">{gameInfo.name}</h2>
           <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
@@ -546,7 +573,8 @@ export const GamePlayPage = () => {
               <span className="text-2xl">🔥</span><span className="text-sm whitespace-nowrap">어려움</span><span className="text-[10px] text-red-200 whitespace-nowrap">×1.5 배율</span>
             </button>
           </div>
-          <button onClick={() => navigate('/')} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
+          <button onClick={() => navigate(hubPath)} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
+          </div>
         </div>
       )}
 
@@ -559,7 +587,7 @@ export const GamePlayPage = () => {
       )}
 
       {/* 게임 렌더링 */}
-      {difficulty !== null && !isCountingDown && renderGame()}
+      {difficulty !== null && !isCountingDown && !gameFinished && renderGame()}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -571,7 +599,7 @@ export const GamePlayPage = () => {
       {/* 상단 네비게이션 */}
       {difficulty !== null && (
         <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
-          <button onClick={() => navigate('/')} className="w-11 h-11 bg-black/80 hover:bg-black text-white backdrop-blur-md border-2 border-white/60 hover:border-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] active:scale-90" title="홈으로">
+          <button onClick={() => navigate(hubPath)} className="w-11 h-11 bg-black/80 hover:bg-black text-white backdrop-blur-md border-2 border-white/60 hover:border-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] active:scale-90" title="홈으로">
             <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
           </button>
           <div className="flex items-center gap-1.5 pointer-events-auto bg-black/80 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
@@ -586,14 +614,15 @@ export const GamePlayPage = () => {
 
       {/* 게임 종료 결과 오버레이 */}
       {gameFinished && (
-        <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center justify-center p-6 font-sans animate-in fade-in duration-200">
-          <div className="bg-slate-900/95 border border-slate-700 rounded-3xl p-8 max-w-sm w-full flex flex-col items-center shadow-2xl">
+        <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
+          <div className="bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
               <span>{gameInfo.code}</span><span className="text-slate-500">|</span><span className="text-slate-300">{gameInfo.target}</span>
             </div>
             <span className="text-6xl mb-3">{gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-xs mb-5">2022 개정 초등 체육과 학습 완료!</p>
+            {hasBattle && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
             <div className="w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">획득 점수</span>
               <span className={`text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
@@ -618,7 +647,7 @@ export const GamePlayPage = () => {
             {/* RPE 운동 자각도 이모지 평가 */}
             <div className="w-full bg-slate-800/60 rounded-2xl px-4 py-4 mb-4 border border-slate-700/50">
               <p className="text-sm font-bold text-slate-300 text-center mb-3">오늘의 활동은 얼마나 힘들었나요?</p>
-              <div className="flex justify-center gap-2">
+              <div className="grid grid-cols-5 gap-1">
                 {[
                   { emoji: '😆', label: '너무 쉬움', value: 1 },
                   { emoji: '😃', label: '쉬움', value: 2 },
@@ -632,19 +661,10 @@ export const GamePlayPage = () => {
                       setRpeSelected(value);
                       // RPE 값을 최근 기록에 업데이트
                       if (gameType && gameInfo) {
-                        const profileRaw = localStorage.getItem('physical_player_profile');
-                        if (profileRaw) {
-                          try {
-                            const profile = JSON.parse(profileRaw);
-                            if (profile.recentGames && profile.recentGames.length > 0) {
-                              profile.recentGames[0].rpe = value;
-                              localStorage.setItem('physical_player_profile', JSON.stringify(profile));
-                            }
-                          } catch { /* ignore */ }
-                        }
+                        updateLatestRpe(gameType, value);
                       }
                     }}
-                    className={`flex flex-col items-center gap-1 px-2.5 py-2 rounded-xl transition-all border-2 ${
+                    className={`min-w-0 whitespace-normal flex flex-col items-center gap-1 px-1 py-2 rounded-xl transition-all border-2 ${
                       rpeSelected === value
                         ? 'bg-cyan-600/30 border-cyan-400 scale-110 shadow-lg shadow-cyan-900/50'
                         : 'bg-slate-900/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800/80'
@@ -675,7 +695,7 @@ export const GamePlayPage = () => {
               <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
-              <button onClick={() => navigate('/')} className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
+              <button onClick={() => navigate(hubPath)} className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
                 <Home className="w-5 h-5" /> 홈으로
               </button>
             </div>
@@ -690,11 +710,11 @@ export const GamePlayPage = () => {
       />
 
       {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && (
+      {!isMotionGranted && ['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
         <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
           <div className="text-xs">
-            <span className="font-bold text-amber-400 block mb-0.5">⚠️ 아이폰 센서 권한 필요</span>
-            <span>움직임 인식을 위해 모션 센서 접근을 허용해 주세요.</span>
+            <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>
+            <span>센서를 허용하거나 게임 안의 터치 조작을 이용해 주세요.</span>
           </div>
           <button
             onClick={requestMotionPermission}

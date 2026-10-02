@@ -15,10 +15,11 @@ export const BalloonPump = ({ groupId, enqueueAction }: Props) => {
   const [popThreshold] = useState(() => 120 + Math.floor(Math.random() * 100));
 
   const handlePump = () => {
-    if (popped || cashedOut) return;
+    if (popped || cashedOut || lockRef.current) return;
     sfxTap();
     const newSize = size + 4 + Math.floor(Math.random() * 4);
     if (newSize >= popThreshold) {
+      lockRef.current = true;
       setPopped(true);
       sfxPop();
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
@@ -72,8 +73,8 @@ export const BalloonPump = ({ groupId, enqueueAction }: Props) => {
       {!popped && !cashedOut && (
         <div className="flex gap-4 relative z-10 w-full max-w-xs">
           <button
-            onMouseDown={handlePump}
-            onTouchStart={(e) => { e.preventDefault(); handlePump(); }}
+            onPointerDown={handlePump}
+            onClick={e => { if (e.detail === 0) handlePump(); }}
             className="flex-1 py-5 bg-sky-600 hover:bg-sky-500 active:bg-sky-700 rounded-2xl text-white font-black text-xl shadow-[0_6px_0_rgba(3,105,161,1)] active:shadow-none active:translate-y-[6px] transition-all"
           >
             펌프! 💨

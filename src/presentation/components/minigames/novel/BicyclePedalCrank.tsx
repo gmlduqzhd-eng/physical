@@ -147,6 +147,7 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         className="relative w-64 h-64 rounded-full border-4 border-slate-700 bg-slate-950 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none my-3"
       >
         {/* 기어 톱니 링 */}

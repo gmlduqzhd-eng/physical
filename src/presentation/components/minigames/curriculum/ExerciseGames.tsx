@@ -1,3 +1,5 @@
+import { useGameScoreSubmission } from '../common/useGameScoreSubmission';
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
 import { GameResultOverlay } from './GameResultOverlay';
@@ -11,7 +13,9 @@ interface GameProps {
 /* =========================================================================
    1. 🌬️ breath-pacer-478 (4-7-8 자율신경 이완 페이서)
    ========================================================================= */
-export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const scheduleTimeout = useGameTimeouts();
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [cycle, setCycle] = useState(1);
   const [countdown, setCountdown] = useState(4);
@@ -19,6 +23,7 @@ export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, on
   const finishedRef = useRef(false);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     finishedRef.current = false;
     setPhase('inhale');
     setCycle(1);
@@ -28,20 +33,18 @@ export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, on
 
   useEffect(() => {
     if (finished) return;
-    const timer = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
+    const timer = scheduleTimeout(() => {
+        if (countdown <= 1) {
           if (phase === 'inhale') {
             setPhase('hold');
             sfxTap();
-            return 7;
+            setCountdown(7);
           } else if (phase === 'hold') {
             setPhase('exhale');
             sfxTap();
-            return 8;
+            setCountdown(8);
           } else {
             if (cycle >= 3) {
-              clearInterval(timer);
               if (!finishedRef.current) {
                 finishedRef.current = true;
                 setFinished(true);
@@ -53,19 +56,20 @@ export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, on
                   timestamp: Date.now()
                 });
               }
-              return 0;
+              setCountdown(0);
+              return;
             }
-            setCycle(cy => cy + 1);
+            setCycle(cycle + 1);
             setPhase('inhale');
             sfxCoin();
-            return 4;
+            setCountdown(4);
           }
+        } else {
+          setCountdown(countdown - 1);
         }
-        return c - 1;
-      });
     }, 1000);
-    return () => clearInterval(timer);
-  }, [phase, cycle, finished, groupId, enqueueAction]);
+    return () => clearTimeout(timer);
+  }, [countdown, phase, cycle, finished, groupId, enqueueAction, scheduleTimeout]);
 
   return (
     <div className="min-h-[100dvh] bg-teal-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -116,7 +120,8 @@ export const BreathPacer478: React.FC<GameProps> = ({ groupId, enqueueAction, on
 /* =========================================================================
    2. 👁️ peripheral-vision-360 (360° 주변시야 동체인식)
    ========================================================================= */
-export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
   const [activeDirection, setActiveDirection] = useState<number | null>(null);
@@ -131,6 +136,7 @@ export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueActio
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setScore(0);
     setTimeLeft(20);
@@ -235,7 +241,8 @@ export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    3. 🏃 shuttle-run-beep (셔틀런 삑 비트 인터벌)
    ========================================================================= */
-export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [level, setLevel] = useState(1);
   const [shuttleCount, setShuttleCount] = useState(0);
   const [runnerPos, setRunnerPos] = useState<'A' | 'B'>('A');
@@ -246,6 +253,7 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction, on
   const LAP_TIME = Math.max(1.2, 3.2 - level * 0.2);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     countRef.current = 0;
     setLevel(1);
     setShuttleCount(0);
@@ -342,13 +350,15 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction, on
 /* =========================================================================
    4. 🧘 mobility-joint-circle (관절 가동성 스무스 서클)
    ========================================================================= */
-export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [progress, setProgress] = useState(0);
   const [finished, setFinished] = useState(false);
   const [currentAngle, setCurrentAngle] = useState(0);
   const isDragging = useRef(false);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setProgress(0);
     setCurrentAngle(0);
     setFinished(false);
@@ -388,7 +398,8 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
       </p>
 
       <div
-        onPointerDown={() => { isDragging.current = true; sfxTap(); }}
+        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isDragging.current = true; sfxTap(); }}
+        onPointerCancel={() => { isDragging.current = false; }}
         onPointerUp={() => { isDragging.current = false; }}
         onPointerMove={handlePointerMove}
         className="relative w-64 h-64 rounded-full border-4 border-dashed border-emerald-500/60 bg-emerald-900/40 flex items-center justify-center cursor-pointer touch-none shadow-2xl mb-8"
@@ -428,7 +439,9 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    5. ⚖️ foot-center-balance (족저압 무게중심 센서)
    ========================================================================= */
-export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [posX, setPosX] = useState(0);
   const [posY, setPosY] = useState(0);
   const [stableTime, setStableTime] = useState(0);
@@ -436,6 +449,8 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
   const TARGET_SEC = 10;
 
   const handleRestart = () => {
+    resetScoreSubmission();
+    finishedRef.current = false;
     setStableTime(0);
     setPosX(0);
     setPosY(0);
@@ -475,7 +490,7 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
           const next = t + 1;
           if (next >= TARGET_SEC && !finishedRef.current) {
             finishedRef.current = true;
-            setTimeout(() => {
+            scheduleTimeout(() => {
               setFinished(true);
               sfxSuccess();
               enqueueAction({
@@ -491,7 +506,7 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction, scheduleTimeout]);
 
   return (
     <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -568,7 +583,8 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    6. ⚡ agility-dot-drill (5점 닷 드릴 풋워크 시퀀서)
    ========================================================================= */
-export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [round, setRound] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -583,6 +599,7 @@ export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction, o
   const currentPattern = PATTERNS[round % PATTERNS.length];
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setRound(0);
     setCurrentStep(0);
     setFinished(false);
@@ -657,13 +674,18 @@ export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction, o
 /* =========================================================================
    7. 💪 eccentric-isom-push (등척성 파워 게이지 홀드)
    ========================================================================= */
-export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [power, setPower] = useState(0);
   const [holdSec, setHoldSec] = useState(0);
   const [finished, setFinished] = useState(false);
   const isPressing = useRef(false);
 
   const handleRestart = () => {
+    resetScoreSubmission();
+    finishedRef.current = false;
+    isPressing.current = false;
     setPower(0);
     setHoldSec(0);
     setFinished(false);
@@ -695,7 +717,7 @@ export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction,
           const next = s + 1;
           if (next >= 8 && !finishedRef.current) {
             finishedRef.current = true;
-            setTimeout(() => {
+            scheduleTimeout(() => {
               setFinished(true);
               sfxSuccess();
               enqueueAction({
@@ -711,7 +733,7 @@ export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction,
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction, scheduleTimeout]);
 
   return (
     <div className="min-h-[100dvh] bg-stone-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -764,7 +786,8 @@ export const EccentricIsomPush: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    8. 🧗 posture-spine-align (척추 중립 정렬 축 얼라인)
    ========================================================================= */
-export const PostureSpineAlign: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const PostureSpineAlign: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [headOffset, setHeadOffset] = useState(-30);
   const [shoulderOffset, setShoulderOffset] = useState(25);
   const [pelvisOffset, setPelvisOffset] = useState(-20);
@@ -773,6 +796,7 @@ export const PostureSpineAlign: React.FC<GameProps> = ({ groupId, enqueueAction,
   const isAligned = Math.abs(headOffset) < 8 && Math.abs(shoulderOffset) < 8 && Math.abs(pelvisOffset) < 8;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setHeadOffset(-30);
     setShoulderOffset(25);
     setPelvisOffset(-20);
@@ -854,13 +878,17 @@ export const PostureSpineAlign: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    9. 💓 pulse-zone-target (목표 심박수 트레이닝 존)
    ========================================================================= */
-export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [bpm, setBpm] = useState(80);
   const [inTargetSec, setInTargetSec] = useState(0);
   const [finished, setFinished] = useState(false);
   const tapTimes = useRef<number[]>([]);
 
   const handleRestart = () => {
+    resetScoreSubmission();
+    finishedRef.current = false;
     setBpm(80);
     setInTargetSec(0);
     tapTimes.current = [];
@@ -899,7 +927,7 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, o
           const next = s + 1;
           if (next >= 6 && !finishedRef.current) {
             finishedRef.current = true;
-            setTimeout(() => {
+            scheduleTimeout(() => {
               setFinished(true);
               sfxSuccess();
               enqueueAction({
@@ -915,7 +943,7 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, o
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [finished, groupId, enqueueAction]);
+  }, [finished, groupId, enqueueAction, scheduleTimeout]);
 
   return (
     <div className="min-h-[100dvh] bg-rose-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
@@ -959,7 +987,8 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction, o
 /* =========================================================================
    10. 🧩 cross-lateral-brain (좌우 교차 크로스 브레인짐)
    ========================================================================= */
-export const CrossLateralBrain: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const CrossLateralBrain: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [leftAction, setLeftAction] = useState<'tap' | 'hold'>('tap');
   const [rightAction, setRightAction] = useState<'tap' | 'hold'>('hold');
   const [score, setScore] = useState(0);
@@ -972,6 +1001,7 @@ export const CrossLateralBrain: React.FC<GameProps> = ({ groupId, enqueueAction,
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setScore(0);
     setFinished(false);
     switchBrainMissions();

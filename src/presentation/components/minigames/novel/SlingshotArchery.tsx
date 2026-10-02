@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useRef, useEffect } from 'react';
 import { Target, Wind } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop, sfxFail, sfxTap } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [arrowCount, setArrowCount] = useState(5);
   const [pullVector, setPullVector] = useState({ x: 0, y: 0 });
   const [isPulling, setIsPulling] = useState(false);
@@ -50,6 +52,7 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
     const currentY = e.clientY - rect.top;
 
     // 앵커 기준으로 뒤로 당겨진 벡터 계산
+    anchorRef.current = { x: rect.width / 2, y: rect.height - 80 };
     const dx = Math.max(-60, Math.min(60, currentX - anchorRef.current.x));
     const dy = Math.max(0, Math.min(80, currentY - anchorRef.current.y)); // 아래로 당김
 
@@ -105,7 +108,7 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
     if (remaining > 0) setWind((Math.random() - 0.5) * 4);
 
     if (remaining <= 0) {
-      finishTimeoutRef.current = setTimeout(() => finishGame(nextScore), 1200);
+      finishTimeoutRef.current = scheduleTimeout(() => finishGame(nextScore), 1200);
     }
   };
 
@@ -139,6 +142,7 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={() => { setIsPulling(false); setPullVector({ x: 0, y: 0 }); }}
         className="relative w-full h-80 bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 rounded-2xl overflow-hidden border-2 border-yellow-500/40 shadow-inner flex flex-col items-center justify-between p-4 touch-none cursor-crosshair"
       >
         {/* 상단 양궁 타겟 동심원 */}

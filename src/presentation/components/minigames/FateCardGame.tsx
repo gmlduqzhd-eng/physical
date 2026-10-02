@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 
 interface Props {
   groupId: string;

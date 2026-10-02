@@ -34,7 +34,9 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => {
     const timer = setInterval(() => {
       // 물살 저항 (매초 약간씩 뒤로 밀림)
-      setDistance(d => Math.max(0, d - 1.5));
+      const nextDistance = Math.max(0, currentRef.current.distance - 1.5);
+      currentRef.current.distance = nextDistance;
+      setDistance(nextDistance);
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timer);

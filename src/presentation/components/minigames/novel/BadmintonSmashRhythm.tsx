@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Zap } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [shuttleY, setShuttleY] = useState(0); // 0 (top) to 100 (bottom hit box at 80%)
   const [combo, setCombo] = useState(0);
   const [score, setScore] = useState(0);
@@ -39,7 +41,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
         sfxFail();
         setCombo(0);
         setHitEffect('MISS!');
-        setTimeout(() => setHitEffect(null), 400);
+        scheduleTimeout(() => setHitEffect(null), 400);
         next = 0;
         speedRef.current = 2.0 + Math.random() * 1.5;
       }
@@ -62,7 +64,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       clearInterval(anim);
       clearInterval(timer);
     };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished) {
@@ -108,7 +110,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       setHitEffect('💨 TOO EARLY!');
     }
 
-    setTimeout(() => setHitEffect(null), 500);
+    scheduleTimeout(() => setHitEffect(null), 500);
   };
 
   return (

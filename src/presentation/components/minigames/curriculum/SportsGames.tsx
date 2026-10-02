@@ -1,3 +1,5 @@
+import { useGameScoreSubmission } from '../common/useGameScoreSubmission';
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
 import { GameResultOverlay } from './GameResultOverlay';
@@ -11,7 +13,9 @@ interface GameProps {
 /* =========================================================================
    11. 🏹 wind-archery-pro (풍향·풍속 탄도학 윈드 양궁)
    ========================================================================= */
-export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [windSpeed, setWindSpeed] = useState(5);
   const [windDir, setWindDir] = useState<'left' | 'right'>('left');
   const [aimOffset, setAimOffset] = useState(0);
@@ -31,6 +35,7 @@ export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, on
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setRound(1);
     setTotalScore(0);
@@ -60,7 +65,7 @@ export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, on
     setTotalScore(newTotal);
     scoreRef.current = newTotal * 20;
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       if (round >= 3) {
         setFinished(true);
         sfxSuccess();
@@ -165,7 +170,8 @@ export const WindArcheryPro: React.FC<GameProps> = ({ groupId, enqueueAction, on
 /* =========================================================================
    12. 🏐 volleyball-apex-set (배구 정점 포물선 토스·스파이크)
    ========================================================================= */
-export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [ballHeight, setBallHeight] = useState(0);
   const [hits, setHits] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -174,6 +180,7 @@ export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction,
   const TARGET_HITS = 5;
 
   const handleRestart = () => {
+    resetScoreSubmission();
     hitsRef.current = 0;
     dirRef.current = 'up';
     setBallHeight(0);
@@ -282,7 +289,8 @@ export const VolleyballApexSet: React.FC<GameProps> = ({ groupId, enqueueAction,
 /* =========================================================================
    13. ⚾ strike-zone-vision (140km/h 스트라이크존 선구안)
    ========================================================================= */
-export const StrikeZoneVision: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const StrikeZoneVision: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [pitch, setPitch] = useState<{ isStrike: boolean; x: number; y: number } | null>(null);
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -298,6 +306,7 @@ export const StrikeZoneVision: React.FC<GameProps> = ({ groupId, enqueueAction, 
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setRound(1);
     setScore(0);
@@ -397,7 +406,9 @@ export const StrikeZoneVision: React.FC<GameProps> = ({ groupId, enqueueAction, 
 /* =========================================================================
    14. ⚽ offside-breaker-pass (3:2 오프사이드 트랩 브레이커)
    ========================================================================= */
-export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [defLinePos, setDefLinePos] = useState(50);
   const [passStatus, setPassStatus] = useState<'ready' | 'success' | 'offside'>('ready');
   const [score, setScore] = useState(0);
@@ -406,6 +417,7 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
   const scoreRef = useRef(0);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setRound(1);
     setScore(0);
@@ -443,7 +455,7 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
       setPassStatus('offside');
     }
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       if (round >= 3) {
         setFinished(true);
         enqueueAction({
@@ -540,7 +552,8 @@ export const OffsideBreakerPass: React.FC<GameProps> = ({ groupId, enqueueAction
 /* =========================================================================
    15. 🏸 badminton-drop-clear (배드민턴 드롭샷 & 하이클리어 코스)
    ========================================================================= */
-export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [oppPos, setOppPos] = useState<'front' | 'back'>('front');
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
@@ -553,6 +566,7 @@ export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setRound(1);
     setScore(0);
@@ -649,7 +663,9 @@ export const BadmintonDropClear: React.FC<GameProps> = ({ groupId, enqueueAction
 /* =========================================================================
    16. 🏀 basketball-free-throw (포물선 각도 자유투)
    ========================================================================= */
-export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [angle, setAngle] = useState(51); // 최적 초기값 51도
   const [isShooting, setIsShooting] = useState(false);
   const [ballPos, setBallPos] = useState<{ x: number; y: number; rot: number }>({ x: 45, y: 175, rot: 0 });
@@ -685,6 +701,7 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
   })();
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setScore(0);
     setShots(0);
@@ -734,7 +751,7 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
           scoreRef.current = nextScore * 170;
 
           // 공이 그물 밑으로 쑥 떨어짐
-          setTimeout(() => {
+          scheduleTimeout(() => {
             setBallPos({ x: 235, y: 115, rot: -720 });
           }, 150);
         } else {
@@ -747,7 +764,7 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
         const nextShots = shots + 1;
         setShots(nextShots);
 
-        setTimeout(() => {
+        scheduleTimeout(() => {
           setIsShooting(false);
           setSwishNet(false);
           if (nextShots >= TOTAL_SHOTS) {
@@ -954,7 +971,8 @@ export const BasketballFreeThrow: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    17. 🥌 curling-weight-control (컬링 하우스 힘 조절 스톤)
    ========================================================================= */
-export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [chargeTime, setChargeTime] = useState(0);
   const [stonePos, setStonePos] = useState(0);
   const [isSliding, setIsSliding] = useState(false);
@@ -971,6 +989,7 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     clearSlideTimer();
     setChargeTime(0);
     setStonePos(0);
@@ -1080,7 +1099,9 @@ export const CurlingWeightControl: React.FC<GameProps> = ({ groupId, enqueueActi
 /* =========================================================================
    18. 🥋 taekwondo-counter-kick (태권도 반격 발차기 패링)
    ========================================================================= */
-export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
+  const scheduleTimeout = useGameTimeouts();
   const [oppState, setOppState] = useState<'idle' | 'warning' | 'attack'>('idle');
   const [counters, setCounters] = useState(0);
   const [round, setRound] = useState(1);
@@ -1097,6 +1118,7 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     clearAllTimers();
     countersRef.current = 0;
     setRound(1);
@@ -1110,15 +1132,15 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
     setOppState('idle');
     const delay = Math.random() * 2000 + 1000;
 
-    warnTimerRef.current = setTimeout(() => {
+    warnTimerRef.current = scheduleTimeout(() => {
       setOppState('warning');
       sfxTap();
 
-      attackTimerRef.current = setTimeout(() => {
+      attackTimerRef.current = scheduleTimeout(() => {
         setOppState('attack');
         hapticTap();
 
-        expireTimerRef.current = setTimeout(() => {
+        expireTimerRef.current = scheduleTimeout(() => {
           if (round >= 3) {
             setFinished(true);
             sfxSuccess();
@@ -1136,7 +1158,7 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
     }, delay);
 
     return () => clearAllTimers();
-  }, [round, finished, groupId, enqueueAction]);
+  }, [round, finished, groupId, enqueueAction, scheduleTimeout]);
 
   const handleParry = () => {
     if (oppState === 'attack' && !finished) {
@@ -1213,7 +1235,8 @@ export const TaekwondoCounterKick: React.FC<GameProps> = ({ groupId, enqueueActi
 /* =========================================================================
    19. 🏓 tabletennis-spin-read (탁구 회전 드라이브 판독)
    ========================================================================= */
-export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [spinType, setSpinType] = useState<'top' | 'back'>('top');
   const [round, setRound] = useState(1);
   const [score, setScore] = useState(0);
@@ -1226,6 +1249,7 @@ export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueActio
   };
 
   const handleRestart = () => {
+    resetScoreSubmission();
     scoreRef.current = 0;
     setRound(1);
     setScore(0);
@@ -1320,12 +1344,14 @@ export const TabletennisSpinRead: React.FC<GameProps> = ({ groupId, enqueueActio
 /* =========================================================================
    20. ⚾ baseball-bunt-defense (번트 대시 1루 송구 수비)
    ========================================================================= */
-export const BaseballBuntDefense: React.FC<GameProps> = ({ groupId, enqueueAction, onExit }) => {
+export const BaseballBuntDefense: React.FC<GameProps> = ({ groupId, enqueueAction: queueAction, onExit }) => {
+  const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [buntCatch, setBuntCatch] = useState(false);
   const [throwAcc, setThrowAcc] = useState(50);
   const [finished, setFinished] = useState(false);
 
   const handleRestart = () => {
+    resetScoreSubmission();
     setBuntCatch(false);
     setThrowAcc(50);
     setFinished(false);

@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxCoin } from '../../../application/soundEffects';
 
@@ -7,12 +8,15 @@ interface Props {
 }
 
 export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [hits, setHits] = useState(0);
   const [activeMole, setActiveMole] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(15);
   const [finished, setFinished] = useState(false);
   const [won, setWon] = useState(false);
   const finishedRef = useRef(false);
+  const activeMoleRef = useRef<number | null>(null);
+  const hitsRef = useRef(0);
 
   useEffect(() => {
     // Timer
@@ -30,17 +34,18 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
     const moleInterval = setInterval(() => {
       if (finishedRef.current) return;
       const r = Math.floor(Math.random() * 9);
+      activeMoleRef.current = r;
       setActiveMole(r);
       
       // Hide mole quickly to make it hard
-      setTimeout(() => setActiveMole(null), 700);
+      scheduleTimeout(() => { activeMoleRef.current = null; setActiveMole(null); }, 700);
     }, 800);
 
     return () => {
       clearInterval(timer);
       clearInterval(moleInterval);
     };
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished && !finishedRef.current) {
@@ -57,21 +62,21 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
   }, [timeLeft, finished, groupId, enqueueAction]);
 
   const handleWhack = (index: number) => {
-    if (finishedRef.current || finished || index !== activeMole) return;
+    if (finishedRef.current || index !== activeMoleRef.current) return;
 
     // Hit successful
+    activeMoleRef.current = null;
     setActiveMole(null); // Hide immediately
     sfxCoin();
-    setHits(h => {
-      const next = h + 1;
+    const next = hitsRef.current + 1;
+    hitsRef.current = next;
+    setHits(next);
       if (next >= 15 && !finishedRef.current) {
         finishedRef.current = true;
         setFinished(true);
         setWon(true);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
       }
-      return next;
-    });
   };
 
   return (
@@ -98,8 +103,9 @@ export const WhackAMoleGame = ({ groupId, enqueueAction }: Props) => {
           return (
             <button
               key={i}
-              onMouseDown={() => handleWhack(i)}
-              onTouchStart={() => handleWhack(i)}
+              onPointerDown={() => handleWhack(i)}
+              onClick={e => { if (e.detail === 0) handleWhack(i); }}
+              aria-label={`${i + 1}번 두더지 구멍`}
               className={`rounded-2xl transition-all duration-100 flex flex-col items-center justify-center relative overflow-hidden border-2 ${
                 isActive
                   ? 'bg-amber-900/80 border-amber-400 scale-100 shadow-[0_0_15px_rgba(251,191,36,0.6)]'

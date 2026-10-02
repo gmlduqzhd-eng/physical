@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxTap } from '../../../application/soundEffects';
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
   const [ringSize, setRingSize] = useState(200);
@@ -16,15 +18,14 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
   const scoreRef = useRef(0);
   const lockRef = useRef(false);
 
-  const shrinkRing = () => {
+  useEffect(() => {
+    const shrinkRing = () => {
     setRingSize(prev => {
       if (prev <= 10) return 200; // reset
       return prev - 1.5;
     });
     animRef.current = requestAnimationFrame(shrinkRing);
-  };
-
-  useEffect(() => {
+    };
     animRef.current = requestAnimationFrame(shrinkRing);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
   }, [round]);
@@ -46,7 +47,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
       setFinished(true);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() });
     } else {
-      setTimeout(() => {
+      scheduleTimeout(() => {
         setRound(r => r + 1);
         setRingSize(200);
         setLastScore(null);

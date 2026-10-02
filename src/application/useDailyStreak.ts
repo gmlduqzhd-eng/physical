@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { isRecord, localDateKey, nonnegativeNumber, readJsonStorage, writeStorage } from './browserStorage';
 
 export interface DailyStreakState {
   currentStreak: number;
@@ -10,36 +11,36 @@ export interface DailyStreakState {
 
 const STORAGE_KEY = 'dambang_daily_streak_v1';
 
-export const useDailyStreak = () => {
-  const [streakData, setStreakData] = useState<DailyStreakState>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // fallback
-    }
-    return {
-      currentStreak: 0,
-      bestStreak: 0,
-      lastCompletedDate: '',
-      history: [],
-      points: 0
-    };
-  });
+export const normalizeDailyStreak = (value: unknown): DailyStreakState => {
+  const saved = isRecord(value) ? value : {};
+  const validDate = (date: unknown): date is string => typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+  return {
+    currentStreak: Math.floor(nonnegativeNumber(saved.currentStreak)),
+    bestStreak: Math.floor(nonnegativeNumber(saved.bestStreak)),
+    lastCompletedDate: validDate(saved.lastCompletedDate) ? saved.lastCompletedDate : '',
+    history: Array.isArray(saved.history) ? [...new Set(saved.history.filter(validDate))].slice(-366) : [],
+    points: nonnegativeNumber(saved.points),
+  };
+};
 
-  const getTodayStr = () => new Date().toISOString().slice(0, 10);
+export const useDailyStreak = () => {
+  const [streakData, setStreakData] = useState<DailyStreakState>(() => normalizeDailyStreak(readJsonStorage(STORAGE_KEY)));
+  useEffect(() => { writeStorage(STORAGE_KEY, JSON.stringify(streakData)); }, [streakData]);
 
   const isTodayCompleted = useCallback(() => {
-    return streakData.lastCompletedDate === getTodayStr();
+    return streakData.lastCompletedDate === localDateKey();
   }, [streakData.lastCompletedDate]);
 
   // 완료 처리 함수
   const completeTodayMission = useCallback((bonusPoints = 50) => {
-    const today = getTodayStr();
+    const today = localDateKey();
+    if (!Number.isFinite(bonusPoints) || bonusPoints < 0) return;
     setStreakData(prev => {
       if (prev.lastCompletedDate === today) return prev; // 이미 오늘 완료됨
 
-      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const previousDate = new Date();
+      previousDate.setDate(previousDate.getDate() - 1);
+      const yesterday = localDateKey(previousDate);
       const isConsecutive = prev.lastCompletedDate === yesterday;
       const newStreak = isConsecutive ? prev.currentStreak + 1 : 1;
       const newBest = Math.max(newStreak, prev.bestStreak);
@@ -48,22 +49,19 @@ export const useDailyStreak = () => {
         currentStreak: newStreak,
         bestStreak: newBest,
         lastCompletedDate: today,
-        history: Array.from(new Set([...prev.history, today])),
+        history: Array.from(new Set([...prev.history, today])).slice(-366),
         points: prev.points + bonusPoints
       };
-
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextData));
-      } catch (e) {
-        console.warn('LocalStorage save failed', e);
-      }
 
       return nextData;
     });
   }, []);
 
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const streakIsActive = streakData.lastCompletedDate === localDateKey() || streakData.lastCompletedDate === localDateKey(yesterday);
   return {
-    streakData,
+    streakData: { ...streakData, currentStreak: streakIsActive ? streakData.currentStreak : 0 },
     isTodayCompleted,
     completeTodayMission
   };

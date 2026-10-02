@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { joinClassroomGroup, classroomError } from '../data/classroomRepository';
+import { readStorage, writeStorage } from '../application/browserStorage';
 import { QrCode, Loader2 } from 'lucide-react';
 
 export const QuickJoin = () => {
@@ -10,7 +12,7 @@ export const QuickJoin = () => {
   const roomId = searchParams.get('room') || '';
   const groupName = searchParams.get('group') || '';
 
-  const [studentName, setStudentName] = useState(() => localStorage.getItem('physical_student_name') || '');
+  const [studentName, setStudentName] = useState(() => readStorage('physical_student_name') || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [roomName, setRoomName] = useState('');
@@ -36,6 +38,7 @@ export const QuickJoin = () => {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (loading) return;
     if (!studentName.trim()) {
       setError('이름을 입력해주세요.');
       return;
@@ -43,41 +46,19 @@ export const QuickJoin = () => {
     setLoading(true);
     setError('');
 
-    // 모둠 접속 처리
-    const { data: groupData, error: groupError } = await supabase
-      .from('room_groups')
-      .select('id')
-      .eq('room_id', roomId)
-      .eq('group_name', groupName)
-      .single();
-
-    let groupId: string;
-    const avatar = 'Smile';
-
-    if (groupError || !groupData) {
-      const { data: newGroup, error: insertError } = await supabase
-        .from('room_groups')
-        .insert([{ room_id: roomId, group_name: groupName, avatar }])
-        .select('id')
-        .single();
-
-      if (insertError || !newGroup) {
-        setError('모둠 접속에 실패했습니다. 다시 시도해주세요.');
-        setLoading(false);
-        return;
-      }
-      groupId = newGroup.id;
-    } else {
-      groupId = groupData.id;
-    }
-
-    localStorage.setItem('physical_student_name', studentName.trim());
-    localStorage.setItem('physical_student_role', 'novice');
-    localStorage.setItem('physical_last_room', roomId);
-    localStorage.setItem('physical_last_group', groupId);
-    localStorage.setItem('physical_last_group_name', groupName);
-
-    navigate(`/mobile/${roomId}/${groupId}`);
+    try {
+      const room = await supabase.from('game_rooms').select('id').eq('id', roomId).maybeSingle();
+      if (room.error) throw new Error('방 정보를 확인할 수 없습니다. 연결 상태를 확인해주세요.');
+      if (!room.data) throw new Error('삭제되었거나 존재하지 않는 수업 방입니다. 새 QR 코드를 요청해주세요.');
+      const groupId = await joinClassroomGroup(roomId, groupName);
+      writeStorage('physical_student_name', studentName.trim());
+      writeStorage('physical_student_role', 'novice');
+      writeStorage('physical_last_room', roomId);
+      writeStorage('physical_last_group', groupId);
+      writeStorage('physical_last_group_name', groupName);
+      navigate(`/mobile/${roomId}/${groupId}`);
+    } catch (cause) { setError(classroomError(cause, '접속에 실패했습니다. 다시 시도해주세요.')); }
+    finally { setLoading(false); }
   };
 
   return (
@@ -116,7 +97,7 @@ export const QuickJoin = () => {
         </button>
       </form>
 
-      <button onClick={() => navigate('/')} className="mt-6 text-slate-400 text-sm font-bold hover:text-slate-600">
+      <button onClick={() => navigate('/lobby')} className="mt-6 text-slate-400 text-sm font-bold hover:text-slate-600">
         직접 PIN 번호로 입장하기 →
       </button>
     </div>

@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node scripts/runtime-regressions.cjs",
+    "test:ui": "node scripts/ui-regressions.cjs",
+    "test:games": "node scripts/game-regressions.cjs",
+    "test:catalog": "node scripts/game-catalog-smoke.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
@@ -31,6 +35,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "playwright": "^1.63.0",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.2",

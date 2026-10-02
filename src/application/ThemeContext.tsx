@@ -1,4 +1,5 @@
 import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { readStorage, writeStorage } from './browserStorage';
 
 type Theme = 'dark' | 'light';
 
@@ -19,12 +20,12 @@ export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem('physical_theme');
+    const saved = readStorage('physical_theme');
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
   });
 
   useEffect(() => {
-    localStorage.setItem('physical_theme', theme);
+    writeStorage('physical_theme', theme);
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.add('light-theme');

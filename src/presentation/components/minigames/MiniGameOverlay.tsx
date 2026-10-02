@@ -26,36 +26,37 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   if (!gameRoom.active_minigame) return null;
 
   const minigame = gameRoom.active_minigame;
+  const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
   switch (minigame.type) {
     case 'volcano':
-      return <VolcanoGame gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
+      return <VolcanoGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'telepathy':
-      return <TelepathyGame gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
+      return <TelepathyGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'tug_of_war':
-      return <TugOfWarGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <TugOfWarGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'shake':
-      return <ShakeGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <ShakeGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'memory':
-      return <MemoryGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <MemoryGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'stopwatch':
-      return <StopwatchGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <StopwatchGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'number_grid':
-      return <NumberGridGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <NumberGridGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'fate_card':
-      return <FateCardGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <FateCardGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'whack_a_mole':
-      return <WhackAMoleGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <WhackAMoleGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'scream':
-      return <ScreamGame groupId={groupId} enqueueAction={enqueueAction} />;
+      return <ScreamGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
     case 'bomb':
-      return <LegacyBombGame bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
+      return <LegacyBombGame key={sessionKey} bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
     case 'quiz':
-      return <LegacyQuizGame quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
+      return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
     default:
       // Fallback for quiz if type is undefined (legacy compatibility)
       if (minigame.question) {
-        return <LegacyQuizGame quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
+        return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
       }
       return null;
   }

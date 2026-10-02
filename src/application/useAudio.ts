@@ -1,12 +1,13 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 // 브라우저 AudioContext를 활용한 절차적 사운드 생성 엔진 (외부 MP3 파일 의존성 제거)
 export const useAudio = () => {
   const audioCtx = useRef<AudioContext | null>(null);
   const lastSirenPlay = useRef(0);
 
-  const getAudioCtx = () => {
-    if (!audioCtx.current) {
+  const getAudioCtx = useCallback(() => {
+    try {
+    if (!audioCtx.current || audioCtx.current.state === 'closed') {
       const AudioCtxConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtxConstructor) {
         audioCtx.current = new AudioCtxConstructor();
@@ -16,7 +17,8 @@ export const useAudio = () => {
       audioCtx.current.resume().catch(() => {});
     }
     return audioCtx.current;
-  };
+    } catch { return null; }
+  }, []);
 
   useEffect(() => {
     const initAudio = () => {
@@ -28,10 +30,13 @@ export const useAudio = () => {
     return () => {
       window.removeEventListener('click', initAudio);
       window.removeEventListener('touchstart', initAudio);
+      const context = audioCtx.current;
+      audioCtx.current = null;
+      if (context && context.state !== 'closed') void context.close().catch(() => {});
     };
-  }, []);
+  }, [getAudioCtx]);
 
-  const playBeep = () => {
+  const playBeep = useCallback(() => {
     const ctx = getAudioCtx();
     if (!ctx) return;
     const osc = ctx.createOscillator();
@@ -49,9 +54,9 @@ export const useAudio = () => {
     
     osc.start();
     osc.stop(ctx.currentTime + 0.3);
-  };
+  }, [getAudioCtx]);
 
-  const playSiren = () => {
+  const playSiren = useCallback(() => {
     const ctx = getAudioCtx();
     if (!ctx) return;
     // 6초 이내 중복 재생 방지 (청각 테러 차단)
@@ -77,9 +82,9 @@ export const useAudio = () => {
     
     osc.start();
     osc.stop(ctx.currentTime + 6);
-  };
+  }, [getAudioCtx]);
 
-  const playVictory = () => {
+  const playVictory = useCallback(() => {
     const ctx = getAudioCtx();
     if (!ctx) return;
     // 아르페지오 팡파레
@@ -99,7 +104,7 @@ export const useAudio = () => {
       osc.start(ctx.currentTime + i*0.1);
       osc.stop(ctx.currentTime + i*0.1 + 1);
     });
-  };
+  }, [getAudioCtx]);
 
   return { playBeep, playSiren, playVictory };
 };

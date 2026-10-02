@@ -1,22 +1,22 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ScoreBoard } from './presentation/ScoreBoard';
-import { MobileMissionView } from './presentation/MobileMissionView';
-import { AdminControlPanel } from './presentation/AdminControlPanel';
-import { Lobby } from './presentation/Lobby';
-import { Manual } from './presentation/Manual';
-import { KioskRelayView } from './presentation/KioskRelayView';
-import { QuickJoin } from './presentation/QuickJoin';
-import { BoardEntry } from './presentation/BoardEntry';
-import { IntroLandingPage } from './presentation/IntroLandingPage';
-import { GameHub } from './presentation/GameHub';
-import { GamePlayPage } from './presentation/GamePlayPage';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 import { TeacherAuthGuard } from './presentation/components/TeacherAuthGuard';
 
-import { TeacherRemote } from './presentation/TeacherRemote';
+const ScoreBoard = lazy(() => import('./presentation/ScoreBoard').then(m => ({ default: m.ScoreBoard })));
+const MobileMissionView = lazy(() => import('./presentation/MobileMissionView').then(m => ({ default: m.MobileMissionView })));
+const AdminControlPanel = lazy(() => import('./presentation/AdminControlPanel').then(m => ({ default: m.AdminControlPanel })));
+const Lobby = lazy(() => import('./presentation/Lobby').then(m => ({ default: m.Lobby })));
+const Manual = lazy(() => import('./presentation/Manual').then(m => ({ default: m.Manual })));
+const KioskRelayView = lazy(() => import('./presentation/KioskRelayView').then(m => ({ default: m.KioskRelayView })));
+const QuickJoin = lazy(() => import('./presentation/QuickJoin').then(m => ({ default: m.QuickJoin })));
+const BoardEntry = lazy(() => import('./presentation/BoardEntry').then(m => ({ default: m.BoardEntry })));
+const IntroLandingPage = lazy(() => import('./presentation/IntroLandingPage').then(m => ({ default: m.IntroLandingPage })));
+const GameHub = lazy(() => import('./presentation/GameHub').then(m => ({ default: m.GameHub })));
+const GamePlayPage = lazy(() => import('./presentation/GamePlayPage').then(m => ({ default: m.GamePlayPage })));
+const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
 
 function App() {
   useEffect(() => {
@@ -30,6 +30,7 @@ function App() {
     <ThemeProvider>
     <BrowserRouter>
       <KakaoInAppNotice />
+      <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
       <Routes>
         {/* 메인: 소개 페이지가 먼저 노출되고, '게임하기' 클릭 시 게임 허브(/hub)로 이동 */}
         <Route path="/" element={<IntroLandingPage />} />
@@ -50,6 +51,7 @@ function App() {
         <Route path="/kiosk" element={hasSupabase ? <KioskRelayView /> : <SupabaseRequired />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </Suspense>
     </BrowserRouter>
     </ThemeProvider>
   );
@@ -57,15 +59,12 @@ function App() {
 
 const SupabaseRequired = () => (
   <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 font-sans">
-    <h1 className="text-3xl text-red-500 font-bold mb-4">🚨 환경 변수가 누락되었습니다!</h1>
+    <h1 className="text-2xl font-bold mb-4">수업 연결을 준비하고 있습니다</h1>
     <p className="text-lg mb-6 text-slate-600 text-center">
-      이 기능은 Supabase 연결이 필요합니다.<br/>
-      Vercel 대시보드(Settings {'>'} Environment Variables)에서<br/>다음 환경변수를 설정하고 <b>재배포(Redeploy)</b> 해주세요.
+      지금은 실시간 수업에 연결할 수 없습니다.<br/>
+      잠시 후 다시 시도해 주세요. 개인 게임은 바로 이용할 수 있습니다.
     </p>
-    <ul className="bg-white p-8 rounded-xl text-left list-disc list-inside border border-slate-200 shadow-sm font-mono text-cyan-600">
-      <li className="mb-2">VITE_SUPABASE_URL</li>
-      <li>VITE_SUPABASE_ANON_KEY</li>
-    </ul>
+    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">개인 게임 열기</a>
   </div>
 );
 
@@ -74,7 +73,7 @@ const NotFound = () => (
     <div className="text-6xl" aria-hidden="true">🧭</div>
     <h1 className="text-3xl font-black">페이지를 찾을 수 없습니다</h1>
     <p className="text-slate-300">주소를 다시 확인하거나 게임 허브로 돌아가 주세요.</p>
-    <a href="/" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
+    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
       게임 허브로 이동
     </a>
   </div>

@@ -1,9 +1,11 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxPop, sfxCoin } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
 export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [phase, setPhase] = useState<'move' | 'freeze'>('move');
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(1);
@@ -17,6 +19,7 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
   const finishedRef = useRef(false);
 
   useEffect(() => {
+    if (finishedRef.current) return;
     if (round > TOTAL_ROUNDS) {
       if (!finishedRef.current) {
         finishedRef.current = true;
@@ -29,10 +32,11 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
     setPhase('move');
     setShakeCount(0);
     const moveTime = 2000 + Math.random() * 3000;
-    const freezeTimer = setTimeout(() => {
+    const freezeTimer = scheduleTimeout(() => {
       phaseRef.current = 'freeze';
       setPhase('freeze');
-      innerTimerRef.current = setTimeout(() => {
+      innerTimerRef.current = scheduleTimeout(() => {
+        if (finishedRef.current) return;
         sfxCoin();
         const next = scoreRef.current + 50;
         scoreRef.current = next;
@@ -45,11 +49,11 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
       clearTimeout(freezeTimer);
       if (innerTimerRef.current) clearTimeout(innerTimerRef.current);
     };
-  }, [round, groupId, enqueueAction]);
+  }, [round, eliminated, groupId, enqueueAction, scheduleTimeout]);
 
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
-      if (eliminated || finished) return;
+      if (finishedRef.current || eliminated || finished) return;
       const a = e.accelerationIncludingGravity;
       if (!a) return;
       const mag = Math.sqrt((a.x ?? 0) ** 2 + (a.y ?? 0) ** 2 + (a.z ?? 0) ** 2);
@@ -57,6 +61,8 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
         setShakeCount(s => s + 1);
       }
       if (phaseRef.current === 'freeze' && mag > 14) {
+        finishedRef.current = true;
+        clearTimeout(innerTimerRef.current);
         setEliminated(true);
         sfxPop();
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() });
@@ -64,7 +70,7 @@ export const FreezeGame = ({ groupId, enqueueAction }: Props) => {
     };
     window.addEventListener('devicemotion', handler);
     return () => window.removeEventListener('devicemotion', handler);
-  }, [eliminated, finished]);
+  }, [eliminated, finished, enqueueAction, groupId]);
 
   return (
     <div className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-300 ${phase === 'move' ? 'bg-green-900' : 'bg-blue-950'}`}>

@@ -65,6 +65,7 @@ export const OneLegBalance = ({ groupId, enqueueAction }: Props) => {
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
+      onPointerCancel={handlePointerUp}
       className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer touch-none ${
         stable ? 'bg-emerald-950' : 'bg-orange-950'
       }`}

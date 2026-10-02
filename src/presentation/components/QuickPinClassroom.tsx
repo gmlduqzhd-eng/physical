@@ -1,297 +1,163 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '../../data/supabase';
+import { createClassroom, findRoomByPin, classroomError } from '../../data/classroomRepository';
+import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
 
 interface QuickPinClassroomProps {
   isOpen: boolean;
   onClose: () => void;
-  onStartGame: (gameType: string) => void;
+  onStartGame: (gameType: string, context?: { roomId: string; groupId: string; pin: string }) => void;
 }
 
 interface PinRoom {
+  id: string;
   pin: string;
-  createdAt: number;
   hostId: string;
   blueScore: number;
   whiteScore: number;
+  blueGroupId: string;
+  whiteGroupId: string;
   members: string[];
 }
 
-const STORAGE_KEY = 'dambang_pin_battles_v1';
-const CHANNEL_NAME = 'dambang_pin_battle_sync';
-
-// 로컬스토리지 방 목록 가져오기 (6시간 지난 방 자동 정리)
-const getStoredRooms = (): Record<string, PinRoom> => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    const parsed: Record<string, PinRoom> = JSON.parse(raw);
-    const now = Date.now();
-    const validRooms: Record<string, PinRoom> = {};
-    for (const [k, v] of Object.entries(parsed)) {
-      if (now - v.createdAt < 6 * 3600 * 1000) {
-        validRooms[k] = v;
-      }
-    }
-    return validRooms;
-  } catch {
-    return {};
-  }
-};
-
-const saveStoredRooms = (rooms: Record<string, PinRoom>) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
-  } catch (e) {
-    console.warn('Failed to save pin rooms', e);
-  }
-};
-
 export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, onClose, onStartGame }) => {
   const { playBeep } = useAudio();
-
-  // 브라우저 탭 고유 클라이언트 ID 생성
-  const [clientId] = useState<string>(() => {
-    try {
-      let id = sessionStorage.getItem('pin_battle_client_id');
-      if (!id) {
-        id = 'user_' + Math.random().toString(36).substring(2, 9);
-        sessionStorage.setItem('pin_battle_client_id', id);
-      }
-      return id;
-    } catch {
-      return 'user_client';
-    }
-  });
-
-  const [inputPin, setInputPin] = useState<string>('');
-  const [inRoom, setInRoom] = useState<boolean>(false);
+  const [clientId] = useState(() => crypto.randomUUID());
+  const [inputPin, setInputPin] = useState('');
+  const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<'blue' | 'white'>('blue');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [copied, setCopied] = useState<boolean>(false);
+  const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const [restoreRoomId] = useState(() => readStorage('pin_battle_current_room', 'session'));
+  const [restorePin] = useState(() => readStorage('pin_battle_current_pin', 'session'));
 
-  // 실시간 동기화 채널 (BroadcastChannel)
   useEffect(() => {
-    if (typeof window === 'undefined' || !('BroadcastChannel' in window)) return;
-
-    const channel = new BroadcastChannel(CHANNEL_NAME);
-
-    channel.onmessage = (event: MessageEvent) => {
-      const { type, pin, room, team, points, targetClientId } = event.data || {};
-
-      if (type === 'ROOM_CREATED' && room) {
-        // 새 방 개설 알림
-      }
-
-      if (currentRoom && currentRoom.pin === pin) {
-        if (type === 'JOIN' && targetClientId) {
-          setCurrentRoom(prev => {
-            if (!prev) return null;
-            if (prev.members.includes(targetClientId)) return prev;
-            return {
-              ...prev,
-              members: [...prev.members, targetClientId]
-            };
-          });
-        } else if (type === 'SCORE_UPDATE') {
-          setCurrentRoom(prev => {
-            if (!prev) return null;
-            return {
-              ...prev,
-              blueScore: team === 'blue' ? prev.blueScore + points : prev.blueScore,
-              whiteScore: team === 'white' ? prev.whiteScore + points : prev.whiteScore
-            };
-          });
-        } else if (type === 'ROOM_CLOSED') {
-          alert('방장(선생님)이 배틀 방을 종료했습니다.');
-          setInRoom(false);
-          setCurrentRoom(null);
-        }
-      }
-    };
-
-    // 다른 탭에서의 localStorage 변경 감지
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && currentRoom) {
-        const rooms = getStoredRooms();
-        if (rooms[currentRoom.pin]) {
-          setCurrentRoom(rooms[currentRoom.pin]);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorage);
-
-    return () => {
-      channel.close();
-      window.removeEventListener('storage', handleStorage);
-    };
-  }, [currentRoom]);
-
-  // 방 개설 (선생님)
-  const handleCreateRoom = useCallback(() => {
-    setErrorMsg(null);
-    const rooms = getStoredRooms();
-
-    // 중복 없는 4자리 핀 생성
-    let newPin = '';
-    for (let i = 0; i < 10; i++) {
-      const candidate = Math.floor(1000 + Math.random() * 9000).toString();
-      if (!rooms[candidate]) {
-        newPin = candidate;
-        break;
-      }
-    }
-    if (!newPin) newPin = Math.floor(1000 + Math.random() * 9000).toString();
-
-    const newRoom: PinRoom = {
-      pin: newPin,
-      createdAt: Date.now(),
-      hostId: clientId,
-      blueScore: 0,
-      whiteScore: 0,
-      members: [clientId]
-    };
-
-    rooms[newPin] = newRoom;
-    saveStoredRooms(rooms);
-
-    try {
-      if ('BroadcastChannel' in window) {
-        const channel = new BroadcastChannel(CHANNEL_NAME);
-        channel.postMessage({ type: 'ROOM_CREATED', room: newRoom });
-        channel.close();
-      }
-    } catch {
-      // 브로드캐스트 미지원 또는 실패 무시
-    }
-
-    setCurrentRoom(newRoom);
-    setInRoom(true);
-    playBeep();
-  }, [clientId, playBeep]);
-
-  // 방 입장 (학생)
-  const handleJoinRoom = useCallback(() => {
-    setErrorMsg(null);
-    const trimmed = inputPin.trim();
-
-    if (trimmed.length !== 4) {
-      setErrorMsg('4자리 숫자 방 번호(PIN)를 정확히 입력해 주세요.');
-      return;
-    }
-
-    const rooms = getStoredRooms();
-    const foundRoom = rooms[trimmed];
-
-    // 방이 존재하지 않는 경우 확실하게 차단!
-    if (!foundRoom) {
-      setErrorMsg(`개설되지 않았거나 종료된 방 번호(#${trimmed})입니다.\n선생님께서 먼저 '학급 배틀방 개설하기'로 방을 열었는지 확인해 주세요.`);
-      return;
-    }
-
-    // 참가자 목록에 내 clientId 등록
-    if (!foundRoom.members.includes(clientId)) {
-      foundRoom.members.push(clientId);
-      rooms[trimmed] = foundRoom;
-      saveStoredRooms(rooms);
-
+    if (!restoreRoomId || !restorePin) return;
+    let active = true;
+    const restore = async () => {
       try {
-        if ('BroadcastChannel' in window) {
-          const channel = new BroadcastChannel(CHANNEL_NAME);
-          channel.postMessage({ type: 'JOIN', pin: trimmed, targetClientId: clientId });
-          channel.close();
-        }
-      } catch {
-        // 브로드캐스트 미지원 또는 실패 무시
-      }
-    }
-
-    setCurrentRoom(foundRoom);
-    setInRoom(true);
-    playBeep();
-  }, [inputPin, clientId, playBeep]);
-
-  // 점수 기여
-  const handleAddScore = useCallback((points: number) => {
-    if (!currentRoom) return;
-    playBeep();
-
-    const rooms = getStoredRooms();
-    const room = rooms[currentRoom.pin] || currentRoom;
-
-    const updatedRoom: PinRoom = {
-      ...room,
-      blueScore: selectedTeam === 'blue' ? room.blueScore + points : room.blueScore,
-      whiteScore: selectedTeam === 'white' ? room.whiteScore + points : room.whiteScore
+        const room = await findRoomByPin(restorePin);
+        if (room.id !== restoreRoomId || room.status === 'finished') return;
+        const { data, error } = await supabase.from('room_groups').select('*').eq('room_id', room.id);
+        const blue = data?.find(group => group.group_name === '청팀');
+        const white = data?.find(group => group.group_name === '백팀');
+        if (!active || error || !blue || !white) return;
+        setCurrentRoom({ id: room.id, pin: room.pin_code, hostId: readStorage('pin_battle_host_' + room.id, 'session') === 'true' ? clientId : '', blueScore: blue.score, whiteScore: white.score, blueGroupId: blue.id, whiteGroupId: white.id, members: [clientId] });
+        setInRoom(true);
+      } catch { /* A removed saved battle can be replaced by a new PIN. */ }
     };
+    void restore();
+    return () => { active = false; };
+  }, [restoreRoomId, restorePin, clientId]);
 
-    rooms[currentRoom.pin] = updatedRoom;
-    saveStoredRooms(rooms);
-    setCurrentRoom(updatedRoom);
-
-    try {
-      if ('BroadcastChannel' in window) {
-        const channel = new BroadcastChannel(CHANNEL_NAME);
-        channel.postMessage({
-          type: 'SCORE_UPDATE',
-          pin: currentRoom.pin,
-          team: selectedTeam,
-          points
-        });
-        channel.close();
-      }
-    } catch {
-      // 브로드캐스트 실패 무시
-    }
-  }, [currentRoom, selectedTeam, playBeep]);
-
-  // 방 나가기
-  const handleLeaveRoom = () => {
-    if (currentRoom) {
-      const rooms = getStoredRooms();
-      if (rooms[currentRoom.pin]) {
-        rooms[currentRoom.pin].members = rooms[currentRoom.pin].members.filter(m => m !== clientId);
-        saveStoredRooms(rooms);
-      }
-    }
-    setInRoom(false);
-    setCurrentRoom(null);
-    setInputPin('');
-    setErrorMsg(null);
+  const readBattle = async (id: string, pin: string): Promise<PinRoom> => {
+    const { data, error } = await supabase.from('room_groups').select('*').eq('room_id', id);
+    if (error) throw new Error('팀 정보를 불러오지 못했습니다. 연결 상태를 확인해주세요.');
+    const blue = data?.find(group => group.group_name === '청팀');
+    const white = data?.find(group => group.group_name === '백팀');
+    if (!blue || !white) throw new Error('청백 학급 배틀 방이 아닙니다. 수업 참여는 홈의 PIN 입장을 이용해주세요.');
+    return { id, pin, hostId: readStorage('pin_battle_host_' + id, 'session') === 'true' ? clientId : '', blueScore: blue.score, whiteScore: white.score, blueGroupId: blue.id, whiteGroupId: white.id, members: [clientId] };
   };
 
-  // 방 종료 (선생님 권한)
-  const handleCloseRoom = () => {
-    if (!currentRoom) return;
-    if (confirm(`정말 #${currentRoom.pin} 배틀 방을 종료하시겠습니까? 모든 참가자가 퇴장됩니다.`)) {
-      const rooms = getStoredRooms();
-      delete rooms[currentRoom.pin];
-      saveStoredRooms(rooms);
-
-      try {
-        if ('BroadcastChannel' in window) {
-          const channel = new BroadcastChannel(CHANNEL_NAME);
-          channel.postMessage({ type: 'ROOM_CLOSED', pin: currentRoom.pin });
-          channel.close();
-        }
-      } catch {
-        // 브로드캐스트 미지원 또는 실패 무시
+  const battleId = currentRoom?.id;
+  useEffect(() => {
+    if (!battleId) return;
+    let active = true;
+    const update = async () => {
+      const [room, groups] = await Promise.all([
+        supabase.from('game_rooms').select('status').eq('id', battleId).maybeSingle(),
+        supabase.from('room_groups').select('id,score').eq('room_id', battleId),
+      ]);
+      if (!active) return;
+      if (room.error || groups.error) { setErrorMsg('연결을 복구하고 있습니다. 잠시 후 다시 시도해주세요.'); return; }
+      if (!room.data || room.data.status === 'finished') {
+        setCurrentRoom(null); setInRoom(false); setErrorMsg('선생님이 배틀 방을 종료했습니다.'); return;
       }
-
-      setInRoom(false);
-      setCurrentRoom(null);
-      setInputPin('');
       setErrorMsg(null);
+      setCurrentRoom(previous => previous?.id === battleId ? { ...previous, blueScore: groups.data?.find(group => group.id === previous.blueGroupId)?.score ?? previous.blueScore, whiteScore: groups.data?.find(group => group.id === previous.whiteGroupId)?.score ?? previous.whiteScore } : previous);
+    };
+    const channel = supabase.channel('pin_battle_' + battleId, { config: { presence: { key: clientId } } })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: 'room_id=eq.' + battleId }, () => { void update(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: 'id=eq.' + battleId }, () => { void update(); })
+      .on('presence', { event: 'sync' }, () => {
+        const members = Object.keys(channel.presenceState());
+        if (active) setCurrentRoom(previous => previous?.id === battleId ? { ...previous, members } : previous);
+      })
+      .subscribe(status => {
+        if (status === 'SUBSCRIBED') { void channel.track({ clientId }); void update(); }
+        if (active && (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) setErrorMsg('실시간 연결을 복구하고 있습니다.');
+      });
+    void update();
+    const interval = window.setInterval(() => { if (navigator.onLine) void update(); }, 10000);
+    return () => { active = false; clearInterval(interval); void supabase.removeChannel(channel); };
+  }, [battleId, clientId]);
+
+  const handleCreateRoom = async () => {
+    if (busyRef.current) return;
+    const teacherPin = readStorage('teacher_master_pin') || '1234';
+    if (readStorage('teacher_session_auth', 'session') !== teacherPin) {
+      const entered = prompt('이 기기의 교사 화면 잠금 PIN을 입력해주세요. (초기값: 1234)');
+      if (entered !== teacherPin) { if (entered !== null) setErrorMsg('교사 PIN이 일치하지 않습니다.'); return; }
+      writeStorage('teacher_session_auth', teacherPin, 'session');
     }
+    busyRef.current = true; setBusy(true); setErrorMsg(null);
+    try {
+      const room = await createClassroom('청백 학급 배틀', null, ['청팀', '백팀']);
+      writeStorage('pin_battle_host_' + room.id, 'true', 'session');
+      const battle = await readBattle(room.id, room.pin_code);
+      writeStorage('pin_battle_current_room', room.id, 'session');
+      writeStorage('pin_battle_current_pin', room.pin_code, 'session');
+      // Keep host controls usable when browser storage is unavailable.
+      setCurrentRoom({ ...battle, hostId: clientId }); setInRoom(true); playBeep();
+    } catch (cause) { setErrorMsg(classroomError(cause, '배틀 방 생성에 실패했습니다.')); }
+    finally { busyRef.current = false; setBusy(false); }
   };
 
-  const handleCopyPin = () => {
+  const handleJoinRoom = async () => {
+    if (busyRef.current) return;
+    busyRef.current = true; setBusy(true); setErrorMsg(null);
+    try {
+      const room = await findRoomByPin(inputPin);
+      if (room.status === 'finished') throw new Error('종료된 배틀 방입니다. 새 PIN을 요청해주세요.');
+      const battle = await readBattle(room.id, room.pin_code);
+      writeStorage('pin_battle_current_room', room.id, 'session');
+      writeStorage('pin_battle_current_pin', room.pin_code, 'session');
+      setCurrentRoom(battle); setInRoom(true); playBeep();
+    } catch (cause) { setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.')); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+
+  const handleStartGame = async (gameType: string) => {
+    if (!currentRoom || busyRef.current) return;
+    busyRef.current = true; setBusy(true); setErrorMsg(null);
+    try {
+      const groupId = selectedTeam === 'blue' ? currentRoom.blueGroupId : currentRoom.whiteGroupId;
+      playBeep(); onStartGame(gameType, { roomId: currentRoom.id, groupId, pin: currentRoom.pin }); onClose();
+    } catch (cause) { setErrorMsg(classroomError(cause, '게임 시작에 실패했습니다.')); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+
+  const handleLeaveRoom = () => { removeStorage('pin_battle_current_room', 'session'); removeStorage('pin_battle_current_pin', 'session'); setCurrentRoom(null); setInRoom(false); setInputPin(''); setErrorMsg(null); };
+  const handleCloseRoom = async () => {
+    if (!currentRoom || currentRoom.hostId !== clientId || busyRef.current) return;
+    if (!confirm('배틀 방을 종료하시겠습니까? 모든 참가자가 퇴장합니다.')) return;
+    busyRef.current = true; setBusy(true);
+    try {
+      const { error } = await supabase.from('game_rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
+      if (error) throw new Error('방 종료에 실패했습니다. 다시 시도해주세요.');
+      handleLeaveRoom();
+    } catch (cause) { setErrorMsg(classroomError(cause, '방 종료에 실패했습니다.')); }
+    finally { busyRef.current = false; setBusy(false); }
+  };
+  const handleCopyPin = async () => {
     if (!currentRoom) return;
-    navigator.clipboard?.writeText(currentRoom.pin);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try { await navigator.clipboard.writeText(currentRoom.pin); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { setErrorMsg('PIN ' + currentRoom.pin + '을 직접 복사해주세요.'); }
   };
 
   if (!isOpen) return null;
@@ -306,7 +172,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-blue-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-slate-900 border border-blue-500/40 rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
@@ -350,6 +216,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               />
               <button
                 onClick={handleJoinRoom}
+                disabled={busy}
                 className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-950 font-black rounded-xl text-sm transition-all shadow-md shadow-cyan-500/20"
               >
                 방 입장하기
@@ -363,6 +230,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             <button
               onClick={handleCreateRoom}
+              disabled={busy}
               className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold rounded-xl text-sm border border-blue-400/30 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1.5"
             >
               <Crown className="w-4 h-4 text-amber-300" />
@@ -462,29 +330,22 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             {/* 선택된 팀에 점수 기여하기 */}
             <div className="space-y-2 mb-4">
+              {errorMsg && <p role="alert" className="text-xs text-rose-300">{errorMsg}</p>}
               <p className="text-xs font-bold text-slate-400">
                 선택된 <span className={selectedTeam === 'blue' ? 'text-blue-400 font-extrabold' : 'text-slate-200 font-extrabold'}>{selectedTeam === 'blue' ? '청팀' : '백팀'}</span>에 점수 기여하기
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  onClick={() => {
-                    handleAddScore(20);
-                    onStartGame('reaction');
-                    onClose();
-                  }}
+                  onClick={() => handleStartGame('reaction')} disabled={busy}
                   className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 반응속도 (+20P)
+                  <Play className="w-3.5 h-3.5 fill-white" /> 반응속도 (결과 점수 반영)
                 </button>
                 <button
-                  onClick={() => {
-                    handleAddScore(20);
-                    onStartGame('swipe');
-                    onClose();
-                  }}
+                  onClick={() => handleStartGame('swipe')} disabled={busy}
                   className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 방향 스와이프 (+20P)
+                  <Play className="w-3.5 h-3.5 fill-white" /> 방향 스와이프 (결과 점수 반영)
                 </button>
               </div>
             </div>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxTap } from '../../../application/soundEffects';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../../icons';
 
 interface Props {
   groupId: string;
@@ -11,47 +11,39 @@ export const TugOfWarGame = ({ groupId, enqueueAction }: Props) => {
   const [progress, setProgress] = useState(50); // Starts at 50, need to reach 100
   const [finished, setFinished] = useState(false);
   const [won, setWon] = useState(false);
+  const progressRef = useRef(50);
+  const finishedRef = useRef(false);
+  const finishGame = useCallback((victory: boolean) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    setFinished(true);
+    setWon(victory);
+    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: victory ? 500 : 0 }, timestamp: Date.now() });
+  }, [enqueueAction, groupId]);
 
   useEffect(() => {
     if (finished) return;
 
     // Enemy pulls back every 200ms
     const timer = setInterval(() => {
-      setProgress(p => {
-        const next = p - 1; // Enemy pulls 5 units per second
-        if (next <= 0) {
-          clearInterval(timer);
-          setFinished(true);
-          setWon(false);
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
-          return 0;
-        }
-        return next;
-      });
+      if (finishedRef.current) return;
+      const next = Math.max(0, progressRef.current - 1);
+      progressRef.current = next;
+      setProgress(next);
+      if (next === 0) { clearInterval(timer); finishGame(false); }
     }, 200);
 
     return () => clearInterval(timer);
-  }, [finished]);
+  }, [finished, finishGame]);
 
   const handleTap = () => {
-    if (finished) return;
+    if (finishedRef.current) return;
     sfxTap();
     
-    setProgress(p => {
-      if (p >= 100) return 100;
-      const next = p + 2; // Player pulls 2 units per tap
-      if (next >= 100) {
-        setFinished(true);
-        setWon(true);
-        submitScore();
-        return 100;
-      }
-      return next;
-    });
-  };
-
-  const submitScore = async () => {
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+    const next = Math.min(100, progressRef.current + 2);
+    progressRef.current = next;
+    setProgress(next);
+    if (next === 100) finishGame(true);
   };
 
   return (

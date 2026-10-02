@@ -31,11 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <h1 className="text-3xl font-bold text-red-500 mb-4">앗! 시스템 오류 발생 🚨</h1>
           <p className="text-gray-300 mb-6 text-center max-w-md">
             예기치 않은 오류가 발생하여 안전하게 화면을 보호했습니다.
-            {this.state.error && (
-              <span className="block mt-2 text-sm text-red-400 bg-black p-2 rounded">
-                {this.state.error.message}
-              </span>
-            )}
+            잠시 후 새로고침하거나 홈으로 돌아가 다시 시도해 주세요.
           </p>
           <button 
             onClick={() => window.location.reload()}
@@ -43,6 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
           >
             화면 새로고침
           </button>
+          <a href="/" className="mt-4 px-6 py-3 text-cyan-300 underline">홈으로 돌아가기</a>
         </div>
       );
     }

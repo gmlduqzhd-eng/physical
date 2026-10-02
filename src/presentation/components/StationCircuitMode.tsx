@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, Printer, Trophy, Play } from 'lucide-react';
+import { readJsonStorage, writeStorage, localDateKey } from '../../application/browserStorage';
 
 interface StationCircuitModeProps {
   isOpen: boolean;
@@ -57,15 +58,19 @@ const STATIONS: Station[] = [
 ];
 
 export const StationCircuitMode: React.FC<StationCircuitModeProps> = ({ isOpen, onClose, onLaunchGame }) => {
-  const [completedStations, setCompletedStations] = useState<string[]>([]);
+  const storageKey = `physical_station_stamps_${localDateKey()}`;
+  const [completedStations, setCompletedStations] = useState<string[]>(() => {
+    const saved = readJsonStorage(storageKey);
+    return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string' && STATIONS.some(station => station.id === id)) : [];
+  });
   const [printMode, setPrintMode] = useState(false);
 
   if (!isOpen) return null;
 
   const toggleComplete = (id: string) => {
-    setCompletedStations(prev =>
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+    const next = completedStations.includes(id) ? completedStations.filter(station => station !== id) : [...completedStations, id];
+    writeStorage(storageKey, JSON.stringify(next));
+    setCompletedStations(next);
   };
 
   const isAllDone = STATIONS.every(s => completedStations.includes(s.id));
@@ -102,6 +107,7 @@ export const StationCircuitMode: React.FC<StationCircuitModeProps> = ({ isOpen, 
           /* 교사용 인쇄/게시 안내 */
           <div className="bg-slate-800/90 rounded-2xl p-5 border border-slate-700 text-sm space-y-4">
             <h3 className="font-bold text-emerald-400 text-base">📌 체육관 벽면 부착 가이드</h3>
+            <button onClick={() => window.print()} className="px-4 py-2 bg-emerald-600 rounded-xl font-bold print:hidden">안내문 인쇄</button>
             <p className="text-xs text-slate-300 leading-relaxed">
               체육관 4개 모서리(A, B, C, D)에 아래 스테이션 표지를 인쇄하여 부착하고,
               학생들이 모둠별로 3~5분마다 시계 방향으로 이동하며 미션을 수행하도록 지도해 주세요.

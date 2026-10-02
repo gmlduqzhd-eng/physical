@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, Play, Pause, SkipForward, Clock, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Play, Pause, SkipForward, Clock, CheckCircle, RotateCcw } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
 import { useVoiceCoach } from '../../application/useVoiceCoach';
+import { useModalDialog } from '../../application/useModalDialog';
 
 interface ClassPlaylistPlayerProps {
   isOpen: boolean;
@@ -65,11 +66,15 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const [timeLeft, setTimeLeft] = useState(DEFAULT_LESSON_STEPS[0].durationSec);
   const [isRunning, setIsRunning] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const deadlineRef = useRef<number | null>(null);
 
   // 모달 닫힘 감지 시 음성 즉시 정지
   useEffect(() => {
     if (!isOpen) {
       stop();
+      setIsRunning(false);
+      deadlineRef.current = null;
     }
   }, [isOpen, stop]);
 
@@ -87,38 +92,45 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       const nextIdx = currentStepIdx + 1;
       setCurrentStepIdx(nextIdx);
       setTimeLeft(DEFAULT_LESSON_STEPS[nextIdx].durationSec);
+      deadlineRef.current = isRunning ? Date.now() + DEFAULT_LESSON_STEPS[nextIdx].durationSec * 1000 : null;
       speak(`${DEFAULT_LESSON_STEPS[nextIdx].phase}, ${DEFAULT_LESSON_STEPS[nextIdx].title}을 시작합니다.`, true);
     } else {
       setIsRunning(false);
+      setTimeLeft(0);
+      setIsComplete(true);
+      deadlineRef.current = null;
       speak('모든 체육 수업이 성공적으로 끝났습니다. 수고하셨습니다!', true);
     }
-  }, [currentStepIdx, speak]);
+  }, [currentStepIdx, isRunning, speak]);
 
   useEffect(() => {
-    let timer: number;
-    if (isRunning && timeLeft > 0) {
-      timer = window.setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev === 10) {
-            speak('10초 남았습니다. 다음 활동을 준비하세요.');
-          }
-          if (prev <= 1) {
-            playBeep();
-            handleNextStep();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    if (!isOpen || !isRunning) return;
+    let warned = false;
+    const tick = () => {
+      if (deadlineRef.current === null) return;
+      const remaining = Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining <= 10 && remaining > 0 && !warned) {
+        warned = true;
+        speak('10초 남았습니다. 다음 활동을 준비하세요.');
+      }
+      if (remaining === 0) {
+        deadlineRef.current = null;
+        playBeep();
+        handleNextStep();
+      }
+    };
+    const timer = window.setInterval(tick, 250);
     return () => clearInterval(timer);
-  }, [isRunning, timeLeft, handleNextStep, playBeep, speak]);
+  }, [isOpen, isRunning, currentStepIdx, handleNextStep, playBeep, speak]);
 
   const handleClose = () => {
     stop();
     setIsRunning(false);
+    deadlineRef.current = null;
     onClose();
   };
+  const dialogRef = useModalDialog(isOpen, handleClose);
 
   if (!isOpen) return null;
 
@@ -127,6 +139,8 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       const prevIdx = currentStepIdx - 1;
       setCurrentStepIdx(prevIdx);
       setTimeLeft(DEFAULT_LESSON_STEPS[prevIdx].durationSec);
+      setIsComplete(false);
+      deadlineRef.current = isRunning ? Date.now() + DEFAULT_LESSON_STEPS[prevIdx].durationSec * 1000 : null;
     }
   };
 
@@ -137,7 +151,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col justify-between p-6">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="40분 체육 수업 플레이어" tabIndex={-1} className="fixed inset-0 z-50 bg-slate-950 text-white flex flex-col p-4 sm:p-6 overflow-y-auto">
       {/* 상단 네비게이션 헤더 */}
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <div className="flex items-center gap-3">
@@ -151,6 +165,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
         </div>
         <button
           onClick={handleClose}
+          aria-label="수업 플레이어 닫기"
           className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-full text-slate-300 hover:text-white"
         >
           <X className="w-6 h-6" />
@@ -158,7 +173,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       </div>
 
       {/* 4단계 스텝 프로그레스 바 */}
-      <div className="grid grid-cols-4 gap-2 my-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 my-4 shrink-0">
         {DEFAULT_LESSON_STEPS.map((s, idx) => {
           const isDone = idx < currentStepIdx;
           const isCurrent = idx === currentStepIdx;
@@ -184,7 +199,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       </div>
 
       {/* 메인 타이머 및 활동 뷰어 */}
-      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 py-4">
+      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-4 sm:gap-8 py-4">
         {/* 대형 타이머 디스플레이 */}
         <div className="flex flex-col items-center justify-center bg-slate-900 border border-slate-700/80 rounded-3xl p-8 w-full max-w-sm aspect-square shadow-2xl relative">
           <div className="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
@@ -219,7 +234,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       </div>
 
       {/* 하단 제어 컨트롤 바 */}
-      <div className="flex items-center justify-center gap-4 border-t border-slate-800 pt-4">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 border-t border-slate-800 pt-4 shrink-0">
         <button
           onClick={handlePrevStep}
           disabled={currentStepIdx === 0}
@@ -232,8 +247,16 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
           onClick={() => {
             if (isRunning) {
               stop();
+              if (deadlineRef.current !== null) setTimeLeft(Math.max(0, Math.ceil((deadlineRef.current - Date.now()) / 1000)));
+              deadlineRef.current = null;
               setIsRunning(false);
             } else {
+              if (isComplete) {
+                setCurrentStepIdx(0);
+                setTimeLeft(DEFAULT_LESSON_STEPS[0].durationSec);
+                setIsComplete(false);
+              }
+              deadlineRef.current = Date.now() + (isComplete ? DEFAULT_LESSON_STEPS[0].durationSec : timeLeft) * 1000;
               setIsRunning(true);
               speak('수업 타이머를 시작합니다.');
             }
@@ -244,11 +267,12 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
               : 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-cyan-500/20'
           }`}
         >
-          {isRunning ? <><Pause className="w-6 h-6" /> 일시정지</> : <><Play className="w-6 h-6 fill-slate-950" /> 수업 시작</>}
+          {isRunning ? <><Pause className="w-6 h-6" /> 일시정지</> : isComplete ? <><RotateCcw className="w-6 h-6" /> 수업 다시 시작</> : <><Play className="w-6 h-6 fill-slate-950" /> 수업 시작</>}
         </button>
 
         <button
           onClick={handleNextStep}
+          disabled={isComplete}
           className="px-5 py-3 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold text-sm text-slate-300 flex items-center gap-1.5"
         >
           다음 단계 <SkipForward className="w-4 h-4" />

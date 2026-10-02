@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCoin } from '../../../application/soundEffects';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
@@ -12,24 +12,29 @@ export const TiltRace = ({ groupId, enqueueAction }: Props) => {
   const collectedRef = useRef(0);
   const targetXRef = useRef(80);
   const finishedRef = useRef(false);
+  const ballXRef = useRef(10);
+
+  const moveBall = useCallback((delta: number) => {
+    if (finishedRef.current || !Number.isFinite(delta) || delta === 0) return;
+    const next = Math.max(0, Math.min(100, ballXRef.current + delta));
+    ballXRef.current = next;
+    setBallX(next);
+    if (Math.abs(next - targetXRef.current) < 10) {
+      sfxCoin();
+      collectedRef.current += 1;
+      setCollected(collectedRef.current);
+      // A collected star must move away from the ball before another can be earned.
+      const targets = Array.from({ length: 9 }, (_, index) => 10 + index * 10)
+        .filter(target => Math.abs(target - next) >= 20);
+      const nextTarget = targets[Math.floor(Math.random() * targets.length)];
+      targetXRef.current = nextTarget;
+      setTargetX(nextTarget);
+    }
+  }, []);
 
   useEffect(() => {
     const handler = (e: DeviceOrientationEvent) => {
-      if (finishedRef.current) return;
-      const gamma = e.gamma ?? 0;
-      setBallX(prev => {
-        const next = Math.max(0, Math.min(100, prev + gamma * 0.3));
-        if (Math.abs(next - targetXRef.current) < 10) {
-          sfxCoin();
-          const nextCount = collectedRef.current + 1;
-          collectedRef.current = nextCount;
-          setCollected(nextCount);
-          const nextTarget = Math.floor(Math.random() * 80) + 10;
-          targetXRef.current = nextTarget;
-          setTargetX(nextTarget);
-        }
-        return next;
-      });
+      if (e.gamma !== null) moveBall(e.gamma * 0.3);
     };
     window.addEventListener('deviceorientation', handler);
 
@@ -47,7 +52,7 @@ export const TiltRace = ({ groupId, enqueueAction }: Props) => {
       window.removeEventListener('deviceorientation', handler);
       clearInterval(timer);
     };
-  }, []);
+  }, [moveBall]);
 
   useEffect(() => {
     if (timeLeft === 0 && !finished && !finishedRef.current) {
@@ -61,23 +66,6 @@ export const TiltRace = ({ groupId, enqueueAction }: Props) => {
       });
     }
   }, [timeLeft, finished, groupId, enqueueAction]);
-
-  const moveBall = (delta: number) => {
-    if (finishedRef.current) return;
-    setBallX(prev => {
-      const next = Math.max(0, Math.min(100, prev + delta));
-      if (Math.abs(next - targetXRef.current) < 10) {
-        sfxCoin();
-        const nextCount = collectedRef.current + 1;
-        collectedRef.current = nextCount;
-        setCollected(nextCount);
-        const nextTarget = Math.floor(Math.random() * 80) + 10;
-        targetXRef.current = nextTarget;
-        setTargetX(nextTarget);
-      }
-      return next;
-    });
-  };
 
   return (
     <div className="min-h-[100dvh] bg-sky-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none">

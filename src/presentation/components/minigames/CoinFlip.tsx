@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useRef } from 'react';
 import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(1);
   const [streak, setStreak] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
@@ -25,7 +27,7 @@ export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
 
     const coinResult: 'heads' | 'tails' = Math.random() > 0.5 ? 'heads' : 'tails';
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       setResult(coinResult);
       setSpinning(false);
 
@@ -45,7 +47,7 @@ export const CoinFlip = ({ groupId, enqueueAction }: Props) => {
         setFinished(true);
         enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: totalScoreRef.current }, timestamp: Date.now() });
       } else {
-        setTimeout(() => {
+        scheduleTimeout(() => {
           setRound(r => r + 1);
           setResult(null);
           setPrediction(null);

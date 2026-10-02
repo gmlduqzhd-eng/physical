@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Eye } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -19,6 +20,7 @@ const MOTIONS: { id: MotionSide; label: string; desc: string; emoji: string }[] 
 ];
 
 export const MirrorMotionInvert = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [currentMotion, setCurrentMotion] = useState<MotionSide>(() => MOTION_IDS[Math.floor(Math.random() * MOTION_IDS.length)]);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
@@ -82,7 +84,7 @@ export const MirrorMotionInvert = ({ groupId, enqueueAction }: Props) => {
       sfxFail();
       setFeedback('거울에서는 좌우가 반대예요! 맞은편 위치를 다시 찾아보세요.');
     }
-    setTimeout(() => setFeedback(null), 500);
+    scheduleTimeout(() => setFeedback(null), 500);
   };
 
   const targetMotion = MOTIONS.find(m => m.id === currentMotion)!;

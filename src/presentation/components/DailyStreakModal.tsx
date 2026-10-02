@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Flame, CheckCircle, Trophy, Sparkles, X, ArrowRight } from 'lucide-react';
 import { useDailyStreak } from '../../application/useDailyStreak';
+import { isRecord, localDateKey, readJsonStorage, writeStorage } from '../../application/browserStorage';
+import { useModalDialog } from '../../application/useModalDialog';
 
 interface DailyStreakModalProps {
   isOpen: boolean;
@@ -10,8 +12,30 @@ interface DailyStreakModalProps {
 
 export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onClose, onLaunchGame }) => {
   const { streakData, isTodayCompleted, completeTodayMission } = useDailyStreak();
-  const [activeStep, setActiveStep] = useState<number>(0);
+  const [activeStep, setActiveStep] = useState<number>(() => {
+    const progress = readJsonStorage('dambang_daily_routine', 'session');
+    if (!isRecord(progress) || progress.date !== localDateKey() || typeof progress.step !== 'number' || !Number.isFinite(progress.step)) return 0;
+    const step = Math.max(0, Math.min(3, Math.floor(progress.step)));
+    if (step === 1 && typeof progress.gameStartedAt === 'number') {
+      const profile = readJsonStorage('physical_player_profile');
+      if (isRecord(profile) && Array.isArray(profile.recentGames) && profile.recentGames.some(record =>
+        isRecord(record) && record.gameType === 'reaction' && typeof record.playedAt === 'number' && record.playedAt >= (progress.gameStartedAt as number)
+      )) return 2;
+    }
+    return step;
+  });
+  const [routineDate, setRoutineDate] = useState(localDateKey);
   const completed = isTodayCompleted();
+  const dialogRef = useModalDialog(isOpen, onClose);
+  useEffect(() => {
+    if (isOpen && routineDate !== localDateKey()) {
+      setRoutineDate(localDateKey());
+      setActiveStep(0);
+    }
+  }, [isOpen, routineDate]);
+  useEffect(() => {
+    writeStorage('dambang_daily_routine', JSON.stringify({ date: routineDate, step: activeStep }), 'session');
+  }, [activeStep, routineDate]);
 
   if (!isOpen) return null;
 
@@ -21,7 +45,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
   const pastWeek = Array.from({ length: 7 }).map((_, i) => {
     const d = new Date();
     d.setDate(today.getDate() - (6 - i));
-    const str = d.toISOString().slice(0, 10);
+    const str = localDateKey(d);
     return {
       dateStr: str,
       dayName: days[d.getDay()],
@@ -42,10 +66,11 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="오늘의 3분 땀방울 챌린지" tabIndex={-1} className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md max-h-[90dvh] overflow-y-auto w-full p-4 sm:p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
+          aria-label="오늘의 챌린지 닫기"
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
         >
           <X className="w-5 h-5" />
@@ -62,14 +87,14 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
         </div>
 
         {/* 주간 스트릭 도장판 */}
-        <div className="grid grid-cols-7 gap-2 bg-slate-800/80 p-3.5 rounded-2xl border border-slate-700/60 mb-6">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 bg-slate-800/80 p-2 sm:p-3.5 rounded-2xl border border-slate-700/60 mb-6">
           {pastWeek.map((item, idx) => (
             <div key={idx} className="flex flex-col items-center gap-1.5">
               <span className={`text-xs font-bold ${item.isToday ? 'text-amber-400' : 'text-slate-400'}`}>
                 {item.dayName}
               </span>
               <div
-                className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm transition-all ${
+                className={`w-full max-w-9 aspect-square rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${
                   item.isDone
                     ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
                     : item.isToday
@@ -128,6 +153,8 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
                     <button
                       onClick={() => {
                         if (idx === 1) {
+                          // Restore the routine after the game only when a result exists.
+                          writeStorage('dambang_daily_routine', JSON.stringify({ date: localDateKey(), step: 1, gameStartedAt: Date.now() }), 'session');
                           onLaunchGame('reaction');
                           onClose();
                         } else {
@@ -144,7 +171,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
               );
             })}
 
-            {activeStep >= 2 && (
+            {activeStep >= 3 && (
               <button
                 onClick={handleFinishRoutine}
                 className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 mt-4"

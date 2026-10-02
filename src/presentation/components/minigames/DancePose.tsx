@@ -1,3 +1,4 @@
+import { useGameTimeouts } from './common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxPop } from '../../../application/soundEffects';
 
@@ -110,6 +111,7 @@ const DanceIllustration = ({ poseId }: { poseId: DancePoseItem['id'] }) => {
 
 
 export const DancePose = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(0);
   const [poseIdx, setPoseIdx] = useState(0);
   const [timePerPose, setTimePerPose] = useState(3);
@@ -117,10 +119,14 @@ export const DancePose = ({ groupId, enqueueAction }: Props) => {
   const [matched, setMatched] = useState(false);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
+  const matchedRef = useRef(false);
+  const finishedRef = useRef(false);
   const TOTAL_ROUNDS = 8;
 
   useEffect(() => {
     if (round >= TOTAL_ROUNDS) {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
       setFinished(true);
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: scoreRef.current }, timestamp: Date.now() });
       return;
@@ -128,29 +134,29 @@ export const DancePose = ({ groupId, enqueueAction }: Props) => {
     setPoseIdx(Math.floor(Math.random() * POSES.length));
     setTimePerPose(3);
     setMatched(false);
+    matchedRef.current = false;
+    const deadline = Date.now() + 3000;
 
     const countdown = setInterval(() => {
-      setTimePerPose(prev => {
-        if (prev <= 1) {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setTimePerPose(remaining);
+        if (remaining === 0) {
           clearInterval(countdown);
-          if (!matched) sfxPop();
-          setRound(r => r + 1);
-          return 0;
+          if (!matchedRef.current) { sfxPop(); setRound(round + 1); }
         }
-        return prev - 1;
-      });
-    }, 1000);
+    }, 100);
     return () => clearInterval(countdown);
-  }, [round]);
+  }, [round, enqueueAction, groupId]);
 
   const handleConfirm = () => {
-    if (finished || matched) return;
+    if (finishedRef.current || matchedRef.current) return;
+    matchedRef.current = true;
     setMatched(true);
     sfxCoin();
     const bonus = timePerPose * 30 + 50;
     setScore(s => s + bonus);
     scoreRef.current += bonus;
-    setTimeout(() => setRound(r => r + 1), 500);
+    scheduleTimeout(() => setRound(round + 1), 500);
   };
 
   const pose = POSES[poseIdx];

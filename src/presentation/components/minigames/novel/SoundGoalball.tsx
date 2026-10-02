@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Volume2, EyeOff } from 'lucide-react';
 import { sfxDirectionalBell, sfxSuccess, sfxFail, unlockAudio } from '../../../../application/soundEffects';
@@ -12,6 +13,7 @@ type Direction = 'left' | 'center' | 'right';
 const DIRECTIONS: Direction[] = ['left', 'center', 'right'];
 
 export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(1);
   const [targetDir, setTargetDir] = useState<Direction>('center');
   const [isPlayingSound, setIsPlayingSound] = useState(false);
@@ -22,8 +24,16 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
   const [awaitingCue, setAwaitingCue] = useState(true);
   const cueTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cueStartedRef = useRef(false);
+  const canBlockRef = useRef(false);
+  const finishedRef = useRef(false);
+  const scoreRef = useRef(0);
+  const targetDirRef = useRef<Direction>('center');
 
   const startSoundRound = useCallback(() => {
+    if (cueStartedRef.current || finishedRef.current) return;
+    cueStartedRef.current = true;
+    canBlockRef.current = false;
     unlockAudio();
     setAwaitingCue(false);
     setCanBlock(false);
@@ -31,18 +41,20 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
     setFeedback('방울 소리가 굴러오는 방향을 들으세요...');
 
     const chosen = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+    targetDirRef.current = chosen;
     setTargetDir(chosen);
 
     // 가상 방울 소리 발생 (삐- 삐- 삐-)
-    cueTimeoutRef.current = setTimeout(() => {
+    cueTimeoutRef.current = scheduleTimeout(() => {
       sfxDirectionalBell(chosen === 'left' ? -1 : chosen === 'right' ? 1 : 0);
 
       setIsPlayingSound(false);
+      canBlockRef.current = true;
       setCanBlock(true);
       setFeedback('방향이 감지되었습니다! 막을 방향을 빠르게 터치하세요!');
     }, 1200);
 
-  }, []);
+  }, [scheduleTimeout]);
 
   useEffect(() => {
     return () => {
@@ -52,35 +64,40 @@ export const SoundGoalball = ({ groupId, enqueueAction }: Props) => {
   }, []);
 
   const finishGame = (finalScore?: number) => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
     setFinished(true);
     sfxSuccess();
     enqueueAction({
       id: Math.random().toString(),
       type: 'INCREMENT_SCORE',
-      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : score },
+      payload: { id: groupId, amount: finalScore !== undefined ? finalScore : scoreRef.current },
       timestamp: Date.now(),
     });
   };
 
   const handleBlock = (dir: Direction) => {
-    if (!canBlock || finished) return;
+    if (!canBlockRef.current || finishedRef.current) return;
+    canBlockRef.current = false;
     setCanBlock(false);
 
-    if (dir === targetDir) {
+    if (dir === targetDirRef.current) {
       // 블로킹 성공!
       sfxSuccess();
       const add = 50;
-      setScore(s => s + add);
+      scoreRef.current += add;
+      setScore(scoreRef.current);
       setFeedback(`🎯 나이스 세이브! ${dir === 'left' ? '왼쪽' : dir === 'center' ? '중앙' : '오른쪽'} 방울공 방어 성공! (+50점)`);
     } else {
       sfxFail();
       setFeedback(`골 허용! 실제 공 방향: ${targetDir === 'left' ? '왼쪽' : targetDir === 'center' ? '중앙' : '오른쪽'}`);
     }
 
-    advanceTimeoutRef.current = setTimeout(() => {
+    advanceTimeoutRef.current = scheduleTimeout(() => {
       if (round >= 4) {
-        finishGame(score + (dir === targetDir ? 50 : 0));
+        finishGame();
       } else {
+        cueStartedRef.current = false;
         setAwaitingCue(true);
         setFeedback('준비되면 소리 듣기 버튼을 누르세요.');
         setRound(r => r + 1);

@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef } from 'react';
 import { Trophy, FastForward, RotateCcw } from 'lucide-react';
 import { sfxSuccess, sfxFail } from '../../../../application/soundEffects';
@@ -53,6 +54,7 @@ const SCENARIOS: PlayScenario[] = [
 ];
 
 export const BaseRunningDecide = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const nextRoundTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -87,7 +89,7 @@ export const BaseRunningDecide = ({ groupId, enqueueAction }: Props) => {
       setFeedback(`❌ 아웃(OUT)! ${current.solutionReason}`);
     }
 
-    nextRoundTimeoutRef.current = setTimeout(() => {
+    nextRoundTimeoutRef.current = scheduleTimeout(() => {
       setWaiting(false);
       setFeedback(null);
       if (index + 1 >= SCENARIOS.length) {

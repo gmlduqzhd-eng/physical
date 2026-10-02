@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Tent, Hammer } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail, sfxPop } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [pegIndex, setPegIndex] = useState(1); // 1, 2, 3 pegs
   const [pegDepth, setPegDepth] = useState(0); // 0% to 100%
   const [sliderPos, setSliderPos] = useState(50); // 0 to 100%
@@ -78,11 +80,8 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       // 퍼펙트 임팩트!
       sfxTap();
       const newDepth = pegDepth + 34;
-      setScore(s => {
-        const next = s + 50;
-        scoreRef.current = next;
-        return next;
-      });
+      scoreRef.current += 50;
+      setScore(scoreRef.current);
       setHitFeedback('🔨 쾅! 퍼펙트 임팩트 (+50점)');
 
       if (newDepth >= 100) {
@@ -91,7 +90,7 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
           // 3개 팩 모두 고정 완료!
           setPegDepth(100);
           setHitFeedback('⛺ 모든 텐트 팩 완벽 고정 완료!');
-          finishGame(50);
+          finishGame();
           return;
         } else {
           setPegIndex(p => p + 1);
@@ -104,17 +103,14 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       // 굿 임팩트
       sfxPop();
       const newDepth = pegDepth + 18;
-      setScore(s => {
-        const next = s + 25;
-        scoreRef.current = next;
-        return next;
-      });
+      scoreRef.current += 25;
+      setScore(scoreRef.current);
       setHitFeedback('👍 탁! 유효 타격 (+25점)');
       if (newDepth >= 100) {
         sfxSuccess();
         if (pegIndex >= 3) {
           setPegDepth(100);
-          finishGame(25);
+          finishGame();
           return;
         } else {
           setPegIndex(p => p + 1);
@@ -129,7 +125,7 @@ export const TentPegHammer = ({ groupId, enqueueAction }: Props) => {
       setHitFeedback('💨 빗맞음! 중심에 맞춰 망치를 내리치세요.');
     }
 
-    setTimeout(() => setHitFeedback(null), 700);
+    scheduleTimeout(() => setHitFeedback(null), 700);
   };
 
   return (

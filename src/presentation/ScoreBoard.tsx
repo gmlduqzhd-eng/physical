@@ -4,12 +4,12 @@ import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
 import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
 
 export const ScoreBoard = () => {
   const { roomId } = useParams<{ roomId: string }>();
-  const { scores, gameRoom } = useGameLogic(roomId);
+  const { scores, gameRoom, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, isDanger } = useGameTimer(gameRoom);
   const { playSiren } = useAudio();
   
@@ -19,7 +19,11 @@ export const ScoreBoard = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const prevScoresRef = useRef<{id:string;score:number;rank:number}[]>([]);
-  const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number}[]>([]);
+  const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number;spinDuration:number}[]>([]);
+
+  useEffect(() => {
+    if (!gameRoom?.status || gameRoom.status === 'waiting') { plankPlayed.current = false; sirenPlayed.current = false; prevScoresRef.current = []; setConfetti([]); }
+  }, [roomId, gameRoom?.status]);
 
   // 순위 역전 감지 토스트
   useEffect(() => {
@@ -70,6 +74,8 @@ export const ScoreBoard = () => {
     }
   }, [isPlankEvent, isTsunami, playSiren]);
 
+  if (!gameRoom) return <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center gap-4 p-6 text-center text-slate-800"><p>{error || (loading ? '전광판 정보를 불러오는 중...' : '수업 방 정보가 없습니다.')}</p><button onClick={refresh} className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button><a href="/board" className="underline">다른 PIN으로 입장</a></div>;
+
   if (gameRoom?.status === 'finished') {
     const sorted = [...scores].sort((a, b) => b.score - a.score);
     const top3 = sorted.slice(0, 3);
@@ -85,7 +91,7 @@ export const ScoreBoard = () => {
             animation: `confettiFall ${3 + p.delay}s ease-in forwards`,
             animationDelay: `${p.delay}s`,
           }}>
-            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color, animation: `confettiSpin ${(p as any).spinDuration || 1}s linear infinite` }} />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: p.color, animation: `confettiSpin ${p.spinDuration}s linear infinite` }} />
           </div>
         ))}
         <style>{`
@@ -93,9 +99,9 @@ export const ScoreBoard = () => {
           @keyframes confettiSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
         `}</style>
 
-        <h1 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-12 drop-shadow-lg relative z-10 tracking-widest">🏆 최종 결과 발표 🏆</h1>
+        <h1 className="text-3xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-12 drop-shadow-lg relative z-10 tracking-widest">🏆 최종 결과 발표 🏆</h1>
 
-        <div className="flex items-end justify-center gap-6 h-80 mb-16 relative z-10 w-full max-w-5xl mt-12">
+        <div className="flex items-end justify-center gap-2 md:gap-6 h-64 md:h-80 mb-16 relative z-10 w-full max-w-5xl mt-12">
           {/* 2nd Place */}
           {top3[1] && (
             <div className="flex flex-col items-center w-1/3">
@@ -110,7 +116,7 @@ export const ScoreBoard = () => {
           {top3[0] && (
             <div className="flex flex-col items-center w-1/3 z-10 -mx-4 mb-4">
               <LucideIcons.Crown className="w-20 h-20 text-yellow-400 mb-2 animate-bounce drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
-              <div className="bg-yellow-400 text-yellow-900 px-6 py-3 rounded-t-xl font-black text-3xl mb-2 shadow-[0_0_20px_rgba(250,204,21,0.3)] flex items-center gap-2"><LucideIcons.Trophy className="w-8 h-8"/> {top3[0].group_name}</div>
+              <div className="bg-yellow-400 text-yellow-900 px-6 py-3 rounded-t-xl font-black text-lg md:text-3xl mb-2 shadow-[0_0_20px_rgba(250,204,21,0.3)] flex items-center gap-2"><LucideIcons.Trophy className="w-8 h-8"/> {top3[0].group_name}</div>
               <div className="text-5xl font-mono font-black text-yellow-400 mb-4 drop-shadow-lg">{top3[0].score}점</div>
               <div className="w-full bg-gradient-to-t from-yellow-600 to-yellow-400 h-64 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-yellow-200">
                 <span className="text-8xl font-black text-white/50">1</span>
@@ -205,10 +211,10 @@ export const ScoreBoard = () => {
         <div className="fixed inset-0 z-[1] pointer-events-none border-8 border-red-500/40 animate-pulse" />
       )}
 
-      <header className="relative z-10 flex justify-between items-center px-12 py-8 bg-white/80 backdrop-blur-md border-b border-cyan-200">
+      <header className="relative z-10 flex justify-between items-center px-4 md:px-12 py-6 md:py-8 flex-wrap gap-4 bg-white/80 backdrop-blur-md border-b border-cyan-200">
         <div className="flex items-center gap-4">
           <Shield className="w-12 h-12 text-cyan-400" />
-          <h1 className="text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
+          <h1 className="text-xl md:text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
             {gameRoom ? gameRoom.name : '폭탄 해체 작전'}
           </h1>
         </div>

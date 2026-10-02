@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Compass, CheckCircle2 } from 'lucide-react';
 import { sfxSuccess, sfxPop, sfxFail } from '../../../../application/soundEffects';
@@ -23,6 +24,7 @@ const QUESTS: TargetQuest[] = [
 ];
 
 export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(0);
   const [currentAngle, setCurrentAngle] = useState(0);
   const [score, setScore] = useState(0);
@@ -33,6 +35,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
   const dialRef = useRef<HTMLDivElement>(null);
   const isDragging = useRef(false);
   const scoreRef = useRef(0);
+  const roundLockedRef = useRef(false);
 
   const finishGame = useCallback((finalScore?: number) => {
     setFinished(true);
@@ -77,6 +80,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (finished || roundLockedRef.current) return;
     isDragging.current = true;
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
     calculateAngle(e.clientX, e.clientY);
@@ -92,7 +96,8 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleLockIn = () => {
-    if (finished) return;
+    if (finished || roundLockedRef.current) return;
+    roundLockedRef.current = true;
     const target = currentQuest.angle;
     const diff = Math.min(Math.abs(currentAngle - target), 360 - Math.abs(currentAngle - target));
 
@@ -100,34 +105,29 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
       // 대성공 (퍼펙트)
       sfxSuccess();
       const add = 100;
-      setScore(s => {
-        const next = s + add;
-        scoreRef.current = next;
-        return next;
-      });
+      scoreRef.current += add;
+      setScore(scoreRef.current);
       setFeedback('🎯 완벽한 방위각 조준! (+100점)');
     } else if (diff <= 18) {
       // 성공
       sfxPop();
       const add = 60;
-      setScore(s => {
-        const next = s + add;
-        scoreRef.current = next;
-        return next;
-      });
+      scoreRef.current += add;
+      setScore(scoreRef.current);
       setFeedback('👍 양호한 방향! (+60점)');
     } else {
       sfxFail();
       setFeedback(`❌ 각도 오차 (${diff}°)! 다시 확인하세요.`);
     }
 
-    setTimeout(() => {
+    scheduleTimeout(() => {
       setFeedback(null);
       if (round + 1 >= 5) {
-        finishGame(score + (diff <= 8 ? 100 : diff <= 18 ? 60 : 0));
+        finishGame(scoreRef.current);
       } else {
         setRound(r => r + 1);
         setCurrentAngle(0);
+        roundLockedRef.current = false;
       }
     }, 800);
   };
@@ -159,6 +159,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         className="relative w-64 h-64 rounded-full border-4 border-slate-700 bg-slate-900 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none my-2"
       >
         {/* 방위 눈금 표기 */}

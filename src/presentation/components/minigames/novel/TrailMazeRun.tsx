@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Mountain, AlertCircle } from 'lucide-react';
 import { sfxTap, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [stage, setStage] = useState(1);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(25);
@@ -20,6 +22,7 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const currentPosRef = useRef({ x: 30, y: 150 });
   const scoreRef = useRef(0);
+  const [renderTick, setRenderTick] = useState(0);
 
   const finishGame = useCallback((finalScore?: number) => {
     setFinished(true);
@@ -100,7 +103,7 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
     // 러너 현재 위치
     ctx.font = '26px sans-serif';
     ctx.fillText('🏃', currentPosRef.current.x - 12, currentPosRef.current.y + 8);
-  }, [stage, stumble]);
+  }, [stage, stumble, renderTick]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (finished) return;
@@ -129,9 +132,15 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
     const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
     // 경로 바깥 덤불에 닿았는지 체크 (픽셀 색상 기반: 흙길 색상이 아니면 탈락)
-    const pixel = ctx.getImageData(Math.floor(x), Math.floor(y), 1, 1).data;
-    // 숲 바닥 색 (#064e3b -> r:6, g:78, b:59)
-    const isForest = pixel[0] < 50 && pixel[1] > 60 && pixel[2] < 70;
+    const previous = currentPosRef.current;
+    const sampleCount = Math.max(1, Math.ceil(Math.hypot(x - previous.x, y - previous.y) / 4));
+    let isForest = x < 0 || y < 0 || x >= canvas.width || y >= canvas.height;
+    for (let sample = 1; sample <= sampleCount && !isForest; sample++) {
+      const sx = previous.x + (x - previous.x) * sample / sampleCount;
+      const sy = previous.y + (y - previous.y) * sample / sampleCount;
+      const pixel = ctx.getImageData(Math.floor(sx), Math.floor(sy), 1, 1).data;
+      isForest = pixel[0] < 50 && pixel[1] > 60 && pixel[2] < 70;
+    }
 
     if (isForest) {
       // 탈락: 덤불에 걸려 넘어짐
@@ -140,11 +149,12 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
       sfxFail();
       currentPosRef.current = { x: 30, y: 150 };
       setProgress(0);
-      setTimeout(() => setStumble(false), 800);
+      scheduleTimeout(() => setStumble(false), 800);
       return;
     }
 
     currentPosRef.current = { x, y };
+    setRenderTick(tick => tick + 1);
     const pct = Math.max(0, Math.min(100, Math.round(((x - 30) / (330 - 30)) * 100)));
     setProgress(pct);
 
@@ -198,6 +208,7 @@ export const TrailMazeRun = ({ groupId, enqueueAction }: Props) => {
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           className="w-full h-[300px] cursor-crosshair"
         />
 

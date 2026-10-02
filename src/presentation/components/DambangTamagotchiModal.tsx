@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { useTamagotchi, TAMAGOTCHI_ITEMS } from '../../application/useTamagotchi';
+import { useModalDialog } from '../../application/useModalDialog';
 
 interface DambangTamagotchiModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
   const { state, level, currentLevelXp, nextLevelXp, buyItem, equipItem } = useTamagotchi();
   const [tab, setTab] = useState<'status' | 'shop'>('status');
   const [petMessage, setPetMessage] = useState('오늘도 신나게 운동해볼까?');
+  const dialogRef = useModalDialog(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -29,17 +31,18 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
   const equippedMedalItem = TAMAGOTCHI_ITEMS.find(i => i.id === state.equippedMedal);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="내 땀방이와 아이템 상점" tabIndex={-1} className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg max-h-[90dvh] overflow-y-auto w-full p-4 sm:p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
+          aria-label="내 땀방이 닫기"
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* 상단 탭 */}
-        <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
+        <div className="flex flex-wrap items-center gap-2 mb-4 mt-8 border-b border-slate-800 pb-3">
           <button
             onClick={() => setTab('status')}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
@@ -76,7 +79,9 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
               </div>
 
               {/* 땀방이 SVG 캐릭터 */}
-              <div
+              <button
+                type="button"
+                aria-label="땀방이 쓰다듬기"
                 onClick={handlePet}
                 className="w-36 h-36 mx-auto relative cursor-pointer select-none transition-transform hover:scale-105 active:scale-95"
               >
@@ -129,7 +134,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                     {equippedMedalItem.emoji}
                   </div>
                 )}
-              </div>
+              </button>
 
               <p className="text-xs text-cyan-300/80 mt-2">💧 캐릭터를 탭하면 기뻐해요!</p>
             </div>

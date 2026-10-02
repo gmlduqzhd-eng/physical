@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../common/useGameTimeouts';
 import { useState, useRef, useEffect } from 'react';
 import { Snowflake } from 'lucide-react';
 import { sfxWhoosh, sfxSuccess, sfxFail } from '../../../../application/soundEffects';
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
+  const scheduleTimeout = useGameTimeouts();
   const [round, setRound] = useState(1);
   const [targetGap, setTargetGap] = useState(() => 45 + Math.floor(Math.random() * 8)); // target power required (30 ~ 75%)
   const [charge, setCharge] = useState(0); // 0 to 100%
@@ -41,7 +43,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleChargeStart = () => {
-    if (jumping || finished) return;
+    if (isCharging.current || jumping || finished) return;
     isCharging.current = true;
     chargeRef.current = 0;
     setCharge(0);
@@ -65,7 +67,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
 
     const diff = finalCharge - targetGap;
     // 오차 범위: ±8% 이내 완벽 착지
-    jumpTimeoutRef.current = setTimeout(() => {
+    jumpTimeoutRef.current = scheduleTimeout(() => {
       if (Math.abs(diff) <= 8) {
         sfxSuccess();
         const add = 80;
@@ -81,7 +83,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
         setScore(s => s + 15);
       }
 
-      resultTimeoutRef.current = setTimeout(() => {
+      resultTimeoutRef.current = scheduleTimeout(() => {
         setJumping(false);
         setCharge(0);
         setFeedback(null);
@@ -166,6 +168,7 @@ export const CrevasseJump = ({ groupId, enqueueAction }: Props) => {
       <button
         onPointerDown={handleChargeStart}
         onPointerUp={handleChargeRelease}
+        onPointerCancel={() => { isCharging.current = false; if (animRef.current) clearInterval(animRef.current); setCharge(0); }}
         onPointerLeave={handleChargeRelease}
         disabled={jumping || finished}
         className="w-full py-6 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:brightness-110 active:brightness-125 text-white font-black text-xl rounded-2xl shadow-xl border-2 border-cyan-300 transition-all flex flex-col items-center justify-center gap-1 touch-none"

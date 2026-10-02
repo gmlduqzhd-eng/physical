@@ -1,5 +1,5 @@
 import type { RoomGroup, GameRoom, MissionTemplate } from '../../domain/types';
-import * as LucideIcons from 'lucide-react';
+import { GameIcons as LucideIcons } from '../icons';
 
 interface WaitingScreenProps {
   myGroup: RoomGroup;
@@ -34,8 +34,8 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         <div className="text-center">
-          <h1 className="text-2xl font-black text-slate-800 mb-2">접속 완료!</h1>
-          <p className="text-slate-500 font-bold">선생님이 곧 게임을 시작합니다</p>
+          <h1 className="text-2xl font-black text-slate-800 mb-2">{gameRoom?.status === 'paused' ? '수업 일시 정지' : '접속 완료!'}</h1>
+          <p className="text-slate-500 font-bold">{gameRoom?.status === 'paused' ? '선생님이 수업을 재개할 때까지 잠시 쉬어주세요.' : '선생님이 곧 게임을 시작합니다'}</p>
           <p className="text-slate-400 text-sm mt-1">잠시만 기다려주세요...</p>
         </div>
 
@@ -67,7 +67,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
           <div className="w-full max-w-sm">
             <p className="text-xs text-slate-400 font-bold mb-2 text-center">오늘의 미션 미리보기</p>
             <div className="space-y-2">
-              {template.buttons.slice(0, 3).map((m, i) => {
+              {template.buttons.filter(m => !m.isHidden).slice(0, 3).map((m, i) => {
                 const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
                 return (
                   <div key={m.id || i} className={`p-3 border rounded-xl flex items-center gap-3 opacity-60 ${m.bg}`}>

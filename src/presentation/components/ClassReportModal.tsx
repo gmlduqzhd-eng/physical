@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useModalDialog } from '../../application/useModalDialog';
+import { localDateKey } from '../../application/browserStorage';
+import { buildClassReportCsv, recordedGroupComment } from '../../application/classReport';
 import type { GameRoom, RoomGroup } from '../../domain/types';
 import { Printer, Copy, Check, X, Award, Users, Trophy, BookOpen, FileSpreadsheet, Image as ImageIcon, Sparkles } from 'lucide-react';
 
@@ -17,12 +20,39 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 }) => {
   const [copiedGeneral, setCopiedGeneral] = useState(false);
   const [copiedGroupIdx, setCopiedGroupIdx] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<'report' | 'neis' | 'photocard'>('report');
+  const [activeTab, setActiveTab] = useState<'report' | 'neis'>('report');
+  const [actionError, setActionError] = useState('');
+  const dialogRef = useModalDialog(isOpen, onClose);
+  const activeRef = useRef(isOpen);
+  activeRef.current = isOpen;
+  const copyAttemptRef = useRef(0);
+  const copyTimers = useRef<{ general?: ReturnType<typeof setTimeout>; group?: ReturnType<typeof setTimeout> }>({});
+  const downloadUrls = useRef(new Set<string>());
+  const downloadTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
+  useEffect(() => {
+    activeRef.current = isOpen;
+    const feedbackTimers = copyTimers.current;
+    const pendingDownloads = downloadTimers.current;
+    const pendingUrls = downloadUrls.current;
+    return () => {
+    activeRef.current = false;
+    copyAttemptRef.current += 1;
+    Object.values(feedbackTimers).forEach(clearTimeout);
+    pendingDownloads.forEach(clearTimeout);
+    pendingUrls.forEach(url => URL.revokeObjectURL(url));
+    pendingDownloads.clear();
+    pendingUrls.clear();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const sortedScores = [...scores].sort((a, b) => b.score - a.score);
-  const totalScore = scores.reduce((acc, s) => acc + s.score, 0);
+  const normalizedScores = scores.map(group => ({
+    ...group, score: Number.isFinite(group.score) ? group.score : 0,
+    completed_missions: Array.isArray(group.completed_missions) ? [...new Set(group.completed_missions.filter(id => typeof id === 'string'))] : [],
+  }));
+  const sortedScores = normalizedScores.sort((a, b) => b.score - a.score);
+  const totalScore = normalizedScores.reduce((acc, s) => acc + s.score, 0);
   const avgScore = scores.length > 0 ? Math.round(totalScore / scores.length) : 0;
   const defusedCount = scores.filter(s => s.is_defused).length;
   const top1 = sortedScores[0];
@@ -31,23 +61,25 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
   // 나이스(NEIS) 생활기록부 공통 추천 서술형 문구
   const generalNeisComments = [
-    `[협동 및 문제해결] 모둠원 간의 적극적인 의사소통과 전략적 역할 분담을 통해 다양한 체육 신체활동 미션을 성실히 완수함.`,
-    `[건강 및 체력] 지속적인 신체 움직임과 인터랙티브 체력 측정 활동에 자발적으로 참여하며, 높은 근지구력과 순발력을 발휘함.`,
-    `[스포츠맨십 및 규칙 준수] 스마트 체육 환경에서 안전 수칙을 준수하고 상대 모둠과 상호 격려하며 페어플레이 정신을 모범적으로 실천함.`
+    `[점수 기록] 등록된 ${scores.length}개 모둠의 총 점수는 ${totalScore.toLocaleString()}점이며 모둠 평균은 ${avgScore.toLocaleString()}점으로 집계됨.`,
+    `[미션 기록] 모둠별 완료 미션 수와 최종 해체 상태가 기록되었으며 ${defusedCount}개 모둠의 해체 성공이 확인됨.`,
+    `[관찰 보완] 학생별 역할, 의사소통, 활동 태도와 신체 기능은 교사의 수업 관찰 기록을 확인하여 개별 서술을 보완할 수 있음.`
   ];
 
   // 모둠별 개별 특기사항 생성
-  const generateGroupNeis = (group: RoomGroup, rank: number) => {
-    if (rank === 1) {
-      return `'${group.group_name}' 모둠의 리더십과 뛰어난 순발력을 바탕으로 전체 활동 1위(${group.score.toLocaleString()}점)를 달성함. 모둠원의 움직임을 조율하고 미션 해결 전략을 주도적으로 제시하는 탁월한 경기 운영 능력을 보임.`;
-    } else if (rank === 2 || rank === 3) {
-      return `'${group.group_name}' 모둠원과 긴밀히 소통하며 꾸준한 지구력으로 상위권(${group.score.toLocaleString()}점)을 기록함. 위기 상황에서도 포기하지 않고 끝까지 동료를 격려하는 우수한 협동심을 나타냄.`;
-    } else {
-      return `'${group.group_name}' 모둠 활동에 적극적으로 참여하여 ${group.completed_missions?.length || 0}개의 미션을 성실히 완수함. 신체활동의 기본 규칙을 충실히 지키며 긍정적인 체육 참여 태도를 형성함.`;
-    }
+  const generateGroupNeis = recordedGroupComment;
+
+  const scheduleCopyReset = (kind: 'general' | 'group') => {
+    clearTimeout(copyTimers.current[kind]);
+    copyTimers.current[kind] = setTimeout(() => {
+      if (kind === 'general') setCopiedGeneral(false);
+      else setCopiedGroupIdx(null);
+    }, 2000);
   };
 
   const copyToClipboard = async (text: string, onSuccess: () => void) => {
+    const attempt = ++copyAttemptRef.current;
+    setActionError('');
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(text);
@@ -56,48 +88,66 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         textArea.value = text;
         textArea.style.position = 'fixed';
         textArea.style.opacity = '0';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
+        const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        (dialogRef.current ?? document.body).appendChild(textArea);
+        try {
+          textArea.focus(); textArea.select();
+          if (!document.execCommand('copy')) throw new Error('Copy was declined.');
+        } finally { textArea.remove(); previousFocus?.focus(); }
       }
-      onSuccess();
+      if (activeRef.current && attempt === copyAttemptRef.current) onSuccess();
     } catch {
-      // ignore
+      if (activeRef.current && attempt === copyAttemptRef.current) setActionError('복사할 수 없습니다. 아래 문구를 선택하여 직접 복사해 주세요.');
     }
+  };
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    downloadUrls.current.add(url);
+    const link = document.createElement('a');
+    link.href = url; link.download = filename;
+    document.body.appendChild(link);
+    try { link.click(); } finally {
+      link.remove();
+      const timer = setTimeout(() => {
+        URL.revokeObjectURL(url); downloadUrls.current.delete(url); downloadTimers.current.delete(timer);
+      }, 1000);
+      downloadTimers.current.add(timer);
+    }
+  };
+  const reportFilename = (prefix: string, extension: string) => {
+    const name = Array.from(gameRoom?.name || '기록').map(char => char.charCodeAt(0) < 32 || /[<>:"/\\|?*]/.test(char) ? '_' : char).join('').slice(0, 60);
+    return `${prefix}_${name}_${localDateKey()}.${extension}`;
   };
 
   // CSV 다운로드 기능
   const handleDownloadCSV = () => {
-    const headers = ['순위', '모둠명', '최종점수', '완료미션수', '해체성공여부', 'NEIS추천세특'];
-    const rows = sortedScores.map((s, idx) => [
-      `${idx + 1}위`,
-      `"${s.group_name}"`,
-      s.score,
-      s.completed_missions?.length || 0,
-      s.is_defused ? '성공' : '미완성',
-      `"${generateGroupNeis(s, idx + 1)}"`
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `체육수업_결과보고서_${gameRoom?.name || '기록'}_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setActionError('');
+    try {
+      const blob = new Blob([buildClassReportCsv(sortedScores)], { type: 'text/csv;charset=utf-8;' });
+      downloadBlob(blob, reportFilename('체육수업_결과보고서', 'csv'));
+    } catch { setActionError('CSV를 저장할 수 없습니다. 브라우저의 다운로드 설정을 확인해 주세요.'); }
   };
 
   // 명예의 전당 포토카드 Canvas 생성 및 이미지 다운로드
   const handleDownloadPhotoCard = () => {
+    setActionError('');
+    if (!top1) { setActionError('포토카드를 만들 모둠 기록이 없습니다.'); return; }
+    try {
     const canvas = document.createElement('canvas');
     canvas.width = 1080;
     canvas.height = 1080;
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) { setActionError('이 브라우저에서는 포토카드를 만들 수 없습니다.'); return; }
+    const fittedText = (text: string, x: number, y: number, maxWidth: number, size: number) => {
+      const line = text.replace(/\s+/g, ' ').slice(0, 80);
+      while (size > 18) { ctx.font = `bold ${size}px sans-serif`; if (ctx.measureText(line).width <= maxWidth) break; size -= 2; }
+      ctx.fillText(line, x, y, maxWidth);
+    };
+    const roundedRect = (x: number, y: number, width: number, height: number, radius: number) => {
+      if (typeof ctx.roundRect === 'function') ctx.roundRect(x, y, width, height, radius);
+      else ctx.rect(x, y, width, height);
+    };
 
     // 배경 그라데이션
     const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1080);
@@ -122,7 +172,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     // 수업 이름
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 64px sans-serif';
-    ctx.fillText(gameRoom?.name || '신체활동 미션 챌린지', 540, 220);
+    fittedText(gameRoom?.name || '신체활동 미션 챌린지', 540, 220, 900, 64);
 
     // 날짜
     ctx.fillStyle = '#94a3b8';
@@ -134,7 +184,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.roundRect(140, 340, 800, 340, 32);
+    roundedRect(140, 340, 800, 340, 32);
     ctx.fill();
     ctx.stroke();
 
@@ -143,7 +193,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 52px sans-serif';
-    ctx.fillText(`1위 : ${top1?.group_name || '챔피언 모둠'}`, 540, 520);
+    fittedText(`1위 : ${top1.group_name}`, 540, 520, 740, 52);
 
     ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 44px monospace';
@@ -156,12 +206,12 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
     // 2위
     ctx.beginPath();
-    ctx.roundRect(140, 720, 380, 180, 24);
+    roundedRect(140, 720, 380, 180, 24);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 34px sans-serif';
-    ctx.fillText(`🥈 2위: ${top2?.group_name || '-'}`, 330, 800);
+    fittedText(`🥈 2위: ${top2?.group_name || '-'}`, 330, 800, 340, 34);
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 32px monospace';
     ctx.fillText(`${top2?.score?.toLocaleString() || 0} pts`, 330, 855);
@@ -169,12 +219,12 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     // 3위
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     ctx.beginPath();
-    ctx.roundRect(560, 720, 380, 180, 24);
+    roundedRect(560, 720, 380, 180, 24);
     ctx.fill();
     ctx.stroke();
     ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 34px sans-serif';
-    ctx.fillText(`🥉 3위: ${top3?.group_name || '-'}`, 750, 800);
+    fittedText(`🥉 3위: ${top3?.group_name || '-'}`, 750, 800, 340, 34);
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 32px monospace';
     ctx.fillText(`${top3?.score?.toLocaleString() || 0} pts`, 750, 855);
@@ -185,11 +235,13 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     ctx.fillText('땀방울 원정대 • 2022 개정 초등 체육과 인터랙티브 스마트 체육', 540, 990);
 
     // 이미지 저장 트리거
-    const dataUrl = canvas.toDataURL('image/png');
-    const a = document.createElement('a');
-    a.href = dataUrl;
-    a.download = `명예의전당_포토카드_${gameRoom?.name || '체육'}.png`;
-    a.click();
+    canvas.toBlob(blob => {
+      if (!activeRef.current) return;
+      if (!blob) { setActionError('포토카드 이미지를 만들 수 없습니다. 다시 시도해 주세요.'); return; }
+      try { downloadBlob(blob, reportFilename('명예의전당_포토카드', 'png')); }
+      catch { setActionError('포토카드를 저장할 수 없습니다. 브라우저의 다운로드 설정을 확인해 주세요.'); }
+    }, 'image/png');
+    } catch { setActionError('포토카드를 만들 수 없습니다. 다시 시도해 주세요.'); }
   };
 
   const handlePrint = () => {
@@ -197,7 +249,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <div id="class-report-print" ref={dialogRef} role="dialog" aria-modal="true" aria-label="수업 기록 리포트" tabIndex={-1} className="fixed inset-0 z-[10010] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
       <div className="bg-white text-slate-900 w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-200">
         {/* 상단 툴바 */}
         <div className="print:hidden bg-slate-900 text-white px-6 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
@@ -205,7 +257,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <span className="p-1.5 bg-cyan-500/20 text-cyan-400 rounded-lg">
               <Trophy className="w-5 h-5" />
             </span>
-            <h2 className="text-lg font-black">수업 결과 및 성취도 리포트</h2>
+            <h2 className="text-base sm:text-lg font-black">수업 기록 리포트</h2>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -232,6 +284,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             </button>
             <button
               onClick={onClose}
+              aria-label="수업 기록 리포트 닫기"
               className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -240,7 +293,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="print:hidden bg-slate-100 border-b border-slate-200 px-6 py-2 flex gap-2">
+        <div className="print:hidden bg-slate-100 border-b border-slate-200 px-4 sm:px-6 py-2 flex flex-wrap gap-2">
           <button
             onClick={() => setActiveTab('report')}
             className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -256,13 +309,14 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-            NEIS 생활기록부 세특 생성기
+            NEIS 기록 확인 · 관찰 보완
           </button>
         </div>
+        {actionError && <p role="alert" className="print:hidden mx-4 my-3 p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl">{actionError}</p>}
 
         {/* 1. 종합 보고서 탭 */}
         {activeTab === 'report' && (
-          <div className="p-8 overflow-y-auto space-y-6 print:p-0 print:space-y-4 font-sans text-sm">
+          <div className="p-4 sm:p-8 overflow-y-auto space-y-6 print:p-0 print:space-y-4 font-sans text-sm">
             {/* 타이틀 */}
             <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between">
               <div>
@@ -284,7 +338,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             </div>
 
             {/* 핵심 지표 */}
-            <div className="grid grid-cols-4 gap-3 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
                 <span className="text-xs text-slate-500 font-bold block mb-1">참여 모둠</span>
                 <span className="text-2xl font-black text-slate-900 font-mono">{scores.length}</span>
@@ -336,9 +390,10 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <div>
               <h3 className="text-xs font-black text-slate-700 uppercase flex items-center gap-1.5 mb-2">
                 <Users className="w-4 h-4 text-cyan-600" />
-                모둠별 세부 성취 결과
+                모둠별 활동 기록
               </h3>
-              <table className="w-full text-left border-collapse border border-slate-200 rounded-xl overflow-hidden text-xs">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[440px] text-left border-collapse border border-slate-200 rounded-xl overflow-hidden text-xs">
                 <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                   <tr>
                     <th className="py-2.5 px-3">순위</th>
@@ -366,24 +421,25 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
         )}
 
         {/* 2. NEIS 생활기록부 세특 탭 */}
         {activeTab === 'neis' && (
-          <div className="p-8 overflow-y-auto space-y-6">
+          <div className="p-4 sm:p-8 overflow-y-auto space-y-6 select-text">
             {/* 공통 추천 문구 */}
             <div className="p-5 bg-indigo-50/60 rounded-2xl border border-indigo-100 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-sm font-black text-indigo-900 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-indigo-600" />
-                  학급 전체 공통 특기사항 추천 문구
+                  학급 전체 기록 요약과 관찰 보완
                 </h3>
                 <button
                   onClick={() => copyToClipboard(generalNeisComments.join('\n\n'), () => {
                     setCopiedGeneral(true);
-                    setTimeout(() => setCopiedGeneral(false), 2000);
+                    scheduleCopyReset('general');
                   })}
                   className="flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-200 text-xs font-bold transition-all"
                 >
@@ -402,11 +458,11 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <div className="space-y-3">
               <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                모둠별 맞춤형 관찰평가 세특 서술문
+                모둠별 기록 요약과 교사 관찰 보완
               </h3>
               <div className="grid gap-3">
                 {sortedScores.map((group, idx) => {
-                  const text = generateGroupNeis(group, idx + 1);
+                  const text = generateGroupNeis(group);
                   return (
                     <div key={group.id} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex-1">
@@ -422,7 +478,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       <button
                         onClick={() => copyToClipboard(text, () => {
                           setCopiedGroupIdx(idx);
-                          setTimeout(() => setCopiedGroupIdx(null), 2000);
+                          scheduleCopyReset('group');
                         })}
                         className="self-end sm:self-center flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-300 text-xs font-bold transition-all shadow-sm"
                       >
@@ -439,14 +495,15 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
         <style>{`
           @media print {
+            body { overflow: visible !important; }
             body * { visibility: hidden; }
-            .print\\:hidden { display: none !important; }
-            .fixed { position: static !important; background: white !important; }
-            div[class*="backdrop-blur"] { backdrop-filter: none !important; background: white !important; }
-            div[class*="max-w-"] { max-width: 100% !important; box-shadow: none !important; }
-            div[class*="overflow-y-auto"] { overflow: visible !important; }
-            div[class*="max-h-"] { max-height: none !important; }
-            .fixed * { visibility: visible; }
+            #class-report-print, #class-report-print * { visibility: visible; }
+            #class-report-print .print\\:hidden { display: none !important; }
+            #class-report-print { position: absolute !important; inset: 0 !important; padding: 0 !important; background: white !important; }
+            #class-report-print div[class*="backdrop-blur"] { backdrop-filter: none !important; background: white !important; }
+            #class-report-print div[class*="max-w-"] { max-width: 100% !important; box-shadow: none !important; }
+            #class-report-print div[class*="overflow-"] { overflow: visible !important; }
+            #class-report-print div[class*="max-h-"] { max-height: none !important; }
           }
         `}</style>
       </div>

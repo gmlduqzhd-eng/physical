@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Eye, CheckCircle2, Sparkles } from 'lucide-react';
 import { sfxTap, sfxSuccess, hapticHeavy } from '../../application/soundEffects';
 
@@ -28,54 +28,45 @@ export const ObserverRefereeMode: React.FC<ObserverRefereeModeProps> = ({ onAwar
   const [quizScore, setQuizScore] = useState<number>(0);
   const [feedback, setFeedback] = useState<string | null>(null);
 
+  const checklistRef = useRef(formChecklist);
+  const cheerRef = useRef(0);
+  const quizAnswered = useRef(false);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const later = (callback: () => void, delay: number) => { timers.current.push(setTimeout(callback, delay)); };
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
   const handleCheck = (key: string) => {
     sfxTap();
-    setFormChecklist(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      // 4가지 모두 체크되면 보너스 부여
-      if (Object.values(next).every(Boolean)) {
-        onAwardBonus(50, '참관학생의 모둠 정밀 자세 피드백 완료!');
-        sfxSuccess();
-        hapticHeavy();
-        setFeedback('🌟 모둠원 전원에게 정밀 피드백 보너스 +50점 지급!');
-        setTimeout(() => setFeedback(null), 3000);
-      }
-      return next;
-    });
+    const next = { ...checklistRef.current, [key]: !checklistRef.current[key] };
+    if (Object.values(next).every(Boolean)) {
+      onAwardBonus(50, '참관학생의 모둠 정밀 자세 피드백 완료!');
+      sfxSuccess(); hapticHeavy();
+      setFeedback('🌟 모둠 정밀 피드백 보너스 +50점!');
+      later(() => setFeedback(null), 3000);
+      Object.keys(next).forEach(item => { next[item] = false; });
+    }
+    checklistRef.current = next; setFormChecklist(next);
   };
-
   const handleCheerTap = () => {
     sfxTap();
-    setCheerGauge(prev => {
-      const next = prev + 10;
-      if (next >= 100) {
-        onAwardBonus(30, '참관학생의 폭풍 응원 버프!');
-        sfxSuccess();
-        hapticHeavy();
-        setFeedback('🔥 폭풍 응원 게이지 100% 달성! +30점!');
-        setTimeout(() => setFeedback(null), 2500);
-        return 0;
-      }
-      return next;
-    });
+    let next = cheerRef.current + 10;
+    if (next >= 100) {
+      onAwardBonus(30, '참관학생의 폭풍 응원 버프!');
+      sfxSuccess(); hapticHeavy();
+      setFeedback('🔥 폭풍 응원 게이지 100% 달성! +30점!');
+      later(() => setFeedback(null), 2500); next = 0;
+    }
+    cheerRef.current = next; setCheerGauge(next);
   };
-
   const handleQuizAnswer = (option: string) => {
+    if (quizAnswered.current) return;
+    quizAnswered.current = true;
     const curr = QUIZ_LIST[currentQuizIdx];
     if (option === curr.a) {
-      sfxSuccess();
-      hapticHeavy();
-      onAwardBonus(40, '체육 상식 퀴즈 정답!');
-      setQuizScore(s => s + 1);
-      setFeedback('🎉 정답입니다! 우리 모둠에 +40점 획득!');
-    } else {
-      sfxTap();
-      setFeedback('😅 아쉬워요! 다음 문제에 도전해 보세요.');
-    }
-    setTimeout(() => {
-      setFeedback(null);
-      setCurrentQuizIdx((idx) => (idx + 1) % QUIZ_LIST.length);
-    }, 1800);
+      sfxSuccess(); hapticHeavy(); onAwardBonus(40, '체육 상식 퀴즈 정답!');
+      setQuizScore(score => score + 1); setFeedback('🎉 정답입니다! 우리 모둠에 +40점!');
+    } else { sfxTap(); setFeedback('😅 다음 문제에 도전해 보세요.'); }
+    later(() => { setFeedback(null); setCurrentQuizIdx(index => (index + 1) % QUIZ_LIST.length); quizAnswered.current = false; }, 1800);
   };
 
   return (
@@ -197,6 +188,7 @@ export const ObserverRefereeMode: React.FC<ObserverRefereeModeProps> = ({ onAwar
               <button
                 key={i}
                 onClick={() => handleQuizAnswer(opt)}
+                disabled={quizAnswered.current}
                 className="w-full p-2.5 rounded-xl bg-slate-800 hover:bg-amber-500/20 border border-slate-700 hover:border-amber-500/40 text-left text-xs text-slate-200 transition-all font-medium"
               >
                 {i + 1}. {opt}

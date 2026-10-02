@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
-import type { GameRoom, RoomGroup } from '../domain/types';
+import { useGameLogic } from '../application/useGameLogic';
+import { timeOffset } from '../application/timeSync';
+import type { GameRoom } from '../domain/types';
 import { useGameTimer } from '../application/useGameTimer';
 import { sfxWhistle, sfxTap, sfxSuccess, sfxClick, hapticHeavy, hapticDouble } from '../application/soundEffects';
 import {
@@ -24,78 +26,46 @@ export const TeacherRemote: React.FC = () => {
 
   const [rooms, setRooms] = useState<GameRoom[]>([]);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(paramRoomId || null);
-  const [currentRoom, setCurrentRoom] = useState<GameRoom | null>(null);
-  const [roomGroups, setRoomGroups] = useState<RoomGroup[]>([]);
+  const { gameRoom: currentRoom, scores: roomGroups, error: roomError, refresh: refreshRoom } = useGameLogic(selectedRoomId || undefined);
   const [announcementInput, setAnnouncementInput] = useState('');
-  const [isWhistling, setIsWhistling] = useState(false);
+  const isWhistling = currentRoom?.announcement === 'WHISTLE';
   const [actionFeedback, setActionFeedback] = useState<string | null>(null);
 
-  const { mins, secs, isDanger } = useGameTimer(currentRoom);
+  const { mins, secs, isDanger, timeLeft } = useGameTimer(currentRoom);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 피드백 토스트 알림
   const showFeedback = (msg: string) => {
     setActionFeedback(msg);
-    setTimeout(() => setActionFeedback(null), 2000);
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    feedbackTimer.current = setTimeout(() => setActionFeedback(null), 3000);
   };
 
   // 방 목록 가져오기
   const fetchRooms = React.useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('game_rooms')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(10);
+    if (error) { showFeedback('방 목록을 불러오지 못했습니다. 연결을 확인해주세요.'); return; }
+    setRooms(data || []);
     if (data && data.length > 0) {
-      setRooms(data);
       if (!selectedRoomId) {
         setSelectedRoomId(data[0].id);
       }
     }
   }, [selectedRoomId]);
 
-  // 선택된 방 세부 정보 가져오기
-  const fetchRoomDetails = React.useCallback(async (id: string) => {
-    const { data: room } = await supabase.from('game_rooms').select('*').eq('id', id).single();
-    if (room) {
-      setCurrentRoom(room);
-      setIsWhistling(room.announcement === 'WHISTLE');
-    }
-
-    const { data: groups } = await supabase
-      .from('room_groups')
-      .select('*')
-      .eq('room_id', id)
-      .order('score', { ascending: false });
-    if (groups) setRoomGroups(groups);
-  }, []);
-
-  useEffect(() => {
-    fetchRooms();
-  }, [fetchRooms]);
-
-  useEffect(() => {
-    if (selectedRoomId) {
-      fetchRoomDetails(selectedRoomId);
-
-      const channel = supabase
-        .channel(`remote_room_${selectedRoomId}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${selectedRoomId}` }, (payload) => {
-          if (payload.new) {
-            const updated = payload.new as GameRoom;
-            setCurrentRoom(updated);
-            setIsWhistling(updated.announcement === 'WHISTLE');
-          }
-        })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: `room_id=eq.${selectedRoomId}` }, () => {
-          fetchRoomDetails(selectedRoomId);
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
-  }, [selectedRoomId, fetchRoomDetails]);
+  useEffect(() => { void fetchRooms(); }, [fetchRooms]);
+  useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
+  const updateRoom = async (updates: Record<string, unknown>) => {
+    if (!currentRoom) return false;
+    if (typeof updates.status === 'string' && ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'].includes(updates.status) && !currentRoom.started_at) updates.started_at = new Date(Date.now() + timeOffset).toISOString();
+    const { data, error } = await supabase.from('game_rooms').update(updates).eq('id', currentRoom.id).select('id');
+    if (error || !data?.length) { showFeedback('수업 제어에 실패했습니다. 연결과 방 상태를 확인해주세요.'); return false; }
+    refreshRoom(); return true;
+  };
 
   // --- 1. 원터치 휘슬 (집중 모드) ---
   const handleToggleWhistle = async () => {
@@ -104,12 +74,10 @@ export const TeacherRemote: React.FC = () => {
     hapticHeavy();
 
     if (!isWhistling) {
-      setIsWhistling(true);
-      await supabase.from('game_rooms').update({ announcement: 'WHISTLE' }).eq('id', currentRoom.id);
+      if (!await updateRoom({ announcement: 'WHISTLE' })) return;
       showFeedback('📢 휘슬 발동! 학생 화면 집중 잠금');
     } else {
-      setIsWhistling(false);
-      await supabase.from('game_rooms').update({ announcement: null }).eq('id', currentRoom.id);
+      if (!await updateRoom({ announcement: null })) return;
       showFeedback('✅ 집중 해제! 게임 화면 복귀');
     }
   };
@@ -119,11 +87,12 @@ export const TeacherRemote: React.FC = () => {
     if (!currentRoom) return;
     sfxTap();
     hapticDouble();
-    const updates: Record<string, string> = { status };
+    const updates: Record<string, unknown> = { status };
+    if (status === 'paused') { updates.started_at = null; updates.global_time_modifier = timeLeft - 300; }
     if (status === 'playing' && !currentRoom.started_at) {
-      updates.started_at = new Date().toISOString();
+      updates.started_at = new Date(Date.now() + timeOffset).toISOString();
     }
-    await supabase.from('game_rooms').update(updates).eq('id', currentRoom.id);
+    if (!await updateRoom(updates)) return;
     showFeedback(status === 'playing' ? '▶️ 수업 시작 / 재개' : '⏸️ 수업 일시 정지');
   };
 
@@ -131,7 +100,7 @@ export const TeacherRemote: React.FC = () => {
     if (!currentRoom) return;
     sfxClick();
     const newMod = (currentRoom.global_time_modifier || 0) + amount;
-    await supabase.from('game_rooms').update({ global_time_modifier: newMod }).eq('id', currentRoom.id);
+    if (!await updateRoom({ global_time_modifier: newMod })) return;
     showFeedback(amount > 0 ? `⏱️ +${amount}초 연장` : `⏱️ ${amount}초 단축`);
   };
 
@@ -143,36 +112,38 @@ export const TeacherRemote: React.FC = () => {
 
     if (type === 'tsunami') {
       const nextStatus = currentRoom.status === 'tsunami' ? 'playing' : 'tsunami';
-      await supabase.from('game_rooms').update({ status: nextStatus }).eq('id', currentRoom.id);
+      if (!await updateRoom({ status: nextStatus })) return;
       showFeedback(nextStatus === 'tsunami' ? '🌊 지진·해일 경보 발동!' : '🌊 해일 상황 종료');
     } else if (type === 'boss_raid') {
       const nextStatus = currentRoom.status === 'boss_raid' ? 'playing' : 'boss_raid';
-      await supabase.from('game_rooms').update({
+      if (!await updateRoom({
         status: nextStatus,
         boss_hp: nextStatus === 'boss_raid' ? 10000 : null,
         boss_max_hp: nextStatus === 'boss_raid' ? 10000 : null,
-      }).eq('id', currentRoom.id);
+      })) return;
       showFeedback(nextStatus === 'boss_raid' ? '👹 보스 레이드 소환!' : '👹 보스 레이드 종료');
     } else if (type === 'zombie') {
       const nextStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
-      await supabase.from('game_rooms').update({ status: nextStatus }).eq('id', currentRoom.id);
+      if (!await updateRoom({ status: nextStatus })) return;
       showFeedback(nextStatus === 'zombie' ? '🧟 좀비 바이러스 살포!' : '🧟 좀비 모드 종료');
     } else if (type === 'buff') {
       // 전 모둠 1분간 점수 2배
       const buffUntil = new Date(Date.now() + 60000).toISOString();
-      await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('room_id', currentRoom.id);
+      const result = await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('room_id', currentRoom.id);
+      if (result.error) return showFeedback('버프 저장에 실패했습니다. 다시 시도해주세요.');
       showFeedback('⚡ 전원 1분간 점수 2배 버프 지급!');
     } else if (type === 'underdog') {
-      // 하위 50% 모둠 역전 찬스 (점수 3배 버프)
+      // 하위 50% 모둠 역전 찬스 (점수 2배 버프)
       if (roomGroups.length >= 2) {
         const sorted = [...roomGroups].sort((a, b) => b.score - a.score);
         const halfIdx = Math.floor(sorted.length / 2);
         const underdogs = sorted.slice(halfIdx);
         const buffUntil = new Date(Date.now() + 90000).toISOString();
         for (const u of underdogs) {
-          await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('id', u.id);
+          const result = await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('id', u.id);
+          if (result.error) return showFeedback('버프 저장에 실패했습니다. 다시 시도해주세요.');
         }
-        await supabase.from('game_rooms').update({ announcement: '🌟 언더독 역전 찬스 발동! 하위 모둠 1분 30초간 점수 3배!' }).eq('id', currentRoom.id);
+        if (!await updateRoom({ announcement: '🌟 언더독 역전 찬스 발동! 하위 모둠 1분 30초간 점수 2배!' })) return;
         showFeedback('🌟 언더독 역전 골든벨 발동!');
       } else {
         showFeedback('모둠이 2개 이상일 때 발동 가능합니다.');
@@ -181,11 +152,11 @@ export const TeacherRemote: React.FC = () => {
       // 학급 전체 초특급 피버 타임
       const buffUntil = new Date(Date.now() + 60000).toISOString();
       await supabase.from('room_groups').update({ item_buff_until: buffUntil }).eq('room_id', currentRoom.id);
-      await supabase.from('game_rooms').update({ announcement: '🔥 [FEVER TIME] 전원 1분간 점수 2배 + 쿨다운 삭제!' }).eq('id', currentRoom.id);
+      if (!await updateRoom({ announcement: '🔥 [FEVER TIME] 전원 1분간 점수 2배 + 쿨다운 삭제!' })) return;
       showFeedback('🔥 학급 전체 피버 타임 발동!');
     } else if (type === 'finish') {
       if (confirm('게임을 종료하고 전광판 시상대 결과를 발표하시겠습니까?')) {
-        await supabase.from('game_rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
+        if (!await updateRoom({ status: 'finished' })) return;
         showFeedback('🏆 게임 종료 및 결과 발표!');
       }
     }
@@ -195,7 +166,7 @@ export const TeacherRemote: React.FC = () => {
   const handleSendAnnouncement = async (text: string) => {
     if (!currentRoom || !text.trim()) return;
     sfxClick();
-    await supabase.from('game_rooms').update({ announcement: text.trim() }).eq('id', currentRoom.id);
+    if (!await updateRoom({ announcement: text.trim() })) return;
     setAnnouncementInput('');
     showFeedback(`📢 공지 전송: "${text.slice(0, 15)}..."`);
   };
@@ -203,12 +174,13 @@ export const TeacherRemote: React.FC = () => {
   const handleClearAnnouncement = async () => {
     if (!currentRoom) return;
     sfxClick();
-    await supabase.from('game_rooms').update({ announcement: null }).eq('id', currentRoom.id);
+    if (!await updateRoom({ announcement: null })) return;
     showFeedback('공지사항을 지웠습니다.');
   };
 
   return (
     <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col font-sans select-none pb-12">
+      {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-950 text-rose-200">{roomError} <button onClick={refreshRoom} className="underline font-bold">다시 시도</button></div>}
       {/* 액션 피드백 토스트 */}
       {actionFeedback && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] bg-cyan-500 text-slate-950 px-5 py-2.5 rounded-full font-black text-sm shadow-2xl animate-in fade-in slide-in-from-top-4 duration-200">

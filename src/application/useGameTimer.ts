@@ -6,21 +6,25 @@ export const useGameTimer = (gameRoom: GameRoom | null) => {
   const [timeLeft, setTimeLeft] = useState<number>(300);
 
   useEffect(() => {
-    if (!gameRoom) return;
+    if (!gameRoom) {
+      setTimeLeft(300);
+      return;
+    }
 
       const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
       
       const updateTimer = () => {
-        if (gameRoom.started_at) {
+        const modifier = Number.isFinite(gameRoom.global_time_modifier) ? gameRoom.global_time_modifier : 0;
+        if (gameRoom.started_at && Number.isFinite(new Date(gameRoom.started_at).getTime())) {
           const start = new Date(gameRoom.started_at).getTime();
           const now = Date.now() + timeOffset;
-          const elapsed = Math.floor((now - start) / 1000);
+          const elapsed = Math.max(0, Math.floor((now - start) / 1000));
           
-          let remaining = 300 - elapsed + gameRoom.global_time_modifier;
+          let remaining = 300 - elapsed + modifier;
           if (remaining < 0) remaining = 0;
           setTimeLeft(remaining);
         } else {
-          let remaining = 300 + gameRoom.global_time_modifier;
+          let remaining = 300 + modifier;
           if (remaining < 0) remaining = 0;
           setTimeLeft(remaining);
         }
