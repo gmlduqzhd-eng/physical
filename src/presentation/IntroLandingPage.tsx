@@ -196,6 +196,9 @@ export const IntroLandingPage = () => {
             <a href="#action-cards" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
               바로 시작
             </a>
+            <a href="#intro-video" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
+              소개 영상
+            </a>
             <a href="#trending" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
               인기 게임
             </a>
@@ -460,6 +463,62 @@ export const IntroLandingPage = () => {
               </div>
             </div>
 
+          </div>
+
+        </div>
+      </section>
+
+      {/* 🎬 2.5 플랫폼 공식 소개 영상 (엽쌤스쿨) */}
+      <section id="intro-video" className="py-12 md:py-16 relative">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-2xl mx-auto mb-6">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/25 text-rose-500 text-xs font-bold shadow-sm whitespace-nowrap mb-2">
+              <Play className="w-3.5 h-3.5 fill-rose-500 shrink-0" />
+              <span>1분 만에 보는 플랫폼 소개</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight break-keep">
+              땀방울 원정대, 영상으로 먼저 만나보세요
+            </h2>
+            <p className={`text-xs sm:text-sm mt-1.5 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              선생님과 학생들이 교실에서 직접 스마트폰으로 체육 수업을 즐기는 생생한 모습을 확인하세요.
+            </p>
+          </div>
+
+          {/* 16:9 반응형 유튜브 비디오 플레이어 컨테이너 */}
+          <div className={`relative rounded-3xl overflow-hidden border-2 shadow-2xl transition-all ${
+            isDark ? 'bg-slate-900 border-slate-700/80 shadow-cyan-500/10' : 'bg-slate-900 border-slate-300 shadow-xl'
+          }`}>
+            <div className="relative w-full aspect-video">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/fxb91q1Et-4?rel=0"
+                title="땀방울 원정대 공식 소개 영상 (엽쌤스쿨)"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+            <div className={`p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 border-t text-xs ${
+              isDark ? 'bg-slate-900/90 border-slate-800 text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-700'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">🎥</span>
+                <div>
+                  <span className="font-black text-sm">땀방울 원정대 공식 소개 영상</span>
+                  <span className="mx-2 text-slate-400">·</span>
+                  <span className="text-slate-500 font-medium">제작: 엽쌤스쿨</span>
+                </div>
+              </div>
+              <a
+                href="https://youtu.be/fxb91q1Et-4"
+                target="_blank"
+                rel="noreferrer noopener"
+                className="text-cyan-600 dark:text-cyan-400 font-bold hover:underline flex items-center gap-1 shrink-0"
+              >
+                <span>YouTube에서 열기</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
           </div>
 
         </div>
