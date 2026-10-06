@@ -17,6 +17,7 @@ import { StationCircuitMode } from './components/StationCircuitMode';
 import { QuickPinClassroom } from './components/QuickPinClassroom';
 import { MotionCamChallenge } from './components/MotionCamChallenge';
 import { BadgeArchiveModal } from './components/BadgeArchiveModal';
+import { GameMotionIcon } from './components/GameMotionIcon';
 
 import {
   GAMES,
@@ -637,7 +638,7 @@ export const GameHub = () => {
             const domainColor = game.domain === '운동' ? 'border-emerald-500/40 bg-emerald-950/30' : game.domain === '스포츠' ? 'border-blue-500/40 bg-blue-950/30' : 'border-purple-500/40 bg-purple-950/30';
             return (
               <button key={game.type} onClick={() => navigate(`/play/${game.type}`)} className={`p-3 rounded-xl border ${domainColor} flex items-center gap-3 hover:scale-[1.02] transition-all text-left group`}>
-                <span className="text-3xl shrink-0">{game.emoji}</span>
+                <GameMotionIcon gameType={game.type} domain={game.domain} size="sm" showBadge={false} />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-white truncate group-hover:text-cyan-300 transition-colors whitespace-nowrap">{game.name}</p>
                   <p className="text-[10px] text-slate-400 truncate whitespace-nowrap">{game.subCategory}</p>
@@ -654,7 +655,9 @@ export const GameHub = () => {
         <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setRandomPick(null)}>
           <div ref={randomDialogRef} role="dialog" aria-modal="true" aria-label="랜덤 게임 추천" tabIndex={-1} className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-purple-500/40 rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center" onClick={e => e.stopPropagation()}>
             <button type="button" onClick={() => setRandomPick(null)} className="mb-3 px-3 py-1 rounded-lg border border-slate-700 text-sm text-slate-300">닫기</button>
-            <div className="text-7xl mb-4 animate-bounce">{randomPick.emoji}</div>
+            <div className="flex justify-center mb-4">
+              <GameMotionIcon gameType={randomPick.type} domain={randomPick.domain} size="lg" showBadge={true} className="animate-bounce" />
+            </div>
             <h3 className="text-2xl font-black text-white mb-1">{randomPick.name}</h3>
             <p className="text-sm text-slate-400 mb-2">{randomPick.desc}</p>
             <p className="text-xs text-purple-300 font-bold mb-6">{randomPick.domain} · {randomPick.subCategory}</p>
@@ -1001,15 +1004,13 @@ export const GameHub = () => {
                     </div>
 
                     {/* 아이콘 및 게임명 */}
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${game.color} flex items-center justify-center shrink-0 shadow-lg text-2xl group-hover:scale-105 transition-transform`}>
-                        {game.emoji}
-                      </div>
-                      <div className="flex-1 min-w-0">
+                    <div className="flex items-start gap-3.5 mb-2.5">
+                      <GameMotionIcon gameType={game.type} domain={game.domain} size="md" showBadge={true} />
+                      <div className="flex-1 min-w-0 pt-0.5">
                         <h3 className="font-black text-base text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
                           {game.name}
                         </h3>
-                        <p className="text-slate-400 text-xs font-medium line-clamp-1 mt-0.5">
+                        <p className="text-slate-400 text-xs font-medium line-clamp-1 mt-1">
                           {game.desc}
                         </p>
                       </div>

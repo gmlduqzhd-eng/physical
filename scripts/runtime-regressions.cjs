@@ -84,10 +84,15 @@ async function main() {
     const groups = ['모둠 "따옴표", 쉼표\n다음 줄', '=HYPERLINK("https://example.test")', ' +1+2', '-5+4', '@SUM(A1:A2)'].map((name, index) =>
       ({ group_name: name, score: index === 0 ? -10 : 100, completed_missions: ['a', 'a', 'b'], is_defused: false }));
     const parsed = parseCsv(report.buildClassReportCsv(groups));
-    assert.equal(parsed.length, groups.length + 1); assert.equal(parsed[1][1], groups[0].group_name);
-    assert.equal(parsed[1][2], '-10'); assert.equal(parsed[1][3], '2');
-    for (let i = 1; i < groups.length; i++) assert.equal(parsed[i + 1][1], "'" + groups[i].group_name);
-    assert(parsed.every(row => row.length === 6));
+    assert.equal(parsed.length, groups.length + 2);
+    const targetRow = parsed.find(r => r[1] === groups[0].group_name);
+    assert(targetRow, 'target row found');
+    assert.equal(targetRow[2], '-10'); assert.equal(targetRow[3], '2');
+    for (let i = 1; i < groups.length; i++) {
+      const disarmed = parsed.find(r => r[1] === "'" + groups[i].group_name);
+      assert(disarmed, 'disarmed formula row found for ' + groups[i].group_name);
+    }
+    assert(parsed.slice(0, -1).every(row => row.length === 11));
   });
   check('activity summaries describe recorded facts rather than inventing student traits', () => {
     const text = report.recordedGroupComment({ group_name: '모둠', score: 321, completed_missions: ['one'], is_defused: true });

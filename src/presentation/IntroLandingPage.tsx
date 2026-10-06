@@ -20,6 +20,7 @@ import {
 import { useTheme } from '../application/ThemeContext';
 import { sfxTap, sfxSuccess } from '../application/soundEffects';
 import { ClassReportModal } from './components/ClassReportModal';
+import { GameMotionIcon } from './components/GameMotionIcon';
 import type { GameRoom, RoomGroup } from '../domain/types';
 
 const DEMO_ROOM: GameRoom = {
@@ -563,9 +564,7 @@ export const IntroLandingPage = () => {
               >
                 <div>
                   <div className="flex justify-between items-start mb-2.5">
-                    <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${game.gradient} flex items-center justify-center text-xl shadow-md transition-transform group-hover:scale-110 shrink-0`}>
-                      {game.emoji}
-                    </div>
+                    <GameMotionIcon gameType={game.id} size="md" showBadge={true} />
                     <div className="flex items-center gap-1">
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 whitespace-nowrap">
                         {game.badge}

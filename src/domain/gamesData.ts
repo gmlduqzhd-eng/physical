@@ -46,7 +46,7 @@ export const GAMES: GameDef[] = [
   {
     type: 'jump',
     name: '점프왕!',
-    emoji: '🦘',
+    emoji: '⚡',
     desc: '폰을 들고 제자리에서 높이 연속 점프!',
     color: 'from-cyan-500 to-blue-600',
     border: 'border-cyan-400/40',
@@ -94,7 +94,7 @@ export const GAMES: GameDef[] = [
   {
     type: 'plank',
     name: '플랭크 챌린지',
-    emoji: '🧘',
+    emoji: '🛡️',
     desc: '폰을 등에 올리고 수평으로 버티기!',
     color: 'from-emerald-500 to-teal-600',
     border: 'border-emerald-400/40',
@@ -110,7 +110,7 @@ export const GAMES: GameDef[] = [
   {
     type: 'stretch',
     name: '스트레칭 타이머',
-    emoji: '🧘‍♂️',
+    emoji: '🧘',
     desc: '부위별 스트레칭으로 유연성 기르기!',
     color: 'from-teal-500 to-cyan-600',
     border: 'border-teal-400/40',
@@ -126,7 +126,7 @@ export const GAMES: GameDef[] = [
   {
     type: 'one_leg',
     name: '한 발 서기',
-    emoji: '🦩',
+    emoji: '🧍',
     desc: '한 발로 서서 폰의 수평을 20초간 유지!',
     color: 'from-emerald-500 to-green-600',
     border: 'border-emerald-400/40',
