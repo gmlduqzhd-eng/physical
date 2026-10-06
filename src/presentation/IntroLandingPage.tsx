@@ -1,77 +1,61 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
   Play,
   Users,
-  Smartphone,
-  Award,
   BookOpen,
   ArrowRight,
   ChevronRight,
-  Flame,
-  Zap,
-  Star,
   Sun,
   Moon,
-  HelpCircle,
-  Activity,
   Tv,
-  FileSpreadsheet,
-  QrCode,
-  ChevronDown
+  HelpCircle,
+  ChevronDown,
+  Gamepad2,
+  Activity,
+  Flame,
+  KeyRound
 } from 'lucide-react';
-import { GAMES } from '../domain/gamesData';
 import { useTheme } from '../application/ThemeContext';
-import { sfxTap, sfxCoin, sfxSuccess } from '../application/soundEffects';
+import { sfxTap, sfxSuccess } from '../application/soundEffects';
 
 export const IntroLandingPage = () => {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
 
-  // 인터랙티브 롤 스위처 ('teacher' | 'student')
-  const [activeRole, setActiveRole] = useState<'teacher' | 'student'>('teacher');
+  // 학생 인라인 PIN 입력 상태
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
 
   // 교육과정 3대 영역 탭 ('exercise' | 'sport' | 'expression')
   const [curriculumTab, setCurriculumTab] = useState<'exercise' | 'sport' | 'expression'>('exercise');
 
   // FAQ 아코디언 상태
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // 미니 액션 시뮬레이터 (히어로 섹션 라이브 체험)
-  const [simSteps, setSimSteps] = useState(0);
-  const [simScore, setSimScore] = useState(0);
-  const [simFeedback, setSimFeedback] = useState<string | null>(null);
-
-  const simStepRef = useRef(0);
-  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
-
-  const handleSimTap = () => {
-    sfxTap();
-    const nextSteps = ++simStepRef.current;
-    setSimSteps(nextSteps);
-    setSimScore(score => score + 15);
-
-    if (nextSteps % 5 === 0) {
-      sfxCoin();
-      setSimFeedback('🔥 콤보 달성! +50 보너스');
-      setSimScore(s => s + 50);
-      if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
-      feedbackTimer.current = setTimeout(() => setSimFeedback(null), 1000);
+  // 학생 PIN 즉시 입장 핸들러
+  const handlePinSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = pinInput.trim();
+    if (!cleaned) {
+      setPinError('PIN 4자리를 입력해주세요.');
+      return;
     }
+    sfxSuccess();
+    navigate(`/lobby?pin=${cleaned}`);
   };
 
-  // 대표 추천 게임 6선
+  // 넷플릭스 스타일 인기 추천 게임 6선
   const FEATURED_GAMES = [
     {
       id: 'jump',
       name: '순발력 점프왕',
       category: '운동',
       emoji: '🦘',
-      badge: '초등 3~6학년',
+      badge: '순발력 체력',
       code: '[4체01-02]',
-      desc: '스마트폰을 쥐고 점프! 가속도 센서로 움직임을 감지하거나 버튼으로 점프 횟수를 기록',
+      desc: '스마트폰을 쥐고 점프! 체공 시간과 수직 도약을 실시간 감지',
       gradient: 'from-amber-500 to-orange-600',
     },
     {
@@ -81,7 +65,7 @@ export const IntroLandingPage = () => {
       emoji: '🏋️',
       badge: '근력·근지구력',
       code: '[6체01-02]',
-      desc: '스마트폰의 움직임을 감지하거나 버튼으로 횟수를 기록하는 스쿼트 활동',
+      desc: '자이로 센서로 무릎 각도와 자세를 정밀 판정하는 피트니스 대결',
       gradient: 'from-cyan-500 to-blue-600',
     },
     {
@@ -89,20 +73,10 @@ export const IntroLandingPage = () => {
       name: '공 굴림 컬링 원정',
       category: '스포츠',
       emoji: '🥌',
-      badge: '표적/투사',
+      badge: '표적·투사',
       code: '[4체02-05]',
       desc: '손목 스냅의 힘을 정밀 조절해 하우스 중앙(버튼)에 스톤 안착',
       gradient: 'from-emerald-500 to-teal-600',
-    },
-    {
-      id: 'slingshot-archery',
-      name: '슬링샷 양궁 퍼펙트 텐',
-      category: '스포츠',
-      emoji: '🎯',
-      badge: '전략·집중',
-      code: '[6체02-04]',
-      desc: '바람의 세기와 각도를 계산해 활시위를 당기는 전략형 양궁',
-      gradient: 'from-purple-500 to-indigo-600',
     },
     {
       id: 'open-space-tactician',
@@ -115,45 +89,90 @@ export const IntroLandingPage = () => {
       gradient: 'from-rose-500 to-pink-600',
     },
     {
-      id: 'wind-surf-balance',
-      name: '바람을 타는 윈드서핑',
+      id: 'slingshot-archery',
+      name: '슬링샷 양궁 퍼펙트 텐',
       category: '스포츠',
-      emoji: '🏄',
-      badge: '생태/자이로',
-      code: '[6체02-09]',
-      desc: '돌풍의 방향을 읽고 스마트폰을 기울여 수평을 유지하는 서핑',
+      emoji: '🎯',
+      badge: '전략·집중',
+      code: '[6체02-04]',
+      desc: '바람의 세기와 각도를 계산해 활시위를 당기는 전략형 양궁',
+      gradient: 'from-purple-500 to-indigo-600',
+    },
+    {
+      id: 'partner-robot-lab',
+      name: '파트너 로봇 연구소',
+      category: '표현',
+      emoji: '🤖',
+      badge: '창의 움직임',
+      code: '[4체03-02]',
+      desc: '신체 요소를 활용한 로봇 대칭 동작 모방 및 창의 표현',
       gradient: 'from-sky-500 to-cyan-600',
     },
   ];
 
-  // 자주 묻는 질문 데이터
+  // 교육과정 3대 영역 게임 데이터
+  const CURRICULUM_DATA = {
+    exercise: {
+      name: '운동 영역 (Health & Fitness)',
+      tag: '건강 체력 · 심폐지구력 · 근력',
+      color: 'text-emerald-500',
+      badgeBg: 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400',
+      btnBg: 'bg-emerald-600 hover:bg-emerald-500',
+      games: [
+        { id: 'jump', name: '점프왕!', emoji: '🦘', code: '[4체01-02]', desc: '순발력 수직 점프 감지' },
+        { id: 'squat', name: '스쿼트 챌린지', emoji: '🏋️', code: '[6체01-02]', desc: '자이로 각도 정밀 판정' },
+        { id: 'run', name: '제자리 달리기', emoji: '🏃', code: '[4체01-02]', desc: '스텝 보폭 가속도 측정' },
+        { id: 'plank', name: '플랭크 챌린지', emoji: '💪', code: '[6체01-05]', desc: '코어 정적 유지력 대결' },
+      ],
+    },
+    sport: {
+      name: '스포츠 영역 (Sports & Games)',
+      tag: '기술형 · 전략형 · 생태형',
+      color: 'text-blue-500',
+      badgeBg: 'bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400',
+      btnBg: 'bg-blue-600 hover:bg-blue-500',
+      games: [
+        { id: 'rolling-curling', name: '공 굴림 컬링', emoji: '🥌', code: '[4체02-05]', desc: '표적 힘 조절 & 스냅' },
+        { id: 'open-space-tactician', name: '오프사이드 브레이커', emoji: '⚽', code: '[6체02-05]', desc: '공간 침투 스루패스' },
+        { id: 'slingshot-archery', name: '슬링샷 양궁', emoji: '🎯', code: '[6체02-04]', desc: '탄성 조준 퍼펙트 텐' },
+        { id: 'kayak-paddle', name: '급류 탈출 카약', emoji: '🛶', code: '[4체02-07]', desc: '좌우 교차 패들링 모험' },
+      ],
+    },
+    expression: {
+      name: '표현 영역 (Expression & Movement)',
+      tag: '움직임 요소 · 창의 표현 · 감정',
+      color: 'text-purple-500',
+      badgeBg: 'bg-purple-500/10 border-purple-500/30 text-purple-600 dark:text-purple-400',
+      btnBg: 'bg-purple-600 hover:bg-purple-500',
+      games: [
+        { id: 'partner-robot-lab', name: '파트너 로봇 연구소', emoji: '🤖', code: '[4체03-02]', desc: '대칭 신체 창의 동작' },
+        { id: 'emotion-thermometer', name: '감정 온도계', emoji: '🌡️', code: '[4체03-04]', desc: '표정과 몸짓 감정 표현' },
+        { id: 'dribble-rhythm', name: '드리블 박자 공장', emoji: '🥁', code: '[4체02-03]', desc: '리듬 템포 동기화 조작' },
+        { id: 'animal', name: '동물 체조 원정대', emoji: '🐾', code: '[4체03-03]', desc: '사물·자연 모방 움직임' },
+      ],
+    },
+  };
+
+  // 핵심 FAQ 데이터 (엄선된 3선)
   const FAQS = [
     {
-      q: '별도의 앱(App) 설치나 학생 계정 가입이 필요한가요?',
-      a: '전혀 필요 없습니다! 크롬, 사파리, 웨일 등 웹 브라우저에서 URL 접속만으로 1초 만에 실행됩니다. 학생들은 복잡한 회원가입 없이 교사가 발급한 4자리 PIN 코드나 QR코드로 즉시 참여합니다.',
+      q: '별도의 앱(App) 설치나 학생 가입이 필요한가요?',
+      a: '전혀 필요 없습니다! 스마트폰, 태블릿, PC의 웹 브라우저(크롬, 웨일, 사파리)에서 접속만으로 즉시 작동합니다. 학생들은 복잡한 가입 없이 교사가 발급한 4자리 PIN이나 QR 스캔으로 1초 만에 입장합니다.',
     },
     {
       q: '스마트폰 센서(자이로/가속도)는 어떻게 작동하나요?',
-      a: '웹 표준 DeviceMotion 및 DeviceOrientation API를 활용하여 스마트폰의 상하 흔들림, 회전, 기울기, 점프 충격량을 브라우저 자체에서 실시간 연산합니다. 별도의 센서 장비나 추가 하드웨어가 전혀 필요하지 않습니다.',
+      a: '웹 표준 센서 API를 활용하여 스마트폰의 상하 흔들림, 회전, 기울기, 점프 충격량을 브라우저에서 직접 실시간 연산합니다. 별도의 하드웨어나 외장 장비 없이 스마트폰만 있으면 됩니다.',
     },
     {
       q: '비가 오거나 미세먼지가 심한 날 교실 체육으로도 적합한가요?',
-      a: '네, 적극 추천합니다! 넓은 운동장이 없어도 교실 책상 사이 공간이나 제자리에서 안전하게 온몸을 움직일 수 있는 게임들로 구성되어 있어 악천후 시 실내 체육 수업으로 최적입니다.',
-    },
-    {
-      q: 'NEIS 학교생활기록부 체육과 세특(세부능력 및 특기사항)은 어떻게 생성되나요?',
-      a: '수업 종료 후 모둠 및 학생별 참여도, 활동 영역(운동·스포츠·표현), 누적 성취기준을 기반으로 2022 개정 체육과 성취기준에 부합하는 정형화된 세특 평가 문구가 원클릭으로 자동 작성됩니다. 교사는 복사하여 NEIS에 바로 입력할 수 있습니다.',
-    },
-    {
-      q: '학급 인원이 20~30명인데 모둠 대항전이 원활한가요?',
-      a: '물론입니다. 1개 모둠부터 최대 8개 모둠까지 유연하게 설정 가능하며, 모둠원 전체의 점수가 실시간 합산되어 교실 앞 대형 TV/전자칠판 전광판에 라이브로 중계됩니다.',
+      a: '네, 교실 실내 체육에 최적화되어 있습니다! 책상 사이 공간이나 제자리에서 안전하게 온몸을 움직일 수 있는 게임들로 구성되어 있어 악천후 시에도 완벽한 체육 수업을 진행할 수 있습니다.',
     },
   ];
 
   return (
     <div className={`min-h-screen font-sans transition-colors duration-200 select-none ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       
-      {/* 🌟 1. 상단 글로벌 네비게이션 헤더 */}
+      {/* 🌟 1. 글로벌 네비게이션 헤더 */}
       <header className={`sticky top-0 z-50 backdrop-blur-md border-b transition-colors ${isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white/95 border-slate-200 shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           
@@ -162,30 +181,38 @@ export const IntroLandingPage = () => {
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center text-xl shadow-lg shadow-cyan-500/20 shrink-0">
               💦
             </div>
-            <div className="whitespace-nowrap shrink-0">
+            <div className="whitespace-nowrap shrink-0 flex items-center gap-2">
               <span className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600 whitespace-nowrap">
                 땀방울 원정대
               </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
+              <span className="hidden sm:inline-block text-[10px] font-black px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
                 2022 개정 체육
               </span>
             </div>
           </div>
 
-          {/* 중앙 네비게이션 링크 (데스크톱) */}
+          {/* 중앙 네비게이션 링크 */}
           <nav className="hidden md:flex items-center gap-7 text-sm font-bold whitespace-nowrap">
-            <a href="#features" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
-              플랫폼 소개
+            <a href="#action-cards" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
+              바로 시작
+            </a>
+            <a href="#trending" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
+              인기 게임
             </a>
             <a href="#curriculum" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
-              교육과정 연계
+              3대 영역
             </a>
-            <a href="#minigames" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
-              추천 게임
+            <a href="#workflow" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
+              수업 진행 3단계
             </a>
-            <a href="#faq" className={`transition-colors whitespace-nowrap ${isDark ? 'text-slate-300 hover:text-cyan-400' : 'text-slate-700 hover:text-cyan-600'}`}>
-              자주 묻는 질문
-            </a>
+            <button
+              onClick={() => navigate('/manual?tab=lesson')}
+              className={`transition-colors whitespace-nowrap text-xs px-2.5 py-1 rounded-lg border ${
+                isDark ? 'border-purple-500/40 text-purple-300 hover:bg-purple-950/40' : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+              }`}
+            >
+              📋 지도안 생성
+            </button>
           </nav>
 
           {/* 우측 액션 버튼들 */}
@@ -199,599 +226,313 @@ export const IntroLandingPage = () => {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* 교사용 수업방 바로가기 */}
+            {/* 교사용 수업 관리 */}
             <button
-              onClick={() => navigate('/admin')}
-              className={`hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap shrink-0 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-slate-600' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-100'}`}
+              onClick={() => {
+                sfxTap();
+                navigate('/admin');
+              }}
+              className={`hidden sm:flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all whitespace-nowrap shrink-0 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-200 hover:text-white hover:border-cyan-500' : 'bg-white border-slate-300 text-slate-800 hover:bg-slate-100'}`}
             >
               <Users className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
-              <span className="whitespace-nowrap">수업 개설</span>
+              <span className="whitespace-nowrap">선생님 모드</span>
             </button>
 
-            {/* 핵심 CTA: 게임하기 (메인 허브 이동) */}
+            {/* 핵심 CTA: 게임 허브 */}
             <button
               onClick={() => {
                 sfxSuccess();
                 navigate('/hub');
               }}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 !text-white rounded-xl text-xs sm:text-sm font-black shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
+              className="flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 !text-white rounded-xl text-xs sm:text-sm font-black shadow-lg shadow-cyan-500/25 transition-all hover:scale-105 active:scale-95 whitespace-nowrap shrink-0"
             >
               <Play className="w-3.5 h-3.5 fill-white !text-white shrink-0" />
-              <span className="whitespace-nowrap !text-white">게임하기</span>
+              <span className="whitespace-nowrap !text-white">게임 허브</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* 🚀 2. 히어로 섹션 (Hero Section) */}
-      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28">
-        {/* 배경 은은한 그라디언트 블러 오라 */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-full blur-[120px] pointer-events-none" />
+      {/* 🚀 2. 히어로 섹션 (컨셉 A: 3대 액션 피라미드 포털) */}
+      <section className="relative overflow-hidden pt-10 pb-16 md:pt-14 md:pb-20">
+        {/* 은은한 배경 오라 */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[360px] bg-gradient-to-tr from-cyan-500/15 via-blue-500/15 to-purple-500/15 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          
+          {/* 헤드라인: 텍스트를 대폭 압축하여 3초 만에 각인 */}
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-10">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap">
+              <Sparkles className="w-4 h-4 text-cyan-500 animate-pulse shrink-0" />
+              <span className="whitespace-nowrap">앱 설치 없이 웹에서 바로 시작하는 미래형 체육 플랫폼</span>
+            </div>
+
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.15] break-keep">
+              스마트폰 하나로,<br />
+              교실이 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500">신나는 경기장</span>으로!
+            </h1>
+
+            <p className={`text-sm sm:text-base leading-relaxed max-w-xl mx-auto break-keep font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              카메라 QR 스캔으로 1초 만에 입장! 50여 종의 2022 개정 체육 미니게임과 실시간 모둠 대결을 지금 경험해보세요.
+            </p>
+          </div>
+
+          {/* 🎯 [핵심] 3대 메인 액션 카드 (선생님 / 학생 / 게임 허브) */}
+          <div id="action-cards" className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             
-            {/* 좌측 텍스트 & CTA 헤드라인 */}
-            <div className="lg:col-span-7 text-center lg:text-left space-y-6">
-              
-              {/* 상단 태그 뱃지 */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-600 dark:text-cyan-400 text-xs sm:text-sm font-bold shadow-sm whitespace-nowrap">
-                <Sparkles className="w-4 h-4 text-cyan-500 dark:text-cyan-400 animate-pulse shrink-0" />
-                <span className="whitespace-nowrap">2022 개정 체육과 교육과정 연계 스마트 피지컬 컴퓨팅</span>
+            {/* 카드 1: 🏫 선생님 수업 개설 (교사용) */}
+            <div className={`p-6 sm:p-7 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl flex flex-col justify-between relative overflow-hidden group ${
+              isDark
+                ? 'bg-slate-900/90 border-slate-800 hover:border-cyan-500/60 shadow-lg'
+                : 'bg-white border-slate-200 hover:border-cyan-500 shadow-md'
+            }`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-cyan-500/20 transition-colors" />
+
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[11px] font-black px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/30 whitespace-nowrap">
+                    선생님 전용
+                  </span>
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center text-xl shrink-0">
+                    🏫
+                  </div>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black mb-2 break-keep">
+                  수업방 개설 & 관리
+                </h3>
+                <p className={`text-xs sm:text-sm leading-relaxed mb-6 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  학급 방을 열어 TV 전광판과 학생 입장용 QR을 띄우고, 수업 종료 후 NEIS 세특을 자동 작성합니다.
+                </p>
               </div>
 
-              {/* 메인 타이틀 */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.2] break-keep">
-                스마트폰 하나로,<br />
-                교실이 <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600">신나는 체육 경기장</span>으로!
-              </h1>
-
-              {/* 상세 설명 */}
-              <p className={`text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0 break-keep font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                별도의 센서 장비 없이 스마트폰의 자이로·가속도 모션 센서만으로 즐기는 초·중등 디지털 체육 플랫폼입니다.
-                <strong className={isDark ? 'text-white' : 'text-slate-900'}> {GAMES.length}종의 신체활동 미니게임</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>실시간 모둠 전광판</strong>, <strong className={isDark ? 'text-white' : 'text-slate-900'}>교사 스마트 리모컨</strong>, 그리고 <strong className={isDark ? 'text-white' : 'text-slate-900'}>NEIS 생기부 세특 자동 생성</strong>까지 원스톱으로 지원합니다.
-              </p>
-
-              {/* 메인 액션 버튼 모음: PC/태블릿/모바일 어떤 환경에서도 줄바꿈 방지 */}
-              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 flex-wrap">
+              <div className="space-y-2.5">
                 <button
-                  id="hero-play-btn"
+                  onClick={() => {
+                    sfxSuccess();
+                    navigate('/admin');
+                  }}
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 !text-white rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 active:scale-95"
+                >
+                  <Users className="w-4 h-4 shrink-0 !text-white" />
+                  <span className="whitespace-nowrap !text-white">수업방 개설하기</span>
+                  <ArrowRight className="w-4 h-4 shrink-0 !text-white" />
+                </button>
+
+                <div className="flex items-center justify-between text-xs font-bold pt-1 px-1">
+                  <button
+                    onClick={() => navigate('/board')}
+                    className="text-cyan-600 dark:text-cyan-400 hover:underline flex items-center gap-1"
+                  >
+                    <Tv className="w-3.5 h-3.5" /> TV 전광판만 열기
+                  </button>
+                  <button
+                    onClick={() => navigate('/manual?tab=lesson')}
+                    className="text-slate-500 dark:text-slate-400 hover:underline flex items-center gap-1"
+                  >
+                    <BookOpen className="w-3.5 h-3.5" /> 지도안 생성
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 카드 2: 📱 학생 PIN 입장 (학생용 & 인라인 입력) */}
+            <div className={`p-6 sm:p-7 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl flex flex-col justify-between relative overflow-hidden group ${
+              isDark
+                ? 'bg-slate-900/90 border-slate-800 hover:border-purple-500/60 shadow-lg'
+                : 'bg-white border-slate-200 hover:border-purple-500 shadow-md'
+            }`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-purple-500/20 transition-colors" />
+
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[11px] font-black px-3 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30 whitespace-nowrap">
+                    학생 전용
+                  </span>
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-xl shrink-0">
+                    📱
+                  </div>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black mb-2 break-keep">
+                  학생 모둠 PIN 입장
+                </h3>
+                <p className={`text-xs sm:text-sm leading-relaxed mb-4 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  교실 앞 TV 화면에 떠 있는 4자리 PIN 코드를 입력하면 즉시 모둠 대결에 입장합니다.
+                </p>
+              </div>
+
+              {/* 인라인 PIN 입력 폼 */}
+              <form onSubmit={handlePinSubmit} className="space-y-2.5">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={pinInput}
+                      onChange={(e) => {
+                        setPinInput(e.target.value);
+                        setPinError('');
+                      }}
+                      placeholder="PIN 4자리 (예: 1234)"
+                      className={`w-full pl-10 pr-3 py-3 rounded-2xl text-center font-mono font-bold text-base border transition-all ${
+                        isDark
+                          ? 'bg-slate-950 border-slate-700 text-white placeholder-slate-500 focus:border-purple-500'
+                          : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-purple-500'
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-5 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 !text-white rounded-2xl font-black text-sm transition-all shadow-md active:scale-95 whitespace-nowrap shrink-0"
+                  >
+                    입장 ▶
+                  </button>
+                </div>
+
+                {pinError ? (
+                  <p className="text-[11px] text-rose-500 font-bold text-center">{pinError}</p>
+                ) : (
+                  <div className="flex items-center justify-center text-xs font-bold pt-1">
+                    <button
+                      type="button"
+                      onClick={() => navigate('/lobby')}
+                      className="text-purple-600 dark:text-purple-400 hover:underline"
+                    >
+                      또는 모둠 선택 로비로 직접 이동 →
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* 카드 3: 🎮 50+ 미니게임 허브 (자유 플레이) */}
+            <div className={`p-6 sm:p-7 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl flex flex-col justify-between relative overflow-hidden group ${
+              isDark
+                ? 'bg-slate-900/90 border-slate-800 hover:border-emerald-500/60 shadow-lg'
+                : 'bg-white border-slate-200 hover:border-emerald-500 shadow-md'
+            }`}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none group-hover:bg-emerald-500/20 transition-colors" />
+
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[11px] font-black px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 whitespace-nowrap">
+                    자유 체험
+                  </span>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
+                    🎮
+                  </div>
+                </div>
+
+                <h3 className="text-xl sm:text-2xl font-black mb-2 break-keep">
+                  50+ 미니게임 허브
+                </h3>
+                <p className={`text-xs sm:text-sm leading-relaxed mb-6 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  방 개설 없이도 혼자서 또는 짝과 함께 50여 가지 신체활동 게임을 바로 플레이할 수 있습니다.
+                </p>
+              </div>
+
+              <div className="space-y-2.5">
+                <button
                   onClick={() => {
                     sfxSuccess();
                     navigate('/hub');
                   }}
-                  className="w-full sm:w-auto px-7 sm:px-8 py-3.5 sm:py-4 bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 !text-white rounded-2xl font-black text-base sm:text-lg shadow-xl shadow-cyan-500/30 transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5 whitespace-nowrap shrink-0"
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 !text-white rounded-2xl font-black text-sm sm:text-base shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 active:scale-95"
                 >
-                  <Play className="w-5 h-5 fill-white !text-white shrink-0" />
-                  <span className="whitespace-nowrap !text-white">지금 게임하기</span>
-                  <ArrowRight className="w-5 h-5 !text-white shrink-0" />
+                  <Gamepad2 className="w-4 h-4 shrink-0 !text-white" />
+                  <span className="whitespace-nowrap !text-white">게임 허브 전체보기</span>
+                  <ArrowRight className="w-4 h-4 shrink-0 !text-white" />
                 </button>
 
-                <button
-                  onClick={() => navigate('/admin')}
-                  className={`w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-base border transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
-                    isDark
-                      ? 'bg-slate-900 border-slate-700 hover:border-cyan-500 text-slate-100 hover:text-white'
-                      : 'bg-white border-2 border-slate-300 hover:border-cyan-500 text-slate-800 hover:text-slate-900 shadow-sm'
-                  }`}
-                >
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-600 dark:text-cyan-400 shrink-0" />
-                  <span className="whitespace-nowrap">선생님 수업방 개설</span>
-                </button>
-
-                <button
-                  onClick={() => navigate('/join')}
-                  className={`w-full sm:w-auto px-5 sm:px-6 py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-base border transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0 ${
-                    isDark
-                      ? 'bg-slate-900/80 border-slate-800 text-slate-300 hover:text-slate-100'
-                      : 'bg-slate-100 border-2 border-slate-300 text-slate-700 hover:text-slate-900'
-                  }`}
-                >
-                  <Smartphone className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400 shrink-0" />
-                  <span className="whitespace-nowrap">학생 PIN 입장</span>
-                </button>
-              </div>
-
-              {/* 핵심 지표 뱃지 4선 */}
-              <div className="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
-                {[
-                  { label: '미니게임 라인업', val: `${GAMES.length}종`, icon: '🎮' },
-                  { label: '교육과정 핵심영역', val: '3대 영역', icon: '🏃' },
-                  { label: '앱 설치 소요시간', val: '0초 (Web)', icon: '⚡' },
-                  { label: 'NEIS 세특 생성', val: '원클릭 자동', icon: '📝' },
-                ].map((item, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-3 rounded-2xl border transition-all ${
-                      isDark ? 'bg-slate-900/60 border-slate-800 text-white' : 'bg-white border-2 border-slate-200 text-slate-900 shadow-sm'
-                    }`}
+                <div className="flex items-center justify-between text-xs font-bold pt-1 px-1">
+                  <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    ⚡ 3대 영역 50종 탑재
+                  </span>
+                  <button
+                    onClick={() => navigate('/play/jump')}
+                    className="text-slate-500 dark:text-slate-400 hover:underline"
                   >
-                    <div className="text-xl mb-1">{item.icon}</div>
-                    <div className="text-base font-black text-cyan-600 dark:text-cyan-400 whitespace-nowrap">{item.val}</div>
-                    <div className="text-[11px] font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">{item.label}</div>
-                  </div>
-                ))}
+                    점프왕 1초 체험 ▶
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* 우측 인터랙티브 라이브 스마트폰 목업 (체험 위젯) */}
-            <div className="lg:col-span-5 flex justify-center">
-              <div className="relative w-full max-w-sm">
-                
-                {/* 폰 외관 프레임 */}
-                <div className={`p-4 rounded-[40px] border-4 shadow-2xl relative ${isDark ? 'bg-slate-900 border-slate-700/80 shadow-cyan-500/10' : 'bg-slate-800 border-slate-700 shadow-xl'}`}>
-                  
-                  {/* 상단 다이내믹 아일랜드 / 수화부 */}
-                  <div className="w-28 h-4 bg-slate-950 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-800"></div>
-                  </div>
-
-                  {/* 폰 화면 내부 */}
-                  <div className="bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950 rounded-[28px] p-5 text-white overflow-hidden relative border border-slate-800 select-none">
-                    
-                    {/* 상단 인게임 스테이터스 */}
-                    <div className="flex justify-between items-center mb-4 text-xs font-bold">
-                      <span className="px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center gap-1 whitespace-nowrap">
-                        <Activity className="w-3 h-3 animate-spin shrink-0" /> 센서 가동 중
-                      </span>
-                      <span className="text-amber-400 flex items-center gap-1 whitespace-nowrap">
-                        <Flame className="w-3.5 h-3.5 fill-amber-400 shrink-0" /> 모둠 1위 질주 중!
-                      </span>
-                    </div>
-
-                    {/* 인터랙티브 타겟 박스 */}
-                    <div className="text-center py-6">
-                      <div className="text-6xl mb-3 animate-bounce">🏃‍♂️</div>
-                      <h3 className="text-xl font-black text-white mb-1 whitespace-nowrap">제자리 달리기 모션 체험</h3>
-                      <p className="text-xs text-slate-400 mb-4 break-keep">화면을 탭하거나 마우스를 클릭해 점수를 올려보세요!</p>
-
-                      {/* 탭 인터랙션 버튼 */}
-                      <button
-                        onClick={handleSimTap}
-                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 !text-white rounded-2xl font-black text-base shadow-lg shadow-emerald-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
-                      >
-                        <Zap className="w-5 h-5 fill-white !text-white shrink-0" />
-                        <span className="whitespace-nowrap !text-white">탭해서 스텝 밟기! ({simSteps}보)</span>
-                      </button>
-
-                      {/* 피드백 말풍선 */}
-                      {simFeedback && (
-                        <div className="mt-2 text-xs font-black text-yellow-300 animate-pulse whitespace-nowrap">
-                          {simFeedback}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 점수 & 센서 게이지 */}
-                    <div className="bg-slate-950/80 rounded-xl p-3 border border-slate-800 flex justify-between items-center">
-                      <div>
-                        <div className="text-[10px] text-slate-400 font-bold whitespace-nowrap">실시간 획득 점수</div>
-                        <div className="text-2xl font-black text-cyan-300 whitespace-nowrap">+{simScore.toLocaleString()}점</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-slate-400 font-bold whitespace-nowrap">가속도 감도 (G-Force)</div>
-                        <div className="text-sm font-black text-emerald-400 whitespace-nowrap">정상 (12.4 m/s²)</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 하단 폰 홈 인디케이터 바 */}
-                  <div className="w-32 h-1 bg-slate-600 rounded-full mx-auto mt-4"></div>
-                </div>
-
-                {/* 플로팅 배너 장식 */}
-                <div className="absolute -bottom-6 -left-6 bg-slate-900 border border-slate-700/80 rounded-2xl p-3 shadow-xl flex items-center gap-3 backdrop-blur-md hidden sm:flex">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-xl shrink-0">
-                    🏆
-                  </div>
-                  <div className="whitespace-nowrap">
-                    <div className="text-xs font-bold text-white whitespace-nowrap">모둠 전광판 실시간 동기화</div>
-                    <div className="text-[10px] text-slate-400 whitespace-nowrap">교실 앞 대형 TV 딜레이 0.05초</div>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* 🎯 3. 역할별 맞춤 기능 (선생님 vs 학생 인터랙티브 탭) */}
-      <section id="features" className={`py-16 md:py-24 border-y transition-colors ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-100/80 border-slate-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-xs sm:text-sm font-bold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase mb-2 whitespace-nowrap">
-              DESIGNED FOR EDUCATION
-            </h2>
-            <h3 className="text-2xl sm:text-4xl font-black tracking-tight mb-4 break-keep">
-              선생님에게는 가장 편리한 수업 도구,<br />
-              학생들에게는 가장 몰입도 높은 놀이터
-            </h3>
-            <p className={`text-sm sm:text-base break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              체육 수업을 혁신하는 스마트 지원 기능을 확인해보세요.
-            </p>
-
-            {/* 역할 선택 탭 버튼: 줄바꿈 없이 깔끔한 탭 */}
-            <div className={`inline-flex p-1.5 rounded-2xl border mt-6 shadow-md ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-slate-200/80 border-slate-300'}`}>
-              <button
-                onClick={() => setActiveRole('teacher')}
-                className={`px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                  activeRole === 'teacher'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 !text-white shadow-lg'
-                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-900'
-                }`}
-              >
-                <Users className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">선생님 전용 기능</span>
-              </button>
-              <button
-                onClick={() => setActiveRole('student')}
-                className={`px-5 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 whitespace-nowrap shrink-0 ${
-                  activeRole === 'student'
-                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 !text-white shadow-lg'
-                    : isDark ? 'text-slate-400 hover:text-white' : 'text-slate-700 hover:text-slate-900'
-                }`}
-              >
-                <Smartphone className="w-4 h-4 shrink-0" />
-                <span className="whitespace-nowrap">학생 맞춤 재미</span>
-              </button>
-            </div>
-          </div>
-
-          {/* 선생님 탭 컨텐츠 */}
-          {activeRole === 'teacher' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: <QrCode className="w-6 h-6 text-cyan-500" />,
-                  title: '1초 만에 수업 개설 & QR 공유',
-                  desc: '복잡한 회원가입 없이 클릭 한 번으로 학급 방을 개설하고 4자리 PIN 코드 및 QR코드로 학생들을 즉시 입장시킵니다.',
-                  tag: '간편한 시작',
-                },
-                {
-                  icon: <Tv className="w-6 h-6 text-blue-500" />,
-                  title: '실시간 대형 TV 전광판',
-                  desc: '교실 앞 전자칠판이나 TV에 실시간 모둠 순위판을 띄워, 학생들의 움직임과 득점을 흥미진진한 라이브 중계로 연출합니다.',
-                  tag: '몰입감 극대화',
-                },
-                {
-                  icon: <Zap className="w-6 h-6 text-amber-500" />,
-                  title: '교사용 무선 스마트 리모컨',
-                  desc: '수업 중 걸어다니며 스마트폰으로 피버타임(점수 2배), 언더독 역전 보너스, 호루라기 정지 등을 원격 제어합니다.',
-                  tag: '스마트 통제',
-                },
-                {
-                  icon: <FileSpreadsheet className="w-6 h-6 text-emerald-500" />,
-                  title: 'NEIS 세특 자동 생성 & CSV',
-                  desc: '경기 참여 데이터와 성취기준을 분석하여 학교생활기록부 체육과 세부능력 및 특기사항 문구를 자동 완성하고 CSV로 내보냅니다.',
-                  tag: '업무 경감',
-                },
-              ].map((card, i) => (
-                <div
-                  key={i}
-                  className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                    isDark ? 'bg-slate-900/90 border-slate-800 text-slate-100 hover:border-cyan-500/50' : 'bg-white border-2 border-slate-200 text-slate-900 hover:border-cyan-500 shadow-sm'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                      {card.icon}
-                    </div>
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
-                      {card.tag}
-                    </span>
-                  </div>
-                  <h4 className="text-lg font-black mb-2 break-keep">{card.title}</h4>
-                  <p className={`text-xs sm:text-sm leading-relaxed break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {card.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 학생 탭 컨텐츠 */}
-          {activeRole === 'student' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: <Flame className="w-6 h-6 text-rose-500" />,
-                  title: '온몸으로 조작하는 피지컬 액션',
-                  desc: '단순한 손가락 터치를 넘어 점프, 스쿼트, 제자리 달리기, 에어 펀치, 서핑 균형 잡기 등 온몸을 역동적으로 움직입니다.',
-                  tag: '체력 증진',
-                },
-                {
-                  icon: <Users className="w-6 h-6 text-purple-500" />,
-                  title: '우리 모둠과 함께하는 협동 배틀',
-                  desc: '내가 흘린 땀방울이 모둠의 점수로 쌓이고, 친구들과 함께 전략을 짜며 자연스럽게 배려와 협동심을 기릅니다.',
-                  tag: '팀워크/인성',
-                },
-                {
-                  icon: <Award className="w-6 h-6 text-amber-500" />,
-                  title: '6대 성취 뱃지 & 성장 다마고치',
-                  desc: '플레이할수록 누적되는 성취 뱃지와 레벨업 다마고치 캐릭터를 통해 운동을 습관화하고 성취감을 만끽합니다.',
-                  tag: '동기 부여',
-                },
-                {
-                  icon: <Star className="w-6 h-6 text-yellow-500" />,
-                  title: '나만의 MVP 포토카드 발급',
-                  desc: '경기 종료 후 오늘의 최고 기록과 나만의 닉네임이 새겨진 캔버스 포토카드를 스마트폰 갤러리에 저장할 수 있습니다.',
-                  tag: '기념 소장',
-                },
-              ].map((card, i) => (
-                <div
-                  key={i}
-                  className={`p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
-                    isDark ? 'bg-slate-900/90 border-slate-800 text-slate-100 hover:border-purple-500/50' : 'bg-white border-2 border-slate-200 text-slate-900 hover:border-purple-500 shadow-sm'
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                      {card.icon}
-                    </div>
-                    <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 whitespace-nowrap">
-                      {card.tag}
-                    </span>
-                  </div>
-                  <h4 className="text-lg font-black mb-2 break-keep">{card.title}</h4>
-                  <p className={`text-xs sm:text-sm leading-relaxed break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {card.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 하단 퀵 액션 배너: 고대비 및 무결점 줄바꿈 */}
-          <div className="mt-10 p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-blue-700 via-indigo-600 to-purple-700 text-white border border-blue-400/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="text-3xl shrink-0">📖</div>
-              <div>
-                <h4 className="font-black text-base sm:text-lg text-white break-keep">수업 지도안이 고민이신가요?</h4>
-                <p className="text-xs sm:text-sm text-cyan-100 break-keep">2022 개정 체육과 교육과정에 맞춘 원클릭 교수학습 지도안 생성기를 무료로 이용해보세요.</p>
-              </div>
-            </div>
-            <button
-              onClick={() => navigate('/manual?tab=lesson')}
-              className="px-5 py-3 bg-white hover:bg-slate-100 !text-blue-700 rounded-xl text-xs sm:text-sm font-black shrink-0 transition-all shadow-md flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <BookOpen className="w-4 h-4 !text-blue-700 shrink-0" />
-              <span className="whitespace-nowrap !text-blue-700">수업 지도안 생성기 바로가기</span>
-            </button>
           </div>
 
         </div>
       </section>
 
-      {/* 📚 4. 2022 개정 체육과 3대 핵심 영역 (Curriculum Section) */}
-      <section id="curriculum" className="py-16 md:py-24">
+      {/* 🔥 3. 지금 가장 핫한 인기 게임 TOP 6 (Trending Games Showcase) */}
+      <section id="trending" className={`py-14 border-y transition-colors ${isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-100/70 border-slate-200'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-xs sm:text-sm font-bold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-2 whitespace-nowrap">
-              CURRICULUM MAPPING
-            </h2>
-            <h3 className="text-2xl sm:text-4xl font-black tracking-tight mb-4 break-keep">
-              2022 개정 초등 체육과 3대 핵심 영역 완벽 연계
-            </h3>
-            <p className={`text-sm sm:text-base break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              국가 교육과정 성취기준을 기반으로 세분화된 맞춤형 신체활동 미니게임을 제공합니다.
-            </p>
-
-            {/* 3대 영역 탭 */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-              {[
-                { id: 'exercise', name: '🏃 운동 영역 (체력·자세)', color: 'border-emerald-500 text-emerald-600 dark:text-emerald-400' },
-                { id: 'sport', name: '⚽ 스포츠 영역 (기술·전술)', color: 'border-blue-500 text-blue-600 dark:text-blue-400' },
-                { id: 'expression', name: '💃 표현 영역 (움직임·리듬)', color: 'border-purple-500 text-purple-600 dark:text-purple-400' },
-              ].map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => setCurriculumTab(t.id as any)}
-                  className={`px-4 sm:px-6 py-2.5 rounded-xl text-xs sm:text-sm font-black border transition-all whitespace-nowrap shrink-0 ${
-                    curriculumTab === t.id
-                      ? `bg-slate-100 dark:bg-slate-800 shadow-md ${t.color}`
-                      : `${isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200' : 'bg-white border-2 border-slate-200 text-slate-700'}`
-                  }`}
-                >
-                  <span className="whitespace-nowrap">{t.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 영역별 세부 카드 */}
-          <div className={`p-6 sm:p-8 rounded-3xl border ${isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-2 border-slate-200 shadow-xl'}`}>
-            {curriculumTab === 'exercise' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-2">
-                  <div>
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap">
-                      신체활동 역량 : 건강 관리 능력
-                    </span>
-                    <h4 className="text-xl font-black mt-2 break-keep">🏃 운동 영역 (Health & Physical Fitness)</h4>
-                  </div>
-                  <div className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    주요 성취기준: <span className="text-emerald-600 dark:text-emerald-400">[4체01-02]</span> <span className="text-emerald-600 dark:text-emerald-400">[6체01-02]</span> <span className="text-emerald-600 dark:text-emerald-400">[6체01-05]</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { name: '점프왕!', code: '[4체01-02]', desc: '순발력 체력운동 / 수직 점프 감지', emoji: '🦘', id: 'jump' },
-                    { name: '스쿼트 챌린지', code: '[6체01-02]', desc: '근력·근지구력 운동 / 무릎 각도 판정', emoji: '🏋️', id: 'squat' },
-                    { name: '제자리 달리기', code: '[4체01-02]', desc: '심폐지구력 달리기 / 스텝 보폭 감지', emoji: '🏃', id: 'run' },
-                    { name: '플랭크 챌린지', code: '[6체01-05]', desc: '코어 근력 버티기 / 정적 유지력', emoji: '💪', id: 'plank' },
-                  ].map(g => (
-                    <div key={g.id} className={`p-4 rounded-2xl border flex flex-col justify-between ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-2 border-slate-200'}`}>
-                      <div>
-                        <div className="text-3xl mb-2">{g.emoji}</div>
-                        <h5 className="font-black text-base whitespace-nowrap">{g.name}</h5>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold whitespace-nowrap">{g.code}</span>
-                        <p className={`text-xs mt-1 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{g.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/play/${g.id}`)}
-                        className="mt-4 w-full py-2 bg-emerald-600 hover:bg-emerald-500 !text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 whitespace-nowrap shrink-0 shadow-sm"
-                      >
-                        <span className="whitespace-nowrap !text-white">체험하기</span> <ChevronRight className="w-3 h-3 !text-white shrink-0" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {curriculumTab === 'sport' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-2">
-                  <div>
-                    <span className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20 whitespace-nowrap">
-                      신체활동 역량 : 경기 수행 및 협동 능력
-                    </span>
-                    <h4 className="text-xl font-black mt-2 break-keep">⚽ 스포츠 영역 (Sports & Games)</h4>
-                  </div>
-                  <div className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    주요 성취기준: <span className="text-blue-600 dark:text-blue-400">[4체02-05]</span> <span className="text-blue-600 dark:text-blue-400">[6체02-05]</span> <span className="text-blue-600 dark:text-blue-400">[6체02-09]</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { name: '공 굴림 컬링 원정', code: '[4체02-05]', desc: '표적 힘 조절 / 스냅 릴리즈', emoji: '🥌', id: 'rolling-curling' },
-                    { name: '오프사이드 브레이커', code: '[6체02-05]', desc: '공간 침투 전술 / 온사이드 스루패스', emoji: '⚽', id: 'open-space-tactician' },
-                    { name: '슬링샷 양궁 퍼펙트 텐', code: '[6체02-04]', desc: '전략형 투사체 표적 / 조준 탄성', emoji: '🎯', id: 'slingshot-archery' },
-                    { name: '급류 탈출 카약', code: '[4체02-07]', desc: '생태형 수상 모험 / 좌우 교차 패들링', emoji: '🛶', id: 'kayak-paddle' },
-                  ].map(g => (
-                    <div key={g.id} className={`p-4 rounded-2xl border flex flex-col justify-between ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-2 border-slate-200'}`}>
-                      <div>
-                        <div className="text-3xl mb-2">{g.emoji}</div>
-                        <h5 className="font-black text-base whitespace-nowrap">{g.name}</h5>
-                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold whitespace-nowrap">{g.code}</span>
-                        <p className={`text-xs mt-1 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{g.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/play/${g.id}`)}
-                        className="mt-4 w-full py-2 bg-blue-600 hover:bg-blue-500 !text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 whitespace-nowrap shrink-0 shadow-sm"
-                      >
-                        <span className="whitespace-nowrap !text-white">체험하기</span> <ChevronRight className="w-3 h-3 !text-white shrink-0" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {curriculumTab === 'expression' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-2">
-                  <div>
-                    <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20 whitespace-nowrap">
-                      신체활동 역량 : 신체 표현 및 심미적 감성
-                    </span>
-                    <h4 className="text-xl font-black mt-2 break-keep">💃 표현 영역 (Expression & Movement)</h4>
-                  </div>
-                  <div className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                    주요 성취기준: <span className="text-purple-600 dark:text-purple-400">[4체03-02]</span> <span className="text-purple-600 dark:text-purple-400">[4체03-04]</span> <span className="text-purple-600 dark:text-purple-400">[6체03-06]</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    { name: '파트너 로봇 연구소', code: '[4체03-02]', desc: '신체 요소 창의 표현 / 대칭 동작', emoji: '🤖', id: 'partner-robot-lab' },
-                    { name: '감정 온도계', code: '[4체03-04]', desc: '감정 신체 표현 / 표정과 몸짓', emoji: '🌡️', id: 'emotion-thermometer' },
-                    { name: '드리블 박자 공장', code: '[4체02-03]', desc: '리듬 조작 움직임 / 템포 동기화', emoji: '🥁', id: 'dribble-rhythm' },
-                    { name: '동물 체조', code: '[4체03-03]', desc: '사물·자연 모방 표현 / 점핑과 크롤링', emoji: '🐾', id: 'animal' },
-                  ].map(g => (
-                    <div key={g.id} className={`p-4 rounded-2xl border flex flex-col justify-between ${isDark ? 'bg-slate-950/80 border-slate-800' : 'bg-slate-50 border-2 border-slate-200'}`}>
-                      <div>
-                        <div className="text-3xl mb-2">{g.emoji}</div>
-                        <h5 className="font-black text-base whitespace-nowrap">{g.name}</h5>
-                        <span className="text-[10px] text-purple-600 dark:text-purple-400 font-bold whitespace-nowrap">{g.code}</span>
-                        <p className={`text-xs mt-1 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{g.desc}</p>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/play/${g.id}`)}
-                        className="mt-4 w-full py-2 bg-purple-600 hover:bg-purple-500 !text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 whitespace-nowrap shrink-0 shadow-sm"
-                      >
-                        <span className="whitespace-nowrap !text-white">체험하기</span> <ChevronRight className="w-3 h-3 !text-white shrink-0" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-        </div>
-      </section>
-
-      {/* 🎮 5. 인기 대표 미니게임 6선 (클릭 시 즉시 체험) */}
-      <section id="minigames" className={`py-16 md:py-24 border-y transition-colors ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-100/80 border-slate-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-3">
             <div>
-              <h2 className="text-xs sm:text-sm font-bold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase mb-2 whitespace-nowrap">
-                FEATURED MINIGAMES
+              <div className="inline-flex items-center gap-1.5 text-xs font-black text-amber-500 uppercase tracking-wider mb-1">
+                <Flame className="w-4 h-4 fill-amber-500" /> TRENDING TOP 6
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight break-keep">
+                아이들이 가장 열광하는 대표 미니게임
               </h2>
-              <h3 className="text-2xl sm:text-4xl font-black tracking-tight break-keep">
-                가장 인기 있는 대표 미니게임
-              </h3>
-              <p className={`text-sm mt-1 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                아이들이 가장 열광하는 6가지 게임을 지금 바로 클릭해서 체험해보세요.
-              </p>
             </div>
 
             <button
               onClick={() => {
-                sfxSuccess();
+                sfxTap();
                 navigate('/hub');
               }}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 !text-white font-bold text-sm shadow-md transition-all self-start md:self-auto whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-cyan-600 dark:text-cyan-400 hover:underline shrink-0"
             >
-              <span className="whitespace-nowrap !text-white">전체 {GAMES.length}개 게임 목록 보기</span>
-              <ArrowRight className="w-4 h-4 !text-white shrink-0" />
+              전체 50+ 게임 목록 보기 <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 넷플릭스 스타일 시각적 게임 카드 그리드 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURED_GAMES.map((game) => (
               <div
                 key={game.id}
-                role="link"
-                tabIndex={0}
-                aria-label={`${game.name} 게임 시작`}
-                onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate(`/play/${game.id}`); } }}
-                onClick={() => navigate(`/play/${game.id}`)}
-                className={`group p-6 rounded-3xl border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl cursor-pointer relative overflow-hidden ${
-                  isDark ? 'bg-slate-900/90 border-slate-800 hover:border-cyan-500/50' : 'bg-white border-2 border-slate-200 hover:border-cyan-500 shadow-md'
+                onClick={() => {
+                  sfxTap();
+                  navigate(`/play/${game.id}`);
+                }}
+                className={`group p-5 rounded-3xl border-2 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                  isDark
+                    ? 'bg-slate-900/80 border-slate-800 hover:border-cyan-500/50'
+                    : 'bg-white border-slate-200 hover:border-cyan-500 shadow-sm'
                 }`}
               >
-                {/* 상단 뱃지 & 아이콘 */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${game.gradient} flex items-center justify-center text-3xl shadow-lg transition-transform group-hover:scale-110 shrink-0`}>
-                    {game.emoji}
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${game.gradient} flex items-center justify-center text-2xl shadow-md transition-transform group-hover:scale-110 shrink-0`}>
+                      {game.emoji}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 whitespace-nowrap">
+                        {game.badge}
+                      </span>
+                      <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-mono font-bold whitespace-nowrap">
+                        {game.code}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-cyan-700 dark:text-cyan-400 border border-slate-300 dark:border-slate-700 whitespace-nowrap">
-                      {game.badge}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">{game.code}</span>
-                  </div>
+
+                  <h3 className={`text-lg font-black transition-colors mb-1.5 whitespace-nowrap ${isDark ? 'text-white group-hover:text-cyan-400' : 'text-slate-900 group-hover:text-cyan-600'}`}>
+                    {game.name}
+                  </h3>
+                  <p className={`text-xs leading-relaxed mb-4 break-keep line-clamp-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {game.desc}
+                  </p>
                 </div>
 
-                <h4 className={`text-xl font-black transition-colors mb-2 whitespace-normal ${isDark ? 'text-white group-hover:text-cyan-400' : 'text-slate-900 group-hover:text-cyan-600'}`}>
-                  {game.name}
-                </h4>
-                <p className={`text-xs sm:text-sm leading-relaxed mb-4 break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  {game.desc}
-                </p>
-
-                <div className="flex items-center text-xs font-bold text-cyan-600 dark:text-cyan-400 group-hover:translate-x-1 transition-transform whitespace-nowrap">
-                  <span className="whitespace-nowrap">1초 만에 바로 플레이</span> <ChevronRight className="w-4 h-4 ml-0.5 shrink-0" />
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <span className="text-[11px] font-bold text-slate-500">1초 만에 실행</span>
+                  <span className="text-xs font-black text-cyan-600 dark:text-cyan-400 flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">
+                    지금 플레이 <Play className="w-3 h-3 fill-current ml-0.5" />
+                  </span>
                 </div>
               </div>
             ))}
@@ -800,58 +541,157 @@ export const IntroLandingPage = () => {
         </div>
       </section>
 
-      {/* ⏱️ 6. 체육 수업 3단계 활용 흐름 (How to Run a Class) */}
-      <section className="py-16 md:py-24">
+      {/* 🏃 4. 2022 개정 체육과 3대 영역 퀵 셀렉터 (Curriculum Showcase) */}
+      <section id="curriculum" className="py-14 md:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-3xl mx-auto mb-14">
-            <h2 className="text-xs sm:text-sm font-bold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase mb-2 whitespace-nowrap">
-              SIMPLE & POWERFUL WORKFLOW
+          <div className="text-center max-w-2xl mx-auto mb-8">
+            <h2 className="text-xs font-bold tracking-widest text-emerald-600 dark:text-emerald-400 uppercase mb-1 whitespace-nowrap">
+              2022 개정 체육과 완벽 연계
             </h2>
-            <h3 className="text-2xl sm:text-4xl font-black tracking-tight mb-4 break-keep">
-              단 3단계로 완성되는 스마트 체육 수업
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight break-keep">
+              교육과정 3대 영역별 맞춤 게임
             </h3>
-            <p className={`text-sm sm:text-base break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-              선생님도 학생도 복잡한 준비 없이 바로 신나게 뛰어놀 수 있습니다.
+            <p className={`text-xs sm:text-sm mt-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              원하는 영역을 클릭하면 국가 성취기준 기반의 게임들을 즉시 확인할 수 있습니다.
+            </p>
+
+            {/* 3대 영역 탭 칩 */}
+            <div className="flex flex-wrap justify-center gap-2.5 mt-5">
+              {[
+                { id: 'exercise', name: '🏃 운동 영역', tag: '체력·자세·건강' },
+                { id: 'sport', name: '⚽ 스포츠 영역', tag: '기술·전술·생태' },
+                { id: 'expression', name: '💃 표현 영역', tag: '움직임·리듬' },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    sfxTap();
+                    setCurriculumTab(t.id as any);
+                  }}
+                  className={`px-4 sm:px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-black border transition-all whitespace-nowrap shrink-0 flex items-center gap-2 ${
+                    curriculumTab === t.id
+                      ? isDark
+                        ? 'bg-slate-800 border-cyan-500 text-cyan-300 shadow-md scale-105'
+                        : 'bg-white border-cyan-600 text-cyan-700 shadow-md scale-105'
+                      : isDark
+                        ? 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                        : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <span>{t.name}</span>
+                  <span className="text-[10px] font-normal opacity-70">({t.tag})</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 영역별 대표 카드 4선 그리드 */}
+          <div className={`p-6 sm:p-7 rounded-3xl border-2 ${
+            isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-lg'
+          }`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-5 border-b border-slate-200 dark:border-slate-800 gap-2">
+              <div className="flex items-center gap-2">
+                <span className={`text-xs font-black px-3 py-1 rounded-full border ${CURRICULUM_DATA[curriculumTab].badgeBg}`}>
+                  {CURRICULUM_DATA[curriculumTab].tag}
+                </span>
+                <h4 className="text-lg font-black">{CURRICULUM_DATA[curriculumTab].name}</h4>
+              </div>
+              <button
+                onClick={() => navigate('/hub')}
+                className="text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline self-start sm:self-auto"
+              >
+                이 영역 전체 게임 보기 →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {CURRICULUM_DATA[curriculumTab].games.map(g => (
+                <div
+                  key={g.id}
+                  className={`p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+                    isDark ? 'bg-slate-950/70 border-slate-800 hover:border-slate-700' : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div>
+                    <div className="text-3xl mb-2">{g.emoji}</div>
+                    <h5 className="font-black text-sm sm:text-base whitespace-nowrap mb-0.5">{g.name}</h5>
+                    <span className="text-[10px] font-mono text-cyan-600 dark:text-cyan-400 font-bold block mb-1">
+                      {g.code}
+                    </span>
+                    <p className={`text-xs break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                      {g.desc}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      sfxTap();
+                      navigate(`/play/${g.id}`);
+                    }}
+                    className={`mt-4 w-full py-2.5 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 text-white shadow-sm active:scale-95 ${CURRICULUM_DATA[curriculumTab].btnBg}`}
+                  >
+                    <span>체험하기</span> <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ⚡ 5. 3초 만에 이해하는 수업 흐름 (Simple 3-Step Flow) */}
+      <section id="workflow" className={`py-14 border-y transition-colors ${isDark ? 'bg-slate-900/40 border-slate-800' : 'bg-slate-100/70 border-slate-200'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-xl mx-auto mb-10">
+            <h2 className="text-xs font-bold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase mb-1 whitespace-nowrap">
+              EASY WORKFLOW
+            </h2>
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight break-keep">
+              단 3단계로 끝나는 스마트 체육
+            </h3>
+            <p className={`text-xs sm:text-sm mt-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              선생님도 학생도 번거로운 준비 없이 바로 신나게 뛰어놉니다.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               {
                 step: '01',
-                title: '수업방 개설 & QR 접속',
-                desc: '교실 앞 TV에 방을 띄우고 학생들이 스마트폰 카메라로 QR코드를 비추면 끝! 별도 앱 설치나 가입 없이 5초 만에 전원 입장 완료.',
+                title: 'QR 1초 스캔',
+                desc: '앱 설치/회원가입 없이, 교실 TV 화면의 QR코드를 카메라로 비추면 학생 전원 5초 만에 입장 완료.',
                 icon: '📱',
-                gradient: 'from-cyan-500 to-blue-500',
+                color: 'text-cyan-400',
               },
               {
                 step: '02',
-                title: '모둠별 미션 & 전광판 대결',
-                desc: '선생님이 리모컨으로 게임을 선택하면 전광판 카운트다운 시작! 모둠원들의 땀방울이 실시간으로 집계되며 교실 전체가 환호성으로 가득 찹니다.',
+                title: '온몸으로 모둠 대결',
+                desc: '점프, 스쿼트, 달리기로 온몸을 움직이면 스마트폰 센서가 땀방울을 감지해 대형 전광판에 라이브 집계.',
                 icon: '🔥',
-                gradient: 'from-amber-500 to-orange-500',
+                color: 'text-amber-400',
               },
               {
                 step: '03',
-                title: '쿨다운 & NEIS 세특 완성',
-                desc: '스트레칭으로 몸을 이완하고, 자동으로 생성된 NEIS 체육과 세특 평가 문구와 경기 결과 CSV를 다운로드하여 수업을 완벽히 정리합니다.',
+                title: 'NEIS 세특 자동 완성',
+                desc: '수업 종료 즉시 2022 개정 성취기준에 맞춘 학교생활기록부 체육과 세특 평가 문구가 원클릭 자동 생성.',
                 icon: '📝',
-                gradient: 'from-emerald-500 to-teal-500',
+                color: 'text-emerald-400',
               },
             ].map((s, idx) => (
               <div
                 key={idx}
-                className={`p-8 rounded-3xl border relative transition-all duration-300 hover:shadow-xl ${
-                  isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-2 border-slate-200 shadow-md'
+                className={`p-6 rounded-3xl border-2 transition-all ${
+                  isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
                 }`}
               >
-                <div className="text-4xl mb-4">{s.icon}</div>
-                <div className={`text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r ${s.gradient} mb-2 whitespace-nowrap`}>
-                  STEP {s.step}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="text-3xl">{s.icon}</div>
+                  <span className={`text-2xl font-black font-mono ${s.color}`}>STEP {s.step}</span>
                 </div>
-                <h4 className="text-xl font-black mb-3 break-keep">{s.title}</h4>
-                <p className={`text-sm leading-relaxed break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                <h4 className="text-lg font-black mb-1.5 break-keep">{s.title}</h4>
+                <p className={`text-xs sm:text-sm leading-relaxed break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   {s.desc}
                 </p>
               </div>
@@ -861,47 +701,82 @@ export const IntroLandingPage = () => {
         </div>
       </section>
 
-      {/* ❓ 7. 자주 묻는 질문 (FAQ Accordion) */}
-      <section id="faq" className={`py-16 md:py-24 border-t transition-colors ${isDark ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-100/80 border-slate-200'}`}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          
-          <div className="text-center mb-12">
-            <h2 className="text-xs sm:text-sm font-bold tracking-widest text-cyan-600 dark:text-cyan-400 uppercase mb-2 whitespace-nowrap">
-              FREQUENTLY ASKED QUESTIONS
-            </h2>
-            <h3 className="text-2xl sm:text-4xl font-black tracking-tight break-keep">
-              선생님들이 자주 물어보시는 질문
-            </h3>
+      {/* 🛠️ 6. 교사용 빠른 도구함 (Teacher Quick Bar) */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto rounded-3xl p-6 sm:p-8 border-2 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-900/20 via-indigo-900/20 to-purple-900/20 border-cyan-500/30">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">👩‍🏫</span>
+              <h3 className="text-lg sm:text-xl font-black break-keep">체육 수업 준비가 고민이신가요?</h3>
+            </div>
+            <p className={`text-xs sm:text-sm break-keep ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              2022 개정 교육과정 연계 교수학습 지도안 생성기, 무선 리모컨, 실시간 전광판을 무료로 사용해보세요.
+            </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 w-full md:w-auto">
+            <button
+              onClick={() => navigate('/manual?tab=lesson')}
+              className="flex-1 md:flex-none px-4 py-3 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 shadow-md active:scale-95 whitespace-nowrap"
+            >
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span>지도안 생성기</span>
+            </button>
+            <button
+              onClick={() => navigate('/remote')}
+              className="flex-1 md:flex-none px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap"
+            >
+              <Activity className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>교사 리모컨</span>
+            </button>
+            <button
+              onClick={() => navigate('/board')}
+              className="flex-1 md:flex-none px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap"
+            >
+              <Tv className="w-4 h-4 text-cyan-400 shrink-0" />
+              <span>대형 전광판</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ❓ 7. 꼭 필요한 핵심 FAQ (3선 아코디언) */}
+      <section className={`py-12 border-t transition-colors ${isDark ? 'bg-slate-900/30 border-slate-800' : 'bg-slate-100/60 border-slate-200'}`}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-6">
+            <h3 className="text-xl sm:text-2xl font-black break-keep">자주 묻는 질문</h3>
+          </div>
+
+          <div className="space-y-3">
             {FAQS.map((faq, index) => {
               const isOpen = openFaq === index;
               return (
                 <div
                   key={index}
                   className={`rounded-2xl border transition-all overflow-hidden ${
-                    isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-2 border-slate-200 shadow-sm'
+                    isDark ? 'bg-slate-900/90 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
                   }`}
                 >
                   <button
                     aria-expanded={isOpen}
                     aria-controls={`faq-${index}`}
                     onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="w-full whitespace-normal p-5 text-left flex justify-between items-center gap-4 focus:outline-none"
+                    className="w-full p-4 text-left flex justify-between items-center gap-3 focus:outline-none"
                   >
-                    <span className="font-black text-base sm:text-lg flex items-center gap-3 break-keep">
-                      <HelpCircle className="w-5 h-5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+                    <span className="font-bold text-xs sm:text-sm flex items-center gap-2.5 break-keep">
+                      <HelpCircle className="w-4 h-4 text-cyan-500 shrink-0" />
                       <span>{faq.q}</span>
                     </span>
                     <ChevronDown
-                      className={`w-5 h-5 text-slate-400 shrink-0 transition-transform duration-200 ${
-                        isOpen ? 'rotate-180 text-cyan-600 dark:text-cyan-400' : ''
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+                        isOpen ? 'rotate-180 text-cyan-500' : ''
                       }`}
                     />
                   </button>
                   {isOpen && (
-                    <div id={`faq-${index}`} className={`px-5 pb-5 pt-1 text-sm sm:text-base leading-relaxed border-t break-keep ${isDark ? 'text-slate-300 border-slate-800/80' : 'text-slate-700 border-slate-200'}`}>
+                    <div id={`faq-${index}`} className={`px-4 pb-4 pt-1 text-xs leading-relaxed border-t break-keep ${
+                      isDark ? 'text-slate-300 border-slate-800/80' : 'text-slate-600 border-slate-200'
+                    }`}>
                       {faq.a}
                     </div>
                   )}
@@ -909,74 +784,30 @@ export const IntroLandingPage = () => {
               );
             })}
           </div>
-
         </div>
       </section>
 
-      {/* 🏁 8. 하단 대형 Call To Action (Final CTA) - 완벽한 고대비 및 무결점 줄바꿈 배너 */}
-      <section className="py-16 md:py-24 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto rounded-3xl sm:rounded-[36px] overflow-hidden p-8 sm:p-14 text-center relative shadow-2xl bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-700 text-white border border-cyan-400/40">
-          
-          {/* 장식용 은은한 빛 효과 */}
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 space-y-6">
-            <div className="text-5xl animate-bounce">💦</div>
-            <h3 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white break-keep keep-white">
-              지금 바로 아이들과 함께<br className="hidden sm:inline" />
-              신나는 땀방울을 흘려보세요!
-            </h3>
-            <p className="text-sm sm:text-base md:text-lg text-cyan-100 max-w-xl mx-auto break-keep font-medium">
-              설치 없이 브라우저에서 바로 시작하는 미래형 체육 플랫폼, 땀방울 원정대.
-            </p>
-
-            {/* 버튼들: 어떤 기기에서도 줄바꿈 없는 선명한 고대비 디자인 */}
-            <div className="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4">
-              <button
-                onClick={() => {
-                  sfxSuccess();
-                  navigate('/hub');
-                }}
-                className="w-full sm:w-auto px-7 sm:px-9 py-4 bg-white hover:bg-slate-100 !text-blue-700 font-black text-base sm:text-lg rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 whitespace-nowrap shrink-0"
-              >
-                <Play className="w-5 h-5 fill-blue-700 !text-blue-700 shrink-0" />
-                <span className="whitespace-nowrap !text-blue-700">게임 시작하기</span>
-              </button>
-
-              <button
-                onClick={() => navigate('/manual')}
-                className="w-full sm:w-auto px-6 sm:px-8 py-4 bg-black/25 hover:bg-black/35 border-2 border-white/70 !text-white font-black text-base sm:text-lg rounded-2xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2.5 backdrop-blur-md whitespace-nowrap shrink-0"
-              >
-                <BookOpen className="w-5 h-5 !text-white shrink-0" />
-                <span className="whitespace-nowrap !text-white">교사용 체육 매뉴얼</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 📄 9. 푸터 (Footer) */}
-      <footer className={`py-10 border-t text-xs font-medium transition-colors ${isDark ? 'bg-slate-950 border-slate-900 text-slate-500' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
+      {/* 📄 8. 푸터 (Footer) */}
+      <footer className={`py-8 border-t text-xs transition-colors ${isDark ? 'bg-slate-950 border-slate-900 text-slate-500' : 'bg-slate-100 border-slate-200 text-slate-600'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 break-keep">
-            <span className="text-lg">💦</span>
-            <span className="font-bold text-slate-700 dark:text-slate-300">땀방울 원정대 (Sweat Expedition)</span>
+            <span className="text-base">💦</span>
+            <span className="font-bold text-slate-700 dark:text-slate-300">땀방울 원정대</span>
             <span>·</span>
             <span>2022 개정 초등 체육과 교육과정 연계 스마트 피지컬 컴퓨팅</span>
           </div>
 
-          <div className="flex items-center gap-6 whitespace-nowrap shrink-0">
-            <button onClick={() => navigate('/manual')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
+          <div className="flex items-center gap-5 whitespace-nowrap shrink-0 font-bold">
+            <button onClick={() => navigate('/manual')} className="hover:text-cyan-500 transition-colors">
               사용 설명서
             </button>
-            <button onClick={() => navigate('/manual?tab=lesson')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
-              수업 지도안
+            <button onClick={() => navigate('/manual?tab=lesson')} className="hover:text-cyan-500 transition-colors">
+              지도안 생성기
             </button>
-            <button onClick={() => navigate('/admin')} className="hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors whitespace-nowrap">
+            <button onClick={() => navigate('/admin')} className="hover:text-cyan-500 transition-colors">
               교사용 로비
             </button>
-            <button onClick={() => navigate('/hub')} className="text-cyan-600 dark:text-cyan-400 font-bold hover:underline whitespace-nowrap">
+            <button onClick={() => navigate('/hub')} className="text-cyan-600 dark:text-cyan-400 hover:underline">
               게임 허브
             </button>
           </div>

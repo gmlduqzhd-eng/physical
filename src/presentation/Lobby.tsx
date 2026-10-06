@@ -7,7 +7,7 @@ import { RotateCcw } from 'lucide-react';
 
 
 export const Lobby = () => {
-  const [pinCode, setPinCode] = useState('');
+  const [pinCode, setPinCode] = useState(() => new URLSearchParams(window.location.search).get('pin') || '');
   const [studentName, setStudentName] = useState(() => readStorage('physical_student_name') || '');
   const [groupName, setGroupName] = useState('1모둠');
   const [error, setError] = useState('');
