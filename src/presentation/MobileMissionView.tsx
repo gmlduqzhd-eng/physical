@@ -114,7 +114,7 @@ export const MobileMissionView = () => {
   const [activeDevicesCount, setActiveDevicesCount] = useState(0);
 
   const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
-  const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'];
+  const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia'];
   const isLocked = isTimeUp || !activeStatuses.includes(gameRoom?.status || '') || myGroup?.is_hacked || (Boolean(roomError) && isOnline) || isWhistleActive;
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
@@ -811,6 +811,26 @@ export const MobileMissionView = () => {
     return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} />;
   }
 
+  // 🌊 해일 경보 — 학생 스마트폰 전체 조작 잠금 및 대피 안내
+  if (gameRoom?.status === 'tsunami') {
+    return (
+      <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 text-center select-none relative overflow-hidden animate-in fade-in duration-200">
+        <div className="absolute inset-0 bg-blue-600/30 animate-pulse pointer-events-none"></div>
+        <LucideIcons.Waves className="w-28 h-28 text-blue-400 mb-6 animate-bounce relative z-10 drop-shadow-[0_0_20px_rgba(96,165,250,0.5)]" />
+        <span className="px-4 py-1.5 rounded-full bg-blue-500/30 text-cyan-300 font-black text-sm uppercase tracking-widest mb-3 border border-blue-400/50 relative z-10 shadow-lg">
+          🌊 긴급 상황 경보
+        </span>
+        <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight text-white relative z-10 tracking-tight">
+          해일 경보 발령!
+        </h1>
+        <p className="text-lg text-blue-200 max-w-sm font-bold relative z-10 leading-relaxed">
+          스마트폰 조작이 일시 잠금되었습니다.<br />
+          즉시 매트 위(안전구역)로 대피하십시오!
+        </p>
+      </div>
+    );
+  }
+
   if (gameRoom?.status === 'finished') {
     const sortedScores = [...scores].sort((a, b) => b.score - a.score);
     const myRank = sortedScores.findIndex(s => s.id === groupId) + 1;
@@ -1030,31 +1050,33 @@ export const MobileMissionView = () => {
       ))}
 
       {gameRoom?.status === 'boss_raid' && (
-        <div 
-          className="absolute inset-0 z-[100] bg-slate-900 flex flex-col items-center justify-center p-6 touch-none"
-          onPointerDown={handleBossTap}
-        >
-          <LucideIcons.Swords className="w-32 h-32 text-red-500 mb-8 animate-bounce" />
-          <h1 className="text-4xl font-black text-white mb-2">보스 레이드 발동!</h1>
-          {bossSyncError && <p role="alert" className="text-amber-300 text-sm mb-4">{bossSyncError}</p>}
-          <p className="text-red-300 font-bold mb-10 text-center">전체 조가 협력하여 보스를 물리치세요!<br/>화면을 빠르게 탭하세요!</p>
-          
-          <div className="w-full bg-slate-800 rounded-full h-8 border-2 border-slate-700 overflow-hidden relative">
+        <div className="mx-4 mt-2 mb-2 p-3 bg-gradient-to-r from-red-950 via-slate-900 to-red-950 rounded-2xl border-2 border-red-500 shadow-xl text-white relative z-20">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <LucideIcons.Swords className="w-6 h-6 text-red-400 animate-pulse" />
+              <div>
+                <h3 className="font-black text-sm text-red-200">체육관 거대 보스 레이드</h3>
+                <p className="text-[10px] text-red-300/80">미션 완수 시 대량 피해! 화면 탭으로 직접 타격!</p>
+              </div>
+            </div>
+            <button
+              onPointerDown={handleBossTap}
+              className="px-3.5 py-2 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 active:scale-95 text-white font-black text-xs rounded-xl shadow-lg border border-red-400 shrink-0 flex items-center gap-1.5 transition-all"
+            >
+              <LucideIcons.Flame className="w-4 h-4 text-yellow-300 animate-bounce" /> 직접 타격! (-1)
+            </button>
+          </div>
+          <div className="w-full bg-slate-800 rounded-full h-5 border border-slate-700 overflow-hidden relative shadow-inner">
             <div 
-              className="h-full bg-gradient-to-r from-red-600 to-red-400 transition-all duration-300"
+              className="h-full bg-gradient-to-r from-red-600 via-orange-500 to-red-400 transition-all duration-300"
               style={{ width: `${Math.max(0, ((gameRoom.boss_hp || 0) / (gameRoom.boss_max_hp || 1)) * 100)}%` }}
             ></div>
-            <div className="absolute inset-0 flex items-center justify-center text-white font-black text-sm text-shadow">
-              {gameRoom.boss_hp?.toLocaleString()} / {gameRoom.boss_max_hp?.toLocaleString()}
+            <div className="absolute inset-0 flex items-center justify-center text-white font-black text-[11px] font-mono text-shadow">
+              {gameRoom.boss_hp?.toLocaleString() ?? 0} / {gameRoom.boss_max_hp?.toLocaleString() ?? 0}
             </div>
           </div>
-          
-          <p className="text-slate-500 text-sm mt-8 animate-pulse">마구마구 터치하세요!</p>
+          {bossSyncError && <p role="alert" className="text-amber-300 text-[10px] mt-1 text-center font-bold">{bossSyncError}</p>}
         </div>
-      )}
-
-      {gameRoom?.status === 'tsunami' && (
-        <div className="absolute inset-0 bg-blue-500/10 animate-pulse z-0 pointer-events-none"></div>
       )}
       
       <div className="absolute top-4 left-4 z-50 flex flex-col gap-2 pointer-events-none">
@@ -1150,7 +1172,7 @@ export const MobileMissionView = () => {
             <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center border border-slate-200 shadow-sm">
               <LucideIcons.Lock className="w-10 h-10 text-slate-400 mb-2" />
               <p className="text-red-500 font-bold text-center text-lg">
-                {gameRoom?.status === 'tsunami' ? '해일 대피 중! 미션 중단!' : '미션 진행 상태가 아닙니다'}
+                {isWhistleActive ? '🚨 호루라기 집중 신호 대기 중' : '미션 진행 상태가 아닙니다'}
               </p>
             </div>
           )}

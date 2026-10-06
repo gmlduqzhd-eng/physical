@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert } from 'lucide-react';
 import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
+import { sfxWhistle } from '../application/soundEffects';
 
 export const ScoreBoard = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -15,6 +16,7 @@ export const ScoreBoard = () => {
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
+  const whistlePlayed = useRef(false);
   const [showQR, setShowQR] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export const ScoreBoard = () => {
   const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number;spinDuration:number}[]>([]);
 
   useEffect(() => {
-    if (!gameRoom?.status || gameRoom.status === 'waiting') { plankPlayed.current = false; sirenPlayed.current = false; prevScoresRef.current = []; setConfetti([]); }
+    if (!gameRoom?.status || gameRoom.status === 'waiting') { plankPlayed.current = false; sirenPlayed.current = false; whistlePlayed.current = false; prevScoresRef.current = []; setConfetti([]); }
   }, [roomId, gameRoom?.status]);
 
   // 순위 역전 감지 토스트
@@ -59,6 +61,7 @@ export const ScoreBoard = () => {
   }, [gameRoom?.status]);
   
   const isTsunami = gameRoom?.status === 'tsunami';
+  const isWhistle = gameRoom?.announcement === 'WHISTLE';
   const isPlankEvent = mins === '01' && secs === '00' && gameRoom?.status === 'playing';
 
   useEffect(() => {
@@ -73,6 +76,15 @@ export const ScoreBoard = () => {
       sirenPlayed.current = false;
     }
   }, [isPlankEvent, isTsunami, playSiren]);
+
+  useEffect(() => {
+    if (isWhistle && !whistlePlayed.current) {
+      sfxWhistle();
+      whistlePlayed.current = true;
+    } else if (!isWhistle) {
+      whistlePlayed.current = false;
+    }
+  }, [isWhistle]);
 
   if (!gameRoom) return <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center gap-4 p-6 text-center text-slate-800"><p>{error || (loading ? '전광판 정보를 불러오는 중...' : '수업 방 정보가 없습니다.')}</p><button onClick={refresh} className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button><a href="/board" className="underline">다른 PIN으로 입장</a></div>;
 
@@ -236,6 +248,71 @@ export const ScoreBoard = () => {
           </div>
         </div>
       </header>
+
+      {/* 🚨 체육관 집중 휘슬 긴급 배너 */}
+      {isWhistle && (
+        <div className="relative z-30 w-full bg-red-600 text-white px-8 py-3.5 flex items-center justify-center gap-4 text-2xl md:text-3xl font-black animate-pulse shadow-xl border-b-4 border-yellow-300">
+          <Volume2 className="w-8 h-8 animate-bounce text-yellow-300" />
+          <span>🚨 체육관 전체 집중! 호루라기 신호 (선생님을 주목하세요)</span>
+        </div>
+      )}
+
+      {/* 📢 선생님 라이브 공지사항 배너 */}
+      {gameRoom?.announcement && gameRoom.announcement !== 'WHISTLE' && (
+        <div className="relative z-20 w-full bg-gradient-to-r from-cyan-600 via-blue-600 to-indigo-600 text-white px-8 py-3 flex items-center justify-center gap-3 text-xl font-black shadow-md border-b border-cyan-400">
+          <LucideIcons.Sparkles className="w-6 h-6 text-yellow-300 animate-spin" />
+          <span className="text-yellow-300 font-extrabold">[선생님 공지]</span>
+          <span className="tracking-wide">{gameRoom.announcement}</span>
+        </div>
+      )}
+
+      {/* ⚡ 플래시 세일 알림 */}
+      {gameRoom?.flash_sale && (
+        <div className="relative z-10 w-full bg-amber-400 text-amber-950 px-8 py-2 flex items-center justify-center gap-2 font-black text-sm md:text-base shadow-sm animate-pulse border-b border-amber-500">
+          <LucideIcons.Zap className="w-5 h-5 fill-amber-950" />
+          <span>⚡ 상점 50% 플래시 세일 오픈! 지금 스마트폰 상점에서 모든 아이템 반값 구매 가능!</span>
+        </div>
+      )}
+
+      {/* 🛡️ 진지 방어전 배너 */}
+      {gameRoom?.status === 'defense' && (
+        <div className="relative z-10 w-full bg-orange-600 text-white px-8 py-2.5 flex items-center justify-center gap-3 font-black text-base shadow-md animate-pulse border-b border-orange-500">
+          <ShieldAlert className="w-5 h-5" />
+          <span>🛡️ 진지 방어전 진행 중! (2초마다 모둠 점수 5점 지속 차감 - 활동 미션을 완수하여 체력을 유지하세요!)</span>
+        </div>
+      )}
+
+      {/* ⏱️ 타임어택 모드 배너 */}
+      {gameRoom?.status === 'time_attack' && (
+        <div className="relative z-10 w-full bg-emerald-600 text-white px-8 py-2.5 flex items-center justify-center gap-3 font-black text-base shadow-md animate-pulse border-b border-emerald-500">
+          <Clock className="w-5 h-5" />
+          <span>⏱️ 타임어택 서킷 모드 진행 중! (모든 미션을 완주하여 랩(Lap) 스코어를 달성하세요!)</span>
+        </div>
+      )}
+
+      {/* 🧟 좀비 바이러스 배너 */}
+      {gameRoom?.status === 'zombie' && (
+        <div className="relative z-10 w-full bg-stone-900 border-b border-green-500 text-green-400 px-8 py-2.5 flex items-center justify-center gap-3 font-black text-base shadow-md animate-pulse">
+          <LucideIcons.Ghost className="w-5 h-5" />
+          <span>🧟 좀비 바이러스 살포 중! (감염자 술래 조를 피해 생존하세요!)</span>
+        </div>
+      )}
+
+      {/* 🕵️ 마피아 게임 배너 */}
+      {gameRoom?.status === 'mafia' && (
+        <div className="relative z-10 w-full bg-red-950 text-red-200 border-b border-red-800 px-8 py-2.5 flex items-center justify-center gap-3 font-black text-base shadow-md animate-pulse">
+          <LucideIcons.UserX className="w-5 h-5" />
+          <span>🕵️ 마피아 게임 진행 중! (각 모둠 내 비밀 스파이를 조심하세요!)</span>
+        </div>
+      )}
+
+      {/* 🎮 단체 미니게임 진행 알림 */}
+      {gameRoom?.active_minigame && (
+        <div className="relative z-10 w-full bg-indigo-600 text-white px-8 py-2.5 flex items-center justify-center gap-3 font-black text-base shadow-md animate-pulse border-b border-indigo-500">
+          <LucideIcons.Gamepad2 className="w-5 h-5" />
+          <span>🎮 단체 숏폼 미니게임 발동 중! 학생 스마트폰 화면을 확인하세요!</span>
+        </div>
+      )}
 
       {/* QR 코드 패널 */}
       {showQR && (

@@ -5,7 +5,7 @@ import { useGameLogic } from '../application/useGameLogic';
 import { createClassroom, classroomError } from '../data/classroomRepository';
 import { timeOffset } from '../application/timeSync';
 import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
-import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home } from 'lucide-react';
+import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone } from 'lucide-react';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
 import { QRCodePanel } from './components/admin/QRCodePanel';
@@ -32,6 +32,7 @@ export const AdminControlPanel = () => {
   // Selected Room Data
   const { scores: roomGroups, gameRoom: currentRoom, error: roomError, refresh: refreshRoom } = useGameLogic(selectedRoomId || undefined);
   const [announcementText, setAnnouncementText] = useState('');
+  const isWhistling = currentRoom?.announcement === 'WHISTLE';
 
   const { mins, secs, isDanger, timeLeft } = useGameTimer(currentRoom);
 
@@ -67,6 +68,15 @@ export const AdminControlPanel = () => {
   };
 
   // --- Room Control Actions ---
+  const handleToggleWhistle = async () => {
+    if (!currentRoom) return;
+    if (isWhistling) {
+      await updateRoom({ announcement: null });
+    } else {
+      await updateRoom({ announcement: 'WHISTLE' });
+    }
+  };
+
   const handleStatusChange = async (status: 'playing' | 'paused') => {
     if (!currentRoom) return;
     const updates: Record<string, unknown> = { status };
@@ -74,28 +84,28 @@ export const AdminControlPanel = () => {
     if (status === 'paused') { updates.started_at = null; updates.global_time_modifier = timeLeft - 300; }
     await updateRoom(updates);
   };
+
   const handleTimeModifier = async (amount: number) => {
     if (!currentRoom) return;
-    const correction = amount > 0 && currentRoom.started_at ? Math.max(0, Math.floor((Date.now() + timeOffset - Date.parse(currentRoom.started_at)) / 1000) - 300 - currentRoom.global_time_modifier) : 0;
-    await updateRoom({ global_time_modifier: currentRoom.global_time_modifier + amount + correction });
+    const currentMod = Number(currentRoom.global_time_modifier) || 0;
+    await updateRoom({ global_time_modifier: currentMod + amount });
   };
 
   const triggerTsunami = async () => {
     if (!currentRoom) return;
     const newStatus = currentRoom.status === 'tsunami' ? 'playing' : 'tsunami';
-    await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+    await updateRoom({ status: newStatus });
   };
 
   const sendAnnouncement = async () => {
-    if (!currentRoom) return;
-    if (!announcementText.trim()) return;
-    await supabase.from('game_rooms').update({ announcement: announcementText.trim() }).eq('id', currentRoom.id);
+    if (!currentRoom || !announcementText.trim()) return;
+    await updateRoom({ announcement: announcementText.trim() });
   };
 
   const clearAnnouncement = async () => {
     if (!currentRoom) return;
     setAnnouncementText('');
-    await supabase.from('game_rooms').update({ announcement: null }).eq('id', currentRoom.id);
+    await updateRoom({ announcement: null });
   };
 
   const roomGroupsRef = useRef(roomGroups);
@@ -129,12 +139,23 @@ export const AdminControlPanel = () => {
           if (result.error) pendingDamage += damage;
         }
         if (room.status === 'defense') await Promise.all(roomGroupsRef.current.map(group => supabase.rpc('increment_classroom_score', { row_id: group.id, amount: -5 })));
-        const bomb = room.active_minigame;
-        if (bomb?.type === 'bomb' && Date.now() >= bomb.explodesAt) {
-          const claimed = await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId).eq('active_minigame', JSON.stringify(bomb)).select('id');
-          if (!claimed.error && claimed.data?.length) {
-            const awarded = await supabase.rpc('increment_classroom_score', { row_id: bomb.holderId, amount: -bomb.penalty });
-            if (!awarded.error) alert('💥 폭탄이 터졌습니다! 페널티: -' + bomb.penalty + '점');
+        
+        // 미니게임 타이머 및 폭탄 자동 정리
+        const minigame = room.active_minigame;
+        if (minigame) {
+          const now = Date.now();
+          if (minigame.type === 'bomb' && minigame.explodesAt && now >= minigame.explodesAt) {
+            const claimed = await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId).eq('active_minigame', JSON.stringify(minigame)).select('id');
+            if (!claimed.error && claimed.data?.length) {
+              const awarded = await supabase.rpc('increment_classroom_score', { row_id: minigame.holderId, amount: -minigame.penalty });
+              if (!awarded.error) alert('💥 폭탄이 터졌습니다! 페널티: -' + minigame.penalty + '점');
+            }
+          } else if (minigame.end_time && now >= minigame.end_time + 3000) {
+            await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId);
+          } else if (minigame.target_time && now >= minigame.target_time + 4000) {
+            await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId);
+          } else if (minigame.expires_at && now >= minigame.expires_at) {
+            await supabase.from('game_rooms').update({ active_minigame: null }).eq('id', controlledRoomId);
           }
         }
       } catch { console.error('수업 이벤트 동기화 실패'); }
@@ -146,7 +167,7 @@ export const AdminControlPanel = () => {
   const sendMinigame = async () => {
     if (!currentRoom) return;
     const randomQuiz = QUIZ_LIST[Math.floor(Math.random() * QUIZ_LIST.length)];
-    if (!await updateRoom({ active_minigame: randomQuiz })) return;
+    if (!await updateRoom({ active_minigame: { type: 'quiz', ...randomQuiz, expires_at: Date.now() + 45000 } })) return;
     alert('돌발 퀴즈가 발송되었습니다!');
   };
 
@@ -157,26 +178,38 @@ export const AdminControlPanel = () => {
 
   const toggleHack = async (groupId: string, isHacked: boolean) => {
     await supabase.from('room_groups').update({ is_hacked: !isHacked }).eq('id', groupId);
+    refreshRoom();
   };
 
   const toggleZombie = async (groupId: string, currentBadges: string[]) => {
     const isZombie = currentBadges?.includes('zombie');
     const newBadges = isZombie ? (currentBadges || []).filter(b => b !== 'zombie') : [...(currentBadges || []), 'zombie'];
     await supabase.from('room_groups').update({ badges: newBadges }).eq('id', groupId);
+    refreshRoom();
   };
 
   const handleReset = async () => {
     if(!currentRoom) return;
     if(window.confirm('정말 이 방의 데이터를 초기화하시겠습니까?')) {
-      await supabase.from('game_rooms').update({ status: 'waiting', global_time_modifier: 0, started_at: null, active_minigame: null, announcement: null }).eq('id', currentRoom.id);
+      await supabase.from('game_rooms').update({ 
+        status: 'waiting', 
+        global_time_modifier: 0, 
+        started_at: null, 
+        active_minigame: null, 
+        announcement: null,
+        boss_hp: null,
+        boss_max_hp: null,
+        flash_sale: false
+      }).eq('id', currentRoom.id);
       await supabase.rpc('reset_group_scores', { room_uuid: currentRoom.id });
+      refreshRoom();
     }
   };
 
   const handleEndGame = async () => {
     if(!currentRoom) return;
     if(window.confirm('정말 게임을 종료하고 결과 발표 화면을 띄우시겠습니까? 모든 참가자의 조작이 멈추고 시상식 화면으로 넘어갑니다.')) {
-      await supabase.from('game_rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
+      await updateRoom({ status: 'finished' });
     }
   };
 
@@ -225,7 +258,7 @@ export const AdminControlPanel = () => {
     const battleDuration = 30; // 30초
     const endTime = Date.now() + battleDuration * 1000;
     if (!await updateRoom({
-      active_minigame: { type: 'team_battle', end_time: endTime, duration: battleDuration }
+      active_minigame: { type: 'team_battle', subType: 'volcano', end_time: endTime, duration: battleDuration, expires_at: endTime + 4000 }
     })) return;
     alert(`⚔️ 30초 모둠 대전이 시작되었습니다!\n모든 학생 화면에 동일한 미니게임이 팝업됩니다.`);
   };
@@ -403,13 +436,33 @@ export const AdminControlPanel = () => {
           <div className="space-y-6">
             <button onClick={() => setSelectedRoomId(null)} className="text-cyan-600 font-bold hover:underline mb-4 inline-block">&larr; 방 목록으로 돌아가기</button>
             
-            <div className="bg-white shadow-sm p-4 rounded-xl flex justify-between items-center border border-slate-200">
+            <div className="bg-white shadow-sm p-4 rounded-xl flex flex-wrap justify-between items-center gap-3 border border-slate-200">
               <div>
                 <h2 className="text-2xl font-black text-slate-900">{currentRoom.name}</h2>
                 <p className="text-cyan-600 font-bold mt-1">접속 핀 번호: {currentRoom.pin_code}</p>
               </div>
-              <button onClick={() => window.open(`/board/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2">
-                <LucideIcons.Monitor className="w-4 h-4" /> TV 전광판 열기
+              <div className="flex gap-2">
+                <button onClick={() => window.open(`/remote/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
+                  <Smartphone className="w-4 h-4" /> 📱 모바일 리모컨
+                </button>
+                <button onClick={() => window.open(`/board/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
+                  <LucideIcons.Monitor className="w-4 h-4" /> 🖥️ TV 전광판 열기
+                </button>
+              </div>
+            </div>
+
+            {/* 🚨 핵심: 원터치 호루라기/휘슬 버튼 */}
+            <div className="bg-white shadow-sm p-4 rounded-xl border border-slate-200">
+              <button
+                onClick={handleToggleWhistle}
+                className={`w-full py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-3 transition-all shadow-md border-2 active:scale-[0.99] ${
+                  isWhistling
+                    ? 'bg-amber-500 hover:bg-amber-400 text-slate-950 border-amber-300 animate-pulse shadow-amber-500/30'
+                    : 'bg-red-600 hover:bg-red-500 text-white border-red-400 shadow-red-600/30'
+                }`}
+              >
+                <Volume2 className="w-6 h-6 animate-bounce" />
+                <span>{isWhistling ? '🚨 호루라기 울림 중! (클릭하여 집중 해제 및 게임 재개)' : '🚨 원터치 호루라기! (전체 학생 화면 즉시 정지 & 집중)'}</span>
               </button>
             </div>
 
@@ -514,19 +567,19 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-emerald-700 mb-4">학생들 스마트폰에 10~15초짜리 짧은 단체 미니게임 팝업을 강제 발동합니다.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000, expires_at: Date.now() + 14000 } })}
                   className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Flame className="w-5 h-5" /> 화산폭발 (광클러시)
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000, expires_at: Date.now() + 10000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Wifi className="w-5 h-5" /> 텔레파시 (동시터치)
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'tug_of_war' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'tug_of_war', expires_at: Date.now() + 20000 } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Grab className="w-5 h-5" /> 줄다리기 (무한당기기)
@@ -557,25 +610,25 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-cyan-700 mb-4">순발력과 기억력을 요하는 짧은 개인/단체 미니게임을 발동합니다.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'shake' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'shake', expires_at: Date.now() + 20000 } })}
                   className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.BatteryCharging className="w-5 h-5" /> 바운스 충전
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'number_grid' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'number_grid', expires_at: Date.now() + 25000 } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.ShieldAlert className="w-5 h-5" /> 순차적 암호해제
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'memory' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'memory', expires_at: Date.now() + 25000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Brain className="w-5 h-5" /> 컬러 패턴 기억
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch', expires_at: Date.now() + 20000 } })}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Timer className="w-5 h-5" /> 7.00초 스탑워치
@@ -606,19 +659,19 @@ export const AdminControlPanel = () => {
               <p className="text-sm text-purple-700 mb-4">운과 활력을 불어넣는 액티비티형 숏폼 미니게임입니다.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'fate_card' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'fate_card', expires_at: Date.now() + 20000 } })}
                   className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Dices className="w-5 h-5" /> 운명의 잭팟 카드
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'whack_a_mole' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'whack_a_mole', expires_at: Date.now() + 20000 } })}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Target className="w-5 h-5" /> 별 두더지 잡기
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'scream' } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'scream', expires_at: Date.now() + 20000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Mic2 className="w-5 h-5" /> 소리질러 (데시벨)
@@ -639,7 +692,7 @@ export const AdminControlPanel = () => {
                 <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 돌발 팝업 게임 (퀴즈) 발송
                 </h2>
-                {currentRoom.active_minigame && (
+                {currentRoom.active_minigame && (currentRoom.active_minigame.type === 'quiz' || (!currentRoom.active_minigame.type && currentRoom.active_minigame.question)) && (
                   <span className="px-3 py-1 bg-indigo-200 text-indigo-800 text-xs font-bold rounded-full animate-pulse">
                     퀴즈 진행 중!
                   </span>
@@ -717,7 +770,7 @@ export const AdminControlPanel = () => {
                     const hpStr = window.prompt('보스의 체력을 입력하세요 (예: 10000)', '10000');
                     const hp = parseInt(hpStr || '0', 10);
                     if (hp > 0) {
-                      await supabase.from('game_rooms').update({ status: 'boss_raid', boss_hp: hp, boss_max_hp: hp }).eq('id', currentRoom.id);
+                      await updateRoom({ status: 'boss_raid', boss_hp: hp, boss_max_hp: hp });
                     }
                   }}
                   className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
@@ -726,7 +779,7 @@ export const AdminControlPanel = () => {
                 </button>
                 <button 
                   onClick={async () => {
-                    await supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id);
+                    await updateRoom({ status: 'playing', boss_hp: null, boss_max_hp: null });
                   }}
                   className="bg-white hover:bg-orange-100 text-orange-600 px-4 py-3 rounded-xl font-bold border border-orange-200 transition-colors"
                 >
@@ -750,7 +803,7 @@ export const AdminControlPanel = () => {
               <div className="flex gap-2">
                 <button 
                   onClick={async () => {
-                    await supabase.from('game_rooms').update({ flash_sale: !currentRoom.flash_sale }).eq('id', currentRoom.id);
+                    await updateRoom({ flash_sale: !currentRoom.flash_sale });
                   }}
                   className={`px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2 ${currentRoom.flash_sale ? 'bg-yellow-600 hover:bg-yellow-500 text-white' : 'bg-white border border-yellow-300 text-yellow-700 hover:bg-yellow-100'}`}
                 >
@@ -778,9 +831,9 @@ export const AdminControlPanel = () => {
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'boss_raid') {
-                          await supabase.from('game_rooms').update({ status: 'playing', boss_hp: null, boss_max_hp: null }).eq('id', currentRoom.id);
+                          await updateRoom({ status: 'playing', boss_hp: null, boss_max_hp: null });
                         } else {
-                          await supabase.from('game_rooms').update({ status: 'boss_raid', boss_hp: 10000, boss_max_hp: 10000 }).eq('id', currentRoom.id);
+                          await updateRoom({ status: 'boss_raid', boss_hp: 10000, boss_max_hp: 10000 });
                         }
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'boss_raid' ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.Swords className="w-6 h-6 mb-1" />
@@ -789,10 +842,10 @@ export const AdminControlPanel = () => {
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'mafia') {
-                          await supabase.from('game_rooms').update({ status: 'playing' }).eq('id', currentRoom.id);
+                          await updateRoom({ status: 'playing' });
                           await supabase.from('room_groups').update({ spy_device_id: null }).eq('room_id', currentRoom.id);
                         } else {
-                          await supabase.from('game_rooms').update({ status: 'mafia' }).eq('id', currentRoom.id);
+                          await updateRoom({ status: 'mafia' });
                         }
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'mafia' ? 'bg-red-900 text-red-100 shadow-[0_0_20px_rgba(153,27,27,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.UserX className="w-6 h-6 mb-1" />
@@ -804,7 +857,7 @@ export const AdminControlPanel = () => {
                     <div className="flex-1 flex flex-col gap-2">
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'time_attack' ? 'playing' : 'time_attack';
-                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                        await updateRoom({ status: newStatus });
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <Clock className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'time_attack' ? '타임어택 종료' : '타임어택 모드'}</span>
@@ -812,7 +865,7 @@ export const AdminControlPanel = () => {
                       </button>
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'defense' ? 'playing' : 'defense';
-                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                        await updateRoom({ status: newStatus });
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'defense' ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <ShieldAlert className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}</span>
@@ -820,7 +873,7 @@ export const AdminControlPanel = () => {
                       </button>
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
-                        await supabase.from('game_rooms').update({ status: newStatus }).eq('id', currentRoom.id);
+                        await updateRoom({ status: newStatus });
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'zombie' ? 'bg-stone-800 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.Ghost className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'zombie' ? '좀비 사태 진압' : '좀비 바이러스 살포!'}</span>
