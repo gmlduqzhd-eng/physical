@@ -19,6 +19,31 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
 import { sfxTap, sfxSuccess } from '../application/soundEffects';
+import { ClassReportModal } from './components/ClassReportModal';
+import type { GameRoom, RoomGroup } from '../domain/types';
+
+const DEMO_ROOM: GameRoom = {
+  id: 'demo-room-2026',
+  name: '4학년 2반 체육 미션 원정대',
+  pin_code: '2026',
+  status: 'finished',
+  created_at: new Date().toISOString(),
+  template_id: 'default',
+  global_time_modifier: 0,
+  started_at: new Date().toISOString(),
+  active_minigame: null,
+  announcement: null,
+  boss_hp: undefined,
+  boss_max_hp: undefined,
+  flash_sale: false,
+};
+
+const DEMO_GROUPS: RoomGroup[] = [
+  { id: 'g1', room_id: 'demo-room-2026', group_name: '1모둠 (불꽃원정대)', avatar: '🔥', score: 1420, completed_missions: ['m1', 'm2', 'm3', 'm4', 'm5'], is_defused: true, is_hacked: false, item_buff_until: null, is_blinded_until: null, spy_device_id: null, badges: ['mvp'], stats: {}, updated_at: '' },
+  { id: 'g2', room_id: 'demo-room-2026', group_name: '2모둠 (번개질주)', avatar: '⚡', score: 1280, completed_missions: ['m1', 'm2', 'm3', 'm4'], is_defused: true, is_hacked: false, item_buff_until: null, is_blinded_until: null, spy_device_id: null, badges: [], stats: {}, updated_at: '' },
+  { id: 'g3', room_id: 'demo-room-2026', group_name: '3모둠 (태풍파워)', avatar: '🌪️', score: 980, completed_missions: ['m1', 'm2', 'm3'], is_defused: false, is_hacked: false, item_buff_until: null, is_blinded_until: null, spy_device_id: null, badges: [], stats: {}, updated_at: '' },
+  { id: 'g4', room_id: 'demo-room-2026', group_name: '4모둠 (무지개협동)', avatar: '🌈', score: 850, completed_missions: ['m1', 'm2'], is_defused: false, is_hacked: false, item_buff_until: null, is_blinded_until: null, spy_device_id: null, badges: [], stats: {}, updated_at: '' },
+];
 
 export const IntroLandingPage = () => {
   const navigate = useNavigate();
@@ -27,6 +52,7 @@ export const IntroLandingPage = () => {
   // 학생 인라인 PIN 입력 상태
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [showNeisDemoModal, setShowNeisDemoModal] = useState(false);
 
   // 게임 쇼케이스 탭 ('trending' | 'exercise' | 'sport' | 'expression')
   const [activeTab, setActiveTab] = useState<'trending' | 'exercise' | 'sport' | 'expression'>('trending');
@@ -593,6 +619,7 @@ export const IntroLandingPage = () => {
                 desc: '앱 설치/가입 없이 교실 TV 화면 QR을 비추면 5초 만에 전원 입장',
                 icon: '📱',
                 color: 'text-cyan-400',
+                isAction: false,
               },
               {
                 step: '02',
@@ -600,6 +627,7 @@ export const IntroLandingPage = () => {
                 desc: '점프·스쿼트·달리기로 땀방울을 감지해 대형 전광판 실시간 합산',
                 icon: '🔥',
                 color: 'text-amber-400',
+                isAction: false,
               },
               {
                 step: '03',
@@ -607,19 +635,30 @@ export const IntroLandingPage = () => {
                 desc: '수업 후 2022 개정 성취기준 연계 체육과 세특 평가 문구 원클릭 생성',
                 icon: '📝',
                 color: 'text-emerald-400',
+                isAction: true,
               },
             ].map((s, idx) => (
               <div
                 key={idx}
-                className={`p-5 rounded-2xl border-2 transition-all flex items-start gap-4 ${
+                onClick={s.isAction ? () => { sfxTap(); setShowNeisDemoModal(true); } : undefined}
+                className={`p-5 rounded-2xl border-2 transition-all flex items-start gap-4 relative group ${
+                  s.isAction ? 'cursor-pointer hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98]' : ''
+                } ${
                   isDark ? 'bg-slate-900/70 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
                 }`}
               >
                 <div className="text-3xl shrink-0 mt-0.5">{s.icon}</div>
-                <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className={`text-xs font-mono font-black ${s.color}`}>STEP {s.step}</span>
-                    <h4 className="text-sm sm:text-base font-black break-keep">{s.title}</h4>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between gap-2 mb-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-mono font-black ${s.color}`}>STEP {s.step}</span>
+                      <h4 className="text-sm sm:text-base font-black break-keep">{s.title}</h4>
+                    </div>
+                    {s.isAction && (
+                      <span className="text-[11px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all whitespace-nowrap">
+                        ✨ 지금 체험하기 &rarr;
+                      </span>
+                    )}
                   </div>
                   <p className={`text-xs leading-relaxed break-keep ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                     {s.desc}
@@ -641,6 +680,13 @@ export const IntroLandingPage = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+              <button
+                onClick={() => { sfxTap(); setShowNeisDemoModal(true); }}
+                className="flex-1 md:flex-none px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span>NEIS 세특 생성기</span>
+              </button>
               <button
                 onClick={() => navigate('/manual?tab=lesson')}
                 className="flex-1 md:flex-none px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1 shadow-sm active:scale-95 whitespace-nowrap"
@@ -742,6 +788,13 @@ export const IntroLandingPage = () => {
         </div>
       </footer>
 
+      {/* NEIS 세특 자동 완성 실시간 체험 모달 */}
+      <ClassReportModal
+        isOpen={showNeisDemoModal}
+        onClose={() => setShowNeisDemoModal(false)}
+        gameRoom={DEMO_ROOM}
+        scores={DEMO_GROUPS}
+      />
     </div>
   );
 };

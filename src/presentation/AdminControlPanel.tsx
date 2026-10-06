@@ -5,12 +5,14 @@ import { useGameLogic } from '../application/useGameLogic';
 import { createClassroom, classroomError } from '../data/classroomRepository';
 import { timeOffset } from '../application/timeSync';
 import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
-import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone } from 'lucide-react';
+import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone, Sparkles } from 'lucide-react';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { QuickStart } from './components/admin/QuickStart';
 import { GameIcons as LucideIcons } from './icons';
+import { ClassReportModal } from './components/ClassReportModal';
+import { buildComprehensiveReportText } from '../application/classReport';
 
 const QUIZ_LIST = [
   { question: "다음 중 달리기 전 가장 알맞은 준비운동은?", options: ["가만히 누워있기", "가볍게 걷기와 스트레칭", "전력 질주하기", "물 1리터 원샷하기"], answer: 1, reward: 300 },
@@ -32,6 +34,7 @@ export const AdminControlPanel = () => {
   // Selected Room Data
   const { scores: roomGroups, gameRoom: currentRoom, error: roomError, refresh: refreshRoom } = useGameLogic(selectedRoomId || undefined);
   const [announcementText, setAnnouncementText] = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
   const isWhistling = currentRoom?.announcement === 'WHISTLE';
 
   const { mins, secs, isDanger, timeLeft } = useGameTimer(currentRoom);
@@ -213,41 +216,21 @@ export const AdminControlPanel = () => {
     }
   };
 
-  // #5 수업 리포트 생성
+  // #5 2022 개정 체육과 NEIS 세특 및 종합 수업 리포트 텍스트 다운로드
   const generateReport = () => {
-    if (!currentRoom || roomGroups.length === 0) return;
-    const sorted = [...roomGroups].sort((a, b) => b.score - a.score);
+    if (!currentRoom || roomGroups.length === 0) {
+      alert('저장할 모둠 점수나 수업 데이터가 없습니다.');
+      return;
+    }
+    const reportText = buildComprehensiveReportText(currentRoom, roomGroups);
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     
-    let report = `📋 땀방울 원정대 수업 결과 리포트\n`;
-    report += `═══════════════════════════\n`;
-    report += `📅 날짜: ${dateStr}\n`;
-    report += `🏫 방 이름: ${currentRoom.name}\n`;
-    report += `🔑 PIN: ${currentRoom.pin_code}\n`;
-    report += `⏱️ 상태: ${currentRoom.status}\n\n`;
-    report += `🏆 최종 순위\n`;
-    report += `───────────────────────────\n`;
-    sorted.forEach((g, i) => {
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      const missions = g.completed_missions?.length || 0;
-      report += `${medal} ${g.group_name}: ${g.score}점 (미션 ${missions}회 완수)\n`;
-    });
-    report += `\n📊 통계 요약\n`;
-    report += `───────────────────────────\n`;
-    const totalScore = sorted.reduce((s, g) => s + g.score, 0);
-    const avgScore = Math.round(totalScore / sorted.length);
-    report += `  총 모둠 수: ${sorted.length}개\n`;
-    report += `  전체 합산 점수: ${totalScore}점\n`;
-    report += `  평균 점수: ${avgScore}점\n`;
-    report += `  최고 점수: ${sorted[0]?.score || 0}점 (${sorted[0]?.group_name})\n`;
-    report += `\n© 땀방울 원정대 - 2022 개정 초등 체육과 교육과정 연계\n`;
-
-    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `수업리포트_${dateStr}_${currentRoom.name}.txt`;
+    a.download = `2022체육세특_수업리포트_${dateStr}_${currentRoom.name}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -441,7 +424,10 @@ export const AdminControlPanel = () => {
                 <h2 className="text-2xl font-black text-slate-900">{currentRoom.name}</h2>
                 <p className="text-cyan-600 font-bold mt-1">접속 핀 번호: {currentRoom.pin_code}</p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
+                <button onClick={() => setShowReportModal(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                  <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" /> 📝 NEIS 세특 & 리포트
+                </button>
                 <button onClick={() => window.open(`/remote/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
                   <Smartphone className="w-4 h-4" /> 📱 모바일 리모컨
                 </button>
@@ -469,12 +455,16 @@ export const AdminControlPanel = () => {
             {/* 모둠별 QR코드 생성 패널 */}
             <QRCodePanel currentRoom={currentRoom} roomGroups={roomGroups} />
 
-            {/* #5 수업 리포트 & #8 모둠 대전 버튼 */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button onClick={generateReport} className="py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
-                📋 수업 결과 리포트 다운로드
+            {/* #5 수업 리포트 & NEIS 세특 & #8 모둠 대전 버튼 */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button onClick={() => setShowReportModal(true)} className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95">
+                <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+                <span>📝 NEIS 세특 자동 완성 열기</span>
               </button>
-              <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              <button onClick={generateReport} className="py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
+                📋 리포트 텍스트 다운로드
+              </button>
+              <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 ⚔️ 30초 모둠 대전 발동!
               </button>
             </div>
@@ -940,6 +930,14 @@ export const AdminControlPanel = () => {
           </div>
         )}
       </div>
+
+      {/* 2022 개정 체육과 NEIS 세특 및 종합 수업 결과 리포트 모달 */}
+      <ClassReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        gameRoom={currentRoom}
+        scores={roomGroups}
+      />
     </div>
   );
 };

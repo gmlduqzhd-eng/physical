@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles } from 'lucide-react';
 import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
 import { sfxWhistle } from '../application/soundEffects';
@@ -174,10 +174,10 @@ export const ScoreBoard = () => {
         <div className="mt-8 relative z-10 flex items-center gap-3">
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black text-base shadow-xl active:scale-95 transition-all"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-black text-base shadow-xl active:scale-95 transition-all"
           >
-            <FileText className="w-5 h-5" />
-            <span>📊 수업 성취도 리포트 & 인쇄</span>
+            <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
+            <span>📝 2022 개정 NEIS 세특 자동 완성 & 리포트</span>
           </button>
         </div>
 
