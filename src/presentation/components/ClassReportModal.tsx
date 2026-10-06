@@ -25,7 +25,8 @@ import {
   Sparkles, 
   SlidersHorizontal,
   Edit3,
-  RefreshCw
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 
 interface ClassReportModalProps {
@@ -132,13 +133,16 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
       // 모둠명을 학생 이름으로 치환한 경우
       const customName = customNames[item.groupId];
+      let displayName = item.groupName;
       if (customName && customName.trim()) {
-        finalComment = finalComment.replace(new RegExp(`'${item.groupName}' 모둠`, 'g'), `${customName} 학생`);
-        finalComment = finalComment.replace(new RegExp(`'${item.groupName}'`, 'g'), customName);
+        displayName = customName.trim();
+        finalComment = finalComment.replace(new RegExp(`'${item.groupName}' 모둠`, 'g'), `${displayName} 학생`);
+        finalComment = finalComment.replace(new RegExp(`'${item.groupName}'`, 'g'), displayName);
       }
 
       return {
         ...item,
+        groupName: displayName,
         level: currentLevel,
         comment: finalComment,
         charCount: finalComment.length,
@@ -215,7 +219,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
     return `${prefix}_${name}_${localDateKey()}.${extension}`;
   };
 
-  // CSV 다운로드 (2022 개정 성취기준 연계 세특 포함)
+  // CSV 다운로드 (화면에서 교사가 수정한 최종 이름, 수준, 문장 100% 반영)
   const handleDownloadCSV = () => {
     setActionError('');
     try {
@@ -223,6 +227,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         gradeGroup: selectedGrade,
         domain: selectedDomain,
         gameRoom,
+        finalizedComments: neisCommentList,
       });
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       downloadBlob(blob, reportFilename('2022개정_체육세특_수업결과', 'csv'));
@@ -489,7 +494,19 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
         {/* 탭 1: NEIS 세특 자동 완성 */}
         {activeTab === 'neis' && (
-          <div className="p-4 sm:p-8 overflow-y-auto space-y-6 select-text">
+          <div className="p-4 sm:p-8 overflow-y-auto space-y-5 select-text">
+            {/* 교사용 관찰평가 안내 배너 */}
+            <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3 text-xs text-amber-950 leading-relaxed shadow-xs">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="font-black text-amber-950 block">📌 교사용 관찰평가 참고 안내</span>
+                <p className="text-amber-900/95 font-medium">
+                  본 문구는 모둠 신체활동 참여 기록을 기반으로 자동 생성된 <strong>'관찰 평가 참고 초안'</strong>입니다.
+                  모둠 순위나 점수만으로 개인의 역량을 단정할 수 없으므로, 학생별 실제 수행 능력, 역할 및 교사의 현장 관찰을 바탕으로 <strong>[상/중/하] 수준을 조정하고 내용을 직접 검토·수정</strong>하여 학교생활기록부에 반영해 주세요.
+                </p>
+              </div>
+            </div>
+
             {/* 설정 컨트롤 패널: 학년군 / 영역 / 필터 */}
             <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/40 rounded-2xl border border-indigo-100 shadow-sm space-y-4">
               <div className="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase">

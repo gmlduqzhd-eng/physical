@@ -3,7 +3,8 @@ import {
   generateNeisGroupComments, 
   generateClassGeneralComment,
   type GradeGroupKey,
-  type DomainKey
+  type DomainKey,
+  type NeisCommentResult
 } from './neisGenerator';
 
 export function escapeCsvCell(value: unknown): string {
@@ -24,6 +25,7 @@ export interface ClassReportCsvOptions {
   gradeGroup?: GradeGroupKey;
   domain?: DomainKey;
   gameRoom?: GameRoom | null;
+  finalizedComments?: NeisCommentResult[];
 }
 
 export function buildClassReportCsv(groups: RoomGroup[], options?: ClassReportCsvOptions): string {
@@ -31,21 +33,24 @@ export function buildClassReportCsv(groups: RoomGroup[], options?: ClassReportCs
   const domain = options?.domain || 'all';
   const gameRoom = options?.gameRoom || null;
 
-  const neisList = generateNeisGroupComments(groups, gameRoom, {
-    gradeGroup,
-    domain,
-  });
+  // 화면에서 교사가 수정한 최종 이름, 수준, 문장이 전달된 경우 우선 사용
+  const neisList = options?.finalizedComments && options.finalizedComments.length > 0
+    ? options.finalizedComments
+    : generateNeisGroupComments(groups, gameRoom, {
+        gradeGroup,
+        domain,
+      });
 
   const headers = [
     '순위',
-    '모둠명',
+    '모둠명/학생명',
     '최종점수',
     '완료미션수',
     '해체성공여부',
-    '성취수준',
+    '성취수준(검토초안)',
     '2022성취기준코드',
     '성취기준영역',
-    'NEIS_체육_세특_평가문구',
+    'NEIS_체육_세특_평가문구(최종수정본)',
     '글자수',
     '바이트수'
   ];
@@ -64,7 +69,11 @@ export function buildClassReportCsv(groups: RoomGroup[], options?: ClassReportCs
     item.byteCount,
   ]);
 
-  return '\uFEFF' + [headers, ...rows].map(row => row.map(escapeCsvCell).join(',')).join('\r\n');
+  const noticeRow = [
+    '# [안내] 본 문구는 모둠 신체활동 참여 기록을 기반으로 자동 생성된 관찰 평가 참고 초안입니다. 학생별 실제 참여 태도와 역할을 바탕으로 검토·수정하여 사용하세요.'
+  ];
+
+  return '\uFEFF' + [headers, ...rows, noticeRow].map(row => row.map(escapeCsvCell).join(',')).join('\r\n');
 }
 
 export function buildComprehensiveReportText(
