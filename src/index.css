@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* ThemeContext가 <html>에 .dark 클래스를 토글하므로 dark: 변형을 OS 설정이 아닌 앱 테마에 연결 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @font-face {
   font-family: 'Maplestory';
   src: url('/fonts/MaplestoryB.ttf') format('truetype');
@@ -55,16 +58,17 @@
 
 /* 라이트 모드 글로벌 오버라이드 */
 .light-theme {
-  /* 주요 배경색 오버라이드 */
+  /* 주요 배경색 오버라이드 (모든 슬래시 투명도 포괄)
+     [class^="x"], [class*=" x"] 형태로 접두사 없는 클래스만 매칭 → dark:/hover: 변형 클래스는 건드리지 않음 */
   & .bg-slate-950 { background-color: var(--bg-primary) !important; }
   & .bg-slate-900 { background-color: var(--bg-secondary) !important; }
-  & .bg-slate-900\/90, & .bg-slate-900\/80, & .bg-slate-900\/70 { background-color: var(--bg-card) !important; }
-  & .bg-slate-950\/80, & .bg-slate-950\/60 { background-color: var(--bg-secondary) !important; }
+  & [class^="bg-slate-950/"], & [class*=" bg-slate-950/"] { background-color: var(--bg-secondary) !important; }
+  & [class^="bg-slate-900/"], & [class*=" bg-slate-900/"] { background-color: var(--bg-card) !important; }
   & .bg-slate-800 { background-color: #e2e8f0 !important; }
-  & .bg-slate-800\/80, & .bg-slate-800\/50, & .bg-slate-800\/90 { background-color: rgba(226, 232, 240, 0.8) !important; }
+  & [class^="bg-slate-800/"], & [class*=" bg-slate-800/"] { background-color: rgba(226, 232, 240, 0.8) !important; }
 
-  /* 텍스트 색상 오버라이드 */
-  & .text-white:not([class*="bg-gradient"]):not([class*="bg-cyan"]):not([class*="bg-blue"]):not([class*="bg-emerald"]):not([class*="bg-purple"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not(.keep-white) { 
+  /* 텍스트 기본 오버라이드 (솔리드 어두운 버튼/뱃지는 보호하되, 파스텔 틴트 내의 흰 글자는 어둡게 전환) */
+  & .text-white:not(.keep-white):not(button.bg-cyan-600):not(button.bg-cyan-500):not(button.bg-blue-600):not(button.bg-blue-500):not(button.bg-emerald-600):not(button.bg-purple-600):not(button.bg-red-600):not(button.bg-rose-600):not(button.bg-amber-600):not(button[class*="bg-gradient"]) { 
     color: var(--text-primary) !important; 
   }
   & .text-slate-100:not(.keep-white) { color: #0f172a !important; }
@@ -72,52 +76,53 @@
   & .text-slate-400, & .text-slate-300 { color: var(--text-secondary) !important; }
   & .text-slate-500, & .text-slate-600 { color: var(--text-muted) !important; }
   
-  /* 버튼 및 강조 컴포넌트 내의 흰색 글자 강제 보호 */
-  & button.bg-gradient-to-r,
-  & button[class*="bg-gradient"],
-  & button[class*="bg-cyan"],
-  & button[class*="bg-blue"],
-  & button[class*="bg-emerald"],
-  & button[class*="bg-purple"],
-  & button[class*="bg-rose"],
-  & button[class*="bg-red"],
+  /* 솔리드 짙은 배경 버튼 내의 흰색 글자만 안전하게 보호 (아웃라인·연한 hover 버튼은 건드리지 않음) */
   & .keep-white,
   & .keep-white *,
-  & [class*="bg-gradient"] .text-white,
-  & [class*="bg-gradient"] span,
+  & button.bg-cyan-600, & button.bg-cyan-500,
+  & button.bg-blue-600, & button.bg-blue-500,
+  & button.bg-emerald-600, & button.bg-emerald-500,
+  & button.bg-purple-600, & button.bg-purple-500,
+  & button.bg-rose-600, & button.bg-rose-500,
+  & button.bg-red-600, & button.bg-red-500,
+  & button[class*="bg-gradient"]:not([class*="text-slate"]):not([class*="text-black"]),
   & button .fill-white {
     color: #ffffff !important;
   }
   
-  /* 강조 색상 유지 (브랜드 컬러는 보존) */
-  & .text-cyan-300, & .text-cyan-400 { color: var(--accent-cyan) !important; }
+  /* 라이트 모드 고대비 텍스트 색상 (300/400 파스텔 -> 700 고대비 변환으로 가독성 확보) */
+  & .text-cyan-300, & .text-cyan-400 { color: var(--accent-cyan) !important; } /* #0891b2 */
+  & .text-purple-300, & .text-purple-400, & .text-purple-200 { color: #7e22ce !important; } /* purple-700 */
+  & .text-emerald-300, & .text-emerald-400, & .text-emerald-200 { color: #047857 !important; } /* emerald-700 */
+  & .text-blue-300, & .text-blue-400, & .text-blue-200 { color: #1d4ed8 !important; } /* blue-700 */
+  & .text-amber-300, & .text-amber-400, & .text-amber-200, & .text-yellow-300, & .text-yellow-400 { color: #b45309 !important; } /* amber-700 */
+  & .text-rose-300, & .text-rose-400, & .text-rose-200, & .text-red-300, & .text-red-400 { color: #be123c !important; } /* rose-700 */
+  & .text-indigo-300, & .text-indigo-400, & .text-indigo-200 { color: #4338ca !important; } /* indigo-700 */
+  & .text-teal-300, & .text-teal-400, & .text-teal-200 { color: #0f766e !important; } /* teal-700 */
+  & .text-orange-300, & .text-orange-400, & .text-orange-200 { color: #c2410c !important; } /* orange-700 */
+  & .text-sky-300, & .text-sky-400, & .text-sky-200 { color: #0369a1 !important; } /* sky-700 */
   
   /* 보더 오버라이드 */
   & .border-slate-800, & .border-slate-700 { border-color: var(--border-primary) !important; }
-  & .border-slate-800\/80, & .border-slate-800\/90, & .border-slate-700\/80 { border-color: var(--border-secondary) !important; }
+  & [class^="border-slate-800/"], & [class*=" border-slate-800/"],
+  & [class^="border-slate-700/"], & [class*=" border-slate-700/"] { border-color: var(--border-secondary) !important; }
   
   /* 카드 그림자 */
   & .shadow-lg, & .shadow-xl, & .shadow-2xl { box-shadow: 0 4px 24px var(--shadow-color) !important; }
 
-  /* 특수 배경 */
-  & .bg-cyan-950\/80, & .bg-cyan-950 { background-color: rgba(8, 145, 178, 0.08) !important; }
-  & .bg-emerald-950 { background-color: rgba(5, 150, 105, 0.08) !important; }
-  & .bg-blue-950 { background-color: rgba(37, 99, 235, 0.08) !important; }
-  & .bg-purple-950 { background-color: rgba(147, 51, 234, 0.08) !important; }
-  & .bg-orange-950\/50 { background-color: rgba(234, 88, 12, 0.06) !important; }
-  & .bg-red-950 { background-color: rgba(220, 38, 38, 0.06) !important; }
-  & .bg-amber-950\/80 { background-color: rgba(217, 119, 6, 0.08) !important; }
+  /* 특수 영역 틴트 배경 (라이트 모드에서 산뜻한 투명도로 조율) */
+  & .bg-cyan-950, & [class^="bg-cyan-950/"], & [class*=" bg-cyan-950/"], & [class^="bg-cyan-900/"], & [class*=" bg-cyan-900/"] { background-color: rgba(8, 145, 178, 0.08) !important; }
+  & .bg-emerald-950, & [class^="bg-emerald-950/"], & [class*=" bg-emerald-950/"], & [class^="bg-emerald-900/"], & [class*=" bg-emerald-900/"] { background-color: rgba(5, 150, 105, 0.08) !important; }
+  & .bg-blue-950, & [class^="bg-blue-950/"], & [class*=" bg-blue-950/"], & [class^="bg-blue-900/"], & [class*=" bg-blue-900/"] { background-color: rgba(37, 99, 235, 0.08) !important; }
+  & .bg-purple-950, & [class^="bg-purple-950/"], & [class*=" bg-purple-950/"], & [class^="bg-purple-900/"], & [class*=" bg-purple-900/"] { background-color: rgba(147, 51, 234, 0.08) !important; }
+  & .bg-orange-950, & [class^="bg-orange-950/"], & [class*=" bg-orange-950/"], & [class^="bg-orange-900/"], & [class*=" bg-orange-900/"] { background-color: rgba(234, 88, 12, 0.06) !important; }
+  & .bg-red-950, & [class^="bg-red-950/"], & [class*=" bg-red-950/"], & [class^="bg-red-900/"], & [class*=" bg-red-900/"] { background-color: rgba(220, 38, 38, 0.06) !important; }
+  & .bg-amber-950, & [class^="bg-amber-950/"], & [class*=" bg-amber-950/"], & [class^="bg-amber-900/"], & [class*=" bg-amber-900/"] { background-color: rgba(217, 119, 6, 0.08) !important; }
   & .bg-cyan-500\/10 { background-color: rgba(8, 145, 178, 0.06) !important; }
   & .bg-cyan-500\/20 { background-color: rgba(8, 145, 178, 0.1) !important; }
-
-  /* 영역 태그 밝은 버전 */
-  & .bg-emerald-950\/30 { background-color: rgba(5, 150, 105, 0.06) !important; }
-  & .bg-blue-950\/30 { background-color: rgba(37, 99, 235, 0.06) !important; }
-  & .bg-purple-950\/30 { background-color: rgba(147, 51, 234, 0.06) !important; }
-  & .bg-blue-950\/40 { background-color: rgba(37, 99, 235, 0.08) !important; }
   
   /* 입력 필드 */
-  & input, & select { background-color: white !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
+  & input, & select, & textarea { background-color: white !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
 
   /* 그라디언트 텍스트 (유지) */
   & .bg-gradient-to-r.from-cyan-300 { --tw-gradient-from: #0891b2; }

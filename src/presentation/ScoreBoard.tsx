@@ -240,8 +240,8 @@ export const ScoreBoard = () => {
           <button onClick={() => setShowQR(!showQR)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="QR 코드 표시">
             <QrCode className="w-6 h-6 text-cyan-500" />
           </button>
-          <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-100 border-red-300 animate-pulse' : 'bg-white border-slate-200 shadow-sm'}`}>
-            <Clock className={`w-8 h-8 ${isDanger ? 'text-white' : 'text-red-500'}`} />
+          <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-50 border-red-300 animate-pulse' : 'bg-white border-slate-200 shadow-sm'}`}>
+            <Clock className={`w-8 h-8 ${isDanger ? 'text-red-600' : 'text-red-500'}`} />
             <span className={`text-5xl font-bold font-mono tracking-wider ${isDanger ? 'text-red-600' : 'text-red-500'}`}>
               {mins}:{secs}
             </span>

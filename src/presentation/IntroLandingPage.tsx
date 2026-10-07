@@ -310,8 +310,10 @@ export const IntroLandingPage = () => {
             </a>
             <button
               onClick={() => navigate('/manual?tab=lesson')}
-              className={`transition-colors whitespace-nowrap text-xs px-2.5 py-1 rounded-lg border ${
-                isDark ? 'border-purple-500/40 text-purple-300 hover:bg-purple-950/40' : 'border-purple-300 text-purple-700 hover:bg-purple-50'
+              className={`transition-colors whitespace-nowrap text-xs font-bold px-3 py-1.5 rounded-lg border ${
+                isDark
+                  ? 'border-purple-500/40 text-purple-300 bg-purple-950/20 hover:bg-purple-900/40'
+                  : 'border-purple-300 text-purple-700 bg-purple-50 hover:bg-purple-100'
               }`}
             >
               📋 지도안 생성기

@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
+import { useState, useLayoutEffect, createContext, useContext, type ReactNode } from 'react';
 import { readStorage, writeStorage } from './browserStorage';
 
 type Theme = 'dark' | 'light';
@@ -24,14 +24,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     return (saved === 'light' || saved === 'dark') ? saved : 'dark';
   });
 
-  useEffect(() => {
+  // 첫 페인트 전에 .dark 클래스를 적용해 dark: 변형의 깜빡임을 방지
+  useLayoutEffect(() => {
     writeStorage('physical_theme', theme);
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.add('light-theme');
-      root.classList.remove('dark-theme');
+      root.classList.remove('dark-theme', 'dark');
     } else {
-      root.classList.add('dark-theme');
+      root.classList.add('dark-theme', 'dark');
       root.classList.remove('light-theme');
     }
   }, [theme]);

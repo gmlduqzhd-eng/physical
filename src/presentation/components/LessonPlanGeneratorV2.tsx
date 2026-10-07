@@ -539,12 +539,12 @@ export const LessonPlanGeneratorV2 = () => {
       {plan ? (
         <div ref={printRef} className="print-area space-y-4">
           {/* 액션 바 */}
-          <div className="flex flex-wrap gap-2 print:hidden sticky top-[120px] z-10 bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-800">
-            <button onClick={() => setPlan(null)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-300 flex items-center gap-1.5 transition-all border border-slate-700"><RotateCcw className="w-3.5 h-3.5" /> 새로 만들기</button>
-            <button onClick={handleRerollGame} className="px-4 py-2 bg-purple-900/50 hover:bg-purple-800/50 rounded-xl text-sm font-bold text-purple-300 flex items-center gap-1.5 transition-all border border-purple-700/50"><Sparkles className="w-3.5 h-3.5" /> 다른 게임 추천</button>
-            <button onClick={handleCopyAll} className="px-4 py-2 bg-cyan-900/50 hover:bg-cyan-800/50 rounded-xl text-sm font-bold text-cyan-300 flex items-center gap-1.5 transition-all border border-cyan-700/50">{copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? '복사됨!' : '전체 복사'}</button>
-            <button onClick={handlePrint} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-300 flex items-center gap-1.5 transition-all border border-slate-700"><Printer className="w-3.5 h-3.5" /> 인쇄</button>
-            <button onClick={handleDownloadMd} className="px-4 py-2 bg-emerald-900/50 hover:bg-emerald-800/50 rounded-xl text-sm font-bold text-emerald-300 flex items-center gap-1.5 transition-all border border-emerald-700/50"><Download className="w-3.5 h-3.5" /> 지도안 다운로드</button>
+          <div className="flex flex-wrap gap-2 print:hidden sticky top-[120px] z-10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md py-3 border-b border-slate-200 dark:border-slate-800">
+            <button onClick={() => setPlan(null)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-all border border-slate-300 dark:border-slate-700"><RotateCcw className="w-3.5 h-3.5" /> 새로 만들기</button>
+            <button onClick={handleRerollGame} className="px-4 py-2 bg-purple-50 dark:bg-purple-900/50 hover:bg-purple-100 dark:hover:bg-purple-800/50 rounded-xl text-sm font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5 transition-all border border-purple-200 dark:border-purple-700/50"><Sparkles className="w-3.5 h-3.5" /> 다른 게임 추천</button>
+            <button onClick={handleCopyAll} className="px-4 py-2 bg-cyan-50 dark:bg-cyan-900/50 hover:bg-cyan-100 dark:hover:bg-cyan-800/50 rounded-xl text-sm font-bold text-cyan-700 dark:text-cyan-300 flex items-center gap-1.5 transition-all border border-cyan-200 dark:border-cyan-700/50">{copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}{copied ? '복사됨!' : '전체 복사'}</button>
+            <button onClick={handlePrint} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 transition-all border border-slate-300 dark:border-slate-700"><Printer className="w-3.5 h-3.5" /> 인쇄</button>
+            <button onClick={handleDownloadMd} className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-800/50 rounded-xl text-sm font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 transition-all border border-emerald-200 dark:border-emerald-700/50"><Download className="w-3.5 h-3.5" /> 지도안 다운로드</button>
           </div>
 
           {/* 📋 수업 개요 */}
@@ -556,9 +556,9 @@ export const LessonPlanGeneratorV2 = () => {
                 ['단원/주제', plan.overview.unit], ['학생 수', `${plan.overview.studentCount}명`],
                 ['장소', plan.overview.space], ['단원', plan.overview.topic],
               ].map(([label, value]) => (
-                <div key={label as string} className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
+                <div key={label as string} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/50">
                   <div className="text-[10px] text-slate-500 font-bold mb-1">{label}</div>
-                  <div className="text-sm text-white font-bold">{value}</div>
+                  <div className="text-sm text-slate-900 dark:text-white font-bold">{value}</div>
                 </div>
               ))}
             </div>
@@ -568,28 +568,28 @@ export const LessonPlanGeneratorV2 = () => {
           <SectionCard title="🎯 교육과정 연계" id="curriculum">
             <div className="space-y-3">
               <div className="flex flex-wrap gap-2">
-                {plan.curriculum.competencies.map(c => <span key={c} className="px-2.5 py-1 bg-cyan-900/30 border border-cyan-700/40 rounded-lg text-xs font-bold text-cyan-300">{c}</span>)}
+                {plan.curriculum.competencies.map(c => <span key={c} className="px-2.5 py-1 bg-cyan-50 dark:bg-cyan-900/30 border border-cyan-200 dark:border-cyan-700/40 rounded-lg text-xs font-bold text-cyan-700 dark:text-cyan-300">{c}</span>)}
               </div>
               {plan.curriculum.isLowGrade ? (
-                <div className="bg-amber-900/20 border border-amber-700/30 rounded-xl p-4">
-                  <p className="text-amber-300 text-sm font-bold mb-1">📌 통합교과(즐거운 생활) 연계 신체활동</p>
-                  <p className="text-amber-200/80 text-xs">테마: {plan.curriculum.lowGradeTheme}</p>
-                  <p className="text-slate-400 text-xs mt-2">※ 1~2학년은 독립된 체육 교과가 없으므로 성취기준 코드를 별도로 제시하지 않습니다.</p>
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-xl p-4">
+                  <p className="text-amber-800 dark:text-amber-300 text-sm font-bold mb-1">📌 통합교과(즐거운 생활) 연계 신체활동</p>
+                  <p className="text-amber-700/90 dark:text-amber-200/80 text-xs">테마: {plan.curriculum.lowGradeTheme}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-xs mt-2">※ 1~2학년은 독립된 체육 교과가 없으므로 성취기준 코드를 별도로 제시하지 않습니다.</p>
                 </div>
               ) : plan.curriculum.standards.length > 0 && (
                 <div className="space-y-2">
                   {plan.curriculum.standards.map(s => (
-                    <div key={s.code} className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50">
-                      <span className="text-cyan-400 text-xs font-black mr-2">{s.code}</span>
-                      <span className="text-white text-sm">{s.text}</span>
+                    <div key={s.code} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/50">
+                      <span className="text-cyan-600 dark:text-cyan-400 text-xs font-black mr-2">{s.code}</span>
+                      <span className="text-slate-900 dark:text-white text-sm">{s.text}</span>
                     </div>
                   ))}
                 </div>
               )}
               <div className="grid grid-cols-3 gap-2 text-xs">
-                <div className="bg-blue-900/20 rounded-lg p-2.5 border border-blue-800/30"><span className="text-blue-400 font-bold block mb-1">지식·이해</span><span className="text-slate-300">{plan.curriculum.knowledge}</span></div>
-                <div className="bg-green-900/20 rounded-lg p-2.5 border border-green-800/30"><span className="text-green-400 font-bold block mb-1">과정·기능</span><span className="text-slate-300">{plan.curriculum.process}</span></div>
-                <div className="bg-purple-900/20 rounded-lg p-2.5 border border-purple-800/30"><span className="text-purple-400 font-bold block mb-1">가치·태도</span><span className="text-slate-300">{plan.curriculum.attitude}</span></div>
+                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-2.5 border border-blue-200 dark:border-blue-800/30"><span className="text-blue-700 dark:text-blue-400 font-bold block mb-1">지식·이해</span><span className="text-slate-700 dark:text-slate-300">{plan.curriculum.knowledge}</span></div>
+                <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg p-2.5 border border-emerald-200 dark:border-emerald-800/30"><span className="text-emerald-700 dark:text-emerald-400 font-bold block mb-1">과정·기능</span><span className="text-slate-700 dark:text-slate-300">{plan.curriculum.process}</span></div>
+                <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-2.5 border border-purple-200 dark:border-purple-800/30"><span className="text-purple-700 dark:text-purple-400 font-bold block mb-1">가치·태도</span><span className="text-slate-700 dark:text-slate-300">{plan.curriculum.attitude}</span></div>
               </div>
             </div>
           </SectionCard>
@@ -597,23 +597,23 @@ export const LessonPlanGeneratorV2 = () => {
           {/* 🌱 오늘의 배움 */}
           <SectionCard title="🌱 오늘의 배움" id="goals">
             <div className="space-y-3">
-              <div className="space-y-2">{plan.learningGoals.goals.map((g, i) => <div key={i} className="bg-emerald-900/20 rounded-xl p-3 border border-emerald-700/30 text-sm text-white font-medium">📌 {g}</div>)}</div>
-              <div><p className="text-xs text-slate-400 font-bold mb-2">성공 기준</p><div className="space-y-1">{plan.learningGoals.successCriteria.map((c, i) => <div key={i} className="text-xs text-slate-300 flex items-start gap-2"><span className="text-emerald-400 mt-0.5">☐</span>{c}</div>)}</div></div>
+              <div className="space-y-2">{plan.learningGoals.goals.map((g, i) => <div key={i} className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-3 border border-emerald-200 dark:border-emerald-700/30 text-sm text-emerald-950 dark:text-emerald-100 font-bold">📌 {g}</div>)}</div>
+              <div><p className="text-xs text-slate-500 dark:text-slate-400 font-bold mb-2">성공 기준</p><div className="space-y-1">{plan.learningGoals.successCriteria.map((c, i) => <div key={i} className="text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2"><span className="text-emerald-600 dark:text-emerald-400 mt-0.5">☐</span>{c}</div>)}</div></div>
             </div>
           </SectionCard>
 
           {/* 🎮 추천 게임 */}
           {plan.recommendedGame && (
             <SectionCard title="🎮 추천 땀방울 원정대 게임" id="game">
-              <div className="bg-gradient-to-r from-purple-900/30 to-indigo-900/30 rounded-2xl p-4 border border-purple-700/40">
+              <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-cyan-50 dark:from-purple-900/30 dark:to-indigo-900/30 rounded-2xl p-4 border border-purple-200 dark:border-purple-700/40">
                 <div className="flex items-start gap-4">
                   <div className="text-4xl">{plan.recommendedGame.game.emoji}</div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-lg font-black text-white">{plan.recommendedGame.game.title}</h4>
-                    <p className="text-xs text-slate-400 mt-1">{plan.recommendedGame.game.description}</p>
-                    <p className="text-xs text-purple-300 mt-2 font-medium">💡 {plan.recommendedGame.reason}</p>
-                    <p className="text-xs text-slate-400 mt-1">📍 {plan.recommendedGame.role}</p>
-                    <p className="text-xs text-slate-400 mt-1">⏱ 권장 사용 시간: {plan.recommendedGame.usageTime}분</p>
+                    <h4 className="text-lg font-black text-slate-900 dark:text-white">{plan.recommendedGame.game.title}</h4>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{plan.recommendedGame.game.description}</p>
+                    <p className="text-xs text-purple-700 dark:text-purple-300 mt-2 font-bold">💡 {plan.recommendedGame.reason}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">📍 {plan.recommendedGame.role}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">⏱ 권장 사용 시간: {plan.recommendedGame.usageTime}분</p>
                     <div className="flex gap-2 mt-3 print:hidden">
                       <button onClick={() => window.open(plan.recommendedGame!.game.route, '_blank')} className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 rounded-lg text-xs font-bold text-white flex items-center gap-1 transition-all"><Play className="w-3 h-3" /> 게임 실행</button>
                     </div>
@@ -627,22 +627,22 @@ export const LessonPlanGeneratorV2 = () => {
           <SectionCard title="🗺 수업 흐름" id="flow" copyText={plan.lessonFlow.map(f => `[${f.stage}] ${f.time}분\n${f.activity}`).join('\n\n')} onCopy={(t) => handleCopySection('flow', t)} copiedSection={copiedSection === 'flow'}>
             <div className="space-y-3">
               {plan.lessonFlow.map((f, i) => (
-                <div key={i} className={`rounded-xl p-4 border ${f.stage === '도입' ? 'bg-blue-900/15 border-blue-700/30' : f.stage === '정리' ? 'bg-amber-900/15 border-amber-700/30' : 'bg-emerald-900/15 border-emerald-700/30'}`}>
+                <div key={i} className={`rounded-xl p-4 border ${f.stage === '도입' ? 'bg-blue-50 dark:bg-blue-900/15 border-blue-200 dark:border-blue-700/30' : f.stage === '정리' ? 'bg-amber-50 dark:bg-amber-900/15 border-amber-200 dark:border-amber-700/30' : 'bg-emerald-50 dark:bg-emerald-900/15 border-emerald-200 dark:border-emerald-700/30'}`}>
                   <div className="flex items-center gap-2 mb-3">
                     <span className={`px-2 py-0.5 rounded-lg text-xs font-black ${f.stage === '도입' ? 'bg-blue-600 text-white' : f.stage === '정리' ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white'}`}>{f.stage}</span>
-                    <span className="text-sm font-bold text-white">{f.time}분</span>
+                    <span className="text-sm font-bold text-slate-900 dark:text-white">{f.time}분</span>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-slate-500 font-bold block mb-1">교수·학습 활동</span><span className="text-white whitespace-pre-line">{f.activity}</span></div>
-                    <div><span className="text-slate-500 font-bold block mb-1">교사 활동</span><span className="text-slate-300 whitespace-pre-line">{f.teacherActivity}</span></div>
-                    <div><span className="text-slate-500 font-bold block mb-1">학생 활동</span><span className="text-slate-300 whitespace-pre-line">{f.studentActivity}</span></div>
-                    {f.gameUsage !== '-' && <div><span className="text-purple-400 font-bold block mb-1">🎮 게임 활용</span><span className="text-purple-200 whitespace-pre-line">{f.gameUsage}</span></div>}
-                    <div><span className="text-slate-500 font-bold block mb-1">안전 유의점</span><span className="text-red-300/80 whitespace-pre-line">{f.safety}</span></div>
-                    {f.evaluation !== '-' && <div><span className="text-slate-500 font-bold block mb-1">평가 포인트</span><span className="text-cyan-300/80">{f.evaluation}</span></div>}
+                    <div><span className="text-slate-500 font-bold block mb-1">교수·학습 활동</span><span className="text-slate-900 dark:text-white whitespace-pre-line">{f.activity}</span></div>
+                    <div><span className="text-slate-500 font-bold block mb-1">교사 활동</span><span className="text-slate-700 dark:text-slate-300 whitespace-pre-line">{f.teacherActivity}</span></div>
+                    <div><span className="text-slate-500 font-bold block mb-1">학생 활동</span><span className="text-slate-700 dark:text-slate-300 whitespace-pre-line">{f.studentActivity}</span></div>
+                    {f.gameUsage !== '-' && <div><span className="text-purple-600 dark:text-purple-400 font-bold block mb-1">🎮 게임 활용</span><span className="text-purple-800 dark:text-purple-200 whitespace-pre-line">{f.gameUsage}</span></div>}
+                    <div><span className="text-slate-500 font-bold block mb-1">안전 유의점</span><span className="text-red-600 dark:text-red-300/80 whitespace-pre-line">{f.safety}</span></div>
+                    {f.evaluation !== '-' && <div><span className="text-slate-500 font-bold block mb-1">평가 포인트</span><span className="text-cyan-700 dark:text-cyan-300/80">{f.evaluation}</span></div>}
                   </div>
                 </div>
               ))}
-              <div className="text-right text-xs font-bold text-slate-400">⏱ 총 수업 시간: {plan.lessonFlow.reduce((a, f) => a + f.time, 0)}분</div>
+              <div className="text-right text-xs font-bold text-slate-500 dark:text-slate-400">⏱ 총 수업 시간: {plan.lessonFlow.reduce((a, f) => a + f.time, 0)}분</div>
             </div>
           </SectionCard>
 
@@ -758,16 +758,16 @@ export const LessonPlanGeneratorV2 = () => {
         /* ═══ 입력 폼 ═══ */
         <div className="space-y-5">
           {/* 기본 설정 */}
-          <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 space-y-4">
-            <h3 className="text-base font-black text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-cyan-400" /> 기본 수업 설정</h3>
+          <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none space-y-4 transition-colors">
+            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2"><BookOpen className="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> 기본 수업 설정</h3>
 
             {/* 학년군 */}
             <div>
-              <label className="text-xs text-slate-400 font-bold block mb-2">① 학년군</label>
+              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">① 학년군</label>
               <div className="grid grid-cols-3 gap-2">
                 {(['1~2학년 · 즐거운 생활 연계', '3~4학년군', '5~6학년군'] as GradeGroup[]).map(g => (
                   <button key={g} onClick={() => { setGrade(g); setDomain('자동'); setSelectedGame(null); }}
-                    className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${grade === g ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
+                    className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${grade === g ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {g}
                   </button>
                 ))}
@@ -776,25 +776,25 @@ export const LessonPlanGeneratorV2 = () => {
 
             {/* 수업 시간 */}
             <div>
-              <label className="text-xs text-slate-400 font-bold block mb-2">② 수업 시간</label>
+              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">② 수업 시간</label>
               <div className="flex gap-2">
                 {[{ key: '40', label: '40분' }, { key: '80', label: '80분' }, { key: 'custom', label: '직접 입력' }].map(({ key, label }) => (
                   <button key={key} onClick={() => handleDurationChange(key as any)}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${durationMode === key ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
+                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${durationMode === key ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {label}
                   </button>
                 ))}
               </div>
-              {durationMode === 'custom' && <input type="number" value={customDuration} onChange={e => { setCustomDuration(e.target.value); setDuration(parseInt(e.target.value) || 40); }} placeholder="분 단위 입력" className="mt-2 w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:border-cyan-500 focus:outline-none" />}
+              {durationMode === 'custom' && <input type="number" value={customDuration} onChange={e => { setCustomDuration(e.target.value); setDuration(parseInt(e.target.value) || 40); }} placeholder="분 단위 입력" className="mt-2 w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:border-cyan-500 focus:outline-none" />}
             </div>
 
             {/* 교육과정 영역 */}
             <div>
-              <label className="text-xs text-slate-400 font-bold block mb-2">③ 교육과정 영역</label>
+              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">③ 교육과정 영역</label>
               <div className="flex flex-wrap gap-2">
                 {domainOptions.map(d => (
                   <button key={d} onClick={() => { setDomain(d); setSelectedGame(null); }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${domain === d ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${domain === d ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {d}
                   </button>
                 ))}
@@ -803,17 +803,17 @@ export const LessonPlanGeneratorV2 = () => {
 
             {/* 단원/주제 */}
             <div>
-              <label className="text-xs text-slate-400 font-bold block mb-2">④ 단원 또는 수업 주제</label>
-              <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="예: 전략형 스포츠 - 빈 공간을 활용하며 게임하기" className="w-full px-3 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none" />
+              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">④ 단원 또는 수업 주제</label>
+              <input type="text" value={unit} onChange={e => setUnit(e.target.value)} placeholder="예: 전략형 스포츠 - 빈 공간을 활용하며 게임하기" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-cyan-500 focus:outline-none" />
             </div>
 
             {/* 활동 형태 */}
             <div>
-              <label className="text-xs text-slate-400 font-bold block mb-2">⑤ 활동 형태</label>
+              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑤ 활동 형태</label>
               <div className="flex flex-wrap gap-2">
                 {(['자동 추천', '개인', '짝', '모둠', '팀 대항', '학급 전체'] as ActivityMode[]).map(m => (
                   <button key={m} onClick={() => setActMode(m)}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${actMode === m ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${actMode === m ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {m}
                   </button>
                 ))}
@@ -822,45 +822,45 @@ export const LessonPlanGeneratorV2 = () => {
           </div>
 
           {/* 상세 설정 */}
-          <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50">
-            <button onClick={() => setShowAdvanced(!showAdvanced)} className="w-full p-4 flex items-center justify-between text-sm font-bold text-slate-300 hover:text-white transition-colors">
-              <span className="flex items-center gap-2"><Target className="w-4 h-4 text-purple-400" /> 상세 설정</span>
+          <div className="bg-white dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none transition-colors">
+            <button onClick={() => setShowAdvanced(!showAdvanced)} className="w-full p-4 flex items-center justify-between text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+              <span className="flex items-center gap-2"><Target className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 상세 설정</span>
               {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
             {showAdvanced && (
-              <div className="p-5 pt-0 space-y-4 border-t border-slate-700/50">
+              <div className="p-5 pt-0 space-y-4 border-t border-slate-200 dark:border-slate-700/50">
                 {/* 학급 인원 */}
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-2">⑥ 학급 인원</label>
-                  <input type="number" value={studentCount} onChange={e => setStudentCount(parseInt(e.target.value) || 24)} className="w-32 px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-sm text-white focus:border-cyan-500 focus:outline-none" />
+                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑥ 학급 인원</label>
+                  <input type="number" value={studentCount} onChange={e => setStudentCount(parseInt(e.target.value) || 24)} className="w-32 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:border-cyan-500 focus:outline-none" />
                 </div>
 
                 {/* 장소 */}
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-2">⑦ 수업 장소</label>
+                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑦ 수업 장소</label>
                   <div className="flex flex-wrap gap-2">
                     {(['자동', '교실', '체육관', '운동장', '다목적실', '좁은 실내 공간'] as SpaceOption[]).map(s => (
-                      <button key={s} onClick={() => setSpace(s)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${space === s ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>{s}</button>
+                      <button key={s} onClick={() => setSpace(s)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${space === s ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{s}</button>
                     ))}
                   </div>
                 </div>
 
                 {/* 기기 */}
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-2">⑧ 디지털 기기</label>
+                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑧ 디지털 기기</label>
                   <div className="flex flex-wrap gap-2">
                     {(['없음', '교사용 1대', '모둠별 1대', '학생 1인 1기기'] as DeviceOption[]).map(d => (
-                      <button key={d} onClick={() => setDevice(d)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${device === d ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>{d}</button>
+                      <button key={d} onClick={() => setDevice(d)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${device === d ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{d}</button>
                     ))}
                   </div>
                 </div>
 
                 {/* 수업 중점 */}
                 <div>
-                  <label className="text-xs text-slate-400 font-bold block mb-2">⑩ 수업 중점 (복수 선택)</label>
+                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑩ 수업 중점 (복수 선택)</label>
                   <div className="flex flex-wrap gap-2">
                     {(['신체활동량', '움직임 기능', '체력', '전략적 사고', '협력', '의사소통', '창의적 표현', '건강 관리', '안전', '즐거움'] as FocusArea[]).map(f => (
-                      <button key={f} onClick={() => toggleFocus(f)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${focuses.includes(f) ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>{f}</button>
+                      <button key={f} onClick={() => toggleFocus(f)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${focuses.includes(f) ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{f}</button>
                     ))}
                   </div>
                 </div>
@@ -869,22 +869,22 @@ export const LessonPlanGeneratorV2 = () => {
           </div>
 
           {/* 게임 선택 */}
-          <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700/50 space-y-4">
-            <h3 className="text-base font-black text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-400" /> 땀방울 원정대 게임</h3>
+          <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none space-y-4 transition-colors">
+            <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 땀방울 원정대 게임</h3>
             <div className="flex gap-2">
-              <button onClick={() => { setGameSelectMode('auto'); setSelectedGame(null); setShowGamePicker(false); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'auto' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>🤖 자동 추천</button>
-              <button onClick={() => { setGameSelectMode('manual'); setShowGamePicker(true); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'manual' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800'}`}>🎯 직접 선택</button>
+              <button onClick={() => { setGameSelectMode('auto'); setSelectedGame(null); setShowGamePicker(false); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'auto' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>🤖 자동 추천</button>
+              <button onClick={() => { setGameSelectMode('manual'); setShowGamePicker(true); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'manual' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>🎯 직접 선택</button>
             </div>
 
             {/* 선택된 게임 표시 */}
             {selectedGame && (
-              <div className="bg-purple-900/20 rounded-xl p-3 border border-purple-700/30 flex items-center gap-3">
+              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-xl p-3 border border-purple-200 dark:border-purple-700/30 flex items-center gap-3">
                 <span className="text-2xl">{selectedGame.emoji}</span>
                 <div className="flex-1">
-                  <p className="text-sm font-bold text-white">{selectedGame.title}</p>
-                  <p className="text-[10px] text-slate-400">{selectedGame.description}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{selectedGame.title}</p>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-400">{selectedGame.description}</p>
                 </div>
-                <button onClick={() => setSelectedGame(null)} className="text-xs text-slate-500 hover:text-red-400">✕</button>
+                <button onClick={() => setSelectedGame(null)} className="text-xs text-slate-400 hover:text-red-500">✕</button>
               </div>
             )}
 
@@ -892,28 +892,28 @@ export const LessonPlanGeneratorV2 = () => {
             {showGamePicker && gameSelectMode === 'manual' && (
               <div className="space-y-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
-                  <input type="text" value={gameSearch} onChange={e => setGameSearch(e.target.value)} placeholder="게임 이름 또는 키워드 검색" className="w-full pl-9 pr-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                  <input type="text" value={gameSearch} onChange={e => setGameSearch(e.target.value)} placeholder="게임 이름 또는 키워드 검색" className="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:border-purple-500 focus:outline-none" />
                 </div>
                 <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                   {filteredGames.map(g => (
                     <button key={g.id} onClick={() => { setSelectedGame(g); setShowGamePicker(false); }}
-                      className={`w-full text-left p-3 rounded-xl border transition-all hover:bg-slate-700/50 ${selectedGame?.id === g.id ? 'bg-purple-900/30 border-purple-600' : 'bg-slate-900/50 border-slate-700/50'}`}>
+                      className={`w-full text-left p-3 rounded-xl border transition-all ${selectedGame?.id === g.id ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-500 dark:border-purple-600' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}>
                       <div className="flex items-center gap-2.5">
                         <span className="text-xl">{g.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-white">{g.title}</span>
-                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">{g.domain}</span>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded border ${g.intensity === '높음' ? 'bg-red-900/30 text-red-300 border-red-700/40' : g.intensity === '보통' ? 'bg-amber-900/30 text-amber-300 border-amber-700/40' : 'bg-green-900/30 text-green-300 border-green-700/40'}`}>{g.intensity}</span>
+                            <span className="text-xs font-bold text-slate-900 dark:text-white">{g.title}</span>
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 border border-slate-300 dark:border-slate-700">{g.domain}</span>
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded border ${g.intensity === '높음' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700/40' : g.intensity === '보통' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700/40' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700/40'}`}>{g.intensity}</span>
                           </div>
-                          <p className="text-[10px] text-slate-500 mt-0.5 truncate">{g.description}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{g.description}</p>
                         </div>
-                        <ExternalLink className="w-3 h-3 text-slate-600 shrink-0" />
+                        <ExternalLink className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
                       </div>
                     </button>
                   ))}
-                  {filteredGames.length === 0 && <p className="text-xs text-slate-500 text-center py-4">조건에 맞는 게임이 없습니다.</p>}
+                  {filteredGames.length === 0 && <p className="text-xs text-slate-500 dark:text-slate-400 text-center py-4">조건에 맞는 게임이 없습니다.</p>}
                 </div>
               </div>
             )}
@@ -933,12 +933,12 @@ export const LessonPlanGeneratorV2 = () => {
 // ─── 섹션 카드 컴포넌트 ───
 function SectionCard({ title, id, children, copyText, onCopy, copiedSection }: { title: string; id: string; children: React.ReactNode; copyText?: string; onCopy?: (text: string) => void; copiedSection?: boolean }) {
   return (
-    <div id={id} className="bg-slate-900/80 rounded-2xl p-5 border border-slate-800 shadow-lg">
+    <div id={id} className="bg-white dark:bg-slate-900/80 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg transition-colors">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-black text-white">{title}</h3>
+        <h3 className="text-base font-black text-slate-900 dark:text-white">{title}</h3>
         {copyText && onCopy && (
-          <button onClick={() => onCopy(copyText)} className="text-xs text-slate-500 hover:text-cyan-400 print:hidden flex items-center gap-1">
-            {copiedSection ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+          <button onClick={() => onCopy(copyText)} className="text-xs text-slate-500 hover:text-cyan-600 dark:hover:text-cyan-400 print:hidden flex items-center gap-1 transition-colors">
+            {copiedSection ? <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" /> : <Copy className="w-3 h-3" />}
             {copiedSection ? '복사됨' : '복사'}
           </button>
         )}
