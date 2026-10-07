@@ -202,16 +202,23 @@ async function main() {
   });
 
   await check('late dance confirmation advances one round rather than also advancing at the deadline', async () => {
-    await mount('DancePose.tsx', 'DancePose');
-    await page.clock.runFor(2900);
-    await page.waitForTimeout(10);
-    await fixture.getByRole('button', { name: /포즈 완료/ }).click();
-    await page.clock.runFor(200);
-    await page.waitForTimeout(10);
-    assert((await fixture.innerText()).includes('1/8'));
-    await page.clock.runFor(400);
-    await page.waitForTimeout(10);
-    assert((await fixture.innerText()).includes('2/8'));
+    // Only 100ms separates the late tap from the 3s deadline, so stop real time from leaking into the fake clock.
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
+    try {
+      await mount('DancePose.tsx', 'DancePose');
+      await page.clock.runFor(2900);
+      await page.waitForTimeout(10);
+      // Click immediately: Playwright's actionability wait (~200ms on the pulsing pose) can cross the 3s deadline.
+      await fixture.getByRole('button', { name: /포즈 완료/ }).evaluate(button => button.click());
+      await page.clock.runFor(200);
+      await page.waitForTimeout(10);
+      assert((await fixture.innerText()).includes('1/8'));
+      await page.clock.runFor(400);
+      await page.waitForTimeout(10);
+      assert((await fixture.innerText()).includes('2/8'));
+    } finally {
+      await page.clock.resume();
+    }
   });
 
   await check('expression automatic timer visits every step in StrictMode without skipping a step', async () => {
