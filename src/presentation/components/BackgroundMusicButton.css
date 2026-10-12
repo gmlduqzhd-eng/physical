@@ -42,9 +42,21 @@
   gap: 12px;
 }
 @media (max-width: 700px) {
+  .intro-landing .header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+  }
   .intro-landing .header-actions {
-    flex-direction: column-reverse;
-    gap: 6px;
+    display: contents;
+  }
+  .intro-landing .background-music-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .intro-landing .qr-trigger {
+    grid-column: 2;
+    grid-row: 1;
   }
   .intro-landing .background-music-button {
     height: 30px;
@@ -52,3 +64,31 @@
     padding: 0 8px;
   }
 }
+.background-music-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.background-music-volume {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #24584c;
+  font-size: 10px;
+}
+.background-music-volume input {
+  width: 76px;
+  min-height: 36px;
+  accent-color: #0891b2;
+  cursor: pointer;
+  padding: 0;
+}
+.background-music-volume input:focus-visible {
+  outline: 2px solid #13aa99;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.background-music-percent { min-width: 34px; text-align: right; }
+.dark .background-music-volume { color: #a7f3d0; }
+.intro-landing .background-music-volume { color: #24584c; }

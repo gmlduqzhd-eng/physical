@@ -13,8 +13,17 @@ import { readStorage, writeStorage } from "./browserStorage";
 import musicSource from "../assets/expedition-theme.mp3";
 
 const preferenceKey = "physical_background_music_v1";
+const volumeKey = "physical_background_music_volume_v1";
+const defaultVolume = 0.175;
+const loadVolume = () => {
+  const saved = readStorage(volumeKey);
+  const parsed = saved?.trim() ? Number(saved) : NaN;
+  return Number.isFinite(parsed) && parsed >= 0 && parsed <= 1 ? parsed : defaultVolume;
+};
 const BackgroundMusicContext = createContext<{
   enabled: boolean;
+  volume: number;
+  setVolume: (value: number) => void;
   toggle: () => void;
   suppress: (value: boolean) => void;
 } | null>(null);
@@ -25,6 +34,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     () => readStorage(preferenceKey) !== "off",
   );
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [volume, updateVolume] = useState(loadVolume);
   const enabledRef = useRef(enabled);
   const eligibleRef = useRef(false);
   const suppressedRef = useRef(false);
@@ -65,6 +75,18 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     else audioRef.current?.pause();
   }, [attemptPlay]);
 
+  const setVolume = useCallback((value: number) => {
+    if (!Number.isFinite(value)) return;
+    const next = Math.max(0, Math.min(1, value));
+    if (audioRef.current) audioRef.current.volume = next;
+    writeStorage(volumeKey, String(next));
+    updateVolume(next);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
+
   useLayoutEffect(() => {
     const audio = audioRef.current;
     eligibleRef.current = eligible;
@@ -78,7 +100,6 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
 
   useLayoutEffect(() => {
     const audio = audioRef.current;
-    if (audio) audio.volume = 0.35;
     const onVisibility = () => {
       if (document.hidden) audio?.pause();
       else attemptPlay();
@@ -95,7 +116,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   }, [attemptPlay]);
 
   return (
-    <BackgroundMusicContext.Provider value={{ enabled, toggle, suppress }}>
+    <BackgroundMusicContext.Provider value={{ enabled, volume, setVolume, toggle, suppress }}>
       <audio
         ref={audioRef}
         data-background-music="expedition"

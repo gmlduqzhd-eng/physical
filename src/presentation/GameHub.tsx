@@ -254,6 +254,7 @@ export const GameHub = () => {
             <span className="hub-curriculum"><Award className="w-3.5 h-3.5" /> 2022 개정 체육과 연계</span>
           </div>
           <div className="hub-header-actions">
+            <BackgroundMusicButton />
             <button type="button" className="hub-action hub-qr" onClick={() => accessQrDialog.current?.open()} aria-label="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog"><QrCode className="w-4 h-4" /> 접속 QR</button>
             <button type="button" className="hub-action" onClick={() => navigate('/')}><Home className="w-4 h-4" /> 메인 화면</button>
             <button type="button" className="hub-action" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings className="w-4 h-4" /> 메뉴</button>
@@ -268,7 +269,6 @@ export const GameHub = () => {
             <div className="hub-menu-items">
               <button type="button" onClick={() => navigate('/manual')}><BookOpen className="w-4 h-4" /> 사용 설명서</button>
               <button type="button" onClick={() => navigate('/manual?tab=lesson')}><Sparkles className="w-4 h-4" /> 지도안 생성기</button>
-              <BackgroundMusicButton />
               <button type="button" onClick={toggleTheme}>{isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />} {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}</button>
               <button type="button" onClick={toggleVoice} aria-pressed={voiceEnabled}>{voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} 음성 코칭 {voiceEnabled ? 'ON' : 'OFF'}</button>
             </div>
