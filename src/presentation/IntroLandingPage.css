@@ -542,3 +542,84 @@
 .intro-landing .footer {
   color: #607569;
 }
+
+/* Classroom projection: fill the display and maximize the square QR. */
+.intro-landing dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border-radius: 0;
+  background: white;
+  box-shadow: none;
+  overflow: hidden;
+}
+.intro-landing dialog .qr-caption {
+  padding: 0 44px;
+}
+.intro-landing dialog h2 {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.intro-landing dialog p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.intro-landing dialog .qr-stage {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+.intro-landing dialog .large-qr {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  margin: 0;
+}
+.intro-landing dialog .qr-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.intro-landing dialog .url {
+  font-size: 13px;
+  margin: 0;
+}
+.intro-landing dialog .save {
+  padding: 10px 17px;
+}
+.intro-landing dialog .close {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+@media (max-width: 600px), (max-height: 500px) {
+  .intro-landing dialog[open] {
+    padding: 10px;
+    gap: 6px;
+  }
+  .intro-landing dialog h2 {
+    font-size: 17px;
+  }
+  .intro-landing dialog p {
+    font-size: 11px;
+  }
+  .intro-landing dialog .url {
+    font-size: 11px;
+  }
+  .intro-landing dialog .save {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
