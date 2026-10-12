@@ -15,6 +15,8 @@ import musicSource from "../assets/expedition-theme.mp3";
 const preferenceKey = "physical_background_music_v1";
 const volumeKey = "physical_background_music_volume_v1";
 const defaultVolume = 0.175;
+// Keep the user's slider/storage value independent of playback output gain.
+const outputGain = 0.5;
 const loadVolume = () => {
   const saved = readStorage(volumeKey);
   const parsed = saved?.trim() ? Number(saved) : NaN;
@@ -78,13 +80,13 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const setVolume = useCallback((value: number) => {
     if (!Number.isFinite(value)) return;
     const next = Math.max(0, Math.min(1, value));
-    if (audioRef.current) audioRef.current.volume = next;
+    if (audioRef.current) audioRef.current.volume = next * outputGain;
     writeStorage(volumeKey, String(next));
     updateVolume(next);
   }, []);
 
   useLayoutEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
+    if (audioRef.current) audioRef.current.volume = volume * outputGain;
   }, [volume]);
 
   useLayoutEffect(() => {
