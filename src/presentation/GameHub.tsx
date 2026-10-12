@@ -2,6 +2,7 @@ import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQr
 import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { BackgroundMusicButton } from './components/BackgroundMusicButton';
+import { LinkShareButton } from './components/LinkShareButton';
 import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
@@ -255,7 +256,10 @@ export const GameHub = () => {
           </div>
           <div className="hub-header-actions">
             <BackgroundMusicButton />
-            <button type="button" className="hub-action hub-qr" onClick={() => accessQrDialog.current?.open()} aria-label="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog"><QrCode className="w-4 h-4" /> 접속 QR</button>
+            <div className="hub-qr-share">
+              <button type="button" className="hub-action hub-qr" onClick={() => accessQrDialog.current?.open()} aria-label="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog"><QrCode className="w-4 h-4" /> 접속 QR</button>
+              <LinkShareButton hub />
+            </div>
             <button type="button" className="hub-action" onClick={() => navigate('/')}><Home className="w-4 h-4" /> 메인 화면</button>
             <button type="button" className="hub-action" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings className="w-4 h-4" /> 메뉴</button>
           </div>
