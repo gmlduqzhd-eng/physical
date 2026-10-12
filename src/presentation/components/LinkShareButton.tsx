@@ -45,7 +45,7 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
         <span>{sharing ? "공유 중" : "링크 공유"}</span>
       </button>
       <div className="share-feedback" role="status">
-        {shareStatus && <button type="button" className="share-dismiss" aria-label="공유 안내 닫기" onClick={() => { setShareStatus(""); setManualCopy(false); }}>닫기</button>}
+        {manualCopy && <button type="button" className="share-dismiss" aria-label="공유 안내 닫기" onClick={() => { setShareStatus(""); setManualCopy(false); }}>닫기</button>}
         {shareStatus && <p>{shareStatus}</p>}
         {manualCopy && (
           <input aria-label="공유할 링크" readOnly value={shareUrl}
