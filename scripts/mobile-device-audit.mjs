@@ -34,6 +34,10 @@ for (const engine of [chromium, webkit].filter(engine=>!process.env.MOBILE_ENGIN
           await qr.waitFor({state:'hidden'});
           await page.getByRole('button',{name:'링크 공유',exact:true}).tap();
           await page.getByRole('status').filter({hasText:/복사/}).waitFor();
+          const feedback = page.getByRole('status').filter({hasText:/복사/});
+          assert.equal(await feedback.evaluate(el=>getComputedStyle(el).position),'fixed','Mobile share feedback stays at the viewport bottom');
+          const feedbackBox = await feedback.boundingBox();
+          assert(feedbackBox.y+feedbackBox.height<=height && feedbackBox.y+feedbackBox.height>=height-50,'Share feedback does not cover header controls');
           await checkLayout();
           const box = await slider.boundingBox();
           await slider.tap({position:{x:box.width*.7,y:box.height/2}});

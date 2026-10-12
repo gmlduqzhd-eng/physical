@@ -21,8 +21,8 @@ html:not(.dark) .hub-header-actions .share-feedback input {
 }
 .hub-qr-share { display:flex; align-items:center; gap:6px; }
 @media (max-width:640px), (max-height:500px) {
-  .intro-landing .share-feedback:not(:empty),
-  .hub-header-actions .share-feedback:not(:empty) {
+  .intro-landing .share-control .share-feedback:not(:empty),
+  .hub-header-actions .share-control .share-feedback:not(:empty) {
     position:fixed; top:auto; right:16px; left:16px;
     bottom:calc(16px + env(safe-area-inset-bottom, 0px));
     width:auto; max-width:360px; margin-left:auto;
