@@ -40,7 +40,8 @@ function readGameInventory() {
   fs.writeFileSync(path.join(work, 'game-catalog-inventory.json'), JSON.stringify(allGames, null, 2));
   const games = testSubset ? allGames.filter(game => testSubset.includes(game.type)) : allGames;
   console.log('Catalog games: ' + games.length);
-  for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 900 }]) {
+  const viewports = process.env.MOBILE_ONLY === '1' ? [{ width: 390, height: 844 }] : [{ width: 390, height: 844 }, { width: 1440, height: 900 }];
+  for (const viewport of viewports) {
     const context = await browser.newContext({ viewport });
     const page = await context.newPage();
     let active;

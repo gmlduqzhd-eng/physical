@@ -1,4 +1,7 @@
 .share-control { position: relative; }
+.share-feedback { pointer-events:none; }
+.share-feedback input { pointer-events:auto; }
+.share-feedback .share-dismiss { pointer-events:auto; float:right; border:0; border-radius:5px; background:transparent; color:inherit; font:inherit; font-weight:700; padding:4px 8px; min-height:32px; cursor:pointer; }
 .hub-header-actions .share-trigger { min-height:44px; white-space:nowrap; }
 .hub-header-actions .share-trigger svg { width:16px; height:16px; }
 .hub-header-actions .share-trigger:disabled { opacity:.65; cursor:wait; }
@@ -17,6 +20,13 @@ html:not(.dark) .hub-header-actions .share-feedback input {
   background:#fff; color:#334155; border-color:#cbd5e1;
 }
 .hub-qr-share { display:flex; align-items:center; gap:6px; }
-@media (max-width:640px) {
-  .hub-header-actions .share-feedback:not(:empty) { width:180px; }
+@media (max-width:640px), (max-height:500px) {
+  .intro-landing .share-feedback:not(:empty),
+  .hub-header-actions .share-feedback:not(:empty) {
+    position:fixed; top:auto; right:16px; left:16px;
+    bottom:calc(16px + env(safe-area-inset-bottom, 0px));
+    width:auto; max-width:360px; margin-left:auto;
+    z-index:60; pointer-events:none;
+  }
+  .share-feedback input { pointer-events:auto; }
 }

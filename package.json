@@ -14,7 +14,10 @@
     "test:music": "node scripts/music-volume-regressions.cjs",
     "test:games": "node scripts/game-regressions.cjs",
     "test:catalog": "node scripts/game-catalog-smoke.cjs",
-    "test:audit": "node scripts/audit-repair-regressions.cjs"
+    "test:audit": "node scripts/audit-repair-regressions.cjs",
+    "test:mobile": "node scripts/mobile-device-audit.mjs",
+    "test:classroom-refresh": "node scripts/classroom-refresh-regressions.cjs",
+    "test:concurrency": "node scripts/concurrency-audit.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
