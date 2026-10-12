@@ -1,78 +1,156 @@
-import { Gamepad2, KeyRound, Play } from "lucide-react";
+import { useRef } from "react";
+import { ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { GAMES } from "../domain/gamesData";
 import accessQr from "../assets/access-qr.svg?inline";
 import "./IntroLandingPage.css";
 
+const domains = [
+  { name: "운동", description: "체력·건강·기본 움직임" },
+  { name: "스포츠", description: "기술·전략·협동 활동" },
+  { name: "표현", description: "리듬·동작·창의적 표현" },
+];
+
 export function IntroLandingPage() {
+  const qrDialog = useRef<HTMLDialogElement>(null);
   return (
     <div className="intro-landing">
-      <div className="wrap">
-        <header>
+      <div className="shell">
+        <header className="header">
           <Link className="brand" to="/" aria-label="땀방울 원정대 홈">
-            <svg viewBox="0 0 40 48" aria-hidden="true">
-              <path
-                d="M20 2C16 10 3 20 3 30a17 17 0 0 0 34 0C37 20 24 10 20 2Z"
-                fill="currentColor"
-              />
-              <path d="m16 22 10 7-10 7V22Z" fill="white" />
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <rect width="32" height="32" rx="9" fill="currentColor" />
+              <path d="m12 8 10 8-10 8V8Z" fill="white" />
             </svg>
-            <span>땀방울 원정대</span>
+            <span>
+              땀방울 원정대<small>PHYSICAL EDUCATION</small>
+            </span>
           </Link>
-          <a
-            className="qr-link"
-            href={accessQr}
-            download="땀방울-원정대-접속-QR.svg"
-            aria-label="땀방울 원정대 접속 QR 이미지 저장"
+          <button
+            className="qr-trigger"
+            type="button"
+            aria-haspopup="dialog"
+            aria-controls="access-qr-dialog"
+            aria-label="접속 QR 크게 보기"
+            onClick={() => qrDialog.current?.showModal()}
           >
-            <span className="qr-image">
-              <img
-                src={accessQr}
-                alt="https://physical-pi.vercel.app/ 접속 QR 코드"
-                width={148}
-                height={148}
-              />
+            <img src={accessQr} alt="접속 QR" width={111} height={111} />
+            <span>
+              <b>모바일로 접속하기</b>
+              <small>카메라로 QR을 스캔하세요.</small>
+              <em>
+                크게 보기 <ArrowRight aria-hidden="true" />
+              </em>
             </span>
-            <span className="qr-copy">
-              <b>접속 QR</b>
-              <span>
-                스마트폰 카메라로
-                <br />
-                스캔해 주세요
-              </span>
-            </span>
-          </a>
+          </button>
         </header>
         <main className="hero">
-          <div className="hero-art" aria-hidden="true">
-            <Gamepad2 />
-          </div>
-          <h1>
-            몸을 움직이면,
-            <br />
-            <span className="accent">놀이가 시작돼요.</span>
-          </h1>
-          <p className="lead">스마트폰 하나로 즐기는 체육 활동</p>
-          <div className="actions">
-            <Link className="action primary" to="/hub">
-              <Play aria-hidden="true" />
-              게임 시작하기
-            </Link>
-            <Link className="action secondary" to="/lobby">
-              <KeyRound aria-hidden="true" />
-              수업에 참여하기
-            </Link>
-          </div>
+          <section className="hero-copy">
+            <div className="eyebrow">2022 개정 교육과정 연계</div>
+            <h1>
+              체육 수업에,
+              <br />
+              <span>움직임의 즐거움을</span>
+            </h1>
+            <p className="intro">
+              2022 개정 교육과정 체육과 영역별·학년별
+              <br />
+              <strong>{GAMES.length}개 자료</strong>를 담고 있습니다.
+              <br />
+              체력 활동부터 스포츠와 표현까지,
+              <br />
+              수업에 맞는 활동을 간편하게 찾아보세요.
+            </p>
+            <div className="actions">
+              <Link className="action primary" to="/hub">
+                자료 둘러보기 <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link className="action secondary" to="/lobby">
+                수업에 참여하기
+              </Link>
+            </div>
+          </section>
+          <aside className="library" aria-label="자료 구성">
+            <div className="library-top">
+              CURRICULUM LIBRARY
+              <span className="dot" />
+            </div>
+            <div className="total">
+              <strong>{GAMES.length}</strong>
+              <span>개의 활동 자료</span>
+            </div>
+            <p className="library-description">
+              학년과 영역에 맞춰 살펴보는 체육 콘텐츠
+            </p>
+            {domains.map((domain, index) => (
+              <div className="domain" key={domain.name}>
+                <div className="domain-left">
+                  <span className="domain-index">0{index + 1}</span>
+                  <div>
+                    <h2>{domain.name}</h2>
+                    <p>{domain.description}</p>
+                  </div>
+                </div>
+                <div className="domain-count">
+                  {GAMES.filter((game) => game.domain === domain.name).length}
+                  <small>개</small>
+                </div>
+              </div>
+            ))}
+            <div className="grade-note">1–2학년 · 3–4학년군 · 5–6학년군</div>
+          </aside>
         </main>
-        <footer>
-          <span>땀방울 원정대</span>
+        <footer className="footer">
+          <span>움직임으로 배우는 체육 · 땀방울 원정대</span>
           <nav aria-label="도움말">
-            <Link to="/admin">
-              교사 수업 관리 <span aria-hidden="true">↗</span>
-            </Link>
+            <Link to="/admin">교사 수업 관리 ↗</Link>
             <Link to="/manual">이용 안내</Link>
           </nav>
         </footer>
       </div>
+      <dialog
+        id="access-qr-dialog"
+        ref={qrDialog}
+        aria-labelledby="qr-title"
+        onClick={(event) => {
+          if (event.target !== event.currentTarget) return;
+          const rect = event.currentTarget.getBoundingClientRect();
+          if (
+            event.clientX < rect.left ||
+            event.clientX > rect.right ||
+            event.clientY < rect.top ||
+            event.clientY > rect.bottom
+          )
+            event.currentTarget.close();
+        }}
+      >
+        <button
+          className="close"
+          type="button"
+          aria-label="QR 확대 닫기"
+          autoFocus
+          onClick={() => qrDialog.current?.close()}
+        >
+          <X aria-hidden="true" />
+        </button>
+        <h2 id="qr-title">모바일로 바로 접속하세요</h2>
+        <p>스마트폰 카메라로 QR 코드를 비춰 주세요.</p>
+        <img
+          className="large-qr"
+          src={accessQr}
+          alt="https://physical-pi.vercel.app/ 접속 QR 코드"
+          width={370}
+          height={370}
+        />
+        <div className="url">physical-pi.vercel.app</div>
+        <a
+          className="save"
+          href={accessQr}
+          download="땀방울-원정대-접속-QR.svg"
+        >
+          QR 이미지 저장
+        </a>
+      </dialog>
     </div>
   );
 }
