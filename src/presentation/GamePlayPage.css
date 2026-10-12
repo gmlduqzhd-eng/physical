@@ -1,0 +1,9 @@
+.gameplay-page.has-game-toolbar { padding-top: 76px; }
+.gameplay-toolbar { min-height: 60px; background: #020617; border-bottom: 1px solid #334155; }
+.gameplay-content > div { min-height: calc(100dvh - 76px); }
+.gameplay-content[hidden] { display: none; }
+.gameplay-content button:focus-visible { outline: 3px solid #22d3ee; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .gameplay-toolbar { gap: 8px; }
+  .gameplay-toolbar > div { min-width: 0; }
+}

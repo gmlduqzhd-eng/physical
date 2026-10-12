@@ -38,11 +38,11 @@ export const StopwatchGame = ({ groupId, enqueueAction }: Props) => {
     setDiff(timeDiff);
 
     if (timeDiff <= 200) {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500, details: { metrics: { '멈춘 시간': `${(finalElapsed / 1000).toFixed(2)}초`, '목표와의 오차': `${(timeDiff / 1000).toFixed(2)}초` } } }, timestamp: Date.now() });
     } else if (timeDiff <= 500) {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 200 }, timestamp: Date.now() });
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 200, details: { metrics: { '멈춘 시간': `${(finalElapsed / 1000).toFixed(2)}초`, '목표와의 오차': `${(timeDiff / 1000).toFixed(2)}초` } } }, timestamp: Date.now() });
     } else {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0 }, timestamp: Date.now() });
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 0, details: { metrics: { '멈춘 시간': `${(finalElapsed / 1000).toFixed(2)}초`, '목표와의 오차': `${(timeDiff / 1000).toFixed(2)}초` } } }, timestamp: Date.now() });
     }
   };
 

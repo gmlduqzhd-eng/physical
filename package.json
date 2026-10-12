@@ -11,7 +11,8 @@
     "test": "node scripts/runtime-regressions.cjs",
     "test:ui": "node scripts/ui-regressions.cjs",
     "test:games": "node scripts/game-regressions.cjs",
-    "test:catalog": "node scripts/game-catalog-smoke.cjs"
+    "test:catalog": "node scripts/game-catalog-smoke.cjs",
+    "test:audit": "node scripts/audit-repair-regressions.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",

@@ -1,4 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { GAMES } from '../domain/gamesData';
+import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
+import { GameResultDetailsView } from './components/GameResultDetailsView';
+import './GamePlayPage.css';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSyncQueue } from '../application/useSyncQueue';
 import type { GameRoom } from '../domain/types';
@@ -192,17 +196,6 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
   };
 });
 
-const NOVEL_GAME_TYPES = new Set([
-  'compass-azimuth', 'kayak-paddle', 'wind-surf-balance', 'tent-peg-hammer',
-  'trail-maze-run', 'alpine-glider', 'campfire-breath', 'crevasse-jump',
-  'slingshot-archery', 'spike-block-wall', 'base-running-decide',
-  'badminton-smash-rhythm', 'tactical-grid-slide', 'sound-goalball',
-  'juggling-bounce-paddle', 'head-shoulders-knees', 'animal-hop-step',
-  'bicycle-pedal-crank', 'double-under-rope', 'mirror-motion-invert',
-  'seesaw-balance-tap',
-  ...Object.keys(CURRICULUM_GAMES_META),
-]);
-
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
@@ -221,6 +214,8 @@ const GamePlaySession = () => {
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
+  const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
+  const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
   const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard' | null>(null);
   const [isCountingDown, setIsCountingDown] = useState(false);
@@ -245,7 +240,9 @@ const GamePlaySession = () => {
 
   const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
     setDifficulty(selected);
-    setIsCountingDown(true);
+    const hasOwnIntro = ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab'].includes(gameType || '');
+    setIsCountingDown(!hasOwnIntro);
+    if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
 
   const handleCountdownComplete = useCallback(() => {
@@ -299,7 +296,7 @@ const GamePlaySession = () => {
   const gameInfo = GAME_TITLES[gameType || ''];
 
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
-  const localEnqueueAction = useCallback((action: { payload: { amount: number } }) => {
+  const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
     completionRef.current = true;
     const rawScore = action.payload.amount;
@@ -307,6 +304,8 @@ const GamePlaySession = () => {
     if (hasBattle && battleGroupId) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: earned, roomId: battleRoomId }, timestamp: Date.now() });
     }
+    const details = normalizeGameResultDetails(action.payload.details);
+    setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
     stopBgm();
@@ -334,7 +333,7 @@ const GamePlaySession = () => {
 
     // 플레이어 프로필에 점수 누적 저장 (RPE는 나중에 별도 저장)
     if (gameType && gameInfo) {
-      addGameResult(gameType, gameInfo.name, earned, difficulty || undefined);
+      addGameResult(gameType, gameInfo.name, earned, difficulty || undefined, undefined, details);
     }
 
     checkBadges(earned);
@@ -343,6 +342,8 @@ const GamePlaySession = () => {
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
+    setResultDetails(undefined);
+    setShowDetailedResult(false);
     setLastEarnedScore(0);
     setRpeSelected(null);
     setKey(prev => prev + 1);
@@ -537,11 +538,12 @@ const GamePlaySession = () => {
         const isExpressionGame = EXPRESSION_GAMES.some(eg => eg.id === gameType);
         if (isExpressionGame && gameType) {
           return (
-            <div className="pt-16 pb-12 px-4 min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center">
+            <div className="pb-12 px-4 min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center">
               <ExpressionGameViewer
                 key={key}
+                prepared
                 gameType={gameType}
-                onComplete={(score) => localEnqueueAction({ payload: { amount: score } })}
+                onComplete={(score, details) => localEnqueueAction({ payload: { amount: score, details } })}
                 onExit={() => navigate(hubPath)}
               />
             </div>
@@ -553,7 +555,7 @@ const GamePlaySession = () => {
   };
 
   return (
-    <div className={`relative min-h-[100dvh] ${NOVEL_GAME_TYPES.has(gameType) ? 'bg-slate-950' : ''}`}>
+    <div className={`gameplay-page ${difficulty !== null ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 난이도 선택 화면 */}
       {difficulty === null && !gameFinished && (
         <div className="fixed inset-0 z-[10002] bg-slate-950 flex flex-col items-center overflow-y-auto p-4 font-sans">
@@ -561,16 +563,20 @@ const GamePlaySession = () => {
           <span className="text-7xl mb-4">{gameInfo.emoji}</span>
           <h2 className="text-2xl font-black text-white mb-2">{gameInfo.name}</h2>
           <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
-          <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">난이도를 선택하세요</p>
+          <div className="w-full text-left bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-5 space-y-2">
+            <p className="text-sm text-slate-200">{GAMES.find(game => game.type === gameType)?.desc}</p>
+            <p className="text-xs text-slate-400">안내를 확인한 뒤 아래 배율을 선택하면 준비를 시작합니다. 게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.</p>
+          </div>
+          <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">기록 점수 배율을 선택하세요</p>
           <div className="flex gap-2 sm:gap-3 w-full max-w-md">
             <button onClick={() => handleSelectDifficulty('easy')} className="flex-1 py-4 sm:py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30 shrink-0">
-              <span className="text-2xl">🌱</span><span className="text-sm whitespace-nowrap">쉬움</span><span className="text-[10px] text-emerald-200 whitespace-nowrap">×0.7 배율</span>
+              <span className="text-2xl">🌱</span><span className="text-sm whitespace-nowrap">기본 연습</span><span className="text-[10px] text-emerald-200 whitespace-nowrap">×0.7 배율</span>
             </button>
             <button onClick={() => handleSelectDifficulty('normal')} className="flex-1 py-4 sm:py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105 shrink-0">
-              <span className="text-2xl">⚡</span><span className="text-sm whitespace-nowrap">보통</span><span className="text-[10px] text-blue-200 whitespace-nowrap">×1.0 배율</span>
+              <span className="text-2xl">⚡</span><span className="text-sm whitespace-nowrap">표준 기록</span><span className="text-[10px] text-blue-200 whitespace-nowrap">×1.0 배율</span>
             </button>
             <button onClick={() => handleSelectDifficulty('hard')} className="flex-1 py-4 sm:py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30 shrink-0">
-              <span className="text-2xl">🔥</span><span className="text-sm whitespace-nowrap">어려움</span><span className="text-[10px] text-red-200 whitespace-nowrap">×1.5 배율</span>
+              <span className="text-2xl">🔥</span><span className="text-sm whitespace-nowrap">도전 기록</span><span className="text-[10px] text-red-200 whitespace-nowrap">×1.5 배율</span>
             </button>
           </div>
           <button onClick={() => navigate(hubPath)} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
@@ -587,7 +593,15 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 렌더링 */}
-      {difficulty !== null && !isCountingDown && !gameFinished && renderGame()}
+      {difficulty !== null && !isCountingDown && <div className="gameplay-content" hidden={gameFinished && !showDetailedResult} onClickCapture={event => {
+        if (!gameFinished) return;
+        const button = (event.target as HTMLElement).closest('button');
+        if (button && /다시|재도전/.test(button.textContent || '')) {
+          event.preventDefault();
+          event.stopPropagation();
+          handleReplay();
+        }
+      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{renderGame()}</div>}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -598,11 +612,12 @@ const GamePlaySession = () => {
 
       {/* 상단 네비게이션 */}
       {difficulty !== null && (
-        <div className="fixed top-4 left-4 right-4 z-[10000] flex items-center justify-between pointer-events-none">
+        <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between px-4 py-2 pointer-events-none">
           <button onClick={() => navigate(hubPath)} className="w-11 h-11 bg-black/80 hover:bg-black text-white backdrop-blur-md border-2 border-white/60 hover:border-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] active:scale-90" title="홈으로">
             <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
           </button>
-          <div className="flex items-center gap-1.5 pointer-events-auto bg-black/80 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+          {showDetailedResult && <button onClick={() => setShowDetailedResult(false)} className="pointer-events-auto px-3 py-2 bg-cyan-700 text-white rounded-xl text-sm font-bold">점수 화면으로</button>}
+          <div className={`${showDetailedResult ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 pointer-events-auto bg-black/80 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.8)]`}>
             <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded-md border border-cyan-700/80">{gameInfo.code}</span>
             <span className="text-[11px] font-bold text-white hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{gameInfo.target}</span>
             <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50' : difficulty === 'hard' ? 'bg-red-950 text-red-300 border border-red-500/50' : 'bg-blue-950 text-blue-300 border border-blue-500/50'}`}>
@@ -613,7 +628,7 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 종료 결과 오버레이 */}
-      {gameFinished && (
+      {gameFinished && !showDetailedResult && (
         <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
@@ -630,7 +645,7 @@ const GamePlaySession = () => {
               </span>
               {difficulty && difficulty !== 'normal' && (
                 <span className={`text-xs mt-1 font-bold ${difficulty === 'hard' ? 'text-red-400' : 'text-emerald-400'}`}>
-                  난이도 {difficulty === 'easy' ? '쉬움' : '어려움'} (×{difficultyMultiplier} 배율)
+                  기록 {difficulty === 'easy' ? '기본 연습' : '도전 기록'} (×{difficultyMultiplier} 배율)
                 </span>
               )}
             </div>
@@ -640,7 +655,7 @@ const GamePlaySession = () => {
             </div>
             {lastEarnedScore > 300 && difficulty !== 'hard' && (
               <div className="w-full bg-orange-950/50 border border-orange-500/30 rounded-xl px-4 py-2.5 mb-4 text-center">
-                <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 더 높은 난이도에 도전해 보세요!</p>
+                <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 자신의 기록을 넘어 보세요!</p>
               </div>
             )}
 
@@ -691,6 +706,8 @@ const GamePlaySession = () => {
               <span>🫀 운동 후 쿨다운 & 심박수 회복 루틴</span>
             </button>
 
+            {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
+            <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기

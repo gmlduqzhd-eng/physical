@@ -5,42 +5,34 @@ interface Props { groupId: string; enqueueAction: (a: any) => void; }
 export const PlankHold = ({ groupId, enqueueAction }: Props) => {
   const [holdTime, setHoldTime] = useState(0);
   const [stable, setStable] = useState(false);
-  const [failed, setFailed] = useState(false);
   const [finished, setFinished] = useState(false);
   const holdRef = useRef(0);
   const stableRef = useRef(false);
-  const failedRef = useRef(false);
   const finishedRef = useRef(false);
   const isPointerHolding = useRef(false);
   const TARGET = 30;
 
   useEffect(() => {
     const handler = (e: DeviceOrientationEvent) => {
-      if (failedRef.current || finishedRef.current) return;
-      const beta = e.beta ?? 0;
+      if (finishedRef.current) return;
+      if (e.beta === null || e.gamma === null) return;
+      const beta = e.beta;
       const gamma = e.gamma ?? 0;
       const isLevel = Math.abs(beta) < 25 && Math.abs(gamma) < 25;
       const currentStable = isLevel || isPointerHolding.current;
       stableRef.current = currentStable;
       setStable(currentStable);
-      if (!currentStable && holdRef.current > 3 && !failedRef.current && !finishedRef.current) {
-        failedRef.current = true;
-        finishedRef.current = true;
-        setFailed(true);
-        setFinished(true);
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: holdRef.current * 15 },
-          timestamp: Date.now()
-        });
-      }
+      if (!currentStable) { holdRef.current = 0; setHoldTime(0); }
     };
     window.addEventListener('deviceorientation', handler);
 
     const timer = setInterval(() => {
-      if (failedRef.current || finishedRef.current) return;
-      if (!stableRef.current) return;
+      if (finishedRef.current) return;
+      if (!stableRef.current) {
+        holdRef.current = 0;
+        setHoldTime(0);
+        return;
+      }
 
       const next = holdRef.current + 1;
       holdRef.current = next;
@@ -65,7 +57,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
   }, [groupId, enqueueAction]);
 
   const handlePointerDown = () => {
-    if (failedRef.current || finishedRef.current) return;
+    if (finishedRef.current) return;
     isPointerHolding.current = true;
     stableRef.current = true;
     setStable(true);
@@ -75,6 +67,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
     isPointerHolding.current = false;
     stableRef.current = false;
     setStable(false);
+    if (!finishedRef.current) { holdRef.current = 0; setHoldTime(0); }
   };
 
   return (
@@ -88,7 +81,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       }`}
     >
       <h1 className="text-3xl font-black text-white mb-2 text-center">💪 코어 플랭크 챌린지</h1>
-      <p className="text-slate-300 font-bold mb-4 text-center text-sm">폰을 등 위에 올리고 일직선 플랭크 자세를 유지하세요!</p>
+      <p className="text-slate-300 font-bold mb-4 text-center text-sm">폰을 등 위에 올려 30초 연속 수평을 유지하세요. 센서 없이 할 때는 화면을 꾹 누르세요. 놓으면 시간이 초기화됩니다.</p>
 
       {/* 정확한 플랭크 자세 SVG 일러스트 */}
       <div className="mb-4 flex items-center justify-center">
@@ -118,10 +111,10 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       <div className="w-full max-w-xs h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-700 mb-3">
         <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all" style={{ width: `${(holdTime / TARGET) * 100}%` }} />
       </div>
-      <p className="text-sm font-black">{failed ? '❌ 흔들렸습니다!' : stable ? '✅ 훌륭합니다! 코어를 단단히 유지하세요!' : '⚠️ 등 위의 폰이 떨어지지 않게 수평을 유지하세요!'}</p>
+      <p className="text-sm font-black">{stable ? '✅ 훌륭합니다! 코어를 단단히 유지하세요!' : '⚠️ 등 위의 폰이 떨어지지 않게 수평을 유지하세요!'}</p>
       <p className="text-slate-400 text-xs mt-3 font-bold">목표: {TARGET}초</p>
 
-      {(finished || failed) && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+{failed ? holdTime * 15 : 500}점</p></div>}
+      {finished && <div className="absolute inset-0 z-50 bg-black/80 flex flex-col items-center justify-center"><div className="text-5xl font-black text-cyan-300 mb-4">{holdTime}초 버팀!</div><p className="text-xl text-white font-bold">+500점</p></div>}
     </div>
   );
 };

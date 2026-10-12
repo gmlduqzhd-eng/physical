@@ -2,6 +2,7 @@ import React from 'react';
 import { isRecord, readJsonStorage } from '../../application/browserStorage';
 import { useModalDialog } from '../../application/useModalDialog';
 import { normalizePlayerProfile } from '../../application/usePlayerProfile';
+import { GameResultDetailsView } from './GameResultDetailsView';
 import { normalizeTamagotchiState } from '../../application/useTamagotchi';
 import { normalizeDailyStreak } from '../../application/useDailyStreak';
 import { Award, X, Lock, CheckCircle, Sparkles } from 'lucide-react';
@@ -25,7 +26,7 @@ const ALL_BADGES: BadgeInfo[] = [
   { id: 'high_scorer', name: '하이스코어러', emoji: '🏅', category: '스포츠/기술', desc: '한 게임에서 500점 이상의 기록 달성', condition: '미니게임 500점 이상' },
   { id: 'veteran', name: '베테랑', emoji: '🎖️', category: '체력/운동', desc: '미니게임을 꾸준히 10회 완료함', condition: '미니게임 10회 완료' },
   { id: 'master', name: '마스터', emoji: '👑', category: '체력/운동', desc: '50회의 미니게임을 끝까지 완료함', condition: '미니게임 50회 완료' },
-  { id: 'brave', name: '용감한 도전자', emoji: '🦁', category: '스포츠/기술', desc: '어려움 난이도에서 점수 획득에 성공함', condition: '어려움 난이도에서 1점 이상' },
+  { id: 'brave', name: '용감한 도전자', emoji: '🦁', category: '스포츠/기술', desc: '도전 기록 배율로 점수 획득에 성공함', condition: '도전 기록에서 1점 이상' },
   { id: 'explorer', name: '탐험가', emoji: '🌍', category: '협동/탐험', desc: '서로 다른 미니게임 10종을 완료함', condition: '미니게임 10종 완료' },
   { id: 'collector', name: '수집가', emoji: '💎', category: '협동/탐험', desc: '서로 다른 미니게임 30종을 완료함', condition: '미니게임 30종 완료' },
   { id: 'tamagotchi_max', name: '땀방울의 수호자', emoji: '🐥', category: '체력/운동', desc: '땀방이를 꾸준히 키워 레벨 5에 도달함', condition: '다마고치 레벨 5 달성' },
@@ -93,6 +94,18 @@ export const BadgeArchiveModal: React.FC<BadgeArchiveModalProps> = ({ isOpen, on
 
         {/* 배지 카드 그리드 */}
         <div className="p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 custom-scrollbar">
+          <section className="sm:col-span-2 rounded-2xl border border-slate-700 p-4">
+            <h3 className="font-bold mb-3">최근 활동 기록</h3>
+            {profile?.recentGames.length ? profile.recentGames.map((record, index) => (
+              <details key={`${record.playedAt}-${index}`} className="border-t border-slate-800 py-3">
+                <summary className="cursor-pointer text-sm focus-visible:outline-2 focus-visible:outline-cyan-400">
+                  {record.gameName} · {record.score}점
+                </summary>
+                <p className="text-xs text-slate-400 mt-2">{new Date(record.playedAt).toLocaleString('ko-KR')}</p>
+                {record.details ? <GameResultDetailsView details={record.details} /> : <p className="text-xs text-slate-400 mt-2">이 활동에는 추가 평가 기록이 없습니다.</p>}
+              </details>
+            )) : <p className="text-sm text-slate-400">활동을 완료하면 이곳에서 기록을 확인할 수 있습니다.</p>}
+          </section>
           {ALL_BADGES.map((b) => {
             const isUnlocked = !!unlockedBadges[b.id];
             return (

@@ -27,6 +27,7 @@ export class BiomechanicalMotionDetector {
    * @returns 유효 동작 여부
    */
   public evaluateMotion(x: number, y: number, z: number): { isValid: boolean; reason?: 'too_fast' | 'weak' | 'cheat_shake' } {
+    if (![x, y, z].every(Number.isFinite)) return { isValid: false, reason: 'weak' };
     const now = performance.now();
     const magnitude = Math.sqrt(x * x + y * y + z * z);
 

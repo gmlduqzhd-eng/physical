@@ -33,7 +33,7 @@ export const ReactionTest = ({ groupId, enqueueAction }: Props) => {
       setReactionTime(time);
       setPhase('done');
       const score = time <= 200 ? 500 : time <= 300 ? 300 : time <= 500 ? 100 : 0;
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() });
+      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details: { metrics: { '반응 시간': `${time}ms` } } }, timestamp: Date.now() });
     } else if (phase === 'too_early') {
       setPhase('ready');
     } else if (phase === 'done') {

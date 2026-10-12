@@ -55,8 +55,11 @@ function readGameInventory() {
         await normal.waitFor({ state: 'visible', timeout: 15000 });
         await normal.click();
         const skip = page.getByRole('button', { name: /준비 완료/ });
-        await skip.waitFor({ state: 'visible', timeout: 5000 });
-        await skip.click();
+        if (await skip.count()) await skip.click();
+        else {
+          await page.getByRole('button', { name: /활동 시작하기/ }).click();
+          await page.waitForTimeout(3300);
+        }
         await page.waitForTimeout(350);
         active.layout = await page.evaluate(() => ({
           width: window.innerWidth,

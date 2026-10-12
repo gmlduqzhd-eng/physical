@@ -413,7 +413,7 @@ export const GameHub = () => {
           { id: 'high_scorer', emoji: '🏅', name: '하이스코어러', desc: '1회 500점 이상 달성', color: 'from-yellow-500 to-amber-600', border: 'border-yellow-500/50' },
           { id: 'veteran', emoji: '🎖️', name: '베테랑', desc: '10회 이상 플레이', color: 'from-cyan-500 to-blue-600', border: 'border-cyan-500/50' },
           { id: 'master', emoji: '👑', name: '마스터', desc: '50회 이상 플레이', color: 'from-purple-500 to-indigo-600', border: 'border-purple-500/50' },
-          { id: 'brave', emoji: '🦁', name: '용감한 도전자', desc: '어려움 난이도 클리어', color: 'from-red-500 to-orange-600', border: 'border-red-500/50' },
+          { id: 'brave', emoji: '🦁', name: '용감한 도전자', desc: '도전 기록으로 점수 획득', color: 'from-red-500 to-orange-600', border: 'border-red-500/50' },
           { id: 'explorer', emoji: '🌍', name: '탐험가', desc: '10종 게임 플레이', color: 'from-emerald-500 to-teal-600', border: 'border-emerald-500/50' },
           { id: 'collector', emoji: '💎', name: '수집가', desc: '30종 게임 플레이', color: 'from-pink-500 to-rose-600', border: 'border-pink-500/50' },
         ];
