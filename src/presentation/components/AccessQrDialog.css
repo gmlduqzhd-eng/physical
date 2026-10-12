@@ -1,0 +1,124 @@
+@font-face {
+  font-family: AccessQrSans;
+  src: url("/fonts/Pretendard-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+#access-qr-dialog {
+  border: 0;
+  color: #1c3037;
+  color-scheme: light;
+  text-align: center;
+  font-family: AccessQrSans, sans-serif;
+}
+#access-qr-dialog:not([open]) {
+  display: none;
+}
+#access-qr-dialog[open] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  position: fixed;
+  inset: 0;
+  width: 100dvw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border-radius: 0;
+  background: white;
+  box-shadow: none;
+  overflow: hidden;
+}
+#access-qr-dialog::backdrop {
+  background: #102b3ba6;
+}
+#access-qr-dialog .qr-caption {
+  padding: 0 44px;
+}
+#access-qr-dialog h2 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  font-weight: 400;
+}
+#access-qr-dialog p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #687d81;
+  margin: 0;
+}
+#access-qr-dialog .qr-stage {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+}
+#access-qr-dialog .large-qr {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  margin: 0;
+}
+#access-qr-dialog .qr-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+#access-qr-dialog .url {
+  font-size: 13px;
+  margin: 0;
+  color: #687d81;
+}
+#access-qr-dialog .save {
+  display: inline-flex;
+  padding: 10px 17px;
+  background: #184e46;
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  text-decoration: none;
+}
+#access-qr-dialog .close {
+  position: absolute;
+  right: 13px;
+  top: 12px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: #eef4f1;
+  color: #53676e;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+}
+#access-qr-dialog .close svg {
+  width: 21px;
+  height: 21px;
+}
+#access-qr-dialog :is(a, button):focus-visible {
+  outline: 3px solid #13aa99;
+  outline-offset: 3px;
+}
+@media (max-width: 600px), (max-height: 500px) {
+  #access-qr-dialog[open] {
+    padding: 10px;
+    gap: 6px;
+  }
+  #access-qr-dialog h2 {
+    font-size: 17px;
+  }
+  #access-qr-dialog p,
+  #access-qr-dialog .url {
+    font-size: 11px;
+  }
+  #access-qr-dialog .save {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

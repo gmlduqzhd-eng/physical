@@ -1,8 +1,9 @@
+import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ChevronRight, Filter, BookOpen, Home, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, ChevronRight, Filter, BookOpen, Home, QrCode, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { useVoiceCoach } from '../application/useVoiceCoach';
@@ -41,6 +42,7 @@ import type {
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 
 export const GameHub = () => {
+  const accessQrDialog = useRef<AccessQrDialogHandle>(null);
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
   const { profile, createProfile, updateNickname, hasProfile } = usePlayerProfile();
@@ -223,6 +225,7 @@ export const GameHub = () => {
         </div>
       )}
 
+      <AccessQrDialog dialogRef={accessQrDialog} />
       {/* Hero Header */}
       <div className="relative overflow-hidden border-b border-slate-800/80">
         <div className="absolute inset-0 bg-gradient-to-b from-blue-900/20 via-transparent to-transparent" />
@@ -238,6 +241,18 @@ export const GameHub = () => {
 
           {/* 우측 상단 액션 버튼들 */}
           <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => accessQrDialog.current?.open()}
+              aria-label="접속 QR 크게 보기"
+              aria-haspopup="dialog"
+              aria-controls="access-qr-dialog"
+              className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
+              style={{ backgroundColor: isDark ? 'rgba(30, 41, 59, 0.85)' : 'rgba(255, 255, 255, 0.95)', borderColor: isDark ? 'rgba(6, 182, 212, 0.6)' : 'rgba(8, 145, 178, 0.4)', color: isDark ? '#67e8f9' : '#0891b2' }}
+            >
+              <QrCode className="w-3.5 h-3.5 shrink-0" />
+              <span>접속 QR</span>
+            </button>
             <button
               onClick={() => navigate('/')}
               className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"

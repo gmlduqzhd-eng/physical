@@ -309,60 +309,7 @@
 .intro-landing .footer a:hover {
   text-decoration: underline;
 }
-.intro-landing dialog {
-  border: 0;
-  border-radius: 20px;
-  padding: 30px;
-  width: min(510px, calc(100vw - 32px));
-  color: #1c3037;
-  text-align: center;
-  font-family: LandingPretendard, sans-serif;
-  box-shadow: 0 24px 90px #132e3c35;
-}
-.intro-landing dialog::backdrop {
-  background: #102b3ba6;
-  backdrop-filter: blur(5px);
-}
-.intro-landing dialog h2 {
-  font-size: 23px;
-  margin: 8px 0 9px;
-}
-.intro-landing dialog p {
-  font-size: 13px;
-  color: #687d81;
-  line-height: 1.7;
-}
-.intro-landing dialog .large-qr {
-  display: block;
-  width: min(370px, 100%);
-  height: auto;
-  margin: 10px auto 8px;
-}
-.intro-landing dialog .close {
-  position: absolute;
-  right: 13px;
-  top: 12px;
-  border: 0;
-  background: #eef4f1;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 23px;
-  color: #53676e;
-}
-.intro-landing dialog .save {
-  display: inline-flex;
-  background: #184e46;
-  color: white;
-  border-radius: 8px;
-  padding: 13px 22px;
-  font-size: 14px;
-}
-.intro-landing dialog .url {
-  font-size: 11px;
-  margin: 9px 0 18px;
-  color: #687d81;
-}
+
 @media (max-width: 700px) {
   .intro-landing .shell {
     padding: 22px 24px 0;
@@ -488,12 +435,6 @@
   .intro-landing .footer nav {
     gap: 28px;
   }
-  .intro-landing dialog {
-    padding: 24px 18px;
-  }
-  .intro-landing dialog h2 {
-    font-size: 20px;
-  }
 }
 @media (max-width: 360px) {
   .intro-landing .shell {
@@ -519,13 +460,7 @@
 .intro-landing .qr-trigger {
   white-space: normal;
 }
-.intro-landing dialog:not([open]) {
-  display: none;
-}
-.intro-landing dialog {
-  position: fixed;
-  margin: auto;
-}
+
 .intro-landing .primary {
   color: white;
 }
@@ -544,84 +479,8 @@
 }
 
 /* Classroom projection: fill the display and maximize the square QR. */
-.intro-landing dialog[open] {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  gap: 8px;
-  inset: 0;
-  width: 100dvw;
-  height: 100dvh;
-  max-width: none;
-  max-height: none;
-  margin: 0;
-  padding: 16px;
-  border-radius: 0;
-  background: white;
-  box-shadow: none;
-  overflow: hidden;
-}
-.intro-landing dialog .qr-caption {
-  padding: 0 44px;
-}
-.intro-landing dialog h2 {
-  font-size: 22px;
-  margin: 0 0 4px;
-}
-.intro-landing dialog p {
-  font-size: 13px;
-  line-height: 1.5;
-}
-.intro-landing dialog .qr-stage {
-  min-width: 0;
-  min-height: 0;
-  display: grid;
-  place-items: center;
-}
-.intro-landing dialog .large-qr {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: contain;
-  margin: 0;
-}
-.intro-landing dialog .qr-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.intro-landing dialog .url {
-  font-size: 13px;
-  margin: 0;
-}
-.intro-landing dialog .save {
-  padding: 10px 17px;
-}
-.intro-landing dialog .close {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-}
+
 @media (max-width: 600px), (max-height: 500px) {
-  .intro-landing dialog[open] {
-    padding: 10px;
-    gap: 6px;
-  }
-  .intro-landing dialog h2 {
-    font-size: 17px;
-  }
-  .intro-landing dialog p {
-    font-size: 11px;
-  }
-  .intro-landing dialog .url {
-    font-size: 11px;
-  }
-  .intro-landing dialog .save {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
 }
 
 .intro-landing .brand-logo {
