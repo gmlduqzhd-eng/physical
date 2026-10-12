@@ -255,13 +255,13 @@ export const GameHub = () => {
             <span className="hub-curriculum"><Award className="w-3.5 h-3.5" /> 2022 개정 체육과 연계</span>
           </div>
           <div className="hub-header-actions">
-            <BackgroundMusicButton />
             <div className="hub-qr-share">
               <button type="button" className="hub-action hub-qr" onClick={() => accessQrDialog.current?.open()} aria-label="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog"><QrCode className="w-4 h-4" /> 접속 QR</button>
               <LinkShareButton hub />
             </div>
             <button type="button" className="hub-action" onClick={() => navigate('/')}><Home className="w-4 h-4" /> 메인 화면</button>
             <button type="button" className="hub-action" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings className="w-4 h-4" /> 메뉴</button>
+            <BackgroundMusicButton />
           </div>
         </div>
         <p>초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400">운동</span> · <span className="text-blue-400">스포츠</span> · <span className="text-purple-400">표현</span>) · 학년별 {GAMES.length}개 게임</p>
