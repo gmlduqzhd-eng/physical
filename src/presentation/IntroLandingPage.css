@@ -1,0 +1,345 @@
+.intro-landing * {
+  box-sizing: border-box;
+}
+.intro-landing {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Malgun Gothic", "Segoe UI", sans-serif;
+}
+.intro-landing a {
+  color: inherit;
+  text-decoration: none;
+}
+.intro-landing button,
+.intro-landing input {
+  font: inherit;
+}
+.intro-landing button,
+.intro-landing a,
+.intro-landing input {
+  -webkit-tap-highlight-color: transparent;
+}
+.intro-landing a:focus-visible,
+.intro-landing button:focus-visible,
+.intro-landing input:focus-visible {
+  outline: 3px solid #19aaff;
+  outline-offset: 5px;
+}
+.intro-landing svg {
+  display: block;
+}
+.intro-landing header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.intro-landing .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  white-space: nowrap;
+}
+.intro-landing .brand > svg {
+  width: 32px;
+  height: 40px;
+}
+.intro-landing .brand > span {
+  font-family: "Maplestory", sans-serif;
+  font-weight: bold;
+  font-size: 24px;
+}
+.intro-landing .qr-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 15px 9px 9px;
+  border-radius: 18px;
+  flex-shrink: 0;
+}
+.intro-landing .qr-image {
+  background: #fff;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+.intro-landing .qr-image > img {
+  width: 148px;
+  height: 148px;
+}
+.intro-landing .qr-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.intro-landing .qr-copy b {
+  font-size: 14px;
+}
+.intro-landing .qr-copy > span {
+  font-size: 11px;
+  line-height: 1.7;
+}
+.intro-landing .wrap {
+  max-width: 1120px;
+  margin: auto;
+  padding: 32px 36px 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+.intro-landing footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 0;
+  font-size: 12px;
+  letter-spacing: -0.25px;
+}
+.intro-landing footer nav {
+  display: flex;
+  gap: 25px;
+}
+.intro-landing footer > span {
+  opacity: 0.5;
+}
+.intro-landing h1,
+.intro-landing h2,
+.intro-landing p {
+  margin: 0;
+}
+.intro-landing h1 {
+  letter-spacing: -3px;
+  line-height: 1.25;
+}
+.intro-landing h2 {
+  letter-spacing: -1.2px;
+}
+.intro-landing main {
+  flex: 1;
+}
+.intro-landing button {
+  cursor: pointer;
+}
+.intro-landing footer a:hover {
+  text-decoration: underline;
+}
+.intro-landing .qr-link:hover {
+  transform: translateY(-2px);
+}
+@media (max-width: 600px) {
+  .intro-landing .wrap {
+    padding: 22px 24px 0;
+  }
+  .intro-landing .brand {
+    gap: 9px;
+  }
+  .intro-landing .brand > svg {
+    width: 25px;
+    height: 32px;
+  }
+  .intro-landing .brand > span {
+    font-size: 19px;
+  }
+  .intro-landing .qr-link {
+    flex-direction: column;
+    gap: 2px;
+    padding: 5px 5px 8px;
+    border-radius: 12px;
+  }
+  .intro-landing .qr-image > img {
+    width: 111px;
+    height: 111px;
+  }
+  .intro-landing .qr-copy > b {
+    font-size: 10px;
+  }
+  .intro-landing .qr-copy > span {
+    display: none;
+  }
+  .intro-landing footer {
+    font-size: 11px;
+    padding: 23px 0;
+  }
+  .intro-landing footer > span {
+    display: none;
+  }
+  .intro-landing footer {
+    justify-content: center;
+  }
+  .intro-landing footer nav {
+    gap: 30px;
+  }
+  .intro-landing h1 {
+    letter-spacing: -1.8px;
+  }
+}
+.intro-landing {
+  background: #f8fbfa;
+  color: #172c39;
+}
+.intro-landing .brand {
+  color: #0c80b7;
+}
+.intro-landing .qr-link {
+  background: #fff;
+  border: 1px solid #e0e9e5;
+}
+.intro-landing .qr-copy {
+  color: #53676e;
+}
+.intro-landing .qr-copy b {
+  color: #243c48;
+}
+.intro-landing .hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 52px 0 74px;
+  min-height: 510px;
+}
+.intro-landing .hero-art {
+  width: 60px;
+  height: 60px;
+  background: #e2f2eb;
+  color: #278660;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 23px;
+  transform: rotate(-7deg);
+}
+.intro-landing .hero-art svg {
+  width: 29px;
+  height: 29px;
+  transform: rotate(7deg);
+}
+.intro-landing h1 {
+  font-size: 58px;
+  font-weight: 800;
+}
+.intro-landing .accent {
+  color: #0a8293;
+}
+.intro-landing .lead {
+  margin-top: 22px;
+  font-size: 17px;
+  color: #687d81;
+  letter-spacing: -0.6px;
+}
+.intro-landing .actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 40px;
+}
+.intro-landing .action {
+  height: 62px;
+  min-width: 217px;
+  border-radius: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  transition: transform 0.15s;
+}
+.intro-landing .action svg {
+  width: 21px;
+  height: 21px;
+}
+.intro-landing .action:hover {
+  transform: translateY(-3px);
+}
+.intro-landing .primary {
+  background: #167f81;
+  color: #fff;
+  box-shadow: 0 9px 20px #167f8120;
+}
+.intro-landing .secondary {
+  border: 1px solid #ccdbd7;
+  background: #fff;
+  color: #315b60;
+}
+.intro-landing footer {
+  color: #738584;
+  border-top: 1px solid #e2eae6;
+}
+.intro-landing footer a {
+  color: #496566;
+}
+@media (max-width: 600px) {
+  .intro-landing .hero {
+    min-height: 500px;
+    padding: 44px 0 42px;
+  }
+  .intro-landing .hero-art {
+    width: 52px;
+    height: 52px;
+    border-radius: 17px;
+    margin-bottom: 25px;
+  }
+  .intro-landing h1 {
+    font-size: 38px;
+    line-height: 1.35;
+  }
+  .intro-landing .lead {
+    font-size: 14px;
+    line-height: 1.7;
+    margin-top: 18px;
+  }
+  .intro-landing .actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 11px;
+    margin-top: 30px;
+  }
+  .intro-landing .action {
+    height: 59px;
+    width: 100%;
+    font-size: 15px;
+    border-radius: 14px;
+  }
+  .intro-landing footer {
+    margin-top: 8px;
+  }
+}
+.intro-landing {
+  min-height: 100dvh;
+  background: #f8fbfa;
+  color: #172c39;
+  color-scheme: light;
+  font-family: "Malgun Gothic", "Segoe UI", sans-serif;
+}
+.intro-landing .qr-image img {
+  display: block;
+}
+.intro-landing .hero-art svg,
+.intro-landing .action svg {
+  stroke-width: 1.7;
+}
+@media (max-width: 360px) {
+  .intro-landing .wrap {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .intro-landing .brand {
+    gap: 6px;
+  }
+  .intro-landing .brand > span {
+    font-size: 16px;
+  }
+  .intro-landing h1 {
+    font-size: 33px;
+  }
+  .intro-landing .action {
+    min-width: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-landing .action {
+    transition: none;
+  }
+}
