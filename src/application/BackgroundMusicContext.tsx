@@ -16,7 +16,7 @@ const preferenceKey = "physical_background_music_v1";
 const volumeKey = "physical_background_music_volume_v1";
 const defaultVolume = 0.175;
 // Keep the user's slider/storage value independent of playback output gain.
-const outputGain = 0.5;
+const outputGain = 0.35;
 const loadVolume = () => {
   const saved = readStorage(volumeKey);
   const parsed = saved?.trim() ? Number(saved) : NaN;
