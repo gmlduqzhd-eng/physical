@@ -15,6 +15,9 @@ export const useGameLogic = (roomId?: string) => {
     let active = true;
     let fetching = false;
     let refreshPending = false;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    let cachedTemplate: MissionTemplate | null = null;
+    let templateInvalidated = true;
     setScores([]); setGameRoom(null); setTemplate(null);
     setLoading(Boolean(roomId));
     setError(roomId ? null : '방 정보가 없습니다.');
@@ -39,9 +42,13 @@ export const useGameLogic = (roomId?: string) => {
           }
           let nextTemplate: MissionTemplate | null = null;
           if (room.data.template_id) {
-            const result = await supabase.from('mission_templates').select('*').eq('id', room.data.template_id).maybeSingle();
-            if (result.error) throw new Error('미션 정보를 불러오지 못했습니다. 다시 시도해주세요.');
-            nextTemplate = result.data;
+            if (templateInvalidated || cachedTemplate?.id !== room.data.template_id) {
+              templateInvalidated = false;
+              const result = await supabase.from('mission_templates').select('*').eq('id', room.data.template_id).maybeSingle();
+              if (result.error) { templateInvalidated = true; throw new Error('미션 정보를 불러오지 못했습니다. 다시 시도해주세요.'); }
+              cachedTemplate = result.data;
+            }
+            nextTemplate = cachedTemplate;
           }
           if (!active) return;
           if (!refreshPending) {
@@ -55,25 +62,41 @@ export const useGameLogic = (roomId?: string) => {
         if (active) setLoading(false);
       }
     };
+    // One classroom event is received by every device. Batch bursts without
+    // postponing indefinitely when scores keep arriving during an activity.
+    const scheduleRefresh = () => {
+      if (!active || refreshTimer !== null) return;
+      refreshTimer = window.setTimeout(() => {
+        refreshTimer = null;
+        void fetchData();
+      }, 300);
+    };
     refreshRef.current = fetchData;
     const subscription = supabase.channel(`classroom:${roomId}:${Math.random().toString(36).slice(2)}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: `room_id=eq.${roomId}` }, () => { void fetchData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${roomId}` }, () => { void fetchData(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_templates' }, () => { void fetchData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'room_groups', filter: `room_id=eq.${roomId}` }, scheduleRefresh)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'game_rooms', filter: `id=eq.${roomId}` }, payload => {
+        // Pause/start commands should not wait for the batched score refresh.
+        if (active && payload.eventType === 'UPDATE' && payload.new.id === roomId) {
+          setGameRoom(previous => previous ? { ...previous, ...payload.new } : previous);
+        }
+        scheduleRefresh();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mission_templates' }, () => { templateInvalidated = true; scheduleRefresh(); })
       .subscribe(status => {
         if (status === 'SUBSCRIBED') void fetchData();
         if (active && (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT')) setError('실시간 연결을 복구하고 있습니다.');
       });
     void fetchData();
-    const recover = () => { if (document.visibilityState === 'visible') void fetchData(); };
+    const recover = () => { if (document.visibilityState === 'visible') { templateInvalidated = true; void fetchData(); } };
     window.addEventListener('online', recover);
     document.addEventListener('visibilitychange', recover);
-    const poll = window.setInterval(() => { if (document.visibilityState === 'visible' && navigator.onLine) void fetchData(); }, 15000);
+    const poll = window.setInterval(() => { if (document.visibilityState === 'visible' && navigator.onLine) { templateInvalidated = true; void fetchData(); } }, 15000);
 
     return () => {
       active = false;
       refreshRef.current = null;
       window.clearInterval(poll);
+      if (refreshTimer !== null) window.clearTimeout(refreshTimer);
       window.removeEventListener('online', recover);
       document.removeEventListener('visibilitychange', recover);
       void supabase.removeChannel(subscription);

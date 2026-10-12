@@ -37,7 +37,7 @@ try {
   templates.push(template.id);
   const classroom = await createRoom('Codex UI regression fixture', template.id, ['1모둠', '2모둠']);
   const battle = await createRoom('Codex battle UI regression fixture', null, ['청팀', '백팀']);
-  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
   const teacherContext = await browser.newContext({ viewport: { width: 1280, height: 850 } });
   const studentContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
   await studentContext.addInitScript(() => { Object.defineProperty(window, 'DeviceMotionEvent', { value: undefined, configurable: true }); });
@@ -156,7 +156,13 @@ try {
     };
   });
   const blocked = await blockedContext.newPage();
+  const blockedConsoleErrors = [];
+  blocked.on('console', message => { if (message.type() === 'error') blockedConsoleErrors.push(message.text()); });
   blocked.on('pageerror', error => errors.push(error.message));
+  // Preload this lazy route before going offline when testing the Vite dev server.
+  // Production's service worker precaches game routes; dev has no such cache.
+  await blocked.goto(base + '/play/stopwatch');
+  await blocked.getByRole('button', { name: /표준 기록/ }).waitFor();
   await blocked.goto(base + '/hub');
   await blocked.getByRole('searchbox').waitFor();
   await blocked.evaluate(path => { history.pushState({}, '', path); window.dispatchEvent(new PopStateEvent('popstate')); }, '/mobile/' + classroom.room.id + '/' + group2.id);
@@ -169,7 +175,8 @@ try {
   await blocked.getByRole('searchbox').waitFor();
   await blockedContext.setOffline(false);
   await blocked.evaluate(() => { history.pushState({}, '', '/play/stopwatch'); window.dispatchEvent(new PopStateEvent('popstate')); });
-  await blocked.getByRole('button', { name: /보통/ }).waitFor();
+  try { await blocked.getByRole('button', { name: /표준 기록/ }).waitFor(); }
+  catch (error) { console.log(JSON.stringify({stage:'blocked storage route recovery',url:blocked.url(),text:(await blocked.locator('body').innerText()).slice(0,1000),errors,blockedConsoleErrors:blockedConsoleErrors.map(text=>text.replace(/apikey=[^&\s'"<>]+/g,'apikey=[redacted]').replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,'[redacted]'))}));throw error; }
   await until(async () => await score(group2.id) === beforeBlocked + 10, 'denied storage queue survives route change');
   checks.push('Denied persistent storage shows warning and retains pending score through SPA routes until reconnect');
   await blockedContext.close();
@@ -179,11 +186,11 @@ try {
   await until(async () => must(await db.from('game_rooms').select('status').eq('id', classroom.room.id).single()).status === 'boss_raid', 'remote started raid');
   // Keep this own-fixture raid brief while exercising the real remote and tap UI.
   must(await db.from('game_rooms').update({ boss_hp: 6, boss_max_hp: 6 }).eq('id', classroom.room.id));
-  await student.getByRole('heading', { name: '보스 레이드 발동!', exact: true }).waitFor();
-  for (let index = 0; index < 6; index++) await student.getByRole('heading', { name: '보스 레이드 발동!', exact: true }).click();
+  await student.getByRole('heading', { name: '체육관 거대 보스 레이드', exact: true }).waitFor();
+  for (let index = 0; index < 6; index++) await student.getByRole('button', { name: '직접 타격! (-1)', exact: true }).click();
   await until(async () => must(await db.from('game_rooms').select('status').eq('id', classroom.room.id).single()).status === 'playing', 'remote-only boss completed');
   for (let index = 0; index < classroom.groups.length; index++) assert.equal(await score(classroom.groups[index].id), beforeRaid[index] + 2000);
-  await until(async () => await student.getByRole('heading', { name: '보스 레이드 발동!', exact: true }).count() === 0, 'raid overlay dismissed');
+  await until(async () => await student.getByRole('heading', { name: '체육관 거대 보스 레이드', exact: true }).count() === 0, 'raid overlay dismissed');
   checks.push('Remote-only teacher control and six mobile taps finish the boss on the server; every group receives 2000 exactly once');
 
   const battleA = await teacherContext.newPage(); const battleB = await studentContext.newPage();
@@ -195,14 +202,18 @@ try {
     await page.getByText('#' + battle.room.pin_code, { exact: true }).waitFor();
   }
   await until(async () => (await battleA.locator('body').textContent()).includes('2명 참가중'), 'two remote battle participants');
+  await battleA.bringToFront();
   await battleA.getByRole('button', { name: /반응속도 \(결과 점수 반영\)/ }).click();
   await battleA.waitForURL('**/play/reaction?**');
   assert.equal(await score(battle.groups.find(group => group.group_name === '청팀').id), 0);
-  await battleA.getByRole('button', { name: /보통/ }).click();
+  await battleA.getByRole('button', { name: /표준 기록/ }).click();
+  const skipPreparation = battleA.getByRole('button', {name: /준비 완료/});
+  if (await skipPreparation.count()) await skipPreparation.click();
+  else await battleA.getByRole('button', {name: /활동 시작하기/}).click();
   await battleA.getByText('화면을 터치하면 시작됩니다', { exact: true }).waitFor({ timeout: 10000 });
   await battleA.getByText('화면을 터치하면 시작됩니다', { exact: true }).click();
   await battleA.getByRole('heading', { name: '지금!', exact: true }).waitFor({ timeout: 8000 });
-  await battleA.getByRole('heading', { name: '지금!', exact: true }).click();
+  await battleA.getByRole('heading', { name: '지금!', exact: true }).click({force:true});
   await battleA.getByRole('button', { name: /다시 하기/ }).waitFor();
   const blue = battle.groups.find(group => group.group_name === '청팀');
   await until(async () => await score(blue.id) > 0, 'actual battle result saved');

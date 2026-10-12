@@ -45,9 +45,20 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
         <span>{sharing ? "공유 중" : "링크 공유"}</span>
       </button>
       <div className="share-feedback" role="status">
+        {shareStatus && <button type="button" className="share-dismiss" aria-label="공유 안내 닫기" onClick={() => { setShareStatus(""); setManualCopy(false); }}>닫기</button>}
         {shareStatus && <p>{shareStatus}</p>}
         {manualCopy && (
-          <input aria-label="공유할 링크" readOnly value={shareUrl} onFocus={(event) => event.currentTarget.select()} />
+          <input aria-label="공유할 링크" readOnly value={shareUrl}
+            onFocus={(event) => event.currentTarget.select()}
+            onTouchEnd={(event) => {
+              event.preventDefault();
+              event.currentTarget.focus();
+              event.currentTarget.setSelectionRange(0, event.currentTarget.value.length);
+            }}
+            onClick={(event) => {
+              event.currentTarget.focus();
+              event.currentTarget.setSelectionRange(0, event.currentTarget.value.length);
+            }} />
         )}
       </div>
     </div>
