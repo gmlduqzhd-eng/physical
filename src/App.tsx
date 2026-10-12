@@ -4,6 +4,7 @@ import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
 import { TeacherAuthGuard } from './presentation/components/TeacherAuthGuard';
+import { BackgroundMusicProvider } from './application/BackgroundMusicContext';
 
 const ScoreBoard = lazy(() => import('./presentation/ScoreBoard').then(m => ({ default: m.ScoreBoard })));
 const MobileMissionView = lazy(() => import('./presentation/MobileMissionView').then(m => ({ default: m.MobileMissionView })));
@@ -29,6 +30,7 @@ function App() {
   return (
     <ThemeProvider>
     <BrowserRouter>
+      <BackgroundMusicProvider>
       <KakaoInAppNotice />
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
       <Routes>
@@ -52,6 +54,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
+      </BackgroundMusicProvider>
     </BrowserRouter>
     </ThemeProvider>
   );

@@ -1,5 +1,7 @@
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useBackgroundMusic } from '../application/BackgroundMusicContext';
+import { BackgroundMusicButton } from './components/BackgroundMusicButton';
 import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
@@ -81,6 +83,10 @@ export const GameHub = () => {
   const [showMotionCam, setShowMotionCam] = useState(false);
   const [showBadgeArchive, setShowBadgeArchive] = useState(false);
   const [showCooldownModal, setShowCooldownModal] = useState(false);
+  const { suppress } = useBackgroundMusic();
+  const activityOpen = showWarmupRoulette || showTamagotchiModal || showMbtiModal || showSplitBattle || showClassPlaylist || showStationCircuit || showQuickPin || showMotionCam || showCooldownModal;
+  useLayoutEffect(() => { suppress(activityOpen); }, [activityOpen, suppress]);
+  useLayoutEffect(() => () => suppress(false), [suppress]);
 
   const openThemeMode = (id: ThemeModeId) => {
     const open: Record<ThemeModeId, () => void> = {
@@ -241,6 +247,7 @@ export const GameHub = () => {
 
           {/* 우측 상단 액션 버튼들 */}
           <div className="flex flex-wrap items-center gap-1.5">
+            <BackgroundMusicButton />
             <button
               type="button"
               onClick={() => accessQrDialog.current?.open()}
