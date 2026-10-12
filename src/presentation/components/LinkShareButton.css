@@ -1,0 +1,22 @@
+.share-control { position: relative; }
+.hub-header-actions .share-trigger { min-height:44px; white-space:nowrap; }
+.hub-header-actions .share-trigger svg { width:16px; height:16px; }
+.hub-header-actions .share-trigger:disabled { opacity:.65; cursor:wait; }
+.hub-header-actions .share-feedback:not(:empty) {
+  position:absolute; right:0; top:calc(100% + 10px); z-index:30;
+  width:min(260px,calc(100vw - 32px)); padding:12px; border:1px solid #475569;
+  border-radius:10px; background:#0f172a; color:#e2e8f0;
+  box-shadow:0 5px 20px #0003; font-size:12px; line-height:1.6;
+}
+.hub-header-actions .share-feedback input {
+  width:100%; margin-top:8px; padding:8px; border:1px solid #475569;
+  border-radius:5px; font:inherit; background:#1e293b; color:#e2e8f0;
+}
+html:not(.dark) .hub-header-actions .share-feedback:not(:empty),
+html:not(.dark) .hub-header-actions .share-feedback input {
+  background:#fff; color:#334155; border-color:#cbd5e1;
+}
+.hub-qr-share { display:flex; align-items:center; gap:6px; }
+@media (max-width:640px) {
+  .hub-header-actions .share-feedback:not(:empty) { width:180px; }
+}
