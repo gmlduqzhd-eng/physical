@@ -556,3 +556,27 @@
   }
   .intro-landing .shell .header .background-music-controls { grid-row: 3; }
 }
+
+/* A consistent toolbar for sharing and music, including small phone screens. */
+.intro-landing .shell .header .header-actions { gap:10px; }
+.intro-landing .shell .header .access-actions { gap:8px; }
+.intro-landing .shell .header .qr-trigger {
+  height:44px; min-height:44px; padding:0 13px; border-radius:24px;
+  flex-direction:row; gap:7px; color:#24584c; background:#fff;
+  border-color:#bacfc7; box-shadow:none; white-space:nowrap;
+}
+.intro-landing .shell .header .qr-trigger img { width:24px; height:24px; }
+.intro-landing .shell .header .qr-trigger b { display:block; font-size:13px; }
+.intro-landing .shell .header .qr-trigger small,
+.intro-landing .shell .header .qr-trigger em { display:none; }
+.intro-landing .shell .header .share-trigger { border-radius:24px; height:44px; }
+@media (max-width:700px) {
+  .intro-landing .shell .header { row-gap:16px; }
+  .intro-landing .shell .header .header-actions {
+    display:flex; grid-column:1 / -1; grid-row:2; flex-wrap:wrap;
+    align-items:center; gap:10px; width:100%;
+  }
+  .intro-landing .shell .header .access-actions { order:1; }
+  .intro-landing .shell .header .background-music-controls { order:2; }
+  .intro-landing .share-feedback:not(:empty) { width:180px; }
+}
