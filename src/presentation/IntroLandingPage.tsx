@@ -75,10 +75,10 @@ export function IntroLandingPage() {
             </p>
             <div className="actions">
               <Link className="action primary" to="/hub">
-                자료 둘러보기 <ArrowRight aria-hidden="true" />
+                원정 시작하기 <ArrowRight aria-hidden="true" />
               </Link>
               <Link className="action secondary" to="/lobby">
-                수업에 참여하기
+                개설방 입장하기
               </Link>
             </div>
           </section>
