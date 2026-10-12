@@ -54,6 +54,7 @@ const base = process.env.AUDIT_URL || 'http://127.0.0.1:5173';
  await page.keyboard.press('Escape');
  assert.equal(await page.getByRole('dialog').count(),0);
  passed.push('320px roulette fits and closes with Escape');
+ await page.getByRole('button',{name:'⚡ 특별 활동',exact:true}).click();
  await page.getByRole('button',{name:/2인.*배틀/}).first().click();
  await page.getByRole('dialog',{name:'2인 화면분할 배틀'}).waitFor();
  await page.getByRole('button',{name:/25회 스피드/}).click();

@@ -65,13 +65,14 @@ const MODES: ThemeMode[] = [
 interface ThemeZoneProps {
   onSelect: (id: ThemeModeId) => void;
   onOpenBadgeArchive: () => void;
+  groupFilter?: 'activities' | 'teacher';
 }
 
-export const ThemeZone = ({ onSelect, onOpenBadgeArchive }: ThemeZoneProps) => (
+export const ThemeZone = ({ onSelect, onOpenBadgeArchive, groupFilter }: ThemeZoneProps) => (
   <section className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-1" aria-labelledby="theme-zone-title">
     <div className="flex items-center justify-between mb-3">
       <h2 id="theme-zone-title" className="text-sm sm:text-base font-black text-white flex items-center gap-1.5 whitespace-nowrap">
-        ⚡ 신나는 스마트 체육 특별 테마존
+        {groupFilter === 'teacher' ? '🧑‍🏫 선생님 도구' : '⚡ 신나는 스마트 체육 특별 테마존'}
       </h2>
       <button
         id="theme-zone-badge-archive"
@@ -83,7 +84,7 @@ export const ThemeZone = ({ onSelect, onOpenBadgeArchive }: ThemeZoneProps) => (
     </div>
 
     <div className="flex flex-col gap-4">
-      {GROUPS.map(group => (
+      {GROUPS.filter(group => !groupFilter || (groupFilter === 'teacher' ? group.id === 'teacher' : group.id !== 'teacher')).map(group => (
         <ThemeGroupRow key={group.id} group={group} modes={MODES.filter(m => m.group === group.id)} onSelect={onSelect} />
       ))}
     </div>
