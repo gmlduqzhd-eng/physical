@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ChevronRight, Filter, BookOpen, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
+import { Sparkles, ChevronRight, Filter, BookOpen, Home, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { useVoiceCoach } from '../application/useVoiceCoach';
@@ -237,7 +237,7 @@ export const GameHub = () => {
           </div>
 
           {/* 우측 상단 액션 버튼들 */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               onClick={() => navigate('/')}
               className="h-9 px-2.5 sm:px-3.5 rounded-full flex items-center justify-center gap-1.5 transition-all hover:scale-105 active:scale-95 border shadow-md text-xs font-bold whitespace-nowrap"
@@ -246,10 +246,10 @@ export const GameHub = () => {
                 borderColor: isDark ? 'rgba(51, 65, 85, 0.6)' : 'rgba(203, 213, 225, 0.8)',
                 color: isDark ? '#f8fafc' : '#334155',
               }}
-              title="서비스 소개 페이지로 이동"
+              title="메인 화면으로 이동"
             >
-              <span>💦</span>
-              <span className="hidden sm:inline">소개 보기</span>
+              <Home className="w-3.5 h-3.5 shrink-0" />
+              <span>메인 화면</span>
             </button>
             <button
               onClick={() => navigate('/manual')}
