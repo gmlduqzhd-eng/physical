@@ -49,7 +49,7 @@ export function IntroLandingPage() {
             >
               <img src={accessQr} alt="접속 QR" width={111} height={111} />
               <span>
-                <b>모바일로 접속하기</b>
+                <b>접속 QR</b>
                 <small>카메라로 QR을 스캔하세요.</small>
                 <em>
                   크게 보기 <ArrowRight aria-hidden="true" />
