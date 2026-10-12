@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import accessQr from '../assets/access-qr.svg?inline';
 import { useNavigate } from 'react-router-dom';
 import {
   Sparkles,
@@ -357,6 +358,22 @@ export const IntroLandingPage = () => {
           </div>
         </div>
       </header>
+
+      <section aria-label="접속 QR" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 flex justify-end">
+        <a
+          href={accessQr}
+          download="땀방울-원정대-접속-QR.svg"
+          aria-label="땀방울 원정대 접속 QR 이미지 저장"
+          className={`flex items-center gap-3 rounded-2xl border p-2 pr-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-500 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200'}`}
+        >
+          <img src={accessQr} alt="https://physical-pi.vercel.app/ 접속 QR 코드" width={148} height={148} className="w-[111px] h-[111px] sm:w-[148px] sm:h-[148px] bg-white rounded-lg shrink-0" />
+          <span className="flex flex-col gap-1">
+            <span className="font-bold text-sm">접속 QR</span>
+            <span className={`text-xs leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>스마트폰 카메라로<br />스캔해 주세요.</span>
+            <span className="text-xs text-cyan-600 dark:text-cyan-400 mt-1">QR 이미지 저장 ↓</span>
+          </span>
+        </a>
+      </section>
 
       {/* 🚀 2. 통합 히어로 섹션 (좌측: 3대 퀵 액션 + 우측: 공식 소개 영상) */}
       <section className="relative overflow-hidden pt-8 pb-12 md:pt-12 md:pb-16">
