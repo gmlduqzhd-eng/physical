@@ -1,0 +1,54 @@
+.background-music-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 18px;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  background: #e8f2ee;
+  border: 1px solid #bacfc7;
+  color: #24584c;
+}
+.background-music-button svg {
+  width: 15px;
+  height: 15px;
+}
+.background-music-button[aria-pressed="false"] {
+  opacity: 0.75;
+}
+.background-music-button:focus-visible {
+  outline: 3px solid #13aa99;
+  outline-offset: 3px;
+}
+.dark .background-music-button {
+  background: #1e293b;
+  border-color: #475569;
+  color: #a7f3d0;
+}
+.intro-landing .background-music-button {
+  background: #e8f2ee;
+  border-color: #bacfc7;
+  color: #24584c;
+}
+.intro-landing .header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+@media (max-width: 700px) {
+  .intro-landing .header-actions {
+    flex-direction: column-reverse;
+    gap: 6px;
+  }
+  .intro-landing .background-music-button {
+    height: 30px;
+    font-size: 10px;
+    padding: 0 8px;
+  }
+}

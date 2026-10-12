@@ -5,6 +5,7 @@ import { GAMES } from "../domain/gamesData";
 import accessQr from "../assets/access-qr.svg?inline";
 import brandLogo from "../assets/brand-logo.png";
 import "./IntroLandingPage.css";
+import { BackgroundMusicButton } from "./components/BackgroundMusicButton";
 import {
   AccessQrDialog,
   type AccessQrDialogHandle,
@@ -34,23 +35,26 @@ export function IntroLandingPage() {
               땀방울 원정대<small>PHYSICAL EDUCATION</small>
             </span>
           </Link>
-          <button
-            className="qr-trigger"
-            type="button"
-            aria-haspopup="dialog"
-            aria-controls="access-qr-dialog"
-            aria-label="접속 QR 크게 보기"
-            onClick={() => accessQrDialog.current?.open()}
-          >
-            <img src={accessQr} alt="접속 QR" width={111} height={111} />
-            <span>
-              <b>모바일로 접속하기</b>
-              <small>카메라로 QR을 스캔하세요.</small>
-              <em>
-                크게 보기 <ArrowRight aria-hidden="true" />
-              </em>
-            </span>
-          </button>
+          <div className="header-actions">
+            <BackgroundMusicButton />
+            <button
+              className="qr-trigger"
+              type="button"
+              aria-haspopup="dialog"
+              aria-controls="access-qr-dialog"
+              aria-label="접속 QR 크게 보기"
+              onClick={() => accessQrDialog.current?.open()}
+            >
+              <img src={accessQr} alt="접속 QR" width={111} height={111} />
+              <span>
+                <b>모바일로 접속하기</b>
+                <small>카메라로 QR을 스캔하세요.</small>
+                <em>
+                  크게 보기 <ArrowRight aria-hidden="true" />
+                </em>
+              </span>
+            </button>
+          </div>
         </header>
         <main className="hero">
           <section className="hero-copy">
