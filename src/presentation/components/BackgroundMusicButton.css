@@ -59,22 +59,22 @@
 }
 @media(prefers-reduced-motion:reduce) { .background-music-switch-knob { transition:none; } }
 
-/* Keep the hub player at the same height as its neighboring toolbar buttons. */
-.hub-header .background-music-controls {
+/* Keep both music players at the same height as its neighboring toolbar buttons. */
+:is(.hub-header, .intro-landing) .background-music-controls {
   width:244px; height:44px; padding:0 10px;
   flex-direction:row; gap:8px; border-radius:24px; box-shadow:none;
 }
-.hub-header .background-music-heading { display:contents; }
-.hub-header .background-music-title { gap:5px; flex-shrink:0; }
-.hub-header .background-music-icon { padding:0; background:transparent; border-radius:0; }
-.hub-header .background-music-icon svg { width:16px; height:16px; }
-.hub-header .background-music-title strong { font-size:11px; white-space:nowrap; }
-.hub-header .background-music-title small { display:none; }
-.hub-header .background-music-button { width:32px; min-width:32px; }
-.hub-header .background-music-button::before { width:32px; height:18px; }
-.hub-header .background-music-switch-knob { width:14px; height:14px; left:17px; }
-.hub-header .background-music-button[aria-pressed=false] .background-music-switch-knob { left:2px; }
-.hub-header .background-music-volume { min-width:0; flex:1; gap:6px; font-size:10px; }
-.hub-header .background-music-volume>svg { display:none; }
-.hub-header .background-music-percent { min-width:35px; }
-.dark .hub-header .background-music-icon { background:transparent; }
+:is(.hub-header, .intro-landing) .background-music-heading { display:contents; }
+:is(.hub-header, .intro-landing) .background-music-title { gap:5px; flex-shrink:0; }
+:is(.hub-header, .intro-landing) .background-music-icon { padding:0; background:transparent; border-radius:0; }
+:is(.hub-header, .intro-landing) .background-music-icon svg { width:16px; height:16px; }
+:is(.hub-header, .intro-landing) .background-music-title strong { font-size:11px; white-space:nowrap; }
+:is(.hub-header, .intro-landing) .background-music-title small { display:none; }
+:is(.hub-header, .intro-landing) .background-music-button { width:32px; min-width:32px; }
+:is(.hub-header, .intro-landing) .background-music-button::before { width:32px; height:18px; }
+:is(.hub-header, .intro-landing) .background-music-switch-knob { width:14px; height:14px; left:17px; }
+:is(.hub-header, .intro-landing) .background-music-button[aria-pressed=false] .background-music-switch-knob { left:2px; }
+:is(.hub-header, .intro-landing) .background-music-volume { min-width:0; flex:1; gap:6px; font-size:10px; }
+:is(.hub-header, .intro-landing) .background-music-volume>svg { display:none; }
+:is(.hub-header, .intro-landing) .background-music-percent { min-width:35px; }
+.dark :is(.hub-header, .intro-landing) .background-music-icon { background:transparent; }
