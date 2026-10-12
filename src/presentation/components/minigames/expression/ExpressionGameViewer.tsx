@@ -1,16 +1,19 @@
 import { EXPRESSION_GAMES } from './expressionGamesData';
+import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 import { ExpressionActivityLayout } from '../common/ExpressionActivityLayout';
 
 interface ExpressionGameViewerProps {
   gameType: string;
-  onComplete: (score: number, meta?: any) => void;
+  onComplete: (score: number, meta?: GameResultDetails) => void;
   onExit?: () => void;
+  prepared?: boolean;
 }
 
 export const ExpressionGameViewer = ({
   gameType,
   onComplete,
   onExit,
+  prepared,
 }: ExpressionGameViewerProps) => {
   const gameData = EXPRESSION_GAMES.find(g => g.id === gameType);
 
@@ -27,6 +30,7 @@ export const ExpressionGameViewer = ({
       game={gameData}
       onComplete={onComplete}
       onExit={onExit}
+      prepared={prepared}
     />
   );
 };

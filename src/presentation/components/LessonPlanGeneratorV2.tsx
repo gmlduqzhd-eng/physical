@@ -350,7 +350,7 @@ function generateEvaluation(domain: string, _gameName: string, isLow: boolean, _
 function generateLevelAdjust(game: LessonGameMeta | undefined, _domain: string): GeneratedPlan['levelAdjust'] {
   return {
     needHelp: [
-      game ? `「${game.title}」의 난이도를 '쉬움'으로 설정하고, 제한 시간을 1.5배로 늘린다.` : '활동 범위를 절반으로 줄이고 성공 기준을 완화한다.',
+      game ? `「${game.title}」을 '기본 연습' 배율로 시작하고, 교사가 활동 속도를 낮추거나 수행 기준을 완화한다.` : '활동 범위를 절반으로 줄이고 성공 기준을 완화한다.',
       '교사 또는 또래 도우미가 옆에서 함께 활동한다.',
     ],
     general: [
@@ -358,7 +358,7 @@ function generateLevelAdjust(game: LessonGameMeta | undefined, _domain: string):
       '짝 또는 모둠에서 자신의 역할을 수행한다.',
     ],
     challenge: [
-      game ? `「${game.title}」의 난이도를 '도전'으로 설정하고, 비우세 손/발을 사용한다.` : '활동 범위를 확대하고 추가 전략 조건을 부여한다.',
+      game ? `「${game.title}」을 '도전 기록' 배율로 시작하고, 교사가 비우세 손/발 사용 등 추가 수행 조건을 안내한다.` : '활동 범위를 확대하고 추가 전략 조건을 부여한다.',
       '모둠 리더 역할을 맡아 친구들을 이끈다.',
     ],
   };

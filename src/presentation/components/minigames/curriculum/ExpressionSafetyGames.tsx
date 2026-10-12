@@ -3,6 +3,7 @@ import { useGameTimeouts } from '../common/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
 import { GameResultOverlay } from './GameResultOverlay';
+import { RotationTracker } from '../common/rotationTracker';
 
 interface GameProps {
   groupId: string;
@@ -20,11 +21,15 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction:
   const [heartHealth, setHeartHealth] = useState(20);
   const [finished, setFinished] = useState(false);
   const pressHistory = useRef<number[]>([]);
+  const validCount = useRef(0);
+  const [tempoFeedback, setTempoFeedback] = useState('첫 압박으로 박자를 시작하세요.');
   const TARGET_COUNT = 30;
 
   const handleRestart = () => {
     resetScoreSubmission();
     pressHistory.current = [];
+    validCount.current = 0;
+    setTempoFeedback('첫 압박으로 박자를 시작하세요.');
     setCompressions(0);
     setBpm(110);
     setHeartHealth(20);
@@ -39,15 +44,24 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction:
     pressHistory.current.push(now);
     if (pressHistory.current.length > 5) pressHistory.current.shift();
 
-    if (pressHistory.current.length >= 2) {
-      const diff = now - pressHistory.current[pressHistory.current.length - 2];
-      const curBpm = Math.min(180, Math.max(60, Math.round(60000 / diff)));
-      setBpm(curBpm);
+    if (pressHistory.current.length < 2) {
+      setTempoFeedback('박자를 시작했어요. 약 0.5~0.6초 간격으로 이어가세요.');
+      return;
     }
-
-    const nextCount = compressions + 1;
+    const interval = now - pressHistory.current[pressHistory.current.length - 2];
+    const curBpm = Math.min(180, Math.max(60, Math.round(60000 / Math.max(1, interval))));
+    setBpm(curBpm);
+    if (interval < 500 || interval > 600) {
+      validCount.current = 0;
+      setCompressions(0);
+      setHeartHealth(20);
+      setTempoFeedback(interval < 500 ? '너무 빨라요. 천천히 일정한 박자로 다시 시작하세요.' : '박자가 끊겼어요. 일정한 박자로 다시 시작하세요.');
+      return;
+    }
+    const nextCount = ++validCount.current;
     setCompressions(nextCount);
-    setHeartHealth(h => Math.min(100, h + 3));
+    setHeartHealth(Math.min(100, 20 + nextCount * 3));
+    setTempoFeedback('좋아요! 일정한 속도로 30회 연속 이어가세요.');
 
     if (nextCount >= TARGET_COUNT) {
       setFinished(true);
@@ -66,7 +80,7 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction:
   return (
     <div className="min-h-[100dvh] bg-red-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <div className="flex justify-between w-full max-w-sm mb-4">
-        <div><span className="text-red-300 text-xs font-bold">압박 횟수</span><div className="text-2xl font-black">{compressions} / {TARGET_COUNT}회</div></div>
+        <div><span className="text-red-300 text-xs font-bold">유효 연속 압박</span><div className="text-2xl font-black">{compressions} / {TARGET_COUNT}회</div></div>
         <div className="text-right"><span className="text-red-300 text-xs font-bold">압박 템포</span><div className={`text-2xl font-black font-mono ${isBpmGood ? 'text-emerald-400' : 'text-amber-400'}`}>{bpm} BPM</div></div>
       </div>
 
@@ -92,10 +106,11 @@ export const CprCompression110: React.FC<GameProps> = ({ groupId, enqueueAction:
         👐 깍지 끼고 강하게 압박!
       </button>
 
+      <p role="status" className="mt-3 text-center text-sm text-red-200">{tempoFeedback}</p>
       {finished && (
         <GameResultOverlay
-          title="🎉 골든타임 생명 구조 성공!"
-          subtitle="가슴 압박 30회를 100~120 BPM 템포로 완수하여 소중한 생명을 살렸습니다."
+          title="🎉 CPR 박자 연습 완료!"
+          subtitle="화면에서 100~120 BPM 템포의 연속 압박 연습을 완료했습니다."
           score={500}
           badge="골든타임 CPR 구조대원"
           onRestart={handleRestart}
@@ -626,9 +641,10 @@ export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueActio
       </p>
 
       <div className="relative w-64 h-64 bg-slate-900 border-4 border-amber-500/60 rounded-3xl flex items-center justify-center mb-6 shadow-2xl overflow-hidden">
-        <div className="text-8xl opacity-30 text-amber-300 pointer-events-none">
-          🤸
-        </div>
+        <svg viewBox="0 0 100 100" className="absolute w-44 h-44 pointer-events-none" aria-label="목표 자세: 팔 90도, 다리 40도">
+          <circle cx="50" cy="25" r="9" fill="none" stroke="#FBBF24" strokeWidth="2" />
+          <path d="M50 34 L50 65 M50 42 L50 7 M50 65 L76.8 87.5" fill="none" stroke="#FBBF24" strokeWidth="11" strokeDasharray="3 2" opacity="0.7" />
+        </svg>
 
         <svg viewBox="0 0 100 100" className="absolute w-44 h-44">
           <circle cx="50" cy="25" r="9" fill="#38BDF8" />
@@ -640,11 +656,11 @@ export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueActio
 
       <div className="w-full max-w-xs flex flex-col gap-3 mb-6">
         <div>
-          <span className="text-xs font-bold text-rose-400">팔 선 각도 조절</span>
+          <span className="text-xs font-bold text-rose-400">팔 선 각도: {armAngle}° · 목표 90°</span>
           <input type="range" min="0" max="180" value={armAngle} onChange={e => setArmAngle(Number(e.target.value))} className="w-full accent-rose-500" />
         </div>
         <div>
-          <span className="text-xs font-bold text-emerald-400">다리 선 각도 조절</span>
+          <span className="text-xs font-bold text-emerald-400">다리 선 각도: {legAngle}° · 목표 40°</span>
           <input type="range" min="10" max="90" value={legAngle} onChange={e => setLegAngle(Number(e.target.value))} className="w-full accent-emerald-500" />
         </div>
       </div>
@@ -656,7 +672,7 @@ export const ShadowPoseSculpture: React.FC<GameProps> = ({ groupId, enqueueActio
           isMatched ? 'bg-amber-400 text-amber-950 shadow-2xl animate-bounce' : 'bg-slate-800 text-slate-500'
         }`}
       >
-        {isMatched ? '✨ 실루엣 95% 일치! 완성!' : '실루엣과 일치하도록 맞추세요'}
+        {isMatched ? '✨ 목표 자세 일치! 완성!' : '실루엣과 일치하도록 맞추세요'}
       </button>
 
       {finished && (
@@ -681,41 +697,37 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: 
   const [trailCount, setTrailCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const isTracing = useRef(false);
-  const TARGET_TRAIL = 20;
+  const TARGET_TRAIL = 3;
+  const rotation = useRef(new RotationTracker());
 
   const handleRestart = () => {
     resetScoreSubmission();
     setTrailCount(0);
+    rotation.current.reset();
     setFinished(false);
   };
 
-  const handlePointerMove = () => {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isTracing.current || finished) return;
-    setTrailCount(c => {
-      const next = c + 1;
-      if (next >= TARGET_TRAIL) {
-        setFinished(true);
-        sfxSuccess();
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: 500 },
-          timestamp: Date.now()
-        });
-      }
-      return next;
-    });
+    const rect = e.currentTarget.getBoundingClientRect();
+    const next = rotation.current.move(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+    setTrailCount(Math.min(TARGET_TRAIL, next));
+    if (next >= TARGET_TRAIL) {
+      setFinished(true);
+      sfxSuccess();
+      enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+    }
   };
 
   return (
     <div className="min-h-[100dvh] bg-purple-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <h1 className="text-2xl font-black mb-1">🌊 리듬체조 리본 나선 궤적</h1>
       <p className="text-xs text-purple-200 mb-6 text-center max-w-xs">
-        손가락을 멈추지 않고 연속으로 둥글게 나선형을 그리며 리본 파동을 만드세요!
+        바깥 궤적을 따라 같은 방향으로 원을 3바퀴 그려 리본 파동을 만드세요!
       </p>
 
       <div
-        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isTracing.current = true; sfxTap(); }}
+        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isTracing.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
         onPointerCancel={() => { isTracing.current = false; }}
         onPointerUp={() => { isTracing.current = false; }}
         onPointerMove={handlePointerMove}
@@ -723,7 +735,7 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: 
       >
         <span className="text-6xl mb-2 animate-spin-slow">🎀</span>
         <span className="text-xs font-bold text-pink-300">손가락으로 둥글게 원을 계속 회전하세요!</span>
-        <span className="text-2xl font-black text-amber-300 font-mono mt-2">{trailCount} / {TARGET_TRAIL} 파동</span>
+        <span className="text-2xl font-black text-amber-300 font-mono mt-2">{trailCount.toFixed(1)} / {TARGET_TRAIL} 바퀴</span>
       </div>
 
       {finished && (

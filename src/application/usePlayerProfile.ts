@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { isRecord, nonnegativeNumber, readJsonStorage, removeStorage, writeStorage } from './browserStorage';
 
 export interface GameRecord {
@@ -7,6 +8,7 @@ export interface GameRecord {
   score: number;
   playedAt: number; // timestamp
   difficulty?: string;
+  details?: GameResultDetails;
   rpe?: number; // 운동 자각도 1~5 (1=너무 쉬움, 5=너무 힘듦)
 }
 
@@ -34,6 +36,7 @@ export const normalizePlayerProfile = (value: unknown): PlayerProfile | null => 
   ).slice(0, 20).map(record => ({
     gameType: record.gameType as string, gameName: record.gameName as string,
     score: record.score as number, playedAt: record.playedAt as number,
+    details: normalizeGameResultDetails(record.details),
     difficulty: typeof record.difficulty === 'string' ? record.difficulty : undefined,
     rpe: typeof record.rpe === 'number' && Number.isInteger(record.rpe) && record.rpe >= 1 && record.rpe <= 5 ? record.rpe : undefined,
   })) : [];
@@ -80,7 +83,7 @@ export const usePlayerProfile = () => {
     });
   }, []);
 
-  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number) => {
+  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number, details?: GameResultDetails) => {
     if (!Number.isFinite(score) || score < 0 || !gameType) return;
     setProfile(prev => {
       const current = prev || {
@@ -93,7 +96,7 @@ export const usePlayerProfile = () => {
         createdAt: Date.now(),
       };
 
-      const record: GameRecord = { gameType, gameName, score, playedAt: Date.now(), difficulty, rpe: rpe && rpe >= 1 && rpe <= 5 ? rpe : undefined };
+      const record: GameRecord = { details: normalizeGameResultDetails(details), gameType, gameName, score, playedAt: Date.now(), difficulty, rpe: rpe && rpe >= 1 && rpe <= 5 ? rpe : undefined };
       const newHighScores = { ...current.highScores };
       if (!newHighScores[gameType] || score > newHighScores[gameType]) {
         newHighScores[gameType] = score;

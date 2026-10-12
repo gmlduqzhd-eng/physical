@@ -44,7 +44,7 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
     const handler = (e: DeviceMotionEvent) => {
       if (cooldown.current || finished) return;
       const acc = e.accelerationIncludingGravity || e.acceleration;
-      if (!acc) return;
+      if (!acc || ![acc.x, acc.y, acc.z].every(value => typeof value === 'number' && Number.isFinite(value))) return;
 
       const x = acc.x ?? 0;
       const y = acc.y ?? 0;

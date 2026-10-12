@@ -3,6 +3,7 @@ import { useGameTimeouts } from '../common/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess, sfxPop, sfxTap, hapticTap } from '../../../../application/soundEffects';
 import { GameResultOverlay } from './GameResultOverlay';
+import { RotationTracker } from '../common/rotationTracker';
 
 interface GameProps {
   groupId: string;
@@ -356,10 +357,12 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
   const [finished, setFinished] = useState(false);
   const [currentAngle, setCurrentAngle] = useState(0);
   const isDragging = useRef(false);
+  const rotation = useRef(new RotationTracker());
 
   const handleRestart = () => {
     resetScoreSubmission();
     setProgress(0);
+    rotation.current.reset();
     setCurrentAngle(0);
     setFinished(false);
   };
@@ -373,21 +376,13 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
     const normalized = (angle + 360) % 360;
     setCurrentAngle(normalized);
 
-    setProgress(p => {
-      const next = p + 2.5;
-      if (next >= 100) {
-        setFinished(true);
-        sfxSuccess();
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: 500 },
-          timestamp: Date.now()
-        });
-        return 100;
-      }
-      return next;
-    });
+    const next = Math.min(100, rotation.current.move(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height) / 3 * 100);
+    setProgress(next);
+    if (next >= 100) {
+      setFinished(true);
+      sfxSuccess();
+      enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+    }
   };
 
   return (
@@ -398,7 +393,7 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
       </p>
 
       <div
-        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isDragging.current = true; sfxTap(); }}
+        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isDragging.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
         onPointerCancel={() => { isDragging.current = false; }}
         onPointerUp={() => { isDragging.current = false; }}
         onPointerMove={handlePointerMove}
@@ -922,7 +917,13 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction: q
   useEffect(() => {
     if (finished) return;
     const timer = setInterval(() => {
-      if (isTargetZoneRef.current && !finishedRef.current) {
+      const lastTap = tapTimes.current.at(-1);
+      if (!lastTap || Date.now() - lastTap > 800 || !isTargetZoneRef.current) {
+        setInTargetSec(0);
+        if (lastTap && Date.now() - lastTap > 800) setBpm(0);
+        return;
+      }
+      if (!finishedRef.current) {
         setInTargetSec(s => {
           const next = s + 1;
           if (next >= 6 && !finishedRef.current) {
@@ -949,7 +950,7 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction: q
     <div className="min-h-[100dvh] bg-rose-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
       <h1 className="text-2xl font-black mb-1">💓 목표 심박수 트레이닝 존</h1>
       <p className="text-xs text-rose-300 mb-6 text-center max-w-xs">
-        유산소 지방 연소 존(130~150 BPM)에 맞추어 심장 버튼을 일정한 박자로 탭하세요!
+        화면의 목표 박자(130~150 BPM)에 맞춰 6초 연속 탭하세요. 표시 수치는 실제 심박수 측정값이 아닙니다.
       </p>
 
       <div className="relative w-64 h-64 rounded-full border-4 border-rose-700 bg-rose-900/60 flex flex-col items-center justify-center mb-6 shadow-2xl">
@@ -967,7 +968,7 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction: q
         {inTargetSec} / 6초 유지
       </div>
       <div className={`text-xs font-bold ${isTargetZone ? 'text-emerald-400' : 'text-amber-300'}`}>
-        {isTargetZone ? '🔥 완벽한 유산소 운동 존! 템포 유지!' : bpm < 130 ? '⬆️ 더 빠르게 탭하여 심박수를 올리세요!' : '⬇️ 너무 빠릅니다! 템포를 살짝 늦추세요!'}
+        {isTargetZone ? '🔥 완벽한 유산소 운동 존! 템포 유지!' : bpm < 130 ? '⬆️ 심장 버튼을 일정한 박자로 계속 탭하세요!' : '⬇️ 너무 빠릅니다! 템포를 살짝 늦추세요!'}
       </div>
 
       {finished && (

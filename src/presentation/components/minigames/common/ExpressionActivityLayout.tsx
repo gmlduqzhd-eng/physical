@@ -4,21 +4,24 @@ import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Awa
 import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
+import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 
 interface ExpressionActivityLayoutProps {
   game: ExpressionGameData;
-  onComplete: (score: number, meta?: any) => void;
+  onComplete: (score: number, meta?: GameResultDetails) => void;
   onExit?: () => void;
+  prepared?: boolean;
 }
 
 export const ExpressionActivityLayout = ({
   game,
   onComplete,
   onExit,
+  prepared = false,
 }: ExpressionActivityLayoutProps) => {
   const scheduleTimeout = useGameTimeouts();
   // 단계: 'countdown' -> 'active' -> 'rubric' -> 'result'
-  const [phase, setPhase] = useState<'countdown' | 'active' | 'rubric' | 'result'>('countdown');
+  const [phase, setPhase] = useState<'countdown' | 'active' | 'rubric' | 'result'>(prepared ? 'active' : 'countdown');
   const [countdown, setCountdown] = useState<number>(3);
   const [currentStepIdx, setCurrentStepIdx] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(game.steps[0]?.durationSeconds || 30);
@@ -26,8 +29,8 @@ export const ExpressionActivityLayout = ({
   const [showAchievementModal, setShowAchievementModal] = useState<boolean>(false);
 
   // 평가 점수 상태 (각 루브릭 항목별 1~5점)
-  const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 5));
-  const [selfReflection, setSelfReflection] = useState<string>('친구들과 함께 멋진 표현을 완성하여 보람찼습니다!');
+  const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 0));
+  const [selfReflection, setSelfReflection] = useState<string>('');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
   const completedRef = useRef(false);
 
@@ -83,13 +86,14 @@ export const ExpressionActivityLayout = ({
 
   // 루브릭 평가 제출 및 완료
   const handleFinishRubric = () => {
-    if (completedRef.current) return;
+    if (completedRef.current || ratings.some(rating => rating < 1)) return;
     completedRef.current = true;
     sfxSuccess();
     setPhase('result');
     const avgScore = Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100);
     onComplete(avgScore, {
       ratings,
+      criteria: game.rubric.map(item => item.criterion),
       selfReflection,
       totalTime: totalElapsedTime,
     });
@@ -302,6 +306,8 @@ export const ExpressionActivityLayout = ({
                     {[1, 2, 3, 4, 5].map(star => (
                       <button
                         key={star}
+                        aria-label={`${item.criterion} ${star}점`}
+                        aria-pressed={ratings[idx] === star}
                         type="button"
                         onClick={() => {
                           const next = [...ratings];
@@ -332,6 +338,7 @@ export const ExpressionActivityLayout = ({
             </label>
             <input
               type="text"
+              maxLength={500}
               value={selfReflection}
               onChange={e => setSelfReflection(e.target.value)}
               placeholder="예: 온몸으로 날씨를 표현해보니 상쾌하고 친구들의 창의적인 동작이 인상 깊었습니다!"
@@ -339,11 +346,13 @@ export const ExpressionActivityLayout = ({
             />
           </div>
 
+          <p role="status" className="text-xs text-purple-300">모든 평가 항목에 별점을 선택하면 제출할 수 있습니다. 성찰 한마디는 자유롭게 작성하세요.</p>
           <div className="flex justify-end pt-2">
             <button
               type="button"
               onClick={handleFinishRubric}
-              className="px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2"
+              disabled={ratings.some(rating => rating < 1)}
+              className="px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trophy className="w-4 h-4" />
               <span>평가 완료 및 활동 결과 보기</span>
@@ -401,8 +410,8 @@ export const ExpressionActivityLayout = ({
               onClick={() => {
                 completedRef.current = false;
                 setTotalElapsedTime(0);
-                setRatings(game.rubric.map(() => 5));
-                setSelfReflection('친구들과 함께 멋진 표현을 완성하여 보람찼습니다!');
+                setRatings(game.rubric.map(() => 0));
+                setSelfReflection('');
                 setIsTimerRunning(true);
                 setPhase('countdown');
                 setCountdown(3);
