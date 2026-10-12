@@ -3,6 +3,7 @@ import { ArrowRight, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { GAMES } from "../domain/gamesData";
 import accessQr from "../assets/access-qr.svg?inline";
+import brandLogo from "../assets/brand-logo.png";
 import "./IntroLandingPage.css";
 
 const domains = [
@@ -30,10 +31,13 @@ export function IntroLandingPage() {
       <div className="shell">
         <header className="header">
           <Link className="brand" to="/" aria-label="땀방울 원정대 홈">
-            <svg viewBox="0 0 32 32" aria-hidden="true">
-              <rect width="32" height="32" rx="9" fill="currentColor" />
-              <path d="m12 8 10 8-10 8V8Z" fill="white" />
-            </svg>
+            <img
+              className="brand-logo"
+              src={brandLogo}
+              alt=""
+              width={44}
+              height={44}
+            />
             <span>
               땀방울 원정대<small>PHYSICAL EDUCATION</small>
             </span>
