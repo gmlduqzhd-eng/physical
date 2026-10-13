@@ -82,6 +82,9 @@ import { BicyclePedalCrank } from './components/minigames/novel/BicyclePedalCran
 import { DoubleUnderRope } from './components/minigames/novel/DoubleUnderRope';
 import { MirrorMotionInvert } from './components/minigames/novel/MirrorMotionInvert';
 import { SeesawBalanceTap } from './components/minigames/novel/SeesawBalanceTap';
+import { SpaceOccupier } from './components/minigames/SpaceOccupier';
+import { RelayMissionRunner } from './components/minigames/RelayMissionRunner';
+import { BodyRhythmOrchestrator } from './components/minigames/BodyRhythmOrchestrator';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
@@ -172,6 +175,9 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'double-under-rope': { name: '이단 줄넘기 더블 탭', emoji: '🪢', domain: '운동', code: '[4체01-02]', target: '체력 도약 2단 쌩쌩이' },
   'mirror-motion-invert': { name: '거울 모드 동작 반전', emoji: '🪞', domain: '운동', code: '[2체01-04]', target: '신경 협응 거울 공간' },
   'seesaw-balance-tap': { name: '균형 시소 버티기', emoji: '⚖️', domain: '운동', code: '[2체01-02]', target: '비이동 평형성 시소' },
+  'space-occupier': { name: '스마트 코트: 빈 공간 점령 작전', emoji: '🗺️', domain: '스포츠', code: '[4체02-06]', target: '전략형 스포츠 공간 분산 침투' },
+  'relay-mission-runner': { name: '모둠 스마트 바통 릴레이', emoji: '🏃', domain: '운동', code: '[4체01-02]', target: '순발력 및 심폐지구력 릴레이' },
+  'body-rhythm-orchestrator': { name: '바디 모션 심포니', emoji: '🎶', domain: '표현', code: '[4체03-02]', target: '움직임 4요소와 리듬 표현' },
 };
 
 // 30종 신규 표현 게임 메타 자동 등록
@@ -523,6 +529,12 @@ const GamePlaySession = () => {
         return <MirrorMotionInvert key={key} {...commonProps} />;
       case 'seesaw-balance-tap':
         return <SeesawBalanceTap key={key} {...commonProps} />;
+      case 'space-occupier':
+        return <SpaceOccupier key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+      case 'relay-mission-runner':
+        return <RelayMissionRunner key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+      case 'body-rhythm-orchestrator':
+        return <BodyRhythmOrchestrator key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
       default: {
         if (gameType && CURRICULUM_GAMES_META[gameType]) {
           return (

@@ -32,6 +32,8 @@ import {
   SPORT_SUB_TYPES,
   DEVICE_FILTERS,
   PLAY_MODE_FILTERS,
+  isPhysicalActivityGame,
+  hasAntiCheatSensor,
 } from '../domain/gamesData';
 import type {
   GradeGroup,
@@ -72,6 +74,7 @@ export const GameHub = () => {
   useEffect(() => { writeStorage('physical_favorites', JSON.stringify([...favorites])); }, [favorites]);
   useEffect(() => () => { if (spinInterval.current) clearInterval(spinInterval.current); }, []);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [physicalOnly, setPhysicalOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<GameDef | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const achievementDialogRef = useModalDialog(!!activeAchievement, () => setActiveAchievement(null));
@@ -173,7 +176,8 @@ export const GameHub = () => {
     const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
     const query = searchQuery.trim().toLocaleLowerCase();
     const searchMatch = !query || `${g.name} ${g.desc} ${g.subCategory} ${g.achievement.code} ${g.achievement.title}`.toLocaleLowerCase().includes(query);
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch;
+    const physicalMatch = !physicalOnly || isPhysicalActivityGame(g);
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch && physicalMatch;
   });
 
   const handleRandomPick = () => {
@@ -192,7 +196,7 @@ export const GameHub = () => {
     }, 100);
   };
 
-  const pageKey = JSON.stringify([gradeFilter, domainFilter, sportFilter, deviceFilter, playModeFilter, placeFilter, sensorFilter, showFavoritesOnly, searchQuery, [...favorites]]);
+  const pageKey = JSON.stringify([gradeFilter, domainFilter, sportFilter, deviceFilter, playModeFilter, placeFilter, sensorFilter, showFavoritesOnly, physicalOnly, searchQuery, [...favorites]]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / 9));
   const currentPage = pagination.key === pageKey ? Math.min(pagination.page, pageCount) : 1;
   const visibleGames = filtered.slice((currentPage - 1) * 9, currentPage * 9);
@@ -201,7 +205,7 @@ export const GameHub = () => {
     catalogRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   };
 
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly || !!searchQuery;
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly || physicalOnly || !!searchQuery;
   const resetAllFilters = () => {
     setDomainFilter('전체');
     setSportFilter('전체');
@@ -211,6 +215,7 @@ export const GameHub = () => {
     setPlaceFilter('전체');
     setSensorFilter('전체');
     setShowFavoritesOnly(false);
+    setPhysicalOnly(false);
     setSearchQuery('');
   };
 
@@ -448,7 +453,19 @@ export const GameHub = () => {
       )}
 
       <section id="hub-panel-games" aria-label="게임 찾기" hidden={activeTab !== 'games'}>
-      <div ref={catalogRef} className="hub-catalog-heading"><div><h2>🎮 게임 찾기</h2><p>게임을 검색하거나 영역과 학년을 선택하세요.</p></div>          <div className="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2">
+      <div ref={catalogRef} className="hub-catalog-heading"><div><h2>🎮 게임 찾기</h2><p>게임을 검색하거나 영역과 학년을 선택하세요.</p></div>          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={() => setPhysicalOnly(!physicalOnly)}
+              className={`px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition-all border shrink-0 ${
+                physicalOnly
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-900/30 ring-2 ring-emerald-400/50'
+                  : 'bg-slate-900 text-emerald-400 border-emerald-800/60 hover:bg-slate-800'
+              }`}
+            >
+              <span>🏃</span>
+              <span>피지컬 활동만</span>
+            </button>
             <button
               onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
               className={`px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition-all border shrink-0 ${
@@ -762,6 +779,16 @@ export const GameHub = () => {
                         }`}>
                           {game.playMode === '협동' ? '🤝 협동' : '👤 개인'}
                         </span>
+                        {isPhysicalActivityGame(game) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-950/90 text-emerald-300 border border-emerald-500/60">
+                            🏃 피지컬
+                          </span>
+                        )}
+                        {hasAntiCheatSensor(game.type) && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-950/90 text-cyan-300 border border-cyan-500/60" title="생체역학 안티치팅 센서 탑재">
+                            🛡️ 안티치팅
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1">

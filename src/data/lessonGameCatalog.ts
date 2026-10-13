@@ -25,6 +25,89 @@ export interface LessonGameMeta {
 }
 
 export const LESSON_GAME_CATALOG: LessonGameMeta[] = [
+  // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
+  {
+    id: 'space-occupier',
+    title: '스마트 코트: 빈 공간 점령 작전',
+    emoji: '🗺️',
+    route: '/play/space-occupier',
+    description: '체육관 4색 콘 코트에서 실시간 레이더 지령을 받아 수비수를 피해 빈 공간으로 신속히 분산 침투하는 모둠 전략 게임',
+    domain: '스포츠',
+    sportType: '전략형',
+    subCategory: '공간 만들기 및 분산 침투',
+    achievementCode: '[4체02-06]',
+    grades: ['3~4학년군', '5~6학년군'],
+    activityModes: ['모둠', '팀 대항'],
+    space: ['체육관', '운동장', '다목적실'],
+    deviceMode: ['모둠별 1대'],
+    recommendedPlayers: { min: 3, max: 8 },
+    intensity: '높음',
+    movementSkills: ['공간 지각', '전력 질주', '방향 전환', '분산 침투'],
+    learningKeywords: ['빈 공간', '전략형 스포츠', '수비 회피', '모둠 협동'],
+    safetyNotes: [
+      '급격한 방향 전환 시 발목 부상을 방지하기 위해 미끄럽지 않은 신발을 착용한다.',
+      '서로 다른 모둠원과 같은 콘을 향해 동시에 달려들지 않도록 주의한다.',
+    ],
+    teachingTips: [
+      '축구, 농구 단원의 "공간 만들기(Space Making)" 수업 도입 또는 정리 활동으로 최적입니다.',
+      '수비수 팀을 실제로 배치하면 난이도와 몰입도가 대폭 상승합니다.',
+    ],
+    noDeviceAlternative: '교사가 호루라기와 깃발 신호로 위험 구역을 선언하고, 학생들은 호각 소리에 맞춰 안전한 콘으로 전력 질주합니다.',
+  },
+  {
+    id: 'relay-mission-runner',
+    title: '모둠 스마트 바통 릴레이',
+    emoji: '🏃',
+    route: '/play/relay-mission-runner',
+    description: '스마트폰을 바통 삼아 15m 반환점까지 전력 질주 후 버피·스쿼트 등 체력 미션을 완수하고 돌아와 다음 주자에게 바통을 터치하는 팀 릴레이',
+    domain: '운동',
+    subCategory: '건강 체력 (순발력·심폐지구력)',
+    achievementCode: '[4체01-02]',
+    grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    activityModes: ['모둠', '팀 대항', '학급 전체'],
+    space: ['체육관', '운동장', '다목적실'],
+    deviceMode: ['모둠별 1대'],
+    recommendedPlayers: { min: 4, max: 40 },
+    intensity: '높음',
+    movementSkills: ['전력 달리기', '스쿼트', '버피', '바통 터치'],
+    learningKeywords: ['심폐지구력', '순발력', '바통 터치', '팀 릴레이', '정정당당'],
+    safetyNotes: [
+      '바통(기기)을 건넬 때 떨어뜨리지 않도록 양손으로 안전하게 교환한다.',
+      '체력 미션 수행 시 허리와 무릎에 무리가 가지 않도록 바른 자세를 유지한다.',
+    ],
+    teachingTips: [
+      '기기를 마구 흔드는 단순 치팅을 원천 차단하고 실제 체육관 질주와 체력 운동을 유도하는 혁신 게임입니다.',
+      '모둠별 총 랩타임을 화면에 띄워 학급 대항전으로 진행하면 열기가 매우 높습니다.',
+    ],
+    noDeviceAlternative: '실제 계주 바통을 사용하고, 반환점에 체력 미션 카드(스쿼트 5회 등)를 부착하여 짝이 확인합니다.',
+  },
+  {
+    id: 'body-rhythm-orchestrator',
+    title: '바디 모션 심포니',
+    emoji: '🎶',
+    route: '/play/body-rhythm-orchestrator',
+    description: '라반의 4대 움직임 요소(신체·공간·노력·관계)로 구성된 4마디 리듬 시퀀스를 모둠원이 협동하여 표현하고 상대 모둠이 상호 감상 평가하는 창의 표현 활동',
+    domain: '표현',
+    subCategory: '움직임 언어 및 리듬 표현',
+    achievementCode: '[4체03-02]',
+    grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    activityModes: ['모둠', '짝'],
+    space: ['교실', '체육관', '다목적실'],
+    deviceMode: ['모둠별 1대', '교사용 1대'],
+    recommendedPlayers: { min: 2, max: 40 },
+    intensity: '보통',
+    movementSkills: ['리듬 표현', '신체 조절', '라반 움직임 요소', '상호 감상'],
+    learningKeywords: ['움직임 요소', '라반', '리듬 표현', '동료 평가', '창의성'],
+    safetyNotes: [
+      '동작 표현 중 주변 친구와 팔다리가 부딪히지 않도록 충분한 개인 안전 거리를 확보한다.',
+    ],
+    teachingTips: [
+      '비트박스나 메트로놈 비트에 맞춰 1마디씩 릴레이로 동작을 연결하면 멋진 군무가 완성됩니다.',
+      '상대 모둠이 별점과 격려 스티커를 태블릿으로 전달하여 2022 개정의 상호 감상 태도를 기를 수 있습니다.',
+    ],
+    noDeviceAlternative: '교사가 칠판에 움직임 요소 카드(머리-높게-부드럽게 등)를 붙이고 탬버린 박자에 맞춰 발표합니다.',
+  },
+
   // ============================================
   // 운동 영역
   // ============================================

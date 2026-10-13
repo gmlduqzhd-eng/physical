@@ -40,6 +40,81 @@ export interface GameDef {
 }
 
 export const GAMES: GameDef[] = [
+  // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
+  {
+    type: 'space-occupier',
+    name: '스마트 코트: 빈 공간 점령 작전',
+    emoji: '🗺️',
+    desc: '체육관 4색 콘 코트에서 수비수를 피해 빈 공간으로 신속히 분산 침투하는 모둠 전략 게임',
+    color: 'from-blue-600 to-indigo-700',
+    border: 'border-blue-400/40',
+    glow: 'hover:shadow-blue-500/30',
+    difficulty: 3,
+    domain: '스포츠',
+    sportType: '전략형',
+    subCategory: '공간 만들기 및 분산 침투',
+    achievement: {
+      code: '[4체02-06]',
+      title: '전략형 스포츠 기본 움직임',
+      desc: '전략형 스포츠에 적합한 기본 움직임을 수행한다 (빈 공간 침투 및 분산 점령).',
+    },
+    grades: ['3~4학년군', '5~6학년군'],
+    devices: ['스마트폰', '태블릿 PC'],
+    playMode: '협동',
+    activityType: '모둠',
+    durationMinutes: 15,
+    equipment: ['4색 콘 (빨강, 파랑, 노랑, 초록)', '팀 조끼'],
+    physicalActivity: true,
+  },
+  {
+    type: 'relay-mission-runner',
+    name: '모둠 스마트 바통 릴레이',
+    emoji: '🏃',
+    desc: '스마트폰을 바통 삼아 질주 후 반환점에서 체력 미션을 완수하고 돌아오는 팀 릴레이',
+    color: 'from-amber-500 to-orange-600',
+    border: 'border-amber-400/40',
+    glow: 'hover:shadow-amber-500/30',
+    difficulty: 3,
+    domain: '운동',
+    subCategory: '건강 체력 (순발력·심폐지구력)',
+    achievement: {
+      code: '[4체01-02]',
+      title: '기본 체력운동 시도',
+      desc: '기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다 (모둠 릴레이 체력 도전).',
+    },
+    grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰', '태블릿 PC'],
+    playMode: '협동',
+    activityType: '모둠',
+    durationMinutes: 15,
+    equipment: ['반환점 콘 1개 (15m 거리)'],
+    physicalActivity: true,
+  },
+  {
+    type: 'body-rhythm-orchestrator',
+    name: '바디 모션 심포니',
+    emoji: '🎶',
+    desc: '라반의 4대 움직임 요소를 조합한 4마디 리듬 시퀀스를 표현하고 상호 감상 평가하는 활동',
+    color: 'from-emerald-500 to-teal-600',
+    border: 'border-emerald-400/40',
+    glow: 'hover:shadow-emerald-500/30',
+    difficulty: 2,
+    domain: '표현',
+    subCategory: '움직임 언어 및 리듬 표현',
+    achievement: {
+      code: '[4체03-02]',
+      title: '움직임 요소 표현 탐색',
+      desc: '움직임 요소(신체·공간·노력·관계)에 따른 표현 방법을 탐색하고 시도하며 상호 감상한다.',
+    },
+    grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    devices: ['스마트폰', '태블릿 PC'],
+    playMode: '협동',
+    activityType: '모둠',
+    durationMinutes: 15,
+    equipment: ['체육관 또는 교실 활동 공간'],
+    physicalActivity: true,
+  },
+
   // ==========================================
   // 1. [운동 영역] 체력, 건강, 성장·발달, 생활 습관, 안전
   // ==========================================
@@ -1399,3 +1474,67 @@ export const PLAY_MODE_FILTERS: { key: PlayModeFilter; label: string; emoji: str
   { key: '개인', label: '개인 게임', emoji: '👤' },
   { key: '협동', label: '협동 게임', emoji: '🤝' },
 ];
+
+const KNOWN_PHYSICAL_TYPES = new Set([
+  'space-occupier',
+  'relay-mission-runner',
+  'body-rhythm-orchestrator',
+  'jump',
+  'squat',
+  'run',
+  'plank',
+  'stretch',
+  'one_leg',
+  'body_twist',
+  'animal',
+  'dance_pose',
+  'red_green',
+  'freeze',
+  'punch',
+  'arm_raise',
+  'wave',
+  'zigzag',
+  'zone_touch',
+  'open-space-tactician',
+  'pass-gate-rescue',
+  'dribble-rhythm',
+  'rolling-curling',
+  'posture-guardian',
+  'pulse-detective',
+  'head-shoulders-knees',
+  'animal-hop-step',
+  'bicycle-pedal-crank',
+  'double-under-rope',
+  'seesaw-balance-tap',
+  'shuttle-run-beep',
+  'agility-dot-drill',
+  'step-mania-4lane',
+  'cpr-compression-110',
+  'water-rescue-throw',
+  'taekwondo-counter-kick',
+  'shadow-pose-sculpture',
+  'partner-mirror-duet',
+  'emotion-freeze-mime',
+  'kayak-paddle',
+  'wind-surf-balance',
+  'target',
+]);
+
+export function isPhysicalActivityGame(game: GameDef): boolean {
+  if (game.physicalActivity === true) return true;
+  return KNOWN_PHYSICAL_TYPES.has(game.type);
+}
+
+const ANTI_CHEAT_GAMES = new Set([
+  'run',
+  'jump',
+  'relay-mission-runner',
+  'space-occupier',
+  'freeze',
+  'red_green',
+]);
+
+export function hasAntiCheatSensor(type: string): boolean {
+  return ANTI_CHEAT_GAMES.has(type);
+}
+
