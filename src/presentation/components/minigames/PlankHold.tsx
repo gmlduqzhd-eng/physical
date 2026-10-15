@@ -10,6 +10,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
   const stableRef = useRef(false);
   const finishedRef = useRef(false);
   const isPointerHolding = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
   const TARGET = 30;
 
   useEffect(() => {
@@ -56,14 +57,18 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
     };
   }, [groupId, enqueueAction]);
 
-  const handlePointerDown = () => {
-    if (finishedRef.current) return;
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (finishedRef.current || !e.isPrimary || activePointerRef.current !== null) return;
+    activePointerRef.current = e.pointerId;
+    e.currentTarget.setPointerCapture(e.pointerId);
     isPointerHolding.current = true;
     stableRef.current = true;
     setStable(true);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
     isPointerHolding.current = false;
     stableRef.current = false;
     setStable(false);
@@ -76,6 +81,7 @@ export const PlankHold = ({ groupId, enqueueAction }: Props) => {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onLostPointerCapture={handlePointerUp}
       className={`min-h-[100dvh] flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer touch-none ${
         stable ? 'bg-emerald-950' : 'bg-red-950'
       }`}

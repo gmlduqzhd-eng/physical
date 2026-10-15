@@ -16,6 +16,8 @@
     "test:catalog": "node scripts/game-catalog-smoke.cjs",
     "test:audit": "node scripts/audit-repair-regressions.cjs",
     "test:mobile": "node scripts/mobile-device-audit.mjs",
+    "test:mobile-new-games": "node scripts/new-games-mobile-regressions.cjs",
+    "test:mobile-inputs": "node scripts/legacy-mobile-regressions.cjs",
     "test:classroom-refresh": "node scripts/classroom-refresh-regressions.cjs",
     "test:concurrency": "node scripts/concurrency-audit.mjs"
   },

@@ -68,12 +68,12 @@ export const RunInPlace = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
       if (cooldown.current || finishedRef.current) return;
-      const a = e.accelerationIncludingGravity || e.acceleration;
-      if (!a) return;
+      const a = e.accelerationIncludingGravity;
+      if (!a || ![a.x, a.y, a.z].every(value => typeof value === 'number' && Number.isFinite(value))) return;
 
-      const x = a.x ?? 0;
-      const y = a.y ?? 0;
-      const z = a.z ?? 0;
+      const x = a.x!;
+      const y = a.y!;
+      const z = a.z!;
 
       const evalResult = detectorRef.current.evaluateMotion(x, y, z);
       if (evalResult.isValid) {

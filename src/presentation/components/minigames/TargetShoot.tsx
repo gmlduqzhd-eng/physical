@@ -15,18 +15,25 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
   const [ringSize, setRingSize] = useState(200);
   const [finished, setFinished] = useState(false);
   const [lastScore, setLastScore] = useState<number | null>(null);
-  const [isStable, setIsStable] = useState(true);
+  const [isStable, setIsStable] = useState(false);
+  const [hasMotion, setHasMotion] = useState(false);
 
   const animRef = useRef<number | null>(null);
   const scoreRef = useRef(0);
   const lockRef = useRef(false);
-  const lastAccel = useRef({ x: 0, y: 0, z: 0 });
+  const lastAccel = useRef<{ x: number; y: number; z: number } | null>(null);
 
   // 몸통 및 손목 흔들림 감지 (양손 파지 및 코어 안정화 훈련)
   useEffect(() => {
     const handleMotion = (e: DeviceMotionEvent) => {
       const acc = e.accelerationIncludingGravity || e.acceleration;
-      if (!acc) return;
+      if (!acc || ![acc.x, acc.y, acc.z].every(value => typeof value === 'number' && Number.isFinite(value))) return;
+      const current = { x: acc.x!, y: acc.y!, z: acc.z! };
+      setHasMotion(true);
+      if (!lastAccel.current) {
+        lastAccel.current = current;
+        return;
+      }
 
       const dx = Math.abs((acc.x ?? 0) - lastAccel.current.x);
       const dy = Math.abs((acc.y ?? 0) - lastAccel.current.y);
@@ -36,7 +43,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
       // 흔들림이 크면 조준 불안정 상태
       setIsStable(tremor < 2.8);
 
-      lastAccel.current = { x: acc.x ?? 0, y: acc.y ?? 0, z: acc.z ?? 0 };
+      lastAccel.current = current;
     };
 
     window.addEventListener('devicemotion', handleMotion);
@@ -44,11 +51,11 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
   }, []);
 
   useEffect(() => {
-    const shrinkRing = () => {
-      setRingSize(prev => {
-        if (prev <= 10) return 200; // reset
-        return prev - 1.5;
-      });
+    let previousFrame: number | undefined;
+    const shrinkRing = (timestamp: number) => {
+      const elapsed = previousFrame === undefined ? 0 : Math.min(100, timestamp - previousFrame);
+      previousFrame = timestamp;
+      setRingSize(prev => prev <= 10 ? 200 : Math.max(10, prev - elapsed * 0.09));
       animRef.current = requestAnimationFrame(shrinkRing);
     };
     animRef.current = requestAnimationFrame(shrinkRing);
@@ -68,7 +75,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
     let basePts = ringSize <= 30 ? 100 : ringSize <= 60 ? 70 : ringSize <= 100 ? 40 : ringSize <= 150 ? 20 : 10;
 
     // 기마자세 코어 안정화 보너스 (+20점)
-    if (isStable && basePts >= 40) {
+    if (hasMotion && isStable && basePts >= 40) {
       basePts += 20;
       sfxCoin();
     }
@@ -122,7 +129,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
       </div>
 
       {/* 신체 자세 가이드 인디케이터 */}
-      <div className="w-full max-w-sm bg-slate-900/80 border border-slate-800 rounded-xl p-3 mb-6 relative z-10 flex items-center justify-between">
+      <div className="w-full max-w-sm bg-slate-900/80 border border-slate-800 rounded-xl p-3 mb-6 relative z-10 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-cyan-400" />
           <span className="text-xs font-bold text-slate-300">신체 자세: 기마자세 홀드</span>
@@ -133,7 +140,7 @@ export const TargetShoot = ({ groupId, enqueueAction }: Props) => {
             : 'bg-amber-500/20 text-amber-300 border border-amber-400/50 animate-pulse'
         }`}>
           <Activity className="w-3 h-3" />
-          {isStable ? '안정 조준 중 (+20점 보너스)' : '자세 불안정! 몸을 고정하세요'}
+          {!hasMotion ? '터치 조준 모드 · 센서 대기' : isStable ? '안정 조준 중 (+20점 보너스)' : '자세 불안정! 몸을 고정하세요'}
         </div>
       </div>
 

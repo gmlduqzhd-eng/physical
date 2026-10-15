@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Sparkles, Music, Users, Star, Play, RotateCcw, Volume2, CheckCircle2 } from 'lucide-react';
-import { sfxSuccess, sfxCoin } from '../../../application/soundEffects';
+import { sfxSuccess, sfxCoin, sfxClick } from '../../../application/soundEffects';
 
 interface MovementCard {
   beat: number;
@@ -37,9 +37,10 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
   const [ratingCreativity, setRatingCreativity] = useState<number>(5);
   const [ratingRhythm, setRatingRhythm] = useState<number>(5);
   const [ratingTeamwork, setRatingTeamwork] = useState<number>(5);
-  const [feedbackTag, setFeedbackTag] = useState<string>('칼군무 완벽!');
+  const [feedbackTag, setFeedbackTag] = useState<string>('칼군무 완벽! ⭐');
 
   const beatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const completionRef = useRef(false);
 
   // 메트로놈 / 비트 재생 (BPM 90 = 667ms 간격)
   useEffect(() => {
@@ -50,7 +51,8 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
 
     beatTimerRef.current = setInterval(() => {
       setCurrentBeat(b => (b % 4) + 1);
-    }, 800);
+      sfxClick();
+    }, 60000 / 90);
 
     return () => {
       if (beatTimerRef.current) clearInterval(beatTimerRef.current);
@@ -65,18 +67,21 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
     const relationships = ['모둠원 전원 일치', '1번부터 릴레이', '짝과 손바닥 마주치며', '서로 다른 방향 보며'];
 
     setCards(prev =>
-      prev.map((c, idx) => ({
-        ...c,
-        bodyPart: bodyParts[idx % bodyParts.length],
-        space: spaces[(idx + 1) % spaces.length],
-        effort: efforts[(idx + 2) % efforts.length],
-        relationship: relationships[(idx + 3) % relationships.length],
-        desc: `${bodyParts[idx % bodyParts.length]}을(를) 활용해 ${efforts[(idx + 2) % efforts.length]} 표현`,
-      }))
+      prev.map(c => {
+        const bodyPart = bodyParts[Math.floor(Math.random() * bodyParts.length)];
+        const effort = efforts[Math.floor(Math.random() * efforts.length)];
+        const relationship = relationships[Math.floor(Math.random() * relationships.length)];
+        const alternatives = spaces.filter(space => space !== c.space);
+        const space = alternatives[Math.floor(Math.random() * alternatives.length)];
+        return { ...c, bodyPart, space, effort, relationship, desc: `${bodyPart}을(를) 활용해 ${effort} 표현` };
+      })
     );
   };
 
   const handleFinishReview = () => {
+    if (completionRef.current) return;
+    completionRef.current = true;
+    setIsPlayingBeat(false);
     sfxSuccess();
     setPhase('finished');
     const totalScore = (ratingCreativity + ratingRhythm + ratingTeamwork) * 20; // 최대 300점
@@ -88,6 +93,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
           gameId: 'body-rhythm-orchestrator',
           score: totalScore,
           amount: totalScore,
+          details: { ratings: [ratingCreativity, ratingRhythm, ratingTeamwork], criteria: ['독창적 표현력', '비트와 박자감', '모둠 협동·조화'], selfReflection: feedbackTag },
         },
       });
     }
@@ -115,14 +121,14 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         <div className="w-full max-w-lg mx-auto flex flex-col gap-5 p-4 text-white">
           {phase === 'setup' && (
             <div className="flex flex-col gap-4 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3 text-cyan-400">
                   <Music className="w-6 h-6" />
                   <h3 className="text-xl font-bold">4마디 리듬 시퀀스 카드</h3>
                 </div>
                 <button
                   onClick={randomizeCards}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition-colors border border-slate-700"
+                  className="min-h-11 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 flex items-center gap-1.5 transition-colors border border-slate-700"
                 >
                   <RotateCcw className="w-3.5 h-3.5" /> 새 동작 조합
                 </button>
@@ -139,7 +145,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
                         <span className="text-base">{c.icon}</span>
                         <span className="font-bold text-sm text-slate-200">{c.bodyPart} × {c.space}</span>
                       </div>
-                      <div className="text-xs text-slate-400 truncate mt-0.5">
+                      <div className="text-xs text-slate-400 mt-0.5">
                         {c.effort} / {c.relationship}
                       </div>
                     </div>
@@ -150,6 +156,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               <button
                 onClick={() => {
                   setPhase('practice');
+                  setCurrentBeat(1);
                   setIsPlayingBeat(true);
                   sfxCoin();
                 }}
@@ -162,6 +169,9 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
 
           {(phase === 'practice' || phase === 'showtime') && (
             <div className="flex flex-col gap-4">
+              <button type="button" onClick={() => setIsPlayingBeat(playing => !playing)} aria-pressed={isPlayingBeat} className="min-h-11 px-4 py-2 rounded-xl bg-slate-800 text-cyan-300 font-bold">
+                {isPlayingBeat ? '비트 일시 정지' : '비트 다시 재생'} · 90 BPM
+              </button>
               {/* 상단 비트 인디케이터 메트로놈 */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 flex flex-col items-center gap-3 shadow-xl">
                 <div className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
@@ -234,14 +244,16 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               </p>
 
               {/* 평가 항목 1: 창의성 */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-sm">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col gap-2 items-start text-sm">
                 <span className="font-bold text-slate-300">💡 독창적 표현력</span>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
                       key={star}
+                      aria-label={`독창적 표현력 ${star}점`}
+                      aria-pressed={ratingCreativity === star}
                       onClick={() => setRatingCreativity(star)}
-                      className={`p-1 ${ratingCreativity >= star ? 'text-amber-400' : 'text-slate-700'}`}
+                      className={`w-11 h-11 flex items-center justify-center ${ratingCreativity >= star ? 'text-amber-400' : 'text-slate-700'}`}
                     >
                       <Star className="w-5 h-5 fill-current" />
                     </button>
@@ -250,14 +262,16 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               </div>
 
               {/* 평가 항목 2: 리듬 일치도 */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-sm">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col gap-2 items-start text-sm">
                 <span className="font-bold text-slate-300">🎵 비트와 박자감</span>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
                       key={star}
+                      aria-label={`비트와 박자감 ${star}점`}
+                      aria-pressed={ratingRhythm === star}
                       onClick={() => setRatingRhythm(star)}
-                      className={`p-1 ${ratingRhythm >= star ? 'text-amber-400' : 'text-slate-700'}`}
+                      className={`w-11 h-11 flex items-center justify-center ${ratingRhythm >= star ? 'text-amber-400' : 'text-slate-700'}`}
                     >
                       <Star className="w-5 h-5 fill-current" />
                     </button>
@@ -266,14 +280,16 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               </div>
 
               {/* 평가 항목 3: 모둠 협동심 */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-sm">
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col gap-2 items-start text-sm">
                 <span className="font-bold text-slate-300">🤝 모둠 협동·조화</span>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
                       key={star}
+                      aria-label={`모둠 협동·조화 ${star}점`}
+                      aria-pressed={ratingTeamwork === star}
                       onClick={() => setRatingTeamwork(star)}
-                      className={`p-1 ${ratingTeamwork >= star ? 'text-amber-400' : 'text-slate-700'}`}
+                      className={`w-11 h-11 flex items-center justify-center ${ratingTeamwork >= star ? 'text-amber-400' : 'text-slate-700'}`}
                     >
                       <Star className="w-5 h-5 fill-current" />
                     </button>

@@ -134,7 +134,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div className="flex flex-col items-center justify-center p-4 min-h-[600px] w-full max-w-md mx-auto select-none font-sans">
-      <div className="w-full flex justify-between items-center mb-3 px-2">
+      <div className="w-full flex flex-wrap justify-between items-center gap-2 mb-3 px-2">
         <div className="flex items-center gap-2">
           <Compass className="w-6 h-6 text-amber-400 animate-spin-slow" />
           <span className="text-white font-bold text-lg">나침반 방위각 마스터</span>
@@ -160,7 +160,7 @@ export const CompassAzimuth = ({ groupId, enqueueAction }: Props) => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
-        className="relative w-64 h-64 rounded-full border-4 border-slate-700 bg-slate-900 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none my-2"
+        className="relative w-64 h-64 overflow-hidden rounded-full border-4 border-slate-700 bg-slate-900 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none my-2"
       >
         {/* 방위 눈금 표기 */}
         <div className="absolute top-2 text-xs font-bold text-red-500">N (0°)</div>

@@ -14,6 +14,7 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
   const totalRef = useRef(0);
   const canvasRef = useRef<HTMLDivElement>(null);
   const drawingRef = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
   const roundLockedRef = useRef(false);
   const pointsRef = useRef<{x: number; y: number}[]>([]);
 
@@ -26,11 +27,12 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleStart = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (roundLockedRef.current || !e.isPrimary) return;
+    if (roundLockedRef.current || !e.isPrimary || activePointerRef.current !== null) return;
     e.preventDefault();
     const pos = getPos(e);
     if (!pos) return;
     e.currentTarget.setPointerCapture(e.pointerId);
+    activePointerRef.current = e.pointerId;
     drawingRef.current = true;
     pointsRef.current = [pos];
     setPoints([pos]);
@@ -38,14 +40,15 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!drawingRef.current || !e.isPrimary) return;
+    if (!drawingRef.current || activePointerRef.current !== e.pointerId) return;
     e.preventDefault();
     const pos = getPos(e);
     if (pos) { pointsRef.current.push(pos); setPoints([...pointsRef.current]); }
   };
 
-  const handleEnd = () => {
-    if (!drawingRef.current || roundLockedRef.current) return;
+  const handleEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!drawingRef.current || roundLockedRef.current || activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
     drawingRef.current = false;
     if (pointsRef.current.length < 10) {
       setPoints([]);
@@ -67,6 +70,14 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
     }
   };
 
+  const handleCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
+    drawingRef.current = false;
+    pointsRef.current = [];
+    setPoints([]);
+  };
+
   return (
     <div className="min-h-[100dvh] bg-rose-950 flex flex-col items-center justify-center p-4 relative overflow-hidden z-[9999] select-none">
       <div className="flex justify-between w-full max-w-sm mb-2 relative z-10">
@@ -77,7 +88,7 @@ export const CircleDraw = ({ groupId, enqueueAction }: Props) => {
       <p className="text-pink-200 font-bold mb-2 text-center text-xs relative z-10">팔을 크게 뻗어 완벽한 원을 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-rose-800 overflow-hidden z-10 touch-none"
         onPointerDown={handleStart} onPointerMove={handleMove} onPointerUp={handleEnd}
-        onPointerCancel={() => { drawingRef.current = false; setPoints([]); }}>
+        onPointerCancel={handleCancel} onLostPointerCapture={handleCancel}>
         {/* 가이드 원 */}
         <div className="absolute inset-[15%] border-2 border-dashed border-rose-700/30 rounded-full" />
         {/* 그린 경로 */}
