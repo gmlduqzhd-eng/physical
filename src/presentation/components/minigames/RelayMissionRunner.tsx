@@ -46,6 +46,24 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
   const [results, setResults] = useState<RunnerResult[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const completionRef = useRef(false);
+  const startedAtRef = useRef(0);
+  const lapStartedAtRef = useRef(0);
+
+  useEffect(() => {
+    if (phase !== 'doing_mission' || currentMission.unit !== '초') return;
+    const startedAt = performance.now();
+    const timer = setInterval(() => {
+      const seconds = Math.min(currentMission.reps, Math.floor((performance.now() - startedAt) / 1000));
+      setCurrentMissionProgress(seconds);
+      if (seconds >= currentMission.reps) {
+        clearInterval(timer);
+        sfxSuccess();
+        setPhase('running_back');
+      }
+    }, 100);
+    return () => clearInterval(timer);
+  }, [phase, currentMission]);
 
   useEffect(() => {
     if (phase === 'setup' || phase === 'finished') {
@@ -54,8 +72,8 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
     }
 
     timerRef.current = setInterval(() => {
-      setTotalTimer(t => t + 1);
-      setLapTimer(t => t + 1);
+      setTotalTimer(Math.floor((performance.now() - startedAtRef.current) / 1000));
+      setLapTimer(Math.floor((performance.now() - lapStartedAtRef.current) / 1000));
     }, 1000);
 
     return () => {
@@ -64,6 +82,9 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
   }, [phase]);
 
   const startRelay = () => {
+    completionRef.current = false;
+    startedAtRef.current = performance.now();
+    lapStartedAtRef.current = startedAtRef.current;
     setCurrentRunner(1);
     setTotalTimer(0);
     setLapTimer(0);
@@ -87,6 +108,7 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
 
   // 2. 체력 미션 카운트
   const handleMissionCount = () => {
+    if (phase !== 'doing_mission' || currentMission.unit === '초') return;
     const next = currentMissionProgress + 1;
     setCurrentMissionProgress(next);
     sfxCoin();
@@ -99,11 +121,15 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
 
   // 3. 복귀 후 다음 주자에게 바통 터치
   const handleBatonPass = () => {
+    if (phase !== 'running_back' || completionRef.current) return;
+    const now = performance.now();
+    const elapsedTotal = Math.floor((now - startedAtRef.current) / 1000);
+    setTotalTimer(elapsedTotal);
     sfxSuccess();
     const result: RunnerResult = {
       runnerIndex: currentRunner,
       missionName: currentMission.name,
-      lapTime: lapTimer,
+      lapTime: Math.floor((now - lapStartedAtRef.current) / 1000),
     };
     const nextResults = [...results, result];
     setResults(nextResults);
@@ -111,13 +137,15 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
     if (currentRunner < totalRunners) {
       const nextRunner = currentRunner + 1;
       setCurrentRunner(nextRunner);
+      lapStartedAtRef.current = now;
       setLapTimer(0);
       pickMissionForRunner(nextRunner);
       setPhase('running_out');
     } else {
+      completionRef.current = true;
       setPhase('finished');
       const baseScore = 200;
-      const speedBonus = Math.max(0, 300 - totalTimer * 2);
+      const speedBonus = Math.max(0, 300 - elapsedTotal * 2);
       const finalScore = baseScore + speedBonus;
       if (enqueueAction) {
         enqueueAction({
@@ -127,6 +155,7 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
             gameId: 'relay-mission-runner',
             score: finalScore,
             amount: finalScore,
+            details: { totalTime: elapsedTotal, metrics: Object.fromEntries(nextResults.map(result => [`${result.runnerIndex}번 주자`, `${result.missionName} · ${result.lapTime}초`])) },
           },
         });
       }
@@ -265,12 +294,14 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
                     </div>
                   </div>
 
-                  <button
+                  {currentMission.unit === '초' ? <p role="status" className="w-full py-5 text-center text-amber-300 font-bold">
+                    {currentMission.reps - currentMissionProgress}초 동안 계속 움직여 주세요. 시간이 끝나면 자동으로 넘어갑니다.
+                  </p> : <button
                     onClick={handleMissionCount}
                     className="w-full py-5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 font-black text-xl text-white shadow-xl shadow-amber-500/25 active:scale-95 flex items-center justify-center gap-3"
                   >
                     <Flame className="w-7 h-7 fill-current" /> 1회 수행 완료 터치!
-                  </button>
+                  </button>}
                 </div>
               )}
 

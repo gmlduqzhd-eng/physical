@@ -40,9 +40,13 @@ export const SpaceOccupier = ({ groupId = 'group-1', enqueueAction, onExit }: Pr
   const [history, setHistory] = useState<{ round: number; success: boolean; timeUsed: number; points: number }[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const roundFinishedRef = useRef(false);
+  const occupiedRef = useRef<number[]>([]);
 
   // 라운드 시작 시 새로운 위험 구역과 안전 공간 무작위 배치
   const startRound = () => {
+    roundFinishedRef.current = false;
+    occupiedRef.current = [];
     const danger = Math.floor(Math.random() * 4) + 1;
     const safe = [1, 2, 3, 4].filter(id => id !== danger);
     setDangerZoneId(danger);
@@ -68,6 +72,8 @@ export const SpaceOccupier = ({ groupId = 'group-1', enqueueAction, onExit }: Pr
   }, [phase]);
 
   const finishRound = useCallback((success: boolean) => {
+    if (roundFinishedRef.current) return;
+    roundFinishedRef.current = true;
     if (timerRef.current) clearInterval(timerRef.current);
     const points = success ? 50 + roundTimer * 10 : 0;
     setHistory(prev => [...prev, { round, success, timeUsed: 7 - roundTimer, points }]);
@@ -99,7 +105,7 @@ export const SpaceOccupier = ({ groupId = 'group-1', enqueueAction, onExit }: Pr
 
   // 구역 터치 (실제 콘에 도착한 학생이 태그하거나 모둠장이 터치)
   const toggleZoneOccupied = (zoneId: number) => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || roundFinishedRef.current) return;
 
     if (zoneId === dangerZoneId) {
       // 위험 구역 침투 시 즉시 실패
@@ -108,9 +114,10 @@ export const SpaceOccupier = ({ groupId = 'group-1', enqueueAction, onExit }: Pr
       return;
     }
 
-    if (occupiedZoneIds.includes(zoneId)) return;
+    if (occupiedRef.current.includes(zoneId)) return;
 
-    const nextOccupied = [...occupiedZoneIds, zoneId];
+    const nextOccupied = [...occupiedRef.current, zoneId];
+    occupiedRef.current = nextOccupied;
     setOccupiedZoneIds(nextOccupied);
     sfxCoin();
 

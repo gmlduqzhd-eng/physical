@@ -246,7 +246,7 @@ const GamePlaySession = () => {
 
   const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
     setDifficulty(selected);
-    const hasOwnIntro = ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab'].includes(gameType || '');
+    const hasOwnIntro = ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
     setIsCountingDown(!hasOwnIntro);
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
@@ -739,7 +739,7 @@ const GamePlaySession = () => {
       />
 
       {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && ['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
+      {!isMotionGranted && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
         <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
           <div className="text-xs">
             <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>

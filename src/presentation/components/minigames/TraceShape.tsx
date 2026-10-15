@@ -21,6 +21,7 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
   const totalRef = useRef(0);
   const canvasRef = useRef<HTMLDivElement>(null);
   const tracingRef = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
   const roundLockedRef = useRef(false);
   const tracedRef = useRef<{x:number;y:number}[]>([]);
 
@@ -33,17 +34,18 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handleStart = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (roundLockedRef.current || !e.isPrimary) return;
+    if (roundLockedRef.current || !e.isPrimary || activePointerRef.current !== null) return;
     e.preventDefault(); const p = getPos(e);
-    if (p) { e.currentTarget.setPointerCapture(e.pointerId); tracingRef.current = true; tracedRef.current = [p]; setTraced([p]); setRoundScore(null); }
+    if (p) { e.currentTarget.setPointerCapture(e.pointerId); activePointerRef.current = e.pointerId; tracingRef.current = true; tracedRef.current = [p]; setTraced([p]); setRoundScore(null); }
   };
   const handleMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!tracingRef.current || !e.isPrimary) return;
+    if (!tracingRef.current || activePointerRef.current !== e.pointerId) return;
     e.preventDefault(); const p = getPos(e);
     if (p) { tracedRef.current.push(p); setTraced([...tracedRef.current]); }
   };
-  const handleEnd = () => {
-    if (!tracingRef.current || roundLockedRef.current) return;
+  const handleEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!tracingRef.current || roundLockedRef.current || activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
     tracingRef.current = false;
     if (tracedRef.current.length < 5) {
       setTraced([]);
@@ -62,6 +64,14 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
     }
   };
 
+  const handleCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
+    tracingRef.current = false;
+    tracedRef.current = [];
+    setTraced([]);
+  };
+
   const shape = SHAPES[shapeIdx];
   const svgPath = shape.points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p[0]} ${p[1]}`).join(' ') + ' Z';
 
@@ -75,7 +85,7 @@ export const TraceShape = ({ groupId, enqueueAction }: Props) => {
       <p className="text-cyan-200 font-bold mb-2 text-center text-xs relative z-10">{shape.name} 모양을 따라 그리세요!</p>
       <div ref={canvasRef} className="relative w-full max-w-sm aspect-square bg-slate-900 rounded-3xl border-2 border-emerald-800 overflow-hidden z-10 touch-none"
         onPointerDown={handleStart} onPointerMove={handleMove} onPointerUp={handleEnd}
-        onPointerCancel={() => { tracingRef.current = false; setTraced([]); }}>
+        onPointerCancel={handleCancel} onLostPointerCapture={handleCancel}>
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
           <path d={svgPath} fill="none" stroke="rgba(52,211,153,0.3)" strokeWidth="2" strokeDasharray="4" />
           {traced.length > 1 && <polyline fill="none" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" points={traced.map(p => `${p.x},${p.y}`).join(' ')} />}
