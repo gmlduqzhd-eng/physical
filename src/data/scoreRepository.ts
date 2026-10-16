@@ -31,7 +31,7 @@ export const ScoreRepository = {
     
     if (error) {
       console.error('Score save failed:', error.code);
-      return error.code === '23503' ? 'obsolete' : 'retry';
+      return error.code === '23503' || error.code === '42501' ? 'obsolete' : 'retry';
     }
     
     return 'saved';

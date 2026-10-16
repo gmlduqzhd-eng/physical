@@ -149,8 +149,11 @@ export const RelayMissionRunner = ({ groupId = 'group-1', enqueueAction, onExit 
       const finalScore = baseScore + speedBonus;
       if (enqueueAction) {
         enqueueAction({
-          type: 'SCORE_GAME',
+          id: crypto.randomUUID(),
+          type: 'INCREMENT_SCORE',
+          timestamp: Date.now(),
           payload: {
+            id: groupId,
             groupId,
             gameId: 'relay-mission-runner',
             score: finalScore,

@@ -26,10 +26,11 @@ export const PunchCounter = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => {
     const handler = (e: DeviceMotionEvent) => {
       if (finishedRef.current || cooldown.current) return;
-      const a = e.acceleration;
+      const a = e.acceleration || e.accelerationIncludingGravity;
       if (!a) return;
+      const threshold = e.acceleration ? 10 : 18;
       const forward = Math.abs(a.z ?? 0);
-      if (forward > 10) {
+      if (forward > threshold) {
         punch();
       }
     };

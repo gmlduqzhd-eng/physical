@@ -87,8 +87,11 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
     const totalScore = (ratingCreativity + ratingRhythm + ratingTeamwork) * 20; // 최대 300점
     if (enqueueAction) {
       enqueueAction({
-        type: 'SCORE_GAME',
+        id: crypto.randomUUID(),
+        type: 'INCREMENT_SCORE',
+        timestamp: Date.now(),
         payload: {
+          id: groupId,
           groupId,
           gameId: 'body-rhythm-orchestrator',
           score: totalScore,

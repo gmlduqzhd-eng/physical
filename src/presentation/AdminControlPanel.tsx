@@ -141,7 +141,10 @@ export const AdminControlPanel = () => {
           const result = await supabase.rpc('damage_classroom_boss', { room_uuid: controlledRoomId, amount: damage });
           if (result.error) pendingDamage += damage;
         }
-        if (room.status === 'defense') await Promise.all(roomGroupsRef.current.map(group => supabase.rpc('increment_classroom_score', { row_id: group.id, amount: -5 })));
+        const isDefenseTimerActive = room.started_at
+          ? new Date(room.started_at).getTime() + (1800 + (room.global_time_modifier || 0)) * 1000 > Date.now()
+          : true;
+        if (room.status === 'defense' && isDefenseTimerActive) await Promise.all(roomGroupsRef.current.map(group => supabase.rpc('increment_classroom_score', { row_id: group.id, amount: -5 })));
         
         // 미니게임 타이머 및 폭탄 자동 정리
         const minigame = room.active_minigame;

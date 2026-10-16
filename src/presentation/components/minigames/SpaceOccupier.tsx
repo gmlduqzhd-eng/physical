@@ -84,8 +84,11 @@ export const SpaceOccupier = ({ groupId = 'group-1', enqueueAction, onExit }: Pr
       setPhase('finished');
       if (enqueueAction) {
         enqueueAction({
-          type: 'SCORE_GAME',
+          id: crypto.randomUUID(),
+          type: 'INCREMENT_SCORE',
+          timestamp: Date.now(),
           payload: {
+            id: groupId,
             groupId,
             gameId: 'space-occupier',
             score: score + points,

@@ -136,8 +136,8 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
       let displayName = item.groupName;
       if (customName && customName.trim()) {
         displayName = customName.trim();
-        finalComment = finalComment.replace(new RegExp(`'${item.groupName}' 모둠`, 'g'), `${displayName} 학생`);
-        finalComment = finalComment.replace(new RegExp(`'${item.groupName}'`, 'g'), displayName);
+        finalComment = finalComment.replaceAll(`'${item.groupName}' 모둠`, `${displayName} 학생`);
+        finalComment = finalComment.replaceAll(`'${item.groupName}'`, displayName);
       }
 
       return {

@@ -201,13 +201,14 @@ export const MobileMissionView = () => {
       return;
     }
     
-    if (gameRoom?.status === 'zombie' && isLocked) {
+    if (gameRoom?.status === 'zombie' && (isZombie || isLocked)) {
        if (!mission.isVaccine) {
           alert('좀비에게 감염되었습니다! 백신 QR코드만 스캔할 수 있습니다.');
           return;
        } else {
           alert('백신을 투여하여 감염에서 회복되었습니다!');
-          await supabase.from('room_groups').update({ is_hacked: false, is_defused: false }).eq('id', groupId);
+          const nextBadges = (myGroup?.badges || []).filter(b => b !== 'zombie');
+          await supabase.from('room_groups').update({ is_hacked: false, is_defused: false, badges: nextBadges }).eq('id', groupId);
        }
     } else if (isLocked || cooldown || !groupId) {
        return;
@@ -356,7 +357,8 @@ export const MobileMissionView = () => {
       setHasBonus(true); writeStorage(`has_bonus_${roomId}_${groupId}`, 'true');
       alert('🎉 보너스 요정 획득!');
     } else if (treasureId === 'TREASURE_BOMB_DEFUSE') {
-      await supabase.from('room_groups').update({ is_defused: true, is_hacked: false }).eq('id', groupId);
+      const nextBadges = (myGroup?.badges || []).filter(b => b !== 'zombie');
+      await supabase.from('room_groups').update({ is_hacked: false, badges: nextBadges }).eq('id', groupId);
       alert('🎉 폭탄 해체/백신 킷 획득! 상태 이상이 회복되었습니다.');
     } else if (treasureId === 'TREASURE_TRAP_MINUS') {
       enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -300 }, timestamp: Date.now() });
@@ -374,6 +376,7 @@ export const MobileMissionView = () => {
 
   useEffect(() => {
     if (showScanner) {
+      if (!document.getElementById('reader')) return;
       let handled = false;
       const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: { width: 250, height: 250 } }, false);
       scanner.render(
@@ -911,15 +914,26 @@ export const MobileMissionView = () => {
 
   if (gameRoom?.active_minigame) {
     return (
-      <MiniGameOverlay 
-        gameRoom={gameRoom} 
-        groupId={groupId} 
-        template={template} 
-        handleMissionComplete={handleMissionComplete} 
-        setShowScanner={setShowScanner} 
-        enqueueAction={enqueueAction} 
-        playVictory={playVictory} 
-      />
+      <>
+        <MiniGameOverlay 
+          gameRoom={gameRoom} 
+          groupId={groupId} 
+          template={template} 
+          handleMissionComplete={handleMissionComplete} 
+          setShowScanner={setShowScanner} 
+          enqueueAction={enqueueAction} 
+          playVictory={playVictory} 
+        />
+        {showScanner && (
+          <div className="fixed inset-0 z-[10000] bg-black flex flex-col">
+            <div className="flex justify-between items-center p-4 bg-slate-900">
+              <span className="text-white font-bold">QR 미션 스캐너</span>
+              <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-3 py-1 rounded font-bold text-sm">닫기</button>
+            </div>
+            <div id="reader" className="flex-1 w-full bg-black" style={{ minHeight: '300px' }}></div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -1213,13 +1227,12 @@ export const MobileMissionView = () => {
                   return (
                     <button 
                       key={m.id || i}
-                      onTouchStart={(e) => {
+                      onClick={(e) => {
                         if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
                         handleMissionComplete(m, e);
                       }}
-                      onMouseDown={(e) => handleMissionComplete(m, e)}
                       disabled={isLocked || isPending} 
-                      className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-none shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
+                      className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-manipulation shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm ${m.color}`}>
