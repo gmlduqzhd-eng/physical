@@ -1,11 +1,11 @@
-import { FlowShell } from './FlowShell';
+import { LessonShell } from './LessonShell';
 import { StudentQrScanner } from './components/StudentQrScanner';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { findRoomByPin, joinClassroomGroup, classroomError } from '../data/classroomRepository';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
-import { RotateCcw } from 'lucide-react';
+import { ArrowRight, BookOpen, Hash, QrCode, RotateCcw } from 'lucide-react';
 
 
 export const Lobby = () => {
@@ -64,11 +64,11 @@ export const Lobby = () => {
     finally { setLoading(false); }
   };
 
-  return <FlowShell><p className="eyebrow">학생 수업 참여</p><h1>우리 모둠으로 들어가요</h1><p className="muted">선생님이 보여주신 QR이나 알려주신 코드로 참여해요. 이름은 쓰지 않아요.</p>
-    {lastRoom&&lastGroup&&lastName&&<p><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName})</button></p>}
-    <div className="grid"><button className={mode==='qr'?'primary card':'card'} onClick={()=>setMode('qr')}>📷 QR로 참여</button><button className={mode==='code'?'primary card':'card'} onClick={()=>setMode('code')}>🔢 코드로 참여</button></div>
-    {mode==='qr'&&<div style={{marginTop:20}}><StudentQrScanner/></div>}
-    {mode==='code'&&<form onSubmit={handleJoin} className="card" style={{marginTop:20,maxWidth:560}}><h2>선생님이 알려준 코드를 입력해요</h2><label>수업 PIN (8자리)<input type="text" inputMode="numeric" maxLength={8} required pattern="[0-9]{8}" placeholder="8자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,''))}/></label><label>우리 모둠<select value={groupName} onChange={e=>setGroupName(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n}>{n}모둠</option>)}</select></label><label>모둠 참여 코드<input type="password" autoComplete="off" required maxLength={12} minLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value.trim())} placeholder="선생님이 알려준 12자리 코드"/></label><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
-    {error&&<p role="alert" className="error">{error}</p>}<div className="quiet-links"><Link to="/hub">혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기</Link></div><details><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 첫 화면의 ‘선생님이에요’에서 이용해요.</p></details>
-  </FlowShell>;
+  return <LessonShell audience="student"><section className="lesson-intro"><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요.</h1><p>선생님이 보여주신 QR이나 코드로 참여해요.<br/>이름은 쓰지 않아도 괜찮아요.</p></section>
+    {lastRoom&&lastGroup&&lastName&&<p className="student-resume"><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName})</button></p>}
+    <div className="student-choices" role="group" aria-label="수업 참여 방법"><button type="button" className="student-choice" aria-pressed={mode==='qr'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('qr')}><span className="lesson-icon"><QrCode aria-hidden="true"/></span><strong>QR로 참여해요</strong><span>선생님 화면의 우리 모둠 QR을 비춰요.</span><span className="student-choice-action">QR 참여 선택 <ArrowRight aria-hidden="true"/></span></button><button type="button" className="student-choice" aria-pressed={mode==='code'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('code')}><span className="lesson-icon"><Hash aria-hidden="true"/></span><strong>코드로 참여해요</strong><span>선생님이 알려주신 코드를 입력해요.</span><span className="student-choice-action">코드 참여 선택 <ArrowRight aria-hidden="true"/></span></button></div><div id="student-entry-panel" className="student-entry-panel">
+    {mode==='qr'&&<StudentQrScanner/>}
+    {mode==='code'&&<form onSubmit={handleJoin} className="card"><h2>선생님이 알려준 코드를 입력해요</h2><label>수업 PIN (8자리)<input type="text" inputMode="numeric" maxLength={8} required pattern="[0-9]{8}" placeholder="8자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,''))}/></label><label>우리 모둠<select value={groupName} onChange={e=>setGroupName(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n}>{n}모둠</option>)}</select></label><label>모둠 참여 코드<input type="password" autoComplete="off" required maxLength={12} minLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value.trim())} placeholder="선생님이 알려준 12자리 코드"/></label><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
+    </div>{error&&<p role="alert" className="error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
+  </LessonShell>;
 };
