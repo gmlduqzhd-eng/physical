@@ -7,6 +7,7 @@ import { supabase } from '../data/supabase';
 import { classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { GAMES } from '../domain/gamesData';
 import { GUIDED_REFLECTIONS, reflectionLabel } from '../domain/guidedReflection';
+import { guidedGoal } from '../domain/guidedGoal';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { LessonShell } from './LessonShell';
 import './GuidedClassroom.css';
@@ -19,6 +20,7 @@ export function GuidedClassroom() {
   const [message, setMessage] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const helpRequests = scores.filter(group => group.help_requested_at).sort((a, b) => String(a.help_requested_at).localeCompare(String(b.help_requested_at)));
   const pending = scores.flatMap(group => (group.pending_missions || []).map(missionId => ({
     key: `${group.id}:${missionId}`, groupId: group.id, groupName: group.group_name,
     missionId, title: template?.buttons.find(button => button.id === missionId)?.title || '활동',
@@ -54,11 +56,23 @@ export function GuidedClassroom() {
     finally { refresh(); setBusy(false); }
   };
 
+  const resolveHelp = async (groupId: string) => {
+    if (busy) return;
+    setBusy(true); setMessage('');
+    try {
+      const result = await supabase.rpc('set_classroom_help', { row_id: groupId, requesting: false });
+      if (result.error || result.data !== true) throw Error('도움 요청을 처리하지 못했습니다. 다시 시도해 주세요.');
+      refresh();
+    } catch (cause) { setMessage(classroomError(cause, '도움 요청 처리 실패')); }
+    finally { setBusy(false); }
+  };
+
   const status = room?.status === 'waiting' ? '학생 참여 안내' : room?.status === 'paused' ? '잠시 멈춤' : room?.status === 'finished' ? '수업 종료' : '수업 진행 중';
   const game = GAMES.find(item => item.type === template?.buttons[0]?.gameType) || GAMES.find(item => item.name === room?.name);
   const reviewable = pending.filter(item => !item.alreadyCompleted);
   const allSelected = reviewable.length > 0 && reviewable.every(item => selected.includes(item.key));
   const guidedMissionIds = new Set(template?.buttons.filter(button => button.requires_approval).map(button => button.id) || []);
+  const goal = guidedGoal(scores, [...guidedMissionIds], room?.goal_percent ?? 75);
   const completed = scores.flatMap(group => (group.completed_missions || []).filter(id => guidedMissionIds.has(id)).map(id => ({ group, missionId: id })));
   const reflections = scores.flatMap(group => Object.entries(group.stats?.guided_reflections || {}).filter(([id, choice]) => guidedMissionIds.has(id) && reflectionLabel(choice)).map(([id, choice]) => ({ group, missionId: id, choice: String(choice) })));
 
@@ -77,6 +91,10 @@ export function GuidedClassroom() {
         </section>
         <section className="card guided-time-card"><h2>남은 활동 시간</h2><p className="big-number" aria-live="off">{mins}:{secs}</p><p>현재 미션: {template?.buttons[0]?.title || '선택한 활동 참여'}</p><Link className="guided-text-link" to={game ? `/play/${game.type}` : '/hub'}>활동 규칙 확인 →</Link></section>
       </div>
+
+      {room.status !== 'finished' && <section className="card guided-help" aria-label="도움 요청"><div className="guided-review-heading"><div><h2>도움 요청 <span className="guided-count">{helpRequests.length}</span></h2><p>먼저 요청한 모둠부터 살펴보세요.</p></div></div>{helpRequests.length ? <div className="guided-review-list">{helpRequests.map(group => <div className="guided-review-row" key={group.id}><strong>{group.group_name}</strong><button disabled={busy} onClick={() => void resolveHelp(group.id)}>도움 완료</button></div>)}</div> : <p className="muted">도움이 필요한 모둠이 없어요.</p>}</section>}
+
+      <section className="card guided-goal" aria-label="학급 공동 목표"><div className="guided-review-heading"><div><h2>학급 공동 목표</h2><p>{goal.achieved ? '🎉 우리 반 목표를 함께 달성했어요!' : `${goal.target}개 모둠이 활동을 마치면 목표 달성!`}</p></div><strong>{goal.completed} / {goal.total}모둠</strong></div><div className="guided-goal-track" role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)}><span style={{width:`${goal.progress}%`}}/></div>{room.status !== 'finished' && <label className="guided-goal-setting">목표 기준 <select disabled={busy} value={goal.percent} onChange={event=>void mutate({goal_percent:Number(event.target.value)})}><option value={50}>절반</option><option value={75}>75%</option><option value={100}>모든 모둠</option></select></label>}<p className="muted">선생님이 확인한 활동만 반영돼요.</p></section>
 
       <section className="card guided-groups" aria-label="완료 확인 대기">
         <div className="guided-review-heading"><div><h2>완료 확인 대기 <span className="guided-count">{pending.length}</span></h2><p>게임 종료 후 요청이 자동으로 올라옵니다. 학생의 실제 참여를 확인해 주세요.</p></div><button disabled={busy} onClick={refresh}>새로고침</button></div>

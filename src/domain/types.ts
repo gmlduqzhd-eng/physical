@@ -30,6 +30,8 @@ export interface GameRoom {
   template_id: string | null;
   status: 'waiting' | 'playing' | 'paused' | 'locked' | 'tsunami' | 'finished' | 'boss_raid' | 'mafia' | 'time_attack' | 'defense' | 'zombie';
   global_time_modifier: number;
+  setup_minutes?: number | null;
+  goal_percent?: number;
   started_at: string | null;
   announcement: string | null;
   active_minigame: any;
@@ -42,6 +44,7 @@ export interface GameRoom {
 export interface RoomGroup {
   id: string;
   room_id: string;
+  help_requested_at?: string | null;
   group_name: string;
   avatar: string;
   score: number;

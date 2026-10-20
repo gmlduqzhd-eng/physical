@@ -15,6 +15,7 @@ import { supabase } from '../data/supabase';
 import { resolveGuidedGameType } from '../domain/guidedMission';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
+import { guidedGoal } from '../domain/guidedGoal';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
 
@@ -57,8 +58,20 @@ export const MobileMissionView = () => {
   const [studentName] = useState(() => readStorage('physical_student_name') || '');
   const [role, setRole] = useState(() => readStorage('physical_student_role') || 'novice');
   const [showFlash, setShowFlash] = useState(false);
+  const [helpBusy, setHelpBusy] = useState(false);
+  const [helpError, setHelpError] = useState('');
 
   const isWhistleActive = gameRoom?.announcement === 'WHISTLE';
+  const toggleHelp = async (requesting: boolean) => {
+    if (!groupId || helpBusy) return;
+    setHelpBusy(true); setHelpError('');
+    try {
+      const result = await supabase.rpc('set_classroom_help', { row_id: groupId, requesting });
+      if (result.error || result.data !== true) throw Error('도움 요청을 전달하지 못했어요. 연결을 확인하고 다시 눌러 주세요.');
+      refreshRoom();
+    } catch (cause) { setHelpError(cause instanceof Error ? cause.message : '도움 요청에 실패했어요.'); }
+    finally { setHelpBusy(false); }
+  };
   const whistlePlayedRef = useRef(false);
 
   useEffect(() => {
@@ -940,6 +953,7 @@ export const MobileMissionView = () => {
     const pending = myGroup?.pending_missions?.includes(guidedMission.id);
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive && !completed;
+    const goal = guidedGoal(scores, [guidedMission.id], gameRoom?.goal_percent ?? 75);
     return <main className="min-h-[100dvh] bg-slate-50 text-slate-900 p-5 flex items-center justify-center">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
         <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
@@ -951,7 +965,11 @@ export const MobileMissionView = () => {
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
           <p className="text-sm text-slate-600 mt-3">게임을 끝내면 선생님에게 확인 요청이 자동으로 전달돼요.</p>
         </div>
+        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-bold text-emerald-900">우리 반 공동 목표</p><p className="text-sm text-emerald-900 mt-1">{goal.achieved ? '🎉 함께 목표를 달성했어요!' : `${goal.completed}/${goal.total}모둠 완료 · 목표 ${goal.target}모둠`}</p><div role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)} className="mt-3 h-3 rounded-full bg-emerald-100 overflow-hidden"><span className="block h-full rounded-full bg-emerald-600" style={{width:`${goal.progress}%`}}/></div></div>
         <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `선생님 확인 완료 · 모둠 ${displayScore}점` : pending ? '선생님 확인을 기다리고 있어요. 게임은 다시 할 수 있어요.' : `모둠 점수 ${displayScore}점`}</div>
+        <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
+        {myGroup?.help_requested_at && <p role="status" className="text-sm text-amber-800 mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
+        {helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}
         {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 요청을 다시 보내고 있어요.' : '연결되면 완료 요청을 자동으로 보낼게요.'}</p>}
         {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-sm">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-sm ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="text-xs text-slate-600 mt-2">{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
         <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '활동 확인 완료' : '게임 시작 →'}</button>

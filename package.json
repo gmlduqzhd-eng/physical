@@ -19,6 +19,7 @@
     "test:mobile-new-games": "node scripts/new-games-mobile-regressions.cjs",
     "test:mobile-inputs": "node scripts/legacy-mobile-regressions.cjs",
     "test:classroom-refresh": "node scripts/classroom-refresh-regressions.cjs",
+    "test:guided": "tsx --test scripts/guided-classroom-features.test.ts",
     "test:concurrency": "node scripts/concurrency-audit.mjs",
     "dev:api": "tsx scripts/dev-api.ts",
     "teacher:setup": "node scripts/setup-teacher.mjs",
