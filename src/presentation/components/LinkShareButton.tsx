@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Share2 } from "lucide-react";
+import { GAMES } from "../../domain/gamesData";
 import "./LinkShareButton.css";
 
 export function LinkShareButton({ hub = false }: { hub?: boolean }) {
@@ -18,7 +19,7 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
         try {
           await navigator.share({
             title: "땀방울 원정대 | 움직임의 즐거움",
-            text: "2022 개정 교육과정 연계 · 운동·스포츠·표현 영역별·학년별 130개 자료",
+            text: `2022 개정 교육과정 연계 · 운동·스포츠·표현 영역별·학년별 ${GAMES.length}개 자료`,
             url: shareUrl,
           });
           return;

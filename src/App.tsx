@@ -20,7 +20,7 @@ const GamePlayPage = lazy(() => import('./presentation/GamePlayPage').then(m => 
 const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
 const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry').then(m => ({ default: m.TeacherStudioEntry })));
 const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
-const RoleLandingPage = lazy(() => import('./presentation/RoleLandingPage').then(m => ({ default: m.RoleLandingPage })));
+const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
 const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
 const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({ default: m.TeacherHome })));
 const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
@@ -42,9 +42,9 @@ function App() {
       <KakaoInAppNotice />
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
       <Routes>
-        {/* 소개 화면에서 접속하기를 누르면 선생님·학생 선택으로 이동 */}
-        <Route path="/" element={<IntroLandingPage />} />
-        <Route path="/start" element={<RoleLandingPage />} />
+        {/* 소개·역할 선택·활동 탐색을 한 메인 화면에서 시작 */}
+        <Route path="/" element={<UnifiedHomePage />} />
+        <Route path="/start" element={<UnifiedHomePage />} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />
