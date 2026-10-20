@@ -4,6 +4,16 @@ import type { GameRoom } from '../domain/types';
 export const classroomError = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
+export async function joinClassroomWithShortPin(pin: string): Promise<{room_id:string;group_id:string;group_name:string}> {
+  if (!/^\d{4}$/.test(pin.trim())) throw new Error('4자리 모둠 PIN을 입력해주세요.');
+  await ensureClassroomUser();
+  const {data,error} = await supabase.rpc('join_classroom_with_short_pin',{entry_pin:pin.trim()});
+  if (error) throw new Error('입장 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.');
+  if (!data) throw new Error('PIN이 맞지 않거나 종료된 수업입니다. 선생님에게 확인해주세요.');
+  if (data.error) throw new Error(data.error);
+  return data;
+}
+
 export async function findRoomByPin(pin: string): Promise<GameRoom> {
   if (!/^\d{8}$/.test(pin.trim())) throw new Error('8자리 수업 PIN을 입력해주세요.');
   await ensureClassroomUser();

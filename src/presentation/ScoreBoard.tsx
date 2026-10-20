@@ -323,8 +323,7 @@ const ScoreBoardContent = () => {
           <LocalQRCode value={window.location.origin+'/lobby'} alt="입장 QR" className="w-24 h-24 border border-cyan-200 rounded-lg"/>
           <div>
             <p className="text-lg font-black text-cyan-800">📱 지금 바로 참여하세요!</p>
-            <p className="text-sm text-cyan-600">QR을 스캔하고 수업 PIN과 우리 모둠 코드를 입력하세요.</p>
-            {gameRoom && <p className="text-2xl font-black text-cyan-700 mt-1 font-mono">PIN: {gameRoom.pin_code}</p>}
+            <p className="text-sm text-cyan-600">QR을 스캔한 뒤 선생님이 알려준 우리 모둠 4자리 PIN을 입력하세요.</p>
           </div>
         </div>
       )}

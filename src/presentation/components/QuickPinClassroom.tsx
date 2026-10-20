@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../data/supabase';
-import { createClassroom, findRoomByPin, joinClassroomGroup, classroomError } from '../../data/classroomRepository';
+import { createClassroom, findRoomByPin, joinClassroomWithShortPin, classroomError } from '../../data/classroomRepository';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
@@ -25,8 +25,7 @@ interface PinRoom {
 export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, onClose, onStartGame }) => {
   const { playBeep } = useAudio();
   const [clientId] = useState(() => crypto.randomUUID());
-  const [inviteCode, setInviteCode] = useState('');
-  const [teacherInvites, setTeacherInvites] = useState<{group_name:string;code:string}[]>([]);
+  const [teacherInvites, setTeacherInvites] = useState<{group_name:string;code:string;short_pin:string}[]>([]);
   const [inputPin, setInputPin] = useState('');
   const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
@@ -43,12 +42,16 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     let active = true;
     const restore = async () => {
       try {
-        const room = await findRoomByPin(restorePin);
+        const shortEntry = restorePin.length === 4 ? await joinClassroomWithShortPin(restorePin) : null;
+        const room = shortEntry
+          ? {id:shortEntry.room_id,pin_code:restorePin,status:'waiting'}
+          : await findRoomByPin(restorePin);
         if (room.id !== restoreRoomId || room.status === 'finished') return;
         const { data, error } = await supabase.from('room_groups').select('*').eq('room_id', room.id);
         const blue = data?.find(group => group.group_name === '청팀');
         const white = data?.find(group => group.group_name === '백팀');
         if (!active || error || !blue || !white) return;
+        if (shortEntry) setSelectedTeam(shortEntry.group_name === '백팀' ? 'white' : 'blue');
         setCurrentRoom({ id: room.id, pin: room.pin_code, hostId: readStorage('pin_battle_host_' + room.id, 'session') === 'true' ? clientId : '', blueScore: blue.score, whiteScore: white.score, blueGroupId: blue.id, whiteGroupId: white.id, members: [clientId] });
         setInRoom(true);
       } catch { /* A removed saved battle can be replaced by a new PIN. */ }
@@ -129,12 +132,12 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     if (busyRef.current) return;
     busyRef.current = true; setBusy(true); setErrorMsg(null);
     try {
-      const room = await findRoomByPin(inputPin);
-      if (room.status === 'finished') throw new Error('종료된 배틀 방입니다. 새 PIN을 요청해주세요.');
-      await joinClassroomGroup(room.id, selectedTeam === 'blue' ? '청팀' : '백팀', inviteCode);
-      const battle = await readBattle(room.id, room.pin_code);
-      writeStorage('pin_battle_current_room', room.id, 'session');
-      writeStorage('pin_battle_current_pin', room.pin_code, 'session');
+      const entry = await joinClassroomWithShortPin(inputPin);
+      if (entry.group_name !== '청팀' && entry.group_name !== '백팀') throw new Error('청백 배틀 모둠 PIN을 입력해주세요.');
+      const battle = await readBattle(entry.room_id, inputPin);
+      setSelectedTeam(entry.group_name === '청팀' ? 'blue' : 'white');
+      writeStorage('pin_battle_current_room', entry.room_id, 'session');
+      writeStorage('pin_battle_current_pin', inputPin, 'session');
       setCurrentRoom(battle); setInRoom(true); playBeep();
     } catch (cause) { setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.')); }
     finally { busyRef.current = false; setBusy(false); }
@@ -164,8 +167,10 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   };
   const handleCopyPin = async () => {
     if (!currentRoom) return;
-    try { await navigator.clipboard.writeText(currentRoom.pin); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-    catch { setErrorMsg('PIN ' + currentRoom.pin + '을 직접 복사해주세요.'); }
+    const pin = teacherInvites.find(item=>item.group_name===(selectedTeam==='blue'?'청팀':'백팀'))?.short_pin;
+    if (!pin) { setErrorMsg('팀 PIN을 불러오는 중입니다.'); return; }
+    try { await navigator.clipboard.writeText(pin); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { setErrorMsg('PIN ' + pin + '을 직접 복사해주세요.'); }
   };
 
   if (!isOpen) return null;
@@ -194,8 +199,8 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-blue-500/30">
               <Users className="w-7 h-7 text-white" />
             </div>
-            <h2 className="text-2xl font-black mb-1">8자리 PIN 학급 배틀룸</h2>
-            <p className="text-xs text-slate-400 mb-5">이름 없이 수업 PIN과 우리 모둠 참여 코드로 입장합니다.</p>
+            <h2 className="text-2xl font-black mb-1">4자리 PIN 학급 배틀룸</h2>
+            <p className="text-xs text-slate-400 mb-5">이름 없이 자기 팀의 4자리 PIN만 입력해요.</p>
 
             {/* 에러 메시지 배너 */}
             {errorMsg && (
@@ -210,19 +215,18 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <label className="text-xs font-bold text-slate-300 block mb-2">선생님이 알려주신 PIN 입력</label>
               <input
                 type="text"
-                maxLength={8}
+                maxLength={4}
                 value={inputPin}
                 onChange={e => {
                   setErrorMsg(null);
-                  setInputPin(e.target.value.replace(/[^0-9]/g, ''));
+                  setInputPin(e.target.value.replace(/[^0-9]/g, '').slice(0,4));
                 }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') handleJoinRoom();
                 }}
-                placeholder="8자리 수업 PIN"
+                placeholder="4자리 팀 PIN"
                 className="w-full py-3 text-center text-3xl font-mono font-black tracking-widest bg-slate-950 border border-slate-700 rounded-xl text-cyan-400 focus:outline-none focus:border-cyan-400 mb-3"
               />
-<label className="block text-sm text-slate-200">참여할 팀<select value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value as 'blue'|'white')} className="block w-full bg-slate-800 p-3"><option value="blue">청팀</option><option value="white">백팀</option></select></label><label className="block text-sm text-slate-200">모둠 참여 코드<input type="password" autoComplete="off" value={inviteCode} maxLength={12} onChange={e=>setInviteCode(e.target.value)} className="block w-full bg-slate-800 p-3 mb-3"/></label>
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}
@@ -252,7 +256,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-cyan-400">배틀 방 번호</span>
+                  <span className="text-[11px] font-bold text-cyan-400">학급 배틀</span>
                   {isHost && (
                     <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold">
                       방장(선생님)
@@ -260,14 +264,14 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                   )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-3xl font-mono font-black tracking-wider text-white">#{currentRoom?.pin}</p>
-                  <button
+                  <p className="text-lg font-bold text-white">청백 학급 배틀</p>
+                  {isHost && <button
                     onClick={handleCopyPin}
                     className="p-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors"
-                    title="방 번호 복사"
+                    title="선택 팀 PIN 복사"
                   >
                     {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </button>
+                  </button>}
                 </div>
               </div>
 
@@ -281,7 +285,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             {/* 선생님용 가이드 배너 */}
             {isHost && (
               <div className="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-xs text-blue-200 mb-4 flex items-center gap-2">
-                <div><p>📢 수업 PIN <b className="text-amber-300 font-mono text-sm">#{currentRoom?.pin}</b>과 팀별 참여 코드를 해당 팀에 안내하세요.</p>{teacherInvites.map(v=><p key={v.group_name}>{v.group_name}: <code>{v.code}</code></p>)}<a href="/admin" className="underline">교사 관리 화면에서 QR·복구키 확인</a></div>
+                <div><p>📢 학생에게 자기 팀의 4자리 PIN만 안내하세요.</p>{teacherInvites.map(v=><p key={v.group_name}>{v.group_name}: <code className="text-lg font-bold">{v.short_pin}</code></p>)}<a href="/admin" className="underline">교사 관리 화면에서 QR·복구키 확인</a></div>
               </div>
             )}
 

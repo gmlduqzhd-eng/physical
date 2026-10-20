@@ -389,8 +389,8 @@ export const AdminControlPanel = () => {
               {rooms.map(r => (
                 <div key={r.id} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 cursor-pointer transition-colors">
                   <div onClick={() => setSelectedRoomId(r.id)}>
-                    <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500"/> {r.pin_code}</h3>
-                    <p className="text-slate-700 font-bold">{r.name}</p>
+                    <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500"/> {r.name}</h3>
+                    <p className="text-slate-700 font-bold">모둠별 4자리 PIN은 방 상세에서 확인</p>
                     <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
                   </div>
                   <div className="flex gap-2 mt-3">
@@ -419,7 +419,7 @@ export const AdminControlPanel = () => {
             <div className="bg-white shadow-sm p-4 rounded-xl flex flex-wrap justify-between items-center gap-3 border border-slate-200">
               <div>
                 <h2 className="text-2xl font-black text-slate-900">{currentRoom.name}</h2>
-                <p className="text-cyan-600 font-bold mt-1">접속 핀 번호: {currentRoom.pin_code}</p>
+                <p className="text-cyan-600 font-bold mt-1">학생 입장: 아래 모둠별 4자리 PIN 또는 QR</p>
               </div>
               <div className="flex gap-2 flex-wrap">
                 <button onClick={() => setShowReportModal(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">

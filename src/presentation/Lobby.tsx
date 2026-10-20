@@ -3,16 +3,17 @@ import { StudentQrScanner } from './components/StudentQrScanner';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
-import { findRoomByPin, joinClassroomGroup, classroomError } from '../data/classroomRepository';
+import { joinClassroomWithShortPin, classroomError } from '../data/classroomRepository';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { ArrowRight, BookOpen, Hash, QrCode, RotateCcw } from 'lucide-react';
 
 
 export const Lobby = () => {
-  const [pinCode, setPinCode] = useState(() => new URLSearchParams(window.location.search).get('pin') || '');
+  const [pinCode, setPinCode] = useState(() => {
+    const pin = new URLSearchParams(window.location.search).get('pin') || '';
+    return /^\d{4}$/.test(pin) ? pin : '';
+  });
   const studentName = '익명 원정대원';
-  const [inviteCode, setInviteCode] = useState('');
-  const [groupName, setGroupName] = useState('1모둠');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -52,14 +53,13 @@ export const Lobby = () => {
     setError('');
 
     try {
-      const room = await findRoomByPin(pinCode);
-      const groupId = await joinClassroomGroup(room.id, groupName, inviteCode);
+      const entry = await joinClassroomWithShortPin(pinCode);
       writeStorage('physical_student_name', studentName.trim());
       writeStorage('physical_student_role', 'novice');
-      writeStorage('physical_last_room', room.id);
-      writeStorage('physical_last_group', groupId);
-      writeStorage('physical_last_group_name', groupName);
-      navigate(`/mobile/${room.id}/${groupId}`);
+      writeStorage('physical_last_room', entry.room_id);
+      writeStorage('physical_last_group', entry.group_id);
+      writeStorage('physical_last_group_name', entry.group_name);
+      navigate(`/mobile/${entry.room_id}/${entry.group_id}`);
     } catch (cause) { setError(classroomError(cause, '입장에 실패했습니다. 다시 시도해주세요.')); }
     finally { setLoading(false); }
   };
@@ -68,7 +68,7 @@ export const Lobby = () => {
     {lastRoom&&lastGroup&&lastName&&<p className="student-resume"><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName})</button></p>}
     <div className="student-choices" role="group" aria-label="수업 참여 방법"><button type="button" className="student-choice" aria-pressed={mode==='qr'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('qr')}><span className="lesson-icon"><QrCode aria-hidden="true"/></span><strong>QR로 참여해요</strong><span>선생님 화면의 우리 모둠 QR을 비춰요.</span><span className="student-choice-action">QR 참여 선택 <ArrowRight aria-hidden="true"/></span></button><button type="button" className="student-choice" aria-pressed={mode==='code'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('code')}><span className="lesson-icon"><Hash aria-hidden="true"/></span><strong>코드로 참여해요</strong><span>선생님이 알려주신 코드를 입력해요.</span><span className="student-choice-action">코드 참여 선택 <ArrowRight aria-hidden="true"/></span></button></div><div id="student-entry-panel" className="student-entry-panel">
     {mode==='qr'&&<StudentQrScanner/>}
-    {mode==='code'&&<form onSubmit={handleJoin} className="card"><h2>선생님이 알려준 코드를 입력해요</h2><label>수업 PIN (8자리)<input type="text" inputMode="numeric" maxLength={8} required pattern="[0-9]{8}" placeholder="8자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,''))}/></label><label>우리 모둠<select value={groupName} onChange={e=>setGroupName(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n}>{n}모둠</option>)}</select></label><label>모둠 참여 코드<input type="password" autoComplete="off" required maxLength={12} minLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value.trim())} placeholder="선생님이 알려준 12자리 코드"/></label><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
+    {mode==='code'&&<form onSubmit={handleJoin} className="card"><h2>선생님이 알려준 모둠 PIN을 입력해요</h2><label>모둠 PIN (4자리)<input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={4} required pattern="[0-9]{4}" placeholder="4자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,'').slice(0,4))}/></label><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
     </div>{error&&<p role="alert" className="error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
   </LessonShell>;
 };
