@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { GAMES } from '../domain/gamesData';
 import { supabase } from '../data/supabase';
+import { resolveGuidedGameType } from '../domain/guidedMission';
+import type { MissionButton } from '../domain/types';
 import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
@@ -321,13 +323,14 @@ const GamePlaySession = () => {
     setGuidedError('');
     try {
       const [room, group] = await Promise.all([
-        supabase.from('game_rooms').select('id,status,template_id').eq('id', battleRoomId).maybeSingle(),
+        supabase.from('game_rooms').select('id,name,status,template_id').eq('id', battleRoomId).maybeSingle(),
         supabase.from('room_groups').select('id,room_id,pending_missions,completed_missions').eq('id', battleGroupId).maybeSingle(),
       ]);
       if (room.error || group.error || !room.data || !group.data || group.data.room_id !== battleRoomId || !room.data.template_id) throw Error('수업 정보를 확인하지 못했습니다. 모둠 화면에서 다시 들어와 주세요.');
-      const template = await supabase.from('mission_templates').select('buttons').eq('id', room.data.template_id).maybeSingle();
-      const mission = Array.isArray(template.data?.buttons) ? template.data.buttons.find((button: { id?: string; gameType?: string; requires_approval?: boolean; amount?: number }) => button.id === missionId && button.gameType === gameType && button.requires_approval) : null;
-      if (template.error || !mission) throw Error('이 수업의 활동과 게임이 일치하지 않습니다.');
+      const template = await supabase.from('mission_templates').select('name,buttons').eq('id', room.data.template_id).maybeSingle();
+      const buttons = Array.isArray(template.data?.buttons) ? template.data.buttons as MissionButton[] : [];
+      const mission = buttons.find(button => button.id === missionId);
+      if (template.error || !mission || resolveGuidedGameType(room.data.name, template.data?.name, buttons, missionId) !== gameType) throw Error('이 수업의 활동과 게임이 일치하지 않습니다.');
       setGuidedAward(typeof mission.amount === 'number' ? mission.amount : null);
       if (group.data.completed_missions?.includes(missionId)) { setGuidedStatus('approved'); return; }
       if (group.data.pending_missions?.includes(missionId)) { setGuidedStatus('pending'); return; }
