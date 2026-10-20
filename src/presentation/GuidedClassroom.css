@@ -1,0 +1,220 @@
+.flow.lesson-shell.guided-classroom .lesson-wrap {
+  max-width: 1240px;
+  padding-inline: 44px;
+}
+
+.guided-classroom .guided-intro {
+  padding: 36px 0 30px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-intro .eyebrow {
+  color: #8b6948;
+  font-size: 14px;
+  letter-spacing: .6px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-intro h1 {
+  margin: 12px 0 8px;
+  font-size: clamp(32px, 4vw, 44px);
+}
+
+.flow.lesson-shell.guided-classroom .guided-intro>p:last-child {
+  color: #687163;
+  font-size: 16px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview {
+  gap: 22px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview .card {
+  min-height: 260px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 13px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-action-card {
+  background: #f0f4e8;
+  border-color: #d6e0cb;
+}
+
+.flow.lesson-shell.guided-classroom .guided-time-card {
+  background: #fffefa;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview h2 {
+  margin: 0;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview p {
+  line-height: 1.8;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview .muted {
+  margin-top: auto;
+  font-size: 14px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-overview .big-number {
+  color: #536b41;
+  font-size: clamp(40px, 5vw, 54px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -2px;
+  line-height: 1.2;
+}
+
+.flow.lesson-shell.guided-classroom .guided-text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: #576c50;
+  font-weight: 700;
+}
+
+.flow.lesson-shell.guided-classroom button.primary {
+  margin-top: 3px;
+  background: #60754f;
+  border-color: #60754f;
+  color: #fffefa;
+}
+
+.flow.lesson-shell.guided-classroom details {
+  border-color: #dfe2d5;
+  background: #fffefa;
+  border-radius: 20px;
+  padding: 20px 23px;
+  margin-top: 20px;
+}
+
+.flow.lesson-shell.guided-classroom details>summary {
+  color: #354239;
+  font-size: 16px;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-panel {
+  margin-top: 18px;
+  padding: 24px;
+  background: #f0f4e8;
+  border: 1px solid #d6e0cb;
+  border-radius: 18px;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-panel>h2 {
+  color: #354239;
+  font-size: 21px;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-panel>p {
+  color: #52634a;
+  line-height: 1.8;
+  margin-top: 12px;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-panel code {
+  overflow-wrap: anywhere;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-card {
+  background: #fffefa;
+  border: 1px solid #dfe2d5;
+  border-radius: 14px;
+  padding: 18px 12px;
+  min-width: 0;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-card img {
+  width: min(100%, 160px);
+  height: auto;
+  margin: 8px auto;
+}
+
+.flow.lesson-shell.guided-classroom .classroom-qr-card p {
+  font-size: 13px;
+  margin: 0;
+}
+
+.flow.lesson-shell.guided-classroom .guided-groups {
+  margin-top: 20px;
+  padding: 25px 28px;
+}
+
+.flow.lesson-shell.guided-classroom .guided-groups .stack {
+  gap: 0;
+}
+
+.flow.lesson-shell.guided-classroom .guided-groups .inline-title {
+  padding: 16px 0;
+  border-bottom: 1px solid #e6e8de;
+}
+
+.flow.lesson-shell.guided-classroom .guided-groups .inline-title:last-child {
+  border-bottom: 0;
+}
+
+.flow.lesson-shell.guided-classroom .notice {
+  background: #f0f4e8;
+  color: #52634a;
+}
+
+@media (max-width: 760px) {
+  .flow.lesson-shell.guided-classroom .lesson-wrap {
+    padding-inline: 22px;
+  }
+
+  .guided-classroom .guided-intro {
+    padding: 28px 0 23px;
+  }
+
+  .flow.lesson-shell.guided-classroom .guided-overview {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .flow.lesson-shell.guided-classroom .guided-overview .card {
+    min-height: auto;
+    padding: 23px;
+  }
+
+  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .flow.lesson-shell.guided-classroom .lesson-wrap {
+    padding-inline: 16px;
+  }
+
+  .flow.lesson-shell.guided-classroom details {
+    padding: 17px;
+  }
+
+  .flow.lesson-shell.guided-classroom .classroom-qr-panel {
+    padding: 16px;
+  }
+
+  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 360px) {
+  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media print {
+  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
