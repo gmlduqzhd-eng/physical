@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../data/supabase';
-import { createClassroom, findRoomByPin, classroomError } from '../../data/classroomRepository';
+import { createClassroom, findRoomByPin, joinClassroomGroup, classroomError } from '../../data/classroomRepository';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
@@ -25,6 +25,8 @@ interface PinRoom {
 export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, onClose, onStartGame }) => {
   const { playBeep } = useAudio();
   const [clientId] = useState(() => crypto.randomUUID());
+  const [inviteCode, setInviteCode] = useState('');
+  const [teacherInvites, setTeacherInvites] = useState<{group_name:string;code:string}[]>([]);
   const [inputPin, setInputPin] = useState('');
   const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
@@ -65,6 +67,15 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   };
 
   const battleId = currentRoom?.id;
+  const ownsBattle = currentRoom?.hostId === clientId;
+  useEffect(() => {
+    if (!battleId || !ownsBattle) return;
+    let active=true;
+    void supabase.rpc('get_classroom_invites',{room_uuid:battleId}).then(({data,error})=>{
+      if(active) {setTeacherInvites(error?[]:data??[]);if(error)setErrorMsg('모둠 코드를 불러오지 못했습니다. 교사 관리 화면에서 다시 인증하세요.');}
+    });
+    return()=>{active=false;};
+  },[battleId,ownsBattle]);
   useEffect(() => {
     if (!battleId) return;
     let active = true;
@@ -99,12 +110,8 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
   const handleCreateRoom = async () => {
     if (busyRef.current) return;
-    const teacherPin = readStorage('teacher_master_pin') || '1234';
-    if (readStorage('teacher_session_auth', 'session') !== teacherPin) {
-      const entered = prompt('이 기기의 교사 화면 잠금 PIN을 입력해주세요. (초기값: 1234)');
-      if (entered !== teacherPin) { if (entered !== null) setErrorMsg('교사 PIN이 일치하지 않습니다.'); return; }
-      writeStorage('teacher_session_auth', teacherPin, 'session');
-    }
+    const auth = await fetch('/api/teacher?action=status').then(r => r.json()).catch(() => null);
+    if (!auth?.authenticated) { setErrorMsg('교사 인증이 필요합니다. 선생님 도구의 AI 수업 준비실에서 인증한 뒤 다시 시도하세요.'); return; }
     busyRef.current = true; setBusy(true); setErrorMsg(null);
     try {
       const room = await createClassroom('청백 학급 배틀', null, ['청팀', '백팀']);
@@ -124,6 +131,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     try {
       const room = await findRoomByPin(inputPin);
       if (room.status === 'finished') throw new Error('종료된 배틀 방입니다. 새 PIN을 요청해주세요.');
+      await joinClassroomGroup(room.id, selectedTeam === 'blue' ? '청팀' : '백팀', inviteCode);
       const battle = await readBattle(room.id, room.pin_code);
       writeStorage('pin_battle_current_room', room.id, 'session');
       writeStorage('pin_battle_current_pin', room.pin_code, 'session');
@@ -186,8 +194,8 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="w-14 h-14 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-blue-500/30">
               <Users className="w-7 h-7 text-white" />
             </div>
-            <h2 className="text-2xl font-black mb-1">4자리 PIN 학급 배틀룸</h2>
-            <p className="text-xs text-slate-400 mb-5">회원가입 없이 4자리 숫자만 치면 우리 반 대항전 시작!</p>
+            <h2 className="text-2xl font-black mb-1">8자리 PIN 학급 배틀룸</h2>
+            <p className="text-xs text-slate-400 mb-5">이름 없이 수업 PIN과 우리 모둠 참여 코드로 입장합니다.</p>
 
             {/* 에러 메시지 배너 */}
             {errorMsg && (
@@ -202,7 +210,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <label className="text-xs font-bold text-slate-300 block mb-2">선생님이 알려주신 PIN 입력</label>
               <input
                 type="text"
-                maxLength={4}
+                maxLength={8}
                 value={inputPin}
                 onChange={e => {
                   setErrorMsg(null);
@@ -211,9 +219,10 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                 onKeyDown={e => {
                   if (e.key === 'Enter') handleJoinRoom();
                 }}
-                placeholder="4자리 숫자 입력"
+                placeholder="8자리 수업 PIN"
                 className="w-full py-3 text-center text-3xl font-mono font-black tracking-widest bg-slate-950 border border-slate-700 rounded-xl text-cyan-400 focus:outline-none focus:border-cyan-400 mb-3"
               />
+<label className="block text-sm text-slate-200">참여할 팀<select value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value as 'blue'|'white')} className="block w-full bg-slate-800 p-3"><option value="blue">청팀</option><option value="white">백팀</option></select></label><label className="block text-sm text-slate-200">모둠 참여 코드<input type="password" autoComplete="off" value={inviteCode} maxLength={12} onChange={e=>setInviteCode(e.target.value)} className="block w-full bg-slate-800 p-3 mb-3"/></label>
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}
@@ -272,14 +281,14 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             {/* 선생님용 가이드 배너 */}
             {isHost && (
               <div className="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-xs text-blue-200 mb-4 flex items-center gap-2">
-                <span>📢 칠판/TV에 방 번호 <b className="text-amber-300 font-mono text-sm">#{currentRoom?.pin}</b>를 안내해 주세요. 학생들이 접속하면 실시간으로 숫자가 올라갑니다.</span>
+                <div><p>📢 수업 PIN <b className="text-amber-300 font-mono text-sm">#{currentRoom?.pin}</b>과 팀별 참여 코드를 해당 팀에 안내하세요.</p>{teacherInvites.map(v=><p key={v.group_name}>{v.group_name}: <code>{v.code}</code></p>)}<a href="/admin" className="underline">교사 관리 화면에서 QR·복구키 확인</a></div>
               </div>
             )}
 
             {/* 청팀 vs 백팀 스코어보드 (실제 0점에서 시작) */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div
-                onClick={() => setSelectedTeam('blue')}
+                onClick={() => { if(isHost) setSelectedTeam('blue'); }}
                 className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                   selectedTeam === 'blue'
                     ? 'bg-blue-600/30 border-blue-400 shadow-lg shadow-blue-500/20 scale-[1.02]'
@@ -294,7 +303,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               </div>
 
               <div
-                onClick={() => setSelectedTeam('white')}
+                onClick={() => { if(isHost) setSelectedTeam('white'); }}
                 className={`p-4 rounded-2xl border cursor-pointer transition-all ${
                   selectedTeam === 'white'
                     ? 'bg-slate-700/60 border-slate-300 shadow-lg shadow-white/10 scale-[1.02]'

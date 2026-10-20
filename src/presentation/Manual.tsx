@@ -14,6 +14,8 @@ export const Manual = () => {
   return (
     <div className={`min-h-[100dvh] p-4 md:p-10 font-sans pb-24 overflow-y-auto select-text transition-colors ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       <div className="max-w-4xl mx-auto space-y-6 relative">
+        <button onClick={() => navigate('/teacher-ai')} className="rounded-xl bg-cyan-700 text-white px-5 py-3 font-bold">✦ AI 수업 준비실 열기</button>
+        <p className="text-sm">기존 지도안 생성기는 조건과 문구를 조합하는 일반 도구입니다. 생성형 AI는 별도의 AI 수업 준비실에서 사용합니다.</p>
         {/* 상단 헤더 네비게이션 */}
         <div className={`sticky top-0 backdrop-blur-md py-4 z-20 border-b space-y-3 transition-colors ${isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white/95 border-slate-200 shadow-xs'}`}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">

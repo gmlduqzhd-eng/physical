@@ -14,6 +14,7 @@ export interface MissionButton {
 }
 
 export interface MissionTemplate {
+  teacher_id?: string | null;
   id: string;
   name: string;
   buttons: MissionButton[];
@@ -21,6 +22,7 @@ export interface MissionTemplate {
 }
 
 export interface GameRoom {
+  teacher_id?: string | null;
   id: string;
   pin_code: string;
   name: string;

@@ -18,6 +18,8 @@ const IntroLandingPage = lazy(() => import('./presentation/IntroLandingPage').th
 const GameHub = lazy(() => import('./presentation/GameHub').then(m => ({ default: m.GameHub })));
 const GamePlayPage = lazy(() => import('./presentation/GamePlayPage').then(m => ({ default: m.GamePlayPage })));
 const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
+const TeacherAi = lazy(() => import('./presentation/TeacherAi').then(m => ({ default: m.TeacherAi })));
+const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 
 function App() {
   useEffect(() => {
@@ -37,6 +39,8 @@ function App() {
         {/* 메인: 소개 페이지가 먼저 노출되고, '게임하기' 클릭 시 게임 허브(/hub)로 이동 */}
         <Route path="/" element={<IntroLandingPage />} />
         <Route path="/hub" element={<GameHub />} />
+        <Route path="/teacher-ai" element={<TeacherAi />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<GameHub />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 
@@ -50,7 +54,7 @@ function App() {
         <Route path="/admin" element={hasSupabase ? <TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/remote" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/remote/:roomId" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
-        <Route path="/kiosk" element={hasSupabase ? <KioskRelayView /> : <SupabaseRequired />} />
+        <Route path="/kiosk" element={hasSupabase ? <TeacherAuthGuard><KioskRelayView /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>

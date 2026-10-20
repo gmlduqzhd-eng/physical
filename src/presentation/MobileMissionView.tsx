@@ -183,13 +183,9 @@ export const MobileMissionView = () => {
       return;
     }
 
-    const newBadges = [...(targetGroup.badges || []), 'zombie'];
-    await supabase.from('room_groups').update({ badges: newBadges }).eq('id', targetGroup.id);
-    
-    enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: targetGroup.id, amount: -300 }, timestamp: Date.now() });
-
-    alert(`🧟 [${targetGroup.group_name}] 조를 감염시켰습니다! 보너스 500점 획득!`);
+    const effect=await supabase.rpc('classroom_effect',{room_uuid:roomId,effect:'infect',target_uuid:targetGroup.id});
+    if(effect.error || !effect.data) return alert('감염 조건 또는 모둠 권한을 확인하세요.');
+    alert('감염 결과를 저장했습니다.');
     setInfectCode('');
   };
 
@@ -280,8 +276,8 @@ export const MobileMissionView = () => {
       const otherGroups = scores.filter(s => s.id !== groupId);
       if (otherGroups.length > 0) {
         const nextTarget = otherGroups[Math.floor(Math.random() * otherGroups.length)];
-        const newBombData = { ...gameRoom.active_minigame, holderId: nextTarget.id };
-        await supabase.from('game_rooms').update({ active_minigame: newBombData }).eq('id', gameRoom.id);
+        const effect=await supabase.rpc('classroom_effect',{room_uuid:gameRoom.id,effect:'bomb_pass',target_uuid:nextTarget.id});
+        if(effect.error || !effect.data) return;
         alert(`💣 폭탄을 [${nextTarget.group_name}] 조에게 넘겼습니다!`);
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
       }
@@ -702,6 +698,12 @@ export const MobileMissionView = () => {
     if (currentScore < actualCost) return alert('점수가 부족합니다!');
     if (!window.confirm(`${actualCost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) return;
 
+    if (['donate','steal','time','blind'].includes(item.id)) {
+      const target=item.id==='time'?null:scores.filter(g=>g.id!==groupId).sort((a,b)=>item.id==='donate'?a.score-b.score:b.score-a.score)[0]?.id;
+      const result=await supabase.rpc('classroom_effect',{room_uuid:roomId,effect:item.id,target_uuid:target,player_role:role});
+      if(result.error || !result.data) return alert('수업 상태·점수·참여 권한을 확인하세요.');
+      await trackPurchase();playBeep();return;
+    }
     if (item.id !== 'tsunami') {
       enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -actualCost }, timestamp: Date.now() });
       playBeep();
@@ -723,38 +725,6 @@ export const MobileMissionView = () => {
       } else {
         setTimeout(() => alert('😭 꽝입니다...'), 300);
       }
-    } else if (item.id === 'donate') {
-      const lowest = scores.reduce((prev, curr) => prev.score < curr.score ? prev : curr);
-      if (lowest.id === groupId) {
-        return alert('우리 조가 꼴등입니다! 다른 사람을 도울 여유가 없네요 ㅠㅠ');
-      }
-      const donateAmount = role === 'priest' ? 400 : 200;
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: lowest.id, amount: donateAmount }, timestamp: Date.now() });
-      alert(`천사 강림! 꼴등 조에게 ${donateAmount}점을 선물했습니다!`);
-    } else if (item.id === 'steal') {
-      const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
-      if (highest.id === groupId) {
-        return alert('우리 조가 이미 1등입니다! 훔칠 곳이 없어요.');
-      }
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: highest.id, amount: -100 }, timestamp: Date.now() });
-      setTimeout(() => {
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 100 }, timestamp: Date.now() });
-        alert('성공! 1등 조의 점수를 100점 훔쳐왔습니다!');
-      }, 500);
-    } else if (item.id === 'time') {
-      if (gameRoom) {
-        const newMod = gameRoom.global_time_modifier + 30;
-        await supabase.from('game_rooms').update({ global_time_modifier: newMod }).eq('id', gameRoom.id);
-        alert('시간술사의 힘! 학급 전체 제한 시간이 30초 늘어났습니다!');
-      }
-    } else if (item.id === 'blind') {
-      const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
-      if (highest.id === groupId) {
-        return alert('우리 조가 이미 1등입니다! 공격할 대상이 없습니다.');
-      }
-      const blindedUntil = new Date(Date.now() + 15000).toISOString();
-      await supabase.from('room_groups').update({ is_blinded_until: blindedUntil }).eq('id', highest.id);
-      alert('성공! 1등 조의 화면에 먹물을 뿌렸습니다!');
     } else if (item.id === 'tsunami') {
       const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
       if (highest.id === groupId) {
@@ -788,7 +758,7 @@ export const MobileMissionView = () => {
     if (!isBossMode) {
       setHoldProgress(0);
       if (holdInterval.current) {
-        clearInterval(holdInterval.current as number);
+        clearInterval(holdInterval.current);
         holdInterval.current = null;
       }
     }

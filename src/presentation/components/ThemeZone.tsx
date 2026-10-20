@@ -54,7 +54,7 @@ const MODES: ThemeMode[] = [
   { id: 'cooldown', group: 'solo', emoji: '🫀', title: '쿨다운 & 심박수 루틴', desc: '호흡 이완 & 맥박 체크' },
 
   { id: 'splitBattle', group: 'versus', emoji: '🤼', title: '2인 배틀 대결', desc: '화면 분할 줄다리기·연타' },
-  { id: 'quickPin', group: 'versus', emoji: '🔢', title: '4자리 PIN 학급대항전', desc: '청팀 vs 백팀 즉시 대결' },
+  { id: 'quickPin', group: 'versus', emoji: '🔢', title: 'PIN 모둠 코드 학급대항전', desc: '청팀 vs 백팀 즉시 대결' },
   { id: 'stationCircuit', group: 'versus', emoji: '🏟️', title: 'QR 스테이션 서킷', desc: '4구역 순환 미션 스탬프' },
   { id: 'motionCam', group: 'versus', emoji: '📷', title: '모션 감지 캠 챌린지', desc: '카메라 앞 핸즈프리 점프' },
 

@@ -1,0 +1,10 @@
+.env*
+*.local
+teacher-studio
+dist-teacher
+outputs
+docs
+supabase
+scripts
+server/geminiStudio.ts
+node_modules

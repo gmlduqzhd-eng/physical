@@ -277,7 +277,7 @@ export const GameHub = () => {
             <div className="flex justify-between items-center mb-5"><h2 className="text-lg font-black">메뉴 · 설정</h2><button type="button" onClick={() => setShowMenu(false)} aria-label="메뉴 닫기" className="p-2"><X className="w-5 h-5" /></button></div>
             <div className="hub-menu-items">
               <button type="button" onClick={() => navigate('/manual')}><BookOpen className="w-4 h-4" /> 사용 설명서</button>
-              <button type="button" onClick={() => navigate('/manual?tab=lesson')}><Sparkles className="w-4 h-4" /> 지도안 생성기</button>
+              <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI 수업 준비실</button>
               <button type="button" onClick={toggleTheme}>{isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />} {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}</button>
               <button type="button" onClick={toggleVoice} aria-pressed={voiceEnabled}>{voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} 음성 코칭 {voiceEnabled ? 'ON' : 'OFF'}</button>
             </div>
@@ -308,7 +308,7 @@ export const GameHub = () => {
                 <input
                   value={nicknameInput}
                   onChange={e => setNicknameInput(e.target.value)}
-                  placeholder="이름(학교명)을 입력하세요"
+                  placeholder="별명만 입력 (실명·학교명 금지)"
                   className="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   onKeyDown={e => { if (e.key === 'Enter' && nicknameInput.trim()) { createProfile(nicknameInput.trim()); setNicknameInput(''); } }}
                 />
@@ -430,6 +430,7 @@ export const GameHub = () => {
       </section>
       {activeTab === 'activities' || activeTab === 'teacher' ? (
         <section id={`hub-panel-${activeTab}`} aria-label={activeTab === 'teacher' ? '선생님 도구' : '특별 활동'}>
+          {activeTab === 'teacher' && <div className="p-4 max-w-5xl mx-auto"><button className="rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button><button className="ml-3 underline" onClick={() => navigate('/privacy')}>기기 정보 관리</button></div>}
           <ThemeZone groupFilter={activeTab === 'teacher' ? 'teacher' : 'activities'} onSelect={openThemeMode} onOpenBadgeArchive={() => setShowBadgeArchive(true)} />
         </section>
       ) : null}

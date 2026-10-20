@@ -93,7 +93,7 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
     setLoading(true);
     
     let error;
-    if (initialTemplate) {
+    if (initialTemplate?.teacher_id) {
       const { error: updateErr } = await supabase.from('mission_templates')
         .update({ name: name.trim(), buttons })
         .eq('id', initialTemplate.id);

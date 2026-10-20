@@ -15,7 +15,7 @@ export const useGameLogic = (roomId?: string) => {
     let active = true;
     let fetching = false;
     let refreshPending = false;
-    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    let refreshTimer: number | null = null;
     let cachedTemplate: MissionTemplate | null = null;
     let templateInvalidated = true;
     setScores([]); setGameRoom(null); setTemplate(null);

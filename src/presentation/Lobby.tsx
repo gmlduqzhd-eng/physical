@@ -8,7 +8,8 @@ import { RotateCcw } from 'lucide-react';
 
 export const Lobby = () => {
   const [pinCode, setPinCode] = useState(() => new URLSearchParams(window.location.search).get('pin') || '');
-  const [studentName, setStudentName] = useState(() => readStorage('physical_student_name') || '');
+  const studentName = '익명 원정대원';
+  const [inviteCode, setInviteCode] = useState('');
   const [groupName, setGroupName] = useState('1모둠');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -44,16 +45,12 @@ export const Lobby = () => {
       setError('핀 번호를 입력해주세요.');
       return;
     }
-    if (!studentName.trim()) {
-      setError('이름을 입력해주세요.');
-      return;
-    }
     setLoading(true);
     setError('');
 
     try {
       const room = await findRoomByPin(pinCode);
-      const groupId = await joinClassroomGroup(room.id, groupName);
+      const groupId = await joinClassroomGroup(room.id, groupName, inviteCode);
       writeStorage('physical_student_name', studentName.trim());
       writeStorage('physical_student_role', 'novice');
       writeStorage('physical_last_room', room.id);
@@ -80,36 +77,26 @@ export const Lobby = () => {
           이전 수업 이어하기 ({lastName} / {lastGroupName})
         </button>
       )}
-      
+
       <form onSubmit={handleJoin} className="w-full max-w-sm bg-white rounded-2xl p-6 border border-slate-200 shadow-xl flex flex-col gap-5">
         <div>
           <label className="block text-slate-700 text-sm font-bold mb-2">핀 번호 (PIN)</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             inputMode="numeric"
-            maxLength={4}
-            placeholder="예: 1234" 
+            maxLength={8}
+            placeholder="8자리 수업 PIN"
             value={pinCode}
             onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-xl font-mono text-center tracking-[0.5em] focus:outline-none focus:border-cyan-500"
           />
         </div>
 
-        <div>
-          <label className="block text-slate-700 text-sm font-bold mb-2">본인 이름 (활동명)</label>
-          <input 
-            type="text" 
-            placeholder="예: 홍길동" 
-            value={studentName}
-            onChange={(e) => setStudentName(e.target.value)}
-            maxLength={10}
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg font-bold text-center focus:outline-none focus:border-cyan-500"
-          />
-        </div>
+        <div className="text-sm text-slate-600">이름 입력 없이 익명으로 참여합니다. 실명·번호·연락처를 입력하지 마세요.</div>
 
         <div>
           <label className="block text-slate-700 text-sm font-bold mb-2">우리 모둠</label>
-          <select 
+          <select
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
             className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg focus:outline-none focus:border-cyan-500"
@@ -120,10 +107,11 @@ export const Lobby = () => {
           </select>
         </div>
 
+        <label className="text-slate-700 font-bold">모둠 참여 코드<input type="password" autoComplete="off" maxLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value)} placeholder="교사가 알려준 모둠 코드" className="block w-full border rounded-xl p-4 mt-2"/></label>
         {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={loading}
           className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-xl transition-colors mt-2"
         >
@@ -132,6 +120,7 @@ export const Lobby = () => {
       </form>
 
       <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
+        <Link to="/privacy" className="text-center underline text-sm text-cyan-800">공용 기기 정보 지우기 / 개인정보 안내</Link>
         <Link to="/manual" className="w-full py-3 bg-cyan-50 rounded-xl text-center font-bold hover:bg-cyan-100 text-cyan-600 transition-colors text-sm border border-cyan-200 shadow-sm">
           📖 땀방울 원정대 사용 설명서
         </Link>

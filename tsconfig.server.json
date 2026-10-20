@@ -1,0 +1,4 @@
+{
+  "compilerOptions": { "target": "ES2023", "lib": ["ES2023", "DOM"], "module": "ESNext", "moduleResolution": "bundler", "types": ["node"], "skipLibCheck": true, "strict": true, "noEmit": true, "resolveJsonModule": true, "allowImportingTsExtensions": true, "jsx": "react-jsx" },
+  "include": ["api/**/*.ts", "server/**/*.ts", "scripts/dev-api.ts", "scripts/dev-studio-api.ts", "scripts/teacher-ai.test.ts", "scripts/gemini-studio.test.ts"]
+}

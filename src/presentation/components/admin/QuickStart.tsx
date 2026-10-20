@@ -1,5 +1,6 @@
+import {LocalQRCode} from '../LocalQRCode';
 import { useState } from 'react';
-import { createClassroom, classroomError } from '../../../data/classroomRepository';
+import { createClassroom, classroomError, openClassroomBoard } from '../../../data/classroomRepository';
 import type { MissionTemplate } from '../../../domain/types';
 import { Zap, Loader2, X, Copy, Check, ExternalLink } from 'lucide-react';
 
@@ -100,11 +101,7 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
             {/* 전체 입장 QR 코드 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-5 text-center">
               <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">📱 전체 입장 QR 코드</p>
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`${baseUrl}/lobby`)}`}
-                alt="입장 QR"
-                className="w-48 h-48 mx-auto mb-2 border border-slate-200 rounded-xl"
-              />
+              <LocalQRCode value={baseUrl+'/lobby'} alt="학생 입장 QR" className="w-36 h-36 mx-auto"/>
               <p className="text-xs text-slate-400">QR 스캔 → PIN 입력 → 바로 참여!</p>
             </div>
 
@@ -122,7 +119,7 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
 
             {/* TV 전광판 바로가기 */}
             <a
-              href={`/board/${createdRoom.id}`}
+              href={`/board/${createdRoom.id}`} onClick={e=>{e.preventDefault();void openClassroomBoard(createdRoom.id);}}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"

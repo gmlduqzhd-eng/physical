@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
+import { openClassroomBoard } from '../data/classroomRepository';
 import { useGameLogic } from '../application/useGameLogic';
 import { timeOffset } from '../application/timeSync';
 import type { GameRoom } from '../domain/types';
@@ -204,7 +205,7 @@ export const TeacherRemote: React.FC = () => {
           </span>
           {currentRoom && (
             <button
-              onClick={() => window.open(`/board/${currentRoom.id}`, '_blank')}
+              onClick={() => void openClassroomBoard(currentRoom.id)}
               className="p-1.5 text-slate-400 hover:text-cyan-400"
               title="전광판 새창 열기"
             >

@@ -1,48 +1,15 @@
+import { useEffect, useState } from 'react';
+import QRCode from 'qrcode';
+import { supabase } from '../../../data/supabase';
 import type { GameRoom, RoomGroup } from '../../../domain/types';
-
-interface QRCodePanelProps {
-  currentRoom: GameRoom;
-  roomGroups: RoomGroup[];
-  appUrl?: string;
-}
-
-export const QRCodePanel = ({ currentRoom, roomGroups, appUrl }: QRCodePanelProps) => {
-  const baseUrl = appUrl || window.location.origin;
-
-  const groupNames = roomGroups.length > 0
-    ? roomGroups.map(g => g.group_name)
-    : Array.from({ length: 8 }, (_, i) => `${i + 1}모둠`);
-
-  return (
-    <div className="bg-cyan-50 shadow-sm p-4 rounded-xl border border-cyan-200 print:shadow-none">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold text-cyan-900 flex items-center gap-2">
-          📱 모둠별 입장 QR 코드
-        </h2>
-        <button onClick={() => window.print()} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold flex items-center gap-2 text-sm print:hidden">
-          🖨️ 인쇄하기
-        </button>
-      </div>
-      <p className="text-sm text-cyan-700 mb-4 print:hidden">학생들이 아래 QR 코드를 스캔하면 이름만 입력하고 바로 입장합니다. 인쇄하여 체육관에 부착하세요.</p>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 print:grid-cols-4">
-        {groupNames.map(name => {
-          const joinUrl = `${baseUrl}/join?room=${currentRoom.id}&group=${encodeURIComponent(name)}`;
-          const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(joinUrl)}`;
-
-          return (
-            <div key={name} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
-              <h3 className="font-black text-lg text-cyan-700 mb-2">{name}</h3>
-              <img src={qrSrc} alt={`${name} 입장 QR`} className="w-32 h-32 mb-2 pointer-events-auto" />
-              <p className="text-[10px] text-slate-400 break-all print:hidden">{joinUrl}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mt-4 bg-white p-3 rounded-lg border border-cyan-200 print:hidden">
-        <p className="text-xs text-cyan-800 font-bold">💡 팁: QR 코드를 A4 용지에 인쇄하여 체육관 벽에 부착하면, 학생들이 달려가서 QR을 찍고 바로 게임에 참여할 수 있습니다!</p>
-      </div>
-    </div>
-  );
+interface Props { currentRoom: GameRoom; roomGroups: RoomGroup[]; appUrl?: string }
+export const QRCodePanel = ({currentRoom,appUrl}:Props) => {
+ const [deviceCodes,setDeviceCodes]=useState<{board_code:string;recovery_code:string}|null>(null);
+ const [cards,setCards]=useState<{group_name:string;code:string;image:string}[]>([]);const [error,setError]=useState('');
+ useEffect(()=>{let active=true; setCards([]);setDeviceCodes(null);setError('');void (async()=>{
+  const result=await supabase.rpc('get_classroom_invites',{room_uuid:currentRoom.id});
+  const codes=await supabase.rpc('get_classroom_device_codes',{room_uuid:currentRoom.id});if(codes.error)throw new Error('교사 기기 코드 발급 실패');if(active)setDeviceCodes(codes.data);if(result.error)throw new Error('모둠 참여 코드를 불러오지 못했습니다. 교사 권한을 확인하세요.');
+  const items=await Promise.all((result.data as {group_name:string;code:string}[]).map(async item=>{const url=new URL('/join',appUrl||window.location.origin);url.searchParams.set('room',currentRoom.id);url.searchParams.set('group',item.group_name);url.hash=new URLSearchParams({code:item.code}).toString();return {...item,image:await QRCode.toDataURL(url.toString(),{width:200,margin:2})};}));if(active)setCards(items);
+ })().catch(e=>{if(active)setError(e instanceof Error?e.message:'QR 생성 실패');});return()=>{active=false};},[currentRoom.id,appUrl]);
+ return <section className="bg-cyan-50 border border-cyan-200 rounded-xl p-4"><h2 className="font-bold text-lg">모둠별 입장 QR · 교사 소유 방</h2><p>수업 PIN: <strong>{currentRoom.pin_code}</strong>. 학생은 실명 없이 우리 모둠 QR로 입장합니다. 참여 코드는 다른 모둠에 공유하지 마세요. QR은 이 기기에서 생성하며 외부 QR 서비스에 코드를 보내지 않습니다.</p><button onClick={()=>window.print()} className="border rounded-lg p-3 my-3 print:hidden">인쇄하기</button>{error&&<p role="alert">{error}</p>}<div className="my-3 text-sm">{deviceCodes&&<><p>전광판 전용 코드 (읽기만 허용): <code>{deviceCodes.board_code}</code></p><details className="print:hidden"><summary>교사 전용 복구키 · 학생에게 공유 금지</summary><p>기기를 바꾸거나 탭을 닫기 전 별도로 보관하세요. 이 키와 교사 접근 코드가 있어야 방 소유권을 복구합니다.</p><code>{deviceCodes.recovery_code}</code></details></>}</div><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{cards.map(card=><article key={card.group_name} className="bg-white border rounded-lg p-3 text-center"><h3 className="font-bold">{card.group_name}</h3><img src={card.image} alt={card.group_name+' 입장 QR'} className="w-36 mx-auto"/><p>참여 코드: <code>{card.code}</code></p></article>)}</div></section>;
 };

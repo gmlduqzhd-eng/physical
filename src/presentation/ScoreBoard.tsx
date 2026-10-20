@@ -1,3 +1,4 @@
+import {LocalQRCode} from './components/LocalQRCode';
 import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
@@ -7,8 +8,10 @@ import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldA
 import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
 import { sfxWhistle } from '../application/soundEffects';
+import { BoardAccess } from './components/BoardAccess';
 
-export const ScoreBoard = () => {
+export const ScoreBoard = () => <BoardAccess><ScoreBoardContent/></BoardAccess>;
+const ScoreBoardContent = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const { scores, gameRoom, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, isDanger } = useGameTimer(gameRoom);
@@ -317,10 +320,10 @@ export const ScoreBoard = () => {
       {/* QR 코드 패널 */}
       {showQR && (
         <div className="relative z-10 px-12 py-4 bg-cyan-50 border-b border-cyan-200 flex items-center justify-center gap-6">
-          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(`${window.location.origin}/lobby`)}`} alt="입장 QR" className="w-24 h-24 border border-cyan-200 rounded-lg" />
+          <LocalQRCode value={window.location.origin+'/lobby'} alt="입장 QR" className="w-24 h-24 border border-cyan-200 rounded-lg"/>
           <div>
             <p className="text-lg font-black text-cyan-800">📱 지금 바로 참여하세요!</p>
-            <p className="text-sm text-cyan-600">QR 코드를 스캔하고 PIN을 입력하면 바로 입장!</p>
+            <p className="text-sm text-cyan-600">QR을 스캔하고 수업 PIN과 우리 모둠 코드를 입력하세요.</p>
             {gameRoom && <p className="text-2xl font-black text-cyan-700 mt-1 font-mono">PIN: {gameRoom.pin_code}</p>}
           </div>
         </div>

@@ -1,0 +1,14 @@
+import { randomBytes, scryptSync } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
+import { createInterface } from 'node:readline/promises';
+const rl = createInterface({ input: process.stdin, output: process.stdout });
+console.log('교사 접근 코드는 12자 이상이어야 합니다. 화면에 표시되므로 주변을 확인하세요. 서버에서만 해시를 보관합니다.');
+const code = await rl.question('새 교사 접근 코드: '); rl.close();
+if (code.length < 12 || code.length > 128) throw new Error('12~128자 코드를 사용하세요.');
+const salt = randomBytes(16).toString('hex');
+const hash = salt + ':' + scryptSync(code, salt, 64).toString('hex');
+let text = await readFile('.env.teacher.local', 'utf8').catch(() => '');
+for (const key of ['TEACHER_ACCESS_HASH', 'TEACHER_SESSION_SECRET', 'APP_ORIGIN']) text = text.replace(new RegExp('^' + key + '=.*(?:\\r?\\n|$)', 'gm'), '');
+text += `\nTEACHER_ACCESS_HASH=${hash}\nTEACHER_SESSION_SECRET=${randomBytes(48).toString('base64url')}\nAPP_ORIGIN=http://127.0.0.1:5173\n`;
+await writeFile('.env.teacher.local', text, { mode: 0o600 });
+console.log('서버 전용 인증 설정을 .env.teacher.local에 저장했습니다.');

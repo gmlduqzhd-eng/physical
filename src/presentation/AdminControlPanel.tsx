@@ -1,8 +1,10 @@
+import {LocalQRCode} from './components/LocalQRCode';
+import { RecoverClassroom } from './components/admin/RecoverClassroom';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { useGameLogic } from '../application/useGameLogic';
-import { createClassroom, classroomError } from '../data/classroomRepository';
+import { createClassroom, classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { timeOffset } from '../application/timeSync';
 import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
 import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone, Sparkles } from 'lucide-react';
@@ -24,6 +26,7 @@ const QUIZ_LIST = [
 export const AdminControlPanel = () => {
   const [activeTab, setActiveTab] = useState<'rooms' | 'templates' | 'create_template' | 'treasures'>('rooms');
   const navigate = useNavigate();
+  // AI proposals remain separate from classroom mutations until a teacher manually applies them.
   
   // Data
   const [templates, setTemplates] = useState<MissionTemplate[]>([]);
@@ -124,23 +127,13 @@ export const AdminControlPanel = () => {
     const controllerId = crypto.randomUUID();
     let active = true;
     let working = false;
-    let pendingDamage = 0;
-    const channel = supabase.channel('room:' + controlledRoomId + ':global', { config: { presence: { key: controllerId } } })
-      .on('broadcast', { event: 'boss_damage' }, event => {
-        const amount = Number(event.payload.amount);
-        if (Number.isFinite(amount) && amount > 0) pendingDamage += Math.min(100000, Math.floor(amount));
-      }).subscribe(status => { if (status === 'SUBSCRIBED') void channel.track({ role: 'teacher-controller' }); });
-    const isLeader = () => Object.entries(channel.presenceState<{ role: string }>()).filter(([, clients]) => clients.some(client => client.role === 'teacher-controller')).map(([id]) => id).sort()[0] === controllerId;
     const interval = window.setInterval(async () => {
       const room = currentRoomRef.current;
-      if (!active || working || !room || !isLeader()) return;
+      if (!active || working || !room) return;
       working = true;
       try {
-        if (room.status === 'boss_raid' && pendingDamage > 0 && room.boss_hp != null && room.boss_hp > 0) {
-          const damage = pendingDamage; pendingDamage = 0;
-          const result = await supabase.rpc('damage_classroom_boss', { room_uuid: controlledRoomId, amount: damage });
-          if (result.error) pendingDamage += damage;
-        }
+        const lease=await supabase.rpc('claim_classroom_controller',{room_uuid:controlledRoomId,holder_uuid:controllerId});
+        if(lease.error || !lease.data) return;
         const isDefenseTimerActive = room.started_at
           ? new Date(room.started_at).getTime() + (1800 + (room.global_time_modifier || 0)) * 1000 > Date.now()
           : true;
@@ -167,7 +160,7 @@ export const AdminControlPanel = () => {
       } catch { console.error('수업 이벤트 동기화 실패'); }
       finally { working = false; }
     }, 2000);
-    return () => { active = false; clearInterval(interval); void supabase.removeChannel(channel); };
+    return () => { active = false; clearInterval(interval); };
   }, [controlledRoomId]);
 
   const sendMinigame = async () => {
@@ -289,6 +282,7 @@ export const AdminControlPanel = () => {
   return (
     <div className="min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
+        <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
         {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 mb-8">
           <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-600">
@@ -379,7 +373,7 @@ export const AdminControlPanel = () => {
               ].map(treasure => (
                 <div key={treasure.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
                   <h3 className={`font-black text-lg mb-2 ${treasure.color}`}>{treasure.name}</h3>
-                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${treasure.id}`} alt={treasure.name} className="w-32 h-32 mb-2" />
+                  <LocalQRCode value={treasure.id} alt={treasure.name} className="w-32 h-32 mb-2"/>
                   <p className="text-xs text-slate-400 break-all">{treasure.id}</p>
                 </div>
               ))}
@@ -400,7 +394,7 @@ export const AdminControlPanel = () => {
                     <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <button onClick={(e) => { e.stopPropagation(); window.open(`/board/${r.id}`, '_blank'); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
+                    <button onClick={(e) => { e.stopPropagation(); void openClassroomBoard(r.id); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
                       <LucideIcons.Monitor className="w-4 h-4" /> TV 전광판
                     </button>
                   </div>
@@ -434,7 +428,7 @@ export const AdminControlPanel = () => {
                 <button onClick={() => window.open(`/remote/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
                   <Smartphone className="w-4 h-4" /> 📱 모바일 리모컨
                 </button>
-                <button onClick={() => window.open(`/board/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
+                <button onClick={() => void openClassroomBoard(currentRoom.id)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
                   <LucideIcons.Monitor className="w-4 h-4" /> 🖥️ TV 전광판 열기
                 </button>
               </div>

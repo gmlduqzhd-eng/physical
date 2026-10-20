@@ -30,3 +30,4 @@ dist-ssr
 .vercel
 /test-results/
 /supabase/.temp/
+/dist-teacher/

@@ -1,3 +1,4 @@
+import {ensureClassroomTeacher} from '../data/supabase';
 import React, { useState, useRef } from 'react';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
@@ -25,7 +26,7 @@ export const KioskRelayView = () => {
     if (loading) return;
     setLoading(true);
     setError('');
-    try { const found = await findRoomByPin(pinCode); setRoomId(found.id); }
+    try { await ensureClassroomTeacher(); const found = await findRoomByPin(pinCode); setRoomId(found.id); }
     catch (cause) { setError(classroomError(cause, '방 접속에 실패했습니다.')); }
     finally { setLoading(false); }
   };
@@ -51,13 +52,13 @@ export const KioskRelayView = () => {
         <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm flex flex-col items-center">
           <LucideIcons.MonitorSmartphone className="w-20 h-20 text-cyan-400 mb-4 animate-pulse" />
           <h1 className="text-2xl font-black mb-2 text-center">공용 키오스크 스테이션 모드</h1>
-          <p className="text-slate-300 text-sm mb-6 text-center break-keep">선생님이 알려주신 방 PIN 번호를 입력하여 공용 패드 모드로 진입하세요.</p>
+          <p className="text-slate-300 text-sm mb-6 text-center break-keep">교사 인증 후 소유한 방의 8자리 PIN을 입력합니다. 여러 모둠의 점수를 기록하는 공용 기기는 교사가 관리하세요.</p>
           <form onSubmit={handleEnterRoom} className="w-full flex flex-col gap-4">
             <input 
               type="text" 
               placeholder="PIN 번호" 
               inputMode="numeric"
-              maxLength={4}
+              maxLength={8}
               value={pinCode}
               onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
               className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"

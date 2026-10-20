@@ -1,6 +1,6 @@
 // 2022 개정 초등 체육과 교육과정 연계 게임 데이터 및 메타데이터
-import { EXPRESSION_GAMES } from '../presentation/components/minigames/expression/expressionGamesData';
-import { CURRICULUM_GAMES_META } from '../presentation/components/minigames/curriculum/curriculumGamesMeta';
+import { EXPRESSION_GAMES } from '../presentation/components/minigames/expression/expressionGamesData.js';
+import { CURRICULUM_GAMES_META } from '../presentation/components/minigames/curriculum/curriculumGamesMeta.js';
 
 export type GradeGroup = '전체' | '1~2학년' | '3~4학년군' | '5~6학년군';
 export type PeDomain2022 = '전체' | '운동' | '스포츠' | '표현';
