@@ -13,6 +13,8 @@ import { ObserverRefereeMode } from './components/ObserverRefereeMode';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { resolveGuidedGameType } from '../domain/guidedMission';
+import { useGuidedSubmission } from '../application/useGuidedSubmission';
+import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
 
@@ -43,6 +45,8 @@ export const MobileMissionView = () => {
   const { roomId, groupId } = useParams<{ roomId: string, groupId: string }>();
   const navigate = useNavigate();
   const { scores, gameRoom, template, loading: roomLoading, error: roomError, refresh: refreshRoom } = useGameLogic(roomId);
+  const guidedEntry = template?.buttons.map(mission => ({ mission, gameType: resolveGuidedGameType(gameRoom?.name, template.name, template.buttons, mission.id) })).find(entry => entry.gameType);
+  const guidedSubmission = useGuidedSubmission(guidedEntry ? roomId ?? null : null, guidedEntry ? groupId ?? null : null, guidedEntry?.mission.id ?? null);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing, storageAvailable, syncWarning } = useSyncQueue();
   const { playBeep, playVictory, playSiren } = useAudio();
@@ -931,7 +935,6 @@ export const MobileMissionView = () => {
   }
 
   const displayScore = myGroup?.score ?? 0;
-  const guidedEntry = template?.buttons.map(mission => ({ mission, gameType: resolveGuidedGameType(gameRoom?.name, template.name, template.buttons, mission.id) })).find(entry => entry.gameType);
   if (guidedEntry && roomId && groupId) {
     const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
     const pending = myGroup?.pending_missions?.includes(guidedMission.id);
@@ -949,6 +952,8 @@ export const MobileMissionView = () => {
           <p className="text-sm text-slate-600 mt-3">게임을 끝내면 선생님에게 확인 요청이 자동으로 전달돼요.</p>
         </div>
         <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `선생님 확인 완료 · 모둠 ${displayScore}점` : pending ? '선생님 확인을 기다리고 있어요. 게임은 다시 할 수 있어요.' : `모둠 점수 ${displayScore}점`}</div>
+        {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 요청을 다시 보내고 있어요.' : '연결되면 완료 요청을 자동으로 보낼게요.'}</p>}
+        {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-sm">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-sm ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="text-xs text-slate-600 mt-2">{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
         <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '활동 확인 완료' : '게임 시작 →'}</button>
         <p className="text-xs text-slate-500 mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 몸 상태에 맞게 참여해요.</p>
       </div>

@@ -6,6 +6,7 @@ import { timeOffset } from '../application/timeSync';
 import { supabase } from '../data/supabase';
 import { classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { GAMES } from '../domain/gamesData';
+import { GUIDED_REFLECTIONS, reflectionLabel } from '../domain/guidedReflection';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { LessonShell } from './LessonShell';
 import './GuidedClassroom.css';
@@ -57,6 +58,9 @@ export function GuidedClassroom() {
   const game = GAMES.find(item => item.type === template?.buttons[0]?.gameType) || GAMES.find(item => item.name === room?.name);
   const reviewable = pending.filter(item => !item.alreadyCompleted);
   const allSelected = reviewable.length > 0 && reviewable.every(item => selected.includes(item.key));
+  const guidedMissionIds = new Set(template?.buttons.filter(button => button.requires_approval).map(button => button.id) || []);
+  const completed = scores.flatMap(group => (group.completed_missions || []).filter(id => guidedMissionIds.has(id)).map(id => ({ group, missionId: id })));
+  const reflections = scores.flatMap(group => Object.entries(group.stats?.guided_reflections || {}).filter(([id, choice]) => guidedMissionIds.has(id) && reflectionLabel(choice)).map(([id, choice]) => ({ group, missionId: id, choice: String(choice) })));
 
   return <LessonShell audience="teacher" className="guided-classroom" back="/teacher" backLabel="교사 시작 화면">
     {loading ? <p role="status">수업을 불러오는 중…</p> : error || !room ? <div role="alert" className="error">{error || '수업을 찾지 못했습니다.'}<button onClick={refresh}>다시 확인</button></div> : <>
@@ -81,6 +85,10 @@ export function GuidedClassroom() {
           <div className="guided-review-list">{pending.map(item => <div className="guided-review-row" key={item.key}><label><input type="checkbox" disabled={item.alreadyCompleted} checked={selected.includes(item.key)} onChange={event => setSelected(current => event.target.checked ? [...current, item.key] : current.filter(key => key !== item.key))}/><span><strong>{item.groupName}</strong><small>{item.title}{item.alreadyCompleted ? ' · 이미 확인된 중복 요청' : ''}</small></span></label><div className="row"><button disabled={busy || room.status === 'finished' || item.alreadyCompleted} onClick={() => void review([item], true)}>확인</button><button disabled={busy || room.status === 'finished'} onClick={() => void review([item], false)}>반려</button></div></div>)}</div>
         </> : <p className="muted">아직 확인할 요청이 없어요.</p>}
       </section>
+
+      {room.status === 'finished' && <section className="card guided-closeout" aria-label="수업 마무리"><h2>오늘 수업 한눈에</h2><div className="guided-closeout-numbers"><p><strong>{scores.length}</strong><span>등록 모둠</span></p><p><strong>{new Set(completed.map(item => item.group.id)).size}</strong><span>활동 확인 모둠</span></p><p><strong>{completed.length}</strong><span>완료 승인</span></p><p><strong>{reflections.length}</strong><span>회고 응답</span></p></div><p className="muted">{pending.length ? `확인되지 않은 요청 ${pending.length}건이 남아 있어요.` : '확인 대기 요청이 없어요.'}</p><div className="guided-reflection-counts">{GUIDED_REFLECTIONS.map(choice => <p key={choice.value}>{choice.label} <strong>{reflections.filter(item => item.choice === choice.value).length}</strong></p>)}</div></section>}
+
+      <details className="guided-reflections"><summary>모둠별 오늘의 회고 ({reflections.length})</summary>{reflections.length ? <div className="guided-reflection-list">{scores.map(group => { const answers = reflections.filter(item => item.group.id === group.id); return <p key={group.id}><strong>{group.group_name}</strong><span>{answers.length ? answers.map(item => `${template?.buttons.find(button => button.id === item.missionId)?.title || '활동'}: ${reflectionLabel(item.choice)}`).join(' · ') : '아직 응답 없음'}</span></p>; })}</div> : <p className="muted">아직 도착한 회고가 없어요.</p>}</details>
 
       {room.status !== 'finished' && <details open={room.status === 'waiting'}><summary>학생 참여 QR 보여 주기</summary><QRCodePanel currentRoom={room} roomGroups={scores}/></details>}
       <details><summary>모둠 점수와 추가 도구</summary><div className="guided-score-list">{scores.map(group => <p key={group.id}><strong>{group.group_name}</strong><span>{group.score}점</span></p>)}</div><div className="row">{room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ announcement: room.announcement === 'WHISTLE' ? null : 'WHISTLE' })}>{room.announcement === 'WHISTLE' ? '집중 안내 해제' : '잠깐 집중 안내'}</button>}<button onClick={() => void openClassroomBoard(room.id)}>전광판 열기</button><Link to={`/admin?room=${room.id}`}>상세 제어·리포트</Link></div>{room.status !== 'finished' && (!confirmEnd ? <button onClick={() => setConfirmEnd(true)}>수업 종료하기</button> : <div className="notice"><p>종료하면 학생의 점수 제출을 마감합니다.</p><div className="row"><button onClick={() => setConfirmEnd(false)}>계속 진행</button><button disabled={busy} onClick={() => void mutate({ status: 'finished', started_at: null, global_time_modifier: timeLeft - 300 })}>수업 종료 확정</button></div></div>)}</details>

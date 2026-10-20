@@ -171,6 +171,16 @@
 .guided-classroom .guided-review-row small { display: block; color: #687163; margin-top: 3px; }
 .guided-classroom .guided-review-row .row { flex-wrap: nowrap; }
 .guided-classroom .guided-score-list p { padding: 8px 0; border-bottom: 1px solid #e6e8de; }
+.guided-classroom .guided-closeout { margin-top: 20px; padding: 25px 28px; }
+.guided-classroom .guided-closeout h2 { margin: 0 0 16px; }
+.guided-classroom .guided-closeout-numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.guided-classroom .guided-closeout-numbers p { margin: 0; padding: 14px; border-radius: 14px; background: #f0f4e8; display: flex; flex-direction: column; }
+.guided-classroom .guided-closeout-numbers strong { font-size: 27px; color: #354239; }
+.guided-classroom .guided-closeout-numbers span { color: #52634a; font-size: 13px; }
+.guided-classroom .guided-reflection-counts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.guided-classroom .guided-reflection-counts p { margin: 0; padding: 8px 12px; border: 1px solid #d6e0cb; border-radius: 12px; }
+.guided-classroom .guided-reflection-list p { display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px solid #e6e8de; padding: 10px 0; }
+.guided-classroom .guided-reflection-list span { text-align: right; }
 
 .flow.lesson-shell.guided-classroom .guided-groups .stack {
   gap: 0;
@@ -191,6 +201,9 @@
 }
 
 @media (max-width: 760px) {
+  .guided-classroom .guided-closeout-numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guided-classroom .guided-reflection-list p { flex-direction: column; gap: 3px; }
+  .guided-classroom .guided-reflection-list span { text-align: left; }
   .guided-classroom .guided-review-heading,
   .guided-classroom .guided-review-row { align-items: flex-start; }
   .guided-classroom .guided-review-row { flex-wrap: wrap; }
