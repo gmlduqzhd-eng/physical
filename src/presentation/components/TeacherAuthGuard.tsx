@@ -14,7 +14,8 @@ export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
       const res = await fetch(`/api/teacher?action=${setup ? 'setup' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
       const body = await res.json(); if (!res.ok) throw new Error(body.error ?? '인증 실패'); setCode(''); onLogin();
     } catch (cause) { setError(cause instanceof Error ? cause.message : '인증 서버에 연결할 수 없습니다.'); } finally { setBusy(false); } }}>
-      <label className="block font-bold">교사 접근 코드<input className="block w-full border rounded-xl p-3 mt-2" type="password" autoComplete="current-password" minLength={12} maxLength={128} value={code} onChange={e => setCode(e.target.value)} required /></label>
+      <label className="block font-bold">교사 접근 코드<input className="block w-full border rounded-xl p-3 mt-2" type="password" autoComplete="current-password" aria-describedby="teacher-code-help" minLength={12} maxLength={128} value={code} onChange={e => setCode(e.target.value)} required /></label>
+      <p id="teacher-code-help" className="mt-2 text-sm text-slate-600">코드는 엽쌤에게 문의하세요</p>
       <button disabled={busy} className="mt-3 rounded-xl bg-cyan-700 text-white px-5 py-3 font-bold">{busy ? '확인 중…' : setup ? '접근 코드 설정하고 시작' : '교사 인증하기'}</button>
     </form>{error && <p role="alert" className="text-red-700 mt-3">{error}</p>}
   </section>;
