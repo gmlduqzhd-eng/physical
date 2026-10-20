@@ -7,4 +7,6 @@ docs
 supabase
 scripts
 server/geminiStudio.ts
+server/studioHandler.ts
+.studio-deploy
 node_modules

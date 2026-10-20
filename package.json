@@ -27,7 +27,9 @@
     "dev:studio": "vite --config teacher-studio/vite.config.ts",
     "dev:studio:api": "tsx scripts/dev-studio-api.ts",
     "build:studio": "tsc --noEmit -p tsconfig.studio.json && vite build --config teacher-studio/vite.config.ts",
-    "test:studio": "tsx --test scripts/gemini-studio.test.ts"
+    "test:studio": "tsx --test scripts/gemini-studio.test.ts",
+    "test:studio:deployment": "tsx --test scripts/studio-deployment.test.ts",
+    "prepare:studio:deploy": "node scripts/prepare-studio-deploy.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",

@@ -23,7 +23,7 @@ const server = createServer(async (req, res) => {
   }
   const action = new URL(req.url ?? '/', origin).searchParams.get('action');
   const nonce = session(req, scope);
-  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel });
+  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: true });
   if (req.method !== 'POST') return send(405, { error: 'POST 요청이 필요합니다.' });
   if (req.headers.origin !== origin) return send(403, { error: '교사 전용 도구에서만 요청할 수 있습니다.' });
   if (!(req.headers['content-type'] ?? '').startsWith('application/json')) return send(415, { error: 'JSON만 허용합니다.' });

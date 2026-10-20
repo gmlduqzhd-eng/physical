@@ -14,7 +14,7 @@ async function request(action: string, body?: unknown) {
   const data = await res.json(); if (!res.ok) throw new Error(data.error ?? '연결 실패'); return data;
 }
 export function Studio() {
-  const [status, setStatus] = useState({ authenticated: false, configured: false, aiReady: false, model: '' });
+  const [status, setStatus] = useState({ authenticated: false, configured: false, aiReady: false, model: '', localSetup: false });
   const [code, setCode] = useState(''); const [adult, setAdult] = useState(false);
   const [key, setKey] = useState(''); const [publicData, setPublicData] = useState(false); const [freeProject, setFreeProject] = useState(false);
   const [keyError, setKeyError] = useState(''); const [keyMessage, setKeyMessage] = useState(''); const [savingKey, setSavingKey] = useState(false);
@@ -24,7 +24,7 @@ export function Studio() {
   const [reviewed, setReviewed] = useState(false); const [adopted, setAdopted] = useState(false);
   const version = useRef(0);
   const refresh = async () => setStatus(await request('status'));
-  useEffect(() => { void request('status').then(setStatus).catch(() => setError('교사 API 서버를 실행하세요: npm run dev:studio:api')); }, []);
+  useEffect(() => { void request('status').then(setStatus).catch(() => setError('교사 API 서버에 연결하지 못했습니다. 잠시 후 다시 열어 주세요.')); }, []);
   const change = (patch: Partial<StudioForm>) => { version.current++; setForm(previous => ({ ...previous, ...patch })); setDraft(null); setResponse(null); setReviewed(false); setAdopted(false); setError(''); };
   const edit = (patch: Partial<TeacherOutput>) => { if (draft) setDraft({ ...draft, ...patch }); setReviewed(false); setAdopted(false); };
   const download = () => {
@@ -33,11 +33,11 @@ export function Studio() {
     const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' })); const a = document.createElement('a'); a.href = url; a.download = '교사-수업준비-검토본.txt'; a.click(); URL.revokeObjectURL(url);
   };
   return <main className="teacher-ai">
-    <header><strong>교사 수업 준비실</strong><span>성인 교사 전용 · 로컬 시험</span>{status.authenticated && <button onClick={() => { version.current++; setDraft(null); setResponse(null); setKey(''); void request('logout', {}).then(refresh); }}>로그아웃</button>}</header>
+    <header><strong>교사 수업 준비실</strong><span>성인 교사 전용 · {import.meta.env.DEV ? '로컬 시험' : '온라인 준비 도구'}</span>{status.authenticated && <button onClick={() => { version.current++; setDraft(null); setResponse(null); setKey(''); void request('logout', {}).then(refresh); }}>로그아웃</button>}</header>
     <section className="ai-intro"><p className="ai-eyebrow">GEMINI · PUBLIC MATERIALS ONLY</p><h1>공개 활동으로 준비하는<br/>우리 반 체육 수업.</h1><p>학생 앱과 분리된 교사용 준비 도구입니다. 학생에게 이 화면과 접근 코드를 공유하지 마세요.</p><div role="status" className="ai-status">{status.aiReady ? `Gemini 설정 저장됨 · ${status.model} · 실제 호출 성공 여부는 생성 후 확인` : 'Gemini 키 설정 필요 · 가짜 결과를 표시하지 않습니다'}</div></section>
-    <details className="ai-privacy"><summary>무료 API 전송 정보·학습 이용·보관 안내</summary><p>전송: 공개 활동 설명·원문 안전 자료와 선택한 학년군·목표·장소·기기·수업 시간·일반 인원 조건. 학생 실명·별명·번호·사진·연락처·개인 이력·관찰 메모 원문은 전송하지 않습니다. 7번은 교사가 선택한 일반 관찰 태그만, 8번은 충분히 큰 집단의 거친 범주 집계만 전송합니다. 6번 기록은 이 화면 메모리에서만 처리합니다.</p><p>무료 Gemini 입력과 출력은 Google 제품·모델 개선 및 사람 검토에 사용될 수 있습니다. 무료 서비스 전체의 고정 보관 일수는 이용 조건에서 명시적으로 보장하지 않으므로 무보관으로 안내하지 않습니다. 민감·기밀 자료를 넣지 마세요. <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">Google 이용 조건</a></p><p>이 도구는 검색·파일 업로드·대화 이력·명시적 캐시를 사용하지 않습니다. 앱 서버와 브라우저 저장소에 입력·출력을 보관하지 않고 새로고침 시 초안을 지웁니다. 교사가 내려받은 파일은 직접 관리합니다. 키는 서버의 Git 제외 파일에만 저장합니다.</p><p>무료·유료 여부는 Google 프로젝트 결제 연결 상태에 따라 정해집니다. 이 도구가 요금제를 확인하거나 자동 변경하지 않습니다. 유료 전환 전 데이터 처리 조건과 학교 절차를 다시 확인하세요.</p></details>
+    <details className="ai-privacy"><summary>무료 API 전송 정보·학습 이용·보관 안내</summary><p>전송: 공개 활동 설명·원문 안전 자료와 선택한 학년군·목표·장소·기기·수업 시간·일반 인원 조건. 학생 실명·별명·번호·사진·연락처·개인 이력·관찰 메모 원문은 전송하지 않습니다. 7번은 교사가 선택한 일반 관찰 태그만, 8번은 충분히 큰 집단의 거친 범주 집계만 전송합니다. 6번 기록은 이 화면 메모리에서만 처리합니다.</p><p>무료 Gemini 입력과 출력은 Google 제품·모델 개선 및 사람 검토에 사용될 수 있습니다. 무료 서비스 전체의 고정 보관 일수는 이용 조건에서 명시적으로 보장하지 않으므로 무보관으로 안내하지 않습니다. 민감·기밀 자료를 넣지 마세요. <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">Google 이용 조건</a></p><p>이 도구는 검색·파일 업로드·대화 이력·명시적 캐시를 사용하지 않습니다. 앱 서버와 브라우저 저장소에 입력·출력을 보관하지 않고 새로고침 시 초안을 지웁니다. 교사가 내려받은 파일은 직접 관리합니다. 키는 로컬에서는 Git 제외 파일, 온라인에서는 서버 전용 환경변수에만 저장합니다.</p><p>무료·유료 여부는 Google 프로젝트 결제 연결 상태에 따라 정해집니다. 이 도구가 요금제를 확인하거나 자동 변경하지 않습니다. 유료 전환 전 데이터 처리 조건과 학교 절차를 다시 확인하세요.</p></details>
     {!status.authenticated ? <section className="ai-form"><h2>성인 교사 인증</h2><p>기존 교사 접근 코드를 사용합니다. API 키와 다른 비밀번호입니다.</p>{!status.configured && <p role="alert">먼저 터미널에서 npm run teacher:setup으로 접근 코드를 설정하세요.</p>}<form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try { await request('login', { code, adultTeacher: adult }); setCode(''); await refresh(); } catch (cause) { setError(cause instanceof Error ? cause.message : '인증 실패'); } finally { setBusy(false); } }}><label>교사 접근 코드<input type="password" autoComplete="current-password" minLength={12} maxLength={128} value={code} required onChange={e => setCode(e.target.value)}/></label><label className="ai-check"><input type="checkbox" checked={adult} onChange={e => setAdult(e.target.checked)}/>만 18세 이상 교사이며 학생에게 이 도구를 제공하지 않습니다.</label><button disabled={busy || !adult || !status.configured}>교사 인증하기</button></form></section> : <>
-      <details className="ai-privacy" open={!status.aiReady || !!keyError || !!keyMessage}><summary>Gemini API 키 저장·교체</summary>
+      {status.localSetup && <details className="ai-privacy" open={!status.aiReady || !!keyError || !!keyMessage}><summary>Gemini API 키 저장·교체</summary>
         <p><a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">Google AI Studio에서 키 만들기</a> → 실제 키 전체를 복사해 아래에 붙여 넣으세요. 키는 채팅에 보내지 마세요.</p>
         <form noValidate onSubmit={async e => {
           e.preventDefault(); setKeyError(''); setKeyMessage('');
@@ -57,7 +57,7 @@ export function Studio() {
           {keyError && <p role="alert" className="ai-error">{keyError}</p>}
           {keyMessage && <p role="status">{keyMessage}</p>}
         </form>
-      </details>
+      </details>}
       <nav className="ai-tabs" aria-label="교사 준비 기능">{Object.entries(STUDIO_TASKS).map(([task, label]) => <button key={task} disabled={busy} aria-pressed={form.task === task} onClick={() => change({ task: task as TeacherTask, observations: [], aggregate: null, activityId: ['recommend','alternative'].includes(task) ? null : form.activityId ?? 'space-occupier' })}>{label}</button>)}</nav>
       <div className="ai-workspace"><section className="ai-form"><h2>{STUDIO_TASKS[form.task]}</h2><div className="ai-fields">
         {(['grade', 'goal', 'place', 'device', 'deviceCount'] as const).map((field, index) => <label key={field}>{['학년군', '수업 목표', '장소', '기기', '기기 배치'][index]}<select disabled={busy} value={form[field]} onChange={e => change({ [field]: e.target.value })}>{[['1~2학년', '3~4학년군', '5~6학년군'], GOALS, ['교실', '체육관', '운동장', '다목적실', '좁은 실내 공간'], ['스마트폰', '태블릿 PC', '데스크톱 PC'], ['교사용 1대', '모둠별 1대', '학생 1인 1기기']][index].map(value => <option key={value}>{value}</option>)}</select></label>)}

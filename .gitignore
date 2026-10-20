@@ -31,3 +31,4 @@ dist-ssr
 /test-results/
 /supabase/.temp/
 /dist-teacher/
+/.studio-deploy/
