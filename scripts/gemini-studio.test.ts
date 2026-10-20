@@ -25,7 +25,7 @@ test('student-app cookies cannot authenticate the separate studio', () => {
   assert.ok(session({ headers: { cookie: cookie(newSession('physical_studio'), false, 'physical_studio') } } as never, 'physical_studio'));
 });
 test('Gemini SDK uses Google directly and never sends teacher identity, keys in body or private records', async () => {
-  const original = globalThis.fetch; let calls = 0;
+  const original = globalThis.fetch; let calls = 0; let omitParticipationCitationOnce = false;
   process.env.GEMINI_API_KEY = 'unit-test-fake-not-a-real-google-key'; process.env.GEMINI_MODEL = 'gemini-3.8-flash'; process.env.GEMINI_PUBLIC_DATA_REVIEWED = 'true';
   const input = { ...base, weather: '제약 없음', observations: [], aggregate: null, activityMinutes: 10 };
   const material = sources(input as never);
@@ -40,6 +40,7 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
     if(prompt.context.task==='group'){assert.equal('classSize' in prompt.context,false);assert.equal('groupSize' in prompt.context,false);}
     const toRef=(c:{activityId:string;field:string;quote:string})=>{const game=catalog.find(g=>g.id===c.activityId);if(!game)return{sourceId:'not-issued-reference'};const value=game[c.field as keyof typeof game];return{sourceId:c.activityId+':'+c.field+':'+(Array.isArray(value)?value.indexOf(c.quote as never):0)};};
     const f=fixture as TeacherOutput;const transport={...f,recommendations:f.recommendations.map(r=>({...r,citations:r.citations.map(toRef)})),sections:f.sections.map(s=>({...s,citations:s.citations.map(toRef)})),safety:f.safety.map(c=>toRef({...c,field:'safety'}))};
+    if (omitParticipationCitationOnce && prompt.context.task === 'participation') { transport.sections[0].citations = []; omitParticipationCitationOnce = false; }
     return new Response(JSON.stringify({ candidates: [{ content: { role: 'model', parts: [{ text: JSON.stringify(transport) }] }, finishReason: 'STOP' }], usageMetadata: { promptTokenCount: 100, candidatesTokenCount: 100, totalTokenCount: 200 } }), { headers: { 'Content-Type': 'application/json' } });
   };
   try {
@@ -60,9 +61,15 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
       assert.equal((await generateStudioAdvice(next)).result.sections.length,headings.length);
     }
     assert.equal(calls,10);
+    // A missing source reference in one student cue is regenerated once.
+    // Neither the client nor server may silently invent a citation.
+    omitParticipationCitationOnce = true;
+    const retried = await generateStudioAdvice({ ...input, task: 'participation', activityId: selected.id });
+    assert.ok(retried.result.sections.every(section => section.citations.length > 0));
+    assert.equal(calls,12);
     // A simpler provider schema does not weaken the application's final checks.
     fixture = { ...(fixture as Record<string, unknown>), title: '가'.repeat(121) };
-    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 11);
+    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 13);
     fixture={title:'테스트',recommendations:[],sections:[{heading:'성찰 질문',minutes:null,content:'질문 제안',citations:[{activityId:'invented',field:'description',quote:'없는 자료'}]}],safety:[],teacherChecks:['확인하세요.']};
     // A returned reference outside server-provided material must never be hydrated.
     await assert.rejects(generateStudioAdvice({...base,task:'reflection',activityId:selected.id}),/목록에 없는 원문 참조/);

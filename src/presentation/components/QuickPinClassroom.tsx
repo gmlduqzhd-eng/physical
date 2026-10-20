@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../data/supabase';
-import { createClassroom, findRoomByPin, joinClassroomWithShortPin, classroomError } from '../../data/classroomRepository';
+import { createClassroom, findRoomByPin, joinStudentByPin, getMyClassroomProfile, classroomError } from '../../data/classroomRepository';
+import { rememberStudentIdentity, savedStudentIdentity, validateStudentIdentity } from '../../application/studentIdentity';
+import { StudentIdentityFields } from './StudentIdentityFields';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
@@ -27,6 +29,8 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   const [clientId] = useState(() => crypto.randomUUID());
   const [teacherInvites, setTeacherInvites] = useState<{group_name:string;code:string;short_pin:string}[]>([]);
   const [inputPin, setInputPin] = useState('');
+  const [studentNumber,setStudentNumber]=useState(()=>savedStudentIdentity().number);
+  const [nickname,setNickname]=useState(()=>savedStudentIdentity().nickname);
   const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<'blue' | 'white'>('blue');
@@ -42,16 +46,17 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     let active = true;
     const restore = async () => {
       try {
-        const shortEntry = restorePin.length === 4 ? await joinClassroomWithShortPin(restorePin) : null;
-        const room = shortEntry
-          ? {id:shortEntry.room_id,pin_code:restorePin,status:'waiting'}
+        const profile = restorePin.length === 4 ? await getMyClassroomProfile(restoreRoomId) : null;
+        if (restorePin.length === 4 && (!profile?.student_number || !profile.nickname)) return;
+        const room = profile
+          ? {id:restoreRoomId,pin_code:restorePin,status:'waiting'}
           : await findRoomByPin(restorePin);
         if (room.id !== restoreRoomId || room.status === 'finished') return;
         const { data, error } = await supabase.from('room_groups').select('*').eq('room_id', room.id);
         const blue = data?.find(group => group.group_name === '청팀');
         const white = data?.find(group => group.group_name === '백팀');
         if (!active || error || !blue || !white) return;
-        if (shortEntry) setSelectedTeam(shortEntry.group_name === '백팀' ? 'white' : 'blue');
+        if (profile) setSelectedTeam(profile.group_id===white.id ? 'white' : 'blue');
         setCurrentRoom({ id: room.id, pin: room.pin_code, hostId: readStorage('pin_battle_host_' + room.id, 'session') === 'true' ? clientId : '', blueScore: blue.score, whiteScore: white.score, blueGroupId: blue.id, whiteGroupId: white.id, members: [clientId] });
         setInRoom(true);
       } catch { /* A removed saved battle can be replaced by a new PIN. */ }
@@ -132,8 +137,10 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     if (busyRef.current) return;
     busyRef.current = true; setBusy(true); setErrorMsg(null);
     try {
-      const entry = await joinClassroomWithShortPin(inputPin);
+      const identity=validateStudentIdentity(studentNumber,nickname);
+      const entry = await joinStudentByPin(inputPin,identity);
       if (entry.group_name !== '청팀' && entry.group_name !== '백팀') throw new Error('청백 배틀 모둠 PIN을 입력해주세요.');
+      rememberStudentIdentity(identity);
       const battle = await readBattle(entry.room_id, inputPin);
       setSelectedTeam(entry.group_name === '청팀' ? 'blue' : 'white');
       writeStorage('pin_battle_current_room', entry.room_id, 'session');
@@ -227,6 +234,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                 placeholder="4자리 팀 PIN"
                 className="w-full py-3 text-center text-3xl font-mono font-black tracking-widest bg-slate-950 border border-slate-700 rounded-xl text-cyan-400 focus:outline-none focus:border-cyan-400 mb-3"
               />
+              <div className="text-slate-900 bg-white rounded-xl p-2 text-left mb-3"><StudentIdentityFields number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname}/></div>
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}

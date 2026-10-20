@@ -1,6 +1,6 @@
 type StorageKind = 'local' | 'session';
 const sessionFallback = new Map<string, string | null>();
-const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile'];
+const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_number', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile'];
 let fallbackExpires = Date.now() + 8 * 60 * 60 * 1000;
 function privacyKind(key: string, kind: StorageKind): StorageKind {
   if (!privateKeys.includes(key)) return kind;

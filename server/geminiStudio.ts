@@ -39,11 +39,18 @@ export async function generateStudioAdvice(raw: unknown) {
   const headings={difficulty:['기초','보통','도전'],plan:['도입','준비운동','본활동','정리','안전 지도'],safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],reflection:['성찰 질문'],participation:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'],recommend:[],alternative:[]}[context.task];
   const section=geminiTransportSchema.shape.sections.element.extend({heading:headings.length?z.enum(headings as [string,...string[]]):z.string(),minutes:context.task==='plan'?z.number():z.null()});
   const taskSchema=geminiTransportSchema.extend({recommendations:recommendationsOnly?geminiTransportSchema.shape.recommendations.length(3):geminiTransportSchema.shape.recommendations.max(0),sections:z.array(section).length(headings.length)});
-  return generateAdvice({ ...context, consent: true }, {
+  const generate = (retry: boolean) => generateAdvice({ ...context, consent: true }, {
     model: google(process.env.GEMINI_MODEL!), modelId: process.env.GEMINI_MODEL!, context: providerContext, schema: taskSchema,
     providerOptions: { google: { thinkingConfig: { thinkingLevel: 'low' } } }, timeoutMs: 90000,
     materials,
-    extraInstructions:'\n이 연결에서는 위 인용 형식을 다음 방식으로 대체한다. citations의 각 항목과 safety의 각 항목은 {sourceId} 하나만 반환한다. sourceId는 activities.sourceReferences에 있는 번호를 그대로 선택한다. 원문을 직접 작성하거나 여러 문장을 합치지 않는다. safety는 field가 safety인 자료 번호만 선택한다. 입력 확인 요약은 citations=[]이다. safety 원문이 제공되었으면 최소 1개를 선택하고 안전 자료가 부족하다고 쓰지 않는다.',
+    extraInstructions:'\n이 연결에서는 위 인용 형식을 다음 방식으로 대체한다. citations의 각 항목과 safety의 각 항목은 {sourceId} 하나만 반환한다. sourceId는 activities.sourceReferences에 있는 번호를 그대로 선택한다. 원문을 직접 작성하거나 여러 문장을 합치지 않는다. safety는 field가 safety인 자료 번호만 선택한다. 입력 확인 요약은 citations=[]이다. safety 원문이 제공되었으면 최소 1개를 선택하고 안전 자료가 부족하다고 쓰지 않는다. participation에서는 세 section 각각에 해당 제안과 관련된 원문 sourceId를 citations 배열에 반드시 1개 이상 넣는다.'+(retry?'\n앞선 응답은 한 section의 citations가 비어 근거 검사를 통과하지 못했다. 세 section 모두 실제로 제공된 원문 sourceId를 각각 선택하고, 원문에서 뒷받침할 수 없는 제안은 만들지 않는다.':''),
     transformOutput(raw){const result=geminiTransportSchema.parse(raw);return{...result,recommendations:result.recommendations.map(r=>({...r,citations:r.citations.map(c=>resolve(c.sourceId))})),sections:result.sections.map(s=>({...s,citations:s.citations.map(c=>resolve(c.sourceId))})),safety:result.safety.map(c=>{const ref=resolve(c.sourceId);if(ref.field!=='safety')throw new Error('검증되지 않은 안전 원문 참조입니다.');return{activityId:ref.activityId,quote:ref.quote};})};},
   });
+  try { return await generate(false); }
+  catch (error) {
+    // The model occasionally omits a citation despite valid lesson content.
+    // Retry once; never invent or attach a reference on the server.
+    if (context.task !== 'participation' || !(error instanceof Error) || error.message !== '근거가 없는 제안입니다.') throw error;
+    return generate(true);
+  }
 }
