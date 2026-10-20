@@ -46,7 +46,7 @@ export const MobileMissionView = () => {
   const { roomId, groupId } = useParams<{ roomId: string, groupId: string }>();
   const navigate = useNavigate();
   const { scores, gameRoom, template, loading: roomLoading, error: roomError, refresh: refreshRoom } = useGameLogic(roomId);
-  const guidedEntry = template?.buttons.map(mission => ({ mission, gameType: resolveGuidedGameType(gameRoom?.name, template.name, template.buttons, mission.id) })).find(entry => entry.gameType);
+  const guidedEntry = template && Array.isArray(template.buttons) ? template.buttons.map(mission => ({ mission, gameType: resolveGuidedGameType(gameRoom?.name, template.name, template.buttons, mission.id) })).find(entry => entry.gameType) : undefined;
   const guidedSubmission = useGuidedSubmission(guidedEntry ? roomId ?? null : null, guidedEntry ? groupId ?? null : null, guidedEntry?.mission.id ?? null);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing, storageAvailable, syncWarning } = useSyncQueue();
@@ -799,7 +799,7 @@ export const MobileMissionView = () => {
 
   // 대기 화면 — 게임 시작 전
   if (gameRoom?.status === 'waiting' || gameRoom?.status === 'paused') {
-    return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} />;
+    return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} helpControl={guidedEntry && gameRoom.status === 'paused' ? <><button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup.help_requested_at)} onClick={() => void toggleHelp(!myGroup.help_requested_at)} className="w-full py-3 rounded-xl border border-amber-400 bg-amber-50 text-amber-900 font-bold">{myGroup.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>{helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}</> : undefined} />;
   }
 
   // 🌊 해일 경보 — 학생 스마트폰 전체 조작 잠금 및 대피 안내

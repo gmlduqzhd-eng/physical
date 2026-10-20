@@ -2,7 +2,7 @@ import { GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
 import type { GameRoom, MissionTemplate } from './types';
 
-export type LessonPreset = { roomId: string; game: GameDef; groups: number; minutes: number; goalPercent: 50 | 75 | 100 };
+export type LessonPreset = { roomId: string; game: GameDef; groups: number; minutes: number | null; goalPercent: 50 | 75 | 100 };
 
 export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate, 'id' | 'name' | 'buttons'>[], groups: { room_id: string }[]): LessonPreset[] {
   const byTemplate = new Map(templates.map(template => [template.id, template]));
@@ -16,8 +16,10 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     const game = GAMES.find(item => item.type === gameType);
     const groupCount = counts.get(room.id) || 0;
     if (!game || groupCount < 1 || groupCount > 8) return [];
-    const minutes = room.setup_minutes ?? (room.status === 'waiting' ? Math.round((room.global_time_modifier + 300) / 60) : 40);
-    const safeMinutes = minutes >= 5 && minutes <= 90 ? minutes : 40;
+    // Older rooms did not store the original duration. Their remaining-time
+    // modifier may have changed during the lesson, so ask the teacher instead.
+    const minutes = room.setup_minutes;
+    const safeMinutes = typeof minutes === 'number' && minutes >= 5 && minutes <= 90 ? minutes : null;
     const goalPercent: 50 | 75 | 100 = room.goal_percent === 50 || room.goal_percent === 100 ? room.goal_percent : 75;
     const key = `${game.type}:${groupCount}:${safeMinutes}:${goalPercent}`;
     if (seen.has(key)) return [];

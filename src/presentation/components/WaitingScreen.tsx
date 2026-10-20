@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { RoomGroup, GameRoom, MissionTemplate } from '../../domain/types';
 import { GameIcons as LucideIcons } from '../icons';
 
@@ -7,9 +8,10 @@ interface WaitingScreenProps {
   template: MissionTemplate | null;
   studentName: string;
   gameRoom: GameRoom | null;
+  helpControl?: ReactNode;
 }
 
-export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom }: WaitingScreenProps) => {
+export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom, helpControl }: WaitingScreenProps) => {
   return (
     <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
@@ -18,6 +20,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
           <LucideIcons.Shield className="w-6 h-6 text-cyan-500" />
           <span className="font-black text-lg text-cyan-600">땀방울 원정대</span>
         </div>
+
         <span className="text-sm text-slate-500 font-bold">{gameRoom?.name}</span>
       </div>
 
@@ -38,6 +41,8 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
           <p className="text-slate-500 font-bold">{gameRoom?.status === 'paused' ? '선생님이 수업을 재개할 때까지 잠시 쉬어주세요.' : '선생님이 곧 게임을 시작합니다'}</p>
           <p className="text-slate-400 text-sm mt-1">잠시만 기다려주세요...</p>
         </div>
+
+        {helpControl && <div className="w-full max-w-sm">{helpControl}</div>}
 
         {/* My info card */}
         <div className="w-full max-w-sm bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
@@ -63,7 +68,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         {/* Mission preview */}
-        {template && template.buttons && template.buttons.length > 0 && (
+        {template && Array.isArray(template.buttons) && template.buttons.length > 0 && (
           <div className="w-full max-w-sm">
             <p className="text-xs text-slate-400 font-bold mb-2 text-center">오늘의 미션 미리보기</p>
             <div className="space-y-2">

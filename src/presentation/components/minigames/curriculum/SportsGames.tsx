@@ -1397,7 +1397,7 @@ export const BaseballBuntDefense: React.FC<GameProps> = ({ groupId, enqueueActio
         <button
           onClick={handleCatch}
           disabled={buntCatch}
-          className={`text-5xl transition-transform active:scale-90 ${buntCatch ? 'opacity-30' : 'animate-bounce cursor-pointer'}`}
+          className={`text-5xl transition-transform active:scale-90 ${buntCatch ? 'opacity-30' : 'animate-pulse cursor-pointer'}`}
         >
           ⚾
         </button>

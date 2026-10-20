@@ -641,15 +641,15 @@ export const AgilityDotDrill: React.FC<GameProps> = ({ groupId, enqueueAction: q
       </p>
 
       <div className="w-72 h-72 bg-amber-900/60 border-4 border-amber-600 rounded-3xl p-6 grid grid-cols-3 grid-rows-3 gap-3 mb-6 shadow-2xl">
-        <button onClick={() => handleDotClick(1)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 1 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>1</button>
+        <button onClick={() => handleDotClick(1)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 1 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-pulse' : 'bg-slate-800 text-slate-400'}`}>1</button>
         <div />
-        <button onClick={() => handleDotClick(2)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 2 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>2</button>
+        <button onClick={() => handleDotClick(2)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 2 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-pulse' : 'bg-slate-800 text-slate-400'}`}>2</button>
         <div />
-        <button onClick={() => handleDotClick(3)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 3 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>3</button>
+        <button onClick={() => handleDotClick(3)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 3 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-pulse' : 'bg-slate-800 text-slate-400'}`}>3</button>
         <div />
-        <button onClick={() => handleDotClick(4)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 4 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>4</button>
+        <button onClick={() => handleDotClick(4)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 4 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-pulse' : 'bg-slate-800 text-slate-400'}`}>4</button>
         <div />
-        <button onClick={() => handleDotClick(5)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 5 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-bounce' : 'bg-slate-800 text-slate-400'}`}>5</button>
+        <button onClick={() => handleDotClick(5)} className={`rounded-2xl font-black text-xl flex items-center justify-center ${currentPattern[currentStep] === 5 ? 'bg-amber-400 text-amber-950 ring-4 ring-white animate-pulse' : 'bg-slate-800 text-slate-400'}`}>5</button>
       </div>
 
       {finished && (

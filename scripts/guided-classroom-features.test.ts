@@ -17,6 +17,11 @@ test('lesson reuse keeps the latest guided setup and ignores unrelated rooms', (
   assert.deepEqual({ id: result[0].roomId, groups: result[0].groups, minutes: result[0].minutes, goal: result[0].goalPercent }, { id: 'latest', groups: 6, minutes: 30, goal: 75 });
 });
 
+test('legacy lessons never claim a duration that was not saved', () => {
+  const result = lessonPresets([room('old', { setup_minutes: null, status: 'finished', global_time_modifier: 90 })], [template], [{ room_id: 'old' }]);
+  assert.equal(result[0].minutes, null);
+});
+
 test('collective goal counts approved groups, caps progress, and never succeeds with zero groups', () => {
   const groups = [
     { id: 'a', completed_missions: ['mission-1'] },
