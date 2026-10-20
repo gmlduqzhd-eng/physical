@@ -25,7 +25,7 @@ function readGameInventory() {
       compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS },
     }).outputText, {
       exports,
-      require(name) { if (name.startsWith('.')) return load(path.resolve(path.dirname(filename), name + '.ts')); return localRequire(name); },
+      require(name) { if (name.startsWith('.')) return load(path.resolve(path.dirname(filename), name.replace(/\.js$/, '') + '.ts')); return localRequire(name); },
     }, { filename });
     return exports;
   }
@@ -119,7 +119,7 @@ function readGameInventory() {
           active.status = 'fail';
           await page.screenshot({ path: path.join(work, `catalog-fail-${engine}-${viewport.width}-${game.type}.png`), fullPage: true });
         }
-        const finishedHome = page.getByRole('button', { name: '홈으로', exact: true });
+        const finishedHome = page.getByRole('button', { name: '활동 목록으로' }).or(page.getByRole('button', { name: '홈으로', exact: true }));
         try {
           await activate(finishedHome.last(), 2000);
         } catch (error) {
@@ -129,7 +129,7 @@ function readGameInventory() {
           await activate(finishedHome.last());
         }
         await page.waitForURL(url => url.pathname === '/hub', { timeout: 10000 });
-        await page.locator('.hub-page').waitFor({ state: 'visible', timeout: 10000 });
+        await page.getByRole('heading', { name: /어떤 활동을 해 볼까요|땀방울 원정대/ }).first().waitFor({ state: 'visible', timeout: 10000 });
         active.returnToHub = true;
         if (active.pageErrors.length) active.status = 'fail';
       } catch (error) { active.status = 'fail'; active.error = error.message; }

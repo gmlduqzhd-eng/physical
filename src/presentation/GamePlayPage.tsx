@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { GAMES } from '../domain/gamesData';
+import { supabase } from '../data/supabase';
 import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
@@ -208,7 +209,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
-  return <GamePlaySession key={`${gameType}:${searchParams.get('room')}:${searchParams.get('group')}`} />;
+  return <GamePlaySession key={`${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}`} />;
 };
 
 const GamePlaySession = () => {
@@ -219,10 +220,17 @@ const GamePlaySession = () => {
   const battleRoomId = searchParams.get('room');
   const battleGroupId = searchParams.get('group');
   const hasBattle = !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
-  const hubPath = hasBattle ? '/hub/tools?battle=1' : '/hub';
+  const guidedRequested = searchParams.get('guided') === '1';
+  const missionId = searchParams.get('mission');
+  const guidedMode = guidedRequested && hasBattle && !!missionId;
+  const hubPath = guidedRequested && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);
+  const [guidedStatus, setGuidedStatus] = useState<'idle' | 'sending' | 'pending' | 'approved' | 'error'>('idle');
+  const [guidedError, setGuidedError] = useState('');
+  const [guidedAward, setGuidedAward] = useState<number | null>(null);
+  const guidedSubmitting = useRef(false);
   const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
   const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
@@ -306,24 +314,57 @@ const GamePlaySession = () => {
 
   const gameInfo = GAME_TITLES[gameType || ''];
 
+  const submitGuidedResult = useCallback(async () => {
+    if (!guidedMode || !battleRoomId || !battleGroupId || !missionId || guidedSubmitting.current) return;
+    guidedSubmitting.current = true;
+    setGuidedStatus('sending');
+    setGuidedError('');
+    try {
+      const [room, group] = await Promise.all([
+        supabase.from('game_rooms').select('id,status,template_id').eq('id', battleRoomId).maybeSingle(),
+        supabase.from('room_groups').select('id,room_id,pending_missions,completed_missions').eq('id', battleGroupId).maybeSingle(),
+      ]);
+      if (room.error || group.error || !room.data || !group.data || group.data.room_id !== battleRoomId || !room.data.template_id) throw Error('수업 정보를 확인하지 못했습니다. 모둠 화면에서 다시 들어와 주세요.');
+      const template = await supabase.from('mission_templates').select('buttons').eq('id', room.data.template_id).maybeSingle();
+      const mission = Array.isArray(template.data?.buttons) ? template.data.buttons.find((button: { id?: string; gameType?: string; requires_approval?: boolean; amount?: number }) => button.id === missionId && button.gameType === gameType && button.requires_approval) : null;
+      if (template.error || !mission) throw Error('이 수업의 활동과 게임이 일치하지 않습니다.');
+      setGuidedAward(typeof mission.amount === 'number' ? mission.amount : null);
+      if (group.data.completed_missions?.includes(missionId)) { setGuidedStatus('approved'); return; }
+      if (group.data.pending_missions?.includes(missionId)) { setGuidedStatus('pending'); return; }
+      if (room.data.status !== 'playing') throw Error('수업이 진행 중일 때 완료 확인을 보낼 수 있습니다. 선생님이 수업을 이어간 뒤 다시 시도해 주세요.');
+      const result = await supabase.rpc('submit_classroom_mission', { row_id: battleGroupId, mission_id: missionId });
+      if (result.error) throw Error('완료 확인 요청을 보내지 못했습니다. 연결을 확인하고 다시 시도해 주세요.');
+      setGuidedStatus('pending');
+    } catch (cause) {
+      setGuidedError(cause instanceof Error ? cause.message : '완료 확인 요청에 실패했습니다.');
+      setGuidedStatus('error');
+    } finally {
+      guidedSubmitting.current = false;
+    }
+  }, [guidedMode, battleRoomId, battleGroupId, missionId, gameType]);
+
   // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
     completionRef.current = true;
     const rawScore = action.payload.amount;
     const earned = Math.round(rawScore * difficultyMultiplier);
-    if (hasBattle && battleGroupId) {
+    if (hasBattle && battleGroupId && !guidedRequested) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: earned, roomId: battleRoomId }, timestamp: Date.now() });
     }
     const details = normalizeGameResultDetails(action.payload.details);
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
+    if (guidedRequested) {
+      if (guidedMode) void submitGuidedResult();
+      else { setGuidedError('수업 입장 정보가 없습니다. 모둠 화면에서 다시 들어와 주세요.'); setGuidedStatus('error'); }
+    }
 
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
-      speak(`게임 완료! 멋져요! ${earned}점을 획득했습니다!`, true);
+      speak(guidedRequested ? '게임을 마쳤어요! 선생님께 완료 확인을 보낼게요.' : `게임 완료! 멋져요! ${earned}점을 획득했습니다!`, true);
     } else {
       sfxFail();
       speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
@@ -347,11 +388,14 @@ const GamePlaySession = () => {
     }
 
     checkBadges(earned);
-  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore]);
+  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedRequested, guidedMode, submitGuidedResult]);
 
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
+    setGuidedStatus('idle');
+    setGuidedError('');
+    setGuidedAward(null);
     setResultDetails(undefined);
     setShowDetailedResult(false);
     setLastEarnedScore(0);
@@ -578,7 +622,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>안내를 확인한 뒤 배율을 선택하면 준비를 시작합니다. 게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.</small></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>게임을 끝내고 결과 화면을 확인하면 활동이 완료됩니다. {guidedRequested ? '결과 화면에서 선생님에게 확인 요청을 자동으로 보냅니다. 수업 점수는 교사가 확인한 뒤 반영됩니다.' : '게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.'}</small></div>
           <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
             <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
             <button data-level="normal" onClick={() => handleSelectDifficulty('normal')}><span className="level-symbol" aria-hidden="true">⚡</span><strong>표준 기록</strong><small>×1.0 배율</small></button>
@@ -631,10 +675,10 @@ const GamePlaySession = () => {
             </div>
             <span className="text-6xl mb-3">{gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
-            <p className="text-emerald-400 font-bold text-xs mb-5">2022 개정 초등 체육과 학습 완료!</p>
-            {hasBattle && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
+            <p className="text-emerald-400 font-bold text-xs mb-5">게임 활동을 마쳤어요! 어떤 움직임을 시도했는지 돌아봐요.</p>
+            {guidedRequested ? <div role="status" className="mb-4 text-center text-sm text-cyan-300"><p>{guidedStatus === 'sending' ? '선생님에게 완료 확인을 보내는 중…' : guidedStatus === 'pending' ? `완료 확인 요청을 보냈어요. 선생님이 확인하면 ${guidedAward === null ? '수업 점수' : `수업 점수 ${guidedAward}점`}가 반영돼요.` : guidedStatus === 'approved' ? '이미 선생님이 이 활동을 확인했어요.' : guidedError || '게임 결과를 확인하고 있어요.'}</p>{guidedStatus === 'error' && guidedMode && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={() => void submitGuidedResult()}>확인 요청 다시 보내기</button>}</div> : hasBattle && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
             <div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
-              <span className="text-slate-400 text-sm font-bold mb-1">획득 점수</span>
+              <span className="text-slate-400 text-sm font-bold mb-1">{guidedRequested ? '이번 게임 기록 · 수업 점수와 별개' : '획득 점수'}</span>
               <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
@@ -708,7 +752,7 @@ const GamePlaySession = () => {
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
               <button onClick={() => navigate(hubPath)} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
-                <Home className="w-5 h-5" /> 홈으로
+                <Home className="w-5 h-5" /> {guidedRequested ? '모둠으로' : '홈으로'}
               </button>
             </div>
           </div>

@@ -930,6 +930,28 @@ export const MobileMissionView = () => {
   }
 
   const displayScore = myGroup?.score ?? 0;
+  const guidedMission = template?.buttons.find(mission => mission.gameType);
+  if (guidedMission && roomId && groupId) {
+    const pending = myGroup?.pending_missions?.includes(guidedMission.id);
+    const completed = myGroup?.completed_missions?.includes(guidedMission.id);
+    const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive && !completed;
+    return <main className="min-h-[100dvh] bg-slate-50 text-slate-900 p-5 flex items-center justify-center">
+      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+        <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
+        <h1 className="text-3xl font-black mt-2">{myGroup?.group_name || '모둠 활동'}</h1>
+        <p className="text-slate-600 mt-2">{gameRoom?.name} · 남은 시간 {mins}:{secs}</p>
+        <div className="bg-cyan-50 border border-cyan-100 rounded-2xl p-5 mt-6">
+          <p className="text-sm font-bold text-cyan-800">오늘의 활동</p>
+          <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
+          <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
+          <p className="text-sm text-slate-600 mt-3">게임을 끝내면 선생님에게 확인 요청이 자동으로 전달돼요.</p>
+        </div>
+        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `선생님 확인 완료 · 모둠 ${displayScore}점` : pending ? '선생님 확인을 기다리고 있어요. 게임은 다시 할 수 있어요.' : `모둠 점수 ${displayScore}점`}</div>
+        <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedMission.gameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '활동 확인 완료' : '게임 시작 →'}</button>
+        <p className="text-xs text-slate-500 mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 몸 상태에 맞게 참여해요.</p>
+      </div>
+    </main>;
+  }
 
   if (myGroup?.is_hacked) {
     return (
@@ -1194,14 +1216,19 @@ export const MobileMissionView = () => {
                 }).map((m: import('../domain/types').MissionButton, i: number) => {
                   const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
                   const isPending = myGroup?.pending_missions?.includes(m.id);
+                  const isCompleted = myGroup?.completed_missions?.includes(m.id);
                   return (
                     <button 
                       key={m.id || i}
                       onClick={(e) => {
+                        if (m.gameType && roomId && groupId) {
+                          navigate(`/play/${encodeURIComponent(m.gameType)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(m.id)}`);
+                          return;
+                        }
                         if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
                         handleMissionComplete(m, e);
                       }}
-                      disabled={isLocked || isPending} 
+                      disabled={isLocked || (!m.gameType && isPending) || (Boolean(m.gameType) && isCompleted)}
                       className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-manipulation shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
                     >
                       <div className="flex items-center gap-4">
@@ -1213,13 +1240,14 @@ export const MobileMissionView = () => {
                             {m.title}
                             {m.requires_approval && !isPending && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full border border-red-200">승인필요</span>}
                             {isPending && <span className="text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full border border-yellow-200">대기 중</span>}
+                            {isCompleted && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">확인 완료</span>}
                           </div>
-                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
+                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.gameType ? isPending ? '확인 요청을 보냈어요. 게임은 다시 할 수 있어요.' : m.desc : m.desc}</div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <span className={`mission-amount font-black text-3xl ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>+{m.amount}</span>
-                        <span className="text-xs text-slate-400 font-bold mt-1">대기 {m.cooldown}초</span>
+                        <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '완료' : '게임 시작 →' : `+${m.amount}`}</span>
+                        <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `교사 확인 후 +${m.amount}점` : `대기 ${m.cooldown}초`}</span>
                       </div>
 
                       {cooldown && (

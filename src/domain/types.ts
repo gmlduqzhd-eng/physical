@@ -8,6 +8,7 @@ export interface MissionButton {
   color: string;
   bg: string;
   requires_approval?: boolean;
+  gameType?: string;
   isHidden?: boolean;
   prerequisiteMissionId?: string;
   isVaccine?: boolean;
