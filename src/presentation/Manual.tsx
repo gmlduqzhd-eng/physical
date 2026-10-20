@@ -1,72 +1,23 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Home, Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText, Sun, Moon } from 'lucide-react';
+import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
 import { GAMES } from '../domain/gamesData';
 import { LessonPlanGeneratorV2 } from './components/LessonPlanGeneratorV2';
-import { useTheme } from '../application/ThemeContext';
+import { FlowShell } from './FlowShell';
+import './ActivityLibrary.css';
+import './Manual.css';
 
 export const Manual = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { isDark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'manual' | 'lesson'>(searchParams.get('tab') === 'lesson' ? 'lesson' : 'manual');
 
   return (
-    <div className={`min-h-[100dvh] p-4 md:p-10 font-sans pb-24 overflow-y-auto select-text transition-colors ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
-      <div className="max-w-4xl mx-auto space-y-6 relative">
-        <button onClick={() => navigate('/teacher-ai')} className="rounded-xl bg-cyan-700 text-white px-5 py-3 font-bold">✦ AI 수업 준비실 열기</button>
-        <p className="text-sm">기존 지도안 생성기는 조건과 문구를 조합하는 일반 도구입니다. 생성형 AI는 별도의 AI 수업 준비실에서 사용합니다.</p>
-        {/* 상단 헤더 네비게이션 */}
-        <div className={`sticky top-0 backdrop-blur-md py-4 z-20 border-b space-y-3 transition-colors ${isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white/95 border-slate-200 shadow-xs'}`}>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black text-cyan-600 dark:text-cyan-400 flex items-center gap-2.5">
-              <span className="text-3xl">📖</span> 땀방울 원정대
-            </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={toggleTheme}
-                className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all shrink-0 ${isDark ? 'bg-slate-900 border-slate-700 text-yellow-400 hover:bg-slate-800' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
-                title={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-              >
-                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={() => navigate('/hub')}
-                className={`shrink-0 px-4 py-2 border shadow-xs rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'}`}
-              >
-                <Home className="w-4 h-4 text-cyan-600 dark:text-cyan-400"/> 홈으로 돌아가기
-              </button>
-            </div>
-          </div>
-          {/* 탭 전환 */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => setActiveTab('manual')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-black flex items-center justify-center gap-1.5 transition-all border ${
-                activeTab === 'manual'
-                  ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-500/20'
-                  : isDark
-                    ? 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'
-                    : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" /> 사용 설명서
-            </button>
-            <button
-              onClick={() => setActiveTab('lesson')}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-black flex items-center justify-center gap-1.5 transition-all border ${
-                activeTab === 'lesson'
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-500/20'
-                  : isDark
-                    ? 'bg-slate-900 text-slate-400 border-slate-700 hover:bg-slate-800 hover:text-slate-200'
-                    : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100 hover:text-slate-900'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" /> 수업 지도안 생성기
-            </button>
-          </div>
-        </div>
-
+    <FlowShell utilities className="manual-page">
+      <div className="manual-content space-y-6 relative">
+        <section className="manual-intro"><p className="eyebrow">땀방울 원정대 사용 안내</p><h1>이용 안내</h1><p className="muted">수업 준비부터 학생 참여까지, 필요한 내용을 차근차근 살펴보세요.</p></section>
+        <aside className="manual-ai-link"><div><strong>AI로 수업을 준비하고 싶다면</strong><p>기존 지도안 생성기는 조건과 문구를 조합하는 일반 도구입니다. 생성형 AI는 별도의 AI 수업 준비실에서 사용합니다.</p></div><button className="primary" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 열기</button></aside>
+        <nav className="manual-tabs" aria-label="안내 화면 선택"><button aria-pressed={activeTab === 'manual'} onClick={() => setActiveTab('manual')}><Sparkles aria-hidden="true"/>사용 설명서</button><button aria-pressed={activeTab === 'lesson'} onClick={() => setActiveTab('lesson')}><FileText aria-hidden="true"/>수업 지도안 생성기</button></nav>
         {/* 사용 설명서 탭 */}
         {activeTab === 'manual' && (
         <div className="bg-slate-900/90 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-10">
@@ -439,7 +390,7 @@ export const Manual = () => {
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
               <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
                 <li>
-                  <strong className="text-white">✏️ 닉네임 설정:</strong> 메인 화면 상단의 "내 기록" 카드에서 닉네임을 입력하면 프로필이 생성됩니다. (예: "3반 김민수")
+                  <strong className="text-white">✏️ 닉네임 설정:</strong> 개인 활동 기록을 사용할 때는 실명이나 학번 대신 개인을 알아볼 수 없는 별명을 사용하세요. (예: "튼튼구름")
                 </li>
                 <li>
                   <strong className="text-white">📊 자동 점수 누적:</strong> 게임을 플레이할 때마다 획득 점수가 자동으로 누적됩니다. 총 점수, 플레이 횟수, 게임별 최고 기록이 모두 저장됩니다.
@@ -458,21 +409,21 @@ export const Manual = () => {
           <section className="space-y-4">
             <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">8</span>
-              🌗 라이트 / 다크 모드
+              상단 이용 설정
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              메인 화면 헤더 우측 상단의 ☀️/🌙 버튼으로 라이트 모드와 다크 모드를 전환할 수 있습니다.
+              화면 위쪽의 음악·링크 공유·앱 설치 버튼으로 이용 환경을 설정할 수 있습니다.
             </p>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
               <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
                 <li>
-                  <strong className="text-white">🌙 다크 모드 (기본):</strong> 눈의 피로를 줄여주는 어두운 색상. 교실 내 조명이 어두운 환경에서 최적.
+                  <strong className="text-white">음악:</strong> 배경음악을 켜거나 끄고 음량을 조절합니다.
                 </li>
                 <li>
-                  <strong className="text-white">☀️ 라이트 모드:</strong> 밝은 교실이나 야외 환경에서 가독성이 높은 밝은 색상.
+                  <strong className="text-white">링크 공유:</strong> 앱의 처음 화면 링크를 공유합니다. 수업방 참여 QR과는 별도입니다.
                 </li>
                 <li>
-                  <strong className="text-white">💾 설정 저장:</strong> 선택한 모드는 localStorage에 저장되어 다음 접속 시에도 유지됩니다.
+                  <strong className="text-white">앱 설치:</strong> 지원되는 브라우저에서는 설치를 요청하고, 그 외에는 기기별 추가 방법을 안내합니다.
                 </li>
               </ul>
             </div>
@@ -503,6 +454,6 @@ export const Manual = () => {
         )}
 
       </div>
-    </div>
+    </FlowShell>
   );
 };

@@ -1,0 +1,7 @@
+.flow.teacher-auth .teacher-login{max-width:620px;margin:42px auto 24px;padding:30px;border:1px solid #e0dfd3;border-radius:23px;background:#fffefa;color:#354239}
+.flow.teacher-auth .teacher-login h2{margin:0 0 18px;font-size:25px}
+.flow.teacher-auth .teacher-login p{font-size:14px;line-height:1.85}
+.flow.teacher-auth .teacher-login label{margin:24px 0 0}
+.flow.teacher-auth .teacher-login button{background:#576c50;color:#fffefa;border-color:#576c50;min-height:48px}
+.flow.teacher-auth .teacher-auth-note{max-width:620px;margin:0 auto 32px;color:#687163;font-size:13px;line-height:1.85}
+@media(max-width:700px){.flow.teacher-auth .teacher-login{margin-top:26px;padding:24px}.flow.teacher-auth .teacher-login button{width:100%}}

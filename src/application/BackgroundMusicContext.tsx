@@ -40,7 +40,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const enabledRef = useRef(enabled);
   const eligibleRef = useRef(false);
   const suppressedRef = useRef(false);
-  const eligible = ["/", "/start", "/hub", "/games", "/hub/tools", "/about"].includes(
+  const eligible = ["/", "/start", "/hub", "/games", "/hub/tools", "/about", "/manual", "/teacher/setup"].includes(
     pathname.replace(/\/$/, "") || "/",
   );
 

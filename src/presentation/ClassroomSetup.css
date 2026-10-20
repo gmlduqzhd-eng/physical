@@ -1,0 +1,14 @@
+.flow.classroom-setup .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0;margin:24px 0;max-width:720px}
+.flow.classroom-setup .steps li{display:flex;align-items:center;justify-content:center;min-height:48px;padding:11px 15px;background:#f0ede3;border:1px solid #e4ded2;border-radius:15px;color:#687163;font-size:14px}
+.flow.classroom-setup .steps li[aria-current=step]{background:#576c50;color:#fffefa;border-color:#576c50;font-weight:700}
+.flow.classroom-setup .card:not(.catalog-card){background:#fffefa;border:1px solid #e0dfd3;border-radius:23px;padding:28px;max-width:850px}
+.flow.classroom-setup .card>.pill{display:inline-block;background:#eef2e5;color:#576c50;font-size:12px;padding:5px 12px;border-radius:20px}
+.flow.classroom-setup .card>h2{margin-bottom:24px}
+.flow.classroom-setup .card .grid{gap:24px;margin-top:25px}
+.flow.classroom-setup button:not(.primary){background:#fffefa;border-color:#cbd1bf;color:#52634a}
+.flow.classroom-setup .primary{background:#576c50;color:#fffefa;border-color:#576c50}
+.flow.classroom-setup .notice{background:#eef2e5;color:#52634a;border:1px solid #dfe5d3;line-height:1.85;border-radius:15px}
+.flow.classroom-setup .check{font-size:14px;line-height:1.8;margin:24px 0;align-items:flex-start}
+.flow.classroom-setup .check input{accent-color:#576c50;min-height:20px;margin-top:3px}
+.flow.classroom-setup .row{gap:12px}
+@media(max-width:700px){.flow.classroom-setup .steps{gap:7px}.flow.classroom-setup .steps li{font-size:12px;padding:10px 5px;min-height:46px}.flow.classroom-setup .card:not(.catalog-card){padding:22px}.flow.classroom-setup .card>.row>button{flex:1 1 100%}.flow.classroom-setup .card .grid{gap:12px}}
