@@ -11,7 +11,7 @@ export function TeacherStudioEntry() {
     </section>
     <section className="ai-form" aria-labelledby="studio-entry-title">
       <h2 id="studio-entry-title">Gemini 교사 수업 준비실</h2>
-      <p className="ai-notice">기존 교사 접근 코드로 로그인하고 만 18세 이상 교사 확인을 해 주세요. 새 화면에서 수업 조건을 선택하고 개인정보 전송 확인에 체크하면 생성할 수 있습니다.</p>
+      <p className="ai-notice">기존 교사 접근 코드로 로그인하고 교사 확인을 해 주세요. 새 화면에서 수업 조건을 선택하고 개인정보 전송 확인에 체크하면 생성할 수 있습니다.</p>
       <a className="inline-flex items-center justify-center rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold min-h-12" href="https://physical-teacher-studio.vercel.app/" rel="noreferrer">Gemini 교사 도구 열기 →</a>
       <p className="ai-notice">학생 앱의 기록·메모와 여기서 선택했던 조건은 자동 전송하지 않습니다. 학생에게 교사 도구 주소나 접근 코드를 공유하지 마세요.</p>
     </section>

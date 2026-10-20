@@ -42,8 +42,9 @@ function App() {
       <KakaoInAppNotice />
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
       <Routes>
-        {/* 메인: 소개 페이지가 먼저 노출되고, '게임하기' 클릭 시 게임 허브(/hub)로 이동 */}
-        <Route path="/" element={<RoleLandingPage />} />
+        {/* 소개 화면에서 접속하기를 누르면 선생님·학생 선택으로 이동 */}
+        <Route path="/" element={<IntroLandingPage />} />
+        <Route path="/start" element={<RoleLandingPage />} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />

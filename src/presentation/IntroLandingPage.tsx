@@ -78,8 +78,8 @@ export function IntroLandingPage() {
               수업에 맞는 활동을 간편하게 찾아보세요.
             </p>
             <div className="actions">
-              <Link className="action primary" to="/hub">
-                원정 시작하기 <ArrowRight aria-hidden="true" />
+              <Link className="action primary" to="/start">
+                접속하기 <ArrowRight aria-hidden="true" />
               </Link>
               <Link className="action secondary" to="/lobby">
                 개설방 입장하기
