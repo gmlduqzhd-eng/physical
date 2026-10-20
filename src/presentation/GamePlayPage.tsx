@@ -5,6 +5,8 @@ import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
 import './GameTheme.css';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { HeaderUtilities } from './components/HeaderUtilities';
+import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { useSyncQueue } from '../application/useSyncQueue';
 import type { GameRoom } from '../domain/types';
 import { useVoiceCoach } from '../application/useVoiceCoach';
@@ -294,11 +296,13 @@ const GamePlaySession = () => {
     }
   }, [difficulty, gameType]);
 
-  // BGM 시작/종료
+  // The shared music preference controls the game's synthesized BGM too.
+  const { enabled: musicEnabled, volume: musicVolume } = useBackgroundMusic();
   useEffect(() => {
-    startBgm();
+    if (musicEnabled && !gameFinished) startBgm(musicVolume);
+    else stopBgm();
     return () => stopBgm();
-  }, []);
+  }, [musicEnabled, musicVolume, gameFinished]);
 
   const gameInfo = GAME_TITLES[gameType || ''];
 
@@ -315,7 +319,6 @@ const GamePlaySession = () => {
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
-    stopBgm();
 
     // 성공/실패 효과음
     if (earned > 0) {
@@ -355,7 +358,6 @@ const GamePlaySession = () => {
     setRpeSelected(null);
     setKey(prev => prev + 1);
     setDifficulty(null);
-    startBgm();
   };
 
   if (!gameType || !gameInfo) {
@@ -568,6 +570,8 @@ const GamePlaySession = () => {
   };
 
   return (
+    <div className="game-tools-scope game-tools-layout">
+      <nav className="game-utilities-bar" aria-label="이용 설정"><HeaderUtilities/></nav>
     <div className={`warm-game gameplay-page ${difficulty !== null ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 난이도 선택 화면 */}
       {difficulty === null && !gameFinished && (
@@ -732,7 +736,7 @@ const GamePlaySession = () => {
           </button>
         </div>
       )}
-    </div>
+    </div></div>
   );
 };
 

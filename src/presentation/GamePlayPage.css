@@ -7,3 +7,10 @@
   .gameplay-toolbar { gap: 8px; }
   .gameplay-toolbar > div { min-width: 0; }
 }
+.game-tools-layout { --game-utility-height:68px; --game-stage-offset:144px; min-height:100dvh; background:#fbf8f2; }
+.game-tools-layout .gameplay-page { padding-top:var(--game-utility-height); }
+.game-tools-layout .gameplay-page.has-game-toolbar { padding-top:var(--game-stage-offset); }
+.game-tools-layout .gameplay-toolbar { top:var(--game-utility-height); }
+.game-tools-layout .game-prepare,.game-tools-layout .game-result-overlay,.game-tools-layout .game-countdown { top:var(--game-utility-height); }
+.game-tools-layout .warm-game .gameplay-content>div { min-height:calc(100dvh - var(--game-stage-offset)); }
+.game-tools-layout .warm-game .gameplay-content>.fixed.inset-0 { top:var(--game-stage-offset); }

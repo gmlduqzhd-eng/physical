@@ -215,12 +215,12 @@ const BGM_NOTES = [
   784, 659, 523, 587, 523, 0, 0, 0,
 ];
 
-export function startBgm() {
+export function startBgm(volume = 0.175) {
   stopBgm();
   const ctx = getCtx();
   if (!ctx) return;
   bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.06;
+  bgmGain.gain.value = 0.06 * (Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 0.175) / 0.175;
   bgmGain.connect(ctx.destination);
 
   let step = 0;

@@ -24,4 +24,4 @@ export function ActivityPicker({ onSelect }: { onSelect?: (game: GameDef) => voi
     {displayed.length < games.length && <button style={{marginTop:20}} onClick={() => { setAll(true); setLimit(displayed.length + 12); }}>활동 더 보기</button>}
   </>;
 }
-export function ActivityLibrary() { return <FlowShell><p className="eyebrow">활동 찾기</p><h1>어떤 활동을 해 볼까요?</h1><p className="muted">목적을 고르거나 이름으로 찾아보세요. 기기를 쓰기 전 활동 규칙을 확인해요.</p><ActivityPicker/><details><summary>더 많은 도구</summary><p>즐겨찾기·기록·테마 모드·스테이션·음악 등 기존 도구를 사용할 수 있어요.</p><Link className="secondary" to="/hub/tools">전체 도구 열기</Link></details></FlowShell>; }
+export function ActivityLibrary() { return <FlowShell utilities><p className="eyebrow">활동 찾기</p><h1>어떤 활동을 해 볼까요?</h1><p className="muted">목적을 고르거나 이름으로 찾아보세요. 기기를 쓰기 전 활동 규칙을 확인해요.</p><ActivityPicker/><details><summary>더 많은 도구</summary><p>즐겨찾기·기록·테마 모드·스테이션·음악 등 기존 도구를 사용할 수 있어요.</p><Link className="secondary" to="/hub/tools">전체 도구 열기</Link></details></FlowShell>; }
