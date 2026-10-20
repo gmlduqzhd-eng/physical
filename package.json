@@ -13,6 +13,7 @@
     "test:hub": "node scripts/hub-tabs-regressions.cjs",
     "test:music": "node scripts/music-volume-regressions.cjs",
     "test:games": "node scripts/game-regressions.cjs",
+    "test:physical": "tsx --test scripts/physical-activity-plans.test.ts",
     "test:catalog": "node scripts/game-catalog-smoke.cjs",
     "test:audit": "node scripts/audit-repair-regressions.cjs",
     "test:mobile": "node scripts/mobile-device-audit.mjs",

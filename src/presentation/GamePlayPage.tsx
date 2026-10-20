@@ -99,6 +99,8 @@ import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffe
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
+import { getPhysicalActivityPlan } from '../domain/physicalActivityPlans';
+import { PhysicalActivityCheck, type ActivityEvidence } from './components/PhysicalActivityCheck';
 
 interface GameMeta {
   name: string;
@@ -239,6 +241,8 @@ const GamePlaySession = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
+  const [pendingResult, setPendingResult] = useState<{ amount: number; details?: GameResultDetails } | null>(null);
+  const [activityEvidence, setActivityEvidence] = useState<ActivityEvidence | null>(null);
   const completionRef = useRef(false);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
@@ -312,28 +316,29 @@ const GamePlaySession = () => {
   }, [musicEnabled, musicVolume, gameFinished]);
 
   const gameInfo = GAME_TITLES[gameType || ''];
+  const activityPlan = getPhysicalActivityPlan(gameType || '', EXPRESSION_GAMES.some(game => game.id === gameType));
 
-  // 로컬 enqueueAction — DB 대신 로컬 state에 점수 기록
-  const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
-    if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
-    completionRef.current = true;
-    const rawScore = action.payload.amount;
+  // Keep game scores separate from peer-reported movement. Screen input is not physical evidence.
+  const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }, evidence: ActivityEvidence) => {
+    const rawScore = payload.amount;
     const earned = Math.round(rawScore * difficultyMultiplier);
-    if (hasBattle && battleGroupId && !guidedRequested) {
+    setActivityEvidence(evidence);
+    setPendingResult(null);
+    if (hasBattle && battleGroupId && !guidedRequested && evidence === 'peer-report') {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: earned, roomId: battleRoomId }, timestamp: Date.now() });
     }
-    const details = normalizeGameResultDetails(action.payload.details);
+    const details = normalizeGameResultDetails(payload.details);
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
-    if (guidedRequested) {
+    if (guidedRequested && evidence === 'peer-report') {
       if (guidedMode) enqueueGuidedCompletion();
     }
 
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
-      speak(guidedRequested ? '게임을 마쳤어요! 선생님께 완료 확인을 보낼게요.' : `게임 완료! 멋져요! ${earned}점을 획득했습니다!`, true);
+      speak(guidedRequested && evidence === 'peer-report' ? '활동 기록을 마쳤어요! 선생님께 완료 확인을 보낼게요.' : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
     } else {
       sfxFail();
       speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
@@ -359,6 +364,17 @@ const GamePlaySession = () => {
     checkBadges(earned);
   }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedRequested, guidedMode, enqueueGuidedCompletion]);
 
+  const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
+    if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
+    completionRef.current = true;
+    setPendingResult(action.payload);
+  }, []);
+
+  const handleActivityFinish = (evidence: ActivityEvidence) => {
+    if (!pendingResult) return;
+    commitResult(pendingResult, evidence);
+  };
+
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
@@ -366,6 +382,8 @@ const GamePlaySession = () => {
     setShowDetailedResult(false);
     setLastEarnedScore(0);
     setRpeSelected(null);
+    setPendingResult(null);
+    setActivityEvidence(null);
     setKey(prev => prev + 1);
     setDifficulty(null);
   };
@@ -588,7 +606,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>게임을 끝내고 결과 화면을 확인하면 활동이 완료됩니다. {guidedRequested ? '결과 화면에서 선생님에게 확인 요청을 자동으로 보냅니다. 수업 점수는 교사가 확인한 뒤 반영됩니다.' : '게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.'}</small></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>화면 게임 뒤 짝과 실제 활동을 한 차례씩 진행합니다. {guidedRequested ? '짝의 활동 기록을 마치면 선생님에게 확인 요청을 보냅니다. 수업 점수는 교사가 확인한 뒤 반영됩니다.' : '화면 점수와 신체 활동 기록은 구분됩니다.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
             <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
             <button data-level="normal" onClick={() => handleSelectDifficulty('normal')}><span className="level-symbol" aria-hidden="true">⚡</span><strong>표준 기록</strong><small>×1.0 배율</small></button>
@@ -616,6 +634,8 @@ const GamePlaySession = () => {
         }
       }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{renderGame()}</div>}
 
+      {pendingResult && <PhysicalActivityCheck plan={activityPlan} onFinish={handleActivityFinish} onExit={() => navigate(hubPath)} />}
+
       {/* 배지 획득 토스트 */}
       {newBadge && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[10003] bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm animate-bounce border-2 border-yellow-300">
@@ -641,11 +661,12 @@ const GamePlaySession = () => {
             </div>
             <span className="text-6xl mb-3">{gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
-            <p className="text-emerald-400 font-bold text-xs mb-5">게임 활동을 마쳤어요! 어떤 움직임을 시도했는지 돌아봐요.</p>
-            {guidedRequested ? <div role="status" className="mb-4 text-center text-sm text-cyan-300"><p>{!guidedMode ? '수업 입장 정보가 없습니다. 모둠 화면에서 다시 들어와 주세요.' : !guidedSubmission.receipt?.completed ? !guidedSubmission.storageAvailable ? '요청을 보관하지 못했어요. 전송될 때까지 이 화면을 열어 두세요.' : !guidedSubmission.isOnline ? '연결이 돌아오면 완료 확인을 자동으로 보낼게요.' : '완료 확인을 선생님께 보내는 중이에요.' : '완료 확인 요청을 보냈어요. 선생님이 확인하면 수업 점수가 반영돼요.'}</p>{guidedSubmission.error && <p>{guidedSubmission.error}</p>}{guidedMode && !guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}</div> : hasBattle && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
+            <p className="text-emerald-400 font-bold text-xs mb-2">화면 게임을 마쳤어요!</p>
+            <p role="status" className="mb-5 text-center text-xs text-amber-200">{activityEvidence === 'peer-report' ? '신체 활동: 짝 확인 기록 · 기기 실측 아님' : '신체 활동: 미확인 · 화면 게임만 완료'}</p>
+            {guidedRequested && activityEvidence === 'screen-only' ? <p role="status" className="mb-4 text-center text-sm text-amber-200">실제 활동 확인 요청은 보내지 않았어요. 대체 동작을 포함해 다시 참여할 수 있습니다.</p> : guidedRequested ? <div role="status" className="mb-4 text-center text-sm text-cyan-300"><p>{!guidedMode ? '수업 입장 정보가 없습니다. 모둠 화면에서 다시 들어와 주세요.' : !guidedSubmission.receipt?.completed ? !guidedSubmission.storageAvailable ? '요청을 보관하지 못했어요. 전송될 때까지 이 화면을 열어 두세요.' : !guidedSubmission.isOnline ? '연결이 돌아오면 완료 확인을 자동으로 보낼게요.' : '완료 확인을 선생님께 보내는 중이에요.' : '완료 확인 요청을 보냈어요. 선생님이 확인하면 수업 점수가 반영돼요.'}</p>{guidedSubmission.error && <p>{guidedSubmission.error}</p>}{guidedMode && !guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}</div> : hasBattle && activityEvidence === 'peer-report' && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
             {guidedMode && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="mt-2 text-xs text-cyan-200">{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
             <div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
-              <span className="text-slate-400 text-sm font-bold mb-1">{guidedRequested ? '이번 게임 기록 · 수업 점수와 별개' : '획득 점수'}</span>
+              <span className="text-slate-400 text-sm font-bold mb-1">화면 게임 점수 · 신체 활동 증거 아님</span>
               <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
@@ -733,7 +754,7 @@ const GamePlaySession = () => {
       />
 
       {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
+      {!isMotionGranted && !pendingResult && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
         <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
           <div className="text-xs">
             <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>

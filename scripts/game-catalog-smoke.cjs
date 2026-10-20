@@ -119,14 +119,18 @@ function readGameInventory() {
           active.status = 'fail';
           await page.screenshot({ path: path.join(work, `catalog-fail-${engine}-${viewport.width}-${game.type}.png`), fullPage: true });
         }
+        const activityDialog = page.locator('[role="dialog"][aria-labelledby="activity-check-title"]');
+        if (await activityDialog.count()) await activate(activityDialog.getByRole('button', { name: '활동 목록으로' }));
+        else {
         const finishedHome = page.getByRole('button', { name: '활동 목록으로' }).or(page.getByRole('button', { name: '홈으로', exact: true }));
         try {
           await activate(finishedHome.last(), 2000);
         } catch (error) {
           // A game can finish while the toolbar tap is in flight. Select the new
           // result screen's home button instead of the now-covered toolbar.
-          if (!await page.getByText('획득 점수', { exact: true }).isVisible()) throw error;
+          if (!await page.getByText('화면 게임 점수 · 신체 활동 증거 아님', { exact: true }).isVisible()) throw error;
           await activate(finishedHome.last());
+        }
         }
         await page.waitForURL(url => url.pathname === '/hub', { timeout: 10000 });
         await page.getByRole('heading', { name: /어떤 활동을 해 볼까요|땀방울 원정대/ }).first().waitFor({ state: 'visible', timeout: 10000 });

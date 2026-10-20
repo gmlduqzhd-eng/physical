@@ -273,7 +273,7 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
           enqueueAction({
             id: Math.random().toString(),
             type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: Math.max(200, countRef.current * 50) },
+            payload: { id: groupId, amount: countRef.current * 50 },
             timestamp: Date.now()
           });
           return 0;
@@ -308,7 +308,7 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
 
       <h1 className="text-xl font-black mb-1">🏃 왕복오래달리기 셔틀 삑!</h1>
       <p className="text-xs text-indigo-200 mb-8 text-center max-w-xs">
-        삑! 신호음이 울리기 전에 반대편 콘으로 달려가 터치하세요! 속도가 빨라집니다.
+        삑! 신호음에 맞춰 실제 콘 사이를 이동해 보세요. 화면 버튼은 왕복 횟수의 자기 기록이며 달리기 증거가 아닙니다.
       </p>
 
       <div className="w-full max-w-sm h-36 bg-indigo-900/60 border-2 border-indigo-700 rounded-3xl p-4 flex items-center justify-between relative mb-8">
@@ -337,8 +337,8 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
       {finished && (
         <GameResultOverlay
           title={`🏃 ${shuttleCount}회 완주 달성!`}
-          subtitle={`심폐지구력 레벨 ${level}단계까지 페이스를 유지했습니다.`}
-          score={Math.max(200, shuttleCount * 50)}
+          subtitle={`화면에 ${shuttleCount}회 기록했습니다. 실제 이동은 짝과 함께 확인하세요.`}
+          score={shuttleCount * 50}
           badge="셔틀런 지구력 철인"
           onRestart={handleRestart}
           onExit={onExit}
@@ -505,9 +505,9 @@ export const FootCenterBalance: React.FC<GameProps> = ({ groupId, enqueueAction:
 
   return (
     <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 pt-16 relative select-none">
-      <h1 className="text-2xl font-black mb-1">⚖️ 족저압 무게중심 센서</h1>
+      <h1 className="text-2xl font-black mb-1">⚖️ 기기 기울기 균형 연습</h1>
       <p className="text-xs text-blue-300 mb-6 text-center max-w-xs">
-        양 발바닥의 중심을 정중앙 그린 서클에 맞추고 10초간 균형을 유지하세요! (기기 기울기 또는 터치 드래그)
+        기기 기울기 또는 화면 드래그로 중심을 맞추세요. 발바닥 압력이나 실제 균형을 측정하지 않습니다.
       </p>
 
       <div
@@ -968,13 +968,13 @@ export const PulseZoneTarget: React.FC<GameProps> = ({ groupId, enqueueAction: q
         {inTargetSec} / 6초 유지
       </div>
       <div className={`text-xs font-bold ${isTargetZone ? 'text-emerald-400' : 'text-amber-300'}`}>
-        {isTargetZone ? '🔥 완벽한 유산소 운동 존! 템포 유지!' : bpm < 130 ? '⬆️ 심장 버튼을 일정한 박자로 계속 탭하세요!' : '⬇️ 너무 빠릅니다! 템포를 살짝 늦추세요!'}
+        {isTargetZone ? '목표 화면 탭 박자에 맞았어요!' : bpm < 130 ? '⬆️ 심장 버튼을 일정한 박자로 계속 탭하세요!' : '⬇️ 너무 빠릅니다! 템포를 살짝 늦추세요!'}
       </div>
 
       {finished && (
         <GameResultOverlay
-          title="🫀 유산소 심박 타깃존 완주!"
-          subtitle="130~150 BPM 유산소 영역에 도달하여 인터벌 심폐 능력을 강화했습니다."
+          title="🫀 화면 박자 도전 완료!"
+          subtitle="130~150 BPM 화면 탭 박자를 맞췄습니다. 실제 심박수와 운동 효과는 측정하지 않았습니다."
           score={500}
           badge="심박 인터벌 트레이너"
           onRestart={handleRestart}

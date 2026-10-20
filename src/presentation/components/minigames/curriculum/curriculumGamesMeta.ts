@@ -48,7 +48,7 @@ export const CURRICULUM_GAMES_META: Record<string, CurriculumGameMeta> = {
   },
   'foot-center-balance': {
     id: 'foot-center-balance',
-    name: '족저압 무게중심 센서',
+    name: '기기 기울기 균형 연습',
     emoji: '⚖️',
     domain: '운동',
     code: '[6체01-02]',
