@@ -1,11 +1,12 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ClipboardCheck, QrCode } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, Music2, QrCode } from 'lucide-react';
 import { GAMES } from '../domain/gamesData';
 import brandLogo from '../assets/brand-logo.png';
 import { BackgroundMusicButton } from './components/BackgroundMusicButton';
 import { LinkShareButton } from './components/LinkShareButton';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
+import { AppInstallButton } from './components/AppInstallButton';
 import './UnifiedHomePage.css';
 
 const domains = [
@@ -18,7 +19,14 @@ export function UnifiedHomePage() {
   const qr = useRef<AccessQrDialogHandle>(null);
   return <div className="unified-home"><div className="shell">
     <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><img src={brandLogo} alt="" width="44" height="51"/><div>땀방울 원정대<small>PHYSICAL EDUCATION</small></div></Link>
-      <nav className="header-nav" aria-label="상단 메뉴"><Link to="/manual">이용 안내</Link><details className="home-tools"><summary>음악·공유 ＋</summary><div className="tools-panel"><BackgroundMusicButton/><div className="tools-actions"><button type="button" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}>접속 QR 보기</button><LinkShareButton/></div></div></details></nav>
+      <nav className="header-nav" aria-label="상단 메뉴">
+        <div className="header-utilities">
+          <details className="home-tools"><summary><Music2 aria-hidden="true"/>음악</summary><div className="tools-panel"><BackgroundMusicButton/></div></details>
+          <LinkShareButton/>
+          <AppInstallButton/>
+        </div>
+        <div className="header-help"><button type="button" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/>접속 QR</button><Link to="/manual">이용 안내</Link></div>
+      </nav>
     </header>
     <main><section className="welcome" aria-labelledby="home-title"><div><div className="eyebrow">땀방울 원정대 · 우리들의 체육 교실</div><h1 id="home-title">작은 움직임에서,<br/><em>함께하는 즐거움으로.</em></h1></div><div className="welcome-side"><p className="lead">선생님의 준비는 더 간편하게,<br/>학생들의 참여는 더 즐겁게.<br/>오늘의 체육 수업을 여기서 시작하세요.</p><p className="grade-note">2022 개정 교육과정 연계 · 1–2학년 · 3–4학년군 · 5–6학년군</p></div></section>
       <nav className="roles" aria-label="역할 선택">
