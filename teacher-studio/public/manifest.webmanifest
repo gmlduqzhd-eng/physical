@@ -1,0 +1,12 @@
+{
+  "id": "/",
+  "name": "땀방울 원정대 · 교사 수업 준비실",
+  "short_name": "교사 준비실",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f8",
+  "theme_color": "#576c50",
+  "icons": [{ "src": "/studio-icon.png", "sizes": "1254x1254", "type": "image/png", "purpose": "any" }]
+}
