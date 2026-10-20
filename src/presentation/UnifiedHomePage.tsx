@@ -1,12 +1,10 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ClipboardCheck, Music2, QrCode } from 'lucide-react';
+import { ArrowRight, ClipboardCheck, QrCode } from 'lucide-react';
 import { GAMES } from '../domain/gamesData';
 import brandLogo from '../assets/brand-logo.png';
-import { BackgroundMusicButton } from './components/BackgroundMusicButton';
-import { LinkShareButton } from './components/LinkShareButton';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
-import { AppInstallButton } from './components/AppInstallButton';
+import { HeaderUtilities } from './components/HeaderUtilities';
 import './UnifiedHomePage.css';
 
 const domains = [
@@ -20,11 +18,7 @@ export function UnifiedHomePage() {
   return <div className="unified-home"><div className="shell">
     <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><img src={brandLogo} alt="" width="44" height="51"/><div>땀방울 원정대<small>PHYSICAL EDUCATION</small></div></Link>
       <nav className="header-nav" aria-label="상단 메뉴">
-        <div className="header-utilities">
-          <details className="home-tools"><summary><Music2 aria-hidden="true"/>음악</summary><div className="tools-panel"><BackgroundMusicButton/></div></details>
-          <LinkShareButton/>
-          <AppInstallButton/>
-        </div>
+        <HeaderUtilities/>
         <div className="header-help"><button type="button" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/>접속 QR</button><Link to="/manual">이용 안내</Link></div>
       </nav>
     </header>
