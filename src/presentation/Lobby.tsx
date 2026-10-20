@@ -1,3 +1,5 @@
+import { FlowShell } from './FlowShell';
+import { StudentQrScanner } from './components/StudentQrScanner';
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../data/supabase';
@@ -14,6 +16,7 @@ export const Lobby = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [mode,setMode]=useState<'qr'|'code'|null>(()=>new URLSearchParams(window.location.search).has('pin')?'code':null);
 
   // 이전 접속 정보 확인
   const lastRoom = readStorage('physical_last_room');
@@ -61,83 +64,11 @@ export const Lobby = () => {
     finally { setLoading(false); }
   };
 
-  return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center pt-12 pb-20 px-6 gap-4 text-slate-900 font-sans overflow-y-auto">
-      <h1 className="text-4xl font-black text-cyan-600 mb-1">땀방울 원정대</h1>
-      <p className="text-slate-600 mb-4 text-center">선생님이 알려주신 핀 번호와<br/>우리 모둠을 선택하고 입장하세요!</p>
-
-      {/* 이전 수업 이어하기 버튼 */}
-      {lastRoom && lastGroup && lastName && (
-        <button
-          onClick={handleResume}
-          disabled={loading}
-          className="w-full max-w-sm py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transition-all active:scale-95"
-        >
-          <RotateCcw className="w-5 h-5" />
-          이전 수업 이어하기 ({lastName} / {lastGroupName})
-        </button>
-      )}
-
-      <form onSubmit={handleJoin} className="w-full max-w-sm bg-white rounded-2xl p-6 border border-slate-200 shadow-xl flex flex-col gap-5">
-        <div>
-          <label className="block text-slate-700 text-sm font-bold mb-2">핀 번호 (PIN)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            maxLength={8}
-            placeholder="8자리 수업 PIN"
-            value={pinCode}
-            onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ''))}
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-xl font-mono text-center tracking-[0.5em] focus:outline-none focus:border-cyan-500"
-          />
-        </div>
-
-        <div className="text-sm text-slate-600">이름 입력 없이 익명으로 참여합니다. 실명·번호·연락처를 입력하지 마세요.</div>
-
-        <div>
-          <label className="block text-slate-700 text-sm font-bold mb-2">우리 모둠</label>
-          <select
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-300 rounded-xl p-4 text-slate-900 text-lg focus:outline-none focus:border-cyan-500"
-          >
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
-              <option key={num} value={`${num}모둠`}>{num}모둠</option>
-            ))}
-          </select>
-        </div>
-
-        <label className="text-slate-700 font-bold">모둠 참여 코드<input type="password" autoComplete="off" maxLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value)} placeholder="교사가 알려준 모둠 코드" className="block w-full border rounded-xl p-4 mt-2"/></label>
-        {error && <p className="text-red-500 text-sm font-bold text-center">{error}</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl font-bold text-xl transition-colors mt-2"
-        >
-          {loading ? '입장 중...' : '입장하기'}
-        </button>
-      </form>
-
-      <div className="w-full max-w-sm mt-6 flex flex-col gap-3">
-        <Link to="/privacy" className="text-center underline text-sm text-cyan-800">공용 기기 정보 지우기 / 개인정보 안내</Link>
-        <Link to="/manual" className="w-full py-3 bg-cyan-50 rounded-xl text-center font-bold hover:bg-cyan-100 text-cyan-600 transition-colors text-sm border border-cyan-200 shadow-sm">
-          📖 땀방울 원정대 사용 설명서
-        </Link>
-        <Link to="/admin" className="w-full py-3 bg-white rounded-xl text-center font-bold hover:bg-slate-50 text-slate-600 transition-colors text-sm border border-slate-200 shadow-sm">
-          ⚙️ 교사 제어 패널 (관리자)
-        </Link>
-        <Link to="/kiosk" className="w-full py-4 bg-cyan-100 rounded-xl text-center font-black hover:bg-cyan-200 text-cyan-800 transition-colors border-2 border-cyan-300 shadow-sm flex items-center justify-center gap-2">
-          🏃‍♂️ 공용 패드 (릴레이 스테이션) 모드
-        </Link>
-        <Link to="/board" className="w-full py-3 bg-white rounded-xl text-center font-bold hover:bg-slate-50 text-slate-600 transition-colors text-sm border border-slate-200 shadow-sm">
-          🖥️ TV 전광판 열기 (PIN 입력)
-        </Link>
-      </div>
-
-      <p className="mt-6 text-sm text-slate-400 font-bold">
-        ⓒ2026. 엽쌤 All rights reserved.
-      </p>
-    </div>
-  );
+  return <FlowShell><p className="eyebrow">학생 수업 참여</p><h1>우리 모둠으로 들어가요</h1><p className="muted">선생님이 보여주신 QR이나 알려주신 코드로 참여해요. 이름은 쓰지 않아요.</p>
+    {lastRoom&&lastGroup&&lastName&&<p><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName})</button></p>}
+    <div className="grid"><button className={mode==='qr'?'primary card':'card'} onClick={()=>setMode('qr')}>📷 QR로 참여</button><button className={mode==='code'?'primary card':'card'} onClick={()=>setMode('code')}>🔢 코드로 참여</button></div>
+    {mode==='qr'&&<div style={{marginTop:20}}><StudentQrScanner/></div>}
+    {mode==='code'&&<form onSubmit={handleJoin} className="card" style={{marginTop:20,maxWidth:560}}><h2>선생님이 알려준 코드를 입력해요</h2><label>수업 PIN (8자리)<input type="text" inputMode="numeric" maxLength={8} required pattern="[0-9]{8}" placeholder="8자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,''))}/></label><label>우리 모둠<select value={groupName} onChange={e=>setGroupName(e.target.value)}>{[1,2,3,4,5,6,7,8].map(n=><option key={n}>{n}모둠</option>)}</select></label><label>모둠 참여 코드<input type="password" autoComplete="off" required maxLength={12} minLength={12} value={inviteCode} onChange={e=>setInviteCode(e.target.value.trim())} placeholder="선생님이 알려준 12자리 코드"/></label><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
+    {error&&<p role="alert" className="error">{error}</p>}<div className="quiet-links"><Link to="/hub">혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기</Link></div><details><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 첫 화면의 ‘선생님이에요’에서 이용해요.</p></details>
+  </FlowShell>;
 };

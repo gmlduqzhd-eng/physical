@@ -32,7 +32,7 @@ export const AdminControlPanel = () => {
   const [templates, setTemplates] = useState<MissionTemplate[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<MissionTemplate | null>(null);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('room'));
   
   // Selected Room Data
   const { scores: roomGroups, gameRoom: currentRoom, error: roomError, refresh: refreshRoom } = useGameLogic(selectedRoomId || undefined);

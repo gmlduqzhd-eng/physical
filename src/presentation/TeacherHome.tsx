@@ -1,0 +1,5 @@
+import { Link } from 'react-router-dom';
+import { FlowShell } from './FlowShell';
+export function TeacherHome() {
+  return <FlowShell><p className="eyebrow">선생님 시작 화면</p><h1>오늘 수업을 준비해 볼까요?</h1><p className="muted">활동을 고르고 모둠을 정하면 학생에게 보여 줄 QR이 준비됩니다.</p><div className="grid" style={{marginTop:28}}><section className="card"><h2>새 수업 준비</h2><ol className="steps"><li>1 활동 선택</li><li>2 모둠·시간</li><li>3 학생 참여</li></ol><Link className="primary" to="/teacher/setup">수업 준비 시작</Link></section><section className="card"><h2>준비하던 수업 이어가기</h2><p className="muted">교사 인증 후 이 기기에서 만든 수업을 확인하세요.</p><Link className="secondary" to="/teacher/setup?resume=1">내 수업 찾기</Link></section></div><div className="quiet-links"><Link to="/teacher-ai">AI로 수업 준비하기</Link><Link to="/hub">활동만 둘러보기</Link><Link to="/demo">예시 수업 체험</Link></div><details><summary>더 많은 교사 도구</summary><div className="quiet-links"><Link to="/admin">기존 상세 제어 패널</Link><Link to="/kiosk">공용 패드 모드</Link><Link to="/board">전광판 연결</Link><Link to="/manual">전체 사용 설명서</Link><Link to="/about">앱 소개·접속 QR</Link></div></details></FlowShell>;
+}

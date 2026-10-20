@@ -216,7 +216,7 @@ const GamePlaySession = () => {
   const battleRoomId = searchParams.get('room');
   const battleGroupId = searchParams.get('group');
   const hasBattle = !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
-  const hubPath = hasBattle ? '/hub?battle=1' : '/hub';
+  const hubPath = hasBattle ? '/hub/tools?battle=1' : '/hub';
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
   const [key, setKey] = useState(0);
   const [gameFinished, setGameFinished] = useState(false);

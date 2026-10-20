@@ -156,7 +156,7 @@ input, textarea, [contenteditable="true"], .select-text, .select-text * {
 /* 모바일 UI 제스처 통제 최적화 */
 html, body, #root { 
   height: 100dvh; 
-  width: 100vw; 
+  width: 100%;
   touch-action: pan-y; 
   -webkit-touch-callout: none; 
   user-select: none; 

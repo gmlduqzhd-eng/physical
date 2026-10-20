@@ -20,6 +20,12 @@ const GamePlayPage = lazy(() => import('./presentation/GamePlayPage').then(m => 
 const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
 const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry').then(m => ({ default: m.TeacherStudioEntry })));
 const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
+const RoleLandingPage = lazy(() => import('./presentation/RoleLandingPage').then(m => ({ default: m.RoleLandingPage })));
+const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
+const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({ default: m.TeacherHome })));
+const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
+const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
+const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
 
 function App() {
   useEffect(() => {
@@ -37,11 +43,17 @@ function App() {
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
       <Routes>
         {/* 메인: 소개 페이지가 먼저 노출되고, '게임하기' 클릭 시 게임 허브(/hub)로 이동 */}
-        <Route path="/" element={<IntroLandingPage />} />
-        <Route path="/hub" element={<GameHub />} />
+        <Route path="/" element={<RoleLandingPage />} />
+        <Route path="/hub" element={<ActivityLibrary />} />
+        <Route path="/hub/tools" element={<GameHub />} />
+        <Route path="/about" element={<IntroLandingPage />} />
+        <Route path="/teacher" element={<TeacherHome />} />
+        <Route path="/teacher/setup" element={hasSupabase ? <TeacherAuthGuard><ClassroomSetup /></TeacherAuthGuard> : <SupabaseRequired />} />
+        <Route path="/teacher/room/:roomId" element={hasSupabase ? <TeacherAuthGuard><GuidedClassroom /></TeacherAuthGuard> : <SupabaseRequired />} />
+        <Route path="/demo" element={<DemoLesson />} />
         <Route path="/teacher-ai" element={<TeacherStudioEntry />} />
         <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/games" element={<GameHub />} />
+        <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 
         {/* 교사 관리 & 수업용 (Supabase 필요 & 교사 PIN 인증) */}
