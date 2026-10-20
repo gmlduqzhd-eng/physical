@@ -49,7 +49,7 @@ export const GameResultOverlay: React.FC<GameResultOverlayProps> = ({
           {onRestart && (
             <button
               onClick={onRestart}
-              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 active:from-emerald-600 active:to-teal-700 text-white font-black text-base rounded-2xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 active:scale-98 transition-transform"
+              className="game-stage-primary w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 active:from-emerald-600 active:to-teal-700 text-white font-black text-base rounded-2xl shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2 active:scale-98 transition-transform"
             >
               <RotateCcw className="w-5 h-5" />
               다시 도전하기

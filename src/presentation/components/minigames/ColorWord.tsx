@@ -74,7 +74,7 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
   };
 
   return (
-    <div className={`min-h-[100dvh] bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-75 ${flash === 'correct' ? '!bg-emerald-950' : flash === 'wrong' ? '!bg-red-950' : ''}`}>
+    <div data-game-color={flash ? 'feedback' : undefined} className={`min-h-[100dvh] bg-gray-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-75 ${flash === 'correct' ? '!bg-emerald-950' : flash === 'wrong' ? '!bg-red-950' : ''}`}>
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
         <div><span className="text-slate-400 text-sm font-bold">맞힌 수</span><div className="text-white text-3xl font-black">{score}</div></div>
         <div className="text-right"><span className="text-slate-400 text-sm font-bold">남은 시간</span><div className={`text-3xl font-black ${timeLeft <= 5 ? 'text-red-500' : 'text-white'}`}>{timeLeft}초</div></div>
@@ -86,7 +86,7 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
       </p>
 
       {/* 문제 표시 */}
-      <div className="w-full max-w-sm h-32 bg-slate-900 rounded-2xl border-2 border-slate-700 flex items-center justify-center mb-8 relative z-10">
+      <div data-game-color="color-word" className="w-full max-w-sm h-32 bg-slate-900 rounded-2xl border-2 border-slate-700 flex items-center justify-center mb-8 relative z-10">
         <span className={`text-6xl font-black ${question.colorClass}`}>{question.word}</span>
       </div>
 
@@ -94,7 +94,7 @@ export const ColorWord = ({ groupId, enqueueAction }: Props) => {
       <div className="grid grid-cols-2 gap-3 w-full max-w-sm relative z-10">
         {COLORS.map((c, i) => (
           <button key={i} onClick={() => handleAnswer(i)} className="py-5 rounded-2xl font-black text-xl text-white bg-slate-800 border-2 border-white/20 active:scale-95 transition-transform hover:bg-slate-700 hover:border-white/40 shadow-md">
-            <span className={c.className}>●</span> {c.name}
+            <span data-game-color="color-choice" className={c.className}>●</span> {c.name}
           </button>
         ))}
       </div>

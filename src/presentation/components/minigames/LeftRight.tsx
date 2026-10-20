@@ -66,7 +66,7 @@ export const LeftRight = ({ groupId, enqueueAction }: Props) => {
   };
 
   return (
-    <div className={`min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-75 ${flash === 'correct' ? '!bg-emerald-950' : flash === 'wrong' ? '!bg-red-950' : ''}`}>
+    <div data-game-color={flash ? 'feedback' : undefined} className={`min-h-[100dvh] bg-indigo-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors duration-75 ${flash === 'correct' ? '!bg-emerald-950' : flash === 'wrong' ? '!bg-red-950' : ''}`}>
       <div className="flex justify-between w-full max-w-sm mb-6 relative z-10">
         <div><span className="text-blue-300 text-sm font-bold">점수</span><div className="text-white text-3xl font-black">{score}</div></div>
         <div className="text-right"><span className="text-blue-300 text-sm font-bold">남은 시간</span><div className={`text-3xl font-black ${timeLeft <= 5 ? 'text-red-500' : 'text-white'}`}>{timeLeft}초</div></div>

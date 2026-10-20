@@ -96,6 +96,7 @@ export const JumpDetector = ({ groupId, enqueueAction }: Props) => {
 
   return (
     <div 
+      data-game-color={lastJump ? 'feedback' : undefined}
       onClick={doJump}
       className={`min-h-[100dvh] bg-blue-950 flex flex-col items-center justify-center p-6 relative overflow-hidden z-[9999] select-none transition-colors cursor-pointer ${lastJump ? '!bg-cyan-900' : ''}`}
     >

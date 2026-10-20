@@ -352,7 +352,7 @@ export const ExpressionActivityLayout = ({
               type="button"
               onClick={handleFinishRubric}
               disabled={ratings.some(rating => rating < 1)}
-              className="px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="game-stage-primary px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trophy className="w-4 h-4" />
               <span>평가 완료 및 활동 결과 보기</span>
@@ -426,7 +426,7 @@ export const ExpressionActivityLayout = ({
               <button
                 type="button"
                 onClick={onExit}
-                className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs shadow-md transition-colors"
+                className="game-stage-primary px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs shadow-md transition-colors"
               >
                 홈 화면으로 이동
               </button>

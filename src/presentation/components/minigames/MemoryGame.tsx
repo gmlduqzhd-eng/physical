@@ -98,6 +98,7 @@ export const MemoryGame = ({ groupId, enqueueAction }: Props) => {
           return (
             <button
               key={i}
+              data-game-color="memory-tile"
               aria-label={c.name}
               onClick={() => handleColorTap(i)}
               disabled={phase !== 'input'}

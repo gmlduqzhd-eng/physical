@@ -140,7 +140,7 @@ export const PhysicalActivityLayout = ({
 
           <button
             onClick={handleStartActivity}
-            className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className="game-stage-primary w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5 fill-current" /> 활동 시작하기 (3초 카운트)
           </button>

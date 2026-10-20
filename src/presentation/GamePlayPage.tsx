@@ -3,6 +3,7 @@ import { GAMES } from '../domain/gamesData';
 import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
+import './GameTheme.css';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSyncQueue } from '../application/useSyncQueue';
 import type { GameRoom } from '../domain/types';
@@ -89,7 +90,7 @@ import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGa
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
 import { CurriculumGameRouter } from './components/minigames/curriculum/CurriculumGameRouter';
-import { Home, RotateCcw, Trophy } from 'lucide-react';
+import { ArrowLeft, Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
@@ -359,7 +360,7 @@ const GamePlaySession = () => {
 
   if (!gameType || !gameInfo) {
     return (
-      <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
+      <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
         <button onClick={() => navigate(hubPath)} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
       </div>
@@ -567,33 +568,19 @@ const GamePlaySession = () => {
   };
 
   return (
-    <div className={`gameplay-page ${difficulty !== null ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
+    <div className={`warm-game gameplay-page ${difficulty !== null ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 난이도 선택 화면 */}
       {difficulty === null && !gameFinished && (
-        <div className="fixed inset-0 z-[10002] bg-slate-950 flex flex-col items-center overflow-y-auto p-4 font-sans">
-          <div className="w-full max-w-md my-auto shrink-0 flex flex-col items-center text-center">
-          <span className="text-7xl mb-4">{gameInfo.emoji}</span>
-          <h2 className="text-2xl font-black text-white mb-2">{gameInfo.name}</h2>
-          <p className="text-sm text-slate-400 mb-8 text-center max-w-sm">{gameInfo.target}</p>
-          <div className="w-full text-left bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-5 space-y-2">
-            <p className="text-sm text-slate-200">{GAMES.find(game => game.type === gameType)?.desc}</p>
-            <p className="text-xs text-slate-400">안내를 확인한 뒤 아래 배율을 선택하면 준비를 시작합니다. 게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.</p>
-          </div>
-          <p className="text-xs text-slate-500 font-bold mb-4 uppercase tracking-widest">기록 점수 배율을 선택하세요</p>
-          <div className="flex gap-2 sm:gap-3 w-full max-w-md">
-            <button onClick={() => handleSelectDifficulty('easy')} className="flex-1 py-4 sm:py-5 bg-emerald-600 hover:bg-emerald-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-emerald-400/30 shrink-0">
-              <span className="text-2xl">🌱</span><span className="text-sm whitespace-nowrap">기본 연습</span><span className="text-[10px] text-emerald-200 whitespace-nowrap">×0.7 배율</span>
-            </button>
-            <button onClick={() => handleSelectDifficulty('normal')} className="flex-1 py-4 sm:py-5 bg-blue-600 hover:bg-blue-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-blue-400/30 scale-105 shrink-0">
-              <span className="text-2xl">⚡</span><span className="text-sm whitespace-nowrap">표준 기록</span><span className="text-[10px] text-blue-200 whitespace-nowrap">×1.0 배율</span>
-            </button>
-            <button onClick={() => handleSelectDifficulty('hard')} className="flex-1 py-4 sm:py-5 bg-red-600 hover:bg-red-500 rounded-2xl text-white font-black flex flex-col items-center gap-1 transition-colors border-2 border-red-400/30 shrink-0">
-              <span className="text-2xl">🔥</span><span className="text-sm whitespace-nowrap">도전 기록</span><span className="text-[10px] text-red-200 whitespace-nowrap">×1.5 배율</span>
-            </button>
-          </div>
-          <button onClick={() => navigate(hubPath)} className="mt-6 text-sm text-slate-500 hover:text-slate-300 transition-colors">← 돌아가기</button>
-          </div>
-        </div>
+        <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
+          <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
+          <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>안내를 확인한 뒤 배율을 선택하면 준비를 시작합니다. 게임 규칙은 같으며 기록 점수에만 배율이 적용됩니다.</small></div>
+          <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
+            <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
+            <button data-level="normal" onClick={() => handleSelectDifficulty('normal')}><span className="level-symbol" aria-hidden="true">⚡</span><strong>표준 기록</strong><small>×1.0 배율</small></button>
+            <button data-level="hard" onClick={() => handleSelectDifficulty('hard')}><span className="level-symbol" aria-hidden="true">🔥</span><strong>도전 기록</strong><small>×1.5 배율</small></button>
+          </div><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
+        </div></div>
       )}
 
       {/* 3초 움직임 준비 카운트다운 */}
@@ -624,25 +611,17 @@ const GamePlaySession = () => {
 
       {/* 상단 네비게이션 */}
       {difficulty !== null && (
-        <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between px-4 py-2 pointer-events-none">
-          <button onClick={() => navigate(hubPath)} className="w-11 h-11 bg-black/80 hover:bg-black text-white backdrop-blur-md border-2 border-white/60 hover:border-white rounded-full flex items-center justify-center transition-all pointer-events-auto shadow-[0_4px_20px_rgba(0,0,0,0.8)] active:scale-90" title="홈으로">
-            <Home className="w-5 h-5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" />
-          </button>
-          {showDetailedResult && <button onClick={() => setShowDetailedResult(false)} className="pointer-events-auto px-3 py-2 bg-cyan-700 text-white rounded-xl text-sm font-bold">점수 화면으로</button>}
-          <div className={`${showDetailedResult ? 'hidden sm:flex' : 'flex'} items-center gap-1.5 pointer-events-auto bg-black/80 backdrop-blur-md border border-white/30 px-3 py-1.5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.8)]`}>
-            <span className="text-[10px] font-mono font-bold text-cyan-300 bg-cyan-950 px-2 py-0.5 rounded-md border border-cyan-700/80">{gameInfo.code}</span>
-            <span className="text-[11px] font-bold text-white hidden xs:inline drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{gameInfo.target}</span>
-            <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${difficulty === 'easy' ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50' : difficulty === 'hard' ? 'bg-red-950 text-red-300 border border-red-500/50' : 'bg-blue-950 text-blue-300 border border-blue-500/50'}`}>
-              {difficulty === 'easy' ? '🌱' : difficulty === 'hard' ? '🔥' : '⚡'}×{difficultyMultiplier}
-            </span>
-          </div>
+        <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
+          <button onClick={() => navigate(hubPath)} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
+          <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
+          {showDetailedResult ? <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button> : <span className="game-toolbar-level">{difficulty === 'easy' ? '연습' : difficulty === 'hard' ? '도전' : '표준'} ×{difficultyMultiplier}</span>}
         </div>
       )}
 
       {/* 게임 종료 결과 오버레이 */}
       {gameFinished && !showDetailedResult && (
-        <div className="fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
-          <div className="bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
+        <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
+          <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
               <span>{gameInfo.code}</span><span className="text-slate-500">|</span><span className="text-slate-300">{gameInfo.target}</span>
             </div>
@@ -650,9 +629,9 @@ const GamePlaySession = () => {
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-xs mb-5">2022 개정 초등 체육과 학습 완료!</p>
             {hasBattle && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
-            <div className="w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
+            <div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">획득 점수</span>
-              <span className={`text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
+              <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
               {difficulty && difficulty !== 'normal' && (
@@ -721,10 +700,10 @@ const GamePlaySession = () => {
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <div className="w-full flex gap-3">
-              <button onClick={handleReplay} className="flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
+              <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
-              <button onClick={() => navigate(hubPath)} className="flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
+              <button onClick={() => navigate(hubPath)} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
                 <Home className="w-5 h-5" /> 홈으로
               </button>
             </div>

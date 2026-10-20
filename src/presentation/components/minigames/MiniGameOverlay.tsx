@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import '../../GameTheme.css';
 import type { GameRoom } from '../../../domain/types';
 import { VolcanoGame } from './VolcanoGame';
 import { TelepathyGame } from './TelepathyGame';
@@ -74,7 +75,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   };
 
   return (
-    <div className="relative z-[9999]">
+    <div className="warm-game relative z-[9999]">
       {minigame.type !== 'bomb' && (
         <button
           onClick={() => setDismissedRunId(runId)}

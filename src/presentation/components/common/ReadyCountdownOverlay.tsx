@@ -46,7 +46,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
   }, [count, finish]);
 
   return (
-    <div className="fixed inset-0 z-[10001] overflow-y-auto bg-slate-950/90 backdrop-blur-md flex flex-col items-center p-4 text-white text-center select-none animate-in fade-in duration-200">
+    <div className="game-countdown fixed inset-0 z-[10001] overflow-y-auto bg-slate-950/90 backdrop-blur-md flex flex-col items-center p-4 text-white text-center select-none animate-in fade-in duration-200">
       <div className="my-auto shrink-0 flex flex-col items-center">
       <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-xs font-bold mb-6">
         <Smartphone className="w-4 h-4 animate-bounce" />
@@ -56,7 +56,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
       <div className="relative mb-6 flex items-center justify-center">
         <div className="absolute w-44 h-44 rounded-full bg-cyan-500/20 animate-ping pointer-events-none" />
         <div className="w-40 h-40 rounded-full border-4 border-cyan-400 bg-slate-900/90 shadow-[0_0_50px_rgba(6,182,212,0.4)] flex items-center justify-center">
-          <span className="text-8xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-200 to-cyan-400 animate-scale-pulse">
+          <span className="game-countdown-number text-8xl font-black font-mono text-transparent bg-clip-text bg-gradient-to-b from-white via-cyan-200 to-cyan-400 animate-scale-pulse">
             {count > 0 ? count : 'GO!'}
           </span>
         </div>
