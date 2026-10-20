@@ -52,17 +52,17 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
       if (task === 'plan') assert.equal(result.result.sections.reduce((n, s) => n + (s.minutes ?? 0), 0), 40);
     }
     assert.equal(calls, 3); await assert.rejects(generateStudioAdvice({ ...base, notes: 'private' })); assert.equal(calls, 3);
-    for (const task of ['safety','mission','observation','group','alternative','reflection'] as const) {
+    for (const task of ['safety','mission','observation','group','alternative','reflection','participation'] as const) {
       const next = { ...input, task, activityId: task==='alternative'?null:selected.id, observations: task==='observation'?['협동이 활발함']:[], aggregate: task==='group'?{groups:'3~5모둠',participants:'모둠당 5~8명',completion:'절반 정도 완료',cooperation:'관찰 부족'}:null };
-      const headings = {safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],alternative:[],reflection:['성찰 질문']}[task];
+      const headings = {safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],alternative:[],reflection:['성찰 질문'],participation:['오늘의 몸 미션','역할 바꾸기','기다리는 동안']}[task];
       fixture = { title:'테스트 전용, 실제 AI 아님',recommendations:task==='alternative'?material.slice(0,3).map(g=>({activityId:g.id,reason:'대체 활동 제안',citations:[{activityId:g.id,field:'description',quote:g.description}]})):[],sections:headings.map(heading=>({heading,minutes:null,content:heading==='관찰 요약'?observationSummary(next as never):heading==='모둠 결과 요약'?groupSummary(next as never):'교사 검토용 역할 교대 제안',citations:[{activityId:selected.id,field:'description',quote:selected.description}]})),safety:[],teacherChecks:['교사가 조건을 확인했나요?'] };
       if(task==='mission')(fixture as TeacherOutput).sections[0].content+=' 6명 모둠의 10분 활동 제안.';
       assert.equal((await generateStudioAdvice(next)).result.sections.length,headings.length);
     }
-    assert.equal(calls,9);
+    assert.equal(calls,10);
     // A simpler provider schema does not weaken the application's final checks.
     fixture = { ...(fixture as Record<string, unknown>), title: '가'.repeat(121) };
-    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 10);
+    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 11);
     fixture={title:'테스트',recommendations:[],sections:[{heading:'성찰 질문',minutes:null,content:'질문 제안',citations:[{activityId:'invented',field:'description',quote:'없는 자료'}]}],safety:[],teacherChecks:['확인하세요.']};
     // A returned reference outside server-provided material must never be hydrated.
     await assert.rejects(generateStudioAdvice({...base,task:'reflection',activityId:selected.id}),/목록에 없는 원문 참조/);

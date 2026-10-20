@@ -36,7 +36,7 @@ export async function generateStudioAdvice(raw: unknown) {
   });
   const resolve=(sourceId:string)=>{const value=references.get(sourceId);if(!value)throw new Error('목록에 없는 원문 참조입니다.');return value;};
   const recommendationsOnly=['recommend','alternative'].includes(context.task);
-  const headings={difficulty:['기초','보통','도전'],plan:['도입','준비운동','본활동','정리','안전 지도'],safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],reflection:['성찰 질문'],recommend:[],alternative:[]}[context.task];
+  const headings={difficulty:['기초','보통','도전'],plan:['도입','준비운동','본활동','정리','안전 지도'],safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],reflection:['성찰 질문'],participation:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'],recommend:[],alternative:[]}[context.task];
   const section=geminiTransportSchema.shape.sections.element.extend({heading:headings.length?z.enum(headings as [string,...string[]]):z.string(),minutes:context.task==='plan'?z.number():z.null()});
   const taskSchema=geminiTransportSchema.extend({recommendations:recommendationsOnly?geminiTransportSchema.shape.recommendations.length(3):geminiTransportSchema.shape.recommendations.max(0),sections:z.array(section).length(headings.length)});
   return generateAdvice({ ...context, consent: true }, {

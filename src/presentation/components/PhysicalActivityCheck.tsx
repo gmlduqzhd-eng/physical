@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { PhysicalActivityPlan } from '../../domain/physicalActivityPlans';
+import type { ParticipationCues } from '../../domain/participationCues';
 
 export type ActivityEvidence = 'peer-report' | 'screen-only';
 
 interface Props {
   plan: PhysicalActivityPlan;
+  cues?: ParticipationCues | null;
   onFinish: (evidence: ActivityEvidence) => void;
   onExit: () => void;
 }
 
 /** A classroom routine and an honest peer report, not a movement sensor. */
-export function PhysicalActivityCheck({ plan, onFinish, onExit }: Props) {
+export function PhysicalActivityCheck({ plan, cues, onFinish, onExit }: Props) {
   const [turn, setTurn] = useState(0);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -40,6 +42,7 @@ export function PhysicalActivityCheck({ plan, onFinish, onExit }: Props) {
         <p className="mb-2 text-xs font-bold text-cyan-300">실제 활동 · {plan.idea}번 개선안</p>
         <h2 id="activity-check-title" className="mb-3 text-2xl font-black">{plan.title}</h2>
         <p className="mb-3 text-sm leading-6">{adapted ? plan.alternative : plan.activity}</p>
+        {cues && <div className="mb-3 rounded-xl border border-cyan-500/30 bg-slate-800 p-3 text-sm"><strong>오늘의 몸 미션</strong><p>{cues.mission}</p><p>역할 교대: {cues.roles}</p><p>기다리는 동안: {cues.waiting}</p></div>}
         <p className="mb-2 rounded-xl bg-slate-800 p-3 text-xs text-slate-200">준비: {plan.setup}<br />안전: {plan.safety}</p>
         <label className="mb-4 flex items-center gap-2 text-sm text-cyan-100">
           <input type="checkbox" checked={adapted} onChange={event => setAdapted(event.target.checked)} className="h-5 w-5 accent-cyan-500" />

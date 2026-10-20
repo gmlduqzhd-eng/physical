@@ -8,7 +8,7 @@ const files = [
   'teacher-studio/AdvancedControls.tsx', 'teacher-studio/Studio.tsx', 'teacher-studio/domain.ts',
   'teacher-studio/index.html', 'teacher-studio/main.tsx', 'teacher-studio/studio.css', 'teacher-studio/vite.config.ts',
   'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts',
-  'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/data/lessonGameCatalog.ts',
+  'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
   'src/presentation/TeacherAi.css',
   'src/application/BackgroundMusicContext.tsx', 'src/application/browserStorage.ts', 'src/application/useModalDialog.ts',
   'src/assets/expedition-theme.mp3',

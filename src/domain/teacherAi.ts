@@ -4,12 +4,13 @@ export const TASKS = {
   recommend: '1. 활동 3개 추천', difficulty: '2. 난이도 조절', plan: '3. 수업 지도안',
   safety: '4. 안전 점검', mission: '5. 협동 미션', next: '6. 다음 도전 (기기 내 분석)',
   observation: '7. 관찰 요약', group: '8. 모둠 결과 요약', alternative: '9. 대체 활동', reflection: '10. 성찰 질문',
+  participation: '11. 몸 미션 · 역할 교대 · 대기 활동',
 } as const;
 export type TeacherTask = keyof typeof TASKS;
 export const GOALS = ['협동과 소통', '기본 움직임', '체력 기르기', '전략과 문제 해결', '리듬과 표현', '즐거운 참여'] as const;
 export const OBSERVATIONS = ['참여가 고르지 않음', '차례 지키기 향상', '규칙 이해에 시간 필요', '협동이 활발함', '활동 시간이 부족함', '기기 조작에 어려움', '공간이 좁음', '설명이 효과적임'] as const;
 export const inputSchema = z.object({
-  task: z.enum(['recommend', 'difficulty', 'plan', 'safety', 'mission', 'observation', 'group', 'alternative', 'reflection']),
+  task: z.enum(['recommend', 'difficulty', 'plan', 'safety', 'mission', 'observation', 'group', 'alternative', 'reflection', 'participation']),
   activityId: z.string().max(100).nullable(),
   grade: z.enum(['1~2학년', '3~4학년군', '5~6학년군']),
   goal: z.enum(GOALS), place: z.enum(['교실', '체육관', '운동장', '다목적실', '좁은 실내 공간']),

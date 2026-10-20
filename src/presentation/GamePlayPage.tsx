@@ -6,7 +6,8 @@ import { normalizeGameResultDetails, type GameResultDetails } from '../domain/ga
 import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
 import './GameTheme.css';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { readParticipationCues } from '../domain/participationCues';
 import { HeaderUtilities } from './components/HeaderUtilities';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { useSyncQueue } from '../application/useSyncQueue';
@@ -217,6 +218,7 @@ export const GamePlayPage = () => {
 
 const GamePlaySession = () => {
   const { gameType } = useParams<{ gameType: string }>();
+  const { hash } = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -316,6 +318,7 @@ const GamePlaySession = () => {
   }, [musicEnabled, musicVolume, gameFinished]);
 
   const gameInfo = GAME_TITLES[gameType || ''];
+  const participationCues = readParticipationCues(hash, gameType || '');
   const activityPlan = getPhysicalActivityPlan(gameType || '', EXPRESSION_GAMES.some(game => game.id === gameType));
 
   // Keep game scores separate from peer-reported movement. Screen input is not physical evidence.
@@ -607,6 +610,7 @@ const GamePlaySession = () => {
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>화면 게임 뒤 짝과 실제 활동을 한 차례씩 진행합니다. {guidedRequested ? '짝의 활동 기록을 마치면 선생님에게 확인 요청을 보냅니다. 수업 점수는 교사가 확인한 뒤 반영됩니다.' : '화면 점수와 신체 활동 기록은 구분됩니다.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
             <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
             <button data-level="normal" onClick={() => handleSelectDifficulty('normal')}><span className="level-symbol" aria-hidden="true">⚡</span><strong>표준 기록</strong><small>×1.0 배율</small></button>
@@ -632,9 +636,9 @@ const GamePlaySession = () => {
           event.stopPropagation();
           handleReplay();
         }
-      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{renderGame()}</div>}
+      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 몸 미션 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
 
-      {pendingResult && <PhysicalActivityCheck plan={activityPlan} onFinish={handleActivityFinish} onExit={() => navigate(hubPath)} />}
+      {pendingResult && <PhysicalActivityCheck plan={activityPlan} cues={participationCues} onFinish={handleActivityFinish} onExit={() => navigate(hubPath)} />}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
