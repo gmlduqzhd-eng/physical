@@ -55,6 +55,8 @@ function App() {
         <Route path="/teacher-ai" element={<TeacherStudioEntry />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<ActivityLibrary />} />
+        <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />
+        <Route path="/solo/play/:gameType" element={<GamePlayPage />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 
         {/* 교사 관리 & 수업용 (Supabase 필요 & 교사 PIN 인증) */}

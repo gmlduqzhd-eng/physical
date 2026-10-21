@@ -8,6 +8,8 @@ const { chromium, webkit, devices } = localRequire(process.env.PLAYWRIGHT_MODULE
 const work = process.env.TEST_OUTPUT_DIR || path.join(repo, 'test-results', 'game-catalog');
 fs.mkdirSync(work, { recursive: true });
 const base = process.argv[2] || 'http://127.0.0.1:5173';
+const playPrefix = process.env.CATALOG_SOLO === '1' ? '/solo/play/' : '/play/';
+const hubPath = process.env.CATALOG_SOLO === '1' ? '/solo' : '/hub';
 const testSubset = process.argv[3] ? process.argv[3].split(',') : null;
 const engine = process.env.BROWSER_ENGINE || 'chromium';
 if (!['chromium', 'webkit'].includes(engine)) throw new Error('BROWSER_ENGINE must be chromium or webkit');
@@ -72,8 +74,8 @@ function readGameInventory() {
     for (const game of games) {
       active = { game: game.type, name: game.name, engine, viewport, mobile, pageErrors: [], consoleErrors: [], status: 'pass' };
       try {
-        await page.goto(base + '/play/' + encodeURIComponent(game.type), { waitUntil: 'domcontentloaded' });
-        const normal = page.getByRole('button').filter({ hasText: '×1.0 배율' });
+        await page.goto(base + playPrefix + encodeURIComponent(game.type), { waitUntil: 'domcontentloaded' });
+        const normal = page.getByRole('button', { name: '활동 시작', exact: true });
         await normal.waitFor({ state: 'visible', timeout: 15000 });
         await activate(normal);
         const skip = page.getByRole('button', { name: /준비 완료/ });
@@ -132,8 +134,8 @@ function readGameInventory() {
           await activate(finishedHome.last());
         }
         }
-        await page.waitForURL(url => url.pathname === '/hub', { timeout: 10000 });
-        await page.getByRole('heading', { name: /어떤 활동을 해 볼까요|땀방울 원정대/ }).first().waitFor({ state: 'visible', timeout: 10000 });
+        await page.waitForURL(url => url.pathname === hubPath, { timeout: 10000 });
+        await page.getByRole('heading', { name: /어떤 활동을 해 볼까요|땀방울 원정대|혼자 해보기/ }).first().waitFor({ state: 'visible', timeout: 10000 });
         active.returnToHub = true;
         if (active.pageErrors.length) active.status = 'fail';
       } catch (error) { active.status = 'fail'; active.error = error.message; }

@@ -52,9 +52,10 @@ function initialQueue(): SyncAction[] {
   return parseSyncQueue([...loadActions(), ...legacy]);
 }
 const inFlight = new Set<string>();
-export const useSyncQueue = () => {
+export const useSyncQueue = (enabled = true) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [initial] = useState(() => {
+    if (!enabled) return { actions: [] as SyncAction[], storageAvailable: true };
     const actions = initialQueue();
     return { actions, storageAvailable: storageFailures.size === 0 && actions.every(action => readStorage(PREFIX + action.id) !== null) };
   });
@@ -67,6 +68,7 @@ export const useSyncQueue = () => {
   const updateQueue = useCallback((next: SyncAction[]) => { queueRef.current = next; setQueue(next); }, []);
 
   useEffect(() => {
+    if (!enabled) return;
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
     const handleStorage = (event: StorageEvent) => {
@@ -90,10 +92,10 @@ export const useSyncQueue = () => {
     window.addEventListener('storage', handleStorage);
     window.addEventListener(QUEUE_EVENT, handleQueueEvent);
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); window.removeEventListener('storage', handleStorage); window.removeEventListener(QUEUE_EVENT, handleQueueEvent); };
-  }, [updateQueue]);
+  }, [enabled, updateQueue]);
 
   useEffect(() => {
-    if (!isOnline || queue.length === 0) return;
+    if (!enabled || !isOnline || queue.length === 0) return;
     let cancelled = false;
     const action = [...queue].sort((left, right) => (left.nextRetryAt || 0) - (right.nextRetryAt || 0))[0];
     const delay = Math.max(0, (action.nextRetryAt || 0) - Date.now());
@@ -122,14 +124,15 @@ export const useSyncQueue = () => {
       } finally { inFlight.delete(action.id); setIsSyncing(false); }
     }, delay);
     return () => { cancelled = true; window.clearTimeout(timer); };
-  }, [queue, isOnline, storageAvailable, updateQueue]);
+  }, [enabled, queue, isOnline, storageAvailable, updateQueue]);
 
   const enqueueAction = useCallback((action: SyncAction) => {
+    if (!enabled) return;
     if (parseSyncQueue([action]).length !== 1 || queueRef.current.some(item => item.id === action.id)) return;
     setStorageAvailable(persistAction(action));
     updateQueue([...queueRef.current, action]);
     notifyQueue({ action });
-  }, [updateQueue]);
+  }, [enabled, updateQueue]);
 
   return { isOnline, queueLength: queue.length, isSyncing, enqueueAction, storageAvailable, syncWarning };
 };

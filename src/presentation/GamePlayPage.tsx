@@ -212,23 +212,25 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
-  return <GamePlaySession key={`${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}`} />;
+  const { pathname } = useLocation();
+  return <GamePlaySession key={`${pathname}:${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}`} />;
 };
 
 const GamePlaySession = () => {
   const { gameType } = useParams<{ gameType: string }>();
-  const { hash } = useLocation();
+  const { hash, pathname } = useLocation();
+  const soloMode = pathname.startsWith('/solo/play/');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const battleRoomId = searchParams.get('room');
   const battleGroupId = searchParams.get('group');
-  const hasBattle = !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
-  const guidedRequested = searchParams.get('guided') === '1';
-  const missionId = searchParams.get('mission');
+  const hasBattle = !soloMode && !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
+  const guidedRequested = !soloMode && searchParams.get('guided') === '1';
+  const missionId = soloMode ? null : searchParams.get('mission');
   const guidedMode = hasBattle && !!missionId;
-  const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
-  const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
+  const hubPath = soloMode ? '/solo' : (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
+  const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
   const enqueueGuidedCompletion = guidedSubmission.enqueueCompletion;
   const [key, setKey] = useState(0);
@@ -595,7 +597,7 @@ const GamePlaySession = () => {
       {!hasStarted && !gameFinished && (
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
-          <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
+          <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           <button type="button" className="game-prepare-start" onClick={handleStartGame}>활동 시작</button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
@@ -730,7 +732,7 @@ const GamePlaySession = () => {
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
               <button onClick={() => navigate(hubPath)} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
-                <Home className="w-5 h-5" /> {guidedRequested ? '모둠으로' : '홈으로'}
+                <Home className="w-5 h-5" /> {soloMode ? '활동 목록으로' : guidedRequested ? '모둠으로' : '홈으로'}
               </button>
             </div>
           </div>
