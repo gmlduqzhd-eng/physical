@@ -122,6 +122,22 @@ async function main() {
     assert.equal(helpers.writeStorage('quota_setting', 'saved'), true);
     assert.equal(data.get('quota_setting'), 'saved');
   });
+  check('a losing fate card records a completed play and survives profile reload', () => {
+    const player = actor(profiles.usePlayerProfile); let view = player.render();
+    view.resetProfile(); view = player.render();
+    view.addGameResult('fate_card', '운명의 카드', -300); view = player.render();
+    assert.equal(view.profile.totalPlays, 1);
+    assert.equal(view.profile.playCounts.fate_card, 1);
+    assert.equal(view.profile.recentGames[0].score, -300);
+    assert.equal(view.profile.totalScore, 0);
+    assert.equal(view.profile.highScores.fate_card, 0);
+    const reloaded = profiles.normalizePlayerProfile(JSON.parse(data.get('physical_player_profile')));
+    assert.equal(reloaded.recentGames[0].score, -300);
+    assert.equal(reloaded.totalPlays, 1);
+    view.addGameResult('reaction', '반응', -300);
+    assert.equal(player.render().profile.totalPlays, 1);
+    view.resetProfile();
+  });
   check('RPE feedback remains attached to the previous game after replay result', () => {
     data.delete('physical_player_profile');
     const player = actor(profiles.usePlayerProfile); let view = player.render();

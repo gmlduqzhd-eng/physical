@@ -21,6 +21,8 @@
     "test:mobile-inputs": "node scripts/legacy-mobile-regressions.cjs",
     "test:classroom-refresh": "node scripts/classroom-refresh-regressions.cjs",
     "test:solo": "node scripts/solo-mode-smoke.cjs",
+    "test:solo-completion": "node scripts/solo-completion-audit.cjs",
+    "test:solo-pointers": "node scripts/solo-pointer-regressions.cjs",
     "test:guided": "tsx --test scripts/guided-classroom-features.test.ts",
     "test:concurrency": "node scripts/concurrency-audit.mjs",
     "dev:api": "tsx scripts/dev-api.ts",

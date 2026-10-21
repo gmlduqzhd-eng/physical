@@ -31,7 +31,8 @@ export const normalizePlayerProfile = (value: unknown): PlayerProfile | null => 
     : {};
   const recentGames = Array.isArray(value.recentGames) ? value.recentGames.filter((record): record is Record<string, unknown> =>
     isRecord(record) && typeof record.gameType === 'string' && typeof record.gameName === 'string'
-      && typeof record.score === 'number' && Number.isFinite(record.score) && record.score >= 0
+      && typeof record.score === 'number' && Number.isFinite(record.score)
+      && (record.score >= 0 || (record.gameType === 'fate_card' && record.score === -300))
       && typeof record.playedAt === 'number' && Number.isFinite(record.playedAt)
   ).slice(0, 20).map(record => ({
     gameType: record.gameType as string, gameName: record.gameName as string,
@@ -84,7 +85,8 @@ export const usePlayerProfile = () => {
   }, []);
 
   const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number, details?: GameResultDetails) => {
-    if (!Number.isFinite(score) || score < 0 || !gameType) return;
+    // The losing fate card is a completed play, even though its result is a penalty.
+    if (!Number.isFinite(score) || (score < 0 && !(gameType === 'fate_card' && score === -300)) || !gameType) return;
     setProfile(prev => {
       const current = prev || {
         nickname: '익명 원정대원',
@@ -98,15 +100,13 @@ export const usePlayerProfile = () => {
 
       const record: GameRecord = { details: normalizeGameResultDetails(details), gameType, gameName, score, playedAt: Date.now(), difficulty, rpe: rpe && rpe >= 1 && rpe <= 5 ? rpe : undefined };
       const newHighScores = { ...current.highScores };
-      if (!newHighScores[gameType] || score > newHighScores[gameType]) {
-        newHighScores[gameType] = score;
-      }
+      newHighScores[gameType] = Math.max(newHighScores[gameType] || 0, score);
       const newPlayCounts = { ...current.playCounts };
       newPlayCounts[gameType] = (newPlayCounts[gameType] || 0) + 1;
 
       const updated: PlayerProfile = {
         ...current,
-        totalScore: current.totalScore + score,
+        totalScore: Math.max(0, current.totalScore + score),
         totalPlays: current.totalPlays + 1,
         highScores: newHighScores,
         playCounts: newPlayCounts,

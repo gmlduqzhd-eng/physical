@@ -21,6 +21,8 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
 
   const anchorRef = useRef({ x: 180, y: 240 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const activePointerRef = useRef<number | null>(null);
+  const pullVectorRef = useRef({ x: 0, y: 0 });
   const finishTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => () => {
@@ -39,14 +41,16 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (arrowCount <= 0 || finished) return;
+    if (arrowCount <= 0 || finished || !e.isPrimary || activePointerRef.current !== null) return;
+    activePointerRef.current = e.pointerId;
+    pullVectorRef.current = { x: 0, y: 0 };
     setIsPulling(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
     sfxTap();
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isPulling || !containerRef.current) return;
+    if (activePointerRef.current !== e.pointerId || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const currentX = e.clientX - rect.left;
     const currentY = e.clientY - rect.top;
@@ -56,11 +60,23 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
     const dx = Math.max(-60, Math.min(60, currentX - anchorRef.current.x));
     const dy = Math.max(0, Math.min(80, currentY - anchorRef.current.y)); // 아래로 당김
 
-    setPullVector({ x: dx, y: dy });
+    pullVectorRef.current = { x: dx, y: dy };
+    setPullVector(pullVectorRef.current);
   };
 
-  const handlePointerUp = () => {
-    if (!isPulling) return;
+  const cancelPull = (e: React.PointerEvent) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
+    pullVectorRef.current = { x: 0, y: 0 };
+    setIsPulling(false);
+    setPullVector({ x: 0, y: 0 });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
+    const pullVector = pullVectorRef.current;
+    pullVectorRef.current = { x: 0, y: 0 };
     setIsPulling(false);
     sfxWhoosh();
 
@@ -142,7 +158,8 @@ export const SlingshotArchery = ({ groupId, enqueueAction }: Props) => {
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
-        onPointerCancel={() => { setIsPulling(false); setPullVector({ x: 0, y: 0 }); }}
+        onPointerCancel={cancelPull}
+        onLostPointerCapture={cancelPull}
         className="relative w-full h-80 bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950 rounded-2xl overflow-hidden border-2 border-yellow-500/40 shadow-inner flex flex-col items-center justify-between p-4 touch-none cursor-crosshair"
       >
         {/* 상단 양궁 타겟 동심원 */}
