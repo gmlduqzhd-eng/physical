@@ -228,16 +228,6 @@ export const MobileMissionView = () => {
        return;
     }
 
-    if (mission.requires_approval) {
-      if (myGroup?.pending_missions?.includes(mission.id)) {
-        return alert('이미 승인 대기 중입니다!');
-      }
-      const result = await supabase.rpc('submit_classroom_mission', { row_id: groupId, mission_id: mission.id });
-      if (result.error) return alert('미션 승인 요청에 실패했습니다. 다시 시도해주세요.');
-      alert('선생님 승인 대기 중입니다! 선생님이 승인하면 점수가 반영됩니다.');
-      return;
-    }
-
     const MotionEvent = typeof DeviceMotionEvent === 'undefined' ? null : DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
     if (typeof MotionEvent?.requestPermission === 'function') {
       MotionEvent.requestPermission().catch(() => {});
@@ -419,21 +409,10 @@ export const MobileMissionView = () => {
     }
   }, [showScanner, template]);
 
-  const handleBingoComplete = async (missionId: string, baseAmount: number, isCoop: boolean) => {
+  const handleBingoComplete = async (missionId: string, baseAmount: number, _isCoop: boolean) => {
     if (isLocked || !myGroup || !groupId) return;
     const currentCompleted = myGroup.completed_missions || [];
     if (currentCompleted.includes(missionId)) return;
-
-    const mission = template?.buttons?.find((b: import('../domain/types').MissionButton) => b.id === missionId);
-    if (mission?.requires_approval && !isCoop) {
-      if (myGroup?.pending_missions?.includes(missionId)) {
-        return alert('이미 승인 대기 중입니다!');
-      }
-      const result = await supabase.rpc('submit_classroom_mission', { row_id: groupId, mission_id: missionId });
-      if (result.error) return alert('미션 승인 요청에 실패했습니다. 다시 시도해주세요.');
-      alert('선생님 승인 대기 중입니다! 선생님이 승인하면 빙고판에 반영됩니다.');
-      return;
-    }
 
     const newCompleted = [...currentCompleted, missionId];
     await supabase.from('room_groups').update({ completed_missions: newCompleted }).eq('id', groupId);
@@ -952,7 +931,7 @@ export const MobileMissionView = () => {
     const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
     const pending = myGroup?.pending_missions?.includes(guidedMission.id);
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
-    const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive && !completed;
+    const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
     const goal = guidedGoal(scores, [guidedMission.id], gameRoom?.goal_percent ?? 75);
     return <main className="min-h-[100dvh] bg-slate-50 text-slate-900 p-5 flex items-center justify-center">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
@@ -963,16 +942,16 @@ export const MobileMissionView = () => {
           <p className="text-sm font-bold text-cyan-800">오늘의 활동</p>
           <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
-          <p className="text-sm text-slate-600 mt-3">게임을 끝내면 선생님에게 확인 요청이 자동으로 전달돼요.</p>
+          <p className="text-sm text-slate-600 mt-3">게임을 끝내면 모둠 점수가 즉시 반영돼요.</p>
         </div>
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-bold text-emerald-900">우리 반 공동 목표</p><p className="text-sm text-emerald-900 mt-1">{goal.achieved ? '🎉 함께 목표를 달성했어요!' : `${goal.completed}/${goal.total}모둠 완료 · 목표 ${goal.target}모둠`}</p><div role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)} className="mt-3 h-3 rounded-full bg-emerald-100 overflow-hidden"><span className="block h-full rounded-full bg-emerald-600" style={{width:`${goal.progress}%`}}/></div></div>
-        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `선생님 확인 완료 · 모둠 ${displayScore}점` : pending ? '선생님 확인을 기다리고 있어요. 게임은 다시 할 수 있어요.' : `모둠 점수 ${displayScore}점`}</div>
+        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : pending ? `활동 기록 완료 · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
         <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
         {myGroup?.help_requested_at && <p role="status" className="text-sm text-amber-800 mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
         {helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}
-        {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 요청을 다시 보내고 있어요.' : '연결되면 완료 요청을 자동으로 보낼게요.'}</p>}
+        {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 기록을 저장하고 있어요.' : '연결되면 완료 기록을 자동으로 저장할게요.'}</p>}
         {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-sm">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-sm ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="text-xs text-slate-600 mt-2">{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
-        <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '활동 확인 완료' : '게임 시작 →'}</button>
+        <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '다시 도전하기 →' : '게임 시작 →'}</button>
         <p className="text-xs text-slate-500 mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 몸 상태에 맞게 참여해요.</p>
       </div>
     </main>;
@@ -1253,7 +1232,7 @@ export const MobileMissionView = () => {
                         if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
                         handleMissionComplete(m, e);
                       }}
-                      disabled={isLocked || (!m.gameType && isPending) || (Boolean(m.gameType) && isCompleted)}
+                      disabled={isLocked}
                       className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-manipulation shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
                     >
                       <div className="flex items-center gap-4">
@@ -1263,16 +1242,14 @@ export const MobileMissionView = () => {
                         <div className="text-left flex flex-col justify-center">
                           <div className={`mission-title font-black text-xl flex items-center gap-2 ${isOutdoorMode ? 'text-white' : m.color}`}>
                             {m.title}
-                            {m.requires_approval && !isPending && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full border border-red-200">승인필요</span>}
-                            {isPending && <span className="text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded-full border border-yellow-200">대기 중</span>}
-                            {isCompleted && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">확인 완료</span>}
+                            {isCompleted && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">수행 완료</span>}
                           </div>
-                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.gameType ? isPending ? '확인 요청을 보냈어요. 게임은 다시 할 수 있어요.' : m.desc : m.desc}</div>
+                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end">
-                        <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '완료' : '게임 시작 →' : `+${m.amount}`}</span>
-                        <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `교사 확인 후 +${m.amount}점` : `대기 ${m.cooldown}초`}</span>
+                        <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '다시 시작 →' : '게임 시작 →' : `+${m.amount}`}</span>
+                        <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `완료 시 점수 즉시 반영` : `대기 ${m.cooldown}초`}</span>
                       </div>
 
                       {cooldown && (

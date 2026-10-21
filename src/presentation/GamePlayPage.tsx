@@ -101,7 +101,6 @@ import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
 import { getPhysicalActivityPlan } from '../domain/physicalActivityPlans';
-import { PhysicalActivityCheck, type ActivityEvidence } from './components/PhysicalActivityCheck';
 import { MotionBoosterChallenge } from './components/common/MotionBoosterChallenge';
 import { MotionIntensityWidget } from './components/common/MotionIntensityWidget';
 
@@ -240,8 +239,8 @@ const GamePlaySession = () => {
   const hasBattle = !!battleRoomId && !!battleGroupId && uuid.test(battleRoomId) && uuid.test(battleGroupId);
   const guidedRequested = searchParams.get('guided') === '1';
   const missionId = searchParams.get('mission');
-  const guidedMode = guidedRequested && hasBattle && !!missionId;
-  const hubPath = guidedRequested && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
+  const guidedMode = hasBattle && !!missionId;
+  const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue();
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
   const enqueueGuidedCompletion = guidedSubmission.enqueueCompletion;
@@ -256,10 +255,8 @@ const GamePlaySession = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
-  const [pendingResult, setPendingResult] = useState<{ amount: number; details?: GameResultDetails } | null>(null);
   const [boosterMultiplier, setBoosterMultiplier] = useState<number | null>(null);
   const [showBooster, setShowBooster] = useState(false);
-  const [activityEvidence, setActivityEvidence] = useState<ActivityEvidence | null>(null);
   const completionRef = useRef(false);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
@@ -336,27 +333,26 @@ const GamePlaySession = () => {
   const participationCues = readParticipationCues(hash, gameType || '');
   const activityPlan = getPhysicalActivityPlan(gameType || '', EXPRESSION_GAMES.some(game => game.id === gameType));
 
-  // Keep game scores separate from peer-reported movement. Screen input is not physical evidence.
-  const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }, evidence: ActivityEvidence) => {
+  // 게임 완료 시 모둠 점수 및 활동 기록 즉시 반영
+  const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }) => {
     const rawScore = payload.amount;
     const earned = Math.round(rawScore * difficultyMultiplier);
-    setActivityEvidence(evidence);
-    setPendingResult(null);
-    if (hasBattle && battleGroupId && !guidedRequested && evidence === 'peer-report') {
-      enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: earned, roomId: battleRoomId }, timestamp: Date.now() });
+    const classroomScore = earned > 0 ? earned : (hasBattle ? 10 : 0);
+    if (hasBattle && battleGroupId && classroomScore !== 0) {
+      enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId }, timestamp: Date.now() });
     }
     const details = normalizeGameResultDetails(payload.details);
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
-    if (guidedRequested && evidence === 'peer-report') {
-      if (guidedMode) enqueueGuidedCompletion();
+    if (guidedMode) {
+      enqueueGuidedCompletion();
     }
 
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
-      speak(guidedRequested && evidence === 'peer-report' ? '활동 기록을 마쳤어요! 선생님께 완료 확인을 보낼게요.' : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
+      speak(hasBattle ? `활동 완료! 모둠 점수 ${classroomScore}점을 기록했습니다!` : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
     } else {
       sfxFail();
       speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
@@ -380,13 +376,13 @@ const GamePlaySession = () => {
     }
 
     checkBadges(earned);
-  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedRequested, guidedMode, enqueueGuidedCompletion]);
+  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion]);
 
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
     completionRef.current = true;
-    setPendingResult(action.payload);
-  }, []);
+    commitResult(action.payload);
+  }, [commitResult]);
 
   const handleBoosterComplete = useCallback((multiplier: number) => {
     setBoosterMultiplier(multiplier);
@@ -394,6 +390,10 @@ const GamePlaySession = () => {
     if (gameFinished && multiplier > 1.0) {
       setLastEarnedScore(prev => {
         const boosted = Math.round(prev * multiplier);
+        const delta = boosted - prev;
+        if (hasBattle && battleGroupId && delta > 0) {
+          enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: delta, roomId: battleRoomId }, timestamp: Date.now() });
+        }
         if (gameType) {
           const bestKey = `physical_best_${gameType}`;
           const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
@@ -402,18 +402,12 @@ const GamePlaySession = () => {
         return boosted;
       });
     }
-  }, [gameFinished, gameType]);
+  }, [gameFinished, gameType, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore]);
 
   const handleBoosterSkip = useCallback(() => {
     setBoosterMultiplier(1.0);
     setShowBooster(false);
   }, []);
-
-  const handleActivityFinish = (evidence: ActivityEvidence) => {
-    if (!pendingResult) return;
-    const bm = boosterMultiplier ?? 1.0;
-    commitResult({ ...pendingResult, amount: Math.round(pendingResult.amount * bm) }, evidence);
-  };
 
   const handleReplay = () => {
     completionRef.current = false;
@@ -422,8 +416,6 @@ const GamePlaySession = () => {
     setShowDetailedResult(false);
     setLastEarnedScore(0);
     setRpeSelected(null);
-    setPendingResult(null);
-    setActivityEvidence(null);
     setBoosterMultiplier(null);
     setShowBooster(false);
     setKey(prev => prev + 1);
@@ -679,20 +671,8 @@ const GamePlaySession = () => {
 
       {showBooster && <MotionBoosterChallenge onComplete={handleBoosterComplete} onSkip={handleBoosterSkip} />}
 
-      {pendingResult && !showBooster && (
-        <PhysicalActivityCheck
-          plan={activityPlan}
-          cues={participationCues}
-          onFinish={handleActivityFinish}
-          onExit={() => navigate(hubPath)}
-          boosterEligible={BOOSTER_ELIGIBLE_GAMES.has(gameType || '')}
-          boosterMultiplier={boosterMultiplier}
-          onStartBooster={() => setShowBooster(true)}
-        />
-      )}
-
       {/* 실시간 움직임 강도 위젯 */}
-      {difficulty !== null && !isCountingDown && !gameFinished && !showBooster && !pendingResult && <MotionIntensityWidget />}
+      {difficulty !== null && !isCountingDown && !gameFinished && !showBooster && <MotionIntensityWidget />}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -711,7 +691,7 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 종료 결과 오버레이 */}
-      {gameFinished && !showDetailedResult && (
+      {gameFinished && !showDetailedResult && !showBooster && (
         <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
@@ -719,9 +699,18 @@ const GamePlaySession = () => {
             </div>
             <span className="text-6xl mb-3">{gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
-            <p className="text-emerald-400 font-bold text-xs mb-2">화면 게임을 마쳤어요!</p>
-            <p role="status" className="mb-5 text-center text-xs text-amber-200">{activityEvidence === 'peer-report' ? '신체 활동: 짝 확인 기록 · 기기 실측 아님' : '신체 활동: 미확인 · 화면 게임만 완료'}</p>
-            {guidedRequested && activityEvidence === 'screen-only' ? <p role="status" className="mb-4 text-center text-sm text-amber-200">실제 활동 확인 요청은 보내지 않았어요. 대체 동작을 포함해 다시 참여할 수 있습니다.</p> : guidedRequested ? <div role="status" className="mb-4 text-center text-sm text-cyan-300"><p>{!guidedMode ? '수업 입장 정보가 없습니다. 모둠 화면에서 다시 들어와 주세요.' : !guidedSubmission.receipt?.completed ? !guidedSubmission.storageAvailable ? '요청을 보관하지 못했어요. 전송될 때까지 이 화면을 열어 두세요.' : !guidedSubmission.isOnline ? '연결이 돌아오면 완료 확인을 자동으로 보낼게요.' : '완료 확인을 선생님께 보내는 중이에요.' : '완료 확인 요청을 보냈어요. 선생님이 확인하면 수업 점수가 반영돼요.'}</p>{guidedSubmission.error && <p>{guidedSubmission.error}</p>}{guidedMode && !guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}</div> : hasBattle && activityEvidence === 'peer-report' && <p role="status" className="mb-4 text-center text-xs text-cyan-300">{syncWarning || (queueLength === 0 ? '학급 배틀 점수 저장 완료' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 학급 점수를 자동으로 전송합니다.' : '학급 배틀 점수를 전송하고 있습니다…')}</p>}
+            <p className="text-emerald-400 font-bold text-xs mb-3">활동을 마쳤어요!</p>
+            {hasBattle && (
+              <p role="status" className="mb-4 text-center text-xs text-cyan-300">
+                {syncWarning || (queueLength === 0 ? '모둠 점수에 즉시 반영되었어요!' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
+              </p>
+            )}
+            {guidedMode && guidedSubmission.error && (
+              <div role="status" className="mb-4 text-center text-sm text-cyan-300">
+                <p>{guidedSubmission.error}</p>
+                {!guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}
+              </div>
+            )}
             {guidedMode && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="mt-2 text-xs text-cyan-200">{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
             <div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">화면 게임 점수 · 신체 활동 증거 아님</span>
@@ -733,7 +722,21 @@ const GamePlaySession = () => {
                   기록 {difficulty === 'easy' ? '기본 연습' : '도전 기록'} (×{difficultyMultiplier} 배율)
                 </span>
               )}
+              {boosterMultiplier && boosterMultiplier > 1.0 && (
+                <span className="text-xs mt-1 font-bold text-amber-400">
+                  ⚡ 움직임 부스터 ×{boosterMultiplier} 적용 완료!
+                </span>
+              )}
             </div>
+            {BOOSTER_ELIGIBLE_GAMES.has(gameType || '') && boosterMultiplier === null && (
+              <button
+                type="button"
+                onClick={() => setShowBooster(true)}
+                className="w-full mb-3 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+              >
+                <span>⚡ 5초 움직임 부스터 챌린지 (최대 ×1.3 보너스)</span>
+              </button>
+            )}
             <div className="w-full flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3 mb-4 border border-slate-700/50">
               <div className="flex items-center gap-2 text-yellow-500"><Trophy className="w-4 h-4" /><span className="text-sm font-bold">최고 기록</span></div>
               <span className="text-yellow-400 font-black">{bestScore}점</span>
@@ -812,7 +815,7 @@ const GamePlaySession = () => {
       />
 
       {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && !pendingResult && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && !gameFinished && (
+      {!isMotionGranted && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && !gameFinished && (
         <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
           <div className="text-xs">
             <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>

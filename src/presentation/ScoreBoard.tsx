@@ -1,10 +1,10 @@
 import {LocalQRCode} from './components/LocalQRCode';
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles, ArrowLeft } from 'lucide-react';
 import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
 import { sfxWhistle } from '../application/soundEffects';
@@ -13,9 +13,18 @@ import { BoardAccess } from './components/BoardAccess';
 export const ScoreBoard = () => <BoardAccess><ScoreBoardContent/></BoardAccess>;
 const ScoreBoardContent = () => {
   const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
   const { scores, gameRoom, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, isDanger } = useGameTimer(gameRoom);
   const { playSiren } = useAudio();
+
+  const handleBackToList = () => {
+    if (window.history.length > 1 && document.referrer && document.referrer.startsWith(window.location.origin)) {
+      navigate(-1);
+      return;
+    }
+    navigate('/admin');
+  };
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
@@ -89,7 +98,18 @@ const ScoreBoardContent = () => {
     }
   }, [isWhistle]);
 
-  if (!gameRoom) return <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center gap-4 p-6 text-center text-slate-800"><p>{error || (loading ? '전광판 정보를 불러오는 중...' : '수업 방 정보가 없습니다.')}</p><button onClick={refresh} className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button><a href="/board" className="underline">다른 PIN으로 입장</a></div>;
+  if (!gameRoom) return (
+    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center gap-4 p-6 text-center text-slate-800">
+      <p>{error || (loading ? '전광판 정보를 불러오는 중...' : '수업 방 정보가 없습니다.')}</p>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <button onClick={refresh} className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button>
+        <button type="button" onClick={handleBackToList} className="px-5 py-3 rounded-xl bg-slate-200 text-slate-800 font-bold flex items-center gap-2">
+          <ArrowLeft className="w-4 h-4" /> 목록으로 돌아가기
+        </button>
+      </div>
+      <a href="/board" className="underline">다른 PIN으로 입장</a>
+    </div>
+  );
 
   if (gameRoom?.status === 'finished') {
     const sorted = [...scores].sort((a, b) => b.score - a.score);
@@ -99,6 +119,18 @@ const ScoreBoardContent = () => {
       <div className="min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center py-12 px-8 pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite] pointer-events-none"></div>
         
+        {/* 상단 목록 복귀 버튼 */}
+        <div className="w-full max-w-5xl flex justify-start mb-4 relative z-10">
+          <button
+            type="button"
+            onClick={handleBackToList}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm shadow-lg transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>목록으로</span>
+          </button>
+        </div>
+
         {/* 컨페티 애니메이션 */}
         {confetti.map(p => (
           <div key={p.id} className="fixed top-0 z-50 pointer-events-none" style={{
@@ -174,7 +206,15 @@ const ScoreBoardContent = () => {
           ))}
         </div>
 
-        <div className="mt-8 relative z-10 flex items-center gap-3">
+        <div className="mt-8 relative z-10 flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={handleBackToList}
+            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-base shadow-xl active:scale-95 transition-all"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>목록으로 돌아가기</span>
+          </button>
           <button
             onClick={() => setShowReportModal(true)}
             className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-black text-base shadow-xl active:scale-95 transition-all"
@@ -228,6 +268,15 @@ const ScoreBoardContent = () => {
 
       <header className="relative z-10 flex justify-between items-center px-4 md:px-12 py-6 md:py-8 flex-wrap gap-4 bg-white/80 backdrop-blur-md border-b border-cyan-200">
         <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={handleBackToList}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-sm shadow-sm transition-colors"
+            title="목록으로 돌아가기"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>목록으로</span>
+          </button>
           <Shield className="w-12 h-12 text-cyan-400" />
           <h1 className="text-xl md:text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
             {gameRoom ? gameRoom.name : '폭탄 해체 작전'}

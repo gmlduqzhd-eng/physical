@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, ensureClassroomUser } from './supabase';
 import type { RoomGroup } from '../domain/types';
 
 export const ScoreRepository = {
@@ -22,6 +22,7 @@ export const ScoreRepository = {
   },
 
   async saveScoreAction(id: string, amount: number, actionId?: string): Promise<'saved' | 'obsolete' | 'retry'> {
+    await ensureClassroomUser().catch(() => {});
     // 오로지 RPC 호출에만 의존하여 동시성(Race Condition)을 방지합니다.
     const { error } = await supabase.rpc('increment_classroom_score', {
       row_id: id,

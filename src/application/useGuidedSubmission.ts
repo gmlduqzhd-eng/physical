@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { supabase } from '../data/supabase';
+import { supabase, ensureClassroomUser } from '../data/supabase';
 import { GUIDED_REFLECTIONS, type GuidedReflection } from '../domain/guidedReflection';
 
 type Receipt = { roomId: string; groupId: string; missionId: string; completed: boolean; reflection?: GuidedReflection; saved?: boolean; updatedAt: number };
@@ -66,8 +66,24 @@ export function useGuidedSubmission(roomId: string | null, groupId: string | nul
         const latest = read(key);
         if (!latest) return;
         if (!latest.completed) {
-          const result = await supabase.rpc('submit_classroom_mission', { row_id: latest.groupId, mission_id: latest.missionId });
-          if (result.error) throw result.error;
+          await ensureClassroomUser().catch(() => {});
+          const { data: groupRow, error: fetchError } = await supabase
+            .from('room_groups')
+            .select('completed_missions')
+            .eq('id', latest.groupId)
+            .maybeSingle();
+          if (fetchError) throw fetchError;
+          const currentCompleted = Array.isArray(groupRow?.completed_missions) ? groupRow.completed_missions : [];
+          if (!currentCompleted.includes(latest.missionId)) {
+            const { error: updateError } = await supabase
+              .from('room_groups')
+              .update({ completed_missions: [...currentCompleted, latest.missionId] })
+              .eq('id', latest.groupId);
+            if (updateError) {
+              const result = await supabase.rpc('submit_classroom_mission', { row_id: latest.groupId, mission_id: latest.missionId });
+              if (result.error) throw result.error;
+            }
+          }
           latest.completed = true;
           write(key, latest);
         }
