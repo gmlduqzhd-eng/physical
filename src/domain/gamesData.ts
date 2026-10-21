@@ -1,3 +1,5 @@
+import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog';
+import { EXPEDITION_BY_ID } from './expeditionGames';
 // 2022 개정 초등 체육과 교육과정 연계 게임 데이터 및 메타데이터
 import { EXPRESSION_GAMES } from '../presentation/components/minigames/expression/expressionGamesData.js';
 import { CURRICULUM_GAMES_META } from '../presentation/components/minigames/curriculum/curriculumGamesMeta.js';
@@ -17,6 +19,7 @@ export interface AchievementStandard {
 }
 
 export interface GameDef {
+  recommendedDevice?: DeviceType;
   type: string;
   name: string;
   emoji: string;
@@ -40,6 +43,7 @@ export interface GameDef {
 }
 
 export const GAMES: GameDef[] = [
+  ...EXPEDITION_B_GAME_DEFS,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {
     type: 'space-occupier',
@@ -1333,6 +1337,8 @@ export const GAMES: GameDef[] = [
   },
   ...EXPRESSION_GAMES.map(eg => ({
     type: eg.id,
+    recommendedDevice: EXPEDITION_BY_ID.get(eg.id)?.recommendedDevice,
+    equipment: EXPEDITION_BY_ID.get(eg.id)?.equipment,
     name: eg.name,
     emoji: eg.emoji,
     desc: eg.desc,
@@ -1403,7 +1409,7 @@ export const GAMES: GameDef[] = [
 
 export const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [
   { key: '전체', label: '전체 학년', badge: 'ALL', desc: '모든 학년군' },
-  { key: '1~2학년', label: '1~2학년', badge: '즐거운 생활', desc: '놀이·신체활동 통합' },
+  { key: '1~2학년', label: '1~2학년군', badge: '즐거운 생활', desc: '놀이·신체활동 통합' },
   { key: '3~4학년군', label: '3~4학년군', badge: '초등 중학년', desc: '기본 움직임·기초 체력' },
   { key: '5~6학년군', label: '5~6학년군', badge: '초등 고학년', desc: '체력 분석·전략 응용' },
 ];

@@ -1,3 +1,4 @@
+import { EXPEDITION_BY_ID } from './expeditionGames';
 /** Classroom movement tasks paired with screen games. A tap is never motion evidence. */
 export interface PhysicalActivityPlan {
   idea: number;
@@ -95,6 +96,8 @@ const groups: ReadonlyArray<readonly [number, readonly string[]]> = [
 ];
 
 export function getPhysicalActivityPlan(gameType: string, isExpressionGame = false): PhysicalActivityPlan {
+  const expedition = EXPEDITION_BY_ID.get(gameType);
+  if (expedition) return {idea:0,title:expedition.name,activity:expedition.desc,alternative:expedition.alternative,setup:expedition.space+' · '+expedition.equipment.join(' · ')+' · 기기 고정',safety:expedition.safety,secondsPerTurn:20};
   if (isExpressionGame) return plans[5];
   const match = groups.find(([, ids]) => ids.includes(gameType));
   return match ? plans[match[0] - 1] : plans[9];

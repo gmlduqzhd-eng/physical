@@ -113,7 +113,7 @@ export function IntroLandingPage() {
                 </div>
               </div>
             ))}
-            <div className="grade-note">1–2학년 · 3–4학년군 · 5–6학년군</div>
+            <div className="grade-note">1–2학년군 · 3–4학년군 · 5–6학년군</div>
           </aside>
         </main>
         <footer className="footer">

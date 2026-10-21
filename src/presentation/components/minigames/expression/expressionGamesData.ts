@@ -1,3 +1,4 @@
+import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData';
 export interface ExpressionStep {
   stepNum: number;
   title: string;
@@ -865,4 +866,5 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     ],
     safetyTips: ['발표 후 퇴장할 때 조명이나 전선 등에 걸려 넘어지지 않도록 동선을 정돈합니다.'],
   },
+  ...EXPEDITION_EXPRESSIONS,
 ];

@@ -1,3 +1,4 @@
+import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog';
 // 수업 지도안 추천용 게임 메타데이터 카탈로그
 // GameHub.tsx의 GAMES 배열에서 추출하여 수업 설계 전용 구조로 변환
 
@@ -25,6 +26,7 @@ export interface LessonGameMeta {
 }
 
 export const LESSON_GAME_CATALOG: LessonGameMeta[] = [
+  ...EXPEDITION_LESSON_CATALOG,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {
     id: 'space-occupier',

@@ -1,3 +1,5 @@
+import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
+import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { GAMES } from '../domain/gamesData';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
@@ -187,6 +189,8 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'body-rhythm-orchestrator': { name: '바디 모션 심포니', emoji: '🎶', domain: '표현', code: '[4체03-02]', target: '움직임 4요소와 리듬 표현' },
 };
 
+EXPEDITION_BY_ID.forEach(game=>{GAME_TITLES[game.id]={name:game.name,emoji:'🧭',domain:game.kind==='A'||game.family==='rhythm'?'표현':game.family==='equipment'?'스포츠':'운동',code:'연계 확인 필요',target:'몸으로 참여하는 원정 활동'};});
+
 // 30종 신규 표현 게임 메타 자동 등록
 EXPRESSION_GAMES.forEach(eg => {
   GAME_TITLES[eg.id] = {
@@ -261,7 +265,7 @@ const GamePlaySession = () => {
 
   const handleStartGame = () => {
     setHasStarted(true);
-    const hasOwnIntro = ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
+    const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
     setIsCountingDown(!hasOwnIntro);
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
@@ -417,6 +421,8 @@ const GamePlaySession = () => {
   const renderGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
 
+    const expedition=EXPEDITION_BY_ID.get(gameType||'');
+    if(expedition?.kind==='B')return <ExpeditionActivity key={key} game={expedition} groupId={dummyGroupId} solo={soloMode} enqueueAction={localEnqueueAction}/>;
     switch (gameType) {
       case 'volcano':
         return <VolcanoGame key={key} gameRoom={dummyGameRoom} {...commonProps} />;

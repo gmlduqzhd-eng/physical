@@ -57,7 +57,7 @@ export function TeacherAi() {
     {status.authenticated && status.localSetup && <LocalAiSettings onSave={refreshStatus} />}
     <nav aria-label="수업 보조 기능" className="ai-tabs">{Object.entries(TASKS).map(([key, label]) => <button key={key} aria-pressed={task === key} onClick={() => change({}, key as TeacherTask)}>{label}</button>)}</nav>
     <div className="ai-workspace"><section className="ai-form"><h2>{TASKS[task]}</h2><div className="ai-fields">
-      <label>학년군<select value={form.grade} onChange={e => setField('grade', e.target.value as typeof form.grade)}>{['1~2학년', '3~4학년군', '5~6학년군'].map(v => <option key={v}>{v}</option>)}</select></label>
+      <label>학년군<select value={form.grade} onChange={e => setField('grade', e.target.value as typeof form.grade)}>{['1~2학년', '3~4학년군', '5~6학년군'].map(v => <option key={v} value={v}>{v === '1~2학년' ? '1~2학년군' : v}</option>)}</select></label>
       <label>수업 목표<select value={form.goal} onChange={e => setField('goal', e.target.value as typeof form.goal)}>{GOALS.map(v => <option key={v}>{v}</option>)}</select></label>
       <label>장소<select value={form.place} onChange={e => setField('place', e.target.value as typeof form.place)}>{['교실', '체육관', '운동장', '다목적실', '좁은 실내 공간'].map(v => <option key={v}>{v}</option>)}</select></label>
       <label>기기<select value={form.device} onChange={e => setField('device', e.target.value as typeof form.device)}>{['스마트폰', '태블릿 PC', '데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label>

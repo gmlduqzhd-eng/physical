@@ -81,7 +81,8 @@ function readGameInventory() {
         const skip = page.getByRole('button', { name: /준비 완료/ });
         if (await skip.count()) await activate(skip);
         else {
-          await activate(page.getByRole('button', { name: /활동 시작하기/ }));
+          const expedition = page.getByRole('button', { name: '원정 시작', exact: true });
+          await activate(await expedition.count() ? expedition : page.getByRole('button', { name: /활동 시작하기/ }));
           await page.waitForTimeout(3300);
         }
         await page.locator('.gameplay-content').waitFor({ state: 'visible' });

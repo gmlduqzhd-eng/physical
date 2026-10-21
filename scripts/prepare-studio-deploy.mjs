@@ -9,6 +9,8 @@ const files = [
   'teacher-studio/index.html', 'teacher-studio/main.tsx', 'teacher-studio/studio.css', 'teacher-studio/vite.config.ts',
   'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts',
   'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
+  'src/domain/expeditionGames.ts', 'src/domain/expeditionCatalog.ts',
+  'src/presentation/components/minigames/expedition/expeditionExpressionData.ts',
   'src/presentation/TeacherAi.css',
   'src/application/BackgroundMusicContext.tsx', 'src/application/browserStorage.ts', 'src/application/useModalDialog.ts',
   'src/assets/expedition-theme.mp3',

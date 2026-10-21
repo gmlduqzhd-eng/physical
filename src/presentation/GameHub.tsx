@@ -499,7 +499,7 @@ export const GameHub = () => {
       </div>
       <div className="hub-primary-filters">
         {PE_DOMAINS.map(domain => <button type="button" key={domain.key} aria-pressed={domainFilter === domain.key} onClick={() => { setDomainFilter(domain.key); if (domain.key !== '스포츠') setSportFilter('전체'); }}>{domain.emoji} {domain.key}</button>)}
-        <select aria-label="학년 선택" value={gradeFilter} onChange={event => setGradeFilter(event.target.value as GradeGroup)}>{GRADE_GROUPS.map(grade => <option key={grade.key} value={grade.key}>{grade.key === '전체' ? '전체 학년' : grade.key}</option>)}</select>
+        <select aria-label="학년 선택" value={gradeFilter} onChange={event => setGradeFilter(event.target.value as GradeGroup)}>{GRADE_GROUPS.map(grade => <option key={grade.key} value={grade.key}>{grade.label}</option>)}</select>
       </div>
       <details className="hub-advanced"><summary>상세 조건 · 기기 / 활동 / 장소 / 센서{deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || sportFilter !== '전체' ? ' · 적용 중' : ''}</summary>
       {/* 스포츠 영역 선택 시 세부 유형 (기술형 / 전략형 / 생태형) */}
