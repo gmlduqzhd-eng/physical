@@ -214,12 +214,13 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 
 // 단순 클릭 게임 목록: 부스터 챌린지를 표시할 대상 게임 유형
 const BOOSTER_ELIGIBLE_GAMES = new Set([
-  'volcano', 'whack_a_mole', 'reaction', 'memory', 'number_grid',
+  'volcano', 'whack_a_mole', 'stopwatch', 'reaction', 'memory', 'number_grid',
   'card_match', 'math', 'color_word', 'left_right', 'balloon', 'coin_flip',
-  'fate_card', 'tug_of_war', 'multi_touch', 'animal-hop-step',
+  'direction', 'fate_card', 'tug_of_war', 'multi_touch', 'animal-hop-step',
   'double-under-rope', 'mirror-motion-invert', 'wind-surf-balance',
   'tent-peg-hammer', 'spike-block-wall', 'base-running-decide',
-  'tactical-grid-slide', 'juggling-bounce-paddle',
+  'tactical-grid-slide', 'juggling-bounce-paddle', 'slingshot-archery',
+  'trail-maze-run', 'crevasse-jump', 'alpine-glider', 'compass-azimuth',
 ]);
 
 export const GamePlayPage = () => {

@@ -51,9 +51,10 @@ const DURATION_SEC = 5;
 // ─── 멀티플라이어 계산 ───
 
 function computeMultiplier(progress: number): number {
-  if (progress >= 1.0) return 1.3;
-  if (progress >= 0.7) return 1.2;
-  if (progress >= 0.3) return 1.1;
+  const rounded = Math.round(progress * 1000) / 1000;
+  if (rounded >= 1.0) return 1.3;
+  if (rounded >= 0.7) return 1.2;
+  if (rounded >= 0.3) return 1.1;
   return 1.0;
 }
 
@@ -172,14 +173,14 @@ export const MotionBoosterChallenge: React.FC<MotionBoosterProps> = ({ onComplet
     if (phase !== 'active' || challenge.type !== 'jump') return;
 
     const handler = (e: DeviceMotionEvent) => {
-      const acc = e.accelerationIncludingGravity;
-      if (!acc) return;
-      const y = acc.y;
-      if (y == null) return;
+      const hasLinearY = typeof e.acceleration?.y === 'number' && Number.isFinite(e.acceleration.y);
+      const y = hasLinearY ? e.acceleration!.y! : e.accelerationIncludingGravity?.y;
+      if (typeof y !== 'number' || !Number.isFinite(y)) return;
 
       const now = Date.now();
-      // y축 가속도 스파이크 > 12 + 400ms 쿨다운
-      if (Math.abs(y) > 12 && now - lastJumpRef.current > 400) {
+      const threshold = hasLinearY ? 8 : 12;
+      // y축 가속도 스파이크 + 400ms 쿨다운
+      if (Math.abs(y) > threshold && now - lastJumpRef.current > 400) {
         lastJumpRef.current = now;
         accumulatorRef.current += 1;
         sfxPop();
@@ -232,13 +233,13 @@ export const MotionBoosterChallenge: React.FC<MotionBoosterProps> = ({ onComplet
     return () => clearTimeout(t);
   }, [phase, resultMultiplier]);
 
-  // ─── 탭 핸들러 (폴백 + 탭 챌린지) ───
+  // ─── 탭 핸들러 (폴백 + 탭 챌린지: 모든 챌린지에서 10회 탭 시 100% 달성 가능) ───
   const handleTap = useCallback(() => {
-    if (phase !== 'active' || challenge.type !== 'tap') return;
-    accumulatorRef.current += 1;
+    if (phase !== 'active' || finishedRef.current) return;
+    accumulatorRef.current += challenge.goal / 10;
     sfxPop();
     hapticTap();
-  }, [phase, challenge.type]);
+  }, [phase, challenge.goal]);
 
   // ─── SVG 진행 링 계산 ───
   const ringRadius = 58;
@@ -249,8 +250,7 @@ export const MotionBoosterChallenge: React.FC<MotionBoosterProps> = ({ onComplet
   return (
     <div
       className="fixed inset-0 z-[10006] bg-slate-950/95 backdrop-blur-lg flex flex-col items-center justify-center p-4 text-white text-center select-none animate-in fade-in duration-300"
-      onTouchStart={challenge.type === 'tap' ? handleTap : undefined}
-      onClick={challenge.type === 'tap' ? handleTap : undefined}
+      onPointerDown={phase === 'active' ? handleTap : undefined}
     >
       {/* ─── READY 화면 ─── */}
       {phase === 'ready' && (
@@ -346,7 +346,13 @@ export const MotionBoosterChallenge: React.FC<MotionBoosterProps> = ({ onComplet
           </p>
 
           {/* 건너뛰기 */}
+          {challenge.type !== 'tap' && (
+            <p className="text-[11px] text-slate-400">
+              💡 센서가 반응하지 않으면 화면을 빠르게 탭하세요! 👆
+            </p>
+          )}
           <button
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={() => {
               if (!finishedRef.current) {
                 finishedRef.current = true;

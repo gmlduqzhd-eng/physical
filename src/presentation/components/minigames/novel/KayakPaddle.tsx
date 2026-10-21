@@ -82,8 +82,10 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
       // 같은 쪽만 두 번 저음 -> 균형 잃음
       sfxFail();
       setTempoCombo(0);
+      tempoComboRef.current = 0;
       currentRef.current.combo = 0;
       setFeedback('⚠️ 같은 쪽만 저으면 카약이 회전합니다! 반대쪽을 저으세요.');
+      lastTimeRef.current = now;
       setLastTime(now);
       return;
     }
@@ -93,6 +95,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
       sfxPop();
       const add = 2.5;
       const nextD = Math.min(goalDistance, distanceRef.current + add);
+      distanceRef.current = nextD;
       setDistance(nextD);
       currentRef.current.distance = nextD;
       setFeedback('🌊 타이밍 조절 필요! 일정한 리듬을 유지하세요.');
@@ -100,10 +103,12 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
       // 퍼펙트 스트로크
       sfxWhoosh();
       const newCombo = tempoComboRef.current + 1;
+      tempoComboRef.current = newCombo;
       setTempoCombo(newCombo);
       currentRef.current.combo = newCombo;
       const boost = 4.5 + Math.min(3, newCombo * 0.5);
       const nextD = Math.min(goalDistance, distanceRef.current + boost);
+      distanceRef.current = nextD;
       setDistance(nextD);
       currentRef.current.distance = nextD;
       setFeedback(`⚡ 완벽한 노젓기! ${newCombo}콤보 가속!`);
@@ -111,12 +116,16 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
       if (nextD >= goalDistance) {
         sfxSuccess();
         finishGame(goalDistance);
+        lastPaddleRef.current = side;
+        lastTimeRef.current = now;
         setLastPaddle(side);
         setLastTime(now);
         return;
       }
     }
 
+    lastPaddleRef.current = side;
+    lastTimeRef.current = now;
     setLastPaddle(side);
     setLastTime(now);
   }, [finishGame]);
@@ -163,7 +172,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
   }, [handlePaddle]);
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
+    <div className="flex flex-col items-center justify-between p-4 pb-24 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
       <div className="w-full flex flex-wrap justify-between items-center gap-2 px-2">
         <div className="flex items-center gap-2">
           <Waves className="w-6 h-6 text-cyan-400" />
@@ -237,7 +246,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
           } ${lastPaddle === 'left' ? 'bg-blue-800 border-blue-500 text-blue-200 opacity-80' : 'bg-gradient-to-br from-blue-600 to-cyan-700 border-cyan-400 text-white hover:brightness-110'}`}
         >
           <ArrowLeft className={sensorActive ? 'w-5 h-5' : 'w-7 h-7'} />
-          <span>{sensorActive ? '터치 폴백' : '왼쪽 노젓기'}</span>
+          <span>왼쪽 노젓기</span>
         </button>
 
         <button
@@ -248,7 +257,7 @@ export const KayakPaddle = ({ groupId, enqueueAction }: Props) => {
           } ${lastPaddle === 'right' ? 'bg-cyan-800 border-cyan-500 text-cyan-200 opacity-80' : 'bg-gradient-to-br from-cyan-600 to-teal-700 border-teal-400 text-white hover:brightness-110'}`}
         >
           <ArrowRight className={sensorActive ? 'w-5 h-5' : 'w-7 h-7'} />
-          <span>{sensorActive ? '터치 폴백' : '오른쪽 노젓기'}</span>
+          <span>오른쪽 노젓기</span>
         </button>
       </div>
 

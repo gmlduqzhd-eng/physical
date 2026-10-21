@@ -152,7 +152,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
   const gammaPercent = Math.max(0, Math.min(100, ((phoneGamma + 90) / 180) * 100));
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
+    <div className="flex flex-col items-center justify-between p-4 pb-24 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
       <div className="w-full flex flex-wrap justify-between items-center gap-2 px-2">
         <div className="flex items-center gap-2">
           <Scale className="w-6 h-6 text-cyan-300" />
@@ -228,7 +228,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
             sensorActive ? 'py-3 text-sm' : 'py-6 text-xl'
           }`}
         >
-          <span>{sensorActive ? '터치 폴백 ⬆️' : '⬆️ 왼쪽 올리기'}</span>
+          <span>⬆️ 왼쪽 올리기</span>
         </button>
 
         <button
@@ -238,7 +238,7 @@ export const SeesawBalanceTap = ({ groupId, enqueueAction }: Props) => {
             sensorActive ? 'py-3 text-sm' : 'py-6 text-xl'
           }`}
         >
-          <span>{sensorActive ? '⬆️ 터치 폴백' : '오른쪽 올리기 ⬆️'}</span>
+          <span>오른쪽 올리기 ⬆️</span>
         </button>
       </div>
 

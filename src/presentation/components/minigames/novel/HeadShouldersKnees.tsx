@@ -53,7 +53,10 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
   useEffect(() => { currentTargetRef.current = currentTarget; }, [currentTarget]);
 
   const pickNextTarget = useCallback(() => {
-    setCurrentTarget(BODY_PART_IDS[Math.floor(Math.random() * BODY_PART_IDS.length)]);
+    const candidates = BODY_PART_IDS.filter(id => id !== currentTargetRef.current);
+    const next = candidates[Math.floor(Math.random() * candidates.length)];
+    currentTargetRef.current = next;
+    setCurrentTarget(next);
     autoSelectedRef.current = false;
   }, []);
 
@@ -152,7 +155,7 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
   const tiltIndicatorPercent = Math.max(0, Math.min(100, 100 - ((currentBeta + 90) / 180) * 100));
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
+    <div className="flex flex-col items-center justify-between p-4 pb-24 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
       <div className="w-full flex flex-wrap justify-between items-center gap-2 px-2">
         <div className="flex items-center gap-2">
           <Smile className="w-6 h-6 text-yellow-400" />
@@ -236,7 +239,7 @@ export const HeadShouldersKnees = ({ groupId, enqueueAction }: Props) => {
             }`}
           >
             <span className={sensorActive ? 'text-2xl' : 'text-4xl'}>{part.emoji}</span>
-            <span>{sensorActive ? '터치 폴백' : part.label}</span>
+            <span>{part.label}</span>
           </button>
         ))}
       </div>

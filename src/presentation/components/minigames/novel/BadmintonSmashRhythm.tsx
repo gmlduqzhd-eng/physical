@@ -129,7 +129,8 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
   // --- devicemotion 센서 등록 (가속도 z 스파이크 감지) ---
   useEffect(() => {
     const handleMotion = (e: DeviceMotionEvent) => {
-      const rawZ = e.acceleration?.z ?? e.accelerationIncludingGravity?.z;
+      const hasLinearZ = typeof e.acceleration?.z === 'number' && Number.isFinite(e.acceleration.z);
+      const rawZ = hasLinearZ ? e.acceleration!.z! : e.accelerationIncludingGravity?.z;
       if (typeof rawZ !== 'number' || !Number.isFinite(rawZ)) return;
       if (!sensorActiveRef.current) {
         sensorActiveRef.current = true;
@@ -142,8 +143,9 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
       if (now - sensorCooldownRef.current < 500) return;
       if (finishedRef.current) return;
 
-      // 스매시 감지: |acc.z| 스파이크 > 10
-      if (Math.abs(accZ) > 10) {
+      // 스매시 감지: 선형 가속도 > 10 또는 중력 포함 가속도 > 18
+      const threshold = hasLinearZ ? 10 : 18;
+      if (Math.abs(accZ) > threshold) {
         sensorCooldownRef.current = now;
         setSensorFlash(true);
         handleSmash();
@@ -163,7 +165,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
   }, [handleSmash]);
 
   return (
-    <div className="flex flex-col items-center justify-between p-4 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
+    <div className="flex flex-col items-center justify-between p-4 pb-24 min-h-[580px] w-full max-w-md mx-auto select-none font-sans">
       <div className="w-full flex flex-wrap justify-between items-center gap-2 px-2">
         <div className="flex items-center gap-2">
           <Zap className="w-6 h-6 text-yellow-400" />
@@ -225,7 +227,7 @@ export const BadmintonSmashRhythm = ({ groupId, enqueueAction }: Props) => {
           sensorActive ? 'py-3 text-lg max-w-[240px] mx-auto' : 'py-6 text-2xl'
         }`}
       >
-        <span>{sensorActive ? '🏸 터치 폴백 (스윙)' : '🏸 스매시 스윙! (SWING)'}</span>
+        <span>{sensorActive ? '🏸 스매시 스윙 (터치)' : '🏸 스매시 스윙! (SWING)'}</span>
       </button>
 
       <p className="text-xs text-slate-400 text-center mt-2">

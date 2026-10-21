@@ -18,7 +18,7 @@ const report = { base, engine: engine.name(), checks: [] };
       try {
         await page.clock.install();
         await page.goto(`${base}/play/${type}`);
-        await page.getByRole('button', { name: /표준 기록/ }).tap();
+        await page.getByRole('button', { name: /표준/ }).tap();
         const ownIntro = ['space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(type);
         if (ownIntro) {
           assert.equal(await page.getByRole('button', { name: /준비 완료/ }).count(), 0, 'One preparation flow per game');
@@ -27,8 +27,14 @@ const report = { base, engine: engine.name(), checks: [] };
         } else await page.getByRole('button', { name: /준비 완료/ }).tap();
         await page.clock.pauseAt(new Date(Date.now() + 100));
         const advance = async ms => { await page.clock.runFor(ms); await new Promise(resolve => setTimeout(resolve, 40)); };
+        const finishResult = async () => {
+          const skipBtn = page.getByRole('button', { name: /화면 게임으로만 기록/ });
+          await skipBtn.or(page.getByText('화면 게임 점수')).waitFor();
+          if (await skipBtn.count()) await skipBtn.tap();
+          await page.getByText('화면 게임 점수').waitFor();
+        };
         const layout = async () => assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), 'No horizontal overflow');
-        await run(page, advance, layout);
+        await run(page, advance, layout, finishResult);
         await layout();
         assert.deepEqual(errors, []);
         report.checks.push({ name, passed: true });
@@ -40,7 +46,7 @@ const report = { base, engine: engine.name(), checks: [] };
       } finally { await context.close(); }
     }
 
-    await check('missing motion values never add steps; tap, finish and replay work', 'run', async (page, advance) => {
+    await check('missing motion values never add steps; tap, finish and replay work', 'run', async (page, advance, _layout, finishResult) => {
       await page.evaluate(() => {
         const event = new Event('devicemotion');
         Object.defineProperty(event, 'accelerationIncludingGravity', { value: { x: null, y: null, z: null } });
@@ -52,13 +58,13 @@ const report = { base, engine: engine.name(), checks: [] };
       await advance(300);
       assert.match(await page.locator('.gameplay-content').innerText(), /유효 걸음수\s*1/);
       await advance(20500);
-      await page.getByText('획득 점수', { exact: true }).waitFor();
-      assert.match(await page.locator('body').innerText(), /획득 점수\s*\+10/);
+      await finishResult();
+      assert.match(await page.locator('body').innerText(), /화면 게임 점수[\s\S]*?\+10/);
       await page.getByRole('button', { name: '다시 하기', exact: true }).tap();
-      await page.getByRole('button', { name: /표준 기록/ }).waitFor();
+      await page.getByRole('button', { name: /표준/ }).waitFor();
     });
 
-    await check('target works without sensors, earns no unmeasured stability bonus and finishes', 'target', async (page, advance, layout) => {
+    await check('target works without sensors, earns no unmeasured stability bonus and finishes', 'target', async (page, advance, layout, finishResult) => {
       await page.getByText('터치 조준 모드 · 센서 대기').waitFor();
       await layout();
       await advance(1200);
@@ -70,12 +76,12 @@ const report = { base, engine: engine.name(), checks: [] };
         await advance(1000);
         await page.getByRole('heading', { name: '표적 조준 사격' }).tap();
       }
-      await page.getByText('획득 점수', { exact: true }).waitFor();
+      await finishResult();
       await page.getByRole('button', { name: '다시 하기', exact: true }).tap();
-      await page.getByRole('button', { name: /표준 기록/ }).waitFor();
+      await page.getByRole('button', { name: /표준/ }).waitFor();
     }, 320);
 
-    await check('relay third runner holds a real ten-second mission then records all four runners', 'relay-mission-runner', async (page, advance) => {
+    await check('relay third runner holds a real ten-second mission then records all four runners', 'relay-mission-runner', async (page, advance, _layout, finishResult) => {
       await page.getByRole('button', { name: /릴레이 시작!/ }).tap();
       for (let runner = 1; runner <= 4; runner++) {
         await page.getByRole('button', { name: /반환점 도착!/ }).tap();
@@ -89,25 +95,25 @@ const report = { base, engine: engine.name(), checks: [] };
         }
         await page.getByRole('button', { name: runner < 4 ? /바통 터치!/ : /결승선 골인!/ }).tap();
       }
-      await page.getByText('획득 점수', { exact: true }).waitFor();
+      await finishResult();
       assert.match(await page.locator('body').innerText(), /3번 주자/);
       await page.getByRole('button', { name: '다시 하기', exact: true }).tap();
-      await page.getByRole('button', { name: /표준 기록/ }).waitFor();
+      await page.getByRole('button', { name: /표준/ }).waitFor();
     });
 
-    await check('space game five timed rounds finish once and remain replayable', 'space-occupier', async (page, advance) => {
+    await check('space game five timed rounds finish once and remain replayable', 'space-occupier', async (page, advance, _layout, finishResult) => {
       await page.getByRole('button', { name: /작전|라운드 시작/ }).last().tap();
       for (let round = 1; round <= 5; round++) {
         await advance(7100);
         if (round < 5) await page.getByRole('button', { name: /다음 라운드 도전/ }).tap();
       }
-      await page.getByText('획득 점수', { exact: true }).waitFor();
-      assert.match(await page.locator('body').innerText(), /획득 점수\s*0/);
+      await finishResult();
+      assert.match(await page.locator('body').innerText(), /화면 게임 점수[\s\S]*?0/);
       await page.getByRole('button', { name: '다시 하기', exact: true }).tap();
-      await page.getByRole('button', { name: /표준 기록/ }).waitFor();
+      await page.getByRole('button', { name: /표준/ }).waitFor();
     });
 
-    await check('rhythm changes cards, pauses beats and saves touch-accessible peer ratings', 'body-rhythm-orchestrator', async (page, advance, layout) => {
+    await check('rhythm changes cards, pauses beats and saves touch-accessible peer ratings', 'body-rhythm-orchestrator', async (page, advance, layout, finishResult) => {
       const cards = () => page.locator('.gameplay-content').innerText();
       await page.getByRole('button', { name: /새 동작 조합/ }).tap();
       const first = await cards();
@@ -131,8 +137,8 @@ const report = { base, engine: engine.name(), checks: [] };
         assert.equal(await rating.getAttribute('aria-pressed'), 'true');
       }
       await page.getByRole('button', { name: /평가 제출 및 점수 확정/ }).tap();
-      await page.getByText('획득 점수', { exact: true }).waitFor();
-      assert.match(await page.locator('body').innerText(), /획득 점수\s*\+180/);
+      await finishResult();
+      assert.match(await page.locator('body').innerText(), /화면 게임 점수[\s\S]*?\+180/);
       assert.match(await page.locator('body').innerText(), /칼군무 완벽/);
     }, 320);
   } finally {

@@ -143,7 +143,7 @@ export const BodyTwist = ({ groupId, enqueueAction }: Props) => {
           }`}
         >
           <span className={sensorActive ? 'text-lg mb-0.5' : 'text-3xl mb-1'}>👈</span>
-          {sensorActive ? '터치 폴백' : '좌측 터치'}
+          좌측 터치
         </button>
 
         <button
@@ -158,7 +158,7 @@ export const BodyTwist = ({ groupId, enqueueAction }: Props) => {
           }`}
         >
           <span className={sensorActive ? 'text-lg mb-0.5' : 'text-3xl mb-1'}>👉</span>
-          {sensorActive ? '터치 폴백' : '우측 터치'}
+          우측 터치
         </button>
       </div>
 
