@@ -14,7 +14,6 @@ import { supabase } from '../data/supabase';
 import { resolveGuidedGameType } from '../domain/guidedMission';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
-import { guidedGoal } from '../domain/guidedGoal';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
 
@@ -607,7 +606,6 @@ export const MobileMissionView = () => {
     const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
-    const goal = guidedGoal(scores, [guidedMission.id], gameRoom?.goal_percent ?? 75);
     return <main className="min-h-[100dvh] bg-slate-50 text-slate-900 p-5 flex items-center justify-center">
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
         <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
@@ -619,7 +617,6 @@ export const MobileMissionView = () => {
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
           <p className="text-sm text-slate-600 mt-3">게임을 끝내면 모둠 점수가 즉시 반영돼요.</p>
         </div>
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-bold text-emerald-900">우리 반 공동 목표</p><p className="text-sm text-emerald-900 mt-1">{goal.achieved ? '🎉 함께 목표를 달성했어요!' : `${goal.completed}/${goal.total}모둠 완료 · 목표 ${goal.target}모둠`}</p><div role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)} className="mt-3 h-3 rounded-full bg-emerald-100 overflow-hidden"><span className="block h-full rounded-full bg-emerald-600" style={{width:`${goal.progress}%`}}/></div></div>
         <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
         <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
         {myGroup?.help_requested_at && <p role="status" className="text-sm text-amber-800 mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}

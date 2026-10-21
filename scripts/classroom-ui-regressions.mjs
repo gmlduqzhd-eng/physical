@@ -162,7 +162,7 @@ try {
   // Preload this lazy route before going offline when testing the Vite dev server.
   // Production's service worker precaches game routes; dev has no such cache.
   await blocked.goto(base + '/play/stopwatch');
-  await blocked.getByRole('button', { name: /표준 기록/ }).waitFor();
+  await blocked.getByRole('button', { name: /활동 시작/ }).waitFor();
   await blocked.goto(base + '/hub');
   await blocked.getByRole('searchbox').waitFor();
   await blocked.evaluate(path => { history.pushState({}, '', path); window.dispatchEvent(new PopStateEvent('popstate')); }, '/mobile/' + classroom.room.id + '/' + group2.id);
@@ -175,7 +175,7 @@ try {
   await blocked.getByRole('searchbox').waitFor();
   await blockedContext.setOffline(false);
   await blocked.evaluate(() => { history.pushState({}, '', '/play/stopwatch'); window.dispatchEvent(new PopStateEvent('popstate')); });
-  try { await blocked.getByRole('button', { name: /표준 기록/ }).waitFor(); }
+  try { await blocked.getByRole('button', { name: /활동 시작/ }).waitFor(); }
   catch (error) { console.log(JSON.stringify({stage:'blocked storage route recovery',url:blocked.url(),text:(await blocked.locator('body').innerText()).slice(0,1000),errors,blockedConsoleErrors:blockedConsoleErrors.map(text=>text.replace(/apikey=[^&\s'"<>]+/g,'apikey=[redacted]').replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,'[redacted]'))}));throw error; }
   await until(async () => await score(group2.id) === beforeBlocked + 10, 'denied storage queue survives route change');
   checks.push('Denied persistent storage shows warning and retains pending score through SPA routes until reconnect');
@@ -206,7 +206,7 @@ try {
   await battleA.getByRole('button', { name: /반응속도 \(결과 점수 반영\)/ }).click();
   await battleA.waitForURL('**/play/reaction?**');
   assert.equal(await score(battle.groups.find(group => group.group_name === '청팀').id), 0);
-  await battleA.getByRole('button', { name: /표준 기록/ }).click();
+  await battleA.getByRole('button', { name: /활동 시작/ }).click();
   const skipPreparation = battleA.getByRole('button', {name: /준비 완료/});
   if (await skipPreparation.count()) await skipPreparation.click();
   else await battleA.getByRole('button', {name: /활동 시작하기/}).click();

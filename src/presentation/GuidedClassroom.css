@@ -148,11 +148,6 @@
 }
 .flow.lesson-shell.guided-classroom .guided-help { margin-top: 20px; padding: 25px 28px; border-color: #e8d4a5; background: #fffcf4; }
 .guided-classroom .guided-help .muted { margin-top: 12px; }
-.flow.lesson-shell.guided-classroom .guided-goal { margin-top: 20px; padding: 25px 28px; }
-.guided-classroom .guided-goal-track { height: 14px; margin: 16px 0; border-radius: 999px; background: #e4ebe0; overflow: hidden; }
-.guided-classroom .guided-goal-track span { display: block; height: 100%; border-radius: inherit; background: #60754f; transition: width .3s ease; }
-.guided-classroom .guided-goal-setting { display: flex; align-items: center; gap: 12px; font-weight: 700; }
-.guided-classroom .guided-goal-setting select { max-width: 180px; }
 
 .guided-classroom .guided-quick-actions,
 .guided-classroom .guided-review-bulk,

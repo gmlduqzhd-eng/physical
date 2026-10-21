@@ -7,7 +7,6 @@ import { supabase } from '../data/supabase';
 import { classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { GAMES } from '../domain/gamesData';
 import { GUIDED_REFLECTIONS, reflectionLabel } from '../domain/guidedReflection';
-import { guidedGoal } from '../domain/guidedGoal';
 import { resolveGuidedGameType } from '../domain/guidedMission';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { LessonShell } from './LessonShell';
@@ -49,8 +48,8 @@ export function GuidedClassroom() {
   const game = GAMES.find(item => item.type === missions[0]?.gameType) || GAMES.find(item => item.name === room?.name);
   const guidedMissionIds = new Set(missions.filter(button => resolveGuidedGameType(room?.name, template?.name, missions, button.id)).map(button => button.id));
   const isGuidedLesson = guidedMissionIds.size > 0;
-  const goal = guidedGoal(scores, [...guidedMissionIds], room?.goal_percent ?? 75);
   const completed = scores.flatMap(group => (group.completed_missions || []).filter(id => guidedMissionIds.has(id)).map(id => ({ group, missionId: id })));
+  const completedGroupCount = new Set(completed.map(item => item.group.id)).size;
   const reflections = scores.flatMap(group => Object.entries(group.stats?.guided_reflections || {}).filter(([id, choice]) => guidedMissionIds.has(id) && reflectionLabel(choice)).map(([id, choice]) => ({ group, missionId: id, choice: String(choice) })));
 
   return <LessonShell audience="teacher" className="guided-classroom" back="/teacher" backLabel="교사 시작 화면">
@@ -60,7 +59,7 @@ export function GuidedClassroom() {
         <section className="card guided-action-card">
           <h2>수업 조작</h2>
           <p>{room.status === 'waiting' ? '학생에게 아래의 우리 모둠 QR을 보여 주세요.' : room.status === 'finished' ? '오늘의 활동을 함께 돌아보세요.' : '모둠별 활동 진행과 점수를 실시간으로 살펴보세요.'}</p>
-          <p className="muted">등록된 모둠 {scores.length}개 · 완료 모둠 {goal.completed}개</p>
+          <p className="muted">등록된 모둠 {scores.length}개 · 완료 모둠 {completedGroupCount}개</p>
           <div className="guided-quick-actions">
             {['waiting', 'playing', 'paused'].includes(room.status) && <button className="primary" disabled={busy} onClick={() => void mutate(room.status === 'playing' ? { status: 'paused', started_at: null, global_time_modifier: timeLeft - 300 } : { status: 'playing', started_at: new Date(Date.now() + timeOffset).toISOString() })}>{room.status === 'waiting' ? '수업 시작' : room.status === 'playing' ? '일시정지' : '수업 이어가기'}</button>}
             {room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ global_time_modifier: room.global_time_modifier + 60 })}>+1분</button>}
@@ -71,7 +70,6 @@ export function GuidedClassroom() {
 
       {isGuidedLesson && room.status !== 'finished' && <section className="card guided-help" aria-label="도움 요청"><div className="guided-review-heading"><div><h2>도움 요청 <span className="guided-count">{helpRequests.length}</span></h2><p>먼저 요청한 모둠부터 살펴보세요.</p></div></div>{helpRequests.length ? <div className="guided-review-list">{helpRequests.map(group => <div className="guided-review-row" key={group.id}><strong>{group.group_name}</strong><button disabled={busy} onClick={() => void resolveHelp(group.id)}>도움 완료</button></div>)}</div> : <p className="muted">도움이 필요한 모둠이 없어요.</p>}</section>}
 
-      {isGuidedLesson && <section className="card guided-goal" aria-label="학급 공동 목표"><div className="guided-review-heading"><div><h2>학급 공동 목표</h2><p>{goal.achieved ? '🎉 우리 반 목표를 함께 달성했어요!' : `${goal.target}개 모둠이 활동을 마치면 목표 달성!`}</p></div><strong>{goal.completed} / {goal.total}모둠</strong></div><div className="guided-goal-track" role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)}><span style={{width:`${goal.progress}%`}}/></div>{room.status !== 'finished' && <label className="guided-goal-setting">목표 기준 <select disabled={busy} value={goal.percent} onChange={event=>void mutate({goal_percent:Number(event.target.value)})}><option value={50}>절반</option><option value={75}>75%</option><option value={100}>모든 모둠</option></select></label>}<p className="muted">모둠이 활동을 마치면 완료 현황과 점수에 즉시 반영됩니다.</p></section>}
 
       {isGuidedLesson && room.status === 'finished' && <section className="card guided-closeout" aria-label="수업 마무리"><h2>오늘 수업 한눈에</h2><div className="guided-closeout-numbers"><p><strong>{scores.length}</strong><span>등록 모둠</span></p><p><strong>{new Set(completed.map(item => item.group.id)).size}</strong><span>활동 완료 모둠</span></p><p><strong>{completed.length}</strong><span>완료 미션</span></p><p><strong>{reflections.length}</strong><span>회고 응답</span></p></div><div className="guided-reflection-counts">{GUIDED_REFLECTIONS.map(choice => <p key={choice.value}>{choice.label} <strong>{reflections.filter(item => item.choice === choice.value).length}</strong></p>)}</div></section>}
 

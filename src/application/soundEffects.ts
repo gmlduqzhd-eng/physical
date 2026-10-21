@@ -219,14 +219,17 @@ export function startBgm(volume = 0.175) {
   stopBgm();
   const ctx = getCtx();
   if (!ctx) return;
-  bgmGain = ctx.createGain();
-  bgmGain.gain.value = 0.06 * (Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 0.175) / 0.175;
-  bgmGain.connect(ctx.destination);
+  const loopGain = ctx.createGain();
+  bgmGain = loopGain;
+  loopGain.gain.value = 0.06 * (Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 0.175) / 0.175;
+  loopGain.connect(ctx.destination);
 
   let step = 0;
   const tempo = 180; // ms per note
 
   bgmInterval = setInterval(() => {
+    // A queued note may run after stop/replay; it belongs only to this loop.
+    if (bgmGain !== loopGain) return;
     const freq = BGM_NOTES[step % BGM_NOTES.length];
     if (freq > 0) {
       const osc = ctx.createOscillator();
@@ -236,7 +239,7 @@ export function startBgm(volume = 0.175) {
       noteGain.gain.setValueAtTime(0.06, ctx.currentTime);
       noteGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + tempo / 1000 * 0.9);
       osc.connect(noteGain);
-      noteGain.connect(bgmGain!);
+      noteGain.connect(loopGain);
       osc.start();
       osc.stop(ctx.currentTime + tempo / 1000);
     }

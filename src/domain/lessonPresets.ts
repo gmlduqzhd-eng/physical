@@ -2,7 +2,7 @@ import { GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
 import type { GameRoom, MissionTemplate } from './types';
 
-export type LessonPreset = { roomId: string; game: GameDef; groups: number; minutes: number | null; goalPercent: 50 | 75 | 100 };
+export type LessonPreset = { roomId: string; game: GameDef; groups: number; minutes: number | null };
 
 export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate, 'id' | 'name' | 'buttons'>[], groups: { room_id: string }[]): LessonPreset[] {
   const byTemplate = new Map(templates.map(template => [template.id, template]));
@@ -20,10 +20,9 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     // modifier may have changed during the lesson, so ask the teacher instead.
     const minutes = room.setup_minutes;
     const safeMinutes = typeof minutes === 'number' && minutes >= 5 && minutes <= 90 ? minutes : null;
-    const goalPercent: 50 | 75 | 100 = room.goal_percent === 50 || room.goal_percent === 100 ? room.goal_percent : 75;
-    const key = `${game.type}:${groupCount}:${safeMinutes}:${goalPercent}`;
+    const key = `${game.type}:${groupCount}:${safeMinutes}`;
     if (seen.has(key)) return [];
     seen.add(key);
-    return [{ roomId: room.id, game, groups: groupCount, minutes: safeMinutes, goalPercent }];
+    return [{ roomId: room.id, game, groups: groupCount, minutes: safeMinutes }];
   }).slice(0, 5);
 }

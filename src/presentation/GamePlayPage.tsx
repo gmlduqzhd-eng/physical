@@ -236,7 +236,7 @@ const GamePlaySession = () => {
   const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
   const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
-  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard' | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
@@ -257,8 +257,8 @@ const GamePlaySession = () => {
     endTime: Date.now() + 90000,
   });
 
-  const handleSelectDifficulty = (selected: 'easy' | 'normal' | 'hard') => {
-    setDifficulty(selected);
+  const handleStartGame = () => {
+    setHasStarted(true);
     const hasOwnIntro = ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
     setIsCountingDown(!hasOwnIntro);
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
@@ -270,7 +270,6 @@ const GamePlaySession = () => {
     setIsCountingDown(false);
   }, []);
 
-  const difficultyMultiplier = difficulty === 'easy' ? 0.7 : difficulty === 'hard' ? 1.5 : 1;
 
   // 업적 배지 체크
   const checkBadges = useCallback((score: number) => {
@@ -286,7 +285,6 @@ const GamePlaySession = () => {
     if (score >= 500 && !badges['high_scorer']) { badges['high_scorer'] = true; newBadges.push('🏅 하이스코어러'); }
     if (plays >= 10 && !badges['veteran']) { badges['veteran'] = true; newBadges.push('🎖️ 베테랑 (10회 플레이)'); }
     if (plays >= 50 && !badges['master']) { badges['master'] = true; newBadges.push('👑 마스터 (50회 플레이)'); }
-    if (difficulty === 'hard' && score > 0 && !badges['brave']) { badges['brave'] = true; newBadges.push('🦁 용감한 도전자'); }
 
     // 다양한 게임 플레이 배지
     const savedGames = readJsonStorage('physical_played_games');
@@ -304,7 +302,7 @@ const GamePlaySession = () => {
       if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current);
       badgeTimerRef.current = setTimeout(() => setNewBadge(null), 4000);
     }
-  }, [difficulty, gameType]);
+  }, [gameType]);
 
   // The shared music preference controls the game's synthesized BGM too.
   const { enabled: musicEnabled, volume: musicVolume } = useBackgroundMusic();
@@ -321,7 +319,7 @@ const GamePlaySession = () => {
   // 게임 완료 시 모둠 점수 및 활동 기록 즉시 반영
   const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }) => {
     const rawScore = payload.amount;
-    const earned = Math.round(rawScore * difficultyMultiplier);
+    const earned = Math.round(rawScore);
     const classroomScore = earned > 0 ? earned : (hasBattle ? 10 : 0);
     if (hasBattle && battleGroupId && classroomScore !== 0) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId }, timestamp: Date.now() });
@@ -357,11 +355,11 @@ const GamePlaySession = () => {
 
     // 플레이어 프로필에 점수 누적 저장 (RPE는 나중에 별도 저장)
     if (gameType && gameInfo) {
-      addGameResult(gameType, gameInfo.name, earned, difficulty || undefined, undefined, details);
+      addGameResult(gameType, gameInfo.name, earned, undefined, undefined, details);
     }
 
     checkBadges(earned);
-  }, [gameType, gameInfo, difficulty, difficultyMultiplier, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion]);
+  }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion]);
 
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
@@ -377,7 +375,7 @@ const GamePlaySession = () => {
     setLastEarnedScore(0);
     setRpeSelected(null);
     setKey(prev => prev + 1);
-    setDifficulty(null);
+    setHasStarted(false);
   };
 
   if (!gameType || !gameInfo) {
@@ -592,19 +590,15 @@ const GamePlaySession = () => {
   return (
     <div className="game-tools-scope game-tools-layout">
       <nav className="game-utilities-bar" aria-label="이용 설정"><HeaderUtilities/></nav>
-    <div className={`warm-game gameplay-page ${difficulty !== null ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
-      {/* 난이도 선택 화면 */}
-      {difficulty === null && !gameFinished && (
+    <div className={`warm-game gameplay-page ${hasStarted ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
+      {/* 활동 준비 화면 */}
+      {!hasStarted && !gameFinished && (
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
-          <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
-            <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
-            <button data-level="normal" onClick={() => handleSelectDifficulty('normal')}><span className="level-symbol" aria-hidden="true">⚡</span><strong>표준 기록</strong><small>×1.0 배율</small></button>
-            <button data-level="hard" onClick={() => handleSelectDifficulty('hard')}><span className="level-symbol" aria-hidden="true">🔥</span><strong>도전 기록</strong><small>×1.5 배율</small></button>
-          </div><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
+          <button type="button" className="game-prepare-start" onClick={handleStartGame}>활동 시작</button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
         </div></div>
       )}
 
@@ -617,7 +611,7 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 렌더링 */}
-      {difficulty !== null && !isCountingDown && <div className="gameplay-content" hidden={gameFinished && !showDetailedResult} onClickCapture={event => {
+      {hasStarted && !isCountingDown && <div className="gameplay-content" hidden={gameFinished && !showDetailedResult} onClickCapture={event => {
         if (!gameFinished) return;
         const button = (event.target as HTMLElement).closest('button');
         if (button && /다시|재도전/.test(button.textContent || '')) {
@@ -625,7 +619,7 @@ const GamePlaySession = () => {
           event.stopPropagation();
           handleReplay();
         }
-      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 몸 미션 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
+      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 이 점수가 활동 기록에 반영됩니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 몸 미션 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -635,11 +629,11 @@ const GamePlaySession = () => {
       )}
 
       {/* 상단 네비게이션 */}
-      {difficulty !== null && (
+      {hasStarted && (
         <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
           <button onClick={() => navigate(hubPath)} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
           <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
-          {showDetailedResult ? <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button> : <span className="game-toolbar-level">{difficulty === 'easy' ? '연습' : difficulty === 'hard' ? '도전' : '표준'} ×{difficultyMultiplier}</span>}
+          {showDetailedResult && <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button>}
         </div>
       )}
 
@@ -670,17 +664,13 @@ const GamePlaySession = () => {
               <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
-              {difficulty && difficulty !== 'normal' && (
-                <span className={`text-xs mt-1 font-bold ${difficulty === 'hard' ? 'text-red-400' : 'text-emerald-400'}`}>
-                  기록 {difficulty === 'easy' ? '기본 연습' : '도전 기록'} (×{difficultyMultiplier} 배율)
-                </span>
-              )}
+
             </div>
             <div className="w-full flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3 mb-4 border border-slate-700/50">
               <div className="flex items-center gap-2 text-yellow-500"><Trophy className="w-4 h-4" /><span className="text-sm font-bold">최고 기록</span></div>
               <span className="text-yellow-400 font-black">{bestScore}점</span>
             </div>
-            {lastEarnedScore > 300 && difficulty !== 'hard' && (
+            {lastEarnedScore > 300 && (
               <div className="w-full bg-orange-950/50 border border-orange-500/30 rounded-xl px-4 py-2.5 mb-4 text-center">
                 <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 자신의 기록을 넘어 보세요!</p>
               </div>

@@ -13,7 +13,7 @@ const base = process.env.AUDIT_URL || 'http://127.0.0.1:5173';
     try {
       await page.clock.install();
       await page.goto(`${base}/play/${type}`);
-      await page.getByRole('button', { name: /표준 기록/ }).click();
+      await page.getByRole('button', { name: /활동 시작/ }).click();
       await page.getByRole('button', { name: /준비 완료/ }).click();
       await page.clock.pauseAt(new Date(Date.now() + 100));
       const advance = async ms => { await page.clock.runFor(ms); await new Promise(resolve => setTimeout(resolve, 10)); };
