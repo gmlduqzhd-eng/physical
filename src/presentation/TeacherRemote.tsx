@@ -8,7 +8,7 @@ import type { GameRoom } from '../domain/types';
 import { useGameTimer } from '../application/useGameTimer';
 import { sfxWhistle, sfxTap, sfxSuccess, sfxClick, hapticHeavy, hapticDouble } from '../application/soundEffects';
 import {
-  Volume2, Play, Pause, Plus, Minus, Zap, Waves, Skull, ShieldAlert,
+  Volume2, Play, Pause, Plus, Minus, Zap, Waves, ShieldAlert,
   Send, ExternalLink, ArrowLeft, RefreshCw, Trophy, Users, Sparkles
 } from 'lucide-react';
 
@@ -62,7 +62,7 @@ export const TeacherRemote: React.FC = () => {
   useEffect(() => () => { if (feedbackTimer.current) clearTimeout(feedbackTimer.current); }, []);
   const updateRoom = async (updates: Record<string, unknown>) => {
     if (!currentRoom) return false;
-    if (typeof updates.status === 'string' && ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia', 'tsunami'].includes(updates.status) && !currentRoom.started_at) updates.started_at = new Date(Date.now() + timeOffset).toISOString();
+    if (typeof updates.status === 'string' && ['playing', 'boss_raid', 'time_attack', 'defense', 'mafia', 'tsunami'].includes(updates.status) && !currentRoom.started_at) updates.started_at = new Date(Date.now() + timeOffset).toISOString();
     const { data, error } = await supabase.from('game_rooms').update(updates).eq('id', currentRoom.id).select('id');
     if (error || !data?.length) { showFeedback('수업 제어에 실패했습니다. 연결과 방 상태를 확인해주세요.'); return false; }
     refreshRoom(); return true;
@@ -106,7 +106,7 @@ export const TeacherRemote: React.FC = () => {
   };
 
   // --- 3. 긴급 이벤트 발동 ---
-  const handleTriggerEvent = async (type: 'tsunami' | 'boss_raid' | 'zombie' | 'buff' | 'underdog' | 'fever' | 'finish') => {
+  const handleTriggerEvent = async (type: 'tsunami' | 'boss_raid' | 'buff' | 'underdog' | 'fever' | 'finish') => {
     if (!currentRoom) return;
     sfxSuccess();
     hapticHeavy();
@@ -123,10 +123,6 @@ export const TeacherRemote: React.FC = () => {
         boss_max_hp: nextStatus === 'boss_raid' ? 10000 : null,
       })) return;
       showFeedback(nextStatus === 'boss_raid' ? '👹 보스 레이드 소환!' : '👹 보스 레이드 종료');
-    } else if (type === 'zombie') {
-      const nextStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
-      if (!await updateRoom({ status: nextStatus })) return;
-      showFeedback(nextStatus === 'zombie' ? '🧟 좀비 바이러스 살포!' : '🧟 좀비 모드 종료');
     } else if (type === 'buff') {
       // 전 모둠 1분간 점수 2배
       const buffUntil = new Date(Date.now() + 60000).toISOString();
@@ -375,21 +371,14 @@ export const TeacherRemote: React.FC = () => {
               className="py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
               <Waves className="w-4 h-4" />
-              <span>해일 플랭크 경보</span>
+              <span>해일 경보 발동</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('boss_raid')}
-              className="py-3 bg-gradient-to-r from-rose-700 to-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
+              className="col-span-2 py-3 bg-gradient-to-r from-rose-700 to-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
               <ShieldAlert className="w-4 h-4" />
               <span>보스 레이드 소환</span>
-            </button>
-            <button
-              onClick={() => handleTriggerEvent('zombie')}
-              className="py-3 bg-gradient-to-r from-emerald-700 to-teal-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
-            >
-              <Skull className="w-4 h-4" />
-              <span>좀비 바이러스 살포</span>
             </button>
           </div>
 

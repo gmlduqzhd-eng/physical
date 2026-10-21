@@ -6,7 +6,7 @@ import { supabase } from '../data/supabase';
 import { useGameLogic } from '../application/useGameLogic';
 import { createClassroom, classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { timeOffset } from '../application/timeSync';
-import type { GameRoom, MissionTemplate, RoomGroup } from '../domain/types';
+import type { GameRoom, MissionTemplate } from '../domain/types';
 import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone, Sparkles } from 'lucide-react';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
@@ -180,13 +180,6 @@ export const AdminControlPanel = () => {
     refreshRoom();
   };
 
-  const toggleZombie = async (groupId: string, currentBadges: string[]) => {
-    const isZombie = currentBadges?.includes('zombie');
-    const newBadges = isZombie ? (currentBadges || []).filter(b => b !== 'zombie') : [...(currentBadges || []), 'zombie'];
-    await supabase.from('room_groups').update({ badges: newBadges }).eq('id', groupId);
-    refreshRoom();
-  };
-
   const handleReset = async () => {
     if(!currentRoom) return;
     if(window.confirm('정말 이 방의 데이터를 초기화하시겠습니까?')) {
@@ -261,23 +254,6 @@ export const AdminControlPanel = () => {
       alert('방 정리 중 오류가 발생했습니다.');
     }
   };
-
-  const pendingApprovals: { group: RoomGroup, mission: import('../domain/types').MissionButton }[] = [];
-  if (currentRoom) {
-    const template = templates.find(t => t.id === currentRoom.template_id);
-    if (template) {
-      roomGroups.forEach(group => {
-        if (group.pending_missions && group.pending_missions.length > 0) {
-          group.pending_missions.forEach(missionId => {
-            const m = template.buttons.find((btn: import('../domain/types').MissionButton) => btn.id === missionId);
-            if (m) {
-              pendingApprovals.push({ group, mission: m as import('../domain/types').MissionButton });
-            }
-          });
-        }
-      });
-    }
-  }
 
   return (
     <div className="min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
@@ -360,16 +336,14 @@ export const AdminControlPanel = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 print:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 print:grid-cols-3">
               {[
                 { id: 'TREASURE_SCORE_500', name: '보물상자 (500점)', color: 'text-yellow-600' },
                 { id: 'TREASURE_SCORE_1000', name: '대박 보물 (1000점)', color: 'text-orange-600' },
                 { id: 'TREASURE_ITEM_DOUBLE', name: '점수 2배 물약', color: 'text-purple-600' },
-                { id: 'TREASURE_ITEM_DRONE', name: '자동 채굴 드론', color: 'text-cyan-600' },
                 { id: 'TREASURE_ITEM_COOLDOWN', name: '쿨다운 감소', color: 'text-blue-600' },
                 { id: 'TREASURE_ITEM_BONUS', name: '보너스 요정', color: 'text-pink-600' },
-                { id: 'TREASURE_BOMB_DEFUSE', name: '폭탄 해체 킷', color: 'text-emerald-600' },
-                { id: 'TREASURE_TRAP_MINUS', name: '함정 (-300점)', color: 'text-red-600' },
+                { id: 'TREASURE_BOMB_DEFUSE', name: '해킹 복구 킷', color: 'text-emerald-600' },
               ].map(treasure => (
                 <div key={treasure.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
                   <h3 className={`font-black text-lg mb-2 ${treasure.color}`}>{treasure.name}</h3>
@@ -498,46 +472,6 @@ export const AdminControlPanel = () => {
                 </div>
               )}
             </div>
-
-            {pendingApprovals.length > 0 && (
-              <div className="bg-red-50 shadow-sm p-4 rounded-xl border border-red-200">
-                <h2 className="text-lg font-bold text-red-900 flex items-center gap-2 mb-4">
-                  <LucideIcons.AlertCircle className="w-5 h-5" /> 승인 대기 중인 임무 ({pendingApprovals.length}건)
-                </h2>
-                <div className="flex flex-col gap-2">
-                  {pendingApprovals.map((req, idx) => (
-                    <div key={`${req.group.id}-${req.mission.id}-${idx}`} className="bg-white p-3 rounded-lg border border-red-200 flex justify-between items-center shadow-sm">
-                      <div>
-                        <span className="font-black text-slate-800 mr-2">[{req.group.group_name}]</span>
-                        <span className="text-slate-600 font-bold">{req.mission.title}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <button 
-                          onClick={async () => {
-                            const { error } = await supabase.rpc('review_classroom_mission', { row_id: req.group.id, mission_id: req.mission.id, approve: true });
-                            if (error) alert('미션 승인에 실패했습니다. 다시 시도해주세요.');
-                            refreshRoom();
-                          }}
-                          className="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded font-bold text-sm shadow-sm"
-                        >
-                          승인 (점수 지급)
-                        </button>
-                        <button 
-                          onClick={async () => {
-                            const { error } = await supabase.rpc('review_classroom_mission', { row_id: req.group.id, mission_id: req.mission.id, approve: false });
-                            if (error) alert('미션 반려에 실패했습니다. 다시 시도해주세요.');
-                            refreshRoom();
-                          }}
-                          className="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded font-bold text-sm shadow-sm"
-                        >
-                          반려
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Phase 1 Minigames Panel */}
             <div className="bg-emerald-50 shadow-sm p-4 rounded-xl border border-emerald-200 mb-6">
@@ -685,7 +619,7 @@ export const AdminControlPanel = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-indigo-700 mb-4">버튼을 누르면 학생들 화면을 덮는 객관식 퀴즈 팝업이 나타납니다. (선착순 정답 조 300점 획득)</p>
+              <p className="text-sm text-indigo-700 mb-4">버튼을 누르면 학생들 화면을 덮는 객관식 퀴즈 팝업이 나타납니다. (정답 모둠 300점 획득)</p>
               <div className="flex gap-2">
                 <button 
                   onClick={sendMinigame}
@@ -858,14 +792,6 @@ export const AdminControlPanel = () => {
                         <span className="text-sm">{currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}</span>
                         {currentRoom.status !== 'defense' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">1초마다 조 점수가<br/>자동으로 깎임 (생존)</span>}
                       </button>
-                      <button onClick={async () => {
-                        const newStatus = currentRoom.status === 'zombie' ? 'playing' : 'zombie';
-                        await updateRoom({ status: newStatus });
-                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'zombie' ? 'bg-stone-800 text-green-400 shadow-[0_0_20px_rgba(74,222,128,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
-                        <LucideIcons.Ghost className="w-6 h-6 mb-1" />
-                        <span className="text-sm">{currentRoom.status === 'zombie' ? '좀비 사태 진압' : '좀비 바이러스 살포!'}</span>
-                        {currentRoom.status !== 'zombie' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">술래 조가 생겨나<br/>다른 조를 감염시킴</span>}
-                      </button>
                     </div>
                     <div className="flex-1 flex flex-col justify-center gap-2">
                       <button onClick={() => handleStatusChange('playing')} className={`py-3 flex items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'playing' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -903,9 +829,6 @@ export const AdminControlPanel = () => {
                       <div className="flex gap-2 w-full mt-2">
                         <button onClick={() => toggleHack(s.id, !!s.is_hacked)} className={`flex-1 py-1.5 rounded text-sm font-bold flex items-center justify-center gap-1 ${s.is_hacked ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
                           <Bug className="w-4 h-4" /> {s.is_hacked ? '해킹 해제' : '해킹 침투'}
-                        </button>
-                        <button onClick={() => toggleZombie(s.id, s.badges || [])} className={`flex-1 py-1.5 rounded text-sm font-bold flex items-center justify-center gap-1 ${s.badges?.includes('zombie') ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
-                          <LucideIcons.Ghost className="w-4 h-4" /> 좀비 모드
                         </button>
                       </div>
                     </div>

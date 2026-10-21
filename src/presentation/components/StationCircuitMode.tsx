@@ -40,7 +40,7 @@ const STATIONS: Station[] = [
   {
     id: 'C',
     name: '스테이션 C : 스피드 연타 구역',
-    targetGame: 'swipe',
+    targetGame: 'direction',
     desc: '화살표 방향을 빠르게 캐치하여 스와이프!',
     mission: '연속 10회 정확히 넘기기',
     emoji: '🏃',
@@ -49,7 +49,7 @@ const STATIONS: Station[] = [
   {
     id: 'D',
     name: '스테이션 D : 밸런스 균형 구역',
-    targetGame: 'balance',
+    targetGame: 'tilt_balance',
     desc: '한 발로 서서 스마트폰의 수평을 유지하기!',
     mission: '20초 동안 균형 게이지 지키기',
     emoji: '🦩',

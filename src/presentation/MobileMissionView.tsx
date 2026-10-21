@@ -9,7 +9,6 @@ import { GameIcons as LucideIcons } from './icons';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
-import { ObserverRefereeMode } from './components/ObserverRefereeMode';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { resolveGuidedGameType } from '../domain/guidedMission';
@@ -21,25 +20,13 @@ import { sfxWhistle } from '../application/soundEffects';
 
 const SHOP_ITEMS = [
   { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 원정대 미션 점수가 2배가 됩니다.', icon: LucideIcons.Zap, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
-  { id: 'drone', name: '자동 채굴 드론', cost: 300, desc: '가만히 있어도 5초마다 10점씩 자동으로 오릅니다! (영구)', icon: LucideIcons.BatteryCharging, color: 'text-cyan-600', bg: 'bg-cyan-50 border-cyan-200' },
   { id: 'cooldown', name: '쿨다운 감소 포션', cost: 150, desc: '모든 미션의 대기 시간이 50% 줄어듭니다! (영구)', icon: LucideIcons.Clock, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-200' },
-  { id: 'bonus', name: '보너스 요정', cost: 150, desc: '미션을 깰 때마다 +10점의 보너스가 추가됩니다! (영구)', icon: LucideIcons.Gift, color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200' },
-  { id: 'lucky', name: '럭키 캡슐', cost: 100, desc: '20% 확률로 400점 대박! (80%는 꽝입니다)', icon: LucideIcons.Coins, color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200' },
-  { id: 'allin', name: '올인(All-In) 룰렛', cost: 0, desc: '현재 점수를 전부 걸고 50% 확률로 점수 2배! 실패하면 0점...', icon: LucideIcons.Skull, color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
-  { id: 'gacha', name: '미션 룰렛 가챠', cost: 150, desc: '대박 1000점부터 함정까지! 무엇이 나올까?', icon: LucideIcons.Gamepad2, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
-  { id: 'donate', name: '기부 천사', cost: 100, desc: '현재 꼴등 조에게 무려 200점을 쏩니다! (나는 100점 소모)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-  { id: 'steal', name: '도둑 고양이', cost: 150, desc: '현재 1등 조의 점수를 몰래 100점 훔쳐옵니다!', icon: LucideIcons.Ghost, color: 'text-slate-600', bg: 'bg-slate-100 border-slate-300' },
-  { id: 'time', name: '시간술사의 시계', cost: 200, desc: '학급 전체의 게임 남은 시간을 30초 늘려줍니다! (영웅 등장)', icon: LucideIcons.Clock, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
+  { id: 'bonus', name: '보너스 요정', cost: 150, desc: '미션을 완료할 때마다 +10점의 보너스가 추가됩니다! (영구)', icon: LucideIcons.Gift, color: 'text-pink-600', bg: 'bg-pink-50 border-pink-200' },
+  { id: 'donate', name: '기부 천사', cost: 100, desc: '현재 꼴등 조에게 200점을 응원 선물로 보냅니다! (나는 100점 소모)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
+  { id: 'steal', name: '도둑 고양이', cost: 150, desc: '현재 1등 조의 점수를 100점 가져옵니다!', icon: LucideIcons.Ghost, color: 'text-slate-600', bg: 'bg-slate-100 border-slate-300' },
+  { id: 'time', name: '시간술사의 시계', cost: 200, desc: '학급 전체의 게임 남은 시간을 30초 늘려줍니다!', icon: LucideIcons.Clock, color: 'text-indigo-600', bg: 'bg-indigo-50 border-indigo-200' },
   { id: 'blind', name: '먹물 공격', cost: 200, desc: '현재 1등 조의 화면을 15초간 시커멓게 가립니다!', icon: LucideIcons.EyeOff, color: 'text-stone-600', bg: 'bg-stone-100 border-stone-300' },
-  { id: 'tsunami', name: '해킹 스크립트', cost: 300, desc: '가장 점수가 높은 조에게 해킹 공격을 가하여 미션을 잠금 상태로 만듭니다!', icon: LucideIcons.TerminalSquare, color: 'text-red-700', bg: 'bg-red-100 border-red-300' }
-];
-
-const ROLE_OPTIONS = [
-  { id: 'novice', name: '초보자', desc: '기본 직업 (특성 없음)', icon: LucideIcons.User, color: 'text-slate-600' },
-  { id: 'warrior', name: '전사', desc: '미션 점수 +20% 보너스', icon: LucideIcons.Sword, color: 'text-red-600' },
-  { id: 'thief', name: '도적', desc: '도둑 고양이 비용 50% 할인', icon: LucideIcons.Ghost, color: 'text-purple-600' },
-  { id: 'priest', name: '사제', desc: '기부 천사 효과 2배 (400점)', icon: LucideIcons.HeartHandshake, color: 'text-emerald-600' },
-  { id: 'observer', name: '심판/기록관(견학생)', desc: '자세 판정 및 퀴즈로 팀 보너스 기여', icon: LucideIcons.Eye, color: 'text-amber-500' },
+  { id: 'tsunami', name: '해킹 스크립트', cost: 300, desc: '가장 점수가 높은 조의 미션 화면을 일시 잠금 상태로 만듭니다!', icon: LucideIcons.TerminalSquare, color: 'text-red-700', bg: 'bg-red-100 border-red-300' }
 ];
 
 export const MobileMissionView = () => {
@@ -50,13 +37,11 @@ export const MobileMissionView = () => {
   const guidedSubmission = useGuidedSubmission(guidedEntry ? roomId ?? null : null, guidedEntry ? groupId ?? null : null, guidedEntry?.mission.id ?? null);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing, storageAvailable, syncWarning } = useSyncQueue();
-  const { playBeep, playVictory, playSiren } = useAudio();
+  const { playBeep, playVictory } = useAudio();
   const { isOutdoorMode, toggleOutdoorMode } = useOutdoorMode();
   const { isActive: isWakeLockActive } = useWakeLock(true);
   const [isStandMode, setIsStandMode] = useState(() => readStorage('physical_stand_mode') === 'true');
-  const [currentRunner, setCurrentRunner] = useState(1);
   const [studentName] = useState(() => readStorage('physical_student_name') || '');
-  const [role, setRole] = useState(() => readStorage('physical_student_role') || 'novice');
   const [showFlash, setShowFlash] = useState(false);
   const [helpBusy, setHelpBusy] = useState(false);
   const [helpError, setHelpError] = useState('');
@@ -78,7 +63,6 @@ export const MobileMissionView = () => {
     if (isWhistleActive && !whistlePlayedRef.current) {
       sfxWhistle();
       try { 
-        // 체육관 소음 극복을 위한 강력한 5단 햅틱 진동
         navigator?.vibrate?.([300, 100, 300, 100, 600]); 
       } catch { /* ignore */ }
       whistlePlayedRef.current = true;
@@ -95,44 +79,24 @@ export const MobileMissionView = () => {
     });
   };
 
-  const nextRunner = () => {
-    setCurrentRunner(prev => {
-      const next = prev >= 4 ? 1 : prev + 1;
-      try { navigator?.vibrate?.(80); } catch { /* ignore */ }
-      return next;
-    });
-  };
-
   const [combo, setCombo] = useState(0);
   const [lastMissionTime, setLastMissionTime] = useState(0);
 
   const [cooldownTime, setCooldownTime] = useState(0);
   const cooldown = cooldownTime > 0;
   const [maxCooldownTime, setMaxCooldownTime] = useState(1);
-  const [activeTab, setActiveTab] = useState<'mission' | 'shop' | 'bingo' | 'observer'>(
-    role === 'observer' ? 'observer' : 'mission'
-  );
-  const [holdProgress, setHoldProgress] = useState(0);
-  const holdProgressRef = useRef(0);
-  
+  const [activeTab, setActiveTab] = useState<'mission' | 'shop'>('mission');
   const [clicks, setClicks] = useState<{id: number, x:number, y:number, val:number}[]>([]);
 
-  const [hasDrone, setHasDrone] = useState(() => readStorage(`has_drone_${roomId}_${groupId}`) === 'true');
   const [hasCooldown, setHasCooldown] = useState(() => readStorage(`has_cooldown_${roomId}_${groupId}`) === 'true');
   const [hasBonus, setHasBonus] = useState(() => readStorage(`has_bonus_${roomId}_${groupId}`) === 'true');
   
-  const holdInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  const lastMotionPenalty = useRef<number>(0);
-  const activeDefuseCountRef = useRef(0);
   const myGroup = scores.find(s => s.id === groupId);
 
   const [deviceId] = useState(() => Math.random().toString(36).substring(2));
   const joinTimeRef = useRef(Date.now());
 
-  const [activeDevicesCount, setActiveDevicesCount] = useState(0);
-
-  const isBossMode = myGroup ? myGroup.score >= 800 && !myGroup.is_defused : false;
-  const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'zombie', 'mafia'];
+  const activeStatuses = ['playing', 'boss_raid', 'time_attack', 'defense', 'mafia'];
   const isLocked = isTimeUp || !activeStatuses.includes(gameRoom?.status || '') || myGroup?.is_hacked || (Boolean(roomError) && isOnline) || isWhistleActive;
   const hasBuff = myGroup?.item_buff_until ? new Date(myGroup.item_buff_until).getTime() > Date.now() : false;
 
@@ -140,10 +104,7 @@ export const MobileMissionView = () => {
   const isLowest = scores.length > 1 && myGroup && scores.every(s => myGroup.score <= s.score);
   const isComebackActive = isLowest && (highestScore - (myGroup?.score || 0) >= 500);
 
-  const isZombie = myGroup?.badges?.includes('zombie') || false;
   const isSpy = myGroup?.spy_device_id === deviceId;
-  const mySurvivorCode = myGroup?.id.substring(0, 4).toUpperCase() || '';
-  const [infectCode, setInfectCode] = useState('');
 
   const pendingBossDamage = useRef(0);
   const bossDamageBatch = useRef<{ id: string; amount: number; retryAt: number } | null>(null);
@@ -179,6 +140,7 @@ export const MobileMissionView = () => {
     }, 250);
     return () => { active = false; window.clearInterval(interval); };
   }, [roomId, gameRoom?.status, isLocked]);
+
   const handleBossTap = (event: React.PointerEvent) => {
     event.preventDefault();
     if (isLocked) return;
@@ -189,53 +151,16 @@ export const MobileMissionView = () => {
     navigator.vibrate?.(20);
   };
 
-  const handleInfect = async () => {
-    if (isLocked || gameRoom?.status !== 'zombie' || !infectCode || infectCode.length !== 4 || !groupId) return;
-    const targetGroup = scores.find(s => s.id.substring(0,4).toUpperCase() === infectCode.toUpperCase() && s.id !== groupId);
-    if (!targetGroup) {
-      alert('유효하지 않은 코드이거나 존재하지 않는 생존자입니다.');
-      return;
-    }
-    if (targetGroup.badges?.includes('zombie')) {
-      alert('해당 생존자는 이미 감염되었습니다.');
-      return;
-    }
-
-    const effect=await supabase.rpc('classroom_effect',{room_uuid:roomId,effect:'infect',target_uuid:targetGroup.id});
-    if(effect.error || !effect.data) return alert('감염 조건 또는 모둠 권한을 확인하세요.');
-    alert('감염 결과를 저장했습니다.');
-    setInfectCode('');
-  };
-
   const handleMissionComplete = async (mission: import('../domain/types').MissionButton, e: React.TouchEvent | React.MouseEvent) => {
     e.preventDefault();
-    if (!groupId || isTimeUp || isWhistleActive || (roomError && isOnline) || !activeStatuses.includes(gameRoom?.status || '')) return;
+    if (!groupId || isLocked || cooldown) return;
     if (mission.prerequisiteMissionId && !myGroup?.completed_missions?.includes(mission.prerequisiteMissionId)) {
       alert('이전 단계 미션을 먼저 완료해야 합니다!');
       return;
     }
-    
-    if (gameRoom?.status === 'zombie' && (isZombie || isLocked)) {
-       if (!mission.isVaccine) {
-          alert('좀비에게 감염되었습니다! 백신 QR코드만 스캔할 수 있습니다.');
-          return;
-       } else {
-          alert('백신을 투여하여 감염에서 회복되었습니다!');
-          const nextBadges = (myGroup?.badges || []).filter(b => b !== 'zombie');
-          await supabase.from('room_groups').update({ is_hacked: false, is_defused: false, badges: nextBadges }).eq('id', groupId);
-       }
-    } else if (isLocked || cooldown || !groupId) {
-       return;
-    }
 
-    const MotionEvent = typeof DeviceMotionEvent === 'undefined' ? null : DeviceMotionEvent as unknown as { requestPermission?: () => Promise<string> };
-    if (typeof MotionEvent?.requestPermission === 'function') {
-      MotionEvent.requestPermission().catch(() => {});
-    }
-    
     if (navigator.vibrate) navigator.vibrate(50);
     playBeep();
-    // 화면 플래시 효과
     setShowFlash(true);
     setTimeout(() => setShowFlash(false), 400);
     const cdSecs = mission.cooldown ?? 5;
@@ -246,7 +171,6 @@ export const MobileMissionView = () => {
     
     let actualAmount = hasBuff ? mission.amount * 2 : mission.amount;
     if (isComebackActive) actualAmount *= 2;
-    if (role === 'warrior') actualAmount = Math.floor(actualAmount * 1.2);
     if (hasBonus) actualAmount += 10;
     
     const now = Date.now();
@@ -342,18 +266,15 @@ export const MobileMissionView = () => {
     if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
 
     if (treasureId === 'TREASURE_SCORE_500') {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
+      enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 500 }, timestamp: Date.now() });
       alert('🎉 보물상자 발견! 500점 획득!');
     } else if (treasureId === 'TREASURE_SCORE_1000') {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 1000 }, timestamp: Date.now() });
+      enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 1000 }, timestamp: Date.now() });
       alert('🎉 대박 보물 발견! 1000점 획득!');
     } else if (treasureId === 'TREASURE_ITEM_DOUBLE') {
       const result = await supabase.from('room_groups').update({ item_buff_until: new Date(Date.now() + 60000).toISOString() }).eq('id', groupId);
       if (result.error) return alert('물약 저장에 실패했습니다. 다시 시도해주세요.');
       alert('🎉 점수 2배 물약 획득! 1분간 점수가 2배가 됩니다.');
-    } else if (treasureId === 'TREASURE_ITEM_DRONE') {
-      setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
-      alert('🎉 자동 채굴 드론 획득!');
     } else if (treasureId === 'TREASURE_ITEM_COOLDOWN') {
       setHasCooldown(true); writeStorage(`has_cooldown_${roomId}_${groupId}`, 'true');
       alert('🎉 쿨다운 감소 버프 획득!');
@@ -361,13 +282,8 @@ export const MobileMissionView = () => {
       setHasBonus(true); writeStorage(`has_bonus_${roomId}_${groupId}`, 'true');
       alert('🎉 보너스 요정 획득!');
     } else if (treasureId === 'TREASURE_BOMB_DEFUSE') {
-      const nextBadges = (myGroup?.badges || []).filter(b => b !== 'zombie');
-      await supabase.from('room_groups').update({ is_hacked: false, badges: nextBadges }).eq('id', groupId);
-      alert('🎉 폭탄 해체/백신 킷 획득! 상태 이상이 회복되었습니다.');
-    } else if (treasureId === 'TREASURE_TRAP_MINUS') {
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -300 }, timestamp: Date.now() });
-      playSiren();
-      alert('💀 함정 발견! 300점을 잃었습니다.');
+      await supabase.from('room_groups').update({ is_hacked: false }).eq('id', groupId);
+      alert('🎉 해킹 복구 킷 획득! 상태 이상이 회복되었습니다.');
     } else {
       alert('알 수 없는 보물입니다.');
     }
@@ -409,75 +325,15 @@ export const MobileMissionView = () => {
     }
   }, [showScanner, template]);
 
-  const handleBingoComplete = async (missionId: string, baseAmount: number, _isCoop: boolean) => {
-    if (isLocked || !myGroup || !groupId) return;
-    const currentCompleted = myGroup.completed_missions || [];
-    if (currentCompleted.includes(missionId)) return;
-
-    const newCompleted = [...currentCompleted, missionId];
-    await supabase.from('room_groups').update({ completed_missions: newCompleted }).eq('id', groupId);
-
-    const getLines = (completedIds: string[]) => {
-      if (!template?.buttons) return 0;
-      const board = template.buttons.slice(0, 9).map((m: import('../domain/types').MissionButton) => completedIds.includes(m.id));
-      const lines = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
-      ];
-      return lines.filter(line => line.every(idx => board[idx])).length;
-    };
-
-    const oldLines = getLines(currentCompleted);
-    const newLines = getLines(newCompleted);
-
-    let totalAward = baseAmount;
-    if (newLines > oldLines) {
-      const bonus = (newLines - oldLines) * 1000;
-      totalAward += bonus;
-      alert(`🎉 빙고 완성!! 보너스 ${bonus}점 획득!`);
-      
-      const currentBadges = myGroup.badges || [];
-      if (newLines >= 1 && !currentBadges.includes('bingo')) {
-        await supabase.from('room_groups').update({ badges: [...currentBadges, 'bingo'] }).eq('id', groupId);
-        setTimeout(() => alert('🏆 업적 달성: [빙고 마스터] - 빙고 1줄 완성!'), 500);
-      }
-    }
-
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: totalAward }, timestamp: Date.now() });
-    playVictory();
-  };
-
-  const handleBingoCompleteRef = useRef(handleBingoComplete);
-  useEffect(() => { handleBingoCompleteRef.current = handleBingoComplete; });
-
-  const [activeCoopCount, setActiveCoopCount] = useState(0);
-  const activeCoopCountRef = useRef(0);
-  const handleCoopTouchStart = async (missionId: string) => {
-    if (channelRef.current) {
-      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: missionId });
-    }
-  };
-
-  const handleCoopTouchEnd = async () => {
-    if (channelRef.current) {
-      await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingCoop: null });
-    }
-  };
-
   useEffect(() => {
     if (gameRoom && gameRoom.status === 'waiting') {
-      removeStorage(`has_drone_${roomId}_${groupId}`);
       removeStorage(`has_cooldown_${roomId}_${groupId}`);
       removeStorage(`has_bonus_${roomId}_${groupId}`);
-      setHasDrone(false);
       setHasCooldown(false);
       setHasBonus(false);
     }
   }, [gameRoom, gameRoom?.status, roomId, groupId]);
 
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const coopTriggered = useRef<string | null>(null);
   const presenceContext = useRef({ gameRoom, scores });
   useEffect(() => { presenceContext.current = { gameRoom, scores }; }, [gameRoom, scores]);
 
@@ -494,33 +350,12 @@ export const MobileMissionView = () => {
     channel.on('presence', { event: 'sync' }, () => {
       const state = channel.presenceState();
       const keys = Object.keys(state);
-      setActiveDevicesCount(keys.length);
-
-      const pressingByMission = new Map<string, number>();
-      let pressingCount = 0;
-      let targetMissionId: string | null = null;
-      let defusePressingCount = 0;
-      
       const deviceIds: string[] = [];
 
       for (const key of keys) {
         const presenceData = state[key][0] as Record<string, unknown>;
         if (presenceData?.deviceId) deviceIds.push(presenceData.deviceId as string);
-        if (presenceData?.pressingCoop) {
-          const missionId = presenceData.pressingCoop as string;
-          pressingByMission.set(missionId, (pressingByMission.get(missionId) || 0) + 1);
-        }
-        if (presenceData?.pressingDefuse) {
-          defusePressingCount++;
-        }
       }
-      for (const [missionId, count] of pressingByMission) {
-        if (count > pressingCount) { pressingCount = count; targetMissionId = missionId; }
-      }
-      if (pressingCount < 2) coopTriggered.current = null;
-      activeDefuseCountRef.current = defusePressingCount;
-      activeCoopCountRef.current = pressingCount;
-      setActiveCoopCount(pressingCount);
 
       deviceIds.sort();
       if (deviceIds[0] === myDeviceId && presenceContext.current.gameRoom?.status === 'mafia') {
@@ -530,69 +365,22 @@ export const MobileMissionView = () => {
           supabase.from('room_groups').update({ spy_device_id: randomSpy }).eq('id', groupId).then();
         }
       }
-
-      if (deviceIds[0] === myDeviceId && pressingCount >= 2 && targetMissionId && coopTriggered.current !== targetMissionId) {
-        coopTriggered.current = targetMissionId;
-        void handleBingoCompleteRef.current(targetMissionId, 500, true);
-      }
     }).subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
-        await channel.track({ deviceId: myDeviceId, joined_at: myJoinTime, pressingCoop: null });
+        await channel.track({ deviceId: myDeviceId, joined_at: myJoinTime });
       }
     });
 
-    channelRef.current = channel;
     return () => {
       supabase.removeChannel(channel);
-      channelRef.current = null;
     };
   }, [roomId, groupId, deviceId]);
-
-  useEffect(() => {
-    if (hasDrone && gameRoom?.status === 'playing' && !isTimeUp) {
-      const int = setInterval(() => {
-        if (!groupId) return;
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 10 }, timestamp: Date.now() });
-      }, 5000);
-      return () => clearInterval(int);
-    }
-  }, [hasDrone, gameRoom?.status, isTimeUp, groupId, enqueueAction]);
 
   useEffect(() => {
     const init = () => playBeep();
     window.addEventListener('touchstart', init, { once: true });
     return () => window.removeEventListener('touchstart', init);
   }, [playBeep]);
-
-  useEffect(() => {
-    if (gameRoom?.status !== 'tsunami') return;
-    const handleMotion = (event: DeviceMotionEvent) => {
-      if (Date.now() - lastMotionPenalty.current < 3000) return;
-      const { x, y, z } = event.acceleration || {};
-      const threshold = 15;
-      if (x != null && y != null && z != null) {
-        if (Math.abs(x) > threshold || Math.abs(y) > threshold || Math.abs(z) > threshold) {
-          lastMotionPenalty.current = Date.now();
-          if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-          playSiren();
-          if (groupId) {
-            enqueueAction({
-              id: Math.random().toString(),
-              type: 'INCREMENT_SCORE',
-              payload: { id: groupId, amount: -50 },
-              timestamp: Date.now()
-            });
-            setClicks(prev => [...prev, { id: Date.now(), x: window.innerWidth/2, y: window.innerHeight/2, val: -50 }]);
-            setTimeout(() => {
-              setClicks(prev => prev.filter(c => c.val !== -50));
-            }, 800);
-          }
-        }
-      }
-    };
-    window.addEventListener('devicemotion', handleMotion);
-    return () => window.removeEventListener('devicemotion', handleMotion);
-  }, [gameRoom?.status, groupId, enqueueAction, playSiren]);
 
   useEffect(() => {
     if (!myGroup || !groupId) return;
@@ -624,61 +412,19 @@ export const MobileMissionView = () => {
 
   const buyItem = async (item: typeof SHOP_ITEMS[0]) => {
     if (isLocked || !isOnline || queueLength > 0 || !myGroup || !groupId) return alert('게임 진행 중이며 점수 동기화가 완료된 상태에서 구매해주세요.');
-    if ((item.id === 'drone' && hasDrone) || (item.id === 'cooldown' && hasCooldown) || (item.id === 'bonus' && hasBonus)) return alert('이미 보유한 아이템입니다.');
+    if ((item.id === 'cooldown' && hasCooldown) || (item.id === 'bonus' && hasBonus)) return alert('이미 보유한 아이템입니다.');
     const others = scores.filter(group => group.id !== groupId);
     if (['donate', 'steal', 'blind', 'tsunami'].includes(item.id) && others.length === 0) return alert('다른 모둠이 참여한 뒤 이용해주세요.');
     if (item.id === 'donate' && scores.every(group => myGroup.score <= group.score)) return alert('우리 조가 꼴등입니다. 점수는 차감되지 않았습니다.');
     if (['steal', 'blind', 'tsunami'].includes(item.id) && scores.every(group => myGroup.score >= group.score)) return alert('우리 조가 이미 1등입니다. 점수는 차감되지 않았습니다.');
     const currentScore = myGroup.score;
-    let actualCost = gameRoom?.flash_sale && item.id !== 'allin' ? Math.floor(item.cost / 2) : item.cost;
-    if (role === 'thief' && item.id === 'steal') actualCost = Math.floor(actualCost / 2);
+    const actualCost = gameRoom?.flash_sale ? Math.floor(item.cost / 2) : item.cost;
 
     const trackPurchase = async () => {
       const currentStats = myGroup.stats || {};
       const newStats = { ...currentStats, items_bought: (currentStats.items_bought || 0) + 1 };
       await supabase.from('room_groups').update({ stats: newStats }).eq('id', groupId);
     };
-    
-    if (item.id === 'allin') {
-      if (currentScore <= 0) return alert('걸 점수가 없습니다!');
-      if (!window.confirm(`정말 ${currentScore}점을 모두 걸고 올인하시겠습니까?`)) return;
-      enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -currentScore }, timestamp: Date.now() });
-      trackPurchase();
-      if (Math.random() < 0.5) {
-        setTimeout(() => {
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: currentScore * 2 }, timestamp: Date.now() });
-          alert('🎉 대박!! 점수가 2배가 되었습니다!!');
-        }, 500);
-      } else {
-        setTimeout(() => alert('💀 실패... 점수를 모두 잃었습니다.'), 500);
-      }
-      return;
-    }
-
-    if (item.id === 'gacha') {
-        if (currentScore < actualCost) return alert('점수가 부족합니다!');
-        enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -actualCost }, timestamp: Date.now() });
-        const rand = Math.random();
-        if (rand < 0.1) {
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 1000 }, timestamp: Date.now() });
-          alert('🎉 대박 당첨! 1000점 획득!');
-        } else if (rand < 0.3) {
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -300 }, timestamp: Date.now() });
-          alert('💀 함정 당첨! 300점을 잃었습니다.');
-        } else if (rand < 0.5) {
-          const result = await supabase.from('room_groups').update({ item_buff_until: new Date(Date.now() + 60000).toISOString() }).eq('id', groupId);
-          if (result.error) return alert('물약 저장에 실패했습니다.');
-          alert('🔥 버프 당첨! 1분간 점수 2배!');
-        } else if (rand < 0.7) {
-          setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
-          alert('🤖 드론 당첨! 자동 채굴 드론 획득!');
-        } else {
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 100 }, timestamp: Date.now() });
-          alert('소소한 당첨! 100점 획득!');
-        }
-        trackPurchase();
-        return;
-    }
 
     if (item.id === 'double') {
       if (currentScore < actualCost) return alert('점수가 부족합니다!');
@@ -697,7 +443,7 @@ export const MobileMissionView = () => {
 
     if (['donate','steal','time','blind'].includes(item.id)) {
       const target=item.id==='time'?null:scores.filter(g=>g.id!==groupId).sort((a,b)=>item.id==='donate'?a.score-b.score:b.score-a.score)[0]?.id;
-      const result=await supabase.rpc('classroom_effect',{room_uuid:roomId,effect:item.id,target_uuid:target,player_role:role});
+      const result=await supabase.rpc('classroom_effect',{room_uuid:roomId,effect:item.id,target_uuid:target,player_role:'novice'});
       if(result.error || !result.data) return alert('수업 상태·점수·참여 권한을 확인하세요.');
       await trackPurchase();playBeep();return;
     }
@@ -707,21 +453,10 @@ export const MobileMissionView = () => {
       await trackPurchase();
     }
 
-    if (item.id === 'drone') {
-      setHasDrone(true); writeStorage(`has_drone_${roomId}_${groupId}`, 'true');
-    } else if (item.id === 'cooldown') {
+    if (item.id === 'cooldown') {
       setHasCooldown(true); writeStorage(`has_cooldown_${roomId}_${groupId}`, 'true');
     } else if (item.id === 'bonus') {
       setHasBonus(true); writeStorage(`has_bonus_${roomId}_${groupId}`, 'true');
-    } else if (item.id === 'lucky') {
-      if (Math.random() < 0.2) {
-        setTimeout(() => {
-          enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 400 }, timestamp: Date.now() });
-          alert('🎉 400점 대박 당첨!!');
-        }, 300);
-      } else {
-        setTimeout(() => alert('😭 꽝입니다...'), 300);
-      }
     } else if (item.id === 'tsunami') {
       const highest = scores.reduce((prev, curr) => prev.score > curr.score ? prev : curr);
       if (highest.id === groupId) {
@@ -736,7 +471,7 @@ export const MobileMissionView = () => {
         alert('공격 실패: ' + error.message);
       } else {
         alert('성공! 1등 조의 화면을 해킹하여 잠금 상태로 만들었습니다!');
-        trackPurchase();
+        await trackPurchase();
       }
     }
   };
@@ -746,25 +481,9 @@ export const MobileMissionView = () => {
     const currentScore = myGroup.score;
     if (currentScore < 50) return alert('점수가 부족합니다!');
     if (!window.confirm('50점을 소모하여 해킹을 즉시 복구하시겠습니까?')) return;
-    enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -50 }, timestamp: Date.now() });
+    enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: -50 }, timestamp: Date.now() });
     await supabase.from('room_groups').update({ is_hacked: false }).eq('id', groupId);
     playBeep();
-  };
-
-  useEffect(() => {
-    if (!isBossMode) {
-      setHoldProgress(0);
-      if (holdInterval.current) {
-        clearInterval(holdInterval.current);
-        holdInterval.current = null;
-      }
-    }
-    return () => { if (holdInterval.current) { clearInterval(holdInterval.current); holdInterval.current = null; } };
-  }, [isBossMode, isLocked]);
-
-  const handleRoleChange = (newRole: string) => {
-    setRole(newRole);
-    writeStorage('physical_student_role', newRole);
   };
 
   if (!groupId || !myGroup || !template || (roomError && isOnline)) return (
@@ -829,7 +548,7 @@ export const MobileMissionView = () => {
         {/* 펫 시스템 UI */}
         {myGroup && (
           <div className="fixed bottom-24 right-4 z-40 flex flex-col items-center gap-1">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold shadow-sm border border-slate-200">
+            <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-bold shadow-sm border border-slate-200 text-slate-800">
               {myGroup.completed_missions?.length >= 20 ? '🔥 불사조' : 
                myGroup.completed_missions?.length >= 10 ? '🐔 닭' : 
                myGroup.completed_missions?.length >= 5 ? '🐥 병아리' : '🥚 알'}
@@ -846,38 +565,6 @@ export const MobileMissionView = () => {
       </div>
     );
   }
-
-  const startHold = async (e: React.TouchEvent | React.MouseEvent) => {
-    e.preventDefault();
-    if (isLocked || holdProgress >= 100 || holdInterval.current) return;
-    playBeep();
-    if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: true });
-    holdProgressRef.current = 0;
-    holdInterval.current = setInterval(async () => {
-      if (activeDevicesCount > 1 && activeDefuseCountRef.current < activeDevicesCount) return;
-      const progress = Math.min(100, holdProgressRef.current + 2);
-      holdProgressRef.current = progress; setHoldProgress(progress);
-      if (progress < 100) return;
-      if (holdInterval.current) clearInterval(holdInterval.current);
-      holdInterval.current = null;
-      const claimed = await supabase.from('room_groups').update({ is_defused: true }).eq('id', groupId).eq('is_defused', false).select('id');
-      if (claimed.error) { alert('해체 결과 저장에 실패했습니다. 다시 시도해주세요.'); setHoldProgress(0); holdProgressRef.current = 0; return; }
-      if (claimed.data?.length) {
-        enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: 2000 }, timestamp: Date.now() });
-        playVictory();
-      }
-      if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
-    }, 100);
-  };
-
-  const stopHold = async () => {
-    if (holdInterval.current) {
-      clearInterval(holdInterval.current);
-      holdInterval.current = null;
-    }
-    if (holdProgressRef.current < 100) { holdProgressRef.current = 0; setHoldProgress(0); }
-    if (channelRef.current) await channelRef.current.track({ deviceId, joined_at: joinTimeRef.current, pressingDefuse: false });
-  };
 
   if (gameRoom?.active_minigame) {
     return (
@@ -904,17 +591,6 @@ export const MobileMissionView = () => {
     );
   }
 
-  if (myGroup?.is_defused) {
-    return (
-      <div className="min-h-[100dvh] bg-emerald-950 flex flex-col items-center justify-center p-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent animate-[pulse_2s_ease-in-out_infinite]"></div>
-        <LucideIcons.CheckCircle className="w-32 h-32 text-emerald-400 mb-8 animate-bounce relative z-10" />
-        <h1 className="text-5xl font-black text-white mb-4 text-center tracking-tighter relative z-10">폭탄 해체<br/>성공!</h1>
-        <button onClick={() => navigate('/')} className="px-8 py-4 bg-emerald-600 rounded-2xl text-white font-bold text-lg relative z-10">메인 화면으로</button>
-      </div>
-    );
-  }
-
   const isBlinded = myGroup?.is_blinded_until ? new Date(myGroup.is_blinded_until).getTime() > Date.now() : false;
   if (isBlinded) {
     return (
@@ -929,7 +605,6 @@ export const MobileMissionView = () => {
   const displayScore = myGroup?.score ?? 0;
   if (guidedEntry && roomId && groupId) {
     const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
-    const pending = myGroup?.pending_missions?.includes(guidedMission.id);
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
     const goal = guidedGoal(scores, [guidedMission.id], gameRoom?.goal_percent ?? 75);
@@ -945,7 +620,7 @@ export const MobileMissionView = () => {
           <p className="text-sm text-slate-600 mt-3">게임을 끝내면 모둠 점수가 즉시 반영돼요.</p>
         </div>
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-bold text-emerald-900">우리 반 공동 목표</p><p className="text-sm text-emerald-900 mt-1">{goal.achieved ? '🎉 함께 목표를 달성했어요!' : `${goal.completed}/${goal.total}모둠 완료 · 목표 ${goal.target}모둠`}</p><div role="progressbar" aria-label="학급 공동 목표 진행률" aria-valuemin={0} aria-valuemax={goal.target || 1} aria-valuenow={Math.min(goal.completed,goal.target || 1)} className="mt-3 h-3 rounded-full bg-emerald-100 overflow-hidden"><span className="block h-full rounded-full bg-emerald-600" style={{width:`${goal.progress}%`}}/></div></div>
-        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : pending ? `활동 기록 완료 · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
+        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
         <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
         {myGroup?.help_requested_at && <p role="status" className="text-sm text-amber-800 mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
         {helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}
@@ -1001,15 +676,8 @@ export const MobileMissionView = () => {
         </div>
       )}
 
-      {/* 상단 퀵 컨트롤 (주자 교대 + 스탠드 모드 + 야외 모드) */}
+      {/* 상단 퀵 컨트롤 (스탠드 모드 + 야외 모드) */}
       <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
-        <button
-          onClick={nextRunner}
-          className="px-2.5 py-1.5 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-xs font-black shadow-md border border-cyan-400 active:scale-95 flex items-center gap-1"
-          title="터치하여 다음 주자 교대"
-        >
-          <span>🏃 {currentRunner}번 주자</span>
-        </button>
         <button
           onClick={toggleStandMode}
           className={`px-2.5 py-1.5 rounded-full text-xs font-black shadow-md border-2 active:scale-95 flex items-center gap-1 ${
@@ -1111,37 +779,10 @@ export const MobileMissionView = () => {
         )}
       </div>
 
-      {!isZombie && (
-        <div className="absolute top-4 right-4 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border bg-white/80 backdrop-blur-sm border-emerald-200 text-emerald-700 pointer-events-none shadow-sm">
-          <LucideIcons.Fingerprint className="w-4 h-4" /> <span className="font-mono">코드: {mySurvivorCode}</span>
-        </div>
-      )}
-
       <div className="flex-1 p-4 flex flex-col z-10 mt-12 overflow-y-auto custom-scrollbar">
-        {isZombie && (
-          <div className="shrink-0 bg-emerald-900 text-white p-4 mb-4 rounded-2xl border border-emerald-500 shadow-lg shadow-emerald-900/50 animate-pulse relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 pointer-events-none"></div>
-            <h3 className="font-black text-xl flex items-center gap-2 mb-2 relative z-10"><LucideIcons.Ghost className="text-emerald-400" /> 좀비 모드 활성화!</h3>
-            <p className="text-xs text-emerald-200 mb-3 relative z-10">생존자 조의 4자리 코드를 입력하여 바이러스를 전파하세요! (성공시 +500점)</p>
-            <div className="flex gap-2 relative z-10">
-              <input 
-                type="text" 
-                maxLength={4}
-                placeholder="생존자 코드 (4자리)" 
-                className="flex-1 bg-black/50 border border-emerald-700 text-emerald-400 font-bold px-3 py-2 rounded-xl text-center uppercase focus:outline-none focus:border-emerald-400"
-                onChange={(e) => setInfectCode(e.target.value.toUpperCase())}
-                value={infectCode}
-              />
-              <button onClick={handleInfect} className="bg-emerald-600 hover:bg-emerald-500 font-black px-5 rounded-xl active:scale-95 transition-all shadow-md">감염</button>
-            </div>
-          </div>
-        )}
-
         <div className={`score-card shrink-0 rounded-3xl p-5 mb-4 flex flex-col items-center shadow-xl relative overflow-hidden transition-all ${
           isStandMode
             ? 'bg-slate-950 border-4 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.25)]'
-            : isZombie
-            ? 'opacity-80'
             : isOutdoorMode
             ? 'bg-black/80 border-2 border-cyan-600'
             : 'bg-white border border-slate-200'
@@ -1150,7 +791,7 @@ export const MobileMissionView = () => {
           <span className={`score-label font-bold tracking-widest text-sm mb-1 relative z-10 ${
             isStandMode ? 'text-amber-300 font-black' : isOutdoorMode ? 'text-slate-300' : 'text-slate-500'
           }`}>
-            {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : '현재 에너지 충전율'} {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
+            {studentName ? `${studentName} 요원 (${myGroup?.group_name})` : `${myGroup?.group_name || '우리 모둠'} 점수`} {hasBuff && <span className="text-yellow-400 ml-2">X2 버프 중!</span>}
           </span>
           <span className={`score-value font-black font-mono transition-transform relative z-10 ${
             isStandMode ? 'text-amber-400 text-8xl drop-shadow-[0_0_20px_rgba(251,191,36,0.4)]' : isOutdoorMode ? 'text-cyan-400 text-7xl' : 'text-slate-900 text-7xl'
@@ -1159,14 +800,10 @@ export const MobileMissionView = () => {
           </span>
           
           <div className="flex gap-2 mt-3 relative z-10">
-            {hasDrone && <span className="px-2 py-1 bg-cyan-900/50 text-cyan-400 border border-cyan-700 rounded text-xs font-bold">드론 가동중</span>}
             {hasCooldown && <span className="px-2 py-1 bg-blue-900/50 text-blue-400 border border-blue-700 rounded text-xs font-bold">쿨다운 단축</span>}
             {hasBonus && <span className="px-2 py-1 bg-pink-900/50 text-pink-400 border border-pink-700 rounded text-xs font-bold">보너스 요정</span>}
-            {role !== 'novice' && <span className="px-2 py-1 bg-purple-900/50 text-purple-400 border border-purple-700 rounded text-xs font-bold">{ROLE_OPTIONS.find(r => r.id === role)?.name}</span>}
           </div>
         </div>
-
-        {/* 하단 고정 탭바를 위한 스페이서 - 실제 탭바는 아래에 fixed로 렌더링 */}
 
         <div className="flex flex-col relative">
           {showScanner && (
@@ -1188,172 +825,69 @@ export const MobileMissionView = () => {
           )}
 
           {activeTab === 'mission' ? (
-            isBossMode ? (
-              <div 
-                className="w-full h-full relative bg-white border-2 border-red-300 shadow-xl rounded-3xl flex flex-col items-center justify-center overflow-hidden touch-none"
-                onTouchStart={startHold} onTouchEnd={stopHold} onMouseDown={startHold} onMouseUp={stopHold} onMouseLeave={stopHold}
+            <div className="flex flex-col gap-3 pb-32">
+              <button
+                onClick={() => setShowScanner(true)}
+                disabled={isLocked || cooldown}
+                className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 mb-1 active:scale-95 transition-transform shadow-md"
               >
-                <div className="absolute bottom-0 left-0 right-0 bg-red-100 transition-all duration-100 ease-linear" style={{ height: `${holdProgress}%` }}></div>
-                <LucideIcons.Fingerprint className={`w-32 h-32 mb-6 z-10 ${holdProgress > 0 ? 'text-red-500 animate-ping' : 'text-slate-300'}`} />
-                <p className="z-10 font-black text-3xl text-slate-900 mb-2">최종 해체 모드</p>
-                <p className="z-10 text-lg text-slate-500 font-bold">조원 전원이 손을 대고 5초간 꾹 누르세요!</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 pb-32">
-                <button
-                  onClick={() => setShowScanner(true)}
-                  disabled={isLocked || cooldown}
-                  className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 mb-1 active:scale-95 transition-transform shadow-md"
-                >
-                  <LucideIcons.Camera className="w-5 h-5" /> QR 코드 미션 스캔 카메라 열기
-                </button>
-                {isSpy && gameRoom?.status === 'mafia' && (
-                  <div className="w-full bg-red-900 text-red-100 p-4 rounded-2xl shadow-md border border-red-500 mb-2 animate-pulse">
-                    <h3 className="font-black text-xl flex items-center gap-2 mb-1"><LucideIcons.UserX className="w-6 h-6" /> 당신은 스파이입니다!</h3>
-                    <p className="text-sm">조원들 몰래 방해 공작을 수행하세요. 일반 미션 버튼을 누르면 점수가 깎입니다!</p>
-                  </div>
-                )}
-                {template.buttons.filter((m: import('../domain/types').MissionButton) => {
-                  if (m.isHidden) return false;
-                  if (m.prerequisiteMissionId && !myGroup?.completed_missions?.includes(m.prerequisiteMissionId)) return false;
-                  return true;
-                }).map((m: import('../domain/types').MissionButton, i: number) => {
-                  const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
-                  const isPending = myGroup?.pending_missions?.includes(m.id);
-                  const isCompleted = myGroup?.completed_missions?.includes(m.id);
-                  return (
-                    <button 
-                      key={m.id || i}
-                      onClick={(e) => {
-                        if (m.gameType && roomId && groupId) {
-                          navigate(`/play/${encodeURIComponent(m.gameType)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(m.id)}`);
-                          return;
-                        }
-                        if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
-                        handleMissionComplete(m, e);
-                      }}
-                      disabled={isLocked}
-                      className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-manipulation shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm ${m.color}`}>
-                          {isPending ? <LucideIcons.Clock className="w-8 h-8 text-yellow-500 animate-pulse" /> : <IconComp className="w-8 h-8" />}
-                        </div>
-                        <div className="text-left flex flex-col justify-center">
-                          <div className={`mission-title font-black text-xl flex items-center gap-2 ${isOutdoorMode ? 'text-white' : m.color}`}>
-                            {m.title}
-                            {isCompleted && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">수행 완료</span>}
-                          </div>
-                          <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
-                        </div>
+                <LucideIcons.Camera className="w-5 h-5" /> QR 코드 미션 스캔 카메라 열기
+              </button>
+              {isSpy && gameRoom?.status === 'mafia' && (
+                <div className="w-full bg-red-900 text-red-100 p-4 rounded-2xl shadow-md border border-red-500 mb-2 animate-pulse">
+                  <h3 className="font-black text-xl flex items-center gap-2 mb-1"><LucideIcons.UserX className="w-6 h-6" /> 당신은 스파이입니다!</h3>
+                  <p className="text-sm">조원들 몰래 방해 공작을 수행하세요. 일반 미션 버튼을 누르면 점수가 깎입니다!</p>
+                </div>
+              )}
+              {template.buttons.filter((m: import('../domain/types').MissionButton) => {
+                if (m.isHidden) return false;
+                if (m.prerequisiteMissionId && !myGroup?.completed_missions?.includes(m.prerequisiteMissionId)) return false;
+                return true;
+              }).map((m: import('../domain/types').MissionButton, i: number) => {
+                const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
+                const isCompleted = myGroup?.completed_missions?.includes(m.id);
+                return (
+                  <button 
+                    key={m.id || i}
+                    onClick={(e) => {
+                      if (m.gameType && roomId && groupId) {
+                        navigate(`/play/${encodeURIComponent(m.gameType)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(m.id)}`);
+                        return;
+                      }
+                      if (cooldown) { if (navigator.vibrate) navigator.vibrate([30, 30, 30]); return; }
+                      handleMissionComplete(m, e);
+                    }}
+                    disabled={isLocked}
+                    className={`mission-btn w-full shrink-0 relative group p-4 border rounded-2xl flex items-center justify-between transition-transform active:scale-95 touch-manipulation shadow-sm hover:shadow-md ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${m.bg}`}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-14 h-14 rounded-full bg-white flex items-center justify-center border border-slate-100 shadow-sm ${m.color}`}>
+                        <IconComp className="w-8 h-8" />
                       </div>
-                      <div className="flex flex-col items-end">
-                        <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '다시 시작 →' : '게임 시작 →' : `+${m.amount}`}</span>
-                        <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `완료 시 점수 즉시 반영` : `대기 ${m.cooldown}초`}</span>
+                      <div className="text-left flex flex-col justify-center">
+                        <div className={`mission-title font-black text-xl flex items-center gap-2 ${isOutdoorMode ? 'text-white' : m.color}`}>
+                          {m.title}
+                          {isCompleted && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full border border-emerald-200">수행 완료</span>}
+                        </div>
+                        <div className={`mission-desc text-sm font-bold mt-0.5 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{m.desc}</div>
                       </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '다시 시작 →' : '게임 시작 →' : `+${m.amount}`}</span>
+                      <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `완료 시 점수 즉시 반영` : `대기 ${m.cooldown}초`}</span>
+                    </div>
 
-                      {cooldown && (
-                        <div className={`cooldown-overlay absolute inset-0 rounded-2xl overflow-hidden backdrop-blur-sm z-10 ${isOutdoorMode ? 'bg-black/70' : 'bg-white/70'}`}>
-                          <div className="absolute bottom-0 left-0 h-1 bg-slate-400 transition-all duration-50 ease-linear" style={{ width: `${(cooldownTime / maxCooldownTime) * 100}%` }}></div>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )
-          ) : activeTab === 'bingo' ? (
-            <div className="flex flex-col gap-2 pb-32">
-              <div className="bg-orange-100 border border-orange-200 rounded-xl p-3 mb-2 flex justify-between items-center">
-                <span className="text-orange-800 font-bold text-sm">영토 점령전! 다른 조보다 먼저 빙고 칸을 선점하세요!</span>
-                <span className="text-xs bg-orange-200 text-orange-900 px-2 py-1 rounded-full font-black">선착순</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {template?.buttons?.slice(0, 9).map((m: import('../domain/types').MissionButton, i: number) => {
-                  const ownerGroup = scores.find(g => g.completed_missions?.includes(m.id));
-                  const isMyTerritory = ownerGroup?.id === groupId;
-                  const isOtherTerritory = ownerGroup && ownerGroup.id !== groupId;
-                  const isCompleted = !!ownerGroup;
-                  const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
-                  const isCoopTile = i === 4; // 정중앙은 협동 타일
-                  
-                  return (
-                    <button
-                      key={m.id}
-                      disabled={isCompleted || isLocked}
-                      onClick={() => {
-                        if (isOtherTerritory) {
-                          alert(`이미 [${ownerGroup.group_name}] 조가 점령한 영토입니다!`);
-                          return;
-                        }
-                        if (!isCoopTile || activeDevicesCount <= 1) {
-                          handleBingoComplete(m.id, m.amount, isCoopTile);
-                        }
-                      }}
-                      onTouchStart={() => isCoopTile && activeDevicesCount > 1 && handleCoopTouchStart(m.id)}
-                      onTouchEnd={() => isCoopTile && activeDevicesCount > 1 && handleCoopTouchEnd()}
-                      onMouseDown={() => isCoopTile && activeDevicesCount > 1 && handleCoopTouchStart(m.id)}
-                      onMouseUp={() => isCoopTile && activeDevicesCount > 1 && handleCoopTouchEnd()}
-                      onMouseLeave={() => isCoopTile && activeDevicesCount > 1 && handleCoopTouchEnd()}
-                      className={`relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95 shadow-sm overflow-hidden
-                        ${isMyTerritory ? 'bg-cyan-500 text-white border-2 border-cyan-400 shadow-cyan-500/50' : 
-                          isOtherTerritory ? 'bg-slate-800 text-slate-500 border-2 border-slate-700' : 
-                          'bg-white border-2 border-slate-200 hover:border-cyan-300 text-slate-700'}`}
-                    >
-                      {isMyTerritory && <div className="absolute inset-0 bg-white/20 animate-pulse"></div>}
-                      {isOtherTerritory && <div className="absolute top-1 right-1 text-[10px] font-black text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded">{ownerGroup.group_name}</div>}
-                      
-                      <IconComp className={`w-8 h-8 ${isMyTerritory ? 'text-white' : isOtherTerritory ? 'text-slate-600' : m.color}`} />
-                      <span className={`font-black text-sm text-center px-1 leading-tight ${isOtherTerritory && 'opacity-50 line-through'}`}>{m.title}</span>
-                      
-                      {isCoopTile && !isCompleted && activeDevicesCount > 1 && (
-                        <div className="absolute bottom-1 w-[80%] h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${(activeCoopCount / activeDevicesCount) * 100}%` }}></div>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-
-            </div>
-          ) : activeTab === 'observer' ? (
-            <div className="pb-32 overflow-y-auto">
-              <ObserverRefereeMode
-                groupName={myGroup?.group_name || '우리'}
-                isBuffActive={hasBuff}
-                onAwardBonus={async (amount, _reason) => {
-                  if (!groupId || isLocked) return;
-                  enqueueAction({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount }, timestamp: Date.now() });
-                }}
-              />
+                    {cooldown && (
+                      <div className={`cooldown-overlay absolute inset-0 rounded-2xl overflow-hidden backdrop-blur-sm z-10 ${isOutdoorMode ? 'bg-black/70' : 'bg-white/70'}`}>
+                        <div className="absolute bottom-0 left-0 h-1 bg-slate-400 transition-all duration-50 ease-linear" style={{ width: `${(cooldownTime / maxCooldownTime) * 100}%` }}></div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           ) : (
             <div className="flex flex-col gap-3 overflow-y-auto pb-32 custom-scrollbar pr-2 h-full">
-              {/* 직업 변경 섹션 */}
-              <div className={`p-4 rounded-2xl border shadow-sm ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : 'bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200'}`}>
-                <h3 className={`font-black text-sm mb-3 flex items-center gap-2 ${isOutdoorMode ? 'text-purple-400' : 'text-purple-700'}`}>
-                  <LucideIcons.Swords className="w-4 h-4" /> 직업 변경
-                </h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {ROLE_OPTIONS.map(r => (
-                    <button
-                      key={r.id}
-                      onClick={() => handleRoleChange(r.id)}
-                      className={`p-3 rounded-xl text-left transition-all active:scale-95 flex items-center gap-2 ${role === r.id 
-                        ? (isOutdoorMode ? 'bg-purple-900 border-2 border-purple-500 text-white' : 'bg-purple-600 text-white border-2 border-purple-400') 
-                        : (isOutdoorMode ? 'bg-slate-800 border border-slate-600 text-slate-300' : 'bg-white border border-slate-200 text-slate-700')}`}
-                    >
-                      <r.icon className="w-5 h-5 shrink-0" />
-                      <div>
-                        <p className="font-black text-sm">{r.name}</p>
-                        <p className={`text-[10px] ${role === r.id ? 'text-white/70' : (isOutdoorMode ? 'text-slate-500' : 'text-slate-400')}`}>{r.desc}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {gameRoom?.flash_sale && (
                 <div className="bg-yellow-50 border-2 border-yellow-400 p-3 rounded-2xl animate-pulse shadow-sm flex items-center justify-center gap-2">
                   <LucideIcons.Zap className="w-5 h-5 text-yellow-600" />
@@ -1361,7 +895,7 @@ export const MobileMissionView = () => {
                 </div>
               )}
               {SHOP_ITEMS.map((item) => {
-                const actualCost = gameRoom?.flash_sale && item.id !== 'allin' ? Math.floor(item.cost / 2) : item.cost;
+                const actualCost = gameRoom?.flash_sale ? Math.floor(item.cost / 2) : item.cost;
                 return (
                   <div key={item.id} className={`p-4 border rounded-2xl flex justify-between items-center shrink-0 shadow-sm ${isOutdoorMode ? 'bg-slate-900 border-slate-700' : `bg-white ${item.bg}`}`}>
                     <div className="flex items-center gap-4">
@@ -1371,7 +905,7 @@ export const MobileMissionView = () => {
                       <div>
                         <p className={`font-black text-lg flex items-center gap-2 ${isOutdoorMode ? 'text-white' : item.color}`}>
                           {item.name}
-                          {gameRoom?.flash_sale && item.id !== 'allin' && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">SALE</span>}
+                          {gameRoom?.flash_sale && <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">SALE</span>}
                         </p>
                         <p className={`text-xs font-bold break-keep pr-2 ${isOutdoorMode ? 'text-slate-400' : 'text-slate-500'}`}>{item.desc}</p>
                       </div>
@@ -1381,12 +915,8 @@ export const MobileMissionView = () => {
                       disabled={displayScore < actualCost || (item.id === 'double' && hasBuff)} 
                       className={`shrink-0 px-4 py-3 rounded-xl font-black text-base transition-transform active:scale-95 flex flex-col items-center justify-center ${displayScore >= actualCost ? 'bg-purple-600 text-white shadow-md hover:bg-purple-500' : (isOutdoorMode ? 'bg-slate-800 text-slate-500' : 'bg-slate-100 text-slate-400')}`}
                     >
-                      {item.id === 'allin' ? '전부' : (
-                        <>
-                          {gameRoom?.flash_sale && <span className="text-[10px] line-through opacity-70 leading-none">{item.cost}</span>}
-                          <span className="leading-none">{actualCost}점</span>
-                        </>
-                      )}
+                      {gameRoom?.flash_sale && <span className="text-[10px] line-through opacity-70 leading-none">{item.cost}</span>}
+                      <span className="leading-none">{actualCost}점</span>
                     </button>
                   </div>
                 );
@@ -1406,14 +936,8 @@ export const MobileMissionView = () => {
         <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'bg-cyan-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
           <LucideIcons.Shield className="w-4 h-4" /> <span className="text-xs">미션</span>
         </button>
-        <button onClick={() => setActiveTab('bingo')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'bingo' ? `tab-active ${isOutdoorMode ? 'bg-orange-700 text-white' : 'bg-orange-500 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.Grid className="w-4 h-4" /> <span className="text-xs">빙고</span>
-        </button>
         <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
           <LucideIcons.ShoppingCart className="w-4 h-4" /> <span className="text-xs">상점</span>
-        </button>
-        <button onClick={() => setActiveTab('observer')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'observer' ? 'bg-amber-500 text-slate-950 font-black shadow-md' : (isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-amber-400' : 'bg-amber-50 border border-amber-200 text-amber-700')}`}>
-          <LucideIcons.Eye className="w-4 h-4" /> <span className="text-xs">심판</span>
         </button>
       </div>
     </div>

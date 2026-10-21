@@ -101,8 +101,6 @@ import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
 import { getPhysicalActivityPlan } from '../domain/physicalActivityPlans';
-import { MotionBoosterChallenge } from './components/common/MotionBoosterChallenge';
-import { MotionIntensityWidget } from './components/common/MotionIntensityWidget';
 
 interface GameMeta {
   name: string;
@@ -211,17 +209,6 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
   };
 });
 
-// 단순 클릭 게임 목록: 부스터 챌린지를 표시할 대상 게임 유형
-const BOOSTER_ELIGIBLE_GAMES = new Set([
-  'volcano', 'whack_a_mole', 'stopwatch', 'reaction', 'memory', 'number_grid',
-  'card_match', 'math', 'color_word', 'left_right', 'balloon', 'coin_flip',
-  'direction', 'fate_card', 'tug_of_war', 'multi_touch', 'animal-hop-step',
-  'double-under-rope', 'mirror-motion-invert', 'wind-surf-balance',
-  'tent-peg-hammer', 'spike-block-wall', 'base-running-decide',
-  'tactical-grid-slide', 'juggling-bounce-paddle', 'slingshot-archery',
-  'trail-maze-run', 'crevasse-jump', 'alpine-glider', 'compass-azimuth',
-]);
-
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
@@ -255,8 +242,6 @@ const GamePlaySession = () => {
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
-  const [boosterMultiplier, setBoosterMultiplier] = useState<number | null>(null);
-  const [showBooster, setShowBooster] = useState(false);
   const completionRef = useRef(false);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
@@ -384,31 +369,6 @@ const GamePlaySession = () => {
     commitResult(action.payload);
   }, [commitResult]);
 
-  const handleBoosterComplete = useCallback((multiplier: number) => {
-    setBoosterMultiplier(multiplier);
-    setShowBooster(false);
-    if (gameFinished && multiplier > 1.0) {
-      setLastEarnedScore(prev => {
-        const boosted = Math.round(prev * multiplier);
-        const delta = boosted - prev;
-        if (hasBattle && battleGroupId && delta > 0) {
-          enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: delta, roomId: battleRoomId }, timestamp: Date.now() });
-        }
-        if (gameType) {
-          const bestKey = `physical_best_${gameType}`;
-          const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
-          if (boosted > currentBest) writeStorage(bestKey, String(boosted));
-        }
-        return boosted;
-      });
-    }
-  }, [gameFinished, gameType, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore]);
-
-  const handleBoosterSkip = useCallback(() => {
-    setBoosterMultiplier(1.0);
-    setShowBooster(false);
-  }, []);
-
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
@@ -416,8 +376,6 @@ const GamePlaySession = () => {
     setShowDetailedResult(false);
     setLastEarnedScore(0);
     setRpeSelected(null);
-    setBoosterMultiplier(null);
-    setShowBooster(false);
     setKey(prev => prev + 1);
     setDifficulty(null);
   };
@@ -640,7 +598,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · 활동 준비</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>화면 게임 뒤 짝과 실제 활동을 한 차례씩 진행합니다. {guidedRequested ? '짝의 활동 기록을 마치면 선생님에게 확인 요청을 보냅니다. 수업 점수는 교사가 확인한 뒤 반영됩니다.' : '화면 점수와 신체 활동 기록은 구분됩니다.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           <p className="game-level-title">어떤 기록으로 시작할까요?</p><div className="game-levels">
             <button data-level="easy" onClick={() => handleSelectDifficulty('easy')}><span className="level-symbol" aria-hidden="true">🌱</span><strong>기본 연습</strong><small>×0.7 배율</small></button>
@@ -669,11 +627,6 @@ const GamePlaySession = () => {
         }
       }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 몸 미션 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
 
-      {showBooster && <MotionBoosterChallenge onComplete={handleBoosterComplete} onSkip={handleBoosterSkip} />}
-
-      {/* 실시간 움직임 강도 위젯 */}
-      {difficulty !== null && !isCountingDown && !gameFinished && !showBooster && <MotionIntensityWidget />}
-
       {/* 배지 획득 토스트 */}
       {newBadge && (
         <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[10003] bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm animate-bounce border-2 border-yellow-300">
@@ -691,7 +644,7 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 종료 결과 오버레이 */}
-      {gameFinished && !showDetailedResult && !showBooster && (
+      {gameFinished && !showDetailedResult && (
         <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
@@ -722,21 +675,7 @@ const GamePlaySession = () => {
                   기록 {difficulty === 'easy' ? '기본 연습' : '도전 기록'} (×{difficultyMultiplier} 배율)
                 </span>
               )}
-              {boosterMultiplier && boosterMultiplier > 1.0 && (
-                <span className="text-xs mt-1 font-bold text-amber-400">
-                  ⚡ 움직임 부스터 ×{boosterMultiplier} 적용 완료!
-                </span>
-              )}
             </div>
-            {BOOSTER_ELIGIBLE_GAMES.has(gameType || '') && boosterMultiplier === null && (
-              <button
-                type="button"
-                onClick={() => setShowBooster(true)}
-                className="w-full mb-3 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
-              >
-                <span>⚡ 5초 움직임 부스터 챌린지 (최대 ×1.3 보너스)</span>
-              </button>
-            )}
             <div className="w-full flex justify-between items-center bg-slate-800/50 rounded-xl px-4 py-3 mb-4 border border-slate-700/50">
               <div className="flex items-center gap-2 text-yellow-500"><Trophy className="w-4 h-4" /><span className="text-sm font-bold">최고 기록</span></div>
               <span className="text-yellow-400 font-black">{bestScore}점</span>

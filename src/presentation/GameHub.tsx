@@ -116,7 +116,7 @@ export const GameHub = () => {
 
   // 스마트 체육 현장 맞춤 필터 (장소 · 센서)
   const [placeFilter, setPlaceFilter] = useState<'전체' | '교실' | '강당' | '운동장'>('전체');
-  const [sensorFilter, setSensorFilter] = useState<'전체' | '터치' | '모션' | '자이로' | '음성'>('전체');
+  const [sensorFilter, setSensorFilter] = useState<'전체' | '터치' | '자이로' | '음성'>('전체');
 
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
@@ -153,9 +153,9 @@ export const GameHub = () => {
     });
   }, []);
 
-  const getGameSensor = (type: string): '터치' | '모션' | '자이로' | '음성' => {
+  const getGameSensor = (type: string): '터치' | '자이로' | '음성' => {
     if (type === 'scream') return '음성';
-    if (['jump', 'squat', 'run', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(type)) return '자이로';
+    if (['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap', 'head-shoulders-knees', 'body-rhythm-orchestrator'].includes(type)) return '자이로';
     return '터치';
   };
 
@@ -679,13 +679,13 @@ export const GameHub = () => {
           {/* 센서별 스마트 필터 */}
           <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>📱</span> 측정 센서 분류 (터치 · 카메라 · 자이로 · 마이크)
+              <span>📱</span> 측정 센서 분류 (터치 · 자이로 · 마이크)
             </h2>
             <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
               {([
                 { key: '전체', label: '전체 센서', emoji: '⚡' },
                 { key: '터치', label: '터치·버튼', emoji: '👆' },
-                { key: '모션', label: '카메라 모션', emoji: '📷' },
+
                 { key: '자이로', label: '자이로·가속도', emoji: '🧭' },
                 { key: '음성', label: '마이크 음성', emoji: '🎤' },
               ] as const).map(s => {

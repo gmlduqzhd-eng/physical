@@ -222,16 +222,6 @@ export const TemplateBuilder = ({ initialTemplate, onBack, onSuccess }: Template
                     </select>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center gap-2 px-2 pb-2">
-                  <input
-                    type="checkbox"
-                    id={`req-app-${btn.id}`}
-                    checked={btn.requires_approval || false}
-                    onChange={e => updateButton(i, 'requires_approval', e.target.checked)}
-                    className="w-4 h-4 text-cyan-600 rounded border-slate-300 focus:ring-cyan-500"
-                  />
-                  <label htmlFor={`req-app-${btn.id}`} className="text-sm font-bold text-slate-700">관리자 승인(선생님 확인) 필요 임무로 설정</label>
-                </div>
               </div>
             );
           })}

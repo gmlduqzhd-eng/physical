@@ -207,7 +207,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <Users className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-black mb-1">4자리 PIN 학급 배틀룸</h2>
-            <p className="text-xs text-slate-400 mb-5">이름 없이 자기 팀의 4자리 PIN만 입력해요.</p>
+            <p className="text-xs text-slate-400 mb-5">선생님이 알려준 팀 4자리 PIN과 번호·별명을 입력해요.</p>
 
             {/* 에러 메시지 배너 */}
             {errorMsg && (
@@ -363,7 +363,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                   <Play className="w-3.5 h-3.5 fill-white" /> 반응속도 (결과 점수 반영)
                 </button>
                 <button
-                  onClick={() => handleStartGame('swipe')} disabled={busy}
+                  onClick={() => handleStartGame('direction')} disabled={busy}
                   className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" /> 방향 스와이프 (결과 점수 반영)
