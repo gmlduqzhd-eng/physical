@@ -106,7 +106,10 @@ export const ExpressionActivityLayout = ({
       {/* 성취기준 세부 모달 */}
       {showAchievementModal && (
         <div
-          className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          aria-label="성취기준 안내"
+          className="expression-achievement-modal fixed inset-0 z-[10020] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setShowAchievementModal(false)}
         >
           <div
@@ -238,7 +241,7 @@ export const ExpressionActivityLayout = ({
             </div>
 
             {/* 단계 이동 제어 바 */}
-            <div className="flex items-center justify-between pt-2">
+            <div className="expression-step-controls flex items-center justify-between pt-2">
               <button
                 type="button"
                 disabled={currentStepIdx === 0}
@@ -282,7 +285,7 @@ export const ExpressionActivityLayout = ({
 
       {/* 4. 자기/동료 루브릭 평가 단계 */}
       {phase === 'rubric' && (
-        <div className="bg-slate-900/90 border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in duration-200">
+        <div className="expression-rubric bg-slate-900/90 border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in duration-200">
           <div className="text-center pb-4 border-b border-slate-800 space-y-1">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950 text-purple-300 text-xs font-bold border border-purple-800 mb-2">
               <Award className="w-3.5 h-3.5" /> 과정 중심 평가 &amp; 피드백
@@ -314,7 +317,7 @@ export const ExpressionActivityLayout = ({
                           next[idx] = star;
                           setRatings(next);
                         }}
-                        className="p-1 hover:scale-110 transition-transform"
+                        className="w-11 h-11 shrink-0 inline-flex items-center justify-center hover:scale-110 transition-transform"
                       >
                         <Star
                           className={`w-5 h-5 ${

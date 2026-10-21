@@ -20,6 +20,7 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
   const lastAngleRef = useRef<number | null>(null);
   const cumulativeAngleRef = useRef(0);
   const isDragging = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
 
   const finishGame = useCallback(() => {
     setFinished(true);
@@ -95,19 +96,22 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (finished) return;
+    if (finished || !e.isPrimary || activePointerRef.current !== null) return;
+    activePointerRef.current = e.pointerId;
     isDragging.current = true;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
     lastAngleRef.current = null;
     calculateAngle(e.clientX, e.clientY);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.current || finished) return;
+    if (!isDragging.current || finished || activePointerRef.current !== e.pointerId) return;
     calculateAngle(e.clientX, e.clientY);
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (activePointerRef.current !== e.pointerId) return;
+    activePointerRef.current = null;
     isDragging.current = false;
     lastAngleRef.current = null;
   };
@@ -148,6 +152,7 @@ export const BicyclePedalCrank = ({ groupId, enqueueAction }: Props) => {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onLostPointerCapture={handlePointerUp}
         className="relative w-64 h-64 rounded-full border-4 border-slate-700 bg-slate-950 shadow-2xl flex items-center justify-center cursor-grab active:cursor-grabbing touch-none my-3"
       >
         {/* 기어 톱니 링 */}

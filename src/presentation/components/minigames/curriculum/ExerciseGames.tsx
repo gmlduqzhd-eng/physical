@@ -361,6 +361,7 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
   const [finished, setFinished] = useState(false);
   const [currentAngle, setCurrentAngle] = useState(0);
   const isDragging = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
   const rotation = useRef(new RotationTracker());
 
   const handleRestart = () => {
@@ -372,7 +373,7 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || finished) return;
+    if (!isDragging.current || finished || activePointerRef.current !== e.pointerId) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
@@ -397,9 +398,10 @@ export const MobilityJointCircle: React.FC<GameProps> = ({ groupId, enqueueActio
       </p>
 
       <div
-        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isDragging.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
-        onPointerCancel={() => { isDragging.current = false; }}
-        onPointerUp={() => { isDragging.current = false; }}
+        onPointerDown={e => { if (finished || !e.isPrimary || activePointerRef.current !== null) return; activePointerRef.current = e.pointerId; e.currentTarget.setPointerCapture(e.pointerId); isDragging.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
+        onPointerCancel={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isDragging.current = false; rotation.current.release(); }}
+        onLostPointerCapture={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isDragging.current = false; rotation.current.release(); }}
+        onPointerUp={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isDragging.current = false; rotation.current.release(); }}
         onPointerMove={handlePointerMove}
         className="relative w-64 h-64 rounded-full border-4 border-dashed border-emerald-500/60 bg-emerald-900/40 flex items-center justify-center cursor-pointer touch-none shadow-2xl mb-8"
       >

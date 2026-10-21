@@ -369,6 +369,12 @@ const GamePlaySession = () => {
     commitResult(action.payload);
   }, [commitResult]);
 
+  const handleReturnToCatalog = () => {
+    // Stop active animation timers before rendering the full catalog on mobile.
+    setHasStarted(false);
+    navigate(hubPath);
+  };
+
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
@@ -384,7 +390,7 @@ const GamePlaySession = () => {
     return (
       <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
-        <button onClick={() => navigate(hubPath)} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
+        <button onClick={handleReturnToCatalog} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
       </div>
     );
   }
@@ -495,21 +501,21 @@ const GamePlaySession = () => {
       case 'body_twist':
         return <BodyTwist key={key} {...commonProps} />;
       case 'pulse-detective':
-        return <PulseDetective key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <PulseDetective key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'posture-guardian':
-        return <PostureGuardian key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <PostureGuardian key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'rolling-curling':
-        return <RollingCurling key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <RollingCurling key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'pass-gate-rescue':
-        return <PassGateRescue key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <PassGateRescue key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'dribble-rhythm':
-        return <DribbleRhythm key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <DribbleRhythm key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'open-space-tactician':
-        return <OpenSpaceTactician key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <OpenSpaceTactician key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'emotion-thermometer':
-        return <EmotionThermometer key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <EmotionThermometer key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'partner-robot-lab':
-        return <PartnerRobotLab key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <PartnerRobotLab key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'compass-azimuth':
         return <CompassAzimuth key={key} {...commonProps} />;
       case 'kayak-paddle':
@@ -553,11 +559,11 @@ const GamePlaySession = () => {
       case 'seesaw-balance-tap':
         return <SeesawBalanceTap key={key} {...commonProps} />;
       case 'space-occupier':
-        return <SpaceOccupier key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <SpaceOccupier key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'relay-mission-runner':
-        return <RelayMissionRunner key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <RelayMissionRunner key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'body-rhythm-orchestrator':
-        return <BodyRhythmOrchestrator key={key} {...commonProps} onExit={() => navigate(hubPath)} />;
+        return <BodyRhythmOrchestrator key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       default: {
         if (gameType && CURRICULUM_GAMES_META[gameType]) {
           return (
@@ -566,7 +572,7 @@ const GamePlaySession = () => {
               gameType={gameType}
               groupId={dummyGroupId}
               enqueueAction={localEnqueueAction}
-              onExit={() => navigate(hubPath)}
+              onExit={handleReturnToCatalog}
             />
           );
         }
@@ -579,7 +585,7 @@ const GamePlaySession = () => {
                 prepared
                 gameType={gameType}
                 onComplete={(score, details) => localEnqueueAction({ payload: { amount: score, details } })}
-                onExit={() => navigate(hubPath)}
+                onExit={handleReturnToCatalog}
               />
             </div>
           );
@@ -596,10 +602,25 @@ const GamePlaySession = () => {
       {/* 활동 준비 화면 */}
       {!hasStarted && !gameFinished && (
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
-          <button className="game-prepare-back" onClick={() => navigate(hubPath)}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
+          <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
+          {/* Permission guidance stays in preparation so it never covers game controls. */}
+          {!isMotionGranted && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (
+            <div className="game-sensor-setup game-prepare-info">
+              <div className="text-xs">
+                <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>
+                <span>센서를 허용하거나 게임 안의 터치 조작을 이용해 주세요.</span>
+              </div>
+              <button
+                onClick={requestMotionPermission}
+                className="game-stage-primary mt-3 px-4 py-3 rounded-xl text-sm font-bold"
+              >
+                센서 허용하기
+              </button>
+            </div>
+          )}
           <button type="button" className="game-prepare-start" onClick={handleStartGame}>활동 시작</button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
         </div></div>
       )}
@@ -633,7 +654,7 @@ const GamePlaySession = () => {
       {/* 상단 네비게이션 */}
       {hasStarted && (
         <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
-          <button onClick={() => navigate(hubPath)} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
+          <button onClick={handleReturnToCatalog} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
           <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
           {showDetailedResult && <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button>}
         </div>
@@ -731,7 +752,7 @@ const GamePlaySession = () => {
               <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
-              <button onClick={() => navigate(hubPath)} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
+              <button onClick={handleReturnToCatalog} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
                 <Home className="w-5 h-5" /> {soloMode ? '활동 목록으로' : guidedRequested ? '모둠으로' : '홈으로'}
               </button>
             </div>
@@ -745,21 +766,7 @@ const GamePlaySession = () => {
         onClose={() => setShowCooldownModal(false)}
       />
 
-      {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && !gameFinished && (
-        <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
-          <div className="text-xs">
-            <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>
-            <span>센서를 허용하거나 게임 안의 터치 조작을 이용해 주세요.</span>
-          </div>
-          <button
-            onClick={requestMotionPermission}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md shrink-0 active:scale-95"
-          >
-            센서 허용하기
-          </button>
-        </div>
-      )}
+
     </div></div>
   );
 };

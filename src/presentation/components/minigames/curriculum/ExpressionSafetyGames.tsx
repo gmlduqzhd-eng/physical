@@ -697,6 +697,7 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: 
   const [trailCount, setTrailCount] = useState(0);
   const [finished, setFinished] = useState(false);
   const isTracing = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
   const TARGET_TRAIL = 3;
   const rotation = useRef(new RotationTracker());
 
@@ -708,7 +709,7 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: 
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isTracing.current || finished) return;
+    if (!isTracing.current || finished || activePointerRef.current !== e.pointerId) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const next = rotation.current.move(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
     setTrailCount(Math.min(TARGET_TRAIL, next));
@@ -727,9 +728,10 @@ export const RibbonWaveStream: React.FC<GameProps> = ({ groupId, enqueueAction: 
       </p>
 
       <div
-        onPointerDown={e => { if (finished) return; e.currentTarget.setPointerCapture(e.pointerId); isTracing.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
-        onPointerCancel={() => { isTracing.current = false; }}
-        onPointerUp={() => { isTracing.current = false; }}
+        onPointerDown={e => { if (finished || !e.isPrimary || activePointerRef.current !== null) return; activePointerRef.current = e.pointerId; e.currentTarget.setPointerCapture(e.pointerId); isTracing.current = true; rotation.current.release(); const r = e.currentTarget.getBoundingClientRect(); rotation.current.move(e.clientX - r.left, e.clientY - r.top, r.width, r.height); sfxTap(); }}
+        onPointerCancel={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isTracing.current = false; rotation.current.release(); }}
+        onLostPointerCapture={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isTracing.current = false; rotation.current.release(); }}
+        onPointerUp={(e: React.PointerEvent<HTMLDivElement>) => { if (activePointerRef.current !== e.pointerId) return; activePointerRef.current = null; isTracing.current = false; rotation.current.release(); }}
         onPointerMove={handlePointerMove}
         className="w-72 h-72 rounded-3xl bg-purple-900/60 border-4 border-dashed border-pink-400 flex flex-col items-center justify-center touch-none mb-6 shadow-2xl cursor-pointer"
       >

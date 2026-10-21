@@ -20,7 +20,8 @@ async function run() {
   const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || 'msedge', headless: true });
   try {
     for (const game of games) {
-      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+      const dimensions=(process.env.AUDIT_VIEWPORT||'390x844').split('x').map(Number);
+      const context = await browser.newContext({ viewport: { width: dimensions[0], height: dimensions[1] }, isMobile: true, hasTouch: true });
       const page = await context.newPage();
       page.setDefaultTimeout(1500);
       const item = { id: game.type, name: game.name, status: 'running', errors: [], actions: [], virtualMs: 0 };
@@ -39,6 +40,7 @@ async function run() {
       };
       const button = regex => content.getByRole('button', { name: regex }).first();
       const circle = async (locator, turns = 1) => {
+        await locator.evaluate(el=>el.scrollIntoView({block:'center'}));
         const box = await locator.boundingBox(); if (!box) return;
         const cx = box.x + box.width / 2, cy = box.y + box.height / 2, r = Math.min(box.width, box.height) * .36;
         await page.mouse.move(cx + r, cy); await page.mouse.down();

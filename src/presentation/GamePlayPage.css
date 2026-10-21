@@ -14,3 +14,19 @@
 .game-tools-layout .game-prepare,.game-tools-layout .game-result-overlay,.game-tools-layout .game-countdown { top:var(--game-utility-height); }
 .game-tools-layout .warm-game .gameplay-content>div { min-height:calc(100dvh - var(--game-stage-offset)); }
 .game-tools-layout .warm-game .gameplay-content>.fixed.inset-0 { top:var(--game-stage-offset); }
+.expression-achievement-modal { top:var(--game-utility-height,0px); }
+.expression-achievement-modal>div { max-height:calc(100dvh - var(--game-utility-height,0px) - 32px); overflow-y:auto; }
+.game-tools-layout .gameplay-content .touch-none { scroll-margin-top:var(--game-stage-offset); scroll-margin-bottom:12px; }
+@media (max-height:500px) and (orientation:landscape) {
+  .game-tools-layout .gameplay-content .touch-none:is(.aspect-square,.w-64.h-64,.w-72.h-72) {
+    width:100%; max-width:calc(100dvh - var(--game-stage-offset) - 24px); height:auto; aspect-ratio:1; flex-shrink:0;
+  }
+}
+@media (max-width:480px) {
+  .expression-step-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .expression-step-controls>div { grid-column:1/-1; grid-row:1; justify-self:center; }
+  .expression-step-controls>button { min-height:44px; min-width:0; padding:10px; white-space:normal; overflow-wrap:anywhere; }
+  .expression-rubric { padding:12px; }
+  .expression-rubric>.space-y-4>div { padding:10px; }
+  .expression-rubric button { max-width:100%; white-space:normal; }
+}
