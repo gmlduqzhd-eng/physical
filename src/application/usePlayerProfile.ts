@@ -112,6 +112,7 @@ export const usePlayerProfile = () => {
         playCounts: newPlayCounts,
         recentGames: [record, ...current.recentGames].slice(0, 20),
       };
+      saveProfile(updated);
       return updated;
     });
   }, []);

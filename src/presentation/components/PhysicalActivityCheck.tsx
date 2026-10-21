@@ -9,10 +9,21 @@ interface Props {
   cues?: ParticipationCues | null;
   onFinish: (evidence: ActivityEvidence) => void;
   onExit: () => void;
+  boosterEligible?: boolean;
+  boosterMultiplier?: number | null;
+  onStartBooster?: () => void;
 }
 
 /** A classroom routine and an honest peer report, not a movement sensor. */
-export function PhysicalActivityCheck({ plan, cues, onFinish, onExit }: Props) {
+export function PhysicalActivityCheck({
+  plan,
+  cues,
+  onFinish,
+  onExit,
+  boosterEligible = false,
+  boosterMultiplier = null,
+  onStartBooster,
+}: Props) {
   const [turn, setTurn] = useState(0);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
@@ -44,6 +55,23 @@ export function PhysicalActivityCheck({ plan, cues, onFinish, onExit }: Props) {
         <p className="mb-3 text-sm leading-6">{adapted ? plan.alternative : plan.activity}</p>
         {cues && <div className="mb-3 rounded-xl border border-cyan-500/30 bg-slate-800 p-3 text-sm"><strong>오늘의 몸 미션</strong><p>{cues.mission}</p><p>역할 교대: {cues.roles}</p><p>기다리는 동안: {cues.waiting}</p></div>}
         <p className="mb-2 rounded-xl bg-slate-800 p-3 text-xs text-slate-200">준비: {plan.setup}<br />안전: {plan.safety}</p>
+        {boosterEligible && (
+          <div className="mb-3 rounded-2xl border border-emerald-500/40 bg-emerald-950/40 p-3 text-center">
+            {boosterMultiplier === null ? (
+              <button
+                type="button"
+                onClick={onStartBooster}
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 px-3 py-2.5 text-sm font-black text-slate-950 shadow-lg transition-all active:scale-95"
+              >
+                🚀 5초 모션 부스터 도전! (최대 ×1.3 배율)
+              </button>
+            ) : (
+              <p className="text-xs font-bold text-emerald-300">
+                🔥 모션 부스터 완료! 점수 ×{boosterMultiplier.toFixed(1)} 배율 적용
+              </p>
+            )}
+          </div>
+        )}
         <label className="mb-4 flex items-center gap-2 text-sm text-cyan-100">
           <input type="checkbox" checked={adapted} onChange={event => setAdapted(event.target.checked)} className="h-5 w-5 accent-cyan-500" />
           대체 동작으로 참여하기

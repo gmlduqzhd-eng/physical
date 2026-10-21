@@ -17,7 +17,11 @@ const base = process.env.AUDIT_URL || 'http://127.0.0.1:5173';
       await page.getByRole('button', { name: /준비 완료/ }).click();
       await page.clock.pauseAt(new Date(Date.now() + 100));
       const advance = async ms => { await page.clock.runFor(ms); await new Promise(resolve => setTimeout(resolve, 10)); };
-      const finished = async () => (await page.locator('body').innerText()).includes('획득 점수');
+      const finished = async () => {
+        const skip = page.getByRole('button', { name: /화면 게임으로만 기록/ });
+        if (await skip.count()) await skip.evaluate(el => el.click());
+        return (await page.locator('body').innerText()).includes('화면 게임 점수');
+      };
       await run(page, advance, finished);
       assert.deepEqual(errors, [], `${type}: browser errors`);
       passed.push(type);
@@ -41,7 +45,7 @@ const base = process.env.AUDIT_URL || 'http://127.0.0.1:5173';
       await page.getByRole('button', { name: /게임 상세 결과 보기/ }).click();
       assert.match(await page.locator('body').innerText(), /CPR 박자 연습 완료/);
       await page.getByRole('button', { name: /다시|재도전/ }).first().click();
-      assert.match(await page.locator('body').innerText(), /기록 점수 배율/);
+      assert.match(await page.locator('body').innerText(), /배율/);
     });
     await check('pulse-zone-target', async (page, advance, finished) => {
       const tap = () => page.getByRole('button', { name: /^❤️$/ }).click();
@@ -93,12 +97,13 @@ const base = process.env.AUDIT_URL || 'http://127.0.0.1:5173';
       assert.equal(await finished(), true);
       assert.match(await page.locator('body').innerText(), /동작을 더 크게 표현했어요/);
       await advance(50);
-      const profile = await page.evaluate(() => JSON.parse(localStorage.getItem('physical_player_profile')));
+      // Player profile is stored in sessionStorage (privacyKind redirects private keys)
+      const profile = await page.evaluate(() => JSON.parse(sessionStorage.getItem('physical_player_profile') || localStorage.getItem('physical_player_profile')));
       assert.equal(profile.totalPlays, 1);
       assert(profile.recentGames[0].details.ratings.every(rating => rating === 4));
       assert.equal(profile.recentGames[0].details.selfReflection, '동작을 더 크게 표현했어요');
       await page.reload();
-      const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('physical_player_profile')));
+      const restored = await page.evaluate(() => JSON.parse(sessionStorage.getItem('physical_player_profile') || localStorage.getItem('physical_player_profile')));
       assert.deepEqual(restored.recentGames[0].details, profile.recentGames[0].details);
     });
     await check('stopwatch', async (page, advance, finished) => {

@@ -102,6 +102,8 @@ import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
 import { getPhysicalActivityPlan } from '../domain/physicalActivityPlans';
 import { PhysicalActivityCheck, type ActivityEvidence } from './components/PhysicalActivityCheck';
+import { MotionBoosterChallenge } from './components/common/MotionBoosterChallenge';
+import { MotionIntensityWidget } from './components/common/MotionIntensityWidget';
 
 interface GameMeta {
   name: string;
@@ -210,6 +212,16 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
   };
 });
 
+// 단순 클릭 게임 목록: 부스터 챌린지를 표시할 대상 게임 유형
+const BOOSTER_ELIGIBLE_GAMES = new Set([
+  'volcano', 'whack_a_mole', 'reaction', 'memory', 'number_grid',
+  'card_match', 'math', 'color_word', 'left_right', 'balloon', 'coin_flip',
+  'fate_card', 'tug_of_war', 'multi_touch', 'animal-hop-step',
+  'double-under-rope', 'mirror-motion-invert', 'wind-surf-balance',
+  'tent-peg-hammer', 'spike-block-wall', 'base-running-decide',
+  'tactical-grid-slide', 'juggling-bounce-paddle',
+]);
+
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
@@ -244,6 +256,8 @@ const GamePlaySession = () => {
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
   const [pendingResult, setPendingResult] = useState<{ amount: number; details?: GameResultDetails } | null>(null);
+  const [boosterMultiplier, setBoosterMultiplier] = useState<number | null>(null);
+  const [showBooster, setShowBooster] = useState(false);
   const [activityEvidence, setActivityEvidence] = useState<ActivityEvidence | null>(null);
   const completionRef = useRef(false);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -373,9 +387,31 @@ const GamePlaySession = () => {
     setPendingResult(action.payload);
   }, []);
 
+  const handleBoosterComplete = useCallback((multiplier: number) => {
+    setBoosterMultiplier(multiplier);
+    setShowBooster(false);
+    if (gameFinished && multiplier > 1.0) {
+      setLastEarnedScore(prev => {
+        const boosted = Math.round(prev * multiplier);
+        if (gameType) {
+          const bestKey = `physical_best_${gameType}`;
+          const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
+          if (boosted > currentBest) writeStorage(bestKey, String(boosted));
+        }
+        return boosted;
+      });
+    }
+  }, [gameFinished, gameType]);
+
+  const handleBoosterSkip = useCallback(() => {
+    setBoosterMultiplier(1.0);
+    setShowBooster(false);
+  }, []);
+
   const handleActivityFinish = (evidence: ActivityEvidence) => {
     if (!pendingResult) return;
-    commitResult(pendingResult, evidence);
+    const bm = boosterMultiplier ?? 1.0;
+    commitResult({ ...pendingResult, amount: Math.round(pendingResult.amount * bm) }, evidence);
   };
 
   const handleReplay = () => {
@@ -387,6 +423,8 @@ const GamePlaySession = () => {
     setRpeSelected(null);
     setPendingResult(null);
     setActivityEvidence(null);
+    setBoosterMultiplier(null);
+    setShowBooster(false);
     setKey(prev => prev + 1);
     setDifficulty(null);
   };
@@ -638,7 +676,22 @@ const GamePlaySession = () => {
         }
       }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 기록 점수는 선택한 배율을 적용합니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 몸 미션 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
 
-      {pendingResult && <PhysicalActivityCheck plan={activityPlan} cues={participationCues} onFinish={handleActivityFinish} onExit={() => navigate(hubPath)} />}
+      {showBooster && <MotionBoosterChallenge onComplete={handleBoosterComplete} onSkip={handleBoosterSkip} />}
+
+      {pendingResult && !showBooster && (
+        <PhysicalActivityCheck
+          plan={activityPlan}
+          cues={participationCues}
+          onFinish={handleActivityFinish}
+          onExit={() => navigate(hubPath)}
+          boosterEligible={BOOSTER_ELIGIBLE_GAMES.has(gameType || '')}
+          boosterMultiplier={boosterMultiplier}
+          onStartBooster={() => setShowBooster(true)}
+        />
+      )}
+
+      {/* 실시간 움직임 강도 위젯 */}
+      {difficulty !== null && !isCountingDown && !gameFinished && !showBooster && !pendingResult && <MotionIntensityWidget />}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -758,7 +811,7 @@ const GamePlaySession = () => {
       />
 
       {/* iOS 모션 권한 안내 배너 */}
-      {!isMotionGranted && !pendingResult && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance'].includes(gameType) && !gameFinished && (
+      {!isMotionGranted && !pendingResult && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && !gameFinished && (
         <div className="fixed bottom-4 left-4 right-4 z-[10005] bg-slate-900/95 border-2 border-amber-500/80 rounded-2xl p-4 shadow-2xl flex items-center justify-between gap-3 text-white">
           <div className="text-xs">
             <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>
