@@ -1,6 +1,6 @@
-import type { GameDef } from './gamesData';
-import type { LessonGameMeta } from '../data/lessonGameCatalog';
-import { EXPEDITION_GAMES, type ExpeditionSpec } from './expeditionGames';
+import type { GameDef } from './gamesData.js';
+import type { LessonGameMeta } from '../data/lessonGameCatalog.js';
+import { EXPEDITION_GAMES, type ExpeditionSpec } from './expeditionGames.js';
 
 export function expeditionGameDef(game: ExpeditionSpec): GameDef {
   return {

@@ -35,6 +35,7 @@
     "teacher:setup": "node scripts/setup-teacher.mjs",
     "test:teacher": "tsx --test scripts/teacher-ai.test.ts",
     "check:server": "tsc -p tsconfig.server.json",
+    "check:server:node": "tsc -p tsconfig.vercel-server.json",
     "dev:studio": "vite --config teacher-studio/vite.config.ts",
     "dev:studio:api": "tsx scripts/dev-studio-api.ts",
     "build:studio": "tsc --noEmit -p tsconfig.studio.json && vite build --config teacher-studio/vite.config.ts",

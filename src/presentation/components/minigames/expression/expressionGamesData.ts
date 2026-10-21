@@ -1,4 +1,4 @@
-import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData';
+import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData.js';
 export interface ExpressionStep {
   stepNum: number;
   title: string;

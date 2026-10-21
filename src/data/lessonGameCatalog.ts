@@ -1,4 +1,4 @@
-import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog';
+import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog.js';
 // 수업 지도안 추천용 게임 메타데이터 카탈로그
 // GameHub.tsx의 GAMES 배열에서 추출하여 수업 설계 전용 구조로 변환
 

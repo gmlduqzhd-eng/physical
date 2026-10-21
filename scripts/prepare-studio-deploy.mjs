@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 const root = resolve('.studio-deploy');
 const files = [
   'package.json', 'package-lock.json', 'tsconfig.app.json', 'tsconfig.studio.json',
+  'tsconfig.server.json', 'tsconfig.vercel-server.json',
   'teacher-studio/AdvancedControls.tsx', 'teacher-studio/Studio.tsx', 'teacher-studio/domain.ts',
   'teacher-studio/index.html', 'teacher-studio/main.tsx', 'teacher-studio/studio.css', 'teacher-studio/vite.config.ts',
   'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts',
@@ -31,7 +32,7 @@ for (const file of files) {
 await mkdir(join(root, 'api'), { recursive: true });
 await writeFile(join(root, 'api/studio.ts'), "export { default, maxDuration } from '../server/studioHandler.js';\n");
 await writeFile(join(root, 'vercel.json'), JSON.stringify({
-  framework: 'vite', buildCommand: 'npm run build:studio', outputDirectory: 'dist-teacher',
+  framework: 'vite', buildCommand: 'npm run check:server:node && npm run build:studio', outputDirectory: 'dist-teacher',
   functions: { 'api/studio.ts': { maxDuration: 120 } },
   rewrites: [{ source: '/((?!api/).*)', destination: '/index.html' }],
   headers: [{ source: '/(.*)', headers: [

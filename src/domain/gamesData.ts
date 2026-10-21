@@ -1,5 +1,5 @@
-import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog';
-import { EXPEDITION_BY_ID } from './expeditionGames';
+import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
+import { EXPEDITION_BY_ID } from './expeditionGames.js';
 // 2022 개정 초등 체육과 교육과정 연계 게임 데이터 및 메타데이터
 import { EXPRESSION_GAMES } from '../presentation/components/minigames/expression/expressionGamesData.js';
 import { CURRICULUM_GAMES_META } from '../presentation/components/minigames/curriculum/curriculumGamesMeta.js';
