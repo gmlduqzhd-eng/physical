@@ -125,6 +125,7 @@ export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueActio
   const [enqueueAction, resetScoreSubmission] = useGameScoreSubmission(queueAction);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(20);
+  const timeLeftRef = useRef(20);
   const [activeDirection, setActiveDirection] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
   const scoreRef = useRef(0);
@@ -141,6 +142,7 @@ export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueActio
     scoreRef.current = 0;
     setScore(0);
     setTimeLeft(20);
+    timeLeftRef.current = 20;
     setFinished(false);
     spawnTarget();
   };
@@ -152,21 +154,20 @@ export const PeripheralVision360: React.FC<GameProps> = ({ groupId, enqueueActio
   useEffect(() => {
     if (finished) return;
     const timer = setInterval(() => {
-      setTimeLeft(t => {
-        if (t <= 1) {
-          clearInterval(timer);
-          setFinished(true);
-          sfxSuccess();
-          enqueueAction({
-            id: Math.random().toString(),
-            type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: Math.max(200, scoreRef.current * 40) },
-            timestamp: Date.now()
-          });
-          return 0;
-        }
-        return t - 1;
-      });
+      const remaining = Math.max(0, timeLeftRef.current - 1);
+      timeLeftRef.current = remaining;
+      setTimeLeft(remaining);
+      if (remaining === 0) {
+        clearInterval(timer);
+        setFinished(true);
+        sfxSuccess();
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: Math.max(200, scoreRef.current * 40) },
+          timestamp: Date.now()
+        });
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, [finished, groupId, enqueueAction]);
@@ -248,6 +249,7 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
   const [shuttleCount, setShuttleCount] = useState(0);
   const [runnerPos, setRunnerPos] = useState<'A' | 'B'>('A');
   const [timeLeftInLap, setTimeLeftInLap] = useState(3.0);
+  const timeLeftInLapRef = useRef(3.0);
   const [finished, setFinished] = useState(false);
   const countRef = useRef(0);
 
@@ -260,26 +262,27 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
     setShuttleCount(0);
     setRunnerPos('A');
     setTimeLeftInLap(3.0);
+    timeLeftInLapRef.current = 3.0;
     setFinished(false);
   };
 
   useEffect(() => {
     if (finished) return;
     const interval = setInterval(() => {
-      setTimeLeftInLap(t => {
-        if (t <= 0.1) {
-          sfxPop();
-          setFinished(true);
-          enqueueAction({
-            id: Math.random().toString(),
-            type: 'INCREMENT_SCORE',
-            payload: { id: groupId, amount: countRef.current * 50 },
-            timestamp: Date.now()
-          });
-          return 0;
-        }
-        return Number((t - 0.1).toFixed(1));
-      });
+      const remaining = Math.max(0, Number((timeLeftInLapRef.current - 0.1).toFixed(1)));
+      timeLeftInLapRef.current = remaining;
+      setTimeLeftInLap(remaining);
+      if (remaining === 0) {
+        clearInterval(interval);
+        sfxPop();
+        setFinished(true);
+        enqueueAction({
+          id: Math.random().toString(),
+          type: 'INCREMENT_SCORE',
+          payload: { id: groupId, amount: countRef.current * 50 },
+          timestamp: Date.now()
+        });
+      }
     }, 100);
     return () => clearInterval(interval);
   }, [finished, LAP_TIME, groupId, enqueueAction]);
@@ -293,6 +296,7 @@ export const ShuttleRunBeep: React.FC<GameProps> = ({ groupId, enqueueAction: qu
     countRef.current = nextCount;
     setRunnerPos(p => (p === 'A' ? 'B' : 'A'));
     setTimeLeftInLap(LAP_TIME);
+    timeLeftInLapRef.current = LAP_TIME;
 
     if (nextCount % 3 === 0) {
       setLevel(l => l + 1);

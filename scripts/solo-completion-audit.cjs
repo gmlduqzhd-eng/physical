@@ -26,6 +26,7 @@ async function run() {
       const item = { id: game.type, name: game.name, status: 'running', errors: [], actions: [], virtualMs: 0 };
       const started = Date.now();
       page.on('pageerror', error => item.errors.push(error.stack || error.message));
+      page.on('console', message => { if(message.type()==='error' && /Cannot update a component|Maximum update depth|Too many re-renders|React error/.test(message.text())) item.errors.push(message.text()); });
       page.on('dialog', dialog => dialog.dismiss());
       const content = page.locator('.gameplay-content');
       const finished = async () => await page.locator('.game-result-overlay').count() > 0;
