@@ -17,7 +17,8 @@ export function ensureClassroomUser(): Promise<string> {
     const existing = await supabase.auth.getSession();
     if (existing.data.session) return existing.data.session.access_token;
     const result = await supabase.auth.signInAnonymously();
-    if (result.error || !result.data.session) throw new Error('이름 없는 수업 인증을 시작하지 못했습니다. Supabase 익명 로그인 설정과 연결을 확인하세요.');
+    if (result.error?.status === 429) throw new Error('같은 인터넷에서 새로 참여하는 기기의 요청이 잠시 몰렸어요. 입장 버튼을 반복해서 누르지 말고 잠시 후 다시 시도해주세요. 계속되면 선생님에게 알려주세요.');
+    if (result.error || !result.data.session) throw new Error('수업 연결을 시작하지 못했어요. 인터넷 연결을 확인하고 다시 시도해주세요.');
     return result.data.session.access_token;
   })().finally(() => { signingIn = null; });
   return signingIn;

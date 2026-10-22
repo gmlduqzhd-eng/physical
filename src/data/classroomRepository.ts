@@ -14,7 +14,7 @@ const studentJoinErrors: Record<string,string> = {
   number_taken:'이 수업에서 이미 사용 중인 학생 번호입니다. 번호를 확인하거나 선생님에게 기존 번호 해제를 요청하세요.',
   group_locked:'이미 다른 모둠에 참여 중입니다. 선생님에게 문의하세요.',
   room_closed:'종료된 수업입니다. 선생님에게 확인해주세요.',
-  rate_limited:'입장 시도가 많습니다. 15분 후 다시 시도해주세요.',
+  rate_limited:'이 기기에서 잘못된 참여 코드를 여러 번 입력했어요. 이미 참여한 수업은 ‘이전 수업 이어가기’를 이용하고, 새 입장은 15분 후 다시 시도해주세요.',
 };
 function studentJoinResult(data: unknown, error: unknown): StudentClassroomEntry {
   if (error || !data || typeof data !== 'object') throw new Error('입장 정보를 확인할 수 없습니다. 연결 상태를 확인해주세요.');
