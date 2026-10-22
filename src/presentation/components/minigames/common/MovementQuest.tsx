@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { makeQuestRound, questCue, questDuration, questResult, QUEST_META, safeRoute } from '../../../../domain/movementQuests';
+import { makeQuestRound, questAccurate, questCue, questDuration, questResult, QUEST_META, safeRoute } from '../../../../domain/movementQuests';
 import type { QuestId, QuestRecord, QuestSettings } from '../../../../domain/movementQuests';
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 import { sfxTap, unlockAudio } from '../../../../application/soundEffects';
@@ -10,11 +10,12 @@ export interface MovementQuestProps {
   enqueueAction?: (action: { id: string; type: string; payload: { id: string; amount: number; details: GameResultDetails }; timestamp: number }) => void;
   onExit?: () => void;
 }
-type Phase = 'intro' | 'plan' | 'countdown' | 'active' | 'record' | 'done';
+type Phase = 'intro' | 'plan' | 'preview' | 'countdown' | 'active' | 'record' | 'done';
 
 export function MovementQuest({ gameId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
   const meta = QUEST_META[gameId];
-  const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || gameId !== 'pass-gate-rescue', players: 3 });
+  const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: 3, seed: Math.floor(Math.random()*1000) });
+  const [answer, setAnswer] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>('intro');
   const [round, setRound] = useState(0);
   const [choice, setChoice] = useState('');
@@ -30,7 +31,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   const saved = useRef(false);
   const transition = useRef(false);
   const plan = makeQuestRound(gameId, round, settings, choice);
-  const duration = phase === 'countdown' ? 3000 : rehearsal ? plan.cueMs * Math.min(4, plan.cues.length) : questDuration(plan);
+  const duration = phase === 'countdown' ? 3000 : phase === 'preview' ? settings.gentle ? 7000 : 5000 : rehearsal ? plan.cueMs * Math.min(4, plan.cues.length) : questDuration(plan);
   const cue = questCue(plan, activeMs);
   const cueIndex = Math.floor(activeMs / plan.cueMs);
   const selected = plan.choices.find(c => c.id === choice);
@@ -50,7 +51,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   }, []);
 
   useEffect(() => {
-    if (!['active', 'countdown'].includes(phase) || paused) return;
+    if (!['active', 'countdown', 'preview'].includes(phase) || paused) return;
     let last = performance.now();
     const interval = window.setInterval(() => {
       const now = performance.now();
@@ -63,7 +64,8 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
 
   useEffect(() => {
     if (paused || activeMs < duration) return;
-    if (phase === 'countdown') { setActiveMs(0); setPhase('active'); }
+    if (phase === 'preview') { setActiveMs(0); setPhase('countdown'); }
+    else if (phase === 'countdown') { setActiveMs(0); setPhase('active'); }
     else if (phase === 'active') { setPhase('record'); window.speechSynthesis?.cancel(); }
   }, [phase, activeMs, duration, paused]);
 
@@ -82,14 +84,15 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   const start = (practice: boolean) => {
     if (!validChoice || transition.current) return;
     transition.current = true;
-    unlockAudio(); setError(''); setRehearsal(practice); setActiveMs(0); setPaused(false); setPhase('countdown');
+    unlockAudio(); setError(''); setAnswer([]); setRehearsal(practice); setActiveMs(0); setPaused(false); setPhase(plan.preview ? 'preview' : 'countdown');
     // The synchronous guard prevents a second start before React commits.
     queueMicrotask(() => { transition.current = false; });
   };
   const record = (outcome: 'complete' | 'partial') => {
-    if (saved.current || transition.current || rehearsal || phase !== 'record' || activeMs < questDuration(plan)) return;
+    if (saved.current || transition.current || rehearsal || phase !== 'record' || activeMs < (plan.timing ? 1000 : questDuration(plan))) return;
+    if(outcome==='complete'&&!questAccurate(plan,{answer,activeMs})){setError('기록한 순서나 예상 시간을 확인해요. 다시 도전하거나 연습 기록으로 남길 수 있어요.');return;}
     transition.current = true;
-    const next = [...records, { round, choice, outcome, activeMs, retries }];
+    const next = [...records, { round, choice, outcome, activeMs, retries, ...(plan.question ? {answer} : {}) }];
     if (round === 2) {
       const result = questResult(gameId, settings, next);
       if (!result) { setError('기록을 확인한 뒤 다시 시도해 주세요.'); transition.current = false; return; }
@@ -117,30 +120,31 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
         <label><input type="checkbox" checked={settings.seated} onChange={e => setSettings({ ...settings, seated: e.target.checked })}/>앉아서 팔 동작으로 참여하기</label>
         <label>진행 속도<select value={settings.gentle ? 'gentle' : 'standard'} onChange={e => setSettings({ ...settings, gentle: e.target.value === 'gentle' })}><option value="gentle">천천히 익히기</option><option value="standard">기본 속도 도전</option></select></label>
         {settings.seated && <p>{meta.alternative} 점수 기준은 같아요.</p>}
-        {gameId === 'pass-gate-rescue' && <>
+        {meta.team && <>
           {solo ? <p>혼자 해보기: 굴리기와 자리 바꾸기 규칙을 연습해요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => setSettings({ ...settings, practice: e.target.value === 'practice' })}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
-          {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{[2, 3, 4, 5, 6].map(n => <option key={n} value={n}>{n}명 · 표식 {n + 1}개</option>)}</select></label>}
+          {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{Array.from({length:(meta.maxPlayers??4)-1},(_,i)=>i+2).map(n => <option key={n} value={n}>{n}명{gameId==='pass-gate-rescue'?` · 표식 ${n+1}개`:''}</option>)}</select></label>}
         </>}
       </div>
       <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>
     </>}
     {phase === 'plan' && <>
       <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{plan.goal}</h2><p>{plan.hint}</p>
-      {gameId === 'zigzag' && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '보급품' : '표식'}</small></div>)}</div>}
+      {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
       <fieldset className="mq-choices"><legend>어떤 작전으로 해 볼까요?</legend>{plan.choices.map(c => <button key={c.id} type="button" aria-pressed={choice === c.id} onClick={() => changeChoice(c.id)}><strong>{c.label}</strong><span>{c.detail}</span></button>)}</fieldset>
       {error && <p role="alert" className="mq-error">{error}</p>}
       {!rehearsed ? <><p>처음에는 짧게 연습해요. 연습에는 점수가 없어요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(true)}>동작 연습하기</button></> : <><p>몸으로 수행한 뒤 한 번만 기록해요. 잘 안 되면 같은 작전을 다시 해도 돼요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>기기 놓고 작전 시작</button></>}
     </>}
-    {(phase === 'countdown' || phase === 'active') && <>
+    {(phase === 'preview' || phase === 'countdown' || phase === 'active') && <>
       <p className="mq-kicker">{rehearsal ? '동작 연습' : plan.title}</p>
       <div className="mq-signal" role="status" aria-live={gameId === 'dribble-rhythm' ? 'off' : 'polite'}>
-        <p>{paused ? '잠깐 쉬고 있어요' : phase === 'countdown' ? '기기를 놓고 준비해요' : plan.goal}</p>
-        <strong>{paused ? '일시정지' : phase === 'countdown' ? Math.max(1, Math.ceil((3000 - activeMs) / 1000)) : cue}</strong>
-        <span>{phase === 'active' ? `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음 · ${settings.seated ? '앉아서' : '서서'} 활동` : '주변을 확인해요'}</span>
+        <p>{paused ? '잠깐 쉬고 있어요' : phase === 'preview' ? '방문할 순서를 기억해요' : phase === 'countdown' ? '기기를 놓고 준비해요' : plan.goal}</p>
+        <strong>{paused ? '일시정지' : phase === 'preview' ? plan.preview?.join(' → ') : phase === 'countdown' ? Math.max(1, Math.ceil((3000 - activeMs) / 1000)) : cue}</strong>
+        <span>{phase === 'active' ? plan.timing && !rehearsal ? '시간 표시는 가려져 있어요' : `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음 · ${settings.seated ? '앉아서' : '서서'} 활동` : '주변을 확인해요'}</span>
       </div>
       {phase === 'active' && gameId === 'dribble-rhythm' && <div className="mq-beats" aria-label={`현재 ${cueIndex % 8 + 1}박`}>{Array.from({ length: 8 }, (_, n) => <span key={n} className={cueIndex % 8 === n ? 'is-current' : ''}>{n + 1}</span>)}</div>}
-      <p className="mq-away">활동 중 화면을 누르지 않아도 돼요. 신호는 동작 안내이며 자동 판정이 아니에요.</p>
+      <p className="mq-away">{plan.timing?'활동을 마칠 때 종료 버튼을 한 번 눌러요.':'활동 중 화면을 누르지 않아도 돼요.'} 신호는 동작 안내이며 자동 판정이 아니에요.</p>
+      {phase==='active'&&plan.timing&&!rehearsal&&<button className="mq-primary" disabled={paused||activeMs<1000} onClick={()=>setPhase('record')}>목표 시간이 된 것 같아요</button>}
       <button className="mq-secondary" onClick={() => { unlockAudio(); setPaused(!paused); }}>{paused ? '계속하기' : '일시정지'}</button>
       <button className="mq-secondary" onClick={() => { setPhase('plan'); setActiveMs(0); setPaused(false); }}>작전 다시 고르기</button>
     </>}
@@ -150,6 +154,8 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
       <button className="mq-secondary" onClick={() => start(true)}>연습 한 번 더</button>
     </> : <>
       <h2>직접 해 본 결과는 어땠나요?</h2><p className="mq-confirmation">{plan.confirmation}</p>
+      {plan.question&&<fieldset className="mq-choices"><legend>{plan.question.prompt}</legend><p>{answer.join(' → ')||'아직 고르지 않았어요'}</p>{plan.question.options.map(option=><button key={option} disabled={answer.length>=plan.question!.answer.length} onClick={()=>setAnswer([...answer,option])}>{option}</button>)}<button onClick={()=>setAnswer([])}>순서 다시 고르기</button>{answer.length===plan.question.answer.length&&<p>{questAccurate(plan,{answer,activeMs})?'기억한 순서가 같아요.':'순서가 달라요. 다시 도전하거나 연습으로 남겨요.'}</p>}</fieldset>}
+      {plan.timing&&<p>목표 {plan.timing.targetSeconds}초 · 직접 종료한 시간 {Math.round(activeMs/100)/10}초 · 차이 {Math.round(Math.abs(activeMs/1000-plan.timing.targetSeconds)*10)/10}초. {questAccurate(plan,{activeMs})?'정한 시간 범위 안에 들어왔어요.':'시간 차이를 보고 다음 시도를 조절해요.'}</p>}
       <p>직접 확인한 결과를 골라요. 기다린 시간이나 버튼만으로 성공을 판단하지 않아요.</p>
       <button className="mq-primary" onClick={() => record('complete')}>달성했어요 · {round === 2 ? '원정 마치기' : '다음 작전'}</button>
       <button className="mq-secondary" onClick={retry}>아직이에요 · 작전 바꾸어 재도전</button>

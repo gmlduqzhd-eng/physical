@@ -1411,7 +1411,7 @@ const BASE_GAMES: GameDef[] = [
 export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
   ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
   desc: QUEST_META[game.type].description, physicalActivity: true, durationMinutes: 4,
-  equipment: game.type === 'zigzag' ? ['바닥 표식 9개', '콩주머니 1개'] : game.type === 'dribble-rhythm' ? ['개인 공 1개'] : ['부드러운 공 1개', '인원보다 1개 많은 표식'],
+  equipment: QUEST_META[game.type].equipment ?? game.equipment,
   safetyTips: ['기기는 거치하고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
 } : game);
 

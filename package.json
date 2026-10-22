@@ -11,6 +11,7 @@
     "test": "node scripts/runtime-regressions.cjs",
     "test:movement": "tsx --test scripts/movement-quests.test.ts",
     "test:movement:ui": "node scripts/movement-quests-regressions.cjs",
+    "test:rollout": "tsx scripts/quest-rollout-regressions.ts",
     "report:games": "node scripts/game-review-report.cjs",
     "test:ui": "node scripts/ui-regressions.cjs",
     "test:hub": "node scripts/hub-tabs-regressions.cjs",

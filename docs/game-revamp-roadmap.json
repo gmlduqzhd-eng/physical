@@ -1,0 +1,12 @@
+{
+  "baseline": "3dd60f16620b831276b812ff4dc5399498607c95",
+  "remainingAtStart": 58,
+  "releasePolicy": "각 묶음은 소스·빌드·타입·브라우저 검증 후 main 배포. 실제 운영 검증 후 다음 묶음으로 진행. 기존 ID와 기록 보존. 학생 실측 검증과 브라우저 검증은 구별.",
+  "batches": [
+    {"priority":1,"name":"기기 거치·이동·기초 움직임","ids":["jump","squat","run","plank","one_leg","fitness","red_green","memory","stopwatch","relay-mission-runner","space-occupier","open-space-tactician"]},
+    {"priority":2,"name":"고유 규칙을 보존한 원정 진행·기록 개선","ids":["exp-phone-03","exp-phone-05","exp-phone-06","exp-phone-07","exp-phone-12","exp-phone-24","exp-phone-30","exp-phone-31","exp-phone-33","exp-phone-35","exp-phone-36","exp-phone-37","exp-phone-38","exp-phone-39","exp-tablet-01","exp-tablet-03","exp-tablet-06","exp-tablet-07","exp-tablet-09","exp-tablet-21","exp-tablet-24","exp-tablet-26","exp-tablet-32","exp-tablet-34","exp-tablet-35","exp-tablet-36","exp-tablet-37","exp-tablet-39","exp-tablet-42"]},
+    {"priority":3,"name":"실제 도구 조작·스포츠 선택·페이스","ids":["target","slingshot-archery","base-running-decide","sound-goalball","badminton-drop-clear","basketball-free-throw","tabletennis-spin-read","shuttle-run-beep"]},
+    {"priority":4,"name":"몸 상태 관찰·자세·편안한 호흡","ids":["pulse-detective","posture-guardian","campfire-breath","breath-pacer-478"]},
+    {"priority":5,"name":"공식 근거를 확인한 안전 학습","ids":["cpr-compression-110","aed-defibrillator-pad","water-rescue-throw","heatwave-pm25-shield","rice-treatment-firstaid"]}
+  ]
+}

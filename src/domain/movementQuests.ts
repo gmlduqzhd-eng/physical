@@ -1,16 +1,23 @@
 import type { GameResultDetails } from './gameResultDetails.js';
+import { EXTENDED_QUEST_IDS, EXTENDED_QUEST_META, makeExtendedQuest } from './extendedMovementQuests.js';
+import type { ExtendedQuestId, QuestMetadata } from './extendedMovementQuests.js';
 
-export const QUEST_IDS = ['zigzag', 'dribble-rhythm', 'pass-gate-rescue'] as const;
+export const PILOT_QUEST_IDS = ['zigzag', 'dribble-rhythm', 'pass-gate-rescue'] as const;
+export const QUEST_IDS = [...PILOT_QUEST_IDS, ...EXTENDED_QUEST_IDS] as const;
 export type QuestId = typeof QUEST_IDS[number];
-export type QuestSettings = { seated: boolean; gentle: boolean; practice: boolean; players: number };
-export type QuestRecord = { round: number; choice: string; outcome: 'complete' | 'partial'; activeMs: number; retries: number };
+export type QuestSettings = { seated: boolean; gentle: boolean; practice: boolean; players: number; seed?: number };
+export type QuestRecord = { round: number; choice: string; outcome: 'complete' | 'partial'; activeMs: number; retries: number; answer?: string[] };
 export interface QuestChoice { id: string; label: string; detail: string; path?: number[] }
 export interface QuestRound {
   title: string; goal: string; hint: string; choices: QuestChoice[]; cues: string[]; cueMs: number;
   repeats: number; blocked?: number; roles?: string[]; confirmation: string;
+  preview?: string[]; question?: { prompt: string; options: string[]; answer: string[] };
+  timing?: { targetSeconds: number; toleranceSeconds: number };
 }
-export const QUEST_META: Record<QuestId, { name: string; emoji: string; description: string; setup: string; rules: string[]; alternative: string }> = {
+export const QUEST_META: Record<QuestId, QuestMetadata> = {
+  ...EXTENDED_QUEST_META,
   zigzag: {
+    equipment: ['바닥 표식 9개', '콩주머니 1개'],
     name: '갈림길 보급 작전', emoji: '🧭',
     description: '막힌 길을 피해 경로를 고르고, 실제 바닥 표식을 걸어 보급품을 가져와요.',
     setup: '3×3 바닥 표식 9개(1~9번) · 콩주머니 1개 · 개인 통로 · 기기 거치',
@@ -18,6 +25,7 @@ export const QUEST_META: Record<QuestId, { name: string; emoji: string; descript
     alternative: '앉아서 책상 위 3×3 표식을 순서대로 짚고 가벼운 물건을 옮겨요.',
   },
   'dribble-rhythm': {
+    equipment: ['개인 공 1개'],
     name: '리듬 배송 공장', emoji: '🥁',
     description: '공을 다루는 박자를 익히고 손 바꾸기와 옆걸음을 연결해 세 배송을 완성해요.',
     setup: '개인 공 1개 · 미끄럽지 않은 개인 공간 · 기기 거치',
@@ -25,6 +33,7 @@ export const QUEST_META: Record<QuestId, { name: string; emoji: string; descript
     alternative: '앉아서 공을 무릎에서 손으로 옮기거나 손바닥으로 허벅지를 가볍게 두드려요.',
   },
   'pass-gate-rescue': {
+    team: true, maxPlayers: 6, equipment: ['부드러운 공 1개', '인원보다 1개 많은 표식'],
     name: '빈자리 패스 구조대', emoji: '🥅',
     description: '공을 굴려 보내고 빈 표식으로 이동해, 모두가 보내기와 받기에 참여해요.',
     setup: '부드러운 공 1개 · 인원보다 1개 많은 원형 바닥 표식 · 기기 거치',
@@ -45,6 +54,7 @@ export function safeRoute(path: readonly number[], blocked: number): boolean {
 
 export function makeQuestRound(id: QuestId, round: number, settings: QuestSettings, choiceId?: string): QuestRound {
   if (!Number.isInteger(round) || round < 0 || round > 2) throw new Error('Invalid quest round');
+  if ((EXTENDED_QUEST_IDS as readonly string[]).includes(id)) return makeExtendedQuest(id as ExtendedQuestId, round, settings, choiceId);
   const seated = settings.seated;
   if (id === 'zigzag') {
     const blocked = [4, 1, 5][round];
@@ -98,7 +108,11 @@ export function makeQuestRound(id: QuestId, round: number, settings: QuestSettin
     confirmation: practice ? '굴리기·회수·자리 바꾸기를 연습했어요' : '모두 보내고 받았고, 보낸 뒤 빈자리로 이동했어요' };
 }
 
-export function questDuration(plan: QuestRound): number { return plan.cues.length * plan.repeats * plan.cueMs; }
+export function questDuration(plan: QuestRound): number { return plan.timing ? 60000 : plan.cues.length * plan.repeats * plan.cueMs; }
+export function questAccurate(plan: QuestRound, record: Pick<QuestRecord,'answer'|'activeMs'>): boolean {
+  if (plan.question && (record.answer?.length !== plan.question.answer.length || !record.answer.every((a,i) => a === plan.question!.answer[i]))) return false;
+  return !plan.timing || Math.abs(record.activeMs / 1000 - plan.timing.targetSeconds) <= plan.timing.toleranceSeconds;
+}
 export function questCue(plan: QuestRound, activeMs: number): string {
   return plan.cues[Math.min(plan.cues.length * plan.repeats - 1, Math.floor(Math.max(0, activeMs) / plan.cueMs)) % plan.cues.length];
 }
@@ -107,7 +121,8 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
     const plan = makeQuestRound(id, index, settings, record.choice);
     const choice = plan.choices.find(c => c.id === record.choice);
     return record.round !== index || !choice || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
-      !['complete', 'partial'].includes(record.outcome) || !Number.isFinite(record.activeMs) || record.activeMs < questDuration(plan) ||
+      !['complete', 'partial'].includes(record.outcome) || !Number.isFinite(record.activeMs) || record.activeMs < (plan.timing ? 1000 : questDuration(plan)) || record.activeMs > 7200000 ||
+      (record.outcome === 'complete' && !questAccurate(plan, record)) ||
       !Number.isInteger(record.retries) || record.retries < 0;
   })) return null;
   const completed = records.filter(r => r.outcome === 'complete').length;

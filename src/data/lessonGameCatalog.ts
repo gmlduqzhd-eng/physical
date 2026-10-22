@@ -1325,8 +1325,8 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
 export const LESSON_GAME_CATALOG: LessonGameMeta[] = BASE_LESSON_GAME_CATALOG.map(game => isQuestId(game.id) ? {
   ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
   deviceMode: ['교사용 1대', '모둠별 1대'], intensity: '보통',
-  recommendedPlayers: game.id === 'pass-gate-rescue' ? { min: 2, max: 6 } : { min: 1, max: 1 },
+  recommendedPlayers: QUEST_META[game.id].team ? { min: 2, max: QUEST_META[game.id].maxPlayers ?? 4 } : { min: 1, max: 1 },
   safetyNotes: ['기기를 거치하고 걸어서 이동한다. 개인 통로를 확보한다.', QUEST_META[game.id].alternative],
   teachingTips: [...QUEST_META[game.id].rules, '첫 연습 후 세 작전을 수행하고 결과를 직접 확인한다. 속도 경쟁과 탈락은 없다.'],
-  noDeviceAlternative: game.id === 'zigzag' ? '종이에 막힌 칸과 경로를 그리고 실제 표식으로 수행한다.' : game.id === 'dribble-rhythm' ? '교사의 박수에 맞춰 8박자 공 조작을 연결한다.' : '교사가 출발 순서를 정하고 보내기 후 빈자리로 이동한다.',
+  noDeviceAlternative: QUEST_META[game.id].rules.join(' ') + ' 교사가 종이·박수로 화면의 신호를 대신한다.',
 } : game);

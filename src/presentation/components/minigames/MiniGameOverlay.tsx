@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { isQuestId } from '../../../domain/movementQuests';
+import { MovementQuest } from './common/MovementQuest';
 import '../../GameTheme.css';
 import type { GameRoom } from '../../../domain/types';
 import { VolcanoGame } from './VolcanoGame';
@@ -36,6 +38,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
   const renderContent = () => {
+    if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     switch (minigame.type) {
       case 'volcano':
         return <VolcanoGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;

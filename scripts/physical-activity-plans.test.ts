@@ -16,8 +16,8 @@ test('all 225 catalog games have a safe, accessible movement routine', () => {
   assert.deepEqual(PHYSICAL_ACTIVITY_PLANS.map(plan => plan.idea), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });
 
-test('ten proposed approaches reach their intended game families', () => {
-  const representatives = ['zone_touch', 'red_green', 'jump', 'relay-mission-runner', 'rolling-curling', 'dance_pose', 'math', 'speed_circle', 'pulse-zone-target', 'stopwatch'];
+test('ten legacy approaches remain available for games that have not migrated to their own plans', () => {
+  const representatives = ['zone_touch', 'freeze', 'arm_raise', 'trail-maze-run', 'rolling-curling', 'dance_pose', 'math', 'speed_circle', 'pulse-zone-target', 'coin_flip'];
   representatives.forEach((gameType, index) => assert.equal(getPhysicalActivityPlan(gameType).idea, index + 1));
   for (const game of EXPRESSION_GAMES.filter(game => !EXPEDITION_BY_ID.has(game.id))) assert.equal(getPhysicalActivityPlan(game.id, true).idea, 6);
 });
