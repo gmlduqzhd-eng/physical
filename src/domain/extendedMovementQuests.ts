@@ -4,7 +4,7 @@ export const EXTENDED_QUEST_IDS = ['jump','squat','run','plank','one_leg','fitne
 export type ExtendedQuestId = typeof EXTENDED_QUEST_IDS[number];
 export interface QuestMetadata {
   name: string; emoji: string; description: string; setup: string; rules: string[]; alternative: string;
-  equipment?: string[]; team?: boolean; maxPlayers?: number;
+  equipment?: string[]; team?: boolean; maxPlayers?: number; sources?: {label:string;url:string}[];
 }
 const fixed = '기기는 거치하고 개인 공간에서 수행해요.';
 const seated = '앉아서 표식을 짚거나 팔을 움직이는 대체 동작을 선택할 수 있어요.';

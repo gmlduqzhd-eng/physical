@@ -63,11 +63,14 @@ try{
      const answer=await finish(false);
      assert.equal(await page.evaluate(()=>sessionStorage.getItem('physical_player_profile')),null,'no auto award');
      for(const value of answer)await button(value).click();
+     const reflection=makeQuestRound(id,round,{gentle:true,seated:width===1024,practice:true,players:3}).reflection;
+     if(reflection&&width===390)await button(reflection.options[0]).click();
      await button(`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`).click();
     }
     await page.locator('.game-result-overlay').waitFor();
     const profile=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));
     assert.equal(profile.totalPlays,1);assert.equal(profile.recentGames[0].score,300);assert.equal(profile.recentGames[0].gameType,id);
+    if(makeQuestRound(id,0,{gentle:true,seated:false,practice:true,players:3}).reflection){if(width===390)assert(profile.recentGames[0].details.metrics['느낌 돌아보기']);else assert(!profile.recentGames[0].details.metrics['느낌 돌아보기']);}
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(width===390)await page.screenshot({path:path.join(out,id+'-result.png'),fullPage:true});
     await button('다시 하기').click();await button('활동 시작').click();await phase('intro');

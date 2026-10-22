@@ -114,3 +114,17 @@ test('sports decisions must match the situation and change across rounds; tool t
   assert.notDeepEqual(makeQuestRound(id,0,settings,'near').cues,makeQuestRound(id,0,settings,'far').cues);
  }
 });
+
+
+test('reflection is optional, bounded and never awards health or breathing performance',()=>{
+ for(const id of ['pulse-detective','posture-guardian','campfire-breath','breath-pacer-478'] as const){
+  const good=records(id);assert.equal(questResult(id,settings,good)?.amount,300);
+  const plan=makeQuestRound(id,0,settings);good[0].reflection=plan.reflection!.options[0];
+  assert.match(questResult(id,settings,good)!.details.metrics!['느낌 돌아보기'],new RegExp(plan.reflection!.options[0]));
+  good[0].reflection='invented health claim';assert.equal(questResult(id,settings,good),null);
+  for(let r=0;r<3;r++)for(const choice of makeQuestRound(id,r,settings).choices){
+   const p=makeQuestRound(id,r,settings,choice.id);assert(p.reflection);assert(p.cues.length>0);
+   if(id.includes('breath'))assert(p.cues.every(c=>!c.includes('숨 참기')&&!c.includes('7초')));
+  }
+ }
+});

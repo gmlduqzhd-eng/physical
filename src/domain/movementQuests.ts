@@ -1,23 +1,25 @@
+import {REFLECTION_QUEST_IDS,REFLECTION_QUEST_META,makeReflectionQuest,type ReflectionQuestId} from './reflectionMovementQuests.js';
 import {SPORTS_QUEST_IDS,SPORTS_QUEST_META,makeSportsQuest,type SportsQuestId} from './sportsMovementQuests.js';
 import type { GameResultDetails } from './gameResultDetails.js';
 import { EXTENDED_QUEST_IDS, EXTENDED_QUEST_META, makeExtendedQuest } from './extendedMovementQuests.js';
 import type { ExtendedQuestId, QuestMetadata } from './extendedMovementQuests.js';
 
 export const PILOT_QUEST_IDS = ['zigzag', 'dribble-rhythm', 'pass-gate-rescue'] as const;
-export const QUEST_IDS = [...PILOT_QUEST_IDS, ...EXTENDED_QUEST_IDS, ...SPORTS_QUEST_IDS] as const;
+export const QUEST_IDS = [...PILOT_QUEST_IDS, ...EXTENDED_QUEST_IDS, ...SPORTS_QUEST_IDS, ...REFLECTION_QUEST_IDS] as const;
 export type QuestId = typeof QUEST_IDS[number];
 export type QuestSettings = { seated: boolean; gentle: boolean; practice: boolean; players: number; seed?: number };
-export type QuestRecord = { round: number; choice: string; outcome: 'complete' | 'partial'; activeMs: number; retries: number; answer?: string[] };
+export type QuestRecord = { round: number; choice: string; outcome: 'complete' | 'partial'; activeMs: number; retries: number; answer?: string[]; reflection?:string };
 export interface QuestChoice { id: string; label: string; detail: string; path?: number[] }
 export interface QuestRound {
   title: string; goal: string; hint: string; choices: QuestChoice[]; cues: string[]; cueMs: number;
   repeats: number; blocked?: number; roles?: string[]; confirmation: string;
   preview?: string[]; question?: { prompt: string; options: string[]; answer: string[] };
+  reflection?: {prompt:string;options:string[]};
   decision?: {answer:string;explanation:string};
   timing?: { targetSeconds: number; toleranceSeconds: number };
 }
 export const QUEST_META: Record<QuestId, QuestMetadata> = {
-  ...EXTENDED_QUEST_META, ...SPORTS_QUEST_META,
+  ...EXTENDED_QUEST_META, ...SPORTS_QUEST_META, ...REFLECTION_QUEST_META,
   zigzag: {
     equipment: ['바닥 표식 9개', '콩주머니 1개'],
     name: '갈림길 보급 작전', emoji: '🧭',
@@ -58,6 +60,7 @@ export function makeQuestRound(id: QuestId, round: number, settings: QuestSettin
   if (!Number.isInteger(round) || round < 0 || round > 2) throw new Error('Invalid quest round');
   if ((EXTENDED_QUEST_IDS as readonly string[]).includes(id)) return makeExtendedQuest(id as ExtendedQuestId, round, settings, choiceId);
   if ((SPORTS_QUEST_IDS as readonly string[]).includes(id)) return makeSportsQuest(id as SportsQuestId,round,settings,choiceId);
+  if ((REFLECTION_QUEST_IDS as readonly string[]).includes(id)) return makeReflectionQuest(id as ReflectionQuestId,round,settings,choiceId);
   const seated = settings.seated;
   if (id === 'zigzag') {
     const blocked = [4, 1, 5][round];
@@ -123,13 +126,14 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
   if (records.length !== 3 || records.some((record, index) => {
     const plan = makeQuestRound(id, index, settings, record.choice);
     const choice = plan.choices.find(c => c.id === record.choice);
-    return record.round !== index || !choice || (plan.decision && choice.id!==plan.decision.answer) || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
+    return (record.reflection && !plan.reflection?.options.includes(record.reflection)) || record.round !== index || !choice || (plan.decision && choice.id!==plan.decision.answer) || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
       !['complete', 'partial'].includes(record.outcome) || !Number.isFinite(record.activeMs) || record.activeMs < (plan.timing ? 1000 : questDuration(plan)) || record.activeMs > 7200000 ||
       (record.outcome === 'complete' && !questAccurate(plan, record)) ||
       !Number.isInteger(record.retries) || record.retries < 0;
   })) return null;
   const completed = records.filter(r => r.outcome === 'complete').length;
   return { amount: completed * 100, details: { totalTime: Math.round(records.reduce((s, r) => s + r.activeMs, 0) / 1000), metrics: {
+    ...(records.some(r=>r.reflection)?{'느낌 돌아보기':records.map((r,i)=>`${i+1}: ${r.reflection||'기록 안 함'}`).join(' / ')}:{}),
     '기록 방식': '활동 후 직접 확인 · 센서 측정 아님', '작전 달성': `${completed}/3 · 직접 확인`,
     '참여 방식': settings.practice ? '혼자 규칙 연습 · 모둠 참여 미확인' : `${settings.players}명 함께 활동 · 직접 확인`,
     '활동 선택': `${settings.seated ? '앉아서' : '서서'} · ${settings.gentle ? '천천히' : '기본 속도'}`,

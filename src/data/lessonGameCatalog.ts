@@ -1330,7 +1330,7 @@ const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES
 }))];
 export const LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(game => isQuestId(game.id) ? {
   ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
-  deviceMode: ['교사용 1대', '모둠별 1대'], intensity: '보통', activityModes:QUEST_META[game.id].team?['짝','모둠']:['개인'],
+  deviceMode: ['교사용 1대', '모둠별 1대'], intensity: ['pulse-detective','posture-guardian','campfire-breath','breath-pacer-478'].includes(game.id)?'낮음':'보통', activityModes:QUEST_META[game.id].team?['짝','모둠']:['개인'],
   movementSkills:['선택한 동작 실행','방법과 결과 비교'],learningKeywords:[QUEST_META[game.id].name,'선택과 시도','직접 확인'],
   recommendedPlayers: QUEST_META[game.id].team ? { min: 2, max: QUEST_META[game.id].maxPlayers ?? 4 } : { min: 1, max: 1 },
   safetyNotes: ['기기를 거치하고 걸어서 이동한다. 개인 통로를 확보한다.', QUEST_META[game.id].alternative],

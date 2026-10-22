@@ -15,6 +15,7 @@ type Phase = 'intro' | 'plan' | 'preview' | 'countdown' | 'active' | 'record' | 
 export function MovementQuest({ gameId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
   const meta = QUEST_META[gameId];
   const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: 3, seed: Math.floor(Math.random()*1000) });
+  const [reflection,setReflection]=useState('');
   const [answer, setAnswer] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>('intro');
   const [round, setRound] = useState(0);
@@ -84,7 +85,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   const start = (practice: boolean) => {
     if (!validChoice || transition.current) return;
     transition.current = true;
-    unlockAudio(); setError(''); setAnswer([]); setRehearsal(practice); setActiveMs(0); setPaused(false); setPhase(plan.preview ? 'preview' : 'countdown');
+    unlockAudio(); setError(''); setAnswer([]); setReflection(''); setRehearsal(practice); setActiveMs(0); setPaused(false); setPhase(plan.preview ? 'preview' : 'countdown');
     // The synchronous guard prevents a second start before React commits.
     queueMicrotask(() => { transition.current = false; });
   };
@@ -92,7 +93,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
     if (saved.current || transition.current || rehearsal || phase !== 'record' || activeMs < (plan.timing ? 1000 : questDuration(plan))) return;
     if(outcome==='complete'&&!questAccurate(plan,{answer,activeMs})){setError('기록한 순서나 예상 시간을 확인해요. 다시 도전하거나 연습 기록으로 남길 수 있어요.');return;}
     transition.current = true;
-    const next = [...records, { round, choice, outcome, activeMs, retries, ...(plan.question ? {answer} : {}) }];
+    const next = [...records, { round, choice, outcome, activeMs, retries, ...(plan.question ? {answer} : {}), ...(reflection?{reflection}:{}) }];
     if (round === 2) {
       const result = questResult(gameId, settings, next);
       if (!result) { setError('기록을 확인한 뒤 다시 시도해 주세요.'); transition.current = false; return; }
@@ -125,6 +126,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
           {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{Array.from({length:(meta.maxPlayers??4)-1},(_,i)=>i+2).map(n => <option key={n} value={n}>{n}명{gameId==='pass-gate-rescue'?` · 표식 ${n+1}개`:''}</option>)}</select></label>}
         </>}
       </div>
+      {meta.sources&&<details className="mq-panel"><summary>확인한 공식 안내</summary>{meta.sources.map(source=><p key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></p>)}</details>}
       <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>
     </>}
     {phase === 'plan' && <>
@@ -154,6 +156,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
       <button className="mq-secondary" onClick={() => start(true)}>연습 한 번 더</button>
     </> : <>
       <h2>직접 해 본 결과는 어땠나요?</h2><p className="mq-confirmation">{plan.confirmation}</p>
+      {plan.reflection&&<fieldset className="mq-choices"><legend>{plan.reflection.prompt}</legend>{plan.reflection.options.map(option=><button key={option} aria-pressed={reflection===option} onClick={()=>setReflection(option)}>{option}</button>)}</fieldset>}
       {plan.question&&<fieldset className="mq-choices"><legend>{plan.question.prompt}</legend><p>{answer.join(' → ')||'아직 고르지 않았어요'}</p>{plan.question.options.map(option=><button key={option} disabled={answer.length>=plan.question!.answer.length} onClick={()=>setAnswer([...answer,option])}>{option}</button>)}<button onClick={()=>setAnswer([])}>순서 다시 고르기</button>{answer.length===plan.question.answer.length&&<p>{questAccurate(plan,{answer,activeMs})?'기억한 순서가 같아요.':'순서가 달라요. 다시 도전하거나 연습으로 남겨요.'}</p>}</fieldset>}
       {plan.timing&&<p>목표 {plan.timing.targetSeconds}초 · 직접 종료한 시간 {Math.round(activeMs/100)/10}초 · 차이 {Math.round(Math.abs(activeMs/1000-plan.timing.targetSeconds)*10)/10}초. {questAccurate(plan,{activeMs})?'정한 시간 범위 안에 들어왔어요.':'시간 차이를 보고 다음 시도를 조절해요.'}</p>}
       <p>직접 확인한 결과를 골라요. 기다린 시간이나 버튼만으로 성공을 판단하지 않아요.</p>

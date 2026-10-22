@@ -215,7 +215,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
   };
 });
 
-QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji }; });
+QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
 
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
