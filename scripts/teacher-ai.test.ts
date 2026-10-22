@@ -20,7 +20,11 @@ function fixture(input: TeacherInput): TeacherOutput {
   const material = sources(input); const first = material[0];
   const cite = (game = first) => ({ activityId: game.id, field: 'description' as const, quote: game.description });
   return { title: '테스트 전용 교사 검토 초안', recommendations: ['recommend', 'alternative'].includes(input.task) ? material.slice(0, 3).map(game => ({ activityId: game.id, reason: '협동 목표를 위한 역할 분담 제안입니다.', citations: [cite(game)] })) : [],
-    sections: (headings[input.task] ?? []).map((heading, i) => ({ heading, minutes: input.task === 'plan' ? [5, 5, 23, 5, 2][i] : null, content: heading === '관찰 요약' ? '교사가 선택한 관찰 항목: '+input.observations.join(' · ')+'. 구체적인 장면·학생별 수행은 제공되지 않았습니다.' : heading === '모둠 결과 요약' ? '교사가 입력한 범주: '+input.aggregate!.groups+' / '+input.aggregate!.participants+' / '+input.aggregate!.completion+' / '+input.aggregate!.cooperation+'. 개인·모둠별 결과는 제공되지 않았습니다.' : heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '교사가 설명하고 모둠 역할을 교대하는 수업 방식 제안입니다.', citations: [cite()] })),
+    sections: (headings[input.task] ?? []).map((heading, i) => ({ heading, minutes: input.task === 'plan' ? [5, 5, 23, 5, 2][i] : null, content: input.task === 'difficulty' ? [
+      '진행: 교사가 안내한 역할에 따라 서로 다른 섬을 맡도록 제안합니다.\n역할: 수행자와 관찰자가 자신의 차례를 확인합니다.\n관찰: 학생이 맡은 섬과 역할을 설명하는지 살펴봅니다.',
+      '진행: 모둠이 협의하여 서로 다른 섬을 맡도록 제안합니다.\n역할: 학생들이 수행자와 관찰자를 교대합니다.\n관찰: 학생들이 동료의 의견을 듣고 차례를 바꾸는지 살펴봅니다.',
+      '진행: 모둠이 배치 방법을 선택하고 실행 뒤 함께 조정하도록 제안합니다.\n역할: 학생들이 역할 교대 방법도 함께 정합니다.\n관찰: 학생들이 서로의 의견을 반영하여 방법을 수정하는지 살펴봅니다.',
+    ][i] : input.task === 'reflection' ? '오늘 어떤 움직임이 즐거웠나요?\n친구와 역할을 어떻게 나누었나요?\n다음에는 어떤 방법으로 함께 참여하고 싶나요?' : heading === '관찰 요약' ? '교사가 선택한 관찰 항목: '+input.observations.join(' · ')+'. 구체적인 장면·학생별 수행은 제공되지 않았습니다.' : heading === '모둠 결과 요약' ? '교사가 입력한 범주: '+input.aggregate!.groups+' / '+input.aggregate!.participants+' / '+input.aggregate!.completion+' / '+input.aggregate!.cooperation+'. 개인·모둠별 결과는 제공되지 않았습니다.' : heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '교사가 설명하고 모둠 역할을 교대하는 수업 방식 제안입니다.', citations: [cite()] })),
     safety: first.safety.slice(0, 2).map(quote => ({ activityId: first.id, quote })), teacherChecks: ['교사가 현장 조건과 참여 의사를 확인했나요?'] };
 }
 test('strict privacy boundary rejects names, room IDs, free text and individual histories', () => {
@@ -69,6 +73,34 @@ test('lesson draft requires all five phases and exact requested duration', () =>
   const input = { ...base, task: 'plan' as const, activityId: 'space-occupier' }; const result = fixture(input);
   result.sections[2].minutes = 30; assert.throws(() => validateOutput(result, input));
   result.sections.pop(); assert.throws(() => validateOutput(result, input));
+});
+
+test('difficulty adjustments require distinct progress, role and observation guidance at each level', () => {
+  const input = { ...base, task: 'difficulty' as const, activityId: 'space-occupier' };
+  const result = fixture(input);
+  assert.doesNotThrow(() => validateOutput(result, input));
+  for (const content of ['진행: 역할을 바꿉니다.\n역할: 수행자와 관찰자', '진행: 역할을 바꿉니다.\n역할: 수행자와 관찰자\n관찰:', '역할: 수행자와 관찰자\n진행: 역할을 바꿉니다.\n관찰: 차례를 확인하는 행동']) {
+    const invalid = fixture(input); invalid.sections[0].content = content;
+    assert.throws(() => validateOutput(invalid, input), /진행·역할·관찰/);
+  }
+  result.sections[1].content = result.sections[0].content.replace(/\n/g, '\n\n');
+  assert.throws(() => validateOutput(result, input), /서로 같아서는/);
+});
+
+test('reflection requires three separate questions and available safety source material cannot be omitted', () => {
+  const reflection = { ...base, task: 'reflection' as const, activityId: 'space-occupier' };
+  for (const count of [1, 2, 4]) {
+    const result = fixture(reflection); result.sections[0].content = Array.from({ length: count }, (_, index) => `${index + 1}. 어떤 활동을 함께 했나요?`).join('\n');
+    assert.throws(() => validateOutput(result, reflection), /세 문항/);
+  }
+  assert.doesNotThrow(() => validateOutput(fixture(reflection), reflection));
+  const safety = { ...base, task: 'safety' as const, activityId: 'space-occupier' };
+  const result = fixture(safety); result.safety = [];
+  const material = sources(safety);
+  assert.ok(material[0].safety.length > 0);
+  assert.throws(() => validateOutput(result, safety), /안전 원문이 누락/);
+  // Activities without a safety source must not receive an invented citation.
+  assert.doesNotThrow(() => validateOutput(result, safety, material.map(game => ({ ...game, safety: [] }))));
 });
 test('private next-challenge records never need an AI call, and insufficient effort evidence does not promote', () => {
   assert.match(nextChallenge([], 'jump'), /부족/);

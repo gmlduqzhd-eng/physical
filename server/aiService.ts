@@ -46,14 +46,14 @@ teacherChecks는 교사가 채택 전 확인할 질문이다. recommendations가
 const taskDirectives: Record<TeacherInput['task'],string> = {
   "recommend": "recommend,alternative는 서로 다른 적합 활동 3개와 이유. sections는 비운다. alternative는 입력된 날씨/공간/기기 제약을 함께 설명한다. 자료가 부족하면 억지 추천하지 않는다.",
   "alternative": "recommend,alternative는 서로 다른 적합 활동 3개와 이유. sections는 비운다. alternative는 입력된 날씨/공간/기기 제약을 함께 설명한다. 자료가 부족하면 억지 추천하지 않는다.",
-  "difficulty": "difficulty는 sections heading이 기초,보통,도전인 정확히 3개. 각 content에 규칙/역할/참여 방식 조정과 교사가 볼 관찰점을 제안한다. 실제 게임 코드의 난이도 변경을 주장하지 않는다.",
+  "difficulty": "difficulty는 sections heading이 기초,보통,도전인 정확히 3개. 각 content를 '진행: 구체적인 규칙·참여 방식 조정\\n역할: 학생이 맡고 교대할 역할\\n관찰: 교사가 실제로 살펴볼 행동' 형식의 세 줄로 작성한다. 세 수준은 같은 활동 목표를 유지하면서 판단할 조건의 복잡성, 역할 분담, 협의의 자율성 중 하나 이상이 구체적으로 달라야 한다. 기초는 교사의 안내와 역할 확인, 보통은 학생 간 협의와 역할 교대, 도전은 학생이 방법을 선택하고 함께 조정하는 방향으로 원자료에 맞는 수업 방식을 제안한다. 활동 설명을 반복하거나 기기·종이 사용만 바꾸어 수준 차이로 삼지 않는다. 각 수준에 관찰할 행동을 반드시 제시한다. 새로운 장비·안전 기준·효과를 사실처럼 추가하지 않으며 실제 게임 코드의 난이도 변경을 주장하지 않는다. 모두 교사 검토용 제안이다.",
   "plan": "plan은 sections heading이 도입,준비운동,본활동,정리,안전 지도인 5개. minutes의 합이 입력 minutes와 같아야 한다. 안전 지도 content는 '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.'만 쓴다.",
   "safety": "safety는 sections를 비우고 원문 safety 선택, teacherChecks에 장소/인원 관련 교사 확인 질문만 제안한다. 안전 적합 판정을 하지 않는다.",
   "mission": "mission은 협동 목표,역할과 진행,완료 확인의 3개 section. 모둠 인원과 activityMinutes의 활동 시간을 반영하되 점수 자동 반영을 주장하지 않는다.",
   "observation": "observation은 관찰 요약,다음 차시 아이디어 2개 section. 관찰 요약 content는 '교사가 선택한 관찰 항목: '+observations를 ' · '로 연결한 문자열+'. 구체적인 장면·학생별 수행은 제공되지 않았습니다.'와 정확히 같아야 한다. 관찰 장면을 추측하지 않는다. 다음 차시 아이디어만 AI 제안이며 이미 관찰된 사실처럼 쓰지 않는다.",
   "group": "group은 모둠 결과 요약,활동 조정안 2개 section. 모둠 결과 요약 content는 '교사가 입력한 범주: '+aggregate.groups+' / '+aggregate.participants+' / '+aggregate.completion+' / '+aggregate.cooperation+'. 개인·모둠별 결과는 제공되지 않았습니다.'와 정확히 같아야 한다. 활동 조정안만 AI 제안이다. 순위/개인/모둠 이름이나 없는 수행 사실을 만들지 않는다.",
   "reflection": "reflection은 sections heading 성찰 질문, content에 학년과 활동에 맞는 질문 3개를 줄바꿈으로 작성한다.",
-  "participation": "participation은 sections heading이 오늘의 몸 미션, 역할 바꾸기, 기다리는 동안인 정확히 3개다. 각 content는 초등학생에게 보여줄 100자 이내의 짧은 한 문장이다. 화면 터치나 타이머를 실제 신체 활동의 증거라고 주장하지 않는다. 역할 바꾸기는 짝 또는 모둠의 수행자와 관찰자가 서로 바꾸는 방법을, 기다리는 동안은 대기 학생이 제자리에서 안전하게 참여할 방법을 제안한다. 모든 문장은 해당 활동 원자료에 근거하되 새로운 안전 수치와 필수 장비를 창작하지 않는다."
+  "participation": "participation은 sections heading이 오늘의 몸 미션, 역할 바꾸기, 기다리는 동안인 정확히 3개다. 각 content는 초등학생에게 보여줄 100자 이내의 짧은 한 문장이다. 화면 터치나 타이머를 실제 신체 활동의 증거라고 주장하지 않는다. 역할 바꾸기는 짝 또는 모둠의 수행자와 관찰자가 서로 바꾸는 방법을 제안한다. 기다리는 동안은 반드시 '제자리에서'로 시작하며 대기 장소를 벗어나지 않고 참여할 방법을 제안한다. 해당 활동 원자료에서 가능한 수행 관찰·차례 확인·구두 협의 등의 행동을 선택하고, 걷거나 뛰며 이동하는 대기를 제안하지 않는다. 모든 문장은 해당 활동 원자료에 근거하되 새로운 안전 수치와 필수 장비를 창작하지 않는다."
 };
 export function instructionsFor(input: TeacherInput) { return instructions + "\n현재 요청은 "+input.task+" 하나뿐이다. 다른 기능의 결과를 추가하지 않는다.\n"+taskDirectives[input.task]+(input.task==='mission'?`\n협동 미션 본문에 '${input.groupSize}명'과 '${input.activityMinutes}분'을 반드시 명시한다. 해당 인원이 모두 참여하는 역할 분담과 정해진 시간 내 역할 교대를 구체적으로 제안한다.`:'')+"\nrecommend/alternative면 sections는 반드시 빈 배열이다. 그 외 작업은 recommendations가 빈 배열이다. plan 이외에는 모든 minutes가 null이다."; }
 
@@ -76,6 +76,7 @@ export function validateOutput(raw: unknown, input: TeacherInput, material = sou
     section.citations.forEach(citationCheck);
   }
   for (const item of result.safety) citationCheck({ ...item, field: 'safety' });
+  if (material.some(game => game.safety.length > 0) && result.safety.length === 0) throw new Error('제공된 안전 원문이 누락되었습니다.');
   if (input.task === 'recommend' || input.task === 'alternative') {
     if (new Set(result.recommendations.map(r => r.activityId)).size !== 3 || result.sections.length) throw new Error('적합한 활동 3개를 확인할 수 없습니다. 조건을 바꿔 주세요.');
   } else if (result.recommendations.length) throw new Error('잘못된 결과 형식입니다.');
@@ -86,6 +87,15 @@ export function validateOutput(raw: unknown, input: TeacherInput, material = sou
     participation: ['오늘의 몸 미션', '역할 바꾸기', '기다리는 동안'],
   };
   if (expected[input.task] && JSON.stringify(result.sections.map(s => s.heading)) !== JSON.stringify(expected[input.task])) throw new Error('필수 수업 항목이 누락되었습니다.');
+  if (input.task === 'difficulty') {
+    const labels = ['진행:', '역할:', '관찰:'];
+    if (result.sections.some(section => {
+      const lines = section.content.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      return lines.length !== labels.length || lines.some((line, index) => !line.startsWith(labels[index]) || !line.slice(labels[index].length).trim());
+    })) throw new Error('난이도별 진행·역할·관찰 항목이 필요합니다.');
+    if (new Set(result.sections.map(section => section.content.replace(/\s+/g, ''))).size !== result.sections.length) throw new Error('난이도별 조정 내용이 서로 같아서는 안 됩니다.');
+  }
+  if (input.task === 'reflection' && result.sections[0].content.split(/\r?\n/).map(line => line.trim()).filter(Boolean).length !== 3) throw new Error('성찰 질문은 줄바꿈으로 구분한 세 문항이어야 합니다.');
   if (input.task === 'plan' && (result.sections.some(s => s.minutes === null) || result.sections.reduce((n, s) => n + (s.minutes ?? 0), 0) !== input.minutes)) throw new Error('수업 시간 합계가 맞지 않습니다.');
   if (input.task === 'plan' && result.sections[4].content !== '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.') throw new Error('검증되지 않은 안전 지도입니다.');
   if (input.task !== 'plan' && result.sections.some(s => s.minutes !== null)) throw new Error('잘못된 시간 정보입니다.');

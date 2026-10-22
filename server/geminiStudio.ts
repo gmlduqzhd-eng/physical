@@ -27,6 +27,10 @@ export function studioRetryInstruction(error: unknown): string | null {
   if (error.message === '학생용 안내는 항목마다 짧은 한 문장이어야 합니다.') return '학생용 안내 세 항목을 각각 줄바꿈 없이 50자 안팎의 한 문장으로 작성한다. 100자를 넘기지 않는다.';
   if (error.message === '필수 수업 항목이 누락되었습니다.') return '요청된 section heading을 제시한 순서대로 빠짐없이 한 번씩 작성한다.';
   if (error.message === '수업 시간 합계가 맞지 않습니다.') return '지도안의 5개 minutes 합계를 입력한 수업 시간과 정확히 맞춘다.';
+  if (error.message === '난이도별 진행·역할·관찰 항목이 필요합니다.' || error.message === '난이도별 조정 내용이 서로 같아서는 안 됩니다.') return '기초·보통·도전 각 content를 진행: / 역할: / 관찰: 로 시작하는 세 줄로 작성한다. 각 수준에서 판단 조건이나 협의의 자율성을 구체적으로 달리하고 관찰할 행동을 적는다.';
+  if (error.message === '성찰 질문은 줄바꿈으로 구분한 세 문항이어야 합니다.') return '성찰 질문 content에는 서로 다른 질문 정확히 세 개를 각각 한 줄로 작성한다. 서문이나 맺음말은 넣지 않는다.';
+  if (error.message === '제공된 안전 원문이 누락되었습니다.') return '제공된 activities.sourceReferences.safety에서 sourceId를 최소 한 개 이상 골라 safety에 포함한다. 안전 원문을 창작하지 않는다.';
+  if (error.message === '필수 수업 인원·활동 시간이 반영되지 않았습니다.') return '협동 미션 본문에 context.groupSize명과 context.activityMinutes분을 실제 입력 숫자로 명시한다.';
   return null;
 }
 

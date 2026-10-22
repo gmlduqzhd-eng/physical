@@ -29,7 +29,8 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
   process.env.GEMINI_API_KEY = 'unit-test-fake-not-a-real-google-key'; process.env.GEMINI_MODEL = defaultGeminiModel; process.env.GEMINI_PUBLIC_DATA_REVIEWED = 'true';
   const input = { ...base, weather: '제약 없음', observations: [], aggregate: null, activityMinutes: 10 };
   const material = sources(input as never);
-  let fixture: unknown = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: material.slice(0, 3).map(game => ({ activityId: game.id, reason: '협동을 위한 역할 교대 제안입니다.', citations: [{ activityId: game.id, field: 'description', quote: game.description }] })), sections: [], safety: [], teacherChecks: ['교사가 현장을 확인했나요?'] };
+  const safetyFor = (games: typeof material) => games.flatMap(game => game.safety.slice(0, 1).map(quote => ({ activityId: game.id, quote }))).slice(0, 8);
+  let fixture: unknown = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: material.slice(0, 3).map(game => ({ activityId: game.id, reason: '협동을 위한 역할 교대 제안입니다.', citations: [{ activityId: game.id, field: 'description', quote: game.description }] })), sections: [], safety: safetyFor(material.slice(0, 3)), teacherChecks: ['교사가 현장을 확인했나요?'] };
   globalThis.fetch = async (url, init) => {
     calls++; assert.equal(String(url), `https://generativelanguage.googleapis.com/v1beta/models/${defaultGeminiModel}:generateContent`);
     const body = JSON.parse(String(init?.body)); const serialized = JSON.stringify(body);
@@ -46,9 +47,14 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
   try {
     assert.equal((await generateStudioAdvice(base)).result.recommendations.length, 3);
     const selected = sources({ ...input, task: 'difficulty', activityId: 'space-occupier' } as never)[0];
+    const difficultyContent = [
+      '진행: 열린 섬을 먼저 함께 확인하는 방식을 제안합니다.\n역할: 친구와 함께 갈 섬을 정해 봅니다.\n관찰: 섬의 위치를 이해하는지 살펴봅니다.',
+      '진행: 서로 다른 열린 섬을 선택하는 방식을 제안합니다.\n역할: 수행자와 관찰자가 역할을 바꾸어 봅니다.\n관찰: 친구와 이동할 위치를 의논하는지 살펴봅니다.',
+      '진행: 닫힌 섬이 생기면 배치를 새로 의논하는 방식을 제안합니다.\n역할: 모둠원이 번갈아 배치를 제안해 봅니다.\n관찰: 변화에 맞춰 협동 전략을 조정하는지 살펴봅니다.',
+    ];
     for (const task of ['difficulty', 'plan'] as const) {
       const headings = task === 'plan' ? ['도입', '준비운동', '본활동', '정리', '안전 지도'] : ['기초', '보통', '도전'];
-      fixture = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: [], sections: headings.map((heading, index) => ({ heading, minutes: task === 'plan' ? [5, 5, 23, 5, 2][index] : null, content: heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '역할을 교대하는 수업 방식 제안입니다.', citations: [{ activityId: selected.id, field: 'description', quote: selected.description }] })), safety: [], teacherChecks: ['현장 조건을 확인했나요?'] };
+      fixture = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: [], sections: headings.map((heading, index) => ({ heading, minutes: task === 'plan' ? [5, 5, 23, 5, 2][index] : null, content: task === 'difficulty' ? difficultyContent[index] : heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '역할을 교대하는 수업 방식 제안입니다.', citations: [{ activityId: selected.id, field: 'description', quote: selected.description }] })), safety: safetyFor([selected]), teacherChecks: ['현장 조건을 확인했나요?'] };
       const result = await generateStudioAdvice({ ...base, task, activityId: selected.id }); assert.equal(result.result.sections.length, headings.length);
       if (task === 'plan') assert.equal(result.result.sections.reduce((n, s) => n + (s.minutes ?? 0), 0), 40);
     }
@@ -56,7 +62,7 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
     for (const task of ['safety','mission','observation','group','alternative','reflection','participation'] as const) {
       const next = { ...input, task, activityId: task==='alternative'?null:selected.id, observations: task==='observation'?['협동이 활발함']:[], aggregate: task==='group'?{groups:'3~5모둠',participants:'모둠당 5~8명',completion:'절반 정도 완료',cooperation:'관찰 부족'}:null };
       const headings = {safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],alternative:[],reflection:['성찰 질문'],participation:['오늘의 몸 미션','역할 바꾸기','기다리는 동안']}[task];
-      fixture = { title:'테스트 전용, 실제 AI 아님',recommendations:task==='alternative'?material.slice(0,3).map(g=>({activityId:g.id,reason:'대체 활동 제안',citations:[{activityId:g.id,field:'description',quote:g.description}]})):[],sections:headings.map(heading=>({heading,minutes:null,content:heading==='관찰 요약'?observationSummary(next as never):heading==='모둠 결과 요약'?groupSummary(next as never):'교사 검토용 역할 교대 제안',citations:[{activityId:selected.id,field:'description',quote:selected.description}]})),safety:[],teacherChecks:['교사가 조건을 확인했나요?'] };
+      fixture = { title:'테스트 전용, 실제 AI 아님',recommendations:task==='alternative'?material.slice(0,3).map(g=>({activityId:g.id,reason:'대체 활동 제안',citations:[{activityId:g.id,field:'description',quote:g.description}]})):[],sections:headings.map(heading=>({heading,minutes:null,content:heading==='관찰 요약'?observationSummary(next as never):heading==='모둠 결과 요약'?groupSummary(next as never):task==='reflection'?'열린 섬을 고를 때 무엇을 살펴보았나요?\n친구와 이동할 위치를 어떻게 의논했나요?\n다시 활동한다면 어떤 역할을 해 보고 싶나요?':'교사 검토용 역할 교대 제안',citations:[{activityId:selected.id,field:'description',quote:selected.description}]})),safety:safetyFor(task==='alternative'?material.slice(0,3):[selected]),teacherChecks:['교사가 조건을 확인했나요?'] };
       if(task==='mission')(fixture as TeacherOutput).sections[0].content+=' 6명 모둠의 10분 활동 제안.';
       assert.equal((await generateStudioAdvice(next)).result.sections.length,headings.length);
     }

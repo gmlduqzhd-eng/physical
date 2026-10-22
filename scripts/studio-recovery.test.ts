@@ -1,11 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStudioAdvice, studioProviderCategory, studioRetryDelayMs, withStudioRecovery } from '../server/geminiStudio.js';
+import { generateStudioAdvice, studioProviderCategory, studioRetryDelayMs, studioRetryInstruction, withStudioRecovery } from '../server/geminiStudio.js';
 import { studioFailureDiagnostics } from '../server/studioHandler.js';
 import { APICallError } from 'ai';
 
 const input = { task:'participation',activityId:'space-occupier',grade:'3~4학년군',goal:'협동과 소통',place:'체육관',device:'태블릿 PC',deviceCount:'모둠별 1대',minutes:40,groupSize:6,classSize:24,consent:true,adultTeacher:true };
-const output = { title:'교사 검토용 활동 안내',recommendations:[],sections:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'].map(heading=>({heading,minutes:null,content:'친구와 역할을 번갈아 맡아 활동해 보세요.',citations:[{sourceId:'space-occupier:description:0'}]})),safety:[],teacherChecks:['현장의 참여 조건을 확인했나요?'] };
+const output = { title:'교사 검토용 활동 안내',recommendations:[],sections:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'].map(heading=>({heading,minutes:null,content:'친구와 역할을 번갈아 맡아 활동해 보세요.',citations:[{sourceId:'space-occupier:description:0'}]})),safety:[{sourceId:'space-occupier:safety:0'}],teacherChecks:['현장의 참여 조건을 확인했나요?'] };
+
+test('missing teaching structure is repaired once without bypassing final validation', async () => {
+  for (const message of ['난이도별 진행·역할·관찰 항목이 필요합니다.', '난이도별 조정 내용이 서로 같아서는 안 됩니다.', '성찰 질문은 줄바꿈으로 구분한 세 문항이어야 합니다.', '제공된 안전 원문이 누락되었습니다.', '필수 수업 인원·활동 시간이 반영되지 않았습니다.']) {
+    assert.ok(studioRetryInstruction(new Error(message)));
+    let calls = 0;
+    await assert.rejects(withStudioRecovery(async correction => {
+      calls++;
+      if (calls === 2) assert.ok(correction);
+      throw new Error(message);
+    }, virtualRuntime()), { message });
+    assert.equal(calls, 2);
+  }
+  assert.equal(studioRetryInstruction(new Error('원문과 일치하지 않는 근거입니다.')), null);
+});
 
 test('malformed or long Gemini output is regenerated once, while quota errors are not retried',async()=>{
   const originalFetch=globalThis.fetch, originalEnv={...process.env};
