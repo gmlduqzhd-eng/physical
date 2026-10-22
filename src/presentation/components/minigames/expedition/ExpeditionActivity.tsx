@@ -13,7 +13,8 @@ const expeditionMinimumPlayers=(game:ExpeditionSpec)=>game.spec[0]==='T'?(fourPl
 
 export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const [phase,setPhase]=useState<Phase>('ready');
-  const [players,setPlayers]=useState(game.players);
+  const [classroomPlayers,setPlayers]=useState(game.players);
+  const players=solo?game.players:classroomPlayers;
   const [plans,setPlans]=useState<ExpeditionRound[]>([]);
   const [round,setRound]=useState(0),[step,setStep]=useState(0);
   const [seconds,setSeconds]=useState(0),[beat,setBeat]=useState(0),[paused,setPaused]=useState(false),[sound,setSound]=useState(true);
@@ -93,7 +94,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
     <div className="expedition-heading"><span>🧭 {game.name}</span><small>{phase==='ready'?'준비':`${round+1}/${game.rounds} 라운드`}</small></div>
     {phase==='ready'?<>
       <p className="expedition-lead">{game.desc}</p>
-      <label>참여 인원<select aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>
+      {!solo&&<label>참여 인원<select aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
       {solo&&players>1&&<p className="expedition-note">혼자 해보기에서는 여러 역할의 진행을 체험해요. 번호 확인은 실제 모둠원이 참여했다는 자동 인증이 아니에요.</p>}
       <p>기기는 거치하고 몸 활동을 해요. 라운드가 끝난 뒤 수행한 기록을 직접 입력해요.</p>
       <details><summary>준비물·안전·대체 동작</summary><p>{game.equipment.join(' · ')} · {game.space}</p><p>{game.safety}</p><p>{game.alternative}</p></details>
