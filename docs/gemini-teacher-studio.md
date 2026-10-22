@@ -41,7 +41,9 @@ AI 결과를 수정하거나 입력 조건을 바꾸면 검토·채택 상태를
 
 ## 환경 변수와 보관
 
-서버 전용 Git 제외 파일 `.env.gemini.local`에 GEMINI_API_KEY, GEMINI_MODEL, GEMINI_PUBLIC_DATA_REVIEWED가 있다. 현재 모델은 gemini-3.1-flash-lite다. gemini-3.8-flash에서 일부 지연이 발생해 무료 지원 모델을 실제 호출로 확인한 뒤 변경했다. 키 저장 화면은 현재 기본 모델을 저장한다. 키를 채팅·댓글에 쓰거나 VITE_로 시작하는 변수에 넣지 않는다.
+로컬을 사용하는 경우 서버 전용 Git 제외 파일 `.env.gemini.local`에 GEMINI_API_KEY, GEMINI_MODEL, GEMINI_PUBLIC_DATA_REVIEWED를 저장한다. 기본 모델은 gemini-3.5-flash-lite다. 기존 gemini-3.1-flash-lite의 반복된 503 과부하에 대응해 다른 무료 티어 지원 모델로 변경했다. 2026-10-23 확인한 Google 공식 가격표에서 이 모델의 표준 텍스트 입력·출력은 무료 티어를 지원하며, 구조화 출력도 지원한다. 실제 요금 적용은 키가 연결된 Google 프로젝트 등급을 따른다. 앱은 결제를 연결하거나 요금제를 자동 변경하지 않는다. 키 저장 화면은 현재 기본 모델을 저장한다. 키를 채팅·댓글에 쓰거나 VITE_로 시작하는 변수에 넣지 않는다.
+
+모델·무료 티어 확인: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite / https://ai.google.dev/gemini-api/docs/pricing#gemini-3.5-flash-lite
 
 교사 인증은 `.env.teacher.local`의 TEACHER_ACCESS_HASH와 TEACHER_SESSION_SECRET을 사용한다. 코드를 처음 만들 때만 `npm run teacher:setup`을 실행한다. 저장된 키는 사용자 교체·삭제 전까지 서버 파일에 존재한다. 로그아웃은 키 파일 삭제가 아니다.
 

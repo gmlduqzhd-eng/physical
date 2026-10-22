@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawn } from 'node:child_process';
 import { studioInputSchema } from '../teacher-studio/domain';
-import { generateStudioAdvice } from '../server/geminiStudio';
+import { defaultGeminiModel, generateStudioAdvice } from '../server/geminiStudio';
 import { sources, catalog, observationSummary, groupSummary } from '../server/aiService';
 import type {TeacherOutput} from '../src/domain/teacherAi';
 import { cookie, newSession, session } from '../server/teacherSession';
@@ -26,12 +26,12 @@ test('student-app cookies cannot authenticate the separate studio', () => {
 });
 test('Gemini SDK uses Google directly and never sends teacher identity, keys in body or private records', async () => {
   const original = globalThis.fetch; let calls = 0; let omitParticipationCitationOnce = false;
-  process.env.GEMINI_API_KEY = 'unit-test-fake-not-a-real-google-key'; process.env.GEMINI_MODEL = 'gemini-3.8-flash'; process.env.GEMINI_PUBLIC_DATA_REVIEWED = 'true';
+  process.env.GEMINI_API_KEY = 'unit-test-fake-not-a-real-google-key'; process.env.GEMINI_MODEL = defaultGeminiModel; process.env.GEMINI_PUBLIC_DATA_REVIEWED = 'true';
   const input = { ...base, weather: '제약 없음', observations: [], aggregate: null, activityMinutes: 10 };
   const material = sources(input as never);
   let fixture: unknown = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: material.slice(0, 3).map(game => ({ activityId: game.id, reason: '협동을 위한 역할 교대 제안입니다.', citations: [{ activityId: game.id, field: 'description', quote: game.description }] })), sections: [], safety: [], teacherChecks: ['교사가 현장을 확인했나요?'] };
   globalThis.fetch = async (url, init) => {
-    calls++; assert.match(String(url), /^https:\/\/generativelanguage.googleapis.com\/v1beta\/models\/gemini-3\.8-flash:generateContent$/);
+    calls++; assert.equal(String(url), `https://generativelanguage.googleapis.com/v1beta/models/${defaultGeminiModel}:generateContent`);
     const body = JSON.parse(String(init?.body)); const serialized = JSON.stringify(body);
     for (const privateKey of ['adultTeacher', 'consent', 'records', 'nickname', 'roomId', 'unit-test-fake']) assert.equal(serialized.includes(privateKey), false);
     assert.equal(body.tools, undefined); assert.equal(body.cachedContent, undefined);

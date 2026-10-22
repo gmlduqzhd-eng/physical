@@ -18,7 +18,7 @@ export const geminiTransportSchema = z.object({
   teacherChecks: z.array(z.string()).min(1).max(6),
 });
 
-export const defaultGeminiModel = 'gemini-3.1-flash-lite';
+export const defaultGeminiModel = 'gemini-3.5-flash-lite';
 export function geminiReady() { return !!process.env.GEMINI_API_KEY && !!process.env.GEMINI_MODEL && process.env.GEMINI_PUBLIC_DATA_REVIEWED === 'true'; }
 export function studioRetryInstruction(error: unknown): string | null {
   if (NoObjectGeneratedError.isInstance(error) || error instanceof z.ZodError) return '요청된 JSON 구조와 항목 수, 문자열 길이를 지켜 새 결과를 작성한다.';
