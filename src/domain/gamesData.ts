@@ -1,3 +1,4 @@
+import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons.js';
 import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
 import { EXPEDITION_BY_ID } from './expeditionGames.js';
 import { isQuestId, QUEST_META } from './movementQuests.js';
@@ -1410,9 +1411,13 @@ const BASE_GAMES: GameDef[] = [
 
 export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
   ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
-  desc: QUEST_META[game.type].description, physicalActivity: true, durationMinutes: 4, playMode: QUEST_META[game.type].team?'협동':'개인', activityType:QUEST_META[game.type].team?'짝':'개인',
+  desc: QUEST_META[game.type].description, achievement:{...game.achievement,title:QUEST_META[game.type].name,desc:QUEST_META[game.type].description}, physicalActivity: true, durationMinutes: 4, playMode: QUEST_META[game.type].team?'협동':'개인', activityType:QUEST_META[game.type].team?'짝':'개인',
   equipment: QUEST_META[game.type].equipment ?? game.equipment,
   safetyTips: ['기기는 거치하고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
+} : isSafetyLessonId(game.type)?{
+  ...game,name:SAFETY_LESSONS[game.type].name,emoji:SAFETY_LESSONS[game.type].emoji,desc:SAFETY_LESSONS[game.type].description,
+  subCategory:'안전 상황 학습',achievement:{code:'연계 확인 필요',title:'상황 판단과 도움 요청',desc:SAFETY_LESSONS[game.type].description},
+  physicalActivity:false,durationMinutes:5,playMode:'개인',activityType:'개인',equipment:SAFETY_LESSONS[game.type].equipment,safetyTips:[SAFETY_LESSONS[game.type].boundary],
 } : game);
 
 export const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [

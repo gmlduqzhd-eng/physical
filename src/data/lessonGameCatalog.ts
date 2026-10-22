@@ -1,3 +1,4 @@
+import {isSafetyLessonId,SAFETY_LESSONS} from '../domain/safetyLessons.js';
 import {GAMES} from '../domain/gamesData.js';
 import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog.js';
 import { isQuestId, QUEST_META } from '../domain/movementQuests.js';
@@ -1323,7 +1324,7 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
   },
 ];
 
-const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES.filter(g=>isQuestId(g.type)&&!BASE_LESSON_GAME_CATALOG.some(l=>l.id===g.type)).map(g=>({
+const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES.filter(g=>(isQuestId(g.type)||isSafetyLessonId(g.type))&&!BASE_LESSON_GAME_CATALOG.some(l=>l.id===g.type)).map(g=>({
   id:g.type,title:g.name,emoji:g.emoji,route:'/play/'+g.type,description:g.desc,domain:g.domain,sportType:g.sportType,subCategory:g.subCategory,achievementCode:g.achievement.code,grades:g.grades,
   activityModes:['개인' as const],space:['교실' as const,'체육관' as const],deviceMode:['교사용 1대' as const],recommendedPlayers:{min:1,max:1},intensity:'보통' as const,
   movementSkills:['도구 조절','선택한 움직임 실행'],learningKeywords:['몸 미션','선택과 비교'],safetyNotes:[],teachingTips:[],noDeviceAlternative:'교사가 종이 카드로 안내해요.',
@@ -1336,4 +1337,10 @@ export const LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(gam
   safetyNotes: ['기기를 거치하고 걸어서 이동한다. 개인 통로를 확보한다.', QUEST_META[game.id].alternative],
   teachingTips: [...QUEST_META[game.id].rules, '첫 연습 후 세 작전을 수행하고 결과를 직접 확인한다. 속도 경쟁과 탈락은 없다.'],
   noDeviceAlternative: QUEST_META[game.id].rules.join(' ') + ' 교사가 종이·박수로 화면의 신호를 대신한다.',
+} : isSafetyLessonId(game.id)?{
+  ...game,title:SAFETY_LESSONS[game.id].name,description:SAFETY_LESSONS[game.id].description,emoji:SAFETY_LESSONS[game.id].emoji,
+  subCategory:'안전 상황 학습',achievementCode:'연계 확인 필요',activityModes:['개인','짝'],deviceMode:['교사용 1대','모둠별 1대'],recommendedPlayers:{min:1,max:2},intensity:'낮음',
+  movementSkills:['상황 판단','도움 요청','안전한 역할 표현'],learningKeywords:['안전한 선택','도움 연결','학습 확인'],safetyNotes:[SAFETY_LESSONS[game.id].boundary],
+  teachingTips:['학습용 가상 상황임을 알려준다.','말·손짓 표현이나 읽기 확인을 선택한다.','실제 응급처치 역량을 점수로 판정하지 않는다.'],
+  noDeviceAlternative:'교사가 상황 카드를 읽고 학생이 안전한 선택과 이유를 말한다. 실제 처치는 전문 교육용 장비와 강사에게 배운다.',
 } : game);

@@ -1,3 +1,5 @@
+import {isSafetyLessonId} from '../../../domain/safetyLessons';
+import {SafetyLesson} from './common/SafetyLesson';
 import { useState } from 'react';
 import { isQuestId } from '../../../domain/movementQuests';
 import { MovementQuest } from './common/MovementQuest';
@@ -38,6 +40,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
   const renderContent = () => {
+    if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     switch (minigame.type) {
       case 'volcano':

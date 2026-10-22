@@ -1,3 +1,4 @@
+import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons';
 import { EXPEDITION_BY_ID } from './expeditionGames';
 import { isQuestId, QUEST_META } from './movementQuests';
 /** Classroom movement tasks paired with screen games. A tap is never motion evidence. */
@@ -97,6 +98,9 @@ const groups: ReadonlyArray<readonly [number, readonly string[]]> = [
 ];
 
 export function getPhysicalActivityPlan(gameType: string, isExpressionGame = false): PhysicalActivityPlan {
+  if(isSafetyLessonId(gameType)){
+    const lesson=SAFETY_LESSONS[gameType];return {idea:0,title:lesson.name,activity:lesson.description,alternative:'앉아서 상황 카드를 가리키거나 설명을 읽고 확인해요. 실제 처치는 연습하지 않아요.',setup:lesson.equipment.join(' · '),safety:lesson.boundary,secondsPerTurn:15};
+  }
   if (isQuestId(gameType)) {
     const quest = QUEST_META[gameType];
     return { idea: 0, title: quest.name, activity: quest.description, alternative: quest.alternative, setup: quest.setup,

@@ -6,6 +6,7 @@ import { makeQuestRound, QUEST_IDS, QUEST_META, safeRoute } from '../src/domain/
 import type { QuestId } from '../src/domain/movementQuests';
 
 const base=process.argv[2]||'http://127.0.0.1:5173';
+const teamMode=process.env.TEST_TEAM==='1';
 const ids=(process.argv[3]?.split(',')||[...QUEST_IDS]) as QuestId[];
 const out=path.resolve(process.env.TEST_OUTPUT_DIR||'test-results/quest-rollout');mkdirSync(out,{recursive:true});
 const report:{base:string;cases:unknown[];errors:string[];writes:string[]}={base,cases:[],errors:[],writes:[]};
@@ -40,9 +41,10 @@ try{
     await phase('record');return answer;
    };
    try{
-    const response=await page.goto(base+'/solo/play/'+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
+    const response=await page.goto(base+(teamMode?'/play/':'/solo/play/')+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
     await button('활동 시작').click();await phase('intro');
     assert.equal(await page.locator('.mq-heading h1').innerText(),QUEST_META[id].name);
+    if(teamMode&&QUEST_META[id].team)await page.getByLabel('함께할 인원').selectOption(String(QUEST_META[id].maxPlayers??4));
     if(width===1024)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
     await button('작전 살펴보기').click();
     const choose=async(round:number)=>{
@@ -70,6 +72,7 @@ try{
     await page.locator('.game-result-overlay').waitFor();
     const profile=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));
     assert.equal(profile.totalPlays,1);assert.equal(profile.recentGames[0].score,300);assert.equal(profile.recentGames[0].gameType,id);
+    if(teamMode&&QUEST_META[id].team)assert.match(profile.recentGames[0].details.metrics['참여 방식'],new RegExp(`^${QUEST_META[id].maxPlayers??4}명`));
     if(makeQuestRound(id,0,{gentle:true,seated:false,practice:true,players:3}).reflection){if(width===390)assert(profile.recentGames[0].details.metrics['느낌 돌아보기']);else assert(!profile.recentGames[0].details.metrics['느낌 돌아보기']);}
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(width===390)await page.screenshot({path:path.join(out,id+'-result.png'),fullPage:true});

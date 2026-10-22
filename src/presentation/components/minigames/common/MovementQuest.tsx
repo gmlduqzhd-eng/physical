@@ -14,7 +14,7 @@ type Phase = 'intro' | 'plan' | 'preview' | 'countdown' | 'active' | 'record' | 
 
 export function MovementQuest({ gameId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
   const meta = QUEST_META[gameId];
-  const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: 3, seed: Math.floor(Math.random()*1000) });
+  const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: Math.min(3,meta.maxPlayers??4), seed: Math.floor(Math.random()*1000) });
   const [reflection,setReflection]=useState('');
   const [answer, setAnswer] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>('intro');

@@ -1,3 +1,4 @@
+import {isSafetyLessonId} from './safetyLessons.js';
 import {REFLECTION_QUEST_IDS,REFLECTION_QUEST_META,makeReflectionQuest,type ReflectionQuestId} from './reflectionMovementQuests.js';
 import {SPORTS_QUEST_IDS,SPORTS_QUEST_META,makeSportsQuest,type SportsQuestId} from './sportsMovementQuests.js';
 import type { GameResultDetails } from './gameResultDetails.js';
@@ -48,7 +49,7 @@ export const QUEST_META: Record<QuestId, QuestMetadata> = {
 
 export function isQuestId(id: string): id is QuestId { return (QUEST_IDS as readonly string[]).includes(id); }
 export function gameBestStorageKey(id: string): string {
-  return `physical_best_${id}${isQuestId(id) ? '_movement_v1' : ''}`;
+  return `physical_best_${id}${isQuestId(id) ? '_movement_v1' : isSafetyLessonId(id)?'_safety_v1':''}`;
 }
 export function safeRoute(path: readonly number[], blocked: number): boolean {
   return path.length >= 2 && path[0] === 6 && path[path.length - 1] === 2 && path.every((cell, i) =>

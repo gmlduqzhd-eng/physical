@@ -1,3 +1,5 @@
+import {isSafetyLessonId,SAFETY_LESSONS,SAFETY_LESSON_IDS} from '../domain/safetyLessons';
+import {SafetyLesson} from './components/minigames/common/SafetyLesson';
 import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
 import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
 import { useState, useCallback, useEffect, useRef } from 'react';
@@ -217,6 +219,8 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 
 QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
 
+SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
+
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
@@ -270,7 +274,7 @@ const GamePlaySession = () => {
   const handleStartGame = () => {
     setHasStarted(true);
     const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
-    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || ''));
+    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||''));
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
 
@@ -424,6 +428,7 @@ const GamePlaySession = () => {
 
   const renderGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
+    if(isSafetyLessonId(gameType))return <SafetyLesson key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
     if (isQuestId(gameType)) return <MovementQuest key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
 
     const expedition=EXPEDITION_BY_ID.get(gameType||'');
@@ -615,7 +620,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">몸 활동: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
           {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (
