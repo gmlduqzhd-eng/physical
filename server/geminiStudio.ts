@@ -3,6 +3,8 @@ import { studioInputSchema } from '../teacher-studio/domain.js';
 import { generateAdvice, sources } from './aiService.js';
 import type {TeacherInput} from '../src/domain/teacherAi.js';
 import { z } from 'zod';
+import { APICallError, NoObjectGeneratedError } from 'ai';
+import { setTimeout as delay } from 'node:timers/promises';
 
 // Google rejects some deeply constrained JSON Schemas with a generic 400.
 // Transmit just the shape; aiService.validateOutput still enforces the complete
@@ -18,6 +20,15 @@ export const geminiTransportSchema = z.object({
 
 export const defaultGeminiModel = 'gemini-3.1-flash-lite';
 export function geminiReady() { return !!process.env.GEMINI_API_KEY && !!process.env.GEMINI_MODEL && process.env.GEMINI_PUBLIC_DATA_REVIEWED === 'true'; }
+export function studioRetryInstruction(error: unknown): string | null {
+  if (NoObjectGeneratedError.isInstance(error) || error instanceof z.ZodError) return '요청된 JSON 구조와 항목 수, 문자열 길이를 지켜 새 결과를 작성한다.';
+  if (!(error instanceof Error)) return null;
+  if (error.message === '근거가 없는 제안입니다.') return '모든 AI 제안 section에 제공된 sourceId를 1개 이상 넣는다. 입력 확인 요약만 citations=[]이다.';
+  if (error.message === '학생용 안내는 항목마다 짧은 한 문장이어야 합니다.') return '학생용 안내 세 항목을 각각 줄바꿈 없이 50자 안팎의 한 문장으로 작성한다. 100자를 넘기지 않는다.';
+  if (error.message === '필수 수업 항목이 누락되었습니다.') return '요청된 section heading을 제시한 순서대로 빠짐없이 한 번씩 작성한다.';
+  if (error.message === '수업 시간 합계가 맞지 않습니다.') return '지도안의 5개 minutes 합계를 입력한 수업 시간과 정확히 맞춘다.';
+  return null;
+}
 export async function generateStudioAdvice(raw: unknown) {
   const input = studioInputSchema.parse(raw);
   if (!geminiReady()) throw new Error('Gemini 키와 공개 자료 이용 확인을 먼저 저장하세요.');
@@ -39,18 +50,23 @@ export async function generateStudioAdvice(raw: unknown) {
   const headings={difficulty:['기초','보통','도전'],plan:['도입','준비운동','본활동','정리','안전 지도'],safety:[],mission:['협동 목표','역할과 진행','완료 확인'],observation:['관찰 요약','다음 차시 아이디어'],group:['모둠 결과 요약','활동 조정안'],reflection:['성찰 질문'],participation:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'],recommend:[],alternative:[]}[context.task];
   const section=geminiTransportSchema.shape.sections.element.extend({heading:headings.length?z.enum(headings as [string,...string[]]):z.string(),minutes:context.task==='plan'?z.number():z.null()});
   const taskSchema=geminiTransportSchema.extend({recommendations:recommendationsOnly?geminiTransportSchema.shape.recommendations.length(3):geminiTransportSchema.shape.recommendations.max(0),sections:z.array(section).length(headings.length)});
-  const generate = (retry: boolean) => generateAdvice({ ...context, consent: true }, {
+  const deadline = Date.now() + 90000;
+  const generate = (correction: string | null) => generateAdvice({ ...context, consent: true }, {
     model: google(process.env.GEMINI_MODEL!), modelId: process.env.GEMINI_MODEL!, context: providerContext, schema: taskSchema,
-    providerOptions: { google: { thinkingConfig: { thinkingLevel: 'low' } } }, timeoutMs: 90000,
+    providerOptions: { google: { thinkingConfig: { thinkingLevel: 'low' } } }, timeoutMs: Math.max(1, deadline - Date.now()),
     materials,
-    extraInstructions:'\n이 연결에서는 위 인용 형식을 다음 방식으로 대체한다. citations의 각 항목과 safety의 각 항목은 {sourceId} 하나만 반환한다. sourceId는 activities.sourceReferences에 있는 번호를 그대로 선택한다. 원문을 직접 작성하거나 여러 문장을 합치지 않는다. safety는 field가 safety인 자료 번호만 선택한다. 입력 확인 요약은 citations=[]이다. safety 원문이 제공되었으면 최소 1개를 선택하고 안전 자료가 부족하다고 쓰지 않는다. participation에서는 세 section 각각에 해당 제안과 관련된 원문 sourceId를 citations 배열에 반드시 1개 이상 넣는다.'+(retry?'\n앞선 응답은 한 section의 citations가 비어 근거 검사를 통과하지 못했다. 세 section 모두 실제로 제공된 원문 sourceId를 각각 선택하고, 원문에서 뒷받침할 수 없는 제안은 만들지 않는다.':''),
+    extraInstructions:'\n이 연결에서는 위 인용 형식을 다음 방식으로 대체한다. citations의 각 항목과 safety의 각 항목은 {sourceId} 하나만 반환한다. sourceId는 activities.sourceReferences에 있는 번호를 그대로 선택한다. 원문을 직접 작성하거나 여러 문장을 합치지 않는다. safety는 field가 safety인 자료 번호만 선택한다. 입력 확인 요약은 citations=[]이다. safety 원문이 제공되었으면 최소 1개를 선택하고 안전 자료가 부족하다고 쓰지 않는다. participation에서는 세 section 각각에 해당 제안과 관련된 원문 sourceId를 citations 배열에 반드시 1개 이상 넣는다. 각 학생용 문장은 50자 안팎으로 짧게 작성한다.'+(correction?'\n앞선 응답이 형식 검사를 통과하지 못했다. '+correction+' 원문에서 뒷받침할 수 없는 제안은 만들지 않는다.':''),
     transformOutput(raw){const result=geminiTransportSchema.parse(raw);return{...result,recommendations:result.recommendations.map(r=>({...r,citations:r.citations.map(c=>resolve(c.sourceId))})),sections:result.sections.map(s=>({...s,citations:s.citations.map(c=>resolve(c.sourceId))})),safety:result.safety.map(c=>{const ref=resolve(c.sourceId);if(ref.field!=='safety')throw new Error('검증되지 않은 안전 원문 참조입니다.');return{activityId:ref.activityId,quote:ref.quote};})};},
   });
-  try { return await generate(false); }
+  try { return await generate(null); }
   catch (error) {
-    // The model occasionally omits a citation despite valid lesson content.
-    // Retry once; never invent or attach a reference on the server.
-    if (context.task !== 'participation' || !(error instanceof Error) || error.message !== '근거가 없는 제안입니다.') throw error;
-    return generate(true);
+    // Regenerate malformed output once within the original request deadline.
+    // Only transient upstream failures and malformed output get one retry.
+    // Quota and credential failures never trigger another provider request.
+    const correction = studioRetryInstruction(error);
+    const transient = APICallError.isInstance(error) && [500,502,503,504].includes(error.statusCode ?? 0);
+    if ((!correction && !transient) || deadline - Date.now() < 2000) throw error;
+    if (transient) await delay(1000);
+    return generate(correction);
   }
 }

@@ -38,6 +38,19 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
     assert.equal((await post('configure', { apiKey: 'must-never-be-saved' }, token)).status, 404);
     assert.equal((await post('generate', { studentName: 'synthetic-private-field' }, token)).status, 422);
     assert.equal((await post('generate', { notes: 'x'.repeat(9000) }, token)).status, 413);
+    const originalFetch = globalThis.fetch; let providerCalls = 0;
+    globalThis.fetch = async (request, init) => {
+      if (String(request).startsWith('https://generativelanguage.googleapis.com/')) {
+        providerCalls++;
+        return new Response(JSON.stringify({error:{code:503,message:'synthetic-private-provider-body',status:'UNAVAILABLE'}}),{status:503,headers:{'Content-Type':'application/json'}});
+      }
+      return originalFetch(request, init);
+    };
+    try {
+      const unavailable = await post('generate', {task:'participation',activityId:'space-occupier',grade:'3~4학년군',goal:'협동과 소통',place:'체육관',device:'태블릿 PC',deviceCount:'모둠별 1대',minutes:40,groupSize:6,classSize:24,consent:true,adultTeacher:true}, token);
+      assert.equal(unavailable.status,503);
+      const message=await unavailable.text();assert.match(message,/일시적으로 혼잡/);assert(!message.includes('synthetic-private-provider-body'));assert.equal(providerCalls,2);
+    } finally { globalThis.fetch = originalFetch; }
     const logout = await post('logout', {}, token);
     assert.equal(logout.status, 200); assert.match(logout.headers.get('set-cookie')!, /Max-Age=0/);
   } finally {

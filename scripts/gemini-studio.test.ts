@@ -69,7 +69,7 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
     assert.equal(calls,12);
     // A simpler provider schema does not weaken the application's final checks.
     fixture = { ...(fixture as Record<string, unknown>), title: '가'.repeat(121) };
-    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 13);
+    await assert.rejects(generateStudioAdvice({ ...base, task: 'plan', activityId: selected.id })); assert.equal(calls, 14);
     fixture={title:'테스트',recommendations:[],sections:[{heading:'성찰 질문',minutes:null,content:'질문 제안',citations:[{activityId:'invented',field:'description',quote:'없는 자료'}]}],safety:[],teacherChecks:['확인하세요.']};
     // A returned reference outside server-provided material must never be hydrated.
     await assert.rejects(generateStudioAdvice({...base,task:'reflection',activityId:selected.id}),/목록에 없는 원문 참조/);

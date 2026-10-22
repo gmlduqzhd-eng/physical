@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { GAMES } from '../src/domain/gamesData';
+import { AVAILABLE_GAMES as GAMES } from '../src/domain/gamesData';
 import { GOALS, type AiResponse, type TeacherOutput, type TeacherTask } from '../src/domain/teacherAi';
 import { participationCuesSchema, participationLink } from '../src/domain/participationCues';
 import { STUDIO_TASKS, type StudioInput } from './domain';
