@@ -9,7 +9,7 @@ import {resolveGuidedGameType} from '../src/domain/guidedMission';
 import {mergedGameUrl,getRemovedGame} from '../src/domain/gameLifecycle';
 
 test('every released play has distinct instructions, three real tasks, and a coherent classroom catalog',()=>{
- assert.equal(PHONE_PLAYS.length,Number(process.env.PHONE_EXPECTED_COUNT||8));
+ assert.equal(PHONE_PLAYS.length,Number(process.env.PHONE_EXPECTED_COUNT||100));
  assert.equal(new Set(PHONE_PLAYS.map(p=>p.id)).size,PHONE_PLAYS.length);
  assert.equal(new Set(PHONE_PLAYS.map(p=>p.rules.join('|'))).size,PHONE_PLAYS.length);
  assert.deepEqual(new Set(PHONE_PLAYS.map(p=>p.category)),new Set(PHONE_CATEGORIES));

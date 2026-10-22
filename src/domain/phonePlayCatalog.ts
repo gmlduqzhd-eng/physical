@@ -1,4 +1,5 @@
 import type {GameDef} from './gamesData.js';
+import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
 
 export const PHONE_CATEGORIES=['반응·민첩성','균형·협응','리듬·표현','이동·공간','전신 활동','협력·소통','판단·전략','정리·이완'] as const;
 export type PhoneCategory=typeof PHONE_CATEGORIES[number];
@@ -13,6 +14,7 @@ export interface PhonePlay {
 // Delimiters are only an authoring shorthand; the runtime receives named fields.
 export type PhonePlayRow=[number,string,number,PhoneKind,PhonePlay['players'],PhonePlay['space'],string,string,string,string,string,string,string,string,string?,string?];
 const rows:PhonePlayRow[]=[
+ ...PHONE_PLAY_EXPANSION,
  [1,'우주 관제사의 예외 신호',0,'signal','혼자','제자리','명령 앞에 「출동」이 있을 때만 동작하고 나머지는 기다려요.','출동이 붙은 말만 실행해요|제자리에서 발을 번갈아 디뎌요|틀리면 멈춰 규칙을 말하고 다시 합류해요','출동 신호를 골라 움직여요|동작 이름만 나오면 기다려요|출동과 대기 신호를 섞어 구별해요','출동, 제자리 두 걸음|팔 펼치기, 움직이지 않기|출동, 팔을 옆으로|대기, 편안히 서기','출동이 있는 명령만 실행했나요?','두 신호만 구별해요.','동작 이름만 나오는 방해 신호에도 기다려요.','발 디디기 대신 손바닥을 번갈아 펴요.','red_green'],
  [15,'세 자세 기억 금고',1,'memory','혼자','제자리','세 가지 지지 자세의 순서를 기억해 몸으로 재현해요.','화면의 자세 순서를 먼저 읽어요|발을 바닥에서 높이 들지 않고 순서대로 자세를 바꿔요|마친 뒤 실행한 순서를 되짚어요','앞뒤 발 지지 순서를 익혀요|팔 방향까지 함께 기억해요|순서가 바뀌어도 천천히 연결해요','두 발 나란히|오른발 살짝 앞|왼발 살짝 앞','세 자세를 안전하게 연결하고 순서를 기억했나요?','두 발을 가까이 두고 작은 보폭으로 해요.','자세 사이에 팔 방향을 하나씩 더해요.','앉아서 오른손 앞·왼손 앞·양손 무릎 자세를 연결해요.','one_leg'],
  [29,'무성 영화의 세 장면',2,'create','짝','제자리','말없이 시작·사건·해결을 몸으로 표현하고 짝이 이야기를 연결해요.','한 명은 배우, 한 명은 관객이에요|움직임의 크기와 높낮이로 장면을 구별해요|장면 뒤 역할을 바꾸고 서로 본 내용을 이야기해요','바람에 모자가 날아간 장면|작은 문을 발견한 장면|길을 잃었다가 집을 찾은 장면','시작 자세|사건 표현|해결 자세','서로 다른 세 장면과 역할 바꾸기를 했나요?','한 장면을 두 동작으로 표현해요.','같은 장면을 느리게·보통 속도로 비교해요.','앉아서 팔·표정·몸통의 작은 움직임으로 표현해요.','emotion-thermometer'],
@@ -23,7 +25,7 @@ const rows:PhonePlayRow[]=[
  [91,'움직임 뒤 몸의 날씨',7,'observe','혼자','제자리','작은 움직임 전후의 몸 느낌을 날씨 몸짓으로 표현해요.','편안한 제자리걸음 뒤 멈춰 몸 느낌을 살펴요|맑음·구름·바람 중 가까운 느낌을 팔로 표현해요|좋고 나쁨을 겨루지 않고 바뀐 느낌을 기억해요','걸음 전 몸 느낌을 표현해요|작은 걸음 뒤 느낌을 표현해요|쉬어 본 뒤 달라진 점을 표현해요','작은 걸음|편안히 멈춤|느낌을 몸짓으로','움직임 전후의 느낌을 비교했나요?','발을 옮기지 않고 손을 천천히 펴요.','느낌이 달라진 이유를 한 문장으로 말해요.','앉아서 손바닥 펴기 전후의 몸 느낌을 살펴요.','pulse-detective'],
 ];
 
-export const PHONE_PLAYS:PhonePlay[]=rows.map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
+export const PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
  id:`phone-play-${String(n).padStart(3,'0')}`,name,category:PHONE_CATEGORIES[c],kind,players,space,
  intensity:c===7||c===1?'낮음':'보통',minutes:players==='모둠'?6:4,seconds:players==='모둠'?36:24,
  goal,rules:rules.split('|'),rounds:rounds.split('|'),cues:cues.split('|'),check,easy,hard,seated,related,options:options?.split('|'),

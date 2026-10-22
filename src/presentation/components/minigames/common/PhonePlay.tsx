@@ -15,6 +15,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
  const submitted=useRef(false),transition=useRef(false);
  const sequence=phoneSequence(p,round,level==='쉬운 방법'),duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:p.seconds*1000;
  const cueIndex=Math.floor(elapsed/6000),cue=p.cues[(cueIndex+round)%p.cues.length];
+ const leader=(round+cueIndex)%players+1;
  const displayCue=p.kind==='create'?'정한 움직임을 몸으로 표현해요':p.kind==='team'?'서로의 차례와 신호를 살펴요':p.kind==='decision'?'고른 계획을 몸으로 실행해요':p.kind==='observe'?'작게 움직이고 느낌을 살펴요':cue;
  const options=p.options?Array.from({length:p.options.length},(_,i)=>p.options![(i+round)%p.options!.length]):[];
  const decisionReady=p.kind!=='decision'||choice===p.options?.[0];
@@ -65,22 +66,22 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   queueMicrotask(()=>{transition.current=false;});
  };
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
-  <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><h1>{p.name}</h1><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':p.players}`}</p></header>
+  <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><h1>{p.name}</h1><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
   {phase==='intro'&&<>
    <p className="pp-lead">{p.goal}</p><div className="pp-badges"><span>약 {p.minutes}분</span><span>{p.intensity} 강도</span><span>{p.players} · {range.min===range.max?range.min:`${range.min}~${range.max}`}명</span><span>스마트폰 1대</span></div>
    <section className="pp-panel"><h2>이렇게 준비해요</h2><p>{phoneSetup(p)}</p><ol>{p.rules.map(rule=><li key={rule}>{rule}</li>)}</ol><p><strong>완료 기준</strong> · {p.check}</p><p>화면 점수는 직접 확인한 참여 기록이에요. 기기가 동작이나 체력을 판정하지 않아요.</p></section>
    <section className="pp-panel"><h2>내게 맞게 골라요</h2>
-    {!solo&&range.max>1&&<label>함께할 인원<select value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:range.max-range.min+1},(_,i)=>range.min+i).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
+    {!solo&&range.max>1&&<label>함께할 인원<select aria-label="함께할 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:range.max-range.min+1},(_,i)=>range.min+i).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
     {solo&&range.min>1&&<p className="pp-notice">혼자 규칙을 연습해요. 친구와 한 활동으로 기록되지 않아요. 함께 하려면 활동 목록에서 ‘활동 열기’를 선택해요.</p>}
     <label><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉아서 참여하기</label><p>{seated?p.seated:'서로 닿지 않는 간격에서 움직여요.'}</p>
-    <label>도전 방법<select value={level} onChange={e=>setLevel(e.target.value)}><option>쉬운 방법</option><option>기본 방법</option><option>추가 도전</option></select></label><p>{level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules[1]}</p>
+    <label>도전 방법<select aria-label="도전 방법" value={level} onChange={e=>setLevel(e.target.value)}><option>쉬운 방법</option><option>기본 방법</option><option>추가 도전</option></select></label><p>{level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules[1]}</p>
     <label><input type="checkbox" checked={sound} onChange={e=>setSound(e.target.checked)}/>시작·전환 소리</label><label><input type="checkbox" checked={voice} disabled={!('speechSynthesis' in window)} onChange={e=>setVoice(e.target.checked)}/>신호 읽어 주기 (선택)</label><p>소리 없이도 시작 전에 순서를 익히거나 고정된 큰 화면으로 진행할 수 있어요. 짝은 신호를 읽은 뒤 역할을 바꿔요.</p>
    </section><details className="pp-panel"><summary>안전과 역할</summary><ul>{phoneSafety.map(s=><li key={s}>{s}</li>)}</ul><p>모둠에서는 1번부터 돌아가며 이끌고, 나머지 친구도 자기 공간에서 동작을 따라 해요. 탈락이나 오래 기다리기는 없어요.</p></details>
    <button className="pp-primary" onClick={()=>setPhase('plan')}>놀이 방법 익히기</button>
   </>}
   {phase==='plan'&&<>
    <h2>{p.rounds[round]}</h2><p>{seated?p.seated:level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules.join(' ')}</p>
-   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map(c=><li key={c}>{c}</li>)}</ol><p>{p.kind==='memory'?'활동 중에는 순서가 가려져요. 몸으로 해 본 뒤 순서를 기록해요.':p.check}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이에요.</p>}</section>
+   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map(c=><li key={c}>{c}</li>)}</ol><p>{p.kind==='memory'?'활동 중에는 순서가 가려져요. 몸으로 해 본 뒤 순서를 기록해요.':p.check}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이며, 6초 신호마다 다음 번호가 이어받아요. 마지막 번호 다음에는 1번으로 돌아와요.</p>}</section>
    {p.kind==='decision'&&<fieldset><legend>안전하게 실행할 계획은?</legend>{options.map(option=><button key={option} aria-pressed={choice===option} onClick={()=>setChoice(option)}>{option}</button>)}{choice&&!decisionReady&&<p role="alert">서로의 통로와 역할을 다시 확인해요. {p.options?.[0]} 계획이 이번 조건에 맞아요.</p>}</fieldset>}
    <p>{rehearsed?'기기는 활동 구역 밖에 놓고 시작해요.':'처음은 8초 연습이에요. 연습에는 점수가 없어요.'}</p>
    <button className="pp-primary" disabled={!decisionReady} onClick={()=>start(!rehearsed)}>{rehearsed?'폰 내려놓고 활동 시작':'짧게 연습하기'}</button>
@@ -91,6 +92,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
     <strong>{paused?'일시정지':phase==='countdown'?Math.max(1,Math.ceil((duration-elapsed)/1000)):p.kind==='memory'?'기억한 순서로 몸을 움직여요':p.kind==='estimate'?'걸음으로 시간을 가늠해요':displayCue}</strong>
     <p>{phase==='active'&&p.kind!=='estimate'?`${Math.ceil((duration-elapsed)/1000)}초 남음`:phase==='active'?'시간 표시는 가렸어요.':'4초 뒤 시작해요.'}</p>
    </div><p>{seated?p.seated:p.goal}</p><p>화면 조작 없이 동작에 집중해요.</p>
+   {phase==='active'&&players>1&&<p data-phone-leader={leader}>지금 이끄는 사람: {leader}번 · 다른 친구도 자기 공간에서 함께 움직여요.</p>}
    {phase==='active'&&p.kind==='estimate'&&!practice&&<button className="pp-primary" disabled={paused||elapsed<1000} onClick={()=>{setPhase('record');window.speechSynthesis?.cancel();}}>멈췄어요 · 시간 확인</button>}
    <button onClick={()=>{setPaused(v=>!v);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 쉬기'}</button>
   </>}

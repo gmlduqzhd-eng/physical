@@ -78,7 +78,9 @@ test('old IDs, lesson recommendations and preparation text resolve to the same n
 test('the audit covers all 225 original games exactly once with evidence and valid merge destinations', () => {
   const report = JSON.parse(readFileSync(new URL('../docs/game-review-225-2026-10-22.json', import.meta.url), 'utf8'));
   assert.equal(report.rows.length, 225); assert.equal(new Set(report.rows.map((r: { id: string }) => r.id)).size, 225);
-  assert.deepEqual(new Set(report.rows.map((r: { id: string }) => r.id)), new Set(GAMES.map(g => g.type)));
+  // The frozen review is of the original 225 games. New phone-only activities
+  // have their own catalog review and must not rewrite this historical audit.
+  assert.deepEqual(new Set(report.rows.map((r: { id: string }) => r.id)), new Set(GAMES.filter(g=>!isPhonePlay(g.type)).map(g => g.type)));
   for (const row of report.rows) {
     assert(row.reason && row.next && row.evidence.file && row.evidence.line > 0 && row.evidence.observation);
     if (row.target) assert(['유지', '개편'].includes(report.rows.find((r: { id: string }) => r.id === row.target).decision));
@@ -128,3 +130,4 @@ test('reflection is optional, bounded and never awards health or breathing perfo
   }
  }
 });
+import {isPhonePlay} from '../src/domain/phonePlayCatalog';
