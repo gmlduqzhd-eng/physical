@@ -227,12 +227,12 @@ export const AdminControlPanel = () => {
   // #8 모둠 대전 미니게임 발동
   const triggerTeamBattle = async () => {
     if (!currentRoom) return;
-    const battleDuration = 30; // 30초
+    const battleDuration = 600; // 몸 미션 준비·연습을 위한 여유 시간
     const endTime = Date.now() + battleDuration * 1000;
     if (!await updateRoom({
-      active_minigame: { type: 'team_battle', subType: 'volcano', end_time: endTime, duration: battleDuration, expires_at: endTime + 4000 }
+      active_minigame: { type: 'fitness', end_time: endTime, duration: battleDuration, expires_at: endTime + 4000 }
     })) return;
-    alert(`⚔️ 30초 모둠 대전이 시작되었습니다!\n모든 학생 화면에 동일한 미니게임이 팝업됩니다.`);
+    alert(`🧭 모둠 몸 미션이 시작되었습니다!\n기기를 거치하고 연습부터 진행하세요. 최대 10분 동안 열어 둡니다.`);
   };
 
   const handleCleanupRooms = async () => {
@@ -436,7 +436,7 @@ export const AdminControlPanel = () => {
                 📋 리포트 텍스트 다운로드
               </button>
               <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                ⚔️ 30초 모둠 대전 발동!
+                🧭 모둠 몸 미션 열기
               </button>
             </div>
 
@@ -479,19 +479,19 @@ export const AdminControlPanel = () => {
                 <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 단체 숏폼 미니게임 (Phase 1)
                 </h2>
-                {currentRoom.active_minigame && ['volcano', 'telepathy', 'tug_of_war'].includes(currentRoom.active_minigame.type) && (
+                {currentRoom.active_minigame && ['volcano','telepathy','tug_of_war','red_green','fitness','exp-tablet-31'].includes(currentRoom.active_minigame.type) && (
                   <span className="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-emerald-700 mb-4">학생들 스마트폰에 10~15초짜리 짧은 단체 미니게임 팝업을 강제 발동합니다.</p>
+              <p className="text-sm text-emerald-700 mb-4">준비·연습부터 진행하는 몸 미션을 열어요. 기기는 거치하고, 종료는 직접 확인해요.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'volcano', end_time: Date.now() + 10000, expires_at: Date.now() + 14000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
                   className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
-                  <LucideIcons.Flame className="w-5 h-5" /> 화산폭발 (광클러시)
+                  <LucideIcons.Flame className="w-5 h-5" /> 신호등 구조 산책
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000, expires_at: Date.now() + 10000 } })}
@@ -500,10 +500,10 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Wifi className="w-5 h-5" /> 텔레파시 (동시터치)
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'tug_of_war', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'exp-tablet-31', expires_at: Date.now() + 600000 } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
-                  <LucideIcons.Grab className="w-5 h-5" /> 줄다리기 (무한당기기)
+                  <LucideIcons.Grab className="w-5 h-5" /> 천으로 함께 공 운반
                 </button>
               </div>
               <div className="flex justify-end mt-2">
@@ -528,31 +528,31 @@ export const AdminControlPanel = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-cyan-700 mb-4">순발력과 기억력을 요하는 짧은 개인/단체 미니게임을 발동합니다.</p>
+              <p className="text-sm text-cyan-700 mb-4">기억·시간 감각과 실제 이동을 연결하는 몸 미션이에요. 준비와 연습을 마친 뒤 진행해요.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'shake', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'fitness', expires_at: Date.now() + 600000 } })}
                   className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.BatteryCharging className="w-5 h-5" /> 바운스 충전
+                  <LucideIcons.BatteryCharging className="w-5 h-5" /> 내가 고르는 운동 원정
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'number_grid', expires_at: Date.now() + 25000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'zigzag', expires_at: Date.now() + 600000 } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.ShieldAlert className="w-5 h-5" /> 순차적 암호해제
+                  <LucideIcons.ShieldAlert className="w-5 h-5" /> 갈림길 보급 작전
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'memory', expires_at: Date.now() + 25000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'memory', expires_at: Date.now() + 600000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Brain className="w-5 h-5" /> 컬러 패턴 기억
+                  <LucideIcons.Brain className="w-5 h-5" /> 기억의 보급 발자국
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch', expires_at: Date.now() + 600000 } })}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Timer className="w-5 h-5" /> 7.00초 스탑워치
+                  <LucideIcons.Timer className="w-5 h-5" /> 몸으로 느끼는 시간길
                 </button>
               </div>
               <div className="flex justify-end mt-2">
@@ -571,31 +571,31 @@ export const AdminControlPanel = () => {
                 <h2 className="text-lg font-bold text-purple-900 flex items-center gap-2">
                   <LucideIcons.Sparkles className="w-5 h-5" /> 텐션 & 운빨 미니게임 (Phase 3)
                 </h2>
-                {currentRoom.active_minigame && ['fate_card', 'whack_a_mole', 'scream'].includes(currentRoom.active_minigame.type) && (
+                {currentRoom.active_minigame && ['fate_card','whack_a_mole','scream','target','red_green','campfire-breath'].includes(currentRoom.active_minigame.type) && (
                   <span className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-purple-700 mb-4">운과 활력을 불어넣는 액티비티형 숏폼 미니게임입니다.</p>
+              <p className="text-sm text-purple-700 mb-4">도구와 몸으로 참여하고 실제 수행 뒤 결과를 직접 확인하는 미션이에요.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'fate_card', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'target', expires_at: Date.now() + 600000 } })}
                   className="bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Dices className="w-5 h-5" /> 운명의 잭팟 카드
+                  <LucideIcons.Dices className="w-5 h-5" /> 표적 보급 미션
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'whack_a_mole', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Target className="w-5 h-5" /> 별 두더지 잡기
+                  <LucideIcons.Target className="w-5 h-5" /> 신호 표식 몸 미션
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'scream', expires_at: Date.now() + 20000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'campfire-breath', expires_at: Date.now() + 600000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Mic2 className="w-5 h-5" /> 소리질러 (데시벨)
+                  <LucideIcons.Mic2 className="w-5 h-5" /> 숲 소리 정리 쉼터
                 </button>
               </div>
               <div className="flex justify-end mt-2">

@@ -1,3 +1,5 @@
+import {getMergedGame,isAvailableGame} from '../../domain/gameLifecycle';
+import {GAMES} from '../../domain/gamesData';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useModalDialog } from '../../application/useModalDialog';
 import { X, RotateCcw, Play } from 'lucide-react';
@@ -18,7 +20,7 @@ interface RouletteSection {
   games: RouletteGame[];
 }
 
-const SECTIONS: RouletteSection[] = [
+const ORIGINAL_SECTIONS: RouletteSection[] = [
   {
     label: '상체',
     emoji: '💪',
@@ -75,6 +77,8 @@ const SECTIONS: RouletteSection[] = [
     ],
   },
 ];
+
+const SECTIONS:RouletteSection[]=ORIGINAL_SECTIONS.map(section=>({...section,games:[...new Map(section.games.flatMap(old=>{const id=getMergedGame(old.type)?.target||old.type;const game=GAMES.find(g=>g.type===id);return isAvailableGame(id)&&game?[[id,{type:id,name:game.name,emoji:game.emoji}] as const]:[];})).values()]}));
 
 interface WarmupRouletteProps {
   isOpen: boolean;

@@ -1,4 +1,7 @@
-import {getMergedGame} from '../../../domain/gameLifecycle';
+import {RetiredGameNotice} from './common/RetiredGameNotice';
+import {EXPEDITION_BY_ID} from '../../../domain/expeditionGames';
+import {ExpeditionActivity} from './expedition/ExpeditionActivity';
+import {getMergedGame,getRemovedGame} from '../../../domain/gameLifecycle';
 import {ConsolidatedActivity} from './common/ConsolidatedActivity';
 import {isSafetyLessonId} from '../../../domain/safetyLessons';
 import {SafetyLesson} from './common/SafetyLesson';
@@ -7,16 +10,12 @@ import { isQuestId } from '../../../domain/movementQuests';
 import { MovementQuest } from './common/MovementQuest';
 import '../../GameTheme.css';
 import type { GameRoom } from '../../../domain/types';
-import { VolcanoGame } from './VolcanoGame';
 import { TelepathyGame } from './TelepathyGame';
-import { TugOfWarGame } from './TugOfWarGame';
 import { ShakeGame } from './ShakeGame';
 import { MemoryGame } from './MemoryGame';
 import { StopwatchGame } from './StopwatchGame';
 import { NumberGridGame } from './NumberGridGame';
-import { FateCardGame } from './FateCardGame';
 import { WhackAMoleGame } from './WhackAMoleGame';
-import { ScreamGame } from './ScreamGame';
 import { LegacyBombGame } from './LegacyBombGame';
 import { LegacyQuizGame } from './LegacyQuizGame';
 
@@ -42,16 +41,16 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
   const renderContent = () => {
-    const merged=getMergedGame(minigame.type);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={action=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()})}>{null}</ConsolidatedActivity>;
+    const eventType=minigame.type==='team_battle'?(minigame.subType||'volcano'):minigame.type;
+    if(getRemovedGame(eventType))return <RetiredGameNotice id={eventType} roomId={gameRoom.id} groupId={groupId}/>;
+    const complete=(action:{payload:{id:string;amount:number;details?:import('../../../domain/gameResultDetails').GameResultDetails}})=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()});
+    const native=EXPEDITION_BY_ID.get(eventType);if(native?.kind==='B'&&!getMergedGame(eventType))return <ExpeditionActivity game={native} groupId={groupId} solo={false} enqueueAction={complete}/>;
+    const merged=getMergedGame(eventType);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={complete}>{null}</ConsolidatedActivity>;
     if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     switch (minigame.type) {
-      case 'volcano':
-        return <VolcanoGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'telepathy':
         return <TelepathyGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'tug_of_war':
-        return <TugOfWarGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'shake':
         return <ShakeGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'memory':
@@ -60,20 +59,14 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
         return <StopwatchGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'number_grid':
         return <NumberGridGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'fate_card':
-        return <FateCardGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'whack_a_mole':
         return <WhackAMoleGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'scream':
-        return <ScreamGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'bomb':
         return <LegacyBombGame key={sessionKey} bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
       case 'quiz':
         return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
       case 'team_battle':
-        return minigame.subType === 'tug_of_war'
-          ? <TugOfWarGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />
-          : <VolcanoGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
+        return <RetiredGameNotice id="volcano" roomId={gameRoom.id} groupId={groupId}/>;
       default:
         // Fallback for quiz if type is undefined (legacy compatibility)
         if (minigame.question) {

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MERGED_GAMES,REMOVED_GAMES,LIFECYCLE_STAGE,getMergedGame,getRemovedGame,isAvailableGame,mergedGameUrl,variantsFor,variantBestKey} from '../src/domain/gameLifecycle';
+import {MERGED_GAMES,REMOVED_GAMES,LIFECYCLE_STAGE,getMergedGame,getRemovedGame,isAvailableGame,mergedGameUrl,variantsFor,variantBestKey,replacementUrl,RETIRED_REPLACEMENTS} from '../src/domain/gameLifecycle';
 import {GAMES,AVAILABLE_GAMES} from '../src/domain/gamesData';
 import {LESSON_GAME_CATALOG,ALL_LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
 import {normalizePlayerProfile} from '../src/application/usePlayerProfile';
@@ -15,6 +15,16 @@ test('all 117 decisions have a direct live destination or a tombstone, with no c
  assert.equal(AVAILABLE_GAMES.length,225-MERGED_GAMES.filter(g=>g.stage<=LIFECYCLE_STAGE).length-(LIFECYCLE_STAGE>=3?6:0));
  for(const g of GAMES){assert.equal(AVAILABLE_GAMES.some(x=>x.type===g.type),isAvailableGame(g.type));if(!isAvailableGame(g.type))assert(!LESSON_GAME_CATALOG.some(x=>x.id===g.type));}
  assert(ALL_LESSON_GAME_CATALOG.length>LESSON_GAME_CATALOG.length);
+});
+test('retired links have active alternatives and operator buttons cannot launch retired screen games',()=>{
+ for(const game of REMOVED_GAMES){
+  const target=RETIRED_REPLACEMENTS[game.id];assert(isAvailableGame(target));
+  for(const prefix of ['/play/','/solo/play/']){const u=new URL(replacementUrl(prefix+game.id,game.id,'?room=r&group=g&guided=1&mission=m','#keep')!,'https://physical-pi.vercel.app');assert.equal(u.pathname,prefix+target);assert.equal(u.searchParams.get('room'),'r');assert.equal(u.searchParams.get('group'),'g');assert.equal(u.searchParams.get('mission'),'m');assert.equal(u.searchParams.get('replacementFor'),game.id);assert.equal(u.hash,'#keep');}
+ }
+ const admin=readFileSync('src/presentation/AdminControlPanel.tsx','utf8');
+ for(const game of REMOVED_GAMES)assert(!new RegExp("active_minigame: \\{[^}]*type: '"+game.id+"'").test(admin));
+ for(const id of ['shake','number_grid','tug_of_war','whack_a_mole'])assert(!new RegExp("active_minigame: \\{[^}]*type: '"+id+"'").test(admin));
+ assert(admin.includes('run_id: crypto.randomUUID()'));
 });
 test('old solo and classroom links keep query, duplicate parameters and participation hash',()=>{
  for(const m of MERGED_GAMES.filter(g=>g.stage<=LIFECYCLE_STAGE))for(const prefix of ['/play/','/solo/play/']){
@@ -33,4 +43,11 @@ test('old record names, scores, counts, RPE and negative fate-card history survi
  assert.deepEqual(normalized.recentGames.map(r=>[r.gameType,r.gameName,r.score,r.rpe]),recentGames.map(r=>[r.gameType,r.gameName,r.score,r.rpe]));
  for(const m of MERGED_GAMES)assert.notEqual(variantBestKey(m.target,m.id),`physical_best_${m.id}`);
  for(const id of [...MERGED_GAMES,...REMOVED_GAMES].map(g=>g.id))assert.equal(resolveGuidedGameType('old','old',[{id:'m',requires_approval:true,gameType:id} as never],'m'),id);
+});
+
+
+test('legacy lessons without gameType still resolve every original audited name after renames',()=>{
+ const audit=JSON.parse(readFileSync('docs/game-review-225-2026-10-22.json','utf8'));
+ for(const row of audit.rows){assert.equal(resolveGuidedGameType(row.name,row.name,[{id:'m',title:`${row.name} 활동 완료`,requires_approval:true} as never],'m'),row.id);}
+ assert.equal(resolveGuidedGameType('unknown','unknown',[{id:'m',title:'unknown 활동 완료',requires_approval:true} as never],'m'),null);
 });

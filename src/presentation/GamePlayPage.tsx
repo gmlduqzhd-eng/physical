@@ -1,5 +1,6 @@
+import {RetiredGameNotice} from './components/minigames/common/RetiredGameNotice';
 import {mergedMovementMeta} from '../domain/mergedMovementVariants';
-import {mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
+import {getRemovedGame,mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
 import {ConsolidatedActivity} from './components/minigames/common/ConsolidatedActivity';
 import {Navigate} from 'react-router-dom';
 import {isSafetyLessonId,SAFETY_LESSONS,SAFETY_LESSON_IDS} from '../domain/safetyLessons';
@@ -21,24 +22,19 @@ import { readParticipationCues } from '../domain/participationCues';
 import { HeaderUtilities } from './components/HeaderUtilities';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { useSyncQueue } from '../application/useSyncQueue';
-import type { GameRoom } from '../domain/types';
 import { useVoiceCoach } from '../application/useVoiceCoach';
 import { useTamagotchi } from '../application/useTamagotchi';
 import { useWakeLock } from '../application/useWakeLock';
 import { useMotionPermission } from '../application/useMotionPermission';
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 import { Heart } from 'lucide-react';
-import { VolcanoGame } from './components/minigames/VolcanoGame';
 import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
 import { StopwatchGame } from './components/minigames/StopwatchGame';
 import { MemoryGame } from './components/minigames/MemoryGame';
 import { NumberGridGame } from './components/minigames/NumberGridGame';
-import { ScreamGame } from './components/minigames/ScreamGame';
 import { ShakeGame } from './components/minigames/ShakeGame';
 import { TugOfWarGame } from './components/minigames/TugOfWarGame';
-import { FateCardGame } from './components/minigames/FateCardGame';
 import { ReactionTest } from './components/minigames/ReactionTest';
-import { BalloonPump } from './components/minigames/BalloonPump';
 import { DirectionSwipe } from './components/minigames/DirectionSwipe';
 import { ColorWord } from './components/minigames/ColorWord';
 import { CardMatch } from './components/minigames/CardMatch';
@@ -46,7 +42,6 @@ import { MathSprint } from './components/minigames/MathSprint';
 import { TargetShoot } from './components/minigames/TargetShoot';
 import { RedGreenLight } from './components/minigames/RedGreenLight';
 import { LeftRight } from './components/minigames/LeftRight';
-import { CoinFlip } from './components/minigames/CoinFlip';
 import { JumpDetector } from './components/minigames/JumpDetector';
 import { SquatCounter } from './components/minigames/SquatCounter';
 import { RunInPlace } from './components/minigames/RunInPlace';
@@ -64,7 +59,6 @@ import { FreezeGame } from './components/minigames/FreezeGame';
 import { WaveCounter } from './components/minigames/WaveCounter';
 import { SpeedCircle } from './components/minigames/SpeedCircle';
 import { ZigZagTouch } from './components/minigames/ZigZagTouch';
-import { MultiTouch } from './components/minigames/MultiTouch';
 import { StretchTimer } from './components/minigames/StretchTimer';
 import { OneLegBalance } from './components/minigames/OneLegBalance';
 import { FitnessRoulette } from './components/minigames/FitnessRoulette';
@@ -231,6 +225,7 @@ export const GamePlayPage = () => {
   const { pathname,search,hash } = useLocation();
   const moved=mergedGameUrl(pathname,gameType||'',search,hash);
   if(moved)return <Navigate replace to={moved}/>;
+  if(getRemovedGame(gameType||''))return <RetiredGameNotice id={gameType!}/>;
   return <GamePlaySession key={`${pathname}:${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}:${searchParams.get('variant')}`} />;
 };
 
@@ -275,21 +270,15 @@ const GamePlaySession = () => {
   useWakeLock(true);
   const { isGranted: isMotionGranted, requestPermission: requestMotionPermission } = useMotionPermission();
 
-  const standaloneTiming = useRef({
-    startedAt: new Date().toISOString(),
-    endTime: Date.now() + 90000,
-  });
 
   const handleStartGame = () => {
     setHasStarted(true);
     const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
     setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||'')&&!variantsFor(gameType||'').length);
-    if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
 
   const handleCountdownComplete = useCallback(() => {
     completionRef.current = false;
-    standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
     setIsCountingDown(false);
   }, []);
 
@@ -420,21 +409,6 @@ const GamePlaySession = () => {
 
   const bestScore = nonnegativeNumber(Number(readStorage(gameBestStorageKey(gameType,selectedVariant?.id))));
 
-  // 화산 게임은 gameRoom을 필요로 하므로 더미 gameRoom 생성
-  const dummyGameRoom: GameRoom = {
-    id: 'standalone',
-    pin_code: '0000',
-    name: 'Standalone',
-    status: 'playing' as const,
-    started_at: standaloneTiming.current.startedAt,
-    global_time_modifier: 0,
-    active_minigame: { type: gameType, end_time: standaloneTiming.current.endTime },
-    template_id: null,
-    flash_sale: false,
-    announcement: null,
-    created_at: standaloneTiming.current.startedAt,
-  };
-
   const dummyGroupId = 'standalone-player';
 
   const renderBaseGame = () => {
@@ -445,8 +419,6 @@ const GamePlaySession = () => {
     const expedition=EXPEDITION_BY_ID.get(gameType||'');
     if(expedition?.kind==='B')return <ExpeditionActivity key={key} game={expedition} groupId={dummyGroupId} solo={soloMode} enqueueAction={localEnqueueAction}/>;
     switch (gameType) {
-      case 'volcano':
-        return <VolcanoGame key={key} gameRoom={dummyGameRoom} {...commonProps} />;
       case 'whack_a_mole':
         return <WhackAMoleGame key={key} {...commonProps} />;
       case 'stopwatch':
@@ -455,18 +427,12 @@ const GamePlaySession = () => {
         return <MemoryGame key={key} {...commonProps} />;
       case 'number_grid':
         return <NumberGridGame key={key} {...commonProps} />;
-      case 'scream':
-        return <ScreamGame key={key} {...commonProps} />;
       case 'shake':
         return <ShakeGame key={key} {...commonProps} />;
       case 'tug_of_war':
         return <TugOfWarGame key={key} {...commonProps} />;
-      case 'fate_card':
-        return <FateCardGame key={key} {...commonProps} />;
       case 'reaction':
         return <ReactionTest key={key} {...commonProps} />;
-      case 'balloon':
-        return <BalloonPump key={key} {...commonProps} />;
       case 'direction':
         return <DirectionSwipe key={key} {...commonProps} />;
       case 'color_word':
@@ -481,8 +447,6 @@ const GamePlaySession = () => {
         return <RedGreenLight key={key} {...commonProps} />;
       case 'left_right':
         return <LeftRight key={key} {...commonProps} />;
-      case 'coin_flip':
-        return <CoinFlip key={key} {...commonProps} />;
       case 'jump':
         return <JumpDetector key={key} {...commonProps} />;
       case 'squat':
@@ -517,8 +481,6 @@ const GamePlaySession = () => {
         return <SpeedCircle key={key} {...commonProps} />;
       case 'zigzag':
         return <ZigZagTouch key={key} {...commonProps} solo={soloMode} />;
-      case 'multi_touch':
-        return <MultiTouch key={key} {...commonProps} />;
       case 'stretch':
         return <StretchTimer key={key} {...commonProps} />;
       case 'one_leg':

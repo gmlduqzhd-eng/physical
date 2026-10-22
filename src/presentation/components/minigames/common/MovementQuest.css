@@ -8,3 +8,5 @@
 .mq-panel a{color:#176b5b;text-decoration:underline;text-underline-offset:3px}.safety-lesson summary{cursor:pointer;min-height:44px}.safety-lesson>label.mq-panel{display:flex;align-items:flex-start;gap:12px}
 
 .safety-lesson .mq-signal strong{font-size:clamp(21px,4vw,28px);line-height:1.65}.safety-lesson .mq-signal{min-height:200px}
+
+.movement-quest a.mq-primary,.movement-quest a.mq-secondary{border-radius:14px;text-decoration:none;text-align:center}

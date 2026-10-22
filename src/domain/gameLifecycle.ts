@@ -1,5 +1,5 @@
 /** Original IDs remain available to record and old-mission readers. */
-export const LIFECYCLE_STAGE = 2;
+export const LIFECYCLE_STAGE = 3;
 export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reason:string}[]=[
   {
     "id": "exp-phone-01",
@@ -821,3 +821,10 @@ export function mergedGameUrl(pathname:string,id:string,search:string,hash:strin
  return `${pathname.startsWith('/solo/play/')?'/solo/play/':'/play/'}${entry.target}?${params.toString()}${hash}`;
 }
 export function variantBestKey(id:string,variant:string):string{return `physical_best_${id}_variant_${variant}_v1`;}
+
+export const RETIRED_REPLACEMENTS:Record<string,string>={multi_touch:'rhythm_clapping',volcano:'red_green',scream:'campfire-breath',balloon:'exp-phone-35',coin_flip:'target',fate_card:'fitness'};
+export function replacementUrl(pathname:string,id:string,search:string,hash:string):string|null{
+ if(!getRemovedGame(id))return null;const target=RETIRED_REPLACEMENTS[id];
+ const params=new URLSearchParams(search);params.set('replacementFor',id);if(variantsFor(target).length)params.set('variant','base');else params.delete('variant');
+ return `${pathname.startsWith('/solo/')?'/solo/play/':'/play/'}${target}?${params.toString()}${hash}`;
+}

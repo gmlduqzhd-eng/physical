@@ -7,7 +7,7 @@ import {MERGED_GAMES,REMOVED_GAMES,LIFECYCLE_STAGE} from '../src/domain/gameLife
 import {normalizePlayerProfile} from '../src/application/usePlayerProfile';
 const base=process.argv[2]||'http://127.0.0.1:4173',out=path.resolve(process.env.TEST_OUTPUT_DIR||'test-results/lifecycle-links');mkdirSync(out,{recursive:true});
 const report:{base:string;stage:number;cases:unknown[];errors:string[];writes:string[]}={base,stage:LIFECYCLE_STAGE,cases:[],errors:[],writes:[]};
-const active=MERGED_GAMES.filter(g=>g.stage<=LIFECYCLE_STAGE);
+const active=process.env.ONLY_RETIRED==='1'?[]:MERGED_GAMES.filter(g=>g.stage<=LIFECYCLE_STAGE);
 const seed=JSON.parse(JSON.stringify(normalizePlayerProfile({nickname:'기존 기록 검사',totalScore:1200,totalPlays:99,createdAt:1,highScores:Object.fromEntries(GAMES.map(g=>[g.type,9999])),playCounts:Object.fromEntries(GAMES.map(g=>[g.type,3])),recentGames:[{gameType:'fate_card',gameName:'예전 운명의 카드',score:-300,playedAt:1,rpe:4,details:{metrics:{'보존':'원본'}}},...MERGED_GAMES.slice(0,10).map((g,i)=>({gameType:g.id,gameName:g.name,score:i+20,playedAt:i+2,rpe:3}))]})));
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try{for(const solo of [true,false]){
@@ -24,10 +24,11 @@ try{for(const solo of [true,false]){
   const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));assert.deepEqual(saved,seed,'opening an old link cannot rewrite history');
   report.cases.push({id:g.id,solo,status:'pass'});
  }
- if(LIFECYCLE_STAGE>=3)for(const g of REMOVED_GAMES){await page.goto(base+prefix+g.id+'?room=keep-room&group=keep-group&mission=keep-mission&guided=1#keep-hash');await page.locator(`[data-retired="${g.id}"]`).waitFor();assert.equal(await page.getByRole('button',{name:'활동 시작',exact:true}).count(),0);assert.deepEqual(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!)),seed);report.cases.push({id:g.id,solo,status:'pass'});}
+ if(LIFECYCLE_STAGE>=3)for(const g of REMOVED_GAMES){await page.goto(base+prefix+g.id+'?room=keep-room&group=keep-group&mission=keep-mission&guided=1#keep-hash');await page.locator(`[data-retired="${g.id}"]`).waitFor();assert.equal(await page.getByRole('button',{name:'활동 시작',exact:true}).count(),0);assert.deepEqual(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!)),seed);const link=page.getByRole('link',{name:/대체 활동/});const next=new URL((await link.getAttribute('href'))!,base);assert.equal(next.searchParams.get('room'),'keep-room');assert.equal(next.searchParams.get('mission'),'keep-mission');assert.equal(next.hash,'#keep-hash');await link.click();await page.getByRole('button',{name:'활동 시작',exact:true}).waitFor();assert.deepEqual(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!)),seed);report.cases.push({id:g.id,solo,status:'pass',replacementVerified:true});}
  await page.goto(base+'/solo');await page.locator('[data-game-card]').first().waitFor();assert.equal(await page.locator('[data-game-card]').count(),AVAILABLE_GAMES.length);
  for(const id of [...active,...(LIFECYCLE_STAGE>=3?REMOVED_GAMES:[])].map(g=>g.id))assert.equal(await page.locator(`[data-game-card="${id}"]`).count(),0);
- await page.getByRole('searchbox').fill(active[0].name);assert(await page.locator(`[data-game-card="${active[0].target}"]`).count());
+ if(active.length){await page.getByRole('searchbox').fill(active[0].name);assert(await page.locator(`[data-game-card="${active[0].target}"]`).count());}
  const oldBests=await page.evaluate(ids=>ids.every(id=>localStorage.getItem('physical_best_'+id)==='9999'),GAMES.map(g=>g.type));assert(oldBests);
+ await page.goto(base+'/hub/tools');await page.getByText('검색 결과',{exact:false}).first().waitFor();assert.deepEqual(await page.evaluate(()=>JSON.parse(localStorage.getItem('physical_favorites')!)),GAMES.map(g=>g.type),'old favorite IDs are retained');
  await context.close();console.log('PASS old links and history',solo?'solo':'classroom',active.length);
  }assert.deepEqual(report.errors,[]);assert.deepEqual(report.writes,[]);writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:report.cases.length}));}finally{await browser.close();}

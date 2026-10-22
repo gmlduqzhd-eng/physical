@@ -1,3 +1,4 @@
+import {getRemovedGame} from './gameLifecycle';
 import { GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
 import type { GameRoom, MissionTemplate } from './types';
@@ -13,7 +14,7 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     const template = byTemplate.get(room.template_id || '');
     if (!template || !Array.isArray(template.buttons) || template.buttons.length !== 1) return [];
     const gameType = resolveGuidedGameType(room.name, template.name, template.buttons, template.buttons[0].id);
-    const game = GAMES.find(item => item.type === gameType);
+    const game = getRemovedGame(gameType||'')?undefined:GAMES.find(item=>item.type===gameType);
     const groupCount = counts.get(room.id) || 0;
     if (!game || groupCount < 1 || groupCount > 8) return [];
     // Older rooms did not store the original duration. Their remaining-time
