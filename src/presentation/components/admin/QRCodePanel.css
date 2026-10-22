@@ -21,8 +21,12 @@
 .classroom-roster li>button{margin-left:auto;min-height:44px}
 .classroom-qr-toolbar{flex-wrap:wrap}
 @media(max-width:640px){
-  .flow.guided-classroom .guided-join-details{padding:10px}
+  .flow.lesson-shell.guided-classroom .guided-join-details{padding:10px}
   .classroom-qr-panel{padding:0;border:0;background:transparent}
+  .flow.lesson-shell.guided-classroom .guided-join-details .classroom-qr-panel{padding:0;border:0;background:transparent}
+  .flow.lesson-shell.guided-classroom .guided-join-details .classroom-qr-grid{grid-template-columns:minmax(0,1fr)}
+  .flow.lesson-shell.guided-classroom .guided-join-details .classroom-qr-card img{width:min(100%,220px)}
+  .flow.lesson-shell.guided-classroom .guided-join-details .classroom-group-pin{font-size:32px;margin:8px 0}
   .classroom-presentation{padding:10px}
   .classroom-qr-card{padding:12px}
   .classroom-qr-toolbar{width:100%}
