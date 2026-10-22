@@ -12,7 +12,7 @@
 }
 
 @theme {
-  --font-sans: 'Maplestory', sans-serif;
+  --font-sans: 'ForestSans', sans-serif;
 }
 
 /* ============================================ */
@@ -56,8 +56,8 @@
   --badge-bg: rgba(241, 245, 249, 0.9);
 }
 
-/* 라이트 모드 글로벌 오버라이드 */
-.light-theme {
+/* Legacy light palette; ForestTheme owns the selected design. */
+.light-theme:not([data-design="forest"]) {
   /* 주요 배경색 오버라이드 (모든 슬래시 투명도 포괄)
      [class^="x"], [class*=" x"] 형태로 접두사 없는 클래스만 매칭 → dark:/hover: 변형 클래스는 건드리지 않음 */
   & .bg-slate-950 { background-color: var(--bg-primary) !important; }
@@ -160,7 +160,7 @@ html, body, #root {
   touch-action: pan-y; 
   -webkit-touch-callout: none; 
   user-select: none; 
-  font-family: 'Maplestory', sans-serif;
+  font-family: 'ForestSans', sans-serif;
 }
 
 img, svg { 

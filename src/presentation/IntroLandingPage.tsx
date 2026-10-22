@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AVAILABLE_GAMES as GAMES } from "../domain/gamesData";
 import accessQr from "../assets/access-qr.svg?inline";
-import brandLogo from "../assets/brand-logo.png";
+import {ForestBrand} from './components/ForestIdentity';
 import "./IntroLandingPage.css";
 import { BackgroundMusicButton } from "./components/BackgroundMusicButton";
 import { LinkShareButton } from "./components/LinkShareButton";
@@ -25,16 +25,7 @@ export function IntroLandingPage() {
       <div className="shell">
         <header className="header">
           <Link className="brand" to="/" aria-label="땀방울 원정대 홈">
-            <img
-              className="brand-logo"
-              src={brandLogo}
-              alt=""
-              width={44}
-              height={44}
-            />
-            <span>
-              땀방울 원정대<small>PHYSICAL EDUCATION</small>
-            </span>
+            <ForestBrand subtitle="함께 움직이는 체육 시간"/>
           </Link>
           <div className="header-actions">
             <BackgroundMusicButton />

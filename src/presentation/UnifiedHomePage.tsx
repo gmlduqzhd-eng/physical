@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, ClipboardCheck, QrCode, UserRound } from 'lucide-react';
 import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import {PHONE_PLAYS} from '../domain/phonePlayCatalog';
-import brandLogo from '../assets/brand-logo.png';
+import {ForestBrand,ForestOrbit} from './components/ForestIdentity';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
 import { HeaderUtilities } from './components/HeaderUtilities';
 import './UnifiedHomePage.css';
@@ -17,13 +17,13 @@ const domains = [
 export function UnifiedHomePage() {
   const qr = useRef<AccessQrDialogHandle>(null);
   return <div className="unified-home"><div className="shell">
-    <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><img src={brandLogo} alt="" width="44" height="51"/><div>땀방울 원정대<small>PHYSICAL EDUCATION</small></div></Link>
+    <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><ForestBrand/></Link>
       <nav className="header-nav" aria-label="상단 메뉴">
         <HeaderUtilities/>
         <div className="header-help"><button type="button" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/>접속 QR</button><Link to="/manual">이용 안내</Link></div>
       </nav>
     </header>
-    <main><section className="welcome" aria-labelledby="home-title"><div><div className="eyebrow">땀방울 원정대 · 우리들의 체육 교실</div><h1 id="home-title">작은 움직임에서,<br/><em>함께하는 즐거움으로.</em></h1></div><div className="welcome-side"><p className="lead">선생님의 준비는 더 간편하게,<br/>학생들의 참여는 더 즐겁게.<br/>오늘의 체육 수업을 여기서 시작하세요.</p><p className="grade-note">2022 개정 교육과정 연계 · 1–2학년군 · 3–4학년군 · 5–6학년군</p></div></section>
+    <main><section className="welcome forest-hero" aria-labelledby="home-title"><div><p className="eyebrow">땀방울 원정대 · 함께 움직이는 체육 시간</p><h1 id="home-title">함께 움직이는<br/>시간의 즐거움.</h1><p className="forest-lead">준비는 가볍게, 경험은 풍성하게.<br/>스마트폰 하나로 만나는 {PHONE_PLAYS.length}가지 몸 놀이.</p><nav className="forest-hero-actions" aria-label="추천 놀이 탐색"><Link to="/hub?collection=phone">나에게 맞는 놀이 찾기 <ArrowRight aria-hidden="true"/></Link></nav></div><ForestOrbit/></section>
       <nav className="roles" aria-label="역할 선택">
         <Link to="/teacher" className="role teacher"><div className="role-top"><span className="icon"><ClipboardCheck aria-hidden="true"/></span></div><div className="role-copy"><h2>선생님, 수업을 준비해요.</h2><p>활동을 고르고 모둠을 구성하면<br/>오늘의 수업을 시작할 수 있어요.</p></div><span className="action">교사로 시작하기 <ArrowRight aria-hidden="true"/></span></Link>
         <Link to="/lobby" className="role student"><div className="role-top"><span className="icon"><QrCode aria-hidden="true"/></span></div><div className="role-copy"><h2>학생은 바로 참여해요.</h2><p>선생님이 알려주신 QR이나 코드로<br/>우리 수업에 함께해요.</p></div><span className="action">수업 참여하기 <ArrowRight aria-hidden="true"/></span></Link>

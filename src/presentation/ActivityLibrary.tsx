@@ -9,6 +9,7 @@ import { isQuestId } from '../domain/movementQuests';
 import { LESSON_GAME_CATALOG } from '../data/lessonGameCatalog';
 import { FlowShell } from './FlowShell';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
+import {ForestOrbit} from './components/ForestIdentity';
 import './ActivityLibrary.css';
 const purposes = ['함께 협동해요', '몸을 움직여요', '교실에서 해요', '리듬을 표현해요'] as const;
 export function ActivityPicker({ onSelect, solo = false }: { onSelect?: (game: GameDef) => void; solo?: boolean }) {
@@ -46,4 +47,4 @@ export function ActivityPicker({ onSelect, solo = false }: { onSelect?: (game: G
     {!solo && !all && !isFiltered && <button style={{marginTop:20}} onClick={() => { setAll(true); setLimit(24); }}>전체 활동 목록 보기 ({GAMES.length}개)</button>}
   </>;
 }
-export function ActivityLibrary({ solo = false }: { solo?: boolean }) { return <FlowShell utilities className={solo ? 'solo-library' : ''}><p className="eyebrow">{solo ? '수업 코드 없이 자유롭게' : '활동 찾기'}</p><h1>{solo ? '혼자 해보기' : '어떤 활동을 해 볼까요?'}</h1><p className="muted">{solo ? `PIN이나 학생 정보 입력 없이 ${GAMES.length}개 게임을 골라 체험해요. 시작 전 활동 규칙과 주변 공간을 확인하세요.` : '목적을 고르거나 이름으로 찾아보세요. 기기를 쓰기 전 활동 규칙을 확인해요.'}</p><nav className="row" aria-label="활동 기록과 수업"><Link className="secondary" to="/records">내 활동 기록</Link>{!solo&&<Link className="secondary" to="/teacher">교사 수업 준비</Link>}</nav><ActivityPicker solo={solo}/>{!solo && <details><summary>더 많은 도구</summary><p>즐겨찾기·기록·테마 모드·스테이션·음악 등 기존 도구를 사용할 수 있어요.</p><Link className="secondary" to="/hub/tools">전체 도구 열기</Link></details>}</FlowShell>; }
+export function ActivityLibrary({ solo = false }: { solo?: boolean }) { return <FlowShell utilities className={solo ? 'solo-library' : ''}><section className="forest-hero forest-catalog-hero"><div><p className="eyebrow">{solo ? '수업 코드 없이, 나만의 속도로' : '땀방울 원정대 · 놀이 컬렉션'}</p><h1>{solo ? <>나만의 속도로,<br/>즐거운 움직임.</> : <>함께 움직이는<br/>시간의 즐거움.</>}</h1><p className="forest-lead">{solo ? `학생 정보 입력 없이 ${GAMES.length}개 활동을 자유롭게 골라요.` : '준비는 가볍게, 경험은 풍성하게. 인원과 공간에 맞춰 골라요.'}</p><nav className="forest-hero-actions" aria-label="활동 기록과 수업"><Link to="/records">내 활동 기록</Link>{!solo&&<Link to="/teacher">교사 수업 준비</Link>}</nav></div><ForestOrbit/></section><ActivityPicker solo={solo}/>{!solo && <details><summary>더 많은 도구</summary><p>즐겨찾기·기록·테마 모드·스테이션·음악 등 기존 도구를 사용할 수 있어요.</p><Link className="secondary" to="/hub/tools">전체 도구 열기</Link></details>}</FlowShell>; }

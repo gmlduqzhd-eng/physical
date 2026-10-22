@@ -4,8 +4,8 @@
   "description": "체육 수업 게임화 미션 플랫폼",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#0891b2",
+  "background_color": "#f7f6f0",
+  "theme_color": "#315c42",
   "orientation": "portrait",
   "icons": [
     {
