@@ -1,4 +1,6 @@
-import {getMergedGame,variantsFor} from '../domain/gameLifecycle';
+import {getMergedGame} from '../domain/gameLifecycle';
+import {matchesActivitySearch} from '../domain/activitySearch';
+import {RecentGameRecords} from './components/RecentGameRecords';
 import {GAMES as HISTORICAL_GAMES} from '../domain/gamesData';
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
 import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
@@ -52,7 +54,7 @@ import { CooldownTimerModal } from './components/CooldownTimerModal';
 export const GameHub = () => {
   const accessQrDialog = useRef<AccessQrDialogHandle>(null);
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'games' | 'activities' | 'teacher' | 'records'>('games');
+  const [activeTab, setActiveTab] = useState<'games' | 'activities' | 'teacher' | 'records'>(()=>new URLSearchParams(window.location.search).get('tab')==='records'?'records':'games');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useModalDialog(showMenu, () => setShowMenu(false));
   const [pagination, setPagination] = useState({ key: '', page: 1 });
@@ -176,8 +178,7 @@ export const GameHub = () => {
     const favMatch = !showFavoritesOnly || [...favorites].some(id=>(getMergedGame(id)?.target||id)===g.type);
     const placeMatch = placeFilter === '전체' || getGamePlace(g.type, g.domain) === placeFilter;
     const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
-    const query = searchQuery.trim().toLocaleLowerCase();
-    const searchMatch = !query || variantsFor(g.type).some(v=>v.name.toLocaleLowerCase().includes(query)) || `${g.name} ${g.desc} ${g.subCategory} ${g.achievement.code} ${g.achievement.title}`.toLocaleLowerCase().includes(query);
+    const searchMatch = matchesActivitySearch(g,searchQuery);
     const physicalMatch = !physicalOnly || isPhysicalActivityGame(g);
     return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch && physicalMatch;
   });
@@ -298,6 +299,7 @@ export const GameHub = () => {
         ))}
       </nav>
       <section id="hub-panel-records" aria-label="내 기록" hidden={activeTab !== 'records'}>
+      <div className="px-4 md:px-8 max-w-5xl mx-auto py-4"><RecentGameRecords profile={profile}/></div>
       {/* 📋 내 기록 */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
 

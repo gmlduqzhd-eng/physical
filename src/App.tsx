@@ -22,6 +22,7 @@ const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry'
 const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
 const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
+const PlayerRecords = lazy(() => import('./presentation/PlayerRecords').then(m => ({ default: m.PlayerRecords })));
 const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({ default: m.TeacherHome })));
 const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
 const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
@@ -56,6 +57,7 @@ function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />
+        <Route path="/records" element={<PlayerRecords />} />
         <Route path="/solo/play/:gameType" element={<GamePlayPage />} />
         <Route path="/play/:gameType" element={<GamePlayPage />} />
 

@@ -245,7 +245,9 @@ const GamePlaySession = () => {
   const variantId=searchParams.get('variant');
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
-  const hubPath = soloMode ? '/solo' : (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
+  const catalogReturn=searchParams.get('returnTo');
+  const safeCatalogReturn=catalogReturn&&/^\/(solo|hub)(\?[^#]*)?$/.test(catalogReturn)?catalogReturn:null;
+  const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : safeCatalogReturn||(soloMode?'/solo':'/hub');
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
   const enqueueGuidedCompletion = guidedSubmission.enqueueCompletion;
@@ -739,6 +741,7 @@ const GamePlaySession = () => {
 
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
+            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기

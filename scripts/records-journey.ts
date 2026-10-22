@@ -1,0 +1,14 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+const base=process.argv[2]||'http://127.0.0.1:4173',out=path.resolve(process.env.TEST_OUTPUT_DIR||'../../outputs/journeys/records-local');fs.mkdirSync(out,{recursive:true});
+const browser=await chromium.launch({channel:'chrome',headless:true}),report:{base:string;cases:unknown[];errors:string[]}={base,cases:[],errors:[]};
+try{for(const width of [390,1440]){
+ const page=await browser.newPage({viewport:{width,height:900}});page.on('pageerror',e=>report.errors.push(e.message));await page.goto(base+'/solo');
+ const fixture={nickname:'이전기록검증',totalScore:400,totalPlays:2,highScores:{tilt_balance:9999},playCounts:{tilt_balance:1,fate_card:1},createdAt:1,recentGames:[{gameType:'one_leg',gameName:'균형 활동 · 두 발 균형 항로',score:300,playedAt:Date.now(),rpe:4,details:{course:{sourceId:'tilt_balance',targetId:'one_leg',sourceName:'기울기 균형',targetName:'균형 활동',version:1},metrics:{'작전 달성':'3 / 3'}}},{gameType:'fate_card',gameName:'예전 운명의 카드',score:-300,playedAt:Number.MAX_VALUE,rpe:2}]};
+ await page.evaluate(value=>sessionStorage.setItem('physical_player_profile',JSON.stringify(value)),fixture);await page.getByRole('link',{name:'내 활동 기록',exact:true}).click();await page.locator('[data-game-record]').first().waitFor();assert.equal(await page.locator('[data-game-record]').count(),2);assert.match(await page.locator('[data-game-record="fate_card"]').innerText(),/-300점/);await page.locator('[data-game-record="one_leg"] summary').click();await page.getByText('선택 코스: 기울기 균형',{exact:true}).waitFor();assert.match(await page.locator('[data-game-record="one_leg"]').innerText(),/운동 자각도: 4 \/ 5/);
+ await page.locator('[data-game-record="one_leg"] a').click();await page.waitForURL(u=>u.pathname==='/solo/play/one_leg'&&u.searchParams.get('variant')==='tilt_balance');await page.getByRole('button',{name:'활동 시작',exact:true}).waitFor();const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));assert.equal(saved.totalPlays,2);assert.equal(saved.highScores.tilt_balance,9999);assert.equal(saved.recentGames[1].score,-300);
+ await page.goto(base+'/records?returnTo=https://example.com');assert.equal(await page.getByRole('link',{name:'활동 목록으로',exact:true}).getAttribute('href'),'/solo');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:path.join(out,'history-'+width+'.png'),fullPage:true});report.cases.push({width,status:'pass',legacyNegative:true,invalidDateHandled:true,rpe:true,courseLink:true,oldBestPreserved:true,externalReturnRejected:true});await page.close();
+ }assert.deepEqual(report.errors,[]);fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log('PASS record compatibility journeys 2');
+}finally{await browser.close();}

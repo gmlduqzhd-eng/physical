@@ -1,16 +1,18 @@
 import { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { ActivityPicker } from './ActivityLibrary';
 import { FlowShell } from './FlowShell';
 import './ClassroomSetup.css';
-import type { GameDef } from '../domain/gamesData';
+import {AVAILABLE_GAMES,type GameDef} from '../domain/gamesData';
 import { lessonPresets, type LessonPreset } from '../domain/lessonPresets';
 import { supabase, ensureClassroomTeacher } from '../data/supabase';
 import { classroomError } from '../data/classroomRepository';
 import type { GameRoom, MissionTemplate } from '../domain/types';
 
 export function ClassroomSetup() {
-  const [step, setStep] = useState(1); const [game, setGame] = useState<GameDef | null>(null);
+  const [params]=useSearchParams();
+  const requestedGame=AVAILABLE_GAMES.find(g=>g.type===params.get('game'));
+  const [step, setStep] = useState(requestedGame?2:1); const [game, setGame] = useState<GameDef | null>(requestedGame||null);
   const [groups, setGroups] = useState(6); const [minutes, setMinutes] = useState(40);
   const [checked, setChecked] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const [rooms, setRooms] = useState<GameRoom[]>([]); const [createdId, setCreatedId] = useState('');
