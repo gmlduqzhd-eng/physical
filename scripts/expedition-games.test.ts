@@ -64,3 +64,20 @@ test('invalid/corrupt nested records are removed and legacy results remain compa
  assert.deepEqual(normalizeGameResultDetails({metrics:{기존:'유지'},activity:{gameId:'exp-phone-01',specId:'S01',rounds:[{round:1,source:'sensor'}]}}),{metrics:{기존:'유지'},activity:{gameId:'exp-phone-01',specId:'S01',soloPreview:false,rounds:[]}});
  assert.equal(normalizeGameResultDetails({activity:{gameId:'unsafe',specId:'S01',rounds:[]}}),undefined);
 });
+
+
+test('29 redesigned expedition flows keep native puzzles, roles, bingo and all stations at both paces',async()=>{
+  const {REVAMPED_EXPEDITION_IDS,paceExpedition,expeditionRehearsal}=await import('../src/domain/expeditionRevamps');
+  assert.equal(REVAMPED_EXPEDITION_IDS.length,29);
+  for(const id of REVAMPED_EXPEDITION_IDS){
+    const game=EXPEDITION_GAMES.find(g=>g.id===id)!;
+    const native=Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,game.players,()=>.42));
+    const adapted=paceExpedition(native,true);
+    for(let i=0;i<native.length;i++){
+      for(const key of ['question','allocation','roles','targets','checks','bingoCells','timing','targetSeconds'] as const)assert.deepEqual(adapted[i][key],native[i][key]);
+      assert(adapted[i].steps.every((s,j)=>s.seconds>=native[i].steps[j].seconds));
+    }
+    assert.equal(adapted.length,game.rounds);
+    const rehearsal=expeditionRehearsal(adapted[0]);assert.equal(rehearsal.steps.length,1);assert.equal(rehearsal.steps[0].seconds,8);assert.equal(rehearsal.timing,undefined);
+  }
+});

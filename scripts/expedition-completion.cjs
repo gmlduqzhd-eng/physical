@@ -2,6 +2,7 @@ const {chromium,webkit}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 require('tsx/cjs');
 const {EXPEDITION_GAMES}=require('../src/domain/expeditionGames.ts');
+const {isRevampedExpedition}=require('../src/domain/expeditionRevamps.ts');
 const {createExpeditionRound}=require('../src/domain/expeditionRules.ts');
 const {EXPRESSION_GAMES}=require('../src/presentation/components/minigames/expression/expressionGamesData.ts');
 const base=process.env.AUDIT_URL||'http://127.0.0.1:5175',engine=process.env.BROWSER_ENGINE==='webkit'?webkit:chromium;
@@ -11,7 +12,7 @@ const games=EXPEDITION_GAMES.filter(g=>!subset||subset.includes(g.spec));
 const report={base,engine:engine.name(),scope:'UI completion with virtual time; manual entries are fixtures, not proof of physical activity.',cases:[]};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function main(){
- const browser=await engine.launch({headless:true,...(engine===chromium?{channel:'msedge'}:{})});
+ const browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.env.BROWSER_CHANNEL||'chrome'}:{})});
  try{for(const game of games){
   const viewport=process.env.AUDIT_VIEWPORT?{width:Number(process.env.AUDIT_VIEWPORT.split('x')[0]),height:Number(process.env.AUDIT_VIEWPORT.split('x')[1])}:game.spec[0]==='S'?{width:320,height:568}:{width:1024,height:768};
   const context=await browser.newContext({viewport,isMobile:true,hasTouch:true});const page=await context.newPage();page.setDefaultTimeout(3000);
@@ -34,6 +35,15 @@ async function main(){
     const players=Number(process.env.PARTICIPANTS)||game.players;
     if(players!==game.players)await page.getByRole('combobox',{name:'참여 인원',exact:true}).selectOption(String(players));
     await tap(page.getByRole('button',{name:'원정 시작',exact:true}));
+    const revamped=isRevampedExpedition(game.id);
+    if(revamped){
+     await page.getByRole('heading',{name:'먼저 8초만 연습해요',exact:true}).waitFor();
+     await tap(page.getByRole('button',{name:'점수 없는 연습 시작',exact:true}));
+     await advance(1000);await advance(5000);await advance(8000);
+     for(let grace=0;grace<3&&!(await page.getByRole('button',{name:'첫 작전 시작',exact:true}).count());grace++)await advance(2000);
+     assert.equal(await page.locator('.game-result-overlay').count(),0,'rehearsal cannot score');
+     await tap(page.getByRole('button',{name:'첫 작전 시작',exact:true}));
+    }
     for(let r=0;r<game.rounds;r++){
      const plan=createExpeditionRound(game,r,players,()=>.42);
      const prefix=plan.secret?5:3;for(let s=0;s<prefix;s++)await advance(1000);
@@ -49,6 +59,7 @@ async function main(){
      for(let grace=0;grace<3&&await page.locator('[data-phase="active"]').count();grace++)await advance(1000);
      await page.locator('[data-phase="record"]').waitFor();await layout();
      if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({path:path.join(out,game.spec+'-record.png'),fullPage:true});
+     if(revamped)await tap(page.getByText('세부 기록 직접 입력 · 일부 성공도 기록',{exact:true}));
      const finish=page.getByRole('button',{name:r+1<game.rounds?'기록하고 다음 라운드':'기록하고 원정 마치기',exact:true});
      await tap(finish);await page.getByRole('alert').waitFor();assert.equal(await page.locator('.game-result-overlay').count(),0,'timer alone cannot submit a result');
      let answer=plan.allocation?plan.allocation.counts.map(String):plan.kind==='unique'?plan.question.options.slice(0,players):plan.kind==='choice'?[plan.question.options[0]]:plan.question?.answer||[];
@@ -58,7 +69,7 @@ async function main(){
      for(const target of plan.targets)await page.getByRole('spinbutton',{name:target.label,exact:true}).fill(String(target.goal));
      for(let i=1;i<=players;i++)await tap(page.getByRole('button',{name:i+'번 확인 전',exact:true}));
      for(const checkbox of await page.locator('.expedition-check input').all())await checkbox.check();
-     await tap(finish);
+     if(revamped&&r>0)await tap(page.getByRole('button',{name:'모든 목표와 역할을 직접 확인했어요',exact:true}));else await tap(finish);
     }
    }
    await page.locator('.game-result-overlay').waitFor();await layout();

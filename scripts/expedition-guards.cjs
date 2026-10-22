@@ -4,7 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const base=process.env.AUDIT_URL||'http://127.0.0.1:5175';
 const out=path.resolve(process.env.AUDIT_OUTPUT||'test-results/expedition-guards');
 async function main(){
- fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({channel:'msedge',headless:true});
+ fs.mkdirSync(out,{recursive:true});const browser=await chromium.launch({channel:'chrome',headless:true});
  const report={base,checks:[],errors:[],scope:'Virtual-clock browser regressions; manual entries are test fixtures.'};
  try{
   const context=await browser.newContext({viewport:{width:320,height:568},isMobile:true,hasTouch:true});
@@ -29,9 +29,10 @@ async function main(){
   await page.getByRole('button',{name:'계속하기',exact:true}).waitFor();await page.clock.runFor(20000);await page.locator('[data-phase="active"]').waitFor();
   await page.evaluate(()=>{delete document.hidden;});await tap('준비로 돌아가기');assert.equal(await saved(),0);
   report.checks.push('pause excludes paused time','hidden page pauses','round retry resets stage','unfinished round never saves');
-  await open('exp-phone-06');await tap('원정 시작');
+  await open('exp-phone-06');await tap('원정 시작');await tap('점수 없는 연습 시작');await advance(3000);await advance(8000);await tap('첫 작전 시작');
   for(let round=0;round<3;round++){
    await page.clock.runFor(3000);await page.clock.runFor(20000);await page.locator('[data-phase="record"]').waitFor();
+   await page.getByText('세부 기록 직접 입력 · 일부 성공도 기록',{exact:true}).click();
    const finish=round<2?'기록하고 다음 라운드':'기록하고 원정 마치기';await tap(finish);await page.getByRole('alert').waitFor();
    await page.getByRole('spinbutton',{name:'안내된 구간을 수행한 수',exact:true}).fill('-1');await tap('1');await tap('1');await tap('1번 확인 전');await tap(finish);await page.getByRole('alert').waitFor();
    await page.getByRole('spinbutton',{name:'안내된 구간을 수행한 수',exact:true}).fill('1');
