@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EXPEDITION_GAMES,HELD_EXPEDITION_SPECS} from '../src/domain/expeditionGames';
 import {GAMES} from '../src/domain/gamesData';
-import {LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
+import {ALL_LESSON_GAME_CATALOG as LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
 import {EXPRESSION_GAMES} from '../src/presentation/components/minigames/expression/expressionGamesData';
 import {createExpeditionRound,validateExpeditionRecord,checkExpeditionAnswer,reachablePath,expeditionScore,expeditionBingo,type ExpeditionRecord} from '../src/domain/expeditionRules';
 import {normalizeGameResultDetails} from '../src/domain/gameResultDetails';

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { GAMES } from "../domain/gamesData";
+import { AVAILABLE_GAMES as GAMES } from "../domain/gamesData";
 import accessQr from "../assets/access-qr.svg?inline";
 import brandLogo from "../assets/brand-logo.png";
 import "./IntroLandingPage.css";

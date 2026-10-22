@@ -42,7 +42,7 @@ try{
    };
    try{
     const response=await page.goto(base+(teamMode?'/play/':'/solo/play/')+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
-    await button('활동 시작').click();await phase('intro');
+    await button('활동 시작').click();if(await button('기본 활동 시작').count())await button('기본 활동 시작').click();await phase('intro');
     assert.equal(await page.locator('.mq-heading h1').innerText(),QUEST_META[id].name);
     if(teamMode&&QUEST_META[id].team)await page.getByLabel('함께할 인원').selectOption(String(QUEST_META[id].maxPlayers??4));
     if(width===1024)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
@@ -76,7 +76,7 @@ try{
     if(makeQuestRound(id,0,{gentle:true,seated:false,practice:true,players:3}).reflection){if(width===390)assert(profile.recentGames[0].details.metrics['느낌 돌아보기']);else assert(!profile.recentGames[0].details.metrics['느낌 돌아보기']);}
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(width===390)await page.screenshot({path:path.join(out,id+'-result.png'),fullPage:true});
-    await button('다시 하기').click();await button('활동 시작').click();await phase('intro');
+    await button('다시 하기').click();await button('활동 시작').click();if(await button('기본 활동 시작').count())await button('기본 활동 시작').click();await phase('intro');
     assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),1);
     report.cases.push({id,width,status:'pass'});console.log('PASS',id,width);
    }catch(e){await page.screenshot({path:path.join(out,id+'-failure.png'),fullPage:true});throw e;}

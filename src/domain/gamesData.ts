@@ -1,3 +1,4 @@
+import {isAvailableGame} from './gameLifecycle.js';
 import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons.js';
 import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
 import { EXPEDITION_BY_ID } from './expeditionGames.js';
@@ -1419,6 +1420,8 @@ export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
   subCategory:'안전 상황 학습',achievement:{code:'연계 확인 필요',title:'상황 판단과 도움 요청',desc:SAFETY_LESSONS[game.type].description},
   physicalActivity:false,durationMinutes:5,playMode:'개인',activityType:'개인',equipment:SAFETY_LESSONS[game.type].equipment,safetyTips:[SAFETY_LESSONS[game.type].boundary],
 } : game);
+
+export const AVAILABLE_GAMES=GAMES.filter(game=>isAvailableGame(game.type));
 
 export const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [
   { key: '전체', label: '전체 학년', badge: 'ALL', desc: '모든 학년군' },

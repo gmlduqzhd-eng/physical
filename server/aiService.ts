@@ -1,6 +1,6 @@
 import { generateText, Output, type LanguageModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
-import { GAMES } from '../src/domain/gamesData.js';
+import { AVAILABLE_GAMES as GAMES } from '../src/domain/gamesData.js';
 import { LESSON_GAME_CATALOG } from '../src/data/lessonGameCatalog.js';
 import { inputSchema, outputSchema, type TeacherInput, type TeacherOutput } from '../src/domain/teacherAi.js';
 import { createHash } from 'node:crypto';

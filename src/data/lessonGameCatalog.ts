@@ -1,3 +1,4 @@
+import {isAvailableGame} from '../domain/gameLifecycle.js';
 import {isSafetyLessonId,SAFETY_LESSONS} from '../domain/safetyLessons.js';
 import {GAMES} from '../domain/gamesData.js';
 import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog.js';
@@ -1329,7 +1330,7 @@ const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES
   activityModes:['개인' as const],space:['교실' as const,'체육관' as const],deviceMode:['교사용 1대' as const],recommendedPlayers:{min:1,max:1},intensity:'보통' as const,
   movementSkills:['도구 조절','선택한 움직임 실행'],learningKeywords:['몸 미션','선택과 비교'],safetyNotes:[],teachingTips:[],noDeviceAlternative:'교사가 종이 카드로 안내해요.',
 }))];
-export const LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(game => isQuestId(game.id) ? {
+export const ALL_LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(game => isQuestId(game.id) ? {
   ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
   deviceMode: ['교사용 1대', '모둠별 1대'], intensity: ['pulse-detective','posture-guardian','campfire-breath','breath-pacer-478'].includes(game.id)?'낮음':'보통', activityModes:QUEST_META[game.id].team?['짝','모둠']:['개인'],
   movementSkills:['선택한 동작 실행','방법과 결과 비교'],learningKeywords:[QUEST_META[game.id].name,'선택과 시도','직접 확인'],
@@ -1344,3 +1345,5 @@ export const LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(gam
   teachingTips:['학습용 가상 상황임을 알려준다.','말·손짓 표현이나 읽기 확인을 선택한다.','실제 응급처치 역량을 점수로 판정하지 않는다.'],
   noDeviceAlternative:'교사가 상황 카드를 읽고 학생이 안전한 선택과 이유를 말한다. 실제 처치는 전문 교육용 장비와 강사에게 배운다.',
 } : game);
+
+export const LESSON_GAME_CATALOG=ALL_LESSON_GAME_CATALOG.filter(game=>isAvailableGame(game.id));

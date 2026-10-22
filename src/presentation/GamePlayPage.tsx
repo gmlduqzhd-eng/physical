@@ -1,8 +1,11 @@
+import {mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
+import {ConsolidatedActivity} from './components/minigames/common/ConsolidatedActivity';
+import {Navigate} from 'react-router-dom';
 import {isSafetyLessonId,SAFETY_LESSONS,SAFETY_LESSON_IDS} from '../domain/safetyLessons';
 import {SafetyLesson} from './components/minigames/common/SafetyLesson';
 import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
 import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { GAMES } from '../domain/gamesData';
 import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
 import { MovementQuest } from './components/minigames/common/MovementQuest';
@@ -224,13 +227,15 @@ SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_L
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
-  const { pathname } = useLocation();
-  return <GamePlaySession key={`${pathname}:${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}`} />;
+  const { pathname,search,hash } = useLocation();
+  const moved=mergedGameUrl(pathname,gameType||'',search,hash);
+  if(moved)return <Navigate replace to={moved}/>;
+  return <GamePlaySession key={`${pathname}:${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}:${searchParams.get('variant')}`} />;
 };
 
 const GamePlaySession = () => {
   const { gameType } = useParams<{ gameType: string }>();
-  const { hash, pathname } = useLocation();
+  const { hash, pathname,state:routeState } = useLocation();
   const soloMode = pathname.startsWith('/solo/play/');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -241,6 +246,9 @@ const GamePlaySession = () => {
   const guidedRequested = !soloMode && searchParams.get('guided') === '1';
   const missionId = soloMode ? null : searchParams.get('mission');
   const guidedMode = hasBattle && !!missionId;
+  const variantId=searchParams.get('variant');
+  const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
+  const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
   const hubPath = soloMode ? '/solo' : (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : '/hub';
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
@@ -250,7 +258,7 @@ const GamePlaySession = () => {
   const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
   const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [hasStarted, setHasStarted] = useState(!!routeState?.activityPrepared);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
@@ -274,7 +282,7 @@ const GamePlaySession = () => {
   const handleStartGame = () => {
     setHasStarted(true);
     const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
-    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||''));
+    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||'')&&!variantsFor(gameType||'').length);
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
 
@@ -326,9 +334,10 @@ const GamePlaySession = () => {
     return () => stopBgm();
   }, [musicEnabled, musicVolume, gameFinished]);
 
-  const gameInfo = GAME_TITLES[gameType || ''];
-  const participationCues = readParticipationCues(hash, gameType || '');
-  const activityPlan = getPhysicalActivityPlan(gameType || '', EXPRESSION_GAMES.some(game => game.id === gameType));
+  const baseGameInfo=GAME_TITLES[gameType||''];
+  const gameInfo=useMemo(()=>selectedVariant?{...baseGameInfo,name:`${baseGameInfo.name} · ${selectedVariant.name}`,target:'통합 활동의 선택 코스'}:baseGameInfo,[baseGameInfo,selectedVariant]);
+  const participationCues = (readParticipationCues(hash, gameType || '')||(selectedVariant?readParticipationCues(hash,selectedVariant.id):null));
+  const activityPlan = getPhysicalActivityPlan(selectedVariant?.id||gameType||'', EXPRESSION_GAMES.some(game=>game.id===(selectedVariant?.id||gameType)));
 
   // 게임 완료 시 모둠 점수 및 활동 기록 즉시 반영
   const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }) => {
@@ -338,7 +347,7 @@ const GamePlaySession = () => {
     if (hasBattle && battleGroupId && classroomScore !== 0) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId }, timestamp: Date.now() });
     }
-    const details = normalizeGameResultDetails(payload.details);
+    const details = normalizeGameResultDetails(selectedVariant?{...payload.details,metrics:{...payload.details?.metrics,'통합 활동':baseGameInfo.name,'선택 코스':selectedVariant.name,'변형 ID':selectedVariant.id,'기록 구분':'통합 코스 v1 · 이전 점수와 직접 비교하지 않아요'}}:payload.details);
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
@@ -360,7 +369,7 @@ const GamePlaySession = () => {
 
     // 최고 기록 저장
     if (gameType) {
-      const bestKey = gameBestStorageKey(gameType);
+      const bestKey = gameBestStorageKey(gameType,selectedVariant?.id);
       const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
       if (earned > currentBest) {
         writeStorage(bestKey, String(earned));
@@ -369,11 +378,11 @@ const GamePlaySession = () => {
 
     // 플레이어 프로필에 점수 누적 저장 (RPE는 나중에 별도 저장)
     if (gameType && gameInfo) {
-      addGameResult(gameType, gameInfo.name, earned, undefined, undefined, details);
+      addGameResult(gameType, gameInfo.name, earned, undefined, undefined, details,scoreKey);
     }
 
     checkBadges(earned);
-  }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion]);
+  }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion,selectedVariant,baseGameInfo,scoreKey]);
 
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
@@ -407,7 +416,7 @@ const GamePlaySession = () => {
     );
   }
 
-  const bestScore = nonnegativeNumber(Number(readStorage(gameBestStorageKey(gameType))));
+  const bestScore = nonnegativeNumber(Number(readStorage(gameBestStorageKey(gameType,selectedVariant?.id))));
 
   // 화산 게임은 gameRoom을 필요로 하므로 더미 gameRoom 생성
   const dummyGameRoom: GameRoom = {
@@ -426,7 +435,7 @@ const GamePlaySession = () => {
 
   const dummyGroupId = 'standalone-player';
 
-  const renderGame = () => {
+  const renderBaseGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
     if(isSafetyLessonId(gameType))return <SafetyLesson key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
     if (isQuestId(gameType)) return <MovementQuest key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
@@ -611,6 +620,8 @@ const GamePlaySession = () => {
     }
   };
 
+  const renderGame=()=>variantsFor(gameType).length?<ConsolidatedActivity targetId={gameType} selected={variantId} solo={soloMode} groupId={dummyGroupId} enqueueAction={localEnqueueAction}>{renderBaseGame()}</ConsolidatedActivity>:renderBaseGame();
+
   return (
     <div className="game-tools-scope game-tools-layout">
       <nav className="game-utilities-bar" aria-label="이용 설정"><HeaderUtilities/></nav>
@@ -620,7 +631,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game => game.type === gameType)?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info"><p>{GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
           {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (

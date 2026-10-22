@@ -1,3 +1,5 @@
+import {getMergedGame,variantsFor} from '../domain/gameLifecycle';
+import {GAMES as HISTORICAL_GAMES} from '../domain/gamesData';
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
 import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
@@ -26,7 +28,7 @@ import './GameHub.css';
 import { ThemeZone, type ThemeModeId } from './components/ThemeZone';
 
 import {
-  GAMES,
+  AVAILABLE_GAMES as GAMES,
   GRADE_GROUPS,
   PE_DOMAINS,
   SPORT_SUB_TYPES,
@@ -67,7 +69,7 @@ export const GameHub = () => {
   const [activeAchievement, setActiveAchievement] = useState<AchievementStandard | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     const saved = readJsonStorage('physical_favorites');
-    return new Set(Array.isArray(saved) ? saved.filter((type): type is string => typeof type === 'string' && GAMES.some(game => game.type === type)) : []);
+    return new Set(Array.isArray(saved) ? saved.filter((type): type is string => typeof type === 'string' && HISTORICAL_GAMES.some(game => game.type === type)) : []);
   });
   const [searchQuery, setSearchQuery] = useState('');
   const spinInterval = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -148,7 +150,7 @@ export const GameHub = () => {
   const toggleFavorite = useCallback((type: string) => {
     setFavorites(prev => {
       const next = new Set(prev);
-      if (next.has(type)) next.delete(type); else next.add(type);
+      const matches=[...next].filter(id=>(getMergedGame(id)?.target||id)===type);if(matches.length)matches.forEach(id=>next.delete(id));else next.add(type);
       return next;
     });
   }, []);
@@ -171,11 +173,11 @@ export const GameHub = () => {
     const sportMatch = domainFilter !== '스포츠' || sportFilter === '전체' || g.sportType === sportFilter;
     const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
     const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
-    const favMatch = !showFavoritesOnly || favorites.has(g.type);
+    const favMatch = !showFavoritesOnly || [...favorites].some(id=>(getMergedGame(id)?.target||id)===g.type);
     const placeMatch = placeFilter === '전체' || getGamePlace(g.type, g.domain) === placeFilter;
     const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
     const query = searchQuery.trim().toLocaleLowerCase();
-    const searchMatch = !query || `${g.name} ${g.desc} ${g.subCategory} ${g.achievement.code} ${g.achievement.title}`.toLocaleLowerCase().includes(query);
+    const searchMatch = !query || variantsFor(g.type).some(v=>v.name.toLocaleLowerCase().includes(query)) || `${g.name} ${g.desc} ${g.subCategory} ${g.achievement.code} ${g.achievement.title}`.toLocaleLowerCase().includes(query);
     const physicalMatch = !physicalOnly || isPhysicalActivityGame(g);
     return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch && physicalMatch;
   });
@@ -852,7 +854,7 @@ export const GameHub = () => {
                       시작 <ChevronRight className="w-3.5 h-3.5" />
                     </button>
                     <button onClick={(e) => { e.stopPropagation(); toggleFavorite(game.type); }} className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors" title="즐겨찾기">
-                      <Star className={`w-4 h-4 ${favorites.has(game.type) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
+                      <Star className={`w-4 h-4 ${[...favorites].some(id=>(getMergedGame(id)?.target||id)===game.type) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
                     </button>
                   </div>
                 </div>

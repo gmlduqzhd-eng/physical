@@ -26,7 +26,7 @@ async function phase(page, value) {
 }
 async function launch(page, id, solo = true) {
   await page.goto(`${base}/${solo ? 'solo/play' : 'play'}/${id}`, { waitUntil: 'networkidle' });
-  await button(page, '활동 시작').click(); await phase(page, 'intro');
+  await button(page, '활동 시작').click();if(await button(page,'기본 활동 시작').count())await button(page,'기본 활동 시작').click(); await phase(page, 'intro');
 }
 async function choose(page, id, round) {
   const options = id === 'zigzag' ? ['위쪽 길','아래쪽 길','위쪽 길'] : id === 'dribble-rhythm' ? ['편한 손으로 연결','두 손 번갈아 연결','두 손 번갈아 연결'] : ['가까이서 정확하게','간격을 조금 넓혀 도전','가까이서 정확하게'];

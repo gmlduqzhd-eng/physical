@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Share2 } from "lucide-react";
-import { GAMES } from "../../domain/gamesData";
+import { AVAILABLE_GAMES as GAMES } from "../../domain/gamesData";
 import "./LinkShareButton.css";
 
 export function LinkShareButton({ hub = false }: { hub?: boolean }) {

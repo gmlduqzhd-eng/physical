@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
-import { GAMES } from '../domain/gamesData';
+import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import { LessonPlanGeneratorV2 } from './components/LessonPlanGeneratorV2';
 import { FlowShell } from './FlowShell';
 import './ActivityLibrary.css';

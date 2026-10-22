@@ -84,7 +84,7 @@ export const usePlayerProfile = () => {
     });
   }, []);
 
-  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number, details?: GameResultDetails) => {
+  const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number, details?: GameResultDetails, scoreKey?:string) => {
     // The losing fate card is a completed play, even though its result is a penalty.
     if (!Number.isFinite(score) || (score < 0 && !(gameType === 'fate_card' && score === -300)) || !gameType) return;
     setProfile(prev => {
@@ -100,7 +100,7 @@ export const usePlayerProfile = () => {
 
       const record: GameRecord = { details: normalizeGameResultDetails(details), gameType, gameName, score, playedAt: Date.now(), difficulty, rpe: rpe && rpe >= 1 && rpe <= 5 ? rpe : undefined };
       const newHighScores = { ...current.highScores };
-      newHighScores[gameType] = Math.max(newHighScores[gameType] || 0, score);
+      newHighScores[scoreKey||gameType] = Math.max(newHighScores[scoreKey||gameType] || 0, score);
       const newPlayCounts = { ...current.playCounts };
       newPlayCounts[gameType] = (newPlayCounts[gameType] || 0) + 1;
 

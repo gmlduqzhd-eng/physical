@@ -2,6 +2,7 @@ const {chromium,webkit}=require('playwright');
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 require('tsx/cjs');
 const {EXPEDITION_GAMES}=require('../src/domain/expeditionGames.ts');
+const {getMergedGame}=require('../src/domain/gameLifecycle.ts');
 const {isRevampedExpedition}=require('../src/domain/expeditionRevamps.ts');
 const {createExpeditionRound}=require('../src/domain/expeditionRules.ts');
 const {EXPRESSION_GAMES}=require('../src/presentation/components/minigames/expression/expressionGamesData.ts');
@@ -24,7 +25,7 @@ async function main(){
   const layout=async()=>assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal overflow');
   try{
    await page.clock.install();await page.goto(base+'/solo/play/'+game.id,{waitUntil:'domcontentloaded'});
-   await page.getByRole('button',{name:'활동 시작',exact:true}).waitFor({timeout:15000});await page.clock.pauseAt(await page.evaluate(()=>new Date(Date.now()+1000).toISOString()));await tap(page.getByRole('button',{name:'활동 시작',exact:true}));
+   await page.getByRole('button',{name:'활동 시작',exact:true}).waitFor({timeout:15000});await page.clock.pauseAt(await page.evaluate(()=>new Date(Date.now()+1000).toISOString()));await tap(page.getByRole('button',{name:'활동 시작',exact:true}));if(await page.getByRole('button',{name:'기본 활동 시작',exact:true}).count())await tap(page.getByRole('button',{name:'기본 활동 시작',exact:true}));
    if(game.kind==='A'){
     await tap(page.getByRole('button',{name:/준비 완료/}));
     for(const step of EXPRESSION_GAMES.find(g=>g.id===game.id).steps){await advance(1000);await tap(page.locator('.gameplay-content').getByRole('button',{name:/다음 단계|활동 마치고 평가하기/}));}
@@ -74,7 +75,7 @@ async function main(){
    }
    await page.locator('.game-result-overlay').waitFor();await layout();
    const profile=()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')));
-   let saved=await profile();assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,game.id);assert(Number.isFinite(saved.recentGames[0].score));
+   let saved=await profile();assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,getMergedGame(game.id)?.target||game.id);assert(Number.isFinite(saved.recentGames[0].score));if(getMergedGame(game.id))assert.equal(saved.recentGames[0].details.metrics['변형 ID'],game.id);
    if(game.kind==='B'){const a=saved.recentGames[0].details.activity;assert.equal(a.gameId,game.id);assert.equal(a.specId,game.spec);assert.equal(a.rounds.length,game.rounds);assert.equal(a.soloPreview,true);assert(a.rounds.every(r=>r.source==='self-report'));}
    await advance(15000);assert.equal((await profile()).totalPlays,1);item.score=saved.recentGames[0].score;
    await page.screenshot({path:path.join(out,game.spec+'-result.png')});

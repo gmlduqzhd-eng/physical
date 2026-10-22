@@ -1,3 +1,4 @@
+import {variantBestKey} from './gameLifecycle.js';
 import {isSafetyLessonId} from './safetyLessons.js';
 import {REFLECTION_QUEST_IDS,REFLECTION_QUEST_META,makeReflectionQuest,type ReflectionQuestId} from './reflectionMovementQuests.js';
 import {SPORTS_QUEST_IDS,SPORTS_QUEST_META,makeSportsQuest,type SportsQuestId} from './sportsMovementQuests.js';
@@ -48,7 +49,8 @@ export const QUEST_META: Record<QuestId, QuestMetadata> = {
 };
 
 export function isQuestId(id: string): id is QuestId { return (QUEST_IDS as readonly string[]).includes(id); }
-export function gameBestStorageKey(id: string): string {
+export function gameBestStorageKey(id: string,variant?:string): string {
+  if(variant)return variantBestKey(id,variant);
   return `physical_best_${id}${isQuestId(id) ? '_movement_v1' : isSafetyLessonId(id)?'_safety_v1':''}`;
 }
 export function safeRoute(path: readonly number[], blocked: number): boolean {

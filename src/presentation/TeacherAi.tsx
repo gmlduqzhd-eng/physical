@@ -1,7 +1,7 @@
 import { endClassroomSession } from '../data/supabase';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { GAMES } from '../domain/gamesData';
+import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import { GOALS, OBSERVATIONS, TASKS, nextChallenge, type AiResponse, type TeacherInput, type TeacherOutput, type TeacherTask } from '../domain/teacherAi';
 import { TeacherLogin } from './components/TeacherAuthGuard';
 import { LocalAiSettings } from './components/LocalAiSettings';

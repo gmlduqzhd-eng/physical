@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ClipboardCheck, QrCode, UserRound } from 'lucide-react';
-import { GAMES } from '../domain/gamesData';
+import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import brandLogo from '../assets/brand-logo.png';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
 import { HeaderUtilities } from './components/HeaderUtilities';
