@@ -1,0 +1,5404 @@
+{
+  "reviewedAt": "2026-10-22",
+  "baseline": "97f95df24cce741b48dc54658d34173db9149848",
+  "total": 225,
+  "counts": {
+    "유지": 47,
+    "개편": 61,
+    "통합": 111,
+    "삭제": 6
+  },
+  "method": "225개 전 항목의 목록·단계별 규칙·컴포넌트 입력·완료/기록 구조를 소스 기준으로 검토. 통합은 활동 소재를 버리지 않고 기본 게임 안의 선택 변형으로 옮기는 후속 설계이며 아직 링크를 이동하지 않음.",
+  "limits": "학생의 이해도·흥미·활동량·안전성을 실측한 결과가 아님. 브라우저 검증은 대표 개편의 조작·진행·저장 경로 검증이며 학생의 실제 움직임이나 모둠 참여의 증거가 아님.",
+  "rubric": [
+    "짧은 설명과 첫 시범으로 시작 가능한가",
+    "신체 움직임이 목표 달성에 직접 연결되는가",
+    "선택·조정·협동·재도전의 의미가 있는가",
+    "화면 입력과 대기보다 실제 참여에 시간을 쓰는가",
+    "학년·공간·도구·대체 동작을 구별할 수 있는가"
+  ],
+  "rows": [
+    {
+      "id": "exp-phone-01",
+      "name": "사방 귀환 보급",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 55,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "중앙에서 음성이 부른 색 표식을 다녀오고 중앙으로 돌아온다. 지령을 순서대로 제시하고 라운드가 끝나면 성공한 왕복 수를 기록한다.",
+        "movement": "route",
+        "spec": "S01"
+      }
+    },
+    {
+      "id": "exp-phone-02",
+      "name": "색깔 환승 미션",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 56,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "색 표식 사이를 지령 순서대로 계속 이동한다. 중앙 귀환 없이 진행하고 같은 색이 연속으로 나오지 않도록 경로를 생성한다.",
+        "movement": "route",
+        "spec": "S02"
+      }
+    },
+    {
+      "id": "exp-phone-03",
+      "name": "규칙 반전 골목",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 57,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "왼쪽·오른쪽 지령에 맞춰 옆걸음한다. 반전 신호가 나오면 반대 방향으로 수행한다. 정상·반전 상태를 분명히 표시한다.",
+        "movement": "route",
+        "spec": "S03"
+      }
+    },
+    {
+      "id": "exp-phone-04",
+      "name": "닫히는 섬 우회전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 58,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "목적지와 통행 금지 구역을 함께 제시한다. 금지 구역을 피해 이동한다. 시작점에서 목적지까지 가능한 경로를 남겨 둔다.",
+        "movement": "route",
+        "spec": "S04"
+      }
+    },
+    {
+      "id": "exp-phone-05",
+      "name": "기억의 발자국",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 59,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "세 곳의 방문 순서를 안내한 뒤 기억해서 이동한다. 활동 후 정답을 공개한다. 설정에 따라 순서 길이를 늘릴 수 있게 한다.",
+        "movement": "route",
+        "spec": "S05"
+      }
+    },
+    {
+      "id": "exp-phone-06",
+      "name": "숫자 암호 우편",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 60,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "합이 목표 숫자가 되는 두 숫자 표식을 방문한다. 준비된 숫자로 실제 정답을 만들 수 있는 문제만 제시한다.",
+        "movement": "route",
+        "spec": "S06"
+      }
+    },
+    {
+      "id": "exp-phone-07",
+      "name": "콘 재배치 로봇",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 61,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "색과 상태를 조합한 지령을 제시한다. 학생은 이동하면서 해당 콘을 세우거나 눕힌다. 종료 후 목표 배치와 실제 배치를 비교한다.",
+        "movement": "route",
+        "spec": "S07"
+      }
+    },
+    {
+      "id": "exp-phone-08",
+      "name": "두 갈래 보급로",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 62,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "긴 걷기 코스와 짧은 옆걸음 미션 코스를 제시한다. 두 경로를 모두 수행해야 보급품 한 묶음을 완료한다.",
+        "movement": "route",
+        "spec": "S08"
+      }
+    },
+    {
+      "id": "exp-phone-09",
+      "name": "무늬 수집 왕복전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 63,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "지점별 색 조각을 가져와 출발점에 놓는다. 앱이 제시한 색 순서대로 무늬를 완성하도록 목표와 확인 화면을 제공한다.",
+        "movement": "route",
+        "spec": "S09"
+      }
+    },
+    {
+      "id": "exp-phone-10",
+      "name": "정글 걸음 탐험",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.",
+      "next": "핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 64,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "평지 큰 걸음, 좁은 길 옆걸음, 풀숲 무릎 올리기처럼 지형마다 이동 방법을 바꾼다. 지형 순서와 교대 신호를 제공한다.",
+        "movement": "route",
+        "spec": "S10"
+      }
+    },
+    {
+      "id": "exp-phone-11",
+      "name": "두 박자 발바꾸기",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-12",
+      "reason": "발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.",
+      "next": "네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.",
+      "targetName": "네 칸 리듬발판",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 65,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "두 박자는 왼발 중심, 다음 두 박자는 오른발 중심으로 스텝한다. 라운드마다 앞뒤·좌우 조합을 바꾼다.",
+        "movement": "rhythm",
+        "spec": "S11"
+      }
+    },
+    {
+      "id": "exp-phone-12",
+      "name": "네 칸 리듬발판",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 66,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "바닥 네 칸에서 제시된 발 순서를 수행한다. 앱은 8박자 패턴과 현재 박자를 표시한다. 실제 발 위치를 자동 인식한다고 표시하지 않는다.",
+        "movement": "rhythm",
+        "spec": "S12"
+      }
+    },
+    {
+      "id": "exp-phone-13",
+      "name": "사다리 발자국 암호",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-12",
+      "reason": "발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.",
+      "next": "네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.",
+      "targetName": "네 칸 리듬발판",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 67,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "테이프 사다리에서 안-안-밖-밖 등 발 순서를 수행한다. 진행 방향과 발 패턴을 구간별로 바꾼다.",
+        "movement": "rhythm",
+        "spec": "S13"
+      }
+    },
+    {
+      "id": "exp-phone-14",
+      "name": "줄 없는 줄넘기 항해",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "music_jumprope",
+      "reason": "줄 돌리는 팔과 발 스텝을 연결하는 동작이 음악 줄넘기 입문 단계에 해당함.",
+      "next": "줄 없이 딛기·낮은 뛰기·줄 사용의 선택 단계로 통합.",
+      "targetName": "음악 줄넘기 비트",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 68,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "줄 돌리는 팔 동작과 낮은 뛰기 또는 번갈아 딛기를 연결한다. 기본·좌우·앞뒤 스텝 구간을 진행한다.",
+        "movement": "rhythm",
+        "spec": "S14"
+      }
+    },
+    {
+      "id": "exp-phone-15",
+      "name": "무릎·손뼉 교차비트",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-12",
+      "reason": "발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.",
+      "next": "네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.",
+      "targetName": "네 칸 리듬발판",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 69,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "무릎 올리기, 반대 손 맞대기, 손뼉을 조합한다. 좌우 조합과 반복 마디를 박자에 맞춰 안내한다.",
+        "movement": "rhythm",
+        "spec": "S15"
+      }
+    },
+    {
+      "id": "exp-phone-16",
+      "name": "두 리듬 조종사",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-12",
+      "reason": "발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.",
+      "next": "네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.",
+      "targetName": "네 칸 리듬발판",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 70,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "발은 일정하게 걷고 팔은 별도 신호에 따라 위·옆·앞으로 뻗는다. 기본 박자와 팔 전환 신호를 구분한다.",
+        "movement": "rhythm",
+        "spec": "S16"
+      }
+    },
+    {
+      "id": "exp-phone-17",
+      "name": "박자 배달 드리블",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "dribble-rhythm",
+      "reason": "공 조작과 박자·손 교대를 연결하는 목표가 대표 개편과 같음.",
+      "next": "이동·손·여러 명 동시 공 조작을 배송 공장의 후속 변형으로 보존.",
+      "targetName": "드리블 박자 공장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 71,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "공을 튀기며 두 표식 사이를 이동한다. 구간마다 사용하는 손이나 돌아오는 코스를 바꾼다.",
+        "movement": "rhythm",
+        "spec": "S17"
+      }
+    },
+    {
+      "id": "exp-phone-18",
+      "name": "발끝 터치 리듬섬",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-36",
+      "reason": "발로 공을 다루고 표식으로 이동·정지하는 같은 공 조작 계열임.",
+      "next": "발바닥 터치·색문 이동·멈추기 단계를 하나의 축구 공 조작 활동에 통합.",
+      "targetName": "발 드리블 색문 탈출",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 72,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "공 위에 발바닥을 번갈아 가볍게 올린다. 한 마디가 끝나면 공을 옆 표식으로 옮겨 다음 조합을 수행한다.",
+        "movement": "rhythm",
+        "spec": "S18"
+      }
+    },
+    {
+      "id": "exp-phone-19",
+      "name": "스카프 박자 낚시",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.",
+      "next": "핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 73,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "박자에 맞춰 스카프를 띄우고 받는다. 옆걸음, 받는 손, 정거장 이동 조건을 구간마다 바꾼다.",
+        "movement": "rhythm",
+        "spec": "S19"
+      }
+    },
+    {
+      "id": "exp-phone-20",
+      "name": "리듬 복싱 경로전",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "taebo_fitness",
+      "reason": "허공 동작·옆걸음·낮추기를 박자에 맞춰 연결하는 피트니스 표현 계열임.",
+      "next": "낮은 강도 입문 콤보로 통합하고 접촉 없는 개인 공간 활동을 유지.",
+      "targetName": "태보 & 복싱 에어로빅",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 74,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "허공에 주먹 뻗기, 옆걸음, 가볍게 몸 낮추기를 연결한다. 같은 콤보를 세 방향으로 수행하도록 안내한다.",
+        "movement": "rhythm",
+        "spec": "S20"
+      }
+    },
+    {
+      "id": "exp-phone-24",
+      "name": "세 높이 보석 배송",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 75,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "낮은 위치 손 뻗기, 일어서기, 위쪽 목표로 팔 뻗기를 연결한다. 좌우 목적지를 바꾸며 수행하고 짝이 완료 수를 확인한다.",
+        "movement": "route",
+        "spec": "S24"
+      }
+    },
+    {
+      "id": "exp-phone-27",
+      "name": "상체·하체 번갈아 원정",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "걷기·팔 뻗기·무릎 올리기 미션을 순서대로 수행하는 체력 코스 변형임.",
+      "next": "선택형 체력 코스의 상하체 교대·무작위 순서 모드로 통합.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 76,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "팔 뻗으며 걷기, 무릎 올리기, 두 동작 연결을 구간별로 수행한다. 단계 순서와 활동 시간을 안내한다.",
+        "movement": "route",
+        "spec": "S27"
+      }
+    },
+    {
+      "id": "exp-phone-28",
+      "name": "세 갈래 체력룰렛",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "걷기·팔 뻗기·무릎 올리기 미션을 순서대로 수행하는 체력 코스 변형임.",
+      "next": "선택형 체력 코스의 상하체 교대·무작위 순서 모드로 통합.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 77,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "큰 걸음, 옆걸음, 팔 벌려 걷기 등에서 세 미션을 뽑는다. 뽑힌 순서로 모두 수행하고 완료를 확인하면 보물상자를 연다.",
+        "movement": "route",
+        "spec": "S28"
+      }
+    },
+    {
+      "id": "exp-phone-29",
+      "name": "몸으로 재는 모래시계",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "stopwatch",
+      "reason": "시간을 가리고 제자리걸음으로 목표 시간을 추정하는 시간 감각 활동임.",
+      "next": "몸으로 시간 느끼기 모드로 통합하고 오차를 신체 능력 평가로 표시하지 않음.",
+      "targetName": "스탑워치 눈치",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 78,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "목표 시간을 확인한 뒤 시간 표시 없이 제자리걸음을 한다. 시간이 되었다고 생각할 때 종료하고 실제 경과 시간과 차이를 확인한다.",
+        "movement": "timing",
+        "spec": "S29"
+      }
+    },
+    {
+      "id": "exp-phone-30",
+      "name": "내 페이스 왕복시계",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 79,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "거치된 기기에서 출발·도착만 기록한다. 세 번 왕복한 소요 시간을 비교하고 비슷한 페이스로 수행했는지 보여 준다.",
+        "movement": "timing",
+        "spec": "S30"
+      }
+    },
+    {
+      "id": "exp-phone-31",
+      "name": "이동 표적 콩주머니",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 80,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "지령에 나온 색 표적에 던지고 직접 회수한다. 다음 라운드에는 던지는 위치나 목표를 바꾸고 표적별 성공을 기록한다.",
+        "movement": "equipment",
+        "spec": "S31"
+      }
+    },
+    {
+      "id": "exp-phone-32",
+      "name": "벽 반사 우편배달",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.",
+      "next": "핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 81,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "스펀지공을 벽에 보내 받은 뒤 옆 표식으로 이동한다. 서로 다른 위치에서 보내기와 받기를 이어간다.",
+        "movement": "equipment",
+        "spec": "S32"
+      }
+    },
+    {
+      "id": "exp-phone-33",
+      "name": "굴러오는 색문 수비",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 82,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝이 좌우 문으로 공을 굴리면 옆걸음으로 이동해 막는다. 공격·수비 역할 교대와 라운드 기록을 제공한다.",
+        "movement": "equipment",
+        "spec": "S33"
+      }
+    },
+    {
+      "id": "exp-phone-34",
+      "name": "패스 후 자리 바꾸기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "pass-gate-rescue",
+      "reason": "패스 후 자리 이동·받기 위치 변경이라는 핵심 전술을 다른 인원과 규칙으로 반복함.",
+      "next": "빈자리 패스의 2인·통로 분리·같은 자리 금지 모드로 보존. 실제 협동 인원과 혼자 연습은 구별.",
+      "targetName": "패스 게이트 구조대",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 83,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "두 사람이 표식 세 개를 사용한다. 공을 보낸 사람은 빈 표식으로 이동한다. 연속 연결과 두 사람의 참여를 확인한다.",
+        "movement": "equipment",
+        "spec": "S34"
+      }
+    },
+    {
+      "id": "exp-phone-35",
+      "name": "풍선 세 점 순찰",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 84,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "풍선을 띄우며 표식 세 곳을 순서대로 방문한다. 구간마다 사용하는 손을 바꾸고 떨어지면 해당 구간부터 이어간다.",
+        "movement": "equipment",
+        "spec": "S35"
+      }
+    },
+    {
+      "id": "exp-phone-36",
+      "name": "발 드리블 색문 탈출",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 85,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "음성이 부른 색문으로 공을 몰고 지정 원 안에 멈춘다. 지령 순서와 라운드별 완료 기록을 제공한다.",
+        "movement": "equipment",
+        "spec": "S36"
+      }
+    },
+    {
+      "id": "exp-phone-37",
+      "name": "배구 한 걸음 리시브",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 86,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝이 보낸 부드러운 공을 옆 표식으로 이동해 받거나 되돌린다. 좌우 이동과 역할 교대를 안내한다.",
+        "movement": "equipment",
+        "spec": "S37"
+      }
+    },
+    {
+      "id": "exp-phone-38",
+      "name": "라켓 세 정거장",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 87,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "라켓 위에 가벼운 공을 올리고 이동한다. 정거장별로 멈추기, 한 번 튀기기, 방향 바꾸기를 수행한다.",
+        "movement": "equipment",
+        "spec": "S38"
+      }
+    },
+    {
+      "id": "exp-phone-39",
+      "name": "공 굴림 회수 빙고",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 88,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "숫자 표적에 공을 굴리고 직접 가져온다. 매번 출발 위치를 바꾸고 확인된 성공 칸으로 빙고를 완성한다.",
+        "movement": "equipment",
+        "spec": "S39"
+      }
+    },
+    {
+      "id": "exp-phone-40",
+      "name": "스카프 바꿔잡기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-19",
+      "reason": "스카프 띄우기·받기·이동의 개인/짝 변형임.",
+      "next": "스카프 활동의 개인→짝 교환 단계로 통합.",
+      "targetName": "스카프 박자 낚시",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 89,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝이 각자 스카프를 띄우고 한 걸음 이동해 상대 스카프를 받는다. 손과 이동 방향 조합을 바꿔 성공 조합을 모은다.",
+        "movement": "equipment",
+        "spec": "S40"
+      }
+    },
+    {
+      "id": "exp-tablet-01",
+      "name": "코트 좌표 원정",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 90,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "네 사람이 서로 다른 좌표를 맡아 바닥 격자로 이동한다. 네 좌표를 모두 채웠다고 확인하면 다음 배치를 제시한다.",
+        "movement": "route",
+        "spec": "T01"
+      }
+    },
+    {
+      "id": "exp-tablet-02",
+      "name": "대형 복사 원정",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.",
+      "next": "핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 91,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "모둠이 이동하다 화면의 삼각형·사각형·마름모 대형을 만든다. 대형 확인과 다음 이동 구간을 반복한다.",
+        "movement": "route",
+        "spec": "T02"
+      }
+    },
+    {
+      "id": "exp-tablet-03",
+      "name": "빈칸 구조대",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 92,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각 섬의 필요한 인원수를 표시한다. 모든 섬의 정원을 맞추도록 분산한다. 정원 합계가 참여 인원과 맞는 문제를 생성한다.",
+        "movement": "route",
+        "spec": "T03"
+      }
+    },
+    {
+      "id": "exp-tablet-04",
+      "name": "연결도로 보급대",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 93,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 맡은 통로로 보급품을 운반한다. 막힌 도로가 바뀌면 새로운 통로로 이동한다. 통행 가능한 대체 경로를 유지한다.",
+        "movement": "route",
+        "spec": "T04"
+      }
+    },
+    {
+      "id": "exp-tablet-05",
+      "name": "기억 무늬 발자국",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-05",
+      "reason": "가린 순서나 배치를 실제 표식으로 재현하는 기억·이동 구조가 겹침.",
+      "next": "개인 순서·모둠 배치·방문 순서 변형으로 통합하고 짧은 순서부터 제시.",
+      "targetName": "기억의 발자국",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 94,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "색 배치를 잠깐 보여 준 뒤 가린다. 모둠이 실제 표식에 서서 배치를 재현하고 정답 공개 후 수행을 확인한다.",
+        "movement": "route",
+        "spec": "T05"
+      }
+    },
+    {
+      "id": "exp-tablet-06",
+      "name": "색과 글자 갈림길",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 95,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 네 갈래 코스를 둔다. 글자의 뜻 또는 글자의 색 중 현재 규칙에 맞는 길을 다녀온다.",
+        "movement": "route",
+        "spec": "T06"
+      }
+    },
+    {
+      "id": "exp-tablet-07",
+      "name": "모둠 숫자 사다리",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 96,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 오름차순·짝수·두 칸씩 등 다른 규칙으로 바닥 숫자를 방문한다. 전원 완료를 확인하면 공동 단계가 끝난다.",
+        "movement": "route",
+        "spec": "T07"
+      }
+    },
+    {
+      "id": "exp-tablet-08",
+      "name": "미로 길 설계단",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 97,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "출발점, 목적지, 금지 칸을 확인해 경로를 정한다. 각자 분리된 코스에서 수행한다. 도달 가능한 미로만 제시한다.",
+        "movement": "route",
+        "spec": "T08"
+      }
+    },
+    {
+      "id": "exp-tablet-09",
+      "name": "기준 방향 탐험대",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 98,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 바닥에 정한 앞쪽을 기준으로 화면 화살표를 해석한다. 기준 방향을 바꿔 같은 지령을 다른 경로로 수행한다.",
+        "movement": "route",
+        "spec": "T09"
+      }
+    },
+    {
+      "id": "exp-tablet-10",
+      "name": "신호 규칙 스위치",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "색 신호의 걷기·옆걸음 규칙 전환은 신호 이동 활동의 확장임.",
+      "next": "기본 신호를 익힌 뒤 규칙 교환 도전으로 통합.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 99,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "초록은 걷기, 파랑은 옆걸음으로 시작한다. 다음 라운드에는 규칙을 바꾼다. 틀려도 다음 신호에 다시 참여한다.",
+        "movement": "route",
+        "spec": "T10"
+      }
+    },
+    {
+      "id": "exp-tablet-18",
+      "name": "다른 춤 같은 박자",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-12",
+      "reason": "발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.",
+      "next": "네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.",
+      "targetName": "네 칸 리듬발판",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 100,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "같은 네 박자에 각자 다른 스텝을 수행한다. 짝의 동작을 배우고 마지막에는 네 사람의 조합을 연결한다. 박자와 단계 진행을 구현한다.",
+        "movement": "rhythm",
+        "spec": "T18"
+      }
+    },
+    {
+      "id": "exp-tablet-21",
+      "name": "패스하고 빈자리",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 101,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "네 사람과 표식 다섯 개를 사용한다. 공을 보낸 사람은 빈자리로 이동한다. 전원의 이동과 받기 참여를 확인한다.",
+        "movement": "equipment",
+        "spec": "T21"
+      }
+    },
+    {
+      "id": "exp-tablet-22",
+      "name": "두 공 교차 배송",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "pass-gate-rescue",
+      "reason": "패스 후 자리 이동·받기 위치 변경이라는 핵심 전술을 다른 인원과 규칙으로 반복함.",
+      "next": "빈자리 패스의 2인·통로 분리·같은 자리 금지 모드로 보존. 실제 협동 인원과 혼자 연습은 구별.",
+      "targetName": "패스 게이트 구조대",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 102,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "두 짝이 분리된 통로에서 다른 색 공을 주고받고 받는 위치를 바꾼다. 화면이 제시한 색 순서로 두 배송을 완료한다.",
+        "movement": "equipment",
+        "spec": "T22"
+      }
+    },
+    {
+      "id": "exp-tablet-23",
+      "name": "벽 패스 왕복 항로",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-32",
+      "reason": "벽 반사 패스 후 다른 위치로 이동하는 공통 조작 활동임.",
+      "next": "개인 벽 반사와 짝 바운드 패스 코스로 통합.",
+      "targetName": "벽 반사 우편배달",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 103,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝에게 벽 바운드 패스를 보낸 뒤 옆 표식을 다녀온다. 다시 받을 위치를 잡으며 이동과 패스를 연결한다.",
+        "movement": "equipment",
+        "spec": "T23"
+      }
+    },
+    {
+      "id": "exp-tablet-24",
+      "name": "배구 세 연결 원정",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 104,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "받기·올리기·넘기기 역할을 바꾸며 공을 보낸 뒤 새 자리로 이동한다. 쉬운 단계에서는 잡아 보내기를 허용한다.",
+        "movement": "equipment",
+        "spec": "T24"
+      }
+    },
+    {
+      "id": "exp-tablet-25",
+      "name": "드리블 박자 교대전",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "dribble-rhythm",
+      "reason": "공 조작과 박자·손 교대를 연결하는 목표가 대표 개편과 같음.",
+      "next": "이동·손·여러 명 동시 공 조작을 배송 공장의 후속 변형으로 보존.",
+      "targetName": "드리블 박자 공장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 105,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "모두 개인 공으로 같은 박자를 따른다. 구간마다 사용하는 손·발 또는 이동 코스를 바꾼다.",
+        "movement": "rhythm",
+        "spec": "T25"
+      }
+    },
+    {
+      "id": "exp-tablet-26",
+      "name": "축구 멈춤 출발 기지",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 106,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "공을 몰다가 신호에 맞춰 발바닥으로 멈춘다. 다음 신호에는 다른 출구로 이동해 여러 기지를 순환한다.",
+        "movement": "equipment",
+        "spec": "T26"
+      }
+    },
+    {
+      "id": "exp-tablet-27",
+      "name": "굴림 표적 빙고",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-39",
+      "reason": "실제 공 굴림과 회수로 빙고를 채우는 같은 목표의 모둠 변형임.",
+      "next": "개인·짝·모둠 공동 빙고 선택으로 통합.",
+      "targetName": "공 굴림 회수 빙고",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 107,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 통로에서 공을 굴리고 회수한다. 서로 다른 목표 칸을 맡아 공용 빙고판을 완성한다.",
+        "movement": "equipment",
+        "spec": "T27"
+      }
+    },
+    {
+      "id": "exp-tablet-28",
+      "name": "콩주머니 세 구역 배송",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-31",
+      "reason": "표적별 던지기와 직접 회수라는 같은 목표의 거리·모둠 변형임.",
+      "next": "거리·색·전원 회수 조건을 같은 표적 운반 활동의 단계로 통합.",
+      "targetName": "이동 표적 콩주머니",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 108,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "가까운·중간·먼 표적에 던진다. 공통 회수 신호에 모두 이동하고 세 구역의 배송 목표를 채운다.",
+        "movement": "equipment",
+        "spec": "T28"
+      }
+    },
+    {
+      "id": "exp-tablet-29",
+      "name": "풍선 연결 정거장",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-35",
+      "reason": "풍선 유지와 표식 이동을 개인/짝 구성으로 반복함.",
+      "next": "개인 유지→짝 연결의 단계로 통합하고 손·경로 선택을 보존.",
+      "targetName": "풍선 세 점 순찰",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 109,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝마다 풍선을 주고받으며 표식 사이를 이동한다. 정거장별로 사용하는 손이나 주고받기 횟수를 바꾼다.",
+        "movement": "equipment",
+        "spec": "T29"
+      }
+    },
+    {
+      "id": "exp-tablet-30",
+      "name": "라켓 이동 수비망",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-38",
+      "reason": "라켓으로 가벼운 물체를 다루며 자리 이동하는 활동군임.",
+      "next": "개인 운반→짝 돌려주기 단계로 통합.",
+      "targetName": "라켓 세 정거장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 110,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "짝이 보낸 풍선이나 느린 공을 지정 구역으로 옆걸음해 돌려준다. 받는 구역과 역할을 바꾼다.",
+        "movement": "equipment",
+        "spec": "T30"
+      }
+    },
+    {
+      "id": "exp-tablet-31",
+      "name": "천 위 화물 공동배송",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.",
+      "next": "핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 111,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "2~4명이 천 가장자리를 잡고 가벼운 공을 운반한다. 옆걸음·넓은 회전·낮추기 구간을 함께 수행한다.",
+        "movement": "cooperation",
+        "spec": "T31"
+      }
+    },
+    {
+      "id": "exp-tablet-32",
+      "name": "움직이는 공 수로",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 112,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 짧은 홈통으로 공을 다음 사람에게 굴린다. 보낸 사람은 줄 끝으로 이동해 수로를 연결한다.",
+        "movement": "cooperation",
+        "spec": "T32"
+      }
+    },
+    {
+      "id": "exp-tablet-33",
+      "name": "사각형 보급 루프",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-36",
+      "reason": "역할별 통로로 물품을 옮겨 공동 조건을 맞추는 운반 활동군임.",
+      "next": "구역별 보급·요청 물품·암호 조립을 모둠 운반의 선택 미션으로 보존.",
+      "targetName": "암호 조각 동시 수송",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 113,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "네 사람이 사각 코스의 서로 다른 변을 맡는다. 각 구간의 출발 바구니와 도착 바구니 사이를 왕복하고 배송 목표를 모두 채운다.",
+        "movement": "cooperation",
+        "spec": "T33"
+      }
+    },
+    {
+      "id": "exp-tablet-34",
+      "name": "개척자 발판 다리",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 114,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 바닥 고리를 앞쪽으로 옮기고 그 안으로 걸어 들어간다. 전원이 자기 통로를 건너면 공동 다리를 완성한다.",
+        "movement": "cooperation",
+        "spec": "T34"
+      }
+    },
+    {
+      "id": "exp-tablet-35",
+      "name": "콘 설계도 복원단",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 115,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 맡은 구역의 색 콘을 옮겨 화면 설계도를 재현한다. 완료 확인 후 일부 위치가 바뀐 다음 설계도를 제시한다.",
+        "movement": "cooperation",
+        "spec": "T35"
+      }
+    },
+    {
+      "id": "exp-tablet-36",
+      "name": "암호 조각 동시 수송",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 116,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 다른 경로에서 숫자·그림 조각을 가져온다. 준비된 조각으로 해결 가능한 암호 조건을 제시하고 모둠이 조립한다.",
+        "movement": "cooperation",
+        "spec": "T36"
+      }
+    },
+    {
+      "id": "exp-tablet-37",
+      "name": "화물 분류 규칙 전환",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 117,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각자 수집 칸에서 물건을 운반한다. 색 분류에서 모양 분류로 규칙이 바뀌면 목적지와 경로를 조정한다.",
+        "movement": "cooperation",
+        "spec": "T37"
+      }
+    },
+    {
+      "id": "exp-tablet-38",
+      "name": "지원 요청 구조망",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-36",
+      "reason": "역할별 통로로 물품을 옮겨 공동 조건을 맞추는 운반 활동군임.",
+      "next": "구역별 보급·요청 물품·암호 조립을 모둠 운반의 선택 미션으로 보존.",
+      "targetName": "암호 조각 동시 수송",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 118,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "네 기지가 서로 다른 보급품을 요청한다. 각자 맡은 통로로 물품을 전달하고 네 요청을 함께 해결한다.",
+        "movement": "cooperation",
+        "spec": "T38"
+      }
+    },
+    {
+      "id": "exp-tablet-39",
+      "name": "다른 길 같은 도착",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 119,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "걷기·옆걸음·표식 돌아가기 등 서로 다른 경로를 맡는다. 출발 시점을 조절해 정해진 시간 구간 안에 함께 도착한다. 도착 확인은 수동으로 기록한다.",
+        "movement": "timing",
+        "spec": "T39"
+      }
+    },
+    {
+      "id": "exp-tablet-40",
+      "name": "같은 자리 금지 패스 작전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "pass-gate-rescue",
+      "reason": "패스 후 자리 이동·받기 위치 변경이라는 핵심 전술을 다른 인원과 규칙으로 반복함.",
+      "next": "빈자리 패스의 2인·통로 분리·같은 자리 금지 모드로 보존. 실제 협동 인원과 혼자 연습은 구별.",
+      "targetName": "패스 게이트 구조대",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 120,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "네 사람과 받기 표식 여섯 개를 사용한다. 같은 라운드에서 공을 받은 표식은 다시 사용하지 않는다. 전원이 서로 다른 공간에서 받으면 라운드를 끝내고 사용 상태를 초기화한다.",
+        "movement": "cooperation",
+        "spec": "T40"
+      }
+    },
+    {
+      "id": "exp-tablet-41",
+      "name": "팀 탐사 빙고",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-42",
+      "reason": "여러 활동 구역을 순환하는 구조가 빙고·보스·탈출 이야기로 반복됨.",
+      "next": "네 종목 순환 활동의 공동 목표 방식으로 통합. 활동 구역별 차이와 역할 교대는 보존.",
+      "targetName": "네 종목 동시 원정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 121,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "이동·리듬·공 조작 구역을 순환한다. 각자 두 종류 이상의 활동에 참여해야 공동 빙고 완료 조건을 충족한다.",
+        "movement": "cooperation",
+        "spec": "T41"
+      }
+    },
+    {
+      "id": "exp-tablet-42",
+      "name": "네 종목 동시 원정",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.",
+      "next": "첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 122,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "발놀림·공 굴리기·리듬 스텝·옆걸음 운반을 네 구역에서 동시에 수행한다. 교대음마다 이동해 모두 네 종목을 경험한다.",
+        "movement": "cooperation",
+        "spec": "T42"
+      }
+    },
+    {
+      "id": "exp-tablet-43",
+      "name": "갈림길 던전 원정",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.",
+      "next": "보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 123,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "각 방에서 콘 사이 옆걸음과 지그재그 걷기 등 두 활동 중 하나를 고른다. 모두 완료했다고 확인하면 다음 방을 연다.",
+        "movement": "cooperation",
+        "spec": "T43"
+      }
+    },
+    {
+      "id": "exp-tablet-44",
+      "name": "협동 보스 수리전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-42",
+      "reason": "여러 활동 구역을 순환하는 구조가 빙고·보스·탈출 이야기로 반복됨.",
+      "next": "네 종목 순환 활동의 공동 목표 방식으로 통합. 활동 구역별 차이와 역할 교대는 보존.",
+      "targetName": "네 종목 동시 원정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 124,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "발 구르기·팔 벌려 걷기·콩주머니 운반·공 굴리기로 네 장치를 수리한다. 개인 목표를 채우고 역할을 교대해 공동 목표를 달성한다.",
+        "movement": "cooperation",
+        "spec": "T44"
+      }
+    },
+    {
+      "id": "exp-tablet-46",
+      "name": "순서 바꾸는 원정 열차",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-05",
+      "reason": "가린 순서나 배치를 실제 표식으로 재현하는 기억·이동 구조가 겹침.",
+      "next": "개인 순서·모둠 배치·방문 순서 변형으로 통합하고 짧은 순서부터 제시.",
+      "targetName": "기억의 발자국",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 125,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "걷기·옆걸음·표식 돌기·공 굴리기 구역의 방문 순서를 보여 준다. 순서를 기억해 중복 방문 없이 수행하고 종료 후 확인한다.",
+        "movement": "cooperation",
+        "spec": "T46"
+      }
+    },
+    {
+      "id": "exp-tablet-50",
+      "name": "원정대 합동 탈출",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-42",
+      "reason": "여러 활동 구역을 순환하는 구조가 빙고·보스·탈출 이야기로 반복됨.",
+      "next": "네 종목 순환 활동의 공동 목표 방식으로 통합. 활동 구역별 차이와 역할 교대는 보존.",
+      "targetName": "네 종목 동시 원정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionRules.ts",
+        "line": 126,
+        "control": "기기 거치 → 시간별 활동 안내 → 횟수·번호·확인 직접 입력",
+        "observation": "지그재그 코스, 공 패스 5회, 8박자 전신 동작, 천으로 공 운반의 네 방을 진행한다. 각 방에서 전원 참여를 확인한 뒤 다음 방을 연다.",
+        "movement": "cooperation",
+        "spec": "T50"
+      }
+    },
+    {
+      "id": "space-occupier",
+      "name": "스마트 코트: 빈 공간 점령 작전",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 이동·공간 전략의 소재는 있으나 긴 안내·조작 또는 대기·참여 구조의 재정비가 필요함.",
+      "next": "시범 라운드, 분리된 걷기 통로, 동시 참여 역할을 도입. 릴레이의 기기 운반을 없애고 전략 결과를 활동 후 확인.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/SpaceOccupier.tsx",
+        "line": 29,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "스마트 코트: 빈 공간 점령 작전 / [4체02-06] / 전략형 스포츠 - 빈 공간 만들기 및 분산 침투 / 4색 콘 (빨강, 파랑, 노랑, 초록) / 체육관 또는 교실 바닥의 4개 코너에 빨강, 파랑, 노랑, 초록 콘을 배치합니다. / 기기 화면에 빨간색 [위험 구역]과 안전한 [빈 공간] 3곳이 실시간으로 표시됩니다.",
+        "movement": "공간 만들기 및 분산 침투"
+      }
+    },
+    {
+      "id": "relay-mission-runner",
+      "name": "모둠 스마트 바통 릴레이",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 이동·공간 전략의 소재는 있으나 긴 안내·조작 또는 대기·참여 구조의 재정비가 필요함.",
+      "next": "시범 라운드, 분리된 걷기 통로, 동시 참여 역할을 도입. 릴레이의 기기 운반을 없애고 전략 결과를 활동 후 확인.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/RelayMissionRunner.tsx",
+        "line": 36,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "모둠 스마트 바통 릴레이 / [4체01-02] / 기본 체력운동(순발력·심폐지구력) 실천과 모둠 릴레이 / 반환점 콘 1개 (출발선에서 15m 거리) / 모둠원 4명이 순서를 정해 출발선에 한 줄로 섭니다. / 스마트폰은 모둠의 [스마트 바통]입니다. 1번 주자가 바통을 쥐고 출발합니다!",
+        "movement": "건강 체력 (순발력·심폐지구력)"
+      }
+    },
+    {
+      "id": "body-rhythm-orchestrator",
+      "name": "바디 모션 심포니",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "동작 요소·감정·신체 부위를 선택하고 몸으로 표현·감상하는 활동 구조가 있음.",
+      "next": "창작·감상 활동으로 유지. 평가 문항 수와 교사 안내 난도는 수업에서 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/BodyRhythmOrchestrator.tsx",
+        "line": 29,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "칼군무 완벽! ⭐ / 골반과 허리 / 발목과 무릎 / 낮은 바닥 공간 / 지그재그 공간 / 바람처럼 부드럽게",
+        "movement": "움직임 언어 및 리듬 표현"
+      }
+    },
+    {
+      "id": "jump",
+      "name": "점프왕!",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "기기 센서와 터치 대체 입력이 운동 횟수·유지 점수로 이어져 실제 동작과 화면 성공의 구별이 약함.",
+      "next": "기기 거치형 동작 미션으로 재설계. 횟수·정확도 자동 판정 대신 수행자가 확인한 기록과 개인 단계 선택 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/JumpDetector.tsx",
+        "line": 8,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "폰을 들고 제자리 점프하거나 화면을 탭하세요! / ⚠️ 손만 가볍게 흔들면 카운트되지 않아요! 높이 점프하세요! / 안티 치팅 가속도 필터 작동 중 • 화면 터치 지원 / 점 획득 완료",
+        "movement": "건강 체력 (순발력)"
+      }
+    },
+    {
+      "id": "squat",
+      "name": "스쿼트 챌린지",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "기기 센서와 터치 대체 입력이 운동 횟수·유지 점수로 이어져 실제 동작과 화면 성공의 구별이 약함.",
+      "next": "기기 거치형 동작 미션으로 재설계. 횟수·정확도 자동 판정 대신 수행자가 확인한 기록과 개인 단계 선택 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/SquatCounter.tsx",
+        "line": 6,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "스쿼트 챌린지 / 폰을 가슴에 대고 스쿼트하거나 화면을 터치하세요! / ⬇️ 내려가는 중... (다시 터치하여 일어나기) / ⬆️ 올라오세요! (터치하여 앉기) / 화면 꺼짐 방지 활성 • 정상 스쿼트 템포 자동 보정",
+        "movement": "건강 체력 (근력·근지구력)"
+      }
+    },
+    {
+      "id": "run",
+      "name": "제자리 달리기",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "기기 센서와 터치 대체 입력이 운동 횟수·유지 점수로 이어져 실제 동작과 화면 성공의 구별이 약함.",
+      "next": "기기 거치형 동작 미션으로 재설계. 횟수·정확도 자동 판정 대신 수행자가 확인한 기록과 개인 단계 선택 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/RunInPlace.tsx",
+        "line": 12,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "⚠️ 바른 자세로 제자리에서 뛰어주세요! 손목만 흔들면 카운트되지 않습니다. / 유효 걸음수 / 제자리 달리기! / 폰을 손에 쥐고 / 무릎을 허리 높이까지 힘차게 올리며 / 제자리에서 달려주세요!",
+        "movement": "건강 체력 (심폐지구력)"
+      }
+    },
+    {
+      "id": "plank",
+      "name": "플랭크 챌린지",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "기기 센서와 터치 대체 입력이 운동 횟수·유지 점수로 이어져 실제 동작과 화면 성공의 구별이 약함.",
+      "next": "기기 거치형 동작 미션으로 재설계. 횟수·정확도 자동 판정 대신 수행자가 확인한 기록과 개인 단계 선택 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PlankHold.tsx",
+        "line": 5,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "💪 코어 플랭크 챌린지 / 폰을 등 위에 올려 30초 연속 수평을 유지하세요. 센서 없이 할 때는 화면을 꾹 누르세요. 놓으면 시간이 초기화됩니다. / ● 수평 유지 / ▲ 균형 흔들림 / ✅ 훌륭합니다! 코어를 단단히 유지하세요! / ⚠️ 등 위의 폰이 떨어지지 않게 수평을 유지하세요!",
+        "movement": "건강 체력 (코어 근력)"
+      }
+    },
+    {
+      "id": "stretch",
+      "name": "스트레칭 타이머",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "동작별 스트레칭 안내와 시간이 있어 준비·정리 활동이라는 독립 목적이 분명함.",
+      "next": "준비·정리 도구로 유지. 시간 경과 점수를 실제 수행·유연성 평가로 해석하지 않도록 표시 정리.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/StretchTimer.tsx",
+        "line": 116,
+        "control": "단계 안내 · 시간/지연 진행",
+        "observation": "🧘 스트레칭 타이머 / 동작을 보고 천천히 따라 해보세요! / ✨ 스트레칭 완료! / +500점 획득",
+        "movement": "건강·생활 습관 (유연성)"
+      }
+    },
+    {
+      "id": "one_leg",
+      "name": "한 발 서기",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "기기 센서와 터치 대체 입력이 운동 횟수·유지 점수로 이어져 실제 동작과 화면 성공의 구별이 약함.",
+      "next": "기기 거치형 동작 미션으로 재설계. 횟수·정확도 자동 판정 대신 수행자가 확인한 기록과 개인 단계 선택 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/OneLegBalance.tsx",
+        "line": 3,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "🦩 한 발 서기 / 스마트폰을 들고 한 발로 서서 균형을 잡거나 화면을 꾹 누르고 버티세요! / ✅ 중심 유지 중! 버티세요! / ⚠️ 흔들려요! 수평을 맞추거나 꾹 누르세요! / 초 완벽 성공! / +500점 획득!",
+        "movement": "운동 체력 (평형성)"
+      }
+    },
+    {
+      "id": "tilt_balance",
+      "name": "균형 잡기",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "one_leg",
+      "reason": "기기 기울기나 버튼으로 화면 물체를 유지·이동하는 조작이 반복되며 몸의 균형과 구별이 필요함.",
+      "next": "한 발·두 발·앉은 자세의 균형 활동 변형으로 재구성. 기기 기울기를 신체 균형 측정값으로 사용하지 않음.",
+      "targetName": "한 발 서기",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/TiltBalance.tsx",
+        "line": 5,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "⚖️ 균형 잡기 / 폰을 수평으로 유지하거나 화면의 중앙을 누르고 버티세요! / ⚠️ 균형을 잡으세요!",
+        "movement": "운동 체력 (평형성·조절)"
+      }
+    },
+    {
+      "id": "multi_touch",
+      "name": "양손 터치",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "연타·동시 터치·수금 타이밍·큰 소리 채우기가 중심이며 목표와 연결된 신체활동이 없음.",
+      "next": "반복 입력 중심 게임은 정리하고 신체활동 시간을 확보. 관련 학급 미니게임 호출 경로도 함께 이관.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/MultiTouch.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "라운드 | 점수: / 🖐️ 양손 터치 / 모든 버튼을 동시에(빠르게) 터치하세요! / 양손 터치 완료!",
+        "movement": "운동 체력 (양손 협응성)"
+      }
+    },
+    {
+      "id": "speed_circle",
+      "name": "빙글빙글!",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.",
+      "next": "팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/SpeedCircle.tsx",
+        "line": 4,
+        "control": "화면 입력",
+        "observation": "🌀 빙글빙글! / 팔을 크게 뻗어 원을 / 바퀴 그리세요! / 완주! 🎉",
+        "movement": "기본 체력운동 (가동성·순발력)"
+      }
+    },
+    {
+      "id": "fitness",
+      "name": "체력 룰렛",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "운동 미션 선택은 있으나 룰렛 결과를 수행하는 단순 반복에 머물기 쉬움.",
+      "next": "움직임 종류를 고르게 경험하는 선택형 코스와 자기 수준에 맞는 도전으로 재구성.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/FitnessRoulette.tsx",
+        "line": 103,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🎰 체력 룰렛 / 룰렛을 돌려 오늘의 랜덤 체육 미션을 완수하세요! / 아래 버튼을 눌러 / 미션을 뽑아보세요! / 돌아가는 중... 🎰 / 룰렛 돌리기 🎯",
+        "movement": "체력 운동 실천 (종합)"
+      }
+    },
+    {
+      "id": "shake",
+      "name": "바운스 충전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "흔들기·올리기·누르기 같은 단일 입력을 반복해 게이지를 채우는 구조임.",
+      "next": "안전한 맨손 동작을 선택하는 체력 코스의 변형으로 흡수. 기기 운반·연타와 운동 점수 연결 제거.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ShakeGame.tsx",
+        "line": 10,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "바운스 충전! / 스마트폰을 위아래로 흔들거나 / 화면을 빠르게 연타해서 100%를 만드세요! / +500점 획득! / 충전에 실패했습니다.",
+        "movement": "건강 체력 (순발력)"
+      }
+    },
+    {
+      "id": "volcano",
+      "name": "화산 폭발",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "연타·동시 터치·수금 타이밍·큰 소리 채우기가 중심이며 목표와 연결된 신체활동이 없음.",
+      "next": "반복 입력 중심 게임은 정리하고 신체활동 시간을 확보. 관련 학급 미니게임 호출 경로도 함께 이관.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/VolcanoGame.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "화산 폭발! / 화면을 빠르게 연타해서 탈출하세요! / 화면 아무 곳이나 빠르게 터치하세요",
+        "movement": "운동 체력 (순발력·스피드)"
+      }
+    },
+    {
+      "id": "reaction",
+      "name": "반응속도 테스트",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "방향·신호를 읽고 터치하는 반응 구조가 반복됨.",
+      "next": "걷기·방향 전환·정지 신호의 변형으로 통합하고 화면 반응속도를 운동능력으로 평가하지 않음.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ReactionTest.tsx",
+        "line": 9,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "반응속도 테스트 / 화면을 터치하면 시작됩니다 / 화면이 초록색으로 바뀌는 순간 / 최대한 빨리 터치하세요! / 기다리세요... / 초록색이 될 때까지",
+        "movement": "운동 체력 (민첩성·반응시간)"
+      }
+    },
+    {
+      "id": "scream",
+      "name": "소리질러!",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "연타·동시 터치·수금 타이밍·큰 소리 채우기가 중심이며 목표와 연결된 신체활동이 없음.",
+      "next": "반복 입력 중심 게임은 정리하고 신체활동 시간을 확보. 관련 학급 미니게임 호출 경로도 함께 이관.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ScreamGame.tsx",
+        "line": 6,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "스마트폰을 향해 크게 함성을 질러 / 데시벨 게이지를 끝까지 채우세요! / 마이크 권한을 확인하고 있어요… / 마이크로 시작하기 / 화면 터치로 시작하기 / 시작하면 10초 동안 도전합니다.",
+        "movement": "건강 생활 습관 (정서 관리)"
+      }
+    },
+    {
+      "id": "arm_raise",
+      "name": "하늘 높이!",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "흔들기·올리기·누르기 같은 단일 입력을 반복해 게이지를 채우는 구조임.",
+      "next": "안전한 맨손 동작을 선택하는 체력 코스의 변형으로 흡수. 기기 운반·연타와 운동 점수 연결 제거.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ArmRaise.tsx",
+        "line": 6,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "하늘 높이! / ⬆️ 올렸어요! 다시 내리세요! / ⬇️ 팔을 하늘 높이 올리세요! / 센서를 사용할 수 없으면 버튼으로 진행하세요.",
+        "movement": "기본 움직임 (뻗기·버티기)"
+      }
+    },
+    {
+      "id": "wave",
+      "name": "좌우 흔들기",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "흔들기·올리기·누르기 같은 단일 입력을 반복해 게이지를 채우는 구조임.",
+      "next": "안전한 맨손 동작을 선택하는 체력 코스의 변형으로 흡수. 기기 운반·연타와 운동 점수 연결 제거.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/WaveCounter.tsx",
+        "line": 5,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "좌우 흔들기! / 폰을 좌우로 크게 흔드세요! / 👋 흔들기 (화면 터치)",
+        "movement": "건강·운동 습관 (맨손체조)"
+      }
+    },
+    {
+      "id": "math",
+      "name": "계산왕 스프린트",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-06",
+      "reason": "인지 문제와 바깥의 신체활동이 분리되어 있음.",
+      "next": "색 규칙·숫자 조건을 맞는 실제 표식 선택으로 연결. 인지 난도와 이동 난도는 따로 조절.",
+      "targetName": "숫자 암호 우편",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/MathSprint.tsx",
+        "line": 47,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "⚡ 계산왕 스프린트 / 정답을 빠르게 터치하세요! / 문제 정답!",
+        "movement": "뇌건강 인지 운동"
+      }
+    },
+    {
+      "id": "color_word",
+      "name": "색깔 읽기 챌린지",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-06",
+      "reason": "인지 문제와 바깥의 신체활동이 분리되어 있음.",
+      "next": "색 규칙·숫자 조건을 맞는 실제 표식 선택으로 연결. 인지 난도와 이동 난도는 따로 조절.",
+      "targetName": "숫자 암호 우편",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ColorWord.tsx",
+        "line": 27,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "색깔 읽기 챌린지 / 이 아니라 글자의 / 을 터치하세요! / 문제 정답!",
+        "movement": "신경 협응 인지 운동"
+      }
+    },
+    {
+      "id": "target",
+      "name": "타겟 조준",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "조준 시점과 센서·터치 판정이 중심이며 실제 표적 조작 활동과 분리되어 있음.",
+      "next": "부드러운 공·콩주머니로 거리와 힘을 선택하는 실제 표적 미션으로 개편.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/TargetShoot.tsx",
+        "line": 11,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "표적 격발 라운드 / 총 획득 점수 / 신체 자세: 기마자세 홀드 / 터치 조준 모드 · 센서 대기 / 안정 조준 중 (+20점 보너스) / 자세 불안정! 몸을 고정하세요",
+        "movement": "표적 활동 (조작 움직임)"
+      }
+    },
+    {
+      "id": "whack_a_mole",
+      "name": "별 두더지 잡기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "방향·신호를 읽고 터치하는 반응 구조가 반복됨.",
+      "next": "걷기·방향 전환·정지 신호의 변형으로 통합하고 화면 반응속도를 운동능력으로 평가하지 않음.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/WhackAMoleGame.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🐹 두더지 잡기! / 구멍에서 쏙 올라오는 두더지를 빠르게 터치하세요! / +500점 획득! / 목표 달성에 실패했습니다.",
+        "movement": "표적·조작 활동"
+      }
+    },
+    {
+      "id": "stopwatch",
+      "name": "스탑워치 눈치",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "목표 시간을 맞추는 화면 입력 중심이며 실제 움직임 없이도 결과가 생김.",
+      "next": "제자리걸음으로 시간 감각을 탐색하고 자기 페이스를 비교하는 활동으로 재구성.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/StopwatchGame.tsx",
+        "line": 9,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "목표와의 오차 / 스탑워치 눈치 게임 / 마음속으로 숫자를 세어 / 정확히 7.00초 / 에 멈추세요! / +500점 획득!",
+        "movement": "기록형 활동 (시간 계측)"
+      }
+    },
+    {
+      "id": "left_right",
+      "name": "좌우 반사신경",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "방향·신호를 읽고 터치하는 반응 구조가 반복됨.",
+      "next": "걷기·방향 전환·정지 신호의 변형으로 통합하고 화면 반응속도를 운동능력으로 평가하지 않음.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/LeftRight.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "좌우 반사신경 / 공이 나타난 쪽 버튼을 터치하세요!",
+        "movement": "비이동 반사 움직임"
+      }
+    },
+    {
+      "id": "direction",
+      "name": "방향 스와이프",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "방향·신호를 읽고 터치하는 반응 구조가 반복됨.",
+      "next": "걷기·방향 전환·정지 신호의 변형으로 통합하고 화면 반응속도를 운동능력으로 평가하지 않음.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/DirectionSwipe.tsx",
+        "line": 17,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "방향 스와이프 / 화살표 방향으로 스와이프하세요!",
+        "movement": "조작 움직임 (방향 전환)"
+      }
+    },
+    {
+      "id": "zone_touch",
+      "name": "구역 터치 달리기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "서로 다른 화면 이동·순서 퍼즐이지만 실제 바닥 표식 이동이라는 공통 목표로 묶을 수 있음.",
+      "next": "갈림길 보급 작전의 사방 이동·미로·순서 코스로 보존. 독립 터치 게임은 이관 이후 정리.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ZoneTouch.tsx",
+        "line": 13,
+        "control": "화면 입력",
+        "observation": "🏃‍♂️ 구역 터치 달리기 / 빛나는 구역을 빠르게 터치하세요! / 🎉 완주 성공! / +500점 획득",
+        "movement": "이동 움직임 (방향 전환 달리기)"
+      }
+    },
+    {
+      "id": "zigzag",
+      "name": "지그재그 런!",
+      "revisedName": "갈림길 보급 작전",
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "바닥 이동 대신 화면 표적 20개를 순서대로 터치하면 완주·500점이 주어짐.",
+      "next": "대표 개편: 막힌 칸을 피해 실제 표식을 왕복하는 갈림길 보급 작전.",
+      "targetName": null,
+      "scope": "대표 개편 구현 완료 · 학생 수업 검증 전",
+      "evidence": {
+        "file": "src/presentation/components/minigames/ZigZagTouch.tsx",
+        "line": 4,
+        "control": "화면 입력",
+        "observation": "⚡ 지그재그 런! / 순서대로 빠르게 터치하세요! ( / 완주! 🏃",
+        "movement": "복합 이동 움직임"
+      }
+    },
+    {
+      "id": "punch",
+      "name": "에어 펀치!",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PunchCounter.tsx",
+        "line": 7,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "에어 펀치! / 폰을 들고 허공에 주먹을 뻗으세요! / 🥊 펀치! (화면 터치)",
+        "movement": "투기형 활동 (타격 기술)"
+      }
+    },
+    {
+      "id": "tilt_race",
+      "name": "기울기 레이스",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "one_leg",
+      "reason": "기기 기울기나 버튼으로 화면 물체를 유지·이동하는 조작이 반복되며 몸의 균형과 구별이 필요함.",
+      "next": "한 발·두 발·앉은 자세의 균형 활동 변형으로 재구성. 기기 기울기를 신체 균형 측정값으로 사용하지 않음.",
+      "targetName": "한 발 서기",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/TiltRace.tsx",
+        "line": 6,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "📱 기울기 레이스 / 폰을 좌우로 기울이거나 버튼을 눌러 공을 별에 맞추세요!",
+        "movement": "표적 제어 (조작 움직임)"
+      }
+    },
+    {
+      "id": "tug_of_war",
+      "name": "스마트 줄다리기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-31",
+      "reason": "연타 대결이 실제 줄다리기나 협력을 표현하지 못함.",
+      "next": "천 위 화물 공동배송의 함께 힘 조절하기 활동으로 전환하고 연타 승패 구조 정리.",
+      "targetName": "천 위 화물 공동배송",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/TugOfWarGame.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "스마트 줄다리기! / 괴력을 발휘해 밧줄을 당겨오세요! / +500점 획득! / 밧줄을 빼앗겼습니다. / 화면을 빠르게 연타하세요!",
+        "movement": "대결·투기형 (당기기 힘 겨루기)"
+      }
+    },
+    {
+      "id": "number_grid",
+      "name": "순차적 암호 해제",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "서로 다른 화면 이동·순서 퍼즐이지만 실제 바닥 표식 이동이라는 공통 목표로 묶을 수 있음.",
+      "next": "갈림길 보급 작전의 사방 이동·미로·순서 코스로 보존. 독립 터치 게임은 이관 이후 정리.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/NumberGridGame.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "순차적 암호 해제 / 1부터 9까지 순서대로 터치하세요! / +500점 획득! / 해체에 실패했습니다.",
+        "movement": "공간 탐색 전략 게임"
+      }
+    },
+    {
+      "id": "memory",
+      "name": "컬러 패턴 기억",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "화면의 색 순서를 기억해 다시 누르는 방식으로 신체활동이 성공 조건이 아님.",
+      "next": "바닥 표식 이동으로 순서를 재현하고 짧은 순서부터 확장하는 기억 원정으로 개편.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/MemoryGame.tsx",
+        "line": 17,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "메모리 컬러 패턴 / 색상이 반짝이는 순서를 기억하세요! / 기억한 순서대로 터치하세요! / 정답입니다! +500점 / 틀렸습니다! / +500점 획득!",
+        "movement": "패턴 전략 인지 게임"
+      }
+    },
+    {
+      "id": "card_match",
+      "name": "짝 맞추기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "memory",
+      "reason": "기억 후 화면 선택이라는 독립 규칙이 기억 게임과 중복됨.",
+      "next": "실제 카드·표식 위치를 기억해 이동하는 짝 찾기 변형으로 보존.",
+      "targetName": "컬러 패턴 기억",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/CardMatch.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "같은 그림의 카드 짝을 찾으세요! / 시도 횟수: / 번 만에 완성!",
+        "movement": "시각 공간 전략 게임"
+      }
+    },
+    {
+      "id": "balloon",
+      "name": "풍선 불기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "연타·동시 터치·수금 타이밍·큰 소리 채우기가 중심이며 목표와 연결된 신체활동이 없음.",
+      "next": "반복 입력 중심 게임은 정리하고 신체활동 시간을 확보. 관련 학급 미니게임 호출 경로도 함께 이관.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/BalloonPump.tsx",
+        "line": 9,
+        "control": "화면 입력",
+        "observation": "💥 펑! 풍선이 터졌습니다! / 펌프를 눌러 풍선을 불리고, 터지기 전에 수금하세요! / 펌프! 💨 / 수금! 💰 / 안전하게 수금했습니다! / 욕심이 과했네요...",
+        "movement": "위험 판단 심리 전략"
+      }
+    },
+    {
+      "id": "red_green",
+      "name": "무궁화꽃이 피었습니다",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 이동 대신 초록일 때 터치하는 반응 게임으로 구현되어 있음.",
+      "next": "걷기·멈춤·속도 조절을 안내하고 탈락 없이 다음 신호에 다시 참여하는 활동으로 개편.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/RedGreenLight.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "무궁화 꽃이 피었습니다 / 지금 터치! / 초록불일 때만 터치하세요! / 빨간불에 움직였습니다! / 최종 점수:",
+        "movement": "민속놀이 (정지와 이동 신체조절)"
+      }
+    },
+    {
+      "id": "freeze",
+      "name": "얼음 땡!",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "멈춤 신호라는 목적이 같은데 기기 흔들림으로 탈락을 판정하는 별도 게임으로 중복됨.",
+      "next": "움직임·정지 코스의 난이도 변형으로 통합하고 흔들림에 따른 자동 탈락 제거.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/FreezeGame.tsx",
+        "line": 7,
+        "control": "기기 센서 + 단계 안내 · 시간/지연 진행",
+        "observation": "라운드 | 점수: / 🧊 얼음 땡! / 움직여! 🏃 / 얼음!! 🧊 / 폰을 들고 제자리에서 움직이세요! / 절대 움직이지 마세요!",
+        "movement": "민속 신체놀이 (규칙 준수)"
+      }
+    },
+    {
+      "id": "coin_flip",
+      "name": "동전 뒤집기",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "무작위 선택과 배율이 결과를 좌우하며 신체활동이나 전술 선택이 성공 조건에 없음.",
+      "next": "독립 체육 게임 목록에서 제외할 대상. 기존 기록·수업 링크의 안내 화면을 마련한 후 비노출 처리.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/CoinFlip.tsx",
+        "line": 10,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "동전 뒤집기 / 앞/뒤를 예측하세요! 연속 정답 시 배율 증가! / 대박! 예언가! / 나쁘지 않아요! / 운이 따라주지 않았네요...",
+        "movement": "전통 놀이 (규칙 준수)"
+      }
+    },
+    {
+      "id": "fate_card",
+      "name": "운명의 카드",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "삭제",
+      "target": null,
+      "reason": "무작위 선택과 배율이 결과를 좌우하며 신체활동이나 전술 선택이 성공 조건에 없음.",
+      "next": "독립 체육 게임 목록에서 제외할 대상. 기존 기록·수업 링크의 안내 화면을 마련한 후 비노출 처리.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/FateCardGame.tsx",
+        "line": 15,
+        "control": "화면 입력",
+        "observation": "운명의 카드 / 3장의 카드 중 하나를 선택하세요. / 대박일까요, 쪽박일까요? / 결과가 점수에 반영되었습니다! 잠시 후 닫힙니다...",
+        "movement": "생활 여가 놀이 (상대 인정)"
+      }
+    },
+    {
+      "id": "dance_pose",
+      "name": "댄스 포즈",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음.",
+      "next": "자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/DancePose.tsx",
+        "line": 113,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "💃 댄스 포즈 / ✅ 포즈 완료! / 👍 성공! / 완벽한 댄서! / 좋은 움직임!",
+        "movement": "현대 표현 (라인댄스·동작)"
+      }
+    },
+    {
+      "id": "animal",
+      "name": "동물 체조",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음.",
+      "next": "자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/AnimalMove.tsx",
+        "line": 17,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🐾 동물 체조 / 시간 종료! / 동물 체조 완료!",
+        "movement": "사물·자연 모방 표현"
+      }
+    },
+    {
+      "id": "circle_draw",
+      "name": "원 그리기 대결",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.",
+      "next": "팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/CircleDraw.tsx",
+        "line": 8,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "⭕ 원 그리기 대결 / 팔을 크게 뻗어 완벽한 원을 그리세요! / 여기에 원을 그리세요! / 완벽! 🎯 / 좋아요! 👍 / 다시 도전! 💪",
+        "movement": "움직임 요소 표현 (공간·궤적)"
+      }
+    },
+    {
+      "id": "trace_shape",
+      "name": "도형 따라 그리기",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.",
+      "next": "팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/TraceShape.tsx",
+        "line": 14,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "✏️ 도형 따라 그리기 / 모양을 따라 그리세요!",
+        "movement": "도구 및 형태 표현"
+      }
+    },
+    {
+      "id": "body_twist",
+      "name": "몸 비틀기!",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/BodyTwist.tsx",
+        "line": 6,
+        "control": "기기 센서 + 화면 입력",
+        "observation": "🟢 센서 활성 / 🔴 터치 모드 / 🔄 몸 비틀기! / 폰을 좌우로 기울이며 몸을 비틀어 보세요! / 허리를 좌우로 비틀면서 지시된 방향을 터치하세요! / 왼쪽으로 비틀기!",
+        "movement": "기초 신체 표현 (회전·비틀기)"
+      }
+    },
+    {
+      "id": "pulse-detective",
+      "name": "심박 탐정단",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "운동 전후 맥박 탐색은 의미 있으나 입력 범위와 안내가 신체 평가처럼 받아들여질 여지가 있음.",
+      "next": "건강 진단 대신 개인의 변화 관찰 자료로 정리하고 측정·입력·활동 역할과 선택적 기록을 간소화.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PulseDetective.tsx",
+        "line": 13,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "15초 동안 센 맥박수(보통 12~35회)를 숫자로 바르게 입력해 주세요. / 심박 탐정단 / [6체01-01] / 운동 전후 신체 변화와 심폐지구력 탐색 / 편안하게 앉아 목 옆이나 손목에 두 손가락을 대고 맥박을 찾아보세요. / 15초 동안 뛰는 맥박 수를 세어 화면에 기록합니다.",
+        "movement": "건강 체력 (심폐지구력·신체변화)"
+      }
+    },
+    {
+      "id": "posture-guardian",
+      "name": "자세 수호 로봇",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "생활 자세를 실제로 시도하는 내용이 있으나 타이머와 유지 확인에 게임의 변화가 적음.",
+      "next": "상황별 자세 선택과 가벼운 물건 옮기기 등 생활 미션을 연결하고 시도 후 비교 제공.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PostureGuardian.tsx",
+        "line": 55,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "자세 수호 로봇 / [4체01-04] / 건강한 생활 습관과 안전한 신체 자세 형성 / 의자 또는 책가방/가벼운 물건 / 수리가 필요한 로봇의 5가지 신체 부품 미션을 확인합니다. / 화면의 바른 자세 설명을 읽고 실제 신체로 10초간 바른 자세를 유지합니다.",
+        "movement": "건강·안전 생활 습관 (바른 자세)"
+      }
+    },
+    {
+      "id": "rolling-curling",
+      "name": "공 굴림 컬링 원정",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "실제 공을 표적으로 굴리는 시도와 힘 조절의 비교가 활동의 중심임.",
+      "next": "핵심 규칙 유지. 직접 입력 기록을 바탕으로 다음 시도의 힘 조절을 말해 보기.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/RollingCurling.tsx",
+        "line": 18,
+        "control": "화면 입력",
+        "observation": "공 굴림 컬링 원정 / [4체02-05] / 기술형 표적 활동에서 힘을 조절하여 표적에 공 굴리기 / 공 1개 (테니스공, 고무공 등) / 바닥 표적 (테이프, 콘, 줄넘기 등) / 공을 공중에 던지지 않고 바닥으로 부드럽게 굴릴 준비가 되었나요?",
+        "movement": "표적 활동 (힘 조절 조작)"
+      }
+    },
+    {
+      "id": "pass-gate-rescue",
+      "name": "패스 게이트 구조대",
+      "revisedName": "빈자리 패스 구조대",
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "패스 성공 때마다 버튼을 누르고 인원별 참여를 체크하는 기록 조작이 많음.",
+      "next": "대표 개편: 패스 후 빈자리 이동, 출발 역할 교대, 라운드 뒤 한 번의 달성 확인.",
+      "targetName": null,
+      "scope": "대표 개편 구현 완료 · 학생 수업 검증 전",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PassGateRescue.tsx",
+        "line": 12,
+        "control": "화면 입력",
+        "observation": "패스 게이트 구조대 / [4체02-06] / 전략형 스포츠에서 공간을 활용한 협력 패스 기술과 배려 실천 / 콘 또는 물병 4~6개 (게이트용) / 콘이나 물병을 2개씩 짝지어 2~3개의 통과 게이트(문)를 바닥에 설치합니다. / 모둠원 전원이 번갈아가며 게이트 사이로 정확하게 공을 주고받습니다.",
+        "movement": "협력 패스 전략 (모둠)"
+      }
+    },
+    {
+      "id": "dribble-rhythm",
+      "name": "드리블 박자 공장",
+      "revisedName": "리듬 배송 공장",
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 공 박자 안내는 있으나 20초 타이머와 실수 수 입력 중심으로 진행됨.",
+      "next": "대표 개편: 8박자 연결→손 선택→옆걸음의 세 작전과 무점수 연습.",
+      "targetName": null,
+      "scope": "대표 개편 구현 완료 · 학생 수업 검증 전",
+      "evidence": {
+        "file": "src/presentation/components/minigames/DribbleRhythm.tsx",
+        "line": 13,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "드리블 박자 공장 / [4체02-03] / 조작 움직임 기술을 리듬과 박자에 맞추어 안정적으로 수행 / 공 1개 (농구공, 축구공, 탱탱볼 등) / 손(농구형 튀기기) 또는 발(축구형 몰기) 중 연습할 방식을 선택합니다. / 나에게 맞는 박자(느림 60, 보통 90, 빠름 120 BPM)를 고릅니다.",
+        "movement": "조작 움직임 (리듬 드리블)"
+      }
+    },
+    {
+      "id": "open-space-tactician",
+      "name": "빈 공간 설계자",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 이동·공간 전략의 소재는 있으나 긴 안내·조작 또는 대기·참여 구조의 재정비가 필요함.",
+      "next": "시범 라운드, 분리된 걷기 통로, 동시 참여 역할을 도입. 릴레이의 기기 운반을 없애고 전략 결과를 활동 후 확인.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/OpenSpaceTactician.tsx",
+        "line": 17,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "빈 공간 설계자 / [6체02-06] / 전략형 스포츠에서 빈 공간 창출과 협력적 공격 전술 실행 / 콘 4개 (활동 구역 표시용) / 미니 전술판에서 공격자 A(공 소유)와 B의 위치를 빈 공간으로 이동시킵니다. / 수비자 X, Y를 피해 공을 전달할 빈 공간(목표 지점)을 터치해 패스 길을 엽니다.",
+        "movement": "공간 침투 전술 (영역형/네트형)"
+      }
+    },
+    {
+      "id": "emotion-thermometer",
+      "name": "감정 온도계",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "동작 요소·감정·신체 부위를 선택하고 몸으로 표현·감상하는 활동 구조가 있음.",
+      "next": "창작·감상 활동으로 유지. 평가 문항 수와 교사 안내 난도는 수업에서 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/EmotionThermometer.tsx",
+        "line": 20,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "감정 온도계 / [4체03-04] / 느낌과 생각을 움직임으로 창의적으로 표현하고 서로의 심미성 감상 / 오늘 몸으로 표현해보고 싶은 감정과 감정의 온도(강도 1~5단계)를 고릅니다. / 15초 동안 카메라나 사진 없이 온몸의 움직임으로 그 감정을 펼쳐보입니다. / 짝꿍은 친구의 몸짓을 바라보며 어떤 감정과 온도가 느껴졌는지 선택합니다.",
+        "movement": "신체 감정 표현 및 감상"
+      }
+    },
+    {
+      "id": "partner-robot-lab",
+      "name": "파트너 로봇 연구소",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "동작 요소·감정·신체 부위를 선택하고 몸으로 표현·감상하는 활동 구조가 있음.",
+      "next": "창작·감상 활동으로 유지. 평가 문항 수와 교사 안내 난도는 수업에서 확인.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/PartnerRobotLab.tsx",
+        "line": 30,
+        "control": "화면 입력",
+        "observation": "파트너 로봇 연구소 / [4체03-02] / 신체 각 부위의 움직임 요소를 탐색하고 짝과 협력하여 창의적 로봇 동작 구성 / 친구의 팔이나 다리를 강제로 잡아당기지 않고, 오직 말과 시범으로만 안내하나요? / 관절을 무리하게 꺾거나 위험한 동작은 제외하고 안전하게 움직이나요? / 두 사람이 팔다리를 뻗어도 주변 벽이나 다른 모둠과 부딪히지 않는 공간이 있나요?",
+        "movement": "신체 부위별 창의 표현 (짝)"
+      }
+    },
+    {
+      "id": "compass-azimuth",
+      "name": "나침반 방위각 마스터",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-tablet-09",
+      "reason": "나침반 다이얼 맞추기와 기준 방향 이동 학습을 한 활동에서 연결할 수 있음.",
+      "next": "기준 방향을 정하고 실제 방향 표식으로 이동하는 입문 코스에 통합.",
+      "targetName": "기준 방향 탐험대",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/CompassAzimuth.tsx",
+        "line": 26,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🎯 완벽한 방위각 조준! (+100점) / 👍 양호한 방향! (+60점) / 나침반 방위각 마스터 / 탐험 목표 방위 / 다이얼을 돌려 각도 / °에 맞추세요!",
+        "movement": "자연 탐험 (오리엔티어링 방위각)"
+      }
+    },
+    {
+      "id": "kayak-paddle",
+      "name": "급류 탈출 카약",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/KayakPaddle.tsx",
+        "line": 11,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "좌/우 번갈아 노를 저으세요! / ⚠️ 같은 쪽만 저으면 카약이 회전합니다! 반대쪽을 저으세요. / 🌊 타이밍 조절 필요! 일정한 리듬을 유지하세요. / 급류 탈출 카약 / 🟢 센서 활성 / 🔴 터치 모드",
+        "movement": "수상 활동 (교차 리듬 패들링)"
+      }
+    },
+    {
+      "id": "wind-surf-balance",
+      "name": "바람을 타는 윈드서핑",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "one_leg",
+      "reason": "기기 기울기나 버튼으로 화면 물체를 유지·이동하는 조작이 반복되며 몸의 균형과 구별이 필요함.",
+      "next": "한 발·두 발·앉은 자세의 균형 활동 변형으로 재구성. 기기 기울기를 신체 균형 측정값으로 사용하지 않음.",
+      "targetName": "한 발 서기",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/WindSurfBalance.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "바람을 타는 윈드서핑 / 현재 돌풍: / ◀ 좌측 돌풍 ( / 우측 돌풍 ( / 잔잔한 바람 ( / 물에 빠졌습니다 (Wipeout)!",
+        "movement": "바람 환경 적응 (에어로 밸런스)"
+      }
+    },
+    {
+      "id": "tent-peg-hammer",
+      "name": "텐트 팩 해머링",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "target",
+      "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.",
+      "next": "힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.",
+      "targetName": "타겟 조준",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/TentPegHammer.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🔨 쾅! 퍼펙트 임팩트 (+50점) / ⛺ 모든 텐트 팩 완벽 고정 완료! / 👍 탁! 유효 타격 (+25점) / 💨 빗맞음! 중심에 맞춰 망치를 내리치세요. / 텐트 팩 해머링 / 임팩트 존 (HIT)",
+        "movement": "캠핑·야외 활동 (팩 고정 임팩트)"
+      }
+    },
+    {
+      "id": "trail-maze-run",
+      "name": "모험 트레일 러닝",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "서로 다른 화면 이동·순서 퍼즐이지만 실제 바닥 표식 이동이라는 공통 목표로 묶을 수 있음.",
+      "next": "갈림길 보급 작전의 사방 이동·미로·순서 코스로 보존. 독립 터치 게임은 이관 이후 정리.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/TrailMazeRun.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "모험 트레일 러닝 / 🚩 출발지(왼쪽)의 주자를 터치한 채로 숲길을 따라 🏁 결승선까지 드래그하세요! / 덤불에 발이 걸렸습니다! / 출발선에서 다시 침착하게 달려보세요. / 💡 녹색 덤불에 손가락이 닿으면 넘어집니다. 흙길 중앙을 부드럽게 이어가세요!",
+        "movement": "산악 트레일 (장애물 회피 내비게이션)"
+      }
+    },
+    {
+      "id": "alpine-glider",
+      "name": "알프스 활강 글라이더",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "누름·해제로 높이를 조절하는 화면 회피 게임으로 신체 이동이 없음.",
+      "next": "높낮이 팔 표현과 막힌 길 선택을 결합하는 보급 코스 변형으로 보존.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/AlpineGlider.tsx",
+        "line": 11,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "알프스 활강 글라이더 / ▲ 협곡 천장 / 상승 기류 (THERMAL) / ▼ 설산 능선 / ✨ 최적 상승 기류 탑승 중! / 기류 구름 높이로 이동하세요",
+        "movement": "공중·활강 모험 (기류 호버링)"
+      }
+    },
+    {
+      "id": "campfire-breath",
+      "name": "생태 모닥불 호흡 릴랙스",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "호흡 안내 기능은 있으나 전문 용어·고정된 숨 참기 및 건강 효과 표현의 검토가 필요함.",
+      "next": "편안한 호흡을 고르는 정리 활동 도구로 단순화. 건강 효과 단정과 의무적 호흡 유지 요소는 전문가 검토 후 정리.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/CampfireBreath.tsx",
+        "line": 14,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "들이마시기 (코로 깊게 숨을 들이쉬세요) / 숨 참기 (편안하게 가슴을 펴고 멈추세요) / 내쉬기 (입으로 천천히 따뜻한 숨을 불어주세요) / 생태 모닥불 호흡 릴랙스 / 자연 속 심신 회복 및 호흡 조절 / 모닥불 온기",
+        "movement": "생태 여가 휴식 (심호흡 이완)"
+      }
+    },
+    {
+      "id": "crevasse-jump",
+      "name": "빙판 크레바스 점프",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "target",
+      "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.",
+      "next": "힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.",
+      "targetName": "타겟 조준",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/CrevasseJump.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🎯 빙판 중앙에 완벽 착지 성공! (+80점) / 💦 도약 힘 부족! 크레바스 직전에 아슬아슬하게 매달림 (+20점) / 💨 너무 세게 뛰어 빙판을 지나쳤습니다 (+15점) / 빙판 크레바스 점프 / 🚩 도약 빙판 / 목표 착지점:",
+        "movement": "빙판 모험 (거리 판단 차징 도약)"
+      }
+    },
+    {
+      "id": "slingshot-archery",
+      "name": "슬링샷 양궁 퍼펙트 텐",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "종목 상황 선택은 있으나 드래그·슬라이더·버튼 결과를 실제 스포츠 수행과 연결할 필요가 있음.",
+      "next": "한 가지 핵심 판단을 짧게 연습한 뒤 실제 도구 조작·이동으로 선택을 실행하고 결과를 비교.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/SlingshotArchery.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "텐(10점) 엑스텐 정중앙! / 골드(8점) 원! / 레드(5점) 원! / 외곽(1점) / 슬링샷 양궁 퍼펙트 텐 / 바람 저항:",
+        "movement": "투사체 표적 전략 (포물선 슬링샷)"
+      }
+    },
+    {
+      "id": "spike-block-wall",
+      "name": "스파이크 블로킹 월",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "open-space-tactician",
+      "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임.",
+      "next": "빈 공간 찾기·수비 위치 바꾸기 변형으로 통합하고 실제 코스 시연을 연결.",
+      "targetName": "빈 공간 설계자",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/SpikeBlockWall.tsx",
+        "line": 15,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "상대 스파이커가 도약합니다! 블로킹 위치를 잡으세요. / ✋ 완벽한 셧다운 블로킹 차단! (+50점) / 스파이크 블로킹 월 / 위의 세 자리 중 / 를 터치하여 2인 블로킹 벽을 세우세요!",
+        "movement": "네트형 수비 전략 (3레인 블로킹)"
+      }
+    },
+    {
+      "id": "base-running-decide",
+      "name": "야구/티볼 주루 판단",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "종목 상황 선택은 있으나 드래그·슬라이더·버튼 결과를 실제 스포츠 수행과 연결할 필요가 있음.",
+      "next": "한 가지 핵심 판단을 짧게 연습한 뒤 실제 도구 조작·이동으로 선택을 실행하고 결과를 비교.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/BaseRunningDecide.tsx",
+        "line": 56,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "야구/티볼 주루 판단 / 경기 상황 분석 / 타구 낙하 지점 / 수비 송구 속도 / 전력 질주! 다음 베이스로 달리기 (Sprint) / 태그 회피! 낮은 슬라이딩 (Slide)",
+        "movement": "필드형 주루 전략 (송구 판독 질주)"
+      }
+    },
+    {
+      "id": "badminton-smash-rhythm",
+      "name": "셔틀콕 스매시 리듬",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "dribble-rhythm",
+      "reason": "종목 이름은 다르지만 화면 타이밍 입력이 성공을 만드는 리듬 구조가 반복됨.",
+      "next": "박자 신호 모듈을 공유하되 공·줄·발 스텝의 도구별 동작은 구분하여 보존.",
+      "targetName": "드리블 박자 공장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/BadmintonSmashRhythm.tsx",
+        "line": 12,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "셔틀콕 스매시 리듬 / 🟢 센서 활성 / 🔴 터치 모드 / 💥 스매시 동작 감지! / 🏸 스매시 스윙 (터치) / 🏸 스매시 스윙! (SWING)",
+        "movement": "네트형 타격 타이밍 (판정선 스매시)"
+      }
+    },
+    {
+      "id": "tactical-grid-slide",
+      "name": "수비 포메이션 슬라이더",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "open-space-tactician",
+      "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임.",
+      "next": "빈 공간 찾기·수비 위치 바꾸기 변형으로 통합하고 실제 코스 시연을 연결.",
+      "targetName": "빈 공간 설계자",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/TacticalGridSlide.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "공격수의 슛 코스를 예측하여 수비수를 배치하세요! / 🛡️ 슛 궤적 완벽 차단! 블록 성공 (+50점) / ⚽ 수비 빈틈으로 실점 허용! / 수비 포메이션 슬라이더 / 침투 공격수: / 남은 시간:",
+        "movement": "영역형 공간 차단 (3x3 포메이션)"
+      }
+    },
+    {
+      "id": "sound-goalball",
+      "name": "골볼 소리 탐지 캐치",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "소리 방향 판별 후 버튼을 누르는 화면 반응이며 실제 굴림·받기와 연결되지 않음.",
+      "next": "소리 방향을 확인하고 부드러운 공 굴림·받기를 수행하는 짝 활동으로 개편. 실내 동선과 접근성 별도 확인.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/SoundGoalball.tsx",
+        "line": 15,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "소리에 귀를 기울이세요! / 방울 소리가 굴러오는 방향을 들으세요... / 방향이 감지되었습니다! 막을 방향을 빠르게 터치하세요! / 준비되면 소리 듣기 버튼을 누르세요. / 골볼 소리 탐지 캐치 / 시각장애인 스포츠 체험 (청각 집중 모드)",
+        "movement": "배리어프리 스포츠 (청각 방향 탐지)"
+      }
+    },
+    {
+      "id": "juggling-bounce-paddle",
+      "name": "저글링 바운스 컨트롤러",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-35",
+      "reason": "버튼·패들로 낙하 물체를 유지하는 화면 과제를 실제 물체 다루기로 전환할 수 있음.",
+      "next": "풍선·가벼운 공의 띄우기와 자리 이동 변형으로 통합.",
+      "targetName": "풍선 세 점 순찰",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/JugglingBouncePaddle.tsx",
+        "line": 19,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "저글링 바운스 컨트롤러 / ◀ 왼쪽 이동 / 오른쪽 이동 ▶ / 떨어지는 테니스공이 바닥에 닿기 전에 노란색 패들로 튕겨 올리세요!",
+        "movement": "다구 저글링 조작 (핸드아이 바운스)"
+      }
+    },
+    {
+      "id": "head-shoulders-knees",
+      "name": "머리 어깨 무릎 발 바디 비트",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/HeadShouldersKnees.tsx",
+        "line": 30,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "✨ 딩동댕! 정확한 신체 부위 터치! / 😅 다시 찾아보세요! / 머리 어깨 무릎 발 바디 비트 / 🟢 센서 활성 / 🔴 터치 모드 / 지금 짚어야 할 신체 부위:",
+        "movement": "기본 신체 인지 (머리 어깨 무릎 발)"
+      }
+    },
+    {
+      "id": "animal-hop-step",
+      "name": "동물 발자국 깡충 스텝",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음.",
+      "next": "자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/AnimalHopStep.tsx",
+        "line": 32,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "💦 발자국이 맞지 않아요! 돌다리를 잘 살펴보세요. / 동물 발자국 깡충 스텝 / 징검다리 코스 / 첫 번째 징검다리의 동물 버튼을 눌러 점프하세요! / 앞에 나타난 동물 발자국을 확인하고 같은 동물 버튼을 눌러 강을 건너세요!",
+        "movement": "이동 움직임 발달 (동물 발자국 홉)"
+      }
+    },
+    {
+      "id": "bicycle-pedal-crank",
+      "name": "자전거 크랭크 페달",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.",
+      "next": "팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/BicyclePedalCrank.tsx",
+        "line": 11,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "자전거 크랭크 페달 / 속도 (RPM) / 💡 페달 핸들을 잡고 시계 방향으로 원을 뱅글뱅글 힘차게 연속으로 돌리세요!",
+        "movement": "가동성 및 순발력 (원형 크랭크 페달)"
+      }
+    },
+    {
+      "id": "double-under-rope",
+      "name": "이단 줄넘기 더블 탭",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "dribble-rhythm",
+      "reason": "종목 이름은 다르지만 화면 타이밍 입력이 성공을 만드는 리듬 구조가 반복됨.",
+      "next": "박자 신호 모듈을 공유하되 공·줄·발 스텝의 도구별 동작은 구분하여 보존.",
+      "targetName": "드리블 박자 공장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/DoubleUnderRope.tsx",
+        "line": 12,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "⚠️ 박자가 느렸습니다! 따닥! 더블 탭하세요. / 이단 줄넘기 더블 탭 / 연속 콤보: / 따닥! 더블 탭 점프 🦘 / 줄이 발밑을 지날 때 빠르게 2번 연속 터치하세요!",
+        "movement": "도약 체력 (2단 쌩쌩이 줄넘기)"
+      }
+    },
+    {
+      "id": "mirror-motion-invert",
+      "name": "거울 모드 동작 반전",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "shadow_puppeteer",
+      "reason": "거울 대칭 버튼·동기화 입력보다 실제 짝 동작 관찰이라는 공통 목표가 중요함.",
+      "next": "리더 교대·느린 시범·다른 팔 동작 변형으로 통합.",
+      "targetName": "그림자 인형사",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/MirrorMotionInvert.tsx",
+        "line": 22,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🪞 딩동댕! 완벽한 거울 대칭 포즈! / 거울에서는 좌우가 반대예요! 맞은편 위치를 다시 찾아보세요. / 거울 모드 동작 반전 / 거울 속 친구의 동작 / 거울을 마주 본 것처럼 친구가 움직인 쪽의 반대편 위치를 재빠르게 터치하세요!",
+        "movement": "신경 협응 및 공간 지각 (거울 모드 반전)"
+      }
+    },
+    {
+      "id": "seesaw-balance-tap",
+      "name": "균형 시소 버티기",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "one_leg",
+      "reason": "기기 기울기나 버튼으로 화면 물체를 유지·이동하는 조작이 반복되며 몸의 균형과 구별이 필요함.",
+      "next": "한 발·두 발·앉은 자세의 균형 활동 변형으로 재구성. 기기 기울기를 신체 균형 측정값으로 사용하지 않음.",
+      "targetName": "한 발 서기",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/novel/SeesawBalanceTap.tsx",
+        "line": 12,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "균형 시소 버티기 / 🟢 센서 활성 / 🔴 터치 모드 / 폰 기울기: / 중심 유지 상태: / 🔴 미끄러짐 주의!",
+        "movement": "비이동 평형성 (시소 중심 유지)"
+      }
+    },
+    {
+      "id": "seed_sprout",
+      "name": "씨앗의 성장",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 45,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "땅속 씨앗 웅크리기: 무릎을 꿇고 머리를 땅에 대며 세상에서 가장 작은 씨앗이 되어 웅크립니다. / 봄비 맞고 떡잎 틔우기: 따스한 봄비를 맞고 양손을 조심스럽게 머리 위로 올려 떡잎을 틔웁니다. / 줄기 뻗고 꽃봉오리 열기: 천천히 일어나 발끝으로 서며 온몸을 길게 늘이고 두 팔로 커다란 꽃을 피웁니다.",
+        "movement": "자연 모방 표현 (성장 과정)"
+      }
+    },
+    {
+      "id": "weather_dance",
+      "name": "날씨 탐험대",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 71,
+        "control": "표현 4단계 → 2개 항목 평가",
+        "observation": "가벼운 이슬비 발걸음: 발끝으로 총총 소리 없이 걸으며 손가락으로 빗방울을 바닥에 톡톡 떨어뜨립니다. / 거센 돌풍과 비바람: 바람에 날리는 나뭇가지처럼 온몸을 좌우로 크게 회전하며 휘몰아칩니다. / 천둥 번개 쾅! 스톱!: 양팔을 번쩍 들며 번개처럼 번쩍인 뒤, 쾅! 소리와 함께 힘찬 정지 동작을 만듭니다. / 구름 개고 무지개 햇살: 평화로운 햇살처럼 미소를 지으며 양팔로 커다란 반원 무지개를 그립니다.",
+        "movement": "자연 현상 신체 모방"
+      }
+    },
+    {
+      "id": "magic_scarf",
+      "name": "마법 스카프 요정",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 98,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "물결 치는 파도 곡선: 스카프 끝을 잡고 천천히 8자 곡선을 그리며 허공에 파도를 만듭니다. / 하늘 높이 던지고 잡기: 스카프를 공중으로 가볍게 던진 뒤, 떨어지는 동안 한 바퀴 돌고 안전하게 낚아챕니다. / 바람 요정 망토 질주: 스카프를 목 뒤에 대고 바람의 저항을 느끼며 가볍게 교실을 유영합니다.",
+        "movement": "도구 활용 기본 움직임"
+      }
+    },
+    {
+      "id": "popcorn_bounce",
+      "name": "팝콘 팡팡",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자연·물체의 크기·힘·높낮이 변화를 몸으로 표현하는 활동군임.",
+      "next": "씨앗·팝콘·풍선·중력 소재를 선택하는 표현 주제로 통합하되 동작의 차이는 보존.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 124,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "지글지글 알갱이 진동: 바닥에 웅크리고 프라이팬의 열기가 전해지듯 잘게 몸을 떨며 진동합니다. / 팡! 팝콘 폭발 점프: 신호음이나 박자에 맞춰 허공으로 사지(양팔·양다리)를 별 모양으로 활짝 펴며 점프! / 푹신한 버터 팝콘 정지: 튀어 오른 후 가장 독창적이고 재미있는 팝콘 포즈로 3초간 얼음!",
+        "movement": "탄력 및 순발적 움직임 표현"
+      }
+    },
+    {
+      "id": "shadow_puppeteer",
+      "name": "그림자 인형사",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 150,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "1인자: 인형사의 창작 모션: A가 천천히 팔과 다리를 구부리고 펴며 독특한 관절 모션을 만듭니다. / 2인자: 그림자의 싱크로 복제: B가 A의 등 뒤 1m에서 A의 실루엣을 똑같이 복사하여 움직입니다. / 역할 교대 및 듀엣 피날레: 역할을 바꾸어 진행한 뒤, 마지막에 서로 마주보고 악수하는 포즈로 마무리합니다.",
+        "movement": "짝 협동 모방 표현"
+      }
+    },
+    {
+      "id": "sound_painter",
+      "name": "소리 그리기",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 176,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "또르르 물방울 소리: 맑고 통통 튀는 물방울 소리에 맞춰 손가락과 발끝으로 경쾌하게 튕겨냅니다. / 쿵쾅쿵쾅 거인의 북소리: 묵직한 저음 북소리에 맞춰 허리를 낮추고 온몸에 묵직한 무게감을 실어 걷습니다. / 샤르르 은하수 바람 소리: 높고 신비로운 소리에 맞춰 두 팔을 양옆으로 펼쳐 공기를 휘감으며 돕니다.",
+        "movement": "청각 자극 신체 형상화"
+      }
+    },
+    {
+      "id": "traffic_signal",
+      "name": "교통 신호등 요원",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "신호에 따른 이동·정지·느리게 움직이기가 같은 핵심 규칙임.",
+      "next": "표현형 신호 코스로 남기고 별도 게임 탐색 부담 축소.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 202,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "초록불: 힘찬 자동차 질주: 핸들을 잡은 자세로 교실의 빈 공간을 자유롭게 가속하며 달립니다. / 노랑불: 초저속 슬로모션: 시간이 멈춘 것처럼 달리는 동작 그대로 극단적으로 느리게 움직입니다. / 빨간불: 0초 급정지 석상: 소리와 함께 그 자리에 돌처럼 단 1mm도 흔들리지 않고 굳습니다.",
+        "movement": "신호 통제 움직임 표현"
+      }
+    },
+    {
+      "id": "balloon_float",
+      "name": "풍선 여행기",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자연·물체의 크기·힘·높낮이 변화를 몸으로 표현하는 활동군임.",
+      "next": "씨앗·팝콘·풍선·중력 소재를 선택하는 표현 주제로 통합하되 동작의 차이는 보존.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 228,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "헬륨가스 주입 팽창: 바람이 들어가듯 뺨을 부풀리고 양팔을 둥글게 만들어 점점 부피를 키웁니다. / 구름 위 무중력 유영: 바람을 타고 발끝으로 둥실둥실 허공을 유영하듯 발자국을 남깁니다. / 바람 빠지며 부드러운 착륙: 바람이 쉭 빠지며 온몸의 힘이 풀려 바닥으로 스르륵 녹아내리듯 엎드립니다.",
+        "movement": "무게감과 팽창·수축 표현"
+      }
+    },
+    {
+      "id": "space_traveler",
+      "name": "우주 유영가",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 258,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "우주복 착용 및 에어로크 진출: 단단한 헬멧과 장갑을 조이는 마임 후, 무중력 공간으로 첫발을 내딛습니다. / 3차원 공간 궤적 유영: 낮은 공간(포복형 유영), 중간 공간, 높은 공간(한 발 점프 유영)으로 곡선 이동합니다. / 우주 미아 위기와 로프 회수: 안전 로프를 잡고 끌어당기며 몸을 회전시켜 정거장 문으로 복귀합니다.",
+        "movement": "움직임 공간 요소 탐구"
+      }
+    },
+    {
+      "id": "element_forces",
+      "name": "4원소 소환사",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 284,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "타오르는 불꽃의 직선 공격: 강하고 날카로운 손동작과 폭발적인 직선 스텝으로 화염의 에너지를 뿜어냅니다. / 흐르는 강의 곡선 파동: 어깨에서 팔꿈치, 손가락 끝으로 이어지는 유려한 물결 웨이브를 만듭니다. / 대지의 거대한 암석 기둥: 발을 바닥에 깊숙이 박고 어떤 태풍에도 흔들리지 않는 바위의 무게감을 유지합니다.",
+        "movement": "움직임 요소 결합 (힘·시간·공간)"
+      }
+    },
+    {
+      "id": "body_sculpture",
+      "name": "신체 조각 미술관",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 310,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "1번 조각: 기둥 베이스 설치: 첫 번째 학생이 중심이 되는 기하학적 받침대 자세를 취하고 정지합니다. / 2~3번 조각: 연결 가지 확장: 다음 학생들이 1번 조각의 빈 공간 사이로 팔, 다리를 통과시키며 조각을 확장합니다. / 마지막 조각: 화룡점정 피날레: 마지막 모둠원이 조각상의 상단에 날개나 왕관 포즈를 더해 5초간 완벽 정지합니다.",
+        "movement": "신체 조각 협동 표현"
+      }
+    },
+    {
+      "id": "rhythm_clapping",
+      "name": "바디 퍼커션 오케스트라",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 336,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "기본 4박자 비트 (쿵-짝-쿵-짝): 발구르기(쿵) - 손뼉(짝) - 발구르기(쿵) - 손뼉(짝) 기본 박자를 마스터합니다. / 8박자 콤보 (가슴-허벅지-손뼉): 오른가슴-왼가슴-오른허벅지-왼허벅지-더블클랩으로 이어지는 테크니컬 비트 연주! / 모둠 돌림노래 릴레이: A조가 4박자를 치면 B조가 다음 4박자를 이어받아 멈추지 않는 리듬 순환을 만듭니다.",
+        "movement": "리듬 신체 타악 표현"
+      }
+    },
+    {
+      "id": "kpop_easy_challenge",
+      "name": "K-POP 기초 챌린지",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 362,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "하체 스텝: 바운스 & 사이드 스텝: 영상의 리듬에 맞춰 무릎을 굽히며 좌우로 통통 튀는 기본 바운스를 익힙니다. / 상체 포인트: 하트 락 & 핑거 스냅: 양손으로 가슴 앞 하트를 만들고 손가락을 튕기며 시선을 정면 카메라에 맞춥니다. / 원테이크 챌린지 댄스!: 음악이 흐르는 동안 처음부터 끝까지 친구들과 대형을 맞추어 안무를 완주합니다.",
+        "movement": "영상 연계 K-POP 포인트 안무"
+      }
+    },
+    {
+      "id": "musical_freeze",
+      "name": "뮤지컬 스톱 모션",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 393,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "배경 테마: 보물섬 해적단: 음악이 흐르는 동안 해적선을 청소하거나 망원경을 보는 익살스러운 연기를 펼칩니다. / 폭풍우 경보! 정지!: 정지 신호음과 함께 거대한 파도를 보고 경악하는 표정으로 5초간 얼음! / 승리의 황금 보물 발견: 다시 음악이 나오면 보물 상자를 열고 환호하는 환희의 댄스를 펼친 뒤 피날레 포즈를 취합니다.",
+        "movement": "극적 상황 감정 표현"
+      }
+    },
+    {
+      "id": "ribbon_gymnast",
+      "name": "리듬 리본 체조",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 419,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "손목 스냅 뱀 모양 물결: 바닥 위에 리본을 올려두고 손목을 좌우로 빠르게 털어 뱀이 기어가듯 물결을 만듭니다. / 머리 위 거대한 도넛 나선: 팔을 머리 위로 쭉 뻗고 리본을 빙글빙글 원형으로 돌리며 발레리나 턴을 돕니다. / 던지기 비행과 캐치 피날레: 리본 손잡이를 위로 살짝 띄웠다가 공중제비 후 다시 잡고 우아하게 무릎을 꿇습니다.",
+        "movement": "리듬 체조 도구 표현"
+      }
+    },
+    {
+      "id": "tempo_chameleon",
+      "name": "템포 카멜레온",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "박자 속도 바꾸기는 신체 타악·리듬 모듈의 난이도 변형으로 제공 가능함.",
+      "next": "느림·기본 속도를 선택하는 변형으로 통합하고 급격한 속도 변화는 완화.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 445,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "60 BPM 거북이 템포: 아주 느린 박자에 맞춰 한 걸음을 딛는 데 2초씩 걸리며 공기를 가르듯 천천히 걷습니다. / 100 BPM 보통 걸음 템포: 경쾌한 팝 음악 템포에 맞춰 팔을 앞뒤로 흔들며 활기차게 워킹합니다. / 140 BPM 번개 스프린트 템포: 숨 가쁜 빠른 비트에 맞춰 제자리에서 발을 마구 구르며 재즈 댄스 탭을 밟습니다.",
+        "movement": "음악 템포 적응 움직임"
+      }
+    },
+    {
+      "id": "story_drama_relay",
+      "name": "한 장면 릴레이 극장",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 471,
+        "control": "표현 4단계 → 2개 항목 평가",
+        "observation": "1번 주자 [기]: 평화로운 일상: 소풍을 가거나 맛있는 도시락을 먹는 행복한 몸짓을 펼칩니다. / 2번 주자 [승]: 거대한 사건 발생: 갑자기 나타난 괴물이나 소나기에 깜짝 놀라 도망치는 긴박한 액션! / 3번 주자 [전]: 친구와의 위기 극복: 쓰러진 친구를 부축하거나 함께 우산을 만들어 비를 피하는 협력 모션. / 4번 주자 [결]: 해피엔딩 피날레: 모둠원 전원이 무대 중앙에 모여 승리의 V포즈를 취하며 막을 내립니다.",
+        "movement": "스토리텔링 무언극 표현"
+      }
+    },
+    {
+      "id": "mirror_sync_duo",
+      "name": "싱크로 미러 듀오",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "shadow_puppeteer",
+      "reason": "짝과 거울 동작을 주고받는 핵심 규칙이 중복됨.",
+      "next": "동시 따라 하기와 한 박자 뒤 따라 하기를 난이도 선택으로 보존.",
+      "targetName": "그림자 인형사",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 498,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "아이 컨택과 호흡 일치: 서로의 눈을 바라보며 동시에 숨을 들이쉬고 내쉬며 템포를 맞춥니다. / 유리창 닦기 듀엣 모션: 손바닥을 마주대듯 허공 10cm 앞에 두고 원을 그리며 동일한 속도로 움직입니다. / 좌우 사이드 스텝 싱크로: 동시에 오른쪽으로 2걸음, 왼쪽으로 2걸음 점프하며 대칭 완벽성을 증명합니다.",
+        "movement": "짝 동기화 표현"
+      }
+    },
+    {
+      "id": "gravity_rebel",
+      "name": "중력 탈출 러너",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자연·물체의 크기·힘·높낮이 변화를 몸으로 표현하는 활동군임.",
+      "next": "씨앗·팝콘·풍선·중력 소재를 선택하는 표현 주제로 통합하되 동작의 차이는 보존.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 524,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "지구 10배 중력의 짓눌림: 머리 위에 바위가 얹힌 듯 어깨를 짓누르며 땀을 뻘뻘 흘리는 무거운 걸음을 걷습니다. / 중력 제어 장치 가동!: 딸깍! 스위치를 켜듯 자세를 바로잡고 몸에서 서서히 무게를 털어냅니다. / 무중력 점핑 하이라이트: 깃털처럼 가벼워진 몸으로 사뿐사뿐 허공을 도약하며 새처럼 날갯짓합니다.",
+        "movement": "힘의 강약 대비 움직임"
+      }
+    },
+    {
+      "id": "art_gallery_critic",
+      "name": "움직이는 갤러리 감상단",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "3~4학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 550,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "미술관 오픈: 30초 라이브 시연: 한 모둠이 무대에서 자신의 창작 포즈 3가지를 음악에 맞춰 선보입니다. / 관객 감상: 명작 포인트 포착: 감상단 학생들은 친구들의 동작 중 가장 인상 깊은 시각적 요소를 관찰합니다. / 따뜻한 한 줄 평 & 별점 부여: 화면의 루브릭 평가표에서 친구들에게 별점을 부여하고 따뜻한 박수를 보냅니다.",
+        "movement": "표현 작품 심미적 감상"
+      }
+    },
+    {
+      "id": "talchum_korea",
+      "name": "신명나는 전통 탈춤",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 580,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "오금질과 불림 사위: 굿거리장단(덩 기덕 쿵 더러러러)에 맞춰 무릎을 굽혔다 펴는 오금질로 신명을 돋웁니다. / 한삼 뿌리기 & 휘두르기: 양팔을 안에서 밖으로 시원하게 뿌리며 허공에 하얀 궤적을 날립니다. / 익살맞은 양반 풍자 걸음: 까치걸음(발뒤꿈치를 들고 사뿐사뿐 걷기)으로 원을 돌며 해학적인 웃음을 짓습니다.",
+        "movement": "민속 표현 (전통 탈춤)"
+      }
+    },
+    {
+      "id": "ganggangsullae",
+      "name": "달맞이 강강술래",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 611,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "진양조 느린 원무: 손을 잡고 오른쪽으로 천천히 걸으며 보름달의 장엄함을 신체로 느낍니다. / 중모리 남생아 놀아라: 가운데로 한두 명이 뛰어나와 익살맞은 남생이 춤을 추고 들어갑니다. / 자진모리 청어엮기 & 풀기: 선두를 따라 팔 아래로 통과하며 촘촘히 엮였다가 시원하게 풀어냅니다.",
+        "movement": "민속 표현 (집단 원무 대형)"
+      }
+    },
+    {
+      "id": "world_folk_dance",
+      "name": "세계 민속 춤 탐방",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 637,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "하와이 훌라: 알로하 물결 사위: 골반을 좌우로 부드럽게 8자 흔들며 양손으로 야자수와 바다 물결을 그립니다. / 이스라엘 마임: 생명의 물 탭: 손을 잡고 원 안으로 4걸음 모였다가 박수를 치며 뒤로 4걸음 물러납니다. / 체코 폴카: 경쾌한 힐앤토 홉스텝: 발뒤꿈치-발끝 찍고 홉! 파트너와 팔짱을 끼고 3박자 회전 질주를 즐깁니다.",
+        "movement": "세계 민속 무용 표현"
+      }
+    },
+    {
+      "id": "kpop_dance_cover",
+      "name": "K-POP 댄스 커버 프로젝트",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "kpop_easy_challenge",
+      "reason": "따라 하기에서 대형 창작으로 확장되는 동일 학습 흐름의 단계임.",
+      "next": "기초·연결·대형 창작 단계로 통합하고 외부 영상 없이도 시작할 시범 제공.",
+      "targetName": "K-POP 기초 챌린지",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 668,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "파트별 포지셔닝 & 오프닝 대형: V자 대형으로 서서 곡의 인트로 비트에 맞춰 한 명씩 시차(카운트) 안무를 선보입니다. / 킬링 파트 군무 (센터 체인지): 하이라이트 후렴구에 맞춰 전원이 칼군무를 선보이며 센터 멤버를 자연스럽게 교체합니다. / 엔딩 요정 시선 고정 피날레: 마지막 비트에 맞춰 숨을 몰아쉬며 가장 매력적인 엔딩 포즈로 5초간 카메라 응시!",
+        "movement": "현대 표현 (K-POP 방송 안무)"
+      }
+    },
+    {
+      "id": "musical_scene_maker",
+      "name": "뮤지컬 장면 연출가",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 699,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "군중의 분주한 발걸음: 시계태엽처럼 바쁘게 오가는 현대 도시인의 걸음을 교차 동선으로 표현합니다. / 주인공의 깨어남과 독무: 모두가 멈춘 가운데 주인공이 날아오르는 듯한 자유로운 점프와 턴을 펼칩니다. / 전원 합창 앙상블 피날레: 주인공의 에너지를 받아 모둠원 전원이 손을 뻗으며 희망찬 대형으로 집결합니다.",
+        "movement": "현대 표현 (뮤지컬 신체극)"
+      }
+    },
+    {
+      "id": "cheerleading_team",
+      "name": "파워 치어리딩 루틴",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 725,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "기본 모션 콤보 (High V -> T -> Low V): 팔꿈치를 굽히지 않고 주먹을 꽉 쥔 채 칼로 자르듯 절도 있게 모션을 끊어칩니다. / 토치 점프 & 클래핑 구호: “빅토리! 땀방울!” 구호를 외치며 박수를 치고 두 발을 모아 힘차게 점프합니다. / 모둠 인간 피라미드 포즈 (노 스턴트): 앞줄은 한쪽 무릎을 꿇고 뒷줄은 하이-V를 취하며 입체적인 2단 전광판 포즈를 만듭니다.",
+        "movement": "스포츠 표현 (스턴트 치어리딩 모션)"
+      }
+    },
+    {
+      "id": "music_jumprope",
+      "name": "음악 줄넘기 비트",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 756,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "양발 모아 비트 점프 (1박 1도약): 줄넘기를 돌리지 않고 가상 줄넘기(맨손 스윙) 또는 실제 줄넘기로 비트에 점프합니다. / 번갈아 뛰기 & 십자 크로스 스텝: 조깅하듯 한 발씩 번갈아 뛴 뒤, 팔을 교차(X자 엇걸기)하여 줄을 넘습니다. / 피날레 더블 언더 (씽씽이) 도전: 마지막 10초간 높은 점프와 빠른 2회전 스윙으로 폭발적인 피날레를 장식합니다.",
+        "movement": "스포츠 표현 (음악 줄넘기)"
+      }
+    },
+    {
+      "id": "taebo_fitness",
+      "name": "태보 & 복싱 에어로빅",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 787,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "원-투 복싱 잽 & 가드 바운스: 턱밑에 가드를 올리고 왼손 잽, 오른손 스트레이트를 비트에 맞춰 연속으로 뻗습니다. / 위빙 회피 & 어퍼컷 콤보: 상체의 U자 회피(위빙) 후 밑에서 위로 턱을 치는 강력한 어퍼컷 연결! / 프론트 푸시 킥 & 니킥 질주: 복부를 보호하며 앞차기 4회, 무릎 당겨치기 4회를 빠른 비트에 맞추어 폭격합니다.",
+        "movement": "스포츠 표현 (격투기 융합 에어로빅)"
+      }
+    },
+    {
+      "id": "flashmob_creator",
+      "name": "모둠 플래시몹 메이커",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 818,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "1단계: 아무렇지 않은 척 일상 위장: 교실 곳곳에서 책을 읽거나 멍때리며 일반적인 일상 연기를 합니다. / 2단계: 첫 번째 댄서의 도화선 점화: 1번 학생이 센터로 뛰어나와 인상적인 독무를 시작합니다. / 3단계: 2배씩 번지는 도미노 합류: 한 마디마다 2명씩 무대로 합류하여 마지막에 모둠 전원이 거대 군무를 폭발시킵니다.",
+        "movement": "종합 표현 (플래시몹 군무 기획)"
+      }
+    },
+    {
+      "id": "expressive_critique",
+      "name": "표현 페스티벌 쇼케이스",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.",
+      "next": "핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/presentation/components/minigames/expression/expressionGamesData.ts",
+        "line": 844,
+        "control": "표현 3단계 → 2개 항목 평가",
+        "observation": "모둠 쇼케이스 무대 발표: 무대 조명이 켜지듯 모둠이 준비한 창작 표현 루틴을 전원 하나가 되어 선보입니다. / 심사위원단 루브릭 채점: 관객 학생들은 [독창성], [협동심], [표현력] 3개 영역의 루브릭 점수를 부여합니다. / 격려의 스탠딩 오베이션: 발표 모둠에게 전원이 기립 박수와 격려의 함성을 보내며 축제를 마감합니다.",
+        "movement": "종합 발표 및 과정 중심 상호 평가"
+      }
+    },
+    {
+      "id": "exp-phone-41",
+      "name": "무게 바꾸기 이사꾼",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 630,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "가벼운 상자: 작은 힘으로 상자를 들어 같은 경로를 가볍게 걸어요. / 무거운 상자: 같은 경로에서 보폭을 줄이고 몸통과 팔에 힘을 표현해요. / 큰 상자: 팔 간격을 넓혀 큰 상자를 함께 옮기는 장면으로 연결해요.",
+        "movement": "expression",
+        "spec": "S41"
+      }
+    },
+    {
+      "id": "exp-phone-42",
+      "name": "시간 늘리기 액션배우",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 664,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "원본 세 동작: 걷기, 팔 뻗기, 몸 낮추기를 같은 순서로 이어요. / 짧은 장면: 같은 세 동작을 짧고 선명하게 표현해요. 뛰지 않고 동작 길이만 바꿔요. / 긴 장면: 같은 순서로 각 동작을 길게 늘이고 차이를 이야기해요.",
+        "movement": "expression",
+        "spec": "S42"
+      }
+    },
+    {
+      "id": "exp-phone-43",
+      "name": "높낮이 엘리베이터",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 698,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "낮은 층: 무릎을 조금 굽혀 낮은 옆걸음과 작은 팔 모양을 연결해요. / 중간 층: 편안히 서서 옆걸음을 이어가며 팔을 가슴 높이로 펴요. / 높은 층: 발바닥을 바닥에 둔 채 팔을 높이 뻗고 세 높이를 연결해요.",
+        "movement": "expression",
+        "spec": "S43"
+      }
+    },
+    {
+      "id": "exp-phone-44",
+      "name": "직선·곡선 발자국 화가",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "직선·곡선 경로와 팔 움직임을 이어 그림을 만드는 표현 목표가 같은 계열임.",
+      "next": "팔·발·도구의 궤적 선택 모드로 통합하여 이동 표현은 보존.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 732,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "직선 발자국: 표식 사이를 직선으로 걸으며 팔로 직선을 크게 그려요. / 곡선 발자국: 넓은 곡선을 걸으며 팔로 부드러운 곡선을 그려요. / 움직이는 그림: 직선과 곡선 경로를 이어 처음과 끝이 있는 그림을 만들어요.",
+        "movement": "expression",
+        "spec": "S44"
+      }
+    },
+    {
+      "id": "exp-phone-45",
+      "name": "몸동작 암호 3·4·5",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 766,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "세 동작 연결: 걷기, 팔 벌리기, 몸 낮추기의 세 동작을 연결해요. / 네 동작 연결: 세 동작 다음에 옆걸음을 붙여 네 동작을 연결해요. 안내를 다시 봐도 괜찮아요. / 다섯 동작 연결: 마지막에 팔로 원 그리기를 붙여 다섯 동작을 이어요. 스스로 순서를 복기해요.",
+        "movement": "expression",
+        "spec": "S45"
+      }
+    },
+    {
+      "id": "exp-phone-46",
+      "name": "상하체 다른 로봇",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "partner-robot-lab",
+      "reason": "상체·하체 동작을 다르게 조합하는 로봇 표현이 기존 카드 조합 활동과 연결됨.",
+      "next": "상체 유지/하체 변경과 역할 교대 도전으로 통합.",
+      "targetName": "파트너 로봇 연구소",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 800,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "발 유지·팔 바꾸기: 제자리 발 스텝은 유지하고 팔을 위, 옆, 앞으로 바꿔요. / 팔 유지·발 바꾸기: 팔 조합을 반복하며 발을 앞뒤, 좌우로 바꿔요. / 로봇 연결: 두 방식을 차례로 연결하고 상체와 하체의 차이를 보여줘요.",
+        "movement": "expression",
+        "spec": "S46"
+      }
+    },
+    {
+      "id": "exp-phone-47",
+      "name": "감정 바꾸기 행진",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "emotion-thermometer",
+      "reason": "같은 움직임의 감정·강도를 바꾸는 표현 목표가 중복됨.",
+      "next": "감정별 걷기·보폭·팔 세기 변형으로 통합.",
+      "targetName": "감정 온도계",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 834,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "기쁨 행진: 정해둔 걷기 경로를 밝은 팔 동작과 넓은 보폭으로 표현해요. / 놀람 행진: 같은 경로에서 몸 방향과 팔 모양을 바꿔 놀람을 표현해요. / 차분한 행진: 같은 경로를 작은 보폭과 부드러운 팔 동작으로 걸으며 차이를 느껴요.",
+        "movement": "expression",
+        "spec": "S47"
+      }
+    },
+    {
+      "id": "exp-phone-48",
+      "name": "동작 수선공",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 868,
+        "control": "표현 4단계 → 자기/짝 평가",
+        "observation": "원본 만들기: 걷기, 팔 벌리기, 몸 낮추기 세 동작을 정해요. / 팔만 수선: 원본 세 동작에서 다시 시작해 팔 하나만 바꿔 표현해요. / 높이만 수선: 다시 원본 세 동작으로 돌아와 몸 높이 하나만 바꿔요. 앞 변화를 누적하지 않아요. / 방향만 수선: 원본에서 다시 시작해 진행 방향 하나만 바꾸고 차이를 비교해요.",
+        "movement": "expression",
+        "spec": "S48"
+      }
+    },
+    {
+      "id": "exp-phone-49",
+      "name": "대칭 깨기 댄스",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 908,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "대칭으로 출발: 좌우 팔과 다리가 같은 동작으로 걷기 스텝을 만들어요. / 대칭 깨기: 걷기 스텝은 유지하고 한쪽 팔 또는 다리 모양을 다르게 바꿔요. / 다시 대칭으로: 원래 대칭으로 돌아와 대칭, 비대칭, 대칭의 작품을 연결해요.",
+        "movement": "expression",
+        "spec": "S49"
+      }
+    },
+    {
+      "id": "exp-phone-50",
+      "name": "끝동작 이어붙이기",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 942,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "첫 자세 받기: 1번이 이동 동작 뒤 멈추면 2번이 그 마지막 자세로 시작해요. / 새 길 붙이기: 2번이 새 이동 동작을 붙이고 마지막 자세를 1번에게 넘겨요. / 작품 잇기: 번갈아 마지막 자세를 첫 자세로 받아 네 장면을 끊김 없이 연결해요.",
+        "movement": "expression",
+        "spec": "S50"
+      }
+    },
+    {
+      "id": "exp-tablet-11",
+      "name": "몸으로 그리는 항로",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "직선·곡선 경로와 팔 움직임을 이어 그림을 만드는 표현 목표가 같은 계열임.",
+      "next": "팔·발·도구의 궤적 선택 모드로 통합하여 이동 표현은 보존.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1148,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "원형 항로: 간격을 지키며 원형 경로를 걷고 팔을 둥글게 움직여요. / 물결 항로: 물결 경로를 걸으며 팔 높이를 부드럽게 바꿔요. / 지그재그 항로: 지그재그를 걷고 세 항로를 연결해 여행 장면을 완성해요.",
+        "movement": "expression",
+        "spec": "T11"
+      }
+    },
+    {
+      "id": "exp-tablet-12",
+      "name": "로봇 공장 생산라인",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1182,
+        "control": "표현 4단계 → 자기/짝 평가",
+        "observation": "공정 1차: 1번 당기기, 2번 옮기기, 3번 펴기, 4번 옆걸음을 동시에 표현해요. / 공정 2차: 1번 옮기기, 2번 펴기, 3번 옆걸음, 4번 당기기로 바꿔요. / 공정 3차: 1번 펴기, 2번 옆걸음, 3번 당기기, 4번 옮기기로 바꿔요. / 공정 4차: 1번 옆걸음, 2번 당기기, 3번 옮기기, 4번 펴기로 바꿔 모두 네 공정을 해요.",
+        "movement": "expression",
+        "spec": "T12"
+      }
+    },
+    {
+      "id": "exp-tablet-13",
+      "name": "높낮이 파도 행진",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1222,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "작은 파도: 이동 간격을 지키며 앞사람의 작은 팔 높이를 차례로 전달해요. / 큰 파도: 팔을 더 높게 바꿔 큰 파도를 앞에서 뒤로 전달해요. / 두 갈래 파도: 두 줄로 나눠 서로 다른 파도를 전달하고 함께 끝내요.",
+        "movement": "expression",
+        "spec": "T13"
+      }
+    },
+    {
+      "id": "exp-tablet-14",
+      "name": "신체 문자 송신소",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1256,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "글자 만들기: 짝이 정한 글자 하나를 팔과 몸통 모양으로 표현해요. / 기호 연결: 글자 다음에 별이나 원 기호를 몸으로 만들고 사이를 옆걸음으로 이어요. / 모둠 메시지: 짝별 글자와 기호 사이에 이동 동작을 넣어 모둠 메시지로 연결해요.",
+        "movement": "expression",
+        "spec": "T14"
+      }
+    },
+    {
+      "id": "exp-tablet-15",
+      "name": "움직이는 분수대",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1290,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "동시 분수: 옆걸음으로 자리를 옮기며 모두 동시에 팔 물줄기를 올려요. / 엇갈린 분수: 짝과 번갈아 팔을 올리고 내리며 이동해요. / 차례 분수: 번호 순으로 물줄기를 올리고 세 장면을 차례로 연결해요.",
+        "movement": "expression",
+        "spec": "T15"
+      }
+    },
+    {
+      "id": "exp-tablet-16",
+      "name": "보이지 않는 상자 이사단",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1324,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "상자 모서리 잡기: 네 사람이 가상 상자 모서리를 잡은 듯 간격을 맞춰 걸어요. / 폭 바꾸기: 상자 폭이 넓어진 장면을 팔 간격과 걸음으로 함께 표현해요. / 높이 바꾸기: 같은 간격으로 상자를 낮게, 높게 옮기며 함께 도착해요.",
+        "movement": "expression",
+        "spec": "T16"
+      }
+    },
+    {
+      "id": "exp-tablet-17",
+      "name": "스텝으로 쓰는 이름",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1358,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "내 이름 스텝: 자신의 이름 음절마다 한 발 스텝을 정해 몸으로 표현해요. 이름을 앱에 입력하지 않아요. / 서로 배우기: 모둠원의 이름 스텝을 한 사람씩 보여주고 모두 따라 해요. / 이름 행진: 모든 이름 스텝 사이에 걷기를 넣고 함께 이름 행진을 완성해요.",
+        "movement": "expression",
+        "spec": "T17"
+      }
+    },
+    {
+      "id": "exp-tablet-19",
+      "name": "원정대 퍼레이드",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "flashmob_creator",
+      "reason": "장면·대형·전원 합류를 연결하는 군무 구성 목표가 같은 계열임.",
+      "next": "원정 퍼레이드 소재를 모둠 군무의 선택 이야기로 보존.",
+      "targetName": "모둠 플래시몹 메이커",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1410,
+        "control": "표현 4단계 → 자기/짝 평가",
+        "observation": "출발 장면: 보폭이 작은 걷기와 가벼운 팔 동작으로 함께 출발해요. / 바람길 장면: 옆걸음과 기울이지 않는 팔 흔들기로 바람길을 표현해요. / 큰물결 장면: 몸 높낮이와 팔의 강약을 바꾸어 큰물결을 표현해요. / 도착 장면: 큰 걸음에서 작은 걸음으로 바꿔 함께 멈추고 네 장면을 연결해요.",
+        "movement": "expression",
+        "spec": "T19"
+      }
+    },
+    {
+      "id": "exp-tablet-20",
+      "name": "동작 조합 교환소",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "유지",
+      "target": null,
+      "reason": "힘·시간·높낮이·대칭·연결·역할이라는 구별되는 표현 목표와 단계별 안내가 있음.",
+      "next": "각 표현 목표와 창작 소재를 유지. 동작을 보여 주는 첫 시범과 짧은 감상은 공통 개선 대상으로 둠.",
+      "targetName": null,
+      "scope": "핵심 규칙 유지 판단",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1449,
+        "control": "표현 3단계 → 자기/짝 평가",
+        "observation": "세 동작 교환: 짝끼리 세 동작을 보여 주고 서로 배워요. / 짝 바꿔 교환: 짝을 바꾸어 다시 세 동작을 보여 주고 서로 배워요. / 여섯 동작 연결: 서로에게 배운 두 묶음의 세 동작을 여섯 동작으로 연결해요.",
+        "movement": "expression",
+        "spec": "T20"
+      }
+    },
+    {
+      "id": "exp-tablet-45",
+      "name": "한 장면 네 가지 움직임",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "story_drama_relay",
+      "reason": "하나의 장면을 서로 다른 몸 움직임으로 표현하고 연결하는 공동 창작 구조임.",
+      "next": "장면별 표현 요소 선택을 릴레이 극장 단계로 통합.",
+      "targetName": "한 장면 릴레이 극장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/domain/expeditionGames.ts",
+        "line": 1913,
+        "control": "표현 4단계 → 자기/짝 평가",
+        "observation": "큰 걸음 장면: 같은 여행 장면을 1번은 큰 걸음으로 표현하고 모두 따라 해요. / 작은 옆걸음 장면: 2번의 작은 옆걸음 표현을 모두 이어 해요. / 높낮이 장면: 3번의 몸 높낮이를 모두 연결해요. / 팔 강약 장면: 4번의 팔 강약 표현을 이어 네 가지 표현의 한 장면을 완성해요.",
+        "movement": "expression",
+        "spec": "T45"
+      }
+    },
+    {
+      "id": "breath-pacer-478",
+      "name": "4-7-8 자율신경 이완 페이서",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "호흡 안내 기능은 있으나 전문 용어·고정된 숨 참기 및 건강 효과 표현의 검토가 필요함.",
+      "next": "편안한 호흡을 고르는 정리 활동 도구로 단순화. 건강 효과 단정과 의무적 호흡 유지 요소는 전문가 검토 후 정리.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 17,
+        "control": "단계 안내 · 시간/지연 진행",
+        "observation": "🌬️ 4-7-8 자율신경 이완 호흡 / 가슴을 펴고 화면의 원이 커지고 작아지는 리듬에 맞춰 숨을 쉬세요. / 들이마시기 (코) / 길게 내쉬기 (입) / 4초 코로 흡기 → 7초 편안히 멈춤 → 8초 입으로 후~ 날숨 / 🌿 심신 이완 완주!",
+        "movement": "운동 교육과정 신규 특화 ([4체01-04])"
+      }
+    },
+    {
+      "id": "peripheral-vision-360",
+      "name": "360° 주변시야 동체인식",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "red_green",
+      "reason": "방향·신호를 읽고 터치하는 반응 구조가 반복됨.",
+      "next": "걷기·방향 전환·정지 신호의 변형으로 통합하고 화면 반응속도를 운동능력으로 평가하지 않음.",
+      "targetName": "무궁화꽃이 피었습니다",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 124,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "👁️ 360° 주변시야 동체인식 / 중앙 십자(+)를 똑바로 쳐다본 채, 외곽에서 깜빡이는 방향을 즉각 터치하세요! / 주변시야 및 시각 신경 반응 협응 능력이 뛰어납니다. / 동체시력 에이스",
+        "movement": "운동 교육과정 신규 특화 ([6체01-02])"
+      }
+    },
+    {
+      "id": "shuttle-run-beep",
+      "name": "셔틀런 삑 비트 인터벌",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "실제 왕복 안내는 있지만 단계·랩·시간과 자기 입력을 동시에 이해해야 함.",
+      "next": "걷기 입문과 개인 페이스 선택, 큰 출발·도착 신호, 활동 후 묶음 기록 적용.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 246,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "단계 / 랩 / 남은 랩 시간 / 🏃 왕복오래달리기 셔틀 삑! / 삑! 신호음에 맞춰 실제 콘 사이를 이동해 보세요. 화면 버튼은 왕복 횟수의 자기 기록이며 달리기 증거가 아닙니다. / 👉 B콘으로 전력 질주! / 👈 A콘으로 전력 질주!",
+        "movement": "운동 교육과정 신규 특화 ([6체01-01])"
+      }
+    },
+    {
+      "id": "mobility-joint-circle",
+      "name": "관절 가동성 스무스 서클",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "magic_scarf",
+      "reason": "손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.",
+      "next": "팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.",
+      "targetName": "마법 스카프 요정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 358,
+        "control": "화면 입력",
+        "observation": "🧘 관절 가동성 스무스 서클 / 발목이나 손목을 원을 그리듯 화면의 원 궤적을 손가락으로 부드럽게 3바퀴 회전하세요! / 가동성 궤적 회전 / 🎉 관절 가동성 100% 달성! / 부드러운 관절 가동 범위를 회복하여 부상을 예방합니다. / 관절 유연성 마스터",
+        "movement": "운동 교육과정 신규 특화 ([4체01-03])"
+      }
+    },
+    {
+      "id": "foot-center-balance",
+      "name": "기기 기울기 균형 연습",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "one_leg",
+      "reason": "기기 기울기나 버튼으로 화면 물체를 유지·이동하는 조작이 반복되며 몸의 균형과 구별이 필요함.",
+      "next": "한 발·두 발·앉은 자세의 균형 활동 변형으로 재구성. 기기 기울기를 신체 균형 측정값으로 사용하지 않음.",
+      "targetName": "한 발 서기",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 443,
+        "control": "기기 센서 + 화면 입력 · 시간/지연 진행",
+        "observation": "⚖️ 기기 기울기 균형 연습 / 기기 기울기 또는 화면 드래그로 중심을 맞추세요. 발바닥 압력이나 실제 균형을 측정하지 않습니다. / 🎯 정중앙 맞추기 / ✅ 중심 유지 중! 버티세요! / ⚠️ 중심이 벗어났습니다! 스마트폰을 수평으로 조절하거나 중앙을 터치하세요! / 🏆 평형성 완벽 유지!",
+        "movement": "운동 교육과정 신규 특화 ([6체01-02])"
+      }
+    },
+    {
+      "id": "agility-dot-drill",
+      "name": "5점 닷 드릴 풋워크 시퀀서",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "zigzag",
+      "reason": "서로 다른 화면 이동·순서 퍼즐이지만 실제 바닥 표식 이동이라는 공통 목표로 묶을 수 있음.",
+      "next": "갈림길 보급 작전의 사방 이동·미로·순서 코스로 보존. 독립 터치 게임은 이관 이후 정리.",
+      "targetName": "지그재그 런!",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 587,
+        "control": "화면 입력",
+        "observation": "다음 밟을 발판 / ⚡ 5점 닷 드릴 풋워크 / 빛나는 번호 발판을 발로 밟듯 빠르게 순서대로 터치하세요! / ⚡ 번개 풋워크 완주! / 정확하고 빠른 발놀림으로 6개 라운드의 닷 드릴을 통과했습니다. / 민첩성 풋워크 왕",
+        "movement": "운동 교육과정 신규 특화 ([4체01-02])"
+      }
+    },
+    {
+      "id": "eccentric-isom-push",
+      "name": "등척성 파워 게이지 홀드",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "fitness",
+      "reason": "흔들기·올리기·누르기 같은 단일 입력을 반복해 게이지를 채우는 구조임.",
+      "next": "안전한 맨손 동작을 선택하는 체력 코스의 변형으로 흡수. 기기 운반·연타와 운동 점수 연결 제거.",
+      "targetName": "체력 룰렛",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 678,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "💪 등척성 파워 게이지 홀드 / 양손을 가슴 앞에서 서로 맞대고 밀며, 녹색 목표 존(75~90%)에 정확히 힘을 유지하세요! / 목표 힘 존 / / 8초 버팀 / ✊ 꾹 눌러서 힘 조절하기! / 🦾 8초 파워 홀드 성공!",
+        "movement": "운동 교육과정 신규 특화 ([6체01-05])"
+      }
+    },
+    {
+      "id": "posture-spine-align",
+      "name": "척추 중립 정렬 축 얼라인",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "posture-guardian",
+      "reason": "화면 슬라이더 정렬이 실제 자세 확인과 혼동될 수 있고 생활 자세 활동이 별도로 있음.",
+      "next": "실제 자세 시도 전 관찰 카드로 옮기고 슬라이더 완료를 자세 성공으로 표시하지 않음.",
+      "targetName": "자세 수호 로봇",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 790,
+        "control": "화면 입력",
+        "observation": "🧗 척추 중립 정렬 축 얼라인 / 귀-어깨-골반이 일직선이 되도록 슬라이더를 움직여 바른 자세 축을 완성하세요! / ✨ 완벽한 바른 자세 확인! / 중립 축을 일직선으로 맞추세요 / 🧘 척추 중립 정렬 완성! / 머리-어깨-골반을 중립 축에 정렬하는 바른 신체 자세를 익혔습니다.",
+        "movement": "운동 교육과정 신규 특화 ([4체01-04])"
+      }
+    },
+    {
+      "id": "pulse-zone-target",
+      "name": "목표 심박수 트레이닝 존",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "pulse-detective",
+      "reason": "탭의 박자가 심박수처럼 보이는 별도 게임으로 실제 맥박 탐색과 중복됨.",
+      "next": "자기 몸 변화 관찰 자료에 통합하고 화면 탭을 실제 심박수로 표시하지 않음.",
+      "targetName": "심박 탐정단",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 882,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "💓 목표 심박수 트레이닝 존 / 화면의 목표 박자(130~150 BPM)에 맞춰 6초 연속 탭하세요. 표시 수치는 실제 심박수 측정값이 아닙니다. / 목표: 130 ~ 150 BPM / / 6초 유지 / 목표 화면 탭 박자에 맞았어요! / ⬆️ 심장 버튼을 일정한 박자로 계속 탭하세요!",
+        "movement": "운동 교육과정 신규 특화 ([6체01-01])"
+      }
+    },
+    {
+      "id": "cross-lateral-brain",
+      "name": "좌우 교차 크로스 브레인짐",
+      "revisedName": null,
+      "domain": "운동",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExerciseGames.tsx",
+        "line": 997,
+        "control": "화면 입력",
+        "observation": "🧩 좌우 교차 브레인짐 / 왼손은 톡톡 탭하고 오른손은 꾹 누르는 좌우 비대칭 협응으로 양뇌를 깨우세요! / 3번 톡톡 탭! / 꾹 누르고 있기! / 오른손 미션 / 양손 협응 완료! (",
+        "movement": "운동 교육과정 신규 특화 ([4체01-02])"
+      }
+    },
+    {
+      "id": "wind-archery-pro",
+      "name": "풍향·풍속 탄도 윈드 양궁",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "target",
+      "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.",
+      "next": "힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.",
+      "targetName": "타겟 조준",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 16,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🏹 풍향·풍속 탄도 윈드 양궁 / 바람의 방향과 세기를 읽고, 바람의 반대쪽으로 조준선을 옮겨 쏘세요! / 현재 바람: / ◀ 왼쪽 조준 / 오른쪽 조준 ▶ / 🏹 화살 발사!",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-04])"
+      }
+    },
+    {
+      "id": "volleyball-apex-set",
+      "name": "배구 정점 포물선 토스·스파이크",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "exp-phone-35",
+      "reason": "버튼·패들로 낙하 물체를 유지하는 화면 과제를 실제 물체 다루기로 전환할 수 있음.",
+      "next": "풍선·가벼운 공의 띄우기와 자리 이동 변형으로 통합.",
+      "targetName": "풍선 세 점 순찰",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 173,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "스파이크 성공 / APEX! 정점! / 궤적 상승/하강 중 / 🏐 배구 정점 포물선 스파이크 / 토스된 공이 꼭짓점(정점)에서 멈추는 찰나에 강스파이크 버튼을 누르세요! / 최적 타격 정점 존 (APEX)",
+        "movement": "스포츠 교육과정 신규 특화 ([4체02-06])"
+      }
+    },
+    {
+      "id": "strike-zone-vision",
+      "name": "140km/h 스트라이크존 선구안",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "target",
+      "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.",
+      "next": "힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.",
+      "targetName": "타겟 조준",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 292,
+        "control": "화면 입력",
+        "observation": "선구안 적중 / ⚾ 140km/h 스트라이크존 선구안 / 홈플레이트 상공으로 들어오는 공이 존 안쪽인지 바깥쪽인지 판독하세요! / 🔴 스트라이크! / 🟢 볼! (참기) / 광속 투구의 궤적을 순식간에 판단하는 최고 수준의 동체시력을 입증했습니다.",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-06])"
+      }
+    },
+    {
+      "id": "offside-breaker-pass",
+      "name": "3:2 오프사이드 트랩 브레이커",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "open-space-tactician",
+      "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임.",
+      "next": "빈 공간 찾기·수비 위치 바꾸기 변형으로 통합하고 실제 코스 시연을 연결.",
+      "targetName": "빈 공간 설계자",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 409,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "⚽ 3:2 오프사이드 트랩 브레이커 / 수비 라인이 공격수보다 골대 쪽(화면 위)으로 물러나 / 온사이드(🟢) / 일 때 칼같은 스루패스를 찔러주세요! / 🥅 상대 골대 / 🟢 온사이드 찬스!",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-05])"
+      }
+    },
+    {
+      "id": "badminton-drop-clear",
+      "name": "셔틀콕 드롭 vs 클리어 선택",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "종목 상황 선택은 있으나 드래그·슬라이더·버튼 결과를 실제 스포츠 수행과 연결할 필요가 있음.",
+      "next": "한 가지 핵심 판단을 짧게 연습한 뒤 실제 도구 조작·이동으로 선택을 실행하고 결과를 비교.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 555,
+        "control": "화면 입력",
+        "observation": "빈 코스 득점 / 🏸 배드민턴 드롭 & 클리어 코스 / 상대방이 뒤에 있으면 네트 앞 드롭샷! 앞에 쏠려있으면 엔드라인 클리어! / 상대 후위 코트 / 🏃 (상대 뒤에 위치!) / 상대 전위 코트 (네트 앞)",
+        "movement": "스포츠 교육과정 신규 특화 ([4체02-06])"
+      }
+    },
+    {
+      "id": "basketball-free-throw",
+      "name": "포물선 각도·파워 자유투",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "종목 상황 선택은 있으나 드래그·슬라이더·버튼 결과를 실제 스포츠 수행과 연결할 필요가 있음.",
+      "next": "한 가지 핵심 판단을 짧게 연습한 뒤 실제 도구 조작·이동으로 선택을 실행하고 결과를 비교.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 666,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "클린 슛 득점 / 🏀 포물선 각도 자유투 / 슬라이더로 발사각을 조절하여 림 안으로 쏙 들어가는 최적 포물선 궤적을 만드세요! / ✨ SWISH! 클린 슛! / 💥 림 튕김! 각도 조절! / 낮은 탄도 (30°)",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-05])"
+      }
+    },
+    {
+      "id": "curling-weight-control",
+      "name": "컬링 하우스 힘 조절 스톤",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "rolling-curling",
+      "reason": "버튼 누름 시간을 힘으로 환산하는 가상 컬링과 실제 공 굴림 컬링이 중복됨.",
+      "next": "실제 공 굴림의 거리·표적 선택 단계로 통합.",
+      "targetName": "공 굴림 컬링 원정",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 974,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🥌 컬링 하우스 힘 조절 스톤 / 발사 버튼을 적절한 시간(약 1초) 동안 꾹 누르고 떼어 하우스 중앙 버튼에 스톤을 멈추세요! / 미끄러지는 중... 🧊 / 꾹 눌러서 힘 모으고 떼기! / 투구 압력 시간: / 🥌 하우스 정중앙 안착 성공!",
+        "movement": "스포츠 교육과정 신규 특화 ([4체02-05])"
+      }
+    },
+    {
+      "id": "taekwondo-counter-kick",
+      "name": "태권도 반격 발차기 패링",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "rhythm_clapping",
+      "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.",
+      "next": "몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.",
+      "targetName": "바디 퍼커션 오케스트라",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 1102,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "/ 3 라운드 / 🥋 태권도 반격 발차기 패링 / 상대가 공격 예비 동작 후 번쩍 빛날 때 즉시 뒤후려차기 반격 버튼을 탭하세요! / 지금 공격해옵니다!! / 발차기 준비 중... / 대치 상태 (호흡 조절)",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-02])"
+      }
+    },
+    {
+      "id": "tabletennis-spin-read",
+      "name": "탁구 커트/탑스핀 회전 판독",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "종목 상황 선택은 있으나 드래그·슬라이더·버튼 결과를 실제 스포츠 수행과 연결할 필요가 있음.",
+      "next": "한 가지 핵심 판단을 짧게 연습한 뒤 실제 도구 조작·이동으로 선택을 실행하고 결과를 비교.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 1238,
+        "control": "화면 입력",
+        "observation": "리시브 시도 / 🏓 탁구 회전 드라이브 판독 / 상대방의 라켓 마찰 궤적을 보고 전진 탑스핀인지 후진 백스핀(커트)인지 맞추세요! / ⬆️ 라켓이 위로 긁어올려짐! / ⬇️ 라켓이 아래로 깎아내려짐! / 공의 회전 방향을 읽으세요!",
+        "movement": "스포츠 교육과정 신규 특화 ([4체02-06])"
+      }
+    },
+    {
+      "id": "baseball-bunt-defense",
+      "name": "번트 타구 대시 & 1루 송구",
+      "revisedName": null,
+      "domain": "스포츠",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "target",
+      "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.",
+      "next": "힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.",
+      "targetName": "타겟 조준",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/SportsGames.tsx",
+        "line": 1347,
+        "control": "화면 입력",
+        "observation": "⚾ 기습 번트 대시 1루 송구 / 굴러오는 번트 타구에 즉시 대시해 잡고, 게이지 중앙을 맞춰 1루로 송구하세요! / 내야 다이아몬드 잔디 / ✅ 타구 포구 완료! 1루수 글러브로 송구! / 굴러오는 야구공을 터치해 포구하세요! / 악송구 (좌)",
+        "movement": "스포츠 교육과정 신규 특화 ([6체02-06])"
+      }
+    },
+    {
+      "id": "cpr-compression-110",
+      "name": "골든타임 CPR 100~120 BPM 압박",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "체육 게임과 안전 지식 학습이 혼재하고 화면 정답을 실제 응급처치 역량으로 오해할 수 있음.",
+      "next": "안전 학습 자료로 구분하고 쉬운 상황·선택·설명 구조로 정리. 실제 처치·훈련 내용은 공식 자료와 지도 전문가 확인 후 변경.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 17,
+        "control": "화면 입력",
+        "observation": "첫 압박으로 박자를 시작하세요. / 박자를 시작했어요. 약 0.5~0.6초 간격으로 이어가세요. / 너무 빨라요. 천천히 일정한 박자로 다시 시작하세요. / 박자가 끊겼어요. 일정한 박자로 다시 시작하세요. / 좋아요! 일정한 속도로 30회 연속 이어가세요. / 유효 연속 압박",
+        "movement": "안전 교육과정 신규 특화 ([6체05-02])"
+      }
+    },
+    {
+      "id": "aed-defibrillator-pad",
+      "name": "자동심장충격기 AED 패드 부착",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "체육 게임과 안전 지식 학습이 혼재하고 화면 정답을 실제 응급처치 역량으로 오해할 수 있음.",
+      "next": "안전 학습 자료로 구분하고 쉬운 상황·선택·설명 구조로 정리. 실제 처치·훈련 내용은 공식 자료와 지도 전문가 확인 후 변경.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 127,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "⚡ 자동심장충격기(AED) 실전 / 패드 1은 오른쪽 쇄골 아래, 패드 2는 왼쪽 젖꼭지 아래에 정확히 부착하세요! / ✅ 패드 1 부착 / 패드 1 (우측 쇄골) / ✅ 패드 2 부착 / 패드 2 (좌측 옆구리)",
+        "movement": "안전 교육과정 신규 특화 ([6체05-02])"
+      }
+    },
+    {
+      "id": "water-rescue-throw",
+      "name": "물놀이 안전 익수자 구명환 투척",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "체육 게임과 안전 지식 학습이 혼재하고 화면 정답을 실제 응급처치 역량으로 오해할 수 있음.",
+      "next": "안전 학습 자료로 구분하고 쉬운 상황·선택·설명 구조로 정리. 실제 처치·훈련 내용은 공식 자료와 지도 전문가 확인 후 변경.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 223,
+        "control": "화면 입력 · 시간/지연 진행",
+        "observation": "🛟 익수자 구명환 투척 / 직접 뛰어들지 말고, 물에 빠진 친구의 바로 앞 위치로 튜브를 던지세요! / 물결 유속 🌊 / 🏊 (도와줘요!) / 가까이 던지기 / 익수자 조준",
+        "movement": "안전 교육과정 신규 특화 ([4체05-03])"
+      }
+    },
+    {
+      "id": "heatwave-pm25-shield",
+      "name": "폭염·미세먼지 체육 안전 디시전",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "체육 게임과 안전 지식 학습이 혼재하고 화면 정답을 실제 응급처치 역량으로 오해할 수 있음.",
+      "next": "안전 학습 자료로 구분하고 쉬운 상황·선택·설명 구조로 정리. 실제 처치·훈련 내용은 공식 자료와 지도 전문가 확인 후 변경.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 330,
+        "control": "화면 입력",
+        "observation": "🚨 초미세먼지 98㎍/㎥ [매우 나쁨 경보] / 실내 체육관 공기청정기 가동 수업 / 운동장 전원 축구 시합 / 선크림 바르고 뜀뛰기 / 창문 활짝 열고 배구 / 🔥 낮 최고기온 36℃ [폭염 경보 발령]",
+        "movement": "안전 교육과정 신규 특화 ([4체05-01])"
+      }
+    },
+    {
+      "id": "rice-treatment-firstaid",
+      "name": "발목 염좌 RICE 4단계 응급처치",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "개편",
+      "target": null,
+      "reason": "체육 게임과 안전 지식 학습이 혼재하고 화면 정답을 실제 응급처치 역량으로 오해할 수 있음.",
+      "next": "안전 학습 자료로 구분하고 쉬운 상황·선택·설명 구조로 정리. 실제 처치·훈련 내용은 공식 자료와 지도 전문가 확인 후 변경.",
+      "targetName": null,
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 433,
+        "control": "화면 입력",
+        "observation": "Rest (안식/휴식) / 다친 발목을 무리하게 걷지 않고 편안히 안정시키기 / Ice (얼음 찜질) / 붓기와 통증을 줄이기 위해 수건에 싼 얼음팩 대기 / Compression (압박) / 부종을 방지하기 위해 탄력 붕대로 적절히 감기",
+        "movement": "안전 교육과정 신규 특화 ([6체05-01])"
+      }
+    },
+    {
+      "id": "step-mania-4lane",
+      "name": "4레인 댄스 스텝 콤보 시퀀서",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "dribble-rhythm",
+      "reason": "종목 이름은 다르지만 화면 타이밍 입력이 성공을 만드는 리듬 구조가 반복됨.",
+      "next": "박자 신호 모듈을 공유하되 공·줄·발 스텝의 도구별 동작은 구분하여 보존.",
+      "targetName": "드리블 박자 공장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 513,
+        "control": "화면 입력",
+        "observation": "🕺 4레인 댄스 스텝 시퀀서 / 빛나는 방향 레인의 스텝 발판을 박자에 맞추어 콤보로 밟으세요! / 🔥 12 COMBO 피버 클리어! / 박자에 맞는 완벽한 방향 전환과 스텝 협응력을 보여주었습니다. / 리듬 스텝 댄서",
+        "movement": "표현 교육과정 신규 특화 ([4체03-05])"
+      }
+    },
+    {
+      "id": "shadow-pose-sculpture",
+      "name": "신체 실루엣 섀도우 조형 매칭",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "seed_sprout",
+      "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음.",
+      "next": "자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.",
+      "targetName": "씨앗의 성장",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 609,
+        "control": "화면 입력",
+        "observation": "👥 신체 실루엣 섀도우 조형 / 배경의 황금빛 무용수 실루엣과 동일한 신체 선이 되도록 관절 각도를 맞추세요! / 목표 자세: 팔 90도, 다리 40도 / 팔 선 각도: / ° · 목표 90° / 다리 선 각도:",
+        "movement": "표현 교육과정 신규 특화 ([6체03-02])"
+      }
+    },
+    {
+      "id": "ribbon-wave-stream",
+      "name": "리듬체조 리본 나선형 궤적",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "ribbon_gymnast",
+      "reason": "손가락 원 회전과 실제 리본 표현 활동이 이중으로 존재함.",
+      "next": "실제 리본으로 직선·물결·나선을 연결하는 입문 단계로 통합.",
+      "targetName": "리듬 리본 체조",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 695,
+        "control": "화면 입력",
+        "observation": "🌊 리듬체조 리본 나선 궤적 / 바깥 궤적을 따라 같은 방향으로 원을 3바퀴 그려 리본 파동을 만드세요! / 손가락으로 둥글게 원을 계속 회전하세요! / 🎀 우아한 리본 체조 완성! / 도구와 신체의 흐름을 끊김 없이 연결하여 나선 궤적을 연출했습니다. / 리듬체조 리본 요정",
+        "movement": "표현 교육과정 신규 특화 ([4체03-06])"
+      }
+    },
+    {
+      "id": "emotion-freeze-mime",
+      "name": "희로애락 감정 마임 정지 포즈",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "emotion-thermometer",
+      "reason": "감정 정지 포즈를 고르고 확인하는 내용이 기존 감정 표현 활동과 겹침.",
+      "next": "강도·속도·몸 모양을 바꾸는 감정 표현 변형으로 통합.",
+      "targetName": "감정 온도계",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 760,
+        "control": "화면 입력",
+        "observation": "온몸으로 환호하며 두 팔을 하늘로 벌리기! / 두 눈을 크게 뜨고 입을 틀어막는 정지 포즈! / 고개를 푹 숙이고 어깨를 움츠리는 쓸쓸한 포즈! / 당당함(勇) / 가슴을 내밀고 허리에 두 손을 얹은 영웅 포즈! / 🎭 희로애락 감정 마임",
+        "movement": "표현 교육과정 신규 특화 ([4체03-04])"
+      }
+    },
+    {
+      "id": "partner-mirror-duet",
+      "name": "거울 짝 듀엣 무용 타이밍 매칭",
+      "revisedName": null,
+      "domain": "표현",
+      "grades": [
+        "1~2학년",
+        "3~4학년군",
+        "5~6학년군"
+      ],
+      "decision": "통합",
+      "target": "shadow_puppeteer",
+      "reason": "거울 대칭 버튼·동기화 입력보다 실제 짝 동작 관찰이라는 공통 목표가 중요함.",
+      "next": "리더 교대·느린 시범·다른 팔 동작 변형으로 통합.",
+      "targetName": "그림자 인형사",
+      "scope": "분류·후속 설계 완료 · 이관/삭제 미실행",
+      "evidence": {
+        "file": "src/presentation/components/minigames/curriculum/ExpressionSafetyGames.tsx",
+        "line": 836,
+        "control": "화면 입력",
+        "observation": "물결 파도 동작 / 우아한 한 바퀴 턴 / 정중한 인사 피날레 / 🪞 거울 짝 듀엣 무용 / 거울 속 파트너 무용수의 동작과 100% 호흡을 맞추어 동일한 동작을 선택하세요! / 거울 속 파트너 무용수",
+        "movement": "표현 교육과정 신규 특화 ([6체03-05])"
+      }
+    }
+  ]
+}

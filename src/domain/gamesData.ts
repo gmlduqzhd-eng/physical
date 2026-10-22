@@ -1,5 +1,6 @@
 import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
 import { EXPEDITION_BY_ID } from './expeditionGames.js';
+import { isQuestId, QUEST_META } from './movementQuests.js';
 // 2022 개정 초등 체육과 교육과정 연계 게임 데이터 및 메타데이터
 import { EXPRESSION_GAMES } from '../presentation/components/minigames/expression/expressionGamesData.js';
 import { CURRICULUM_GAMES_META } from '../presentation/components/minigames/curriculum/curriculumGamesMeta.js';
@@ -42,7 +43,7 @@ export interface GameDef {
   playMode: PlayMode;
 }
 
-export const GAMES: GameDef[] = [
+const BASE_GAMES: GameDef[] = [
   ...EXPEDITION_B_GAME_DEFS,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {
@@ -1406,6 +1407,13 @@ export const GAMES: GameDef[] = [
     };
   }),
 ];
+
+export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
+  ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
+  desc: QUEST_META[game.type].description, physicalActivity: true, durationMinutes: 4,
+  equipment: game.type === 'zigzag' ? ['바닥 표식 9개', '콩주머니 1개'] : game.type === 'dribble-rhythm' ? ['개인 공 1개'] : ['부드러운 공 1개', '인원보다 1개 많은 표식'],
+  safetyTips: ['기기는 거치하고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
+} : game);
 
 export const GRADE_GROUPS: { key: GradeGroup; label: string; badge: string; desc: string }[] = [
   { key: '전체', label: '전체 학년', badge: 'ALL', desc: '모든 학년군' },

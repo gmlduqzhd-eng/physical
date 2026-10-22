@@ -1,4 +1,5 @@
 import { EXPEDITION_BY_ID } from './expeditionGames';
+import { isQuestId, QUEST_META } from './movementQuests';
 /** Classroom movement tasks paired with screen games. A tap is never motion evidence. */
 export interface PhysicalActivityPlan {
   idea: number;
@@ -96,6 +97,11 @@ const groups: ReadonlyArray<readonly [number, readonly string[]]> = [
 ];
 
 export function getPhysicalActivityPlan(gameType: string, isExpressionGame = false): PhysicalActivityPlan {
+  if (isQuestId(gameType)) {
+    const quest = QUEST_META[gameType];
+    return { idea: 0, title: quest.name, activity: quest.description, alternative: quest.alternative, setup: quest.setup,
+      safety: '기기는 거치하고 걸어서 이동해요. 개인 공간을 확보하고 통증이 있으면 쉬어요.', secondsPerTurn: 30 };
+  }
   const expedition = EXPEDITION_BY_ID.get(gameType);
   if (expedition) return {idea:0,title:expedition.name,activity:expedition.desc,alternative:expedition.alternative,setup:expedition.space+' · '+expedition.equipment.join(' · ')+' · 기기 고정',safety:expedition.safety,secondsPerTurn:20};
   if (isExpressionGame) return plans[5];

@@ -1,4 +1,5 @@
 import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog.js';
+import { isQuestId, QUEST_META } from '../domain/movementQuests.js';
 // 수업 지도안 추천용 게임 메타데이터 카탈로그
 // GameHub.tsx의 GAMES 배열에서 추출하여 수업 설계 전용 구조로 변환
 
@@ -25,7 +26,7 @@ export interface LessonGameMeta {
   noDeviceAlternative: string;
 }
 
-export const LESSON_GAME_CATALOG: LessonGameMeta[] = [
+const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
   ...EXPEDITION_LESSON_CATALOG,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {
@@ -1320,3 +1321,12 @@ export const LESSON_GAME_CATALOG: LessonGameMeta[] = [
     noDeviceAlternative: '종이 카드에 동작을 그려 뽑은 후 짝과 함께 로봇 동작 시퀀스를 표현한다.',
   },
 ];
+
+export const LESSON_GAME_CATALOG: LessonGameMeta[] = BASE_LESSON_GAME_CATALOG.map(game => isQuestId(game.id) ? {
+  ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
+  deviceMode: ['교사용 1대', '모둠별 1대'], intensity: '보통',
+  recommendedPlayers: game.id === 'pass-gate-rescue' ? { min: 2, max: 6 } : { min: 1, max: 1 },
+  safetyNotes: ['기기를 거치하고 걸어서 이동한다. 개인 통로를 확보한다.', QUEST_META[game.id].alternative],
+  teachingTips: [...QUEST_META[game.id].rules, '첫 연습 후 세 작전을 수행하고 결과를 직접 확인한다. 속도 경쟁과 탈락은 없다.'],
+  noDeviceAlternative: game.id === 'zigzag' ? '종이에 막힌 칸과 경로를 그리고 실제 표식으로 수행한다.' : game.id === 'dribble-rhythm' ? '교사의 박수에 맞춰 8박자 공 조작을 연결한다.' : '교사가 출발 순서를 정하고 보내기 후 빈자리로 이동한다.',
+} : game);

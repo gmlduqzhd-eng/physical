@@ -3,9 +3,10 @@ import { GAMES } from './gamesData';
 // These activities have their own introduction and a result callback. Keep the
 // wider catalog searchable while giving a teacher a manageable starting set.
 export const FEATURED_GAME_IDS = [
+  'zigzag', 'dribble-rhythm', 'pass-gate-rescue',
   'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator',
   'pulse-detective', 'posture-guardian', 'rolling-curling',
-  'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician',
+  'open-space-tactician',
   'emotion-thermometer', 'partner-robot-lab',
 ] as const;
 

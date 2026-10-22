@@ -1,4 +1,4 @@
-import type { ExpeditionSpec } from './expeditionGames';
+import type { ExpeditionSpec } from './expeditionGames.js';
 
 export interface ExpeditionStep { title:string; instruction:string; seconds:number; beats?:string[]; }
 export interface ExpeditionBoard { size:number; start:number; destination:number; blocked:number[]; path:number[]; }

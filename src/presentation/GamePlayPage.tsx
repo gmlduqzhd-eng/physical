@@ -2,6 +2,7 @@ import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
 import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { GAMES } from '../domain/gamesData';
+import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
@@ -213,6 +214,8 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
   };
 });
 
+QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji }; });
+
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
   const [searchParams] = useSearchParams();
@@ -266,7 +269,7 @@ const GamePlaySession = () => {
   const handleStartGame = () => {
     setHasStarted(true);
     const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
-    setIsCountingDown(!hasOwnIntro);
+    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || ''));
     if (hasOwnIntro) standaloneTiming.current = { startedAt: new Date().toISOString(), endTime: Date.now() + 90000 };
   };
 
@@ -352,7 +355,7 @@ const GamePlaySession = () => {
 
     // 최고 기록 저장
     if (gameType) {
-      const bestKey = `physical_best_${gameType}`;
+      const bestKey = gameBestStorageKey(gameType);
       const currentBest = nonnegativeNumber(Number(readStorage(bestKey)));
       if (earned > currentBest) {
         writeStorage(bestKey, String(earned));
@@ -399,7 +402,7 @@ const GamePlaySession = () => {
     );
   }
 
-  const bestScore = nonnegativeNumber(Number(readStorage(`physical_best_${gameType}`)));
+  const bestScore = nonnegativeNumber(Number(readStorage(gameBestStorageKey(gameType))));
 
   // 화산 게임은 gameRoom을 필요로 하므로 더미 gameRoom 생성
   const dummyGameRoom: GameRoom = {
@@ -495,7 +498,7 @@ const GamePlaySession = () => {
       case 'speed_circle':
         return <SpeedCircle key={key} {...commonProps} />;
       case 'zigzag':
-        return <ZigZagTouch key={key} {...commonProps} />;
+        return <ZigZagTouch key={key} {...commonProps} solo={soloMode} />;
       case 'multi_touch':
         return <MultiTouch key={key} {...commonProps} />;
       case 'stretch':
@@ -513,9 +516,9 @@ const GamePlaySession = () => {
       case 'rolling-curling':
         return <RollingCurling key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'pass-gate-rescue':
-        return <PassGateRescue key={key} {...commonProps} onExit={handleReturnToCatalog} />;
+        return <PassGateRescue key={key} {...commonProps} solo={soloMode} onExit={handleReturnToCatalog} />;
       case 'dribble-rhythm':
-        return <DribbleRhythm key={key} {...commonProps} onExit={handleReturnToCatalog} />;
+        return <DribbleRhythm key={key} {...commonProps} solo={soloMode} onExit={handleReturnToCatalog} />;
       case 'open-space-tactician':
         return <OpenSpaceTactician key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'emotion-thermometer':

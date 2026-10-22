@@ -1,4 +1,4 @@
-import type { ExpeditionRecord } from './expeditionRules';
+import type { ExpeditionRecord } from './expeditionRules.js';
 export interface GameResultDetails {
   activity?:{gameId:string;specId:string;soloPreview:boolean;rounds:ExpeditionRecord[]};
   ratings?: number[];
