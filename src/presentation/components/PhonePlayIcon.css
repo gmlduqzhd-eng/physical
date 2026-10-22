@@ -1,0 +1,18 @@
+.phone-play-icon{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;vertical-align:middle;color:#176c67}
+.phone-play-icon svg{display:block;width:100%;height:100%}
+.phone-play-icon[data-category="반응·민첩성"]{color:#a65013}
+.phone-play-icon[data-category="균형·협응"]{color:#386da0}
+.phone-play-icon[data-category="리듬·표현"]{color:#97507d}
+.phone-play-icon[data-category="이동·공간"]{color:#29786e}
+.phone-play-icon[data-category="전신 활동"]{color:#63802e}
+.phone-play-icon[data-category="협력·소통"]{color:#7962a8}
+.phone-play-icon[data-category="판단·전략"]{color:#9a6933}
+.phone-play-icon[data-category="정리·이완"]{color:#477d91}
+.phone-play-icon[data-dark]{color:#8ee2da}
+.phone-play-icon[data-dark][data-category="반응·민첩성"]{color:#fdba74}
+.phone-play-icon[data-dark][data-category="균형·협응"]{color:#93c5fd}
+.phone-play-icon[data-dark][data-category="리듬·표현"]{color:#f9a8d4}
+.phone-play-icon[data-dark][data-category="전신 활동"]{color:#bef264}
+.phone-play-icon[data-dark][data-category="협력·소통"]{color:#c4b5fd}
+.phone-play-icon[data-dark][data-category="판단·전략"]{color:#fcd34d}
+.phone-play-icon[data-dark][data-category="정리·이완"]{color:#a5d8ea}

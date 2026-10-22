@@ -1,10 +1,11 @@
 import type {GameDef} from './gamesData.js';
 import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
+import {PHONE_PLAY_VISUALS,type PhonePlayVisual} from './phonePlayVisuals.js';
 
 export const PHONE_CATEGORIES=['반응·민첩성','균형·협응','리듬·표현','이동·공간','전신 활동','협력·소통','판단·전략','정리·이완'] as const;
 export type PhoneCategory=typeof PHONE_CATEGORIES[number];
 export type PhoneKind='signal'|'memory'|'create'|'estimate'|'count'|'team'|'decision'|'observe';
-export interface PhonePlay {
+export interface PhonePlay extends PhonePlayVisual {
  id:string;name:string;category:PhoneCategory;kind:PhoneKind;players:'혼자'|'짝'|'모둠';
  space:'제자리'|'두 걸음'|'넓은 공간';intensity:'낮음'|'보통';minutes:4|6;seconds:number;
  goal:string;rules:string[];rounds:string[];cues:string[];check:string;easy:string;hard:string;seated:string;
@@ -26,6 +27,7 @@ const rows:PhonePlayRow[]=[
 ];
 
 export const PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
+ ...PHONE_PLAY_VISUALS[`phone-play-${String(n).padStart(3,'0')}`],
  id:`phone-play-${String(n).padStart(3,'0')}`,name,category:PHONE_CATEGORIES[c],kind,players,space,
  intensity:c===7||c===1?'낮음':'보통',minutes:players==='모둠'?6:4,seconds:players==='모둠'?36:24,
  goal,rules:rules.split('|'),rounds:rounds.split('|'),cues:cues.split('|'),check,easy,hard,seated,related,options:options?.split('|'),
@@ -35,9 +37,8 @@ export const isPhonePlay=(id:string)=>PHONE_PLAY_BY_ID.has(id);
 export const phonePlayerRange=(p:PhonePlay)=>p.players==='혼자'?{min:1,max:1}:p.players==='짝'?{min:2,max:2}:{min:3,max:6};
 export const phoneSetup=(p:PhonePlay)=>`${p.space==='제자리'?'팔다리를 펼쳐도 닿지 않는 제자리 공간':p.space==='두 걸음'?'각자 두 걸음 왕복할 통로':'서로 겹치지 않는 넉넉한 개인 통로'} · 스마트폰 1대는 활동 구역 밖 안전한 곳에 내려놓아요. 표시물·가구·촬영은 필요 없어요.`;
 export const phoneSafety=['기기를 손에 들고 움직이지 않아요. 이동은 걷기로 하고 기기 쪽으로 접근하지 않아요.','서로 닿지 않는 간격을 확인하고 불편하면 멈추거나 작은 동작을 선택해요. 눈을 감거나 접촉을 강요하지 않아요.'];
-const emojis=['📡','⚖️','🎭','🧭','🌱','🤝','🧩','🌤️'];
 export const PHONE_GAME_DEFS:GameDef[]=PHONE_PLAYS.map(p=>({
- type:p.id,name:p.name,emoji:emojis[PHONE_CATEGORIES.indexOf(p.category)],desc:p.goal,
+ type:p.id,name:p.name,emoji:p.emoji,desc:p.goal,
  color:'from-teal-600 to-cyan-700',border:'border-teal-400/40',glow:'hover:shadow-teal-500/30',difficulty:p.kind==='decision'?3:2,
  domain:p.category==='리듬·표현'?'표현':'운동',subCategory:p.category,
  achievement:{code:'연계 확인 필요',title:'준비물 없는 몸 놀이',desc:'실제 움직임과 선택·협력·자기 확인을 연결하는 놀이입니다. 성취기준 코드를 임의로 부여하지 않습니다.'},

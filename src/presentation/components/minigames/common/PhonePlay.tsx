@@ -3,6 +3,7 @@ import {phonePlayerRange,phoneRecordValid,phoneSafety,phoneSequence,phoneSetup,p
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import {sfxTap,unlockAudio} from '../../../../application/soundEffects';
 import './PhonePlay.css';
+import {PhonePlayIcon} from '../../PhonePlayIcon';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
 export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
@@ -66,7 +67,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   queueMicrotask(()=>{transition.current=false;});
  };
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
-  <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><h1>{p.name}</h1><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
+  <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
   {phase==='intro'&&<>
    <p className="pp-lead">{p.goal}</p><div className="pp-badges"><span>약 {p.minutes}분</span><span>{p.intensity} 강도</span><span>{p.players} · {range.min===range.max?range.min:`${range.min}~${range.max}`}명</span><span>스마트폰 1대</span></div>
    <section className="pp-panel"><h2>이렇게 준비해요</h2><p>{phoneSetup(p)}</p><ol>{p.rules.map(rule=><li key={rule}>{rule}</li>)}</ol><p><strong>완료 기준</strong> · {p.check}</p><p>화면 점수는 직접 확인한 참여 기록이에요. 기기가 동작이나 체력을 판정하지 않아요.</p></section>

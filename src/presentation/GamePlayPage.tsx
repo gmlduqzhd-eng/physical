@@ -1,4 +1,5 @@
 import {RetiredGameNotice} from './components/minigames/common/RetiredGameNotice';
+import {PhonePlayIcon} from './components/PhonePlayIcon';
 import {mergedMovementMeta} from '../domain/mergedMovementVariants';
 import {getRemovedGame,mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
 import {ConsolidatedActivity} from './components/minigames/common/ConsolidatedActivity';
@@ -216,7 +217,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 });
 
 QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
-PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:'🌱',domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
+PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:p.emoji,domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
 
 SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
 
@@ -599,7 +600,7 @@ const GamePlaySession = () => {
       {!hasStarted && !gameFinished && (
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
-          <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
+          <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info"><p>{movementMeta?.description||GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
@@ -663,7 +664,7 @@ const GamePlaySession = () => {
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
               <span>{gameInfo.code}</span><span className="text-slate-500">|</span><span className="text-slate-300">{gameInfo.target}</span>
             </div>
-            <span className="text-6xl mb-3">{gameInfo.emoji}</span>
+            <span className="text-6xl mb-3">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-xs mb-3">활동을 마쳤어요!</p>
             {hasBattle && (

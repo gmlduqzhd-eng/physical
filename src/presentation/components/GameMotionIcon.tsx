@@ -1,4 +1,6 @@
 import React from 'react';
+import {PHONE_PLAY_BY_ID} from '../../domain/phonePlayCatalog';
+import {PhonePlayIcon} from './PhonePlayIcon';
 import {
   Zap,
   Dumbbell,
@@ -651,6 +653,7 @@ export const GameMotionIcon: React.FC<GameMotionIconProps> = ({
   showBadge = true,
   className = ''
 }) => {
+  const phonePlay = PHONE_PLAY_BY_ID.get(gameType);
   const meta = MOTION_MAP[gameType] || {
     Icon: domain === '스포츠' ? Trophy : domain === '표현' ? Sparkles : Flame,
     badgeText: domain ? `🏃 ${domain}` : '🔥 체육미션',
@@ -679,9 +682,9 @@ export const GameMotionIcon: React.FC<GameMotionIconProps> = ({
         <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
 
         {/* 선명한 벡터 모션 아이콘 */}
-        <Icon
+        {phonePlay ? <PhonePlayIcon gameType={gameType} size={size==='sm'?24:size==='lg'?36:30} dark className="relative z-10 drop-shadow-md" /> : <Icon
           className={`${iconSize} ${meta.iconColor} relative z-10 drop-shadow-md stroke-[2.2] group-hover:rotate-3 transition-transform duration-300`}
-        />
+        />}
       </div>
 
       {/* 우측 하단 한눈에 보이는 동작 태그 칩 */}
@@ -689,7 +692,7 @@ export const GameMotionIcon: React.FC<GameMotionIconProps> = ({
         <span
           className={`absolute -bottom-1 -right-1 z-20 text-[9px] font-black px-1.5 py-0.2 rounded-md border shadow-xs whitespace-nowrap backdrop-blur-md ${meta.badgeColor}`}
         >
-          {meta.badgeText}
+          {phonePlay ? phonePlay.label : meta.badgeText}
         </span>
       )}
     </div>
