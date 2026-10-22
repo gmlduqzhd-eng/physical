@@ -1,6 +1,6 @@
 import { LessonShell } from './LessonShell';
 import { StudentQrScanner } from './components/StudentQrScanner';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { joinStudentByPin, getMyClassroomProfile, completeStudentProfile, classroomError } from '../data/classroomRepository';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
@@ -18,6 +18,12 @@ export const Lobby = () => {
   const [nickname,setNickname]=useState(()=>savedStudentIdentity().nickname);
   const [resumePending,setResumePending]=useState(false);
   const [error, setError] = useState('');
+  const errorRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (!error) return;
+    errorRef.current?.focus({ preventScroll: true });
+    errorRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [error]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [mode,setMode]=useState<'qr'|'code'|null>(()=>new URLSearchParams(window.location.search).has('pin')?'code':null);
@@ -86,6 +92,6 @@ export const Lobby = () => {
     <div className="student-choices" role="group" aria-label="수업 참여 방법"><button type="button" className="student-choice" aria-pressed={mode==='qr'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('qr')}><span className="lesson-icon"><QrCode aria-hidden="true"/></span><strong>QR로 참여해요</strong><span>선생님 화면의 우리 모둠 QR을 비춰요.</span><span className="student-choice-action">QR 참여 선택 <ArrowRight aria-hidden="true"/></span></button><button type="button" className="student-choice" aria-pressed={mode==='code'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('code')}><span className="lesson-icon"><Hash aria-hidden="true"/></span><strong>코드로 참여해요</strong><span>선생님이 알려주신 코드를 입력해요.</span><span className="student-choice-action">코드 참여 선택 <ArrowRight aria-hidden="true"/></span></button></div><div id="student-entry-panel" className="student-entry-panel">
     {mode==='qr'&&<StudentQrScanner/>}
     {mode==='code'&&<form onSubmit={handleJoin} className="card"><h2>선생님이 알려준 모둠 PIN을 입력해요</h2><label>모둠 PIN (4자리)<input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={4} required pattern="[0-9]{4}" placeholder="4자리 숫자" value={pinCode} onChange={e=>setPinCode(e.target.value.replace(/\D/g,'').slice(0,4))}/></label><StudentIdentityFields number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname}/><button className="primary button-wide" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
-    </div>{error&&<p role="alert" className="error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
+    </div>{error&&<p ref={errorRef} tabIndex={-1} role="alert" className="error student-entry-error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
   </LessonShell>;
 };

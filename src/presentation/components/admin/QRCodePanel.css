@@ -14,5 +14,19 @@
 .classroom-roster { text-align:left; margin-top:14px; border-top:1px solid #d9e1d4; padding-top:10px; max-height:260px; overflow:auto; }
 .classroom-roster li { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:5px 0; }
 .classroom-roster li button { font-size:.8rem; color:#8a3b35; text-decoration:underline; flex-shrink:0; }
-.classroom-presentation:fullscreen .classroom-qr-grid { grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); }
+.classroom-presentation:fullscreen .classroom-qr-grid { grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); }
 @media(max-width:640px) { .classroom-presentation { padding:16px; } .classroom-qr-grid { grid-template-columns:1fr; } }
+.classroom-roster li{flex-wrap:wrap}
+.classroom-roster li>span{min-width:0;flex:1 1 140px;overflow-wrap:anywhere}
+.classroom-roster li>button{margin-left:auto;min-height:44px}
+.classroom-qr-toolbar{flex-wrap:wrap}
+@media(max-width:640px){
+  .flow.guided-classroom .guided-join-details{padding:10px}
+  .classroom-qr-panel{padding:0;border:0;background:transparent}
+  .classroom-presentation{padding:10px}
+  .classroom-qr-card{padding:12px}
+  .classroom-qr-toolbar{width:100%}
+  .classroom-qr-toolbar button{flex:1 1 100%;min-height:48px}
+  .classroom-presentation .classroom-presentation-head{padding:0;margin-bottom:16px}
+  .classroom-roster ul{padding-left:0;list-style:none}
+}

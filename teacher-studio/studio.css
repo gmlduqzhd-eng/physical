@@ -34,3 +34,16 @@
 .teacher-ai.studio-tools-scope footer{color:#687163}
 .teacher-ai.studio-tools-scope :is(button,input,select,textarea,summary,a):focus-visible{outline:3px solid #576c50;outline-offset:4px}
 @media(max-width:760px){.teacher-ai.studio-tools-scope{padding:20px}.teacher-ai.studio-tools-scope h1{font-size:31px;letter-spacing:-1px}.teacher-ai.studio-tools-scope h2{font-size:21px}.teacher-ai.studio-tools-scope .ai-form,.teacher-ai.studio-tools-scope .ai-result{padding:22px}.teacher-ai.studio-tools-scope .ai-intro{padding:28px 0 24px}}
+
+.studio-result-heading,.teacher-ai .ai-error{scroll-margin-block:16px}
+@media(max-width:850px){
+  .teacher-ai details>summary{min-height:44px;padding-block:10px;line-height:1.5}
+  .teacher-ai .ai-quotes>summary{font-size:14px}
+  .teacher-ai .ai-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .teacher-ai label{min-width:0}
+  .teacher-ai .ai-meta,.teacher-ai .ai-error{overflow-wrap:anywhere}
+}
+@media(max-width:450px){
+  .teacher-ai.studio-tools-scope .ai-form,.teacher-ai.studio-tools-scope .ai-result{padding:16px}
+  .teacher-ai .ai-fields{grid-template-columns:minmax(0,1fr)}
+}
