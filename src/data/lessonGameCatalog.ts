@@ -30,6 +30,13 @@ export interface LessonGameMeta {
 }
 
 const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
+  ...PHONE_PLAYS.map(p=>({
+    id:p.id,title:p.name,emoji:'🌱',route:'/play/'+p.id,description:p.goal,domain:p.category==='리듬·표현'?'표현' as const:'운동' as const,subCategory:p.category,achievementCode:'연계 확인 필요',
+    grades:PHONE_PLAY_BY_ID.get(p.id)?.kind==='decision'?['3~4학년군','5~6학년군']:['1~2학년','3~4학년군','5~6학년군'],
+    activityModes:[p.players==='혼자'?'개인' as const:p.players],space:p.space==='넓은 공간'?['체육관' as const,'운동장' as const]:['교실' as const,'체육관' as const,'다목적실' as const,'운동장' as const],
+    deviceMode:['교사용 1대' as const,'모둠별 1대' as const],recommendedPlayers:phonePlayerRange(p),intensity:p.intensity,
+    movementSkills:[p.category],learningKeywords:['준비물 없음','스마트폰 1대',p.category,p.name],safetyNotes:[...phoneSafety,p.seated],teachingTips:[...p.rules,p.easy,p.hard],noDeviceAlternative:'진행자가 규칙과 순서를 말하고 친구들이 수행한 뒤 서로 확인해요. 종이·도구는 필요 없어요.',
+  })),
   ...EXPEDITION_LESSON_CATALOG,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {
@@ -1347,3 +1354,4 @@ export const ALL_LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map
 } : game);
 
 export const LESSON_GAME_CATALOG=ALL_LESSON_GAME_CATALOG.filter(game=>isAvailableGame(game.id));
+import {PHONE_PLAYS,PHONE_PLAY_BY_ID,phonePlayerRange,phoneSafety} from '../domain/phonePlayCatalog.js';

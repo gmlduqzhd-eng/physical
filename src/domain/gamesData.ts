@@ -1,4 +1,5 @@
 import {isAvailableGame} from './gameLifecycle.js';
+import {PHONE_GAME_DEFS} from './phonePlayCatalog.js';
 import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons.js';
 import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
 import { EXPEDITION_BY_ID } from './expeditionGames.js';
@@ -46,6 +47,7 @@ export interface GameDef {
 }
 
 const BASE_GAMES: GameDef[] = [
+  ...PHONE_GAME_DEFS,
   ...EXPEDITION_B_GAME_DEFS,
   // ─── 2022 개정 교육과정 연계 고도화 신규 게임 ───
   {

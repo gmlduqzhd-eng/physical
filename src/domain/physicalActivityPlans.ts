@@ -100,6 +100,8 @@ const groups: ReadonlyArray<readonly [number, readonly string[]]> = [
 ];
 
 export function getPhysicalActivityPlan(gameType: string, isExpressionGame = false): PhysicalActivityPlan {
+  const phone=PHONE_PLAY_BY_ID.get(gameType);
+  if(phone)return {idea:0,title:phone.name,activity:phone.goal,alternative:phone.seated,setup:phoneSetup(phone),safety:'기기는 활동 구역 밖에 내려놓고, 서로 닿지 않는 공간에서 걸어서 참여해요.',secondsPerTurn:phone.seconds};
   const variant=getMergedGame(gameType)&&mergedMovementMeta(gameType);
   if(variant)return {idea:0,title:variant.name,activity:variant.description,alternative:variant.alternative,setup:variant.setup,safety:'기기는 거치하고 개인 통로에서 걷거나 앉아서 참여해요. 통증이 있으면 쉬어요.',secondsPerTurn:20};
   if(isSafetyLessonId(gameType)){
@@ -118,3 +120,4 @@ export function getPhysicalActivityPlan(gameType: string, isExpressionGame = fal
 }
 
 export const PHYSICAL_ACTIVITY_PLANS = plans;
+import {PHONE_PLAY_BY_ID,phoneSetup} from './phonePlayCatalog';

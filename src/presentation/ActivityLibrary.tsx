@@ -1,4 +1,5 @@
 import {variantsFor} from '../domain/gameLifecycle';
+import {PHONE_CATEGORIES,PHONE_PLAYS,PHONE_PLAY_BY_ID} from '../domain/phonePlayCatalog';
 import { useState } from 'react';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import {matchesActivitySearch} from '../domain/activitySearch';
@@ -11,19 +12,26 @@ import './ActivityLibrary.css';
 const purposes = ['함께 협동해요', '몸을 움직여요', '교실에서 해요', '리듬을 표현해요'] as const;
 export function ActivityPicker({ onSelect, solo = false }: { onSelect?: (game: GameDef) => void; solo?: boolean }) {
   const [params,setParams] = useSearchParams();
+  const phoneOnly=params.get('collection')==='phone';
+  const phoneCategory=params.get('category')||'전체',people=params.get('people')||'전체',time=params.get('time')||'전체',intensity=params.get('intensity')||'전체',space=params.get('space')||'전체';
+  const togglePhone=()=>{const next=new URLSearchParams(params);if(phoneOnly){['collection','category','people','time','intensity','space'].forEach(k=>next.delete(k));}else next.set('collection','phone');setParams(next,{replace:true});setLimit(12);};
   const location=useLocation();
   const [domain, setDomain] = useState(() => ['운동','스포츠','표현'].includes(params.get('domain') ?? '') ? params.get('domain')! : '전체');
   const [purpose, setPurpose] = useState(()=>params.get('purpose')||''); const [query, setQuery] = useState(()=>params.get('q')||'');
   const [all, setAll] = useState(false); const [limit, setLimit] = useState(6);
   const [grade, setGrade] = useState(()=>params.get('grade')||'전체'); const [device, setDevice] = useState(()=>params.get('device')||'전체');
   const updateFilter=(key:string,value:string)=>{const next=new URLSearchParams(params);if(!value||value==='전체')next.delete(key);else next.set(key,value);setParams(next,{replace:true});setLimit(6);};
-  const clearFilters=()=>{setDomain('전체');setPurpose('');setQuery('');setGrade('전체');setDevice('전체');const next=new URLSearchParams(params);for(const key of ['domain','purpose','q','grade','device'])next.delete(key);setParams(next,{replace:true});};
+  const clearFilters=()=>{setDomain('전체');setPurpose('');setQuery('');setGrade('전체');setDevice('전체');const next=new URLSearchParams(params);for(const key of ['domain','purpose','q','grade','device','collection','category','people','time','intensity','space'])next.delete(key);setParams(next,{replace:true});setLimit(6);};
   const playHref=(id:string)=>`${solo?'/solo/play/':'/play/'}${id}?${new URLSearchParams({returnTo:location.pathname+location.search})}`;
-  const isFiltered = domain !== '전체' || !!purpose || !!query || grade !== '전체' || device !== '전체';
+  const isFiltered = phoneOnly || domain !== '전체' || !!purpose || !!query || grade !== '전체' || device !== '전체';
   const source = solo || all || isFiltered ? GAMES : FEATURED_GAMES;
-  const games = source.filter(g => (domain === '전체' || g.domain === domain) && matchesActivitySearch(g,query) && (grade === '전체' || g.grades.some(v => v === grade)) && (device === '전체' || g.devices.some(v => v === device)) && (!purpose || (purpose === purposes[0] ? g.playMode === '협동' : purpose === purposes[1] ? g.physicalActivity === true : purpose === purposes[2] ? LESSON_GAME_CATALOG.some(l => l.id === g.type && l.space.includes('교실')) : g.domain === '표현')));
-  const displayed = solo ? games : games.slice(0, all || isFiltered ? limit : FEATURED_GAMES.length);
-  return <><div className="chips" aria-label="활동 목적">{purposes.map(p => <button key={p} aria-pressed={purpose === p} onClick={() => { const value=p===purpose?'':p;setPurpose(value);updateFilter('purpose',value); }}>{p}</button>)}</div>
+  const games = source.filter(g => {const p=PHONE_PLAY_BY_ID.get(g.type);return (!phoneOnly||!!p&&(phoneCategory==='전체'||p.category===phoneCategory)&&(people==='전체'||p.players===people)&&(time==='전체'||(time==='5분 이하'?p.minutes<=5:p.minutes>5))&&(intensity==='전체'||p.intensity===intensity)&&(space==='전체'||p.space===space))&&(domain === '전체' || g.domain === domain) && matchesActivitySearch(g,query) && (grade === '전체' || g.grades.some(v => v === grade)) && (device === '전체' || g.devices.some(v => v === device)) && (!purpose || (purpose === purposes[0] ? g.playMode === '협동' : purpose === purposes[1] ? g.physicalActivity === true : purpose === purposes[2] ? LESSON_GAME_CATALOG.some(l => l.id === g.type && l.space.includes('교실')) : g.domain === '표현'));});
+  const displayed = games.slice(0, solo ? Math.max(12,limit) : all || isFiltered ? limit : FEATURED_GAMES.length);
+  return <><section className="phone-collection" aria-label="스마트폰만으로 하는 놀이"><div><span className="pill">별도 준비물 없음 · {PHONE_PLAYS.length}가지</span><h2>스마트폰만 있으면, 몸 놀이 시작!</h2><p>폰은 내려놓고 움직여요. 혼자·짝·모둠, 필요한 공간에 맞춰 골라요.</p></div><button className={phoneOnly?'secondary':'primary'} aria-pressed={phoneOnly} onClick={togglePhone}>{phoneOnly?'전체 활동으로':'스마트폰만으로 하는 놀이 보기'}</button></section>
+    {phoneOnly&&<fieldset className="phone-filter-grid"><legend>준비물 없는 놀이 고르기</legend>{([
+      ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['people','참여 인원',people,['전체','혼자','짝','모둠']],['time','소요 시간',time,['전체','5분 이하','6분 이상']],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체','제자리','두 걸음','넓은 공간']],
+    ] as const).map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}<p>모든 놀이는 스마트폰 1대 공유로 가능해요. 짝 2명 · 모둠 3~6명이 기본이에요.</p></fieldset>}
+    <div className="chips" aria-label="활동 목적">{purposes.map(p => <button key={p} aria-pressed={purpose === p} onClick={() => { const value=p===purpose?'':p;setPurpose(value);updateFilter('purpose',value); }}>{p}</button>)}</div>
     <label>활동 영역<select aria-label="활동 영역" value={domain} onChange={e => { setDomain(e.target.value);updateFilter('domain',e.target.value); }}>{['전체','운동','스포츠','표현'].map(v => <option key={v}>{v}</option>)}</select></label>
     <label>어떤 활동을 찾으세요?<input type="search" placeholder="활동 이름으로 검색" value={query} onChange={e => { setQuery(e.target.value);updateFilter('q',e.target.value); }}/></label>
     <details><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체','1~2학년','3~4학년군','5~6학년군'].map(v => <option key={v} value={v}>{v === '1~2학년' ? '1~2학년군' : v}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체','스마트폰','태블릿 PC','데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label></div></details>

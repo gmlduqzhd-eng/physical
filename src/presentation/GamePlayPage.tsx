@@ -216,6 +216,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 });
 
 QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
+PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:'🌱',domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
 
 SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
 
@@ -276,7 +277,7 @@ const GamePlaySession = () => {
   const handleStartGame = () => {
     setHasStarted(true);
     const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
-    setIsCountingDown(!hasOwnIntro && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||'')&&!variantsFor(gameType||'').length);
+    setIsCountingDown(!hasOwnIntro && !isPhonePlay(gameType||'') && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||'')&&!variantsFor(gameType||'').length);
   };
 
   const handleCountdownComplete = useCallback(() => {
@@ -415,6 +416,8 @@ const GamePlaySession = () => {
 
   const renderBaseGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
+    const phone=PHONE_PLAY_BY_ID.get(gameType);
+    if(phone)return <PhonePlay key={key} {...commonProps} play={phone} solo={soloMode} onExit={handleReturnToCatalog}/>;
     if(isSafetyLessonId(gameType))return <SafetyLesson key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
     if (isQuestId(gameType)) return <MovementQuest key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;
 
@@ -765,3 +768,5 @@ const GamePlaySession = () => {
   );
 };
 
+import {PHONE_PLAY_BY_ID,PHONE_PLAYS,isPhonePlay} from '../domain/phonePlayCatalog';
+import {PhonePlay} from './components/minigames/common/PhonePlay';
