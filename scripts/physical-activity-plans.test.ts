@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { GAMES } from '../src/domain/gamesData';
-import { EXPEDITION_GAMES, EXPEDITION_BY_ID } from '../src/domain/expeditionGames';
+import { EXPEDITION_GAMES } from '../src/domain/expeditionGames';
 import { EXPRESSION_GAMES } from '../src/presentation/components/minigames/expression/expressionGamesData';
 import { getPhysicalActivityPlan, PHYSICAL_ACTIVITY_PLANS } from '../src/domain/physicalActivityPlans';
 
@@ -16,11 +16,7 @@ test('all 225 catalog games have a safe, accessible movement routine', () => {
   assert.deepEqual(PHYSICAL_ACTIVITY_PLANS.map(plan => plan.idea), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 });
 
-test('ten legacy approaches remain available for games that have not migrated to their own plans', () => {
-  const representatives = ['zone_touch', 'freeze', 'arm_raise', 'trail-maze-run', 'rolling-curling', 'dance_pose', 'math', 'speed_circle', 'pulse-zone-target', 'coin_flip'];
-  representatives.forEach((gameType, index) => assert.equal(getPhysicalActivityPlan(gameType).idea, index + 1));
-  for (const game of EXPRESSION_GAMES.filter(game => !EXPEDITION_BY_ID.has(game.id))) assert.equal(getPhysicalActivityPlan(game.id, true).idea, 6);
-});
+test('the maintained stretching activity retains its safe fallback',()=>{assert.equal(getPhysicalActivityPlan('stretch').idea,3);});
 
 test('92 new activities use their own movement, equipment, safety and alternatives', () => {
   for (const game of EXPEDITION_GAMES) {

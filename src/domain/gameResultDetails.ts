@@ -1,5 +1,6 @@
 import type { ExpeditionRecord } from './expeditionRules.js';
 export interface GameResultDetails {
+  course?:{sourceId:string;targetId:string;sourceName:string;targetName:string;version:1};
   activity?:{gameId:string;specId:string;soloPreview:boolean;rounds:ExpeditionRecord[]};
   ratings?: number[];
   criteria?: string[];
@@ -12,6 +13,7 @@ export function normalizeGameResultDetails(value: unknown): GameResultDetails | 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const data = value as Record<string, unknown>;
   const result: GameResultDetails = {};
+  if(data.course&&typeof data.course==='object'&&!Array.isArray(data.course)){const c=data.course as Record<string,unknown>;if(c.version===1&&typeof c.sourceId==='string'&&/^[a-z0-9_-]{1,100}$/.test(c.sourceId)&&typeof c.targetId==='string'&&/^[a-z0-9_-]{1,100}$/.test(c.targetId)&&typeof c.sourceName==='string'&&typeof c.targetName==='string')result.course={sourceId:c.sourceId,targetId:c.targetId,sourceName:c.sourceName.slice(0,100),targetName:c.targetName.slice(0,100),version:1};}
   if(data.activity && typeof data.activity==='object' && !Array.isArray(data.activity)){
     const activity=data.activity as Record<string,unknown>;
     if(typeof activity.gameId==='string'&&/^exp-(phone|tablet)-\d{2}$/.test(activity.gameId)&&typeof activity.specId==='string'&&/^[ST]\d{2}$/.test(activity.specId)&&Array.isArray(activity.rounds)){

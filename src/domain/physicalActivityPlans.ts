@@ -1,3 +1,5 @@
+import {getMergedGame} from './gameLifecycle';
+import {mergedMovementMeta} from './mergedMovementVariants';
 import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons';
 import { EXPEDITION_BY_ID } from './expeditionGames';
 import { isQuestId, QUEST_META } from './movementQuests';
@@ -98,6 +100,8 @@ const groups: ReadonlyArray<readonly [number, readonly string[]]> = [
 ];
 
 export function getPhysicalActivityPlan(gameType: string, isExpressionGame = false): PhysicalActivityPlan {
+  const variant=getMergedGame(gameType)&&mergedMovementMeta(gameType);
+  if(variant)return {idea:0,title:variant.name,activity:variant.description,alternative:variant.alternative,setup:variant.setup,safety:'기기는 거치하고 개인 통로에서 걷거나 앉아서 참여해요. 통증이 있으면 쉬어요.',secondsPerTurn:20};
   if(isSafetyLessonId(gameType)){
     const lesson=SAFETY_LESSONS[gameType];return {idea:0,title:lesson.name,activity:lesson.description,alternative:'앉아서 상황 카드를 가리키거나 설명을 읽고 확인해요. 실제 처치는 연습하지 않아요.',setup:lesson.equipment.join(' · '),safety:lesson.boundary,secondsPerTurn:15};
   }

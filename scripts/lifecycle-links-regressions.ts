@@ -14,7 +14,7 @@ try{for(const solo of [true,false]){
  const context=await browser.newContext({viewport:{width:solo?390:1024,height:844}}),page=await context.newPage();
  page.on('pageerror',e=>report.errors.push(e.message));
  await page.route('**/*',route=>{const r=route.request(),u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')||u.pathname.startsWith('/api/'))&&!['GET','HEAD','OPTIONS'].includes(r.method())){report.writes.push(u.pathname);return route.abort();}return route.continue();});
- await page.goto(base+'/solo');await page.evaluate(({seed,ids})=>{sessionStorage.setItem('physical_player_profile',JSON.stringify(seed));for(const id of ids)sessionStorage.setItem('physical_best_'+id,'9999');sessionStorage.setItem('physical_favorites',JSON.stringify(ids));},{seed,ids:GAMES.map(g=>g.type)});
+ await page.goto(base+'/solo');await page.evaluate(({seed,ids})=>{sessionStorage.setItem('physical_player_profile',JSON.stringify(seed));for(const id of ids)localStorage.setItem('physical_best_'+id,'9999');localStorage.setItem('physical_favorites',JSON.stringify(ids));},{seed,ids:GAMES.map(g=>g.type)});
  const prefix=solo?'/solo/play/':'/play/';
  for(const g of active){
   const response=await page.goto(base+prefix+g.id+'?room=keep-room&group=keep-group&mission=keep-mission&guided=1#keep-hash');assert.equal(response?.status(),200);
@@ -28,6 +28,6 @@ try{for(const solo of [true,false]){
  await page.goto(base+'/solo');await page.locator('[data-game-card]').first().waitFor();assert.equal(await page.locator('[data-game-card]').count(),AVAILABLE_GAMES.length);
  for(const id of [...active,...(LIFECYCLE_STAGE>=3?REMOVED_GAMES:[])].map(g=>g.id))assert.equal(await page.locator(`[data-game-card="${id}"]`).count(),0);
  await page.getByRole('searchbox').fill(active[0].name);assert(await page.locator(`[data-game-card="${active[0].target}"]`).count());
- const oldBests=await page.evaluate(ids=>ids.every(id=>sessionStorage.getItem('physical_best_'+id)==='9999'),GAMES.map(g=>g.type));assert(oldBests);
+ const oldBests=await page.evaluate(ids=>ids.every(id=>localStorage.getItem('physical_best_'+id)==='9999'),GAMES.map(g=>g.type));assert(oldBests);
  await context.close();console.log('PASS old links and history',solo?'solo':'classroom',active.length);
  }assert.deepEqual(report.errors,[]);assert.deepEqual(report.writes,[]);writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:report.cases.length}));}finally{await browser.close();}

@@ -1,3 +1,5 @@
+import {getMergedGame} from '../../../domain/gameLifecycle';
+import {ConsolidatedActivity} from './common/ConsolidatedActivity';
 import {isSafetyLessonId} from '../../../domain/safetyLessons';
 import {SafetyLesson} from './common/SafetyLesson';
 import { useState } from 'react';
@@ -40,6 +42,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
   const renderContent = () => {
+    const merged=getMergedGame(minigame.type);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={action=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()})}>{null}</ConsolidatedActivity>;
     if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     switch (minigame.type) {

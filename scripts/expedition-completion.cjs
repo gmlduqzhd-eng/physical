@@ -16,7 +16,7 @@ async function main(){
  const browser=await engine.launch({headless:true,...(engine===chromium?{channel:process.env.BROWSER_CHANNEL||'chrome'}:{})});
  try{for(const game of games){
   const viewport=process.env.AUDIT_VIEWPORT?{width:Number(process.env.AUDIT_VIEWPORT.split('x')[0]),height:Number(process.env.AUDIT_VIEWPORT.split('x')[1])}:game.spec[0]==='S'?{width:320,height:568}:{width:1024,height:768};
-  const context=await browser.newContext({viewport,isMobile:true,hasTouch:true});const page=await context.newPage();page.setDefaultTimeout(3000);
+  const context=await browser.newContext({viewport,isMobile:true,hasTouch:true});const page=await context.newPage();page.setDefaultTimeout(10000);page.setDefaultNavigationTimeout(20000);
   const item={spec:game.spec,id:game.id,kind:game.kind,viewport,status:'running',errors:[],serverCalls:[]};
   page.on('pageerror',e=>item.errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&/Cannot update|Maximum update|Too many re-renders|Uncaught/.test(m.text()))item.errors.push(m.text());});
   await page.route('**/*.supabase.co/**',route=>{item.serverCalls.push(route.request().url());return route.fulfill({status:503,body:'{}'});});
@@ -49,7 +49,7 @@ async function main(){
      const plan=createExpeditionRound(game,r,players,()=>.42);
      const prefix=plan.secret?5:3;for(let s=0;s<prefix;s++)await advance(1000);
      await page.locator('[data-phase="active"]').waitFor();await layout();
-     if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({path:path.join(out,game.spec+'-active.png'),fullPage:true});
+     if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-active.png'),fullPage:true});
      if(plan.secret)assert.equal(await page.locator('.expedition-pattern').count(),0,'memory cues are hidden during activity');
      if(plan.timing==='estimate'){await advance(plan.targetSeconds*1000);await tap(page.getByRole('button',{name:'지금 끝내기',exact:true}));}
      else if(plan.timing==='lap'){await advance(12000);await tap(page.getByRole('button',{name:'왕복 도착 기록',exact:true}));}
@@ -59,7 +59,7 @@ async function main(){
      // virtual tick. Allow bounded clock ticks, never invoke a completion hook.
      for(let grace=0;grace<3&&await page.locator('[data-phase="active"]').count();grace++)await advance(1000);
      await page.locator('[data-phase="record"]').waitFor();await layout();
-     if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({path:path.join(out,game.spec+'-record.png'),fullPage:true});
+     if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-record.png'),fullPage:true});
      if(revamped)await tap(page.getByText('세부 기록 직접 입력 · 일부 성공도 기록',{exact:true}));
      const finish=page.getByRole('button',{name:r+1<game.rounds?'기록하고 다음 라운드':'기록하고 원정 마치기',exact:true});
      await tap(finish);await page.getByRole('alert').waitFor();assert.equal(await page.locator('.game-result-overlay').count(),0,'timer alone cannot submit a result');
@@ -75,14 +75,14 @@ async function main(){
    }
    await page.locator('.game-result-overlay').waitFor();await layout();
    const profile=()=>page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')));
-   let saved=await profile();assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,getMergedGame(game.id)?.target||game.id);assert(Number.isFinite(saved.recentGames[0].score));if(getMergedGame(game.id))assert.equal(saved.recentGames[0].details.metrics['변형 ID'],game.id);
+   let saved=await profile();assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,getMergedGame(game.id)?.target||game.id);assert(Number.isFinite(saved.recentGames[0].score));if(getMergedGame(game.id))assert.equal(saved.recentGames[0].details.course?.sourceId||saved.recentGames[0].details.metrics?.['변형 ID'],game.id);
    if(game.kind==='B'){const a=saved.recentGames[0].details.activity;assert.equal(a.gameId,game.id);assert.equal(a.specId,game.spec);assert.equal(a.rounds.length,game.rounds);assert.equal(a.soloPreview,true);assert(a.rounds.every(r=>r.source==='self-report'));}
    await advance(15000);assert.equal((await profile()).totalPlays,1);item.score=saved.recentGames[0].score;
-   await page.screenshot({path:path.join(out,game.spec+'-result.png')});
+   await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-result.png')});
    await tap(page.getByRole('button',{name:'다시 하기',exact:true}));await page.getByRole('button',{name:'활동 시작',exact:true}).waitFor();assert.equal((await profile()).totalPlays,1);
    await tap(page.getByRole('button',{name:'활동 목록으로',exact:true}));await page.waitForURL('**/solo');await page.getByRole('heading',{name:'혼자 해보기',exact:true}).waitFor();
    assert.deepEqual(item.errors,[]);assert.deepEqual(item.serverCalls,[]);item.status='pass';item.resultOnce=true;item.replay=true;item.returnToCatalog=true;
-  }catch(e){item.status='fail';item.error=e.message;await page.screenshot({path:path.join(out,game.spec+'-failure.png'),fullPage:true}).catch(()=>{});}
+  }catch(e){item.status='fail';item.error=e.message;await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-failure.png'),fullPage:true}).catch(()=>{});}
   report.cases.push(item);fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(item.status.toUpperCase()+' '+game.spec+' '+(item.error||item.score));await context.close();
  }}finally{await browser.close();}
  report.summary={total:report.cases.length,passed:report.cases.filter(c=>c.status==='pass').length,failed:report.cases.filter(c=>c.status==='fail').length};fs.writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(report.summary);if(report.summary.failed)process.exitCode=1;

@@ -1,3 +1,4 @@
+import {mergedMovementMeta,makeMergedMovementRound} from '../../../../domain/mergedMovementVariants';
 import { useEffect, useRef, useState } from 'react';
 import { makeQuestRound, questAccurate, questCue, questDuration, questResult, QUEST_META, safeRoute } from '../../../../domain/movementQuests';
 import type { QuestId, QuestRecord, QuestSettings } from '../../../../domain/movementQuests';
@@ -6,14 +7,14 @@ import { sfxTap, unlockAudio } from '../../../../application/soundEffects';
 import './MovementQuest.css';
 
 export interface MovementQuestProps {
-  gameId: QuestId; groupId?: string; solo?: boolean;
+  gameId: QuestId; variantId?:string; groupId?: string; solo?: boolean;
   enqueueAction?: (action: { id: string; type: string; payload: { id: string; amount: number; details: GameResultDetails }; timestamp: number }) => void;
   onExit?: () => void;
 }
 type Phase = 'intro' | 'plan' | 'preview' | 'countdown' | 'active' | 'record' | 'done';
 
-export function MovementQuest({ gameId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
-  const meta = QUEST_META[gameId];
+export function MovementQuest({ gameId,variantId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
+  const meta = (variantId&&mergedMovementMeta(variantId))||QUEST_META[gameId];
   const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: Math.min(3,meta.maxPlayers??4), seed: Math.floor(Math.random()*1000) });
   const [reflection,setReflection]=useState('');
   const [answer, setAnswer] = useState<string[]>([]);
@@ -31,7 +32,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   const [error, setError] = useState('');
   const saved = useRef(false);
   const transition = useRef(false);
-  const plan = makeQuestRound(gameId, round, settings, choice);
+  const plan = variantId?makeMergedMovementRound(variantId,round,settings,choice):makeQuestRound(gameId, round, settings, choice);
   const duration = phase === 'countdown' ? 3000 : phase === 'preview' ? settings.gentle ? 7000 : 5000 : rehearsal ? plan.cueMs * Math.min(4, plan.cues.length) : questDuration(plan);
   const cue = questCue(plan, activeMs);
   const cueIndex = Math.floor(activeMs / plan.cueMs);
@@ -95,7 +96,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
     transition.current = true;
     const next = [...records, { round, choice, outcome, activeMs, retries, ...(plan.question ? {answer} : {}), ...(reflection?{reflection}:{}) }];
     if (round === 2) {
-      const result = questResult(gameId, settings, next);
+      const result = questResult(gameId, settings, next,variantId?(r,s,c)=>makeMergedMovementRound(variantId,r,s,c):undefined);
       if (!result) { setError('기록을 확인한 뒤 다시 시도해 주세요.'); transition.current = false; return; }
       saved.current = true; setRecords(next); setPhase('done');
       enqueueAction?.({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, ...result }, timestamp: Date.now() });
@@ -111,7 +112,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   };
   const retry = () => { setRetries(retries + 1); setActiveMs(0); setPhase('plan'); };
 
-  return <section className="movement-quest" data-quest={gameId} data-phase={phase} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
+  return <section className="movement-quest" data-quest={gameId} data-movement-variant={variantId} data-phase={phase} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
     <header className="mq-heading"><span aria-hidden="true">{meta.emoji}</span><div><p>몸으로 푸는 원정 미션</p><h1>{meta.name}</h1></div><span className="mq-pill">{phase === 'intro' ? '준비' : `${round + 1} / 3 작전`}</span></header>
     <div className="mq-progress" aria-label={`${records.length}개 작전 기록 완료`}>{[0, 1, 2].map(i => <span key={i} className={i < records.length ? 'is-complete' : ''}>{i < records.length ? records[i].outcome === 'complete' ? '◆' : '◇' : i + 1}</span>)}</div>
     {phase === 'intro' && <>
@@ -132,6 +133,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
     {phase === 'plan' && <>
       <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{plan.goal}</h2><p>{plan.hint}</p>
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
+      {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
       <fieldset className="mq-choices"><legend>어떤 작전으로 해 볼까요?</legend>{plan.choices.map(c => <button key={c.id} type="button" aria-pressed={choice === c.id} onClick={() => changeChoice(c.id)}><strong>{c.label}</strong><span>{c.detail}</span></button>)}</fieldset>
       {error && <p role="alert" className="mq-error">{error}</p>}{plan.decision&&choice===plan.decision.answer&&<p className="mq-panel">{plan.decision.explanation}</p>}
@@ -145,6 +147,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
         <span>{phase === 'active' ? plan.timing && !rehearsal ? '시간 표시는 가려져 있어요' : `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음 · ${settings.seated ? '앉아서' : '서서'} 활동` : '주변을 확인해요'}</span>
       </div>
       {phase === 'active' && gameId === 'dribble-rhythm' && <div className="mq-beats" aria-label={`현재 ${cueIndex % 8 + 1}박`}>{Array.from({ length: 8 }, (_, n) => <span key={n} className={cueIndex % 8 === n ? 'is-current' : ''}>{n + 1}</span>)}</div>}
+      {plan.stimulus&&<div className="mq-panel"><p>{plan.stimulus.rule}을 따라가요.</p><strong style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       <p className="mq-away">{plan.timing?'활동을 마칠 때 종료 버튼을 한 번 눌러요.':'활동 중 화면을 누르지 않아도 돼요.'} 신호는 동작 안내이며 자동 판정이 아니에요.</p>
       {phase==='active'&&plan.timing&&!rehearsal&&<button className="mq-primary" disabled={paused||activeMs<1000} onClick={()=>setPhase('record')}>목표 시간이 된 것 같아요</button>}
       <button className="mq-secondary" onClick={() => { unlockAudio(); setPaused(!paused); }}>{paused ? '계속하기' : '일시정지'}</button>
@@ -157,7 +160,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
     </> : <>
       <h2>직접 해 본 결과는 어땠나요?</h2><p className="mq-confirmation">{plan.confirmation}</p>
       {plan.reflection&&<fieldset className="mq-choices"><legend>{plan.reflection.prompt}</legend>{plan.reflection.options.map(option=><button key={option} aria-pressed={reflection===option} onClick={()=>setReflection(option)}>{option}</button>)}</fieldset>}
-      {plan.question&&<fieldset className="mq-choices"><legend>{plan.question.prompt}</legend><p>{answer.join(' → ')||'아직 고르지 않았어요'}</p>{plan.question.options.map(option=><button key={option} disabled={answer.length>=plan.question!.answer.length} onClick={()=>setAnswer([...answer,option])}>{option}</button>)}<button onClick={()=>setAnswer([])}>순서 다시 고르기</button>{answer.length===plan.question.answer.length&&<p>{questAccurate(plan,{answer,activeMs})?'기억한 순서가 같아요.':'순서가 달라요. 다시 도전하거나 연습으로 남겨요.'}</p>}</fieldset>}
+      {plan.question&&<fieldset className="mq-choices"><legend>{plan.question.prompt}</legend><p>{answer.join(' → ')||'아직 고르지 않았어요'}</p>{plan.question.options.map(option=><button key={option} disabled={answer.length>=plan.question!.answer.length} onClick={()=>setAnswer([...answer,option])}>{option}</button>)}<button onClick={()=>setAnswer([])}>답 다시 고르기</button>{answer.length===plan.question.answer.length&&<p>{questAccurate(plan,{answer,activeMs})?'기록한 답이 안내 규칙과 같아요.':'답이 달라요. 다시 도전하거나 연습으로 남겨요.'}</p>}</fieldset>}
       {plan.timing&&<p>목표 {plan.timing.targetSeconds}초 · 직접 종료한 시간 {Math.round(activeMs/100)/10}초 · 차이 {Math.round(Math.abs(activeMs/1000-plan.timing.targetSeconds)*10)/10}초. {questAccurate(plan,{activeMs})?'정한 시간 범위 안에 들어왔어요.':'시간 차이를 보고 다음 시도를 조절해요.'}</p>}
       <p>직접 확인한 결과를 골라요. 기다린 시간이나 버튼만으로 성공을 판단하지 않아요.</p>
       <button className="mq-primary" onClick={() => record('complete')}>달성했어요 · {round === 2 ? '원정 마치기' : '다음 작전'}</button>

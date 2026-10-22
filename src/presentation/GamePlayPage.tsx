@@ -1,3 +1,4 @@
+import {mergedMovementMeta} from '../domain/mergedMovementVariants';
 import {mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
 import {ConsolidatedActivity} from './components/minigames/common/ConsolidatedActivity';
 import {Navigate} from 'react-router-dom';
@@ -337,7 +338,8 @@ const GamePlaySession = () => {
   const baseGameInfo=GAME_TITLES[gameType||''];
   const gameInfo=useMemo(()=>selectedVariant?{...baseGameInfo,name:`${baseGameInfo.name} · ${selectedVariant.name}`,target:'통합 활동의 선택 코스'}:baseGameInfo,[baseGameInfo,selectedVariant]);
   const participationCues = (readParticipationCues(hash, gameType || '')||(selectedVariant?readParticipationCues(hash,selectedVariant.id):null));
-  const activityPlan = getPhysicalActivityPlan(selectedVariant?.id||gameType||'', EXPRESSION_GAMES.some(game=>game.id===(selectedVariant?.id||gameType)));
+  const movementMeta=selectedVariant&&mergedMovementMeta(selectedVariant.id);
+  const activityPlan = movementMeta?{title:movementMeta.name,setup:movementMeta.setup,safety:movementMeta.alternative}:getPhysicalActivityPlan(selectedVariant?.id||gameType||'', EXPRESSION_GAMES.some(game=>game.id===(selectedVariant?.id||gameType)));
 
   // 게임 완료 시 모둠 점수 및 활동 기록 즉시 반영
   const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }) => {
@@ -347,7 +349,7 @@ const GamePlaySession = () => {
     if (hasBattle && battleGroupId && classroomScore !== 0) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId }, timestamp: Date.now() });
     }
-    const details = normalizeGameResultDetails(selectedVariant?{...payload.details,metrics:{...payload.details?.metrics,'통합 활동':baseGameInfo.name,'선택 코스':selectedVariant.name,'변형 ID':selectedVariant.id,'기록 구분':'통합 코스 v1 · 이전 점수와 직접 비교하지 않아요'}}:payload.details);
+    const details = normalizeGameResultDetails(selectedVariant?{...payload.details,course:{sourceId:selectedVariant.id,targetId:gameType,sourceName:selectedVariant.name,targetName:baseGameInfo.name,version:1}}:payload.details);
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
@@ -631,7 +633,7 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info"><p>{movementMeta?.description||GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동을 완료하면 획득 점수가 우리 모둠 점수에 즉시 반영됩니다.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'몸 활동'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 몸 미션</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
           {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (

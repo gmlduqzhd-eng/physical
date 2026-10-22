@@ -1,5 +1,5 @@
 /** Original IDs remain available to record and old-mission readers. */
-export const LIFECYCLE_STAGE = 1;
+export const LIFECYCLE_STAGE = 2;
 export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reason:string}[]=[
   {
     "id": "exp-phone-01",

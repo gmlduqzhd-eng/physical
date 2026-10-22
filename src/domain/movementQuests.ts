@@ -16,6 +16,7 @@ export interface QuestRound {
   title: string; goal: string; hint: string; choices: QuestChoice[]; cues: string[]; cueMs: number;
   repeats: number; blocked?: number; roles?: string[]; confirmation: string;
   preview?: string[]; question?: { prompt: string; options: string[]; answer: string[] };
+  stimulus?: {text:string;color:string;rule:string};
   reflection?: {prompt:string;options:string[]};
   decision?: {answer:string;explanation:string};
   timing?: { targetSeconds: number; toleranceSeconds: number };
@@ -125,9 +126,10 @@ export function questAccurate(plan: QuestRound, record: Pick<QuestRecord,'answer
 export function questCue(plan: QuestRound, activeMs: number): string {
   return plan.cues[Math.min(plan.cues.length * plan.repeats - 1, Math.floor(Math.max(0, activeMs) / plan.cueMs)) % plan.cues.length];
 }
-export function questResult(id: QuestId, settings: QuestSettings, records: readonly QuestRecord[]): { amount: number; details: GameResultDetails } | null {
+export function questResult(id: QuestId, settings: QuestSettings, records: readonly QuestRecord[], factory?:(round:number,settings:QuestSettings,choice?:string)=>QuestRound): { amount: number; details: GameResultDetails } | null {
+  const build=factory??((round:number,s:QuestSettings,choice?:string)=>makeQuestRound(id,round,s,choice));
   if (records.length !== 3 || records.some((record, index) => {
-    const plan = makeQuestRound(id, index, settings, record.choice);
+    const plan = build(index,settings,record.choice);
     const choice = plan.choices.find(c => c.id === record.choice);
     return (record.reflection && !plan.reflection?.options.includes(record.reflection)) || record.round !== index || !choice || (plan.decision && choice.id!==plan.decision.answer) || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
       !['complete', 'partial'].includes(record.outcome) || !Number.isFinite(record.activeMs) || record.activeMs < (plan.timing ? 1000 : questDuration(plan)) || record.activeMs > 7200000 ||
@@ -141,7 +143,7 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
     '참여 방식': settings.practice ? '혼자 규칙 연습 · 모둠 참여 미확인' : `${settings.players}명 함께 활동 · 직접 확인`,
     '활동 선택': `${settings.seated ? '앉아서' : '서서'} · ${settings.gentle ? '천천히' : '기본 속도'}`,
     '점수 기준': '달성했다고 확인한 작전당 100점 · 속도/횟수/운동량 평가 아님',
-    '작전 선택': records.map((r, i) => `${i + 1}: ${makeQuestRound(id, i, settings).choices.find(c => c.id === r.choice)?.label}`).join(' / '),
+    '작전 선택': records.map((r, i) => `${i + 1}: ${build(i,settings).choices.find(c => c.id === r.choice)?.label}`).join(' / '),
     '다시 시도': `${records.reduce((s, r) => s + r.retries, 0)}회 · 감점 없음`,
     '시간 범위': '작전별 최종 시도 안내 시간 · 연습·재도전·휴식 제외',
     '기록 버전': '몸 미션 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요',
