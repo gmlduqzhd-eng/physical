@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from './teacherSession.js';
-import { defaultGeminiModel, geminiReady, generateStudioAdvice } from './geminiStudio.js';
+import { defaultGeminiModel, geminiReady, generateStudioAdvice, studioProviderCategory } from './geminiStudio.js';
 
 export const maxDuration = 120;
 const scope = 'physical_studio';
@@ -18,7 +18,9 @@ export function studioFailureDiagnostics(error: unknown) {
     const diagnostic: (typeof chain)[number] = { kind: kinds.includes(item.name ?? '') ? item.name! : 'unknown' };
     if (Number.isInteger(item.statusCode)) diagnostic.status = item.statusCode;
     const message = (item.message ?? '') + (item.responseBody ?? '');
-    if (/학생용 안내/.test(message)) diagnostic.category = 'student_cue_length';
+    const providerCategory = studioProviderCategory(current);
+    if (providerCategory) diagnostic.category = providerCategory;
+    else if (/학생용 안내/.test(message)) diagnostic.category = 'student_cue_length';
     else if (/근거가 없는/.test(message)) diagnostic.category = 'missing_citation';
     else if (/schema/i.test(message)) diagnostic.category = 'schema';
     else if (/thinking/i.test(message)) diagnostic.category = 'thinking';

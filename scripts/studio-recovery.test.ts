@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generateStudioAdvice } from '../server/geminiStudio.js';
+import { generateStudioAdvice, studioProviderCategory, studioRetryDelayMs, withStudioRecovery } from '../server/geminiStudio.js';
 import { studioFailureDiagnostics } from '../server/studioHandler.js';
+import { APICallError } from 'ai';
 
 const input = { task:'participation',activityId:'space-occupier',grade:'3~4학년군',goal:'협동과 소통',place:'체육관',device:'태블릿 PC',deviceCount:'모둠별 1대',minutes:40,groupSize:6,classSize:24,consent:true,adultTeacher:true };
 const output = { title:'교사 검토용 활동 안내',recommendations:[],sections:['오늘의 몸 미션','역할 바꾸기','기다리는 동안'].map(heading=>({heading,minutes:null,content:'친구와 역할을 번갈아 맡아 활동해 보세요.',citations:[{sourceId:'space-occupier:description:0'}]})),safety:[],teacherChecks:['현장의 참여 조건을 확인했나요?'] };
@@ -23,10 +24,76 @@ test('malformed or long Gemini output is regenerated once, while quota errors ar
       };
       if(mode==='always-invalid'||mode==='unavailable'||mode==='quota')await assert.rejects(generateStudioAdvice(input));
       else {const result=await generateStudioAdvice(input);assert.equal(result.result.sections.length,3);assert(result.result.sections.every(s=>s.content.length<=100&&s.citations.length>0));}
-      assert.equal(calls,mode==='quota'?1:2,mode);
+      assert.equal(calls,mode==='quota'?1:mode==='unavailable'?3:2,mode);
       assert(signals.every(Boolean));
     }
   } finally {globalThis.fetch=originalFetch;for(const key of Object.keys(process.env))if(!(key in originalEnv))delete process.env[key];Object.assign(process.env,originalEnv);}
+});
+
+const providerError = (statusCode = 503, retryAfter?: string) => new APICallError({
+  message: 'synthetic high demand; do-not-log-secret', url: 'https://generativelanguage.googleapis.com/synthetic',
+  requestBodyValues: { private: 'do-not-log-secret' }, statusCode,
+  responseHeaders: retryAfter ? { 'retry-after': retryAfter } : undefined,
+  responseBody: 'do-not-log-secret',
+});
+
+function virtualRuntime() {
+  let time = 0;
+  const waits: number[] = [];
+  return { waits, advance: (ms: number) => { time += ms; }, now: () => time, random: () => 0.5, sleep: async (ms: number) => { waits.push(ms); time += ms; } };
+}
+
+test('two transient failures recover with increasing delays and one shared budget', async () => {
+  const runtime = virtualRuntime(); const timeouts: number[] = []; let calls = 0;
+  const result = await withStudioRecovery(async (_correction, timeout) => {
+    timeouts.push(timeout); if (++calls < 3) throw providerError(); return 'validated';
+  }, runtime);
+  assert.equal(result, 'validated'); assert.equal(calls, 3);
+  assert.deepEqual(runtime.waits, [2500, 4500]);
+  assert.deepEqual(timeouts, [90000, 87500, 83000]);
+});
+
+test('Retry-After, including HTTP dates, is honored without exceeding the deadline', async () => {
+  assert.equal(studioRetryDelayMs(providerError(503, '12'), 1, 0, 0), 12000);
+  assert.equal(studioRetryDelayMs(providerError(503, 'Thu, 01 Jan 1970 00:00:15 GMT'), 1, 0, 0), 15000);
+  assert.equal(studioRetryDelayMs(providerError(503, 'invalid'), 2, 0, 0), 4000);
+  for (const header of ['120', '999999999999999999999999']) {
+    const runtime = virtualRuntime(); let calls = 0;
+    await assert.rejects(withStudioRecovery(async () => { calls++; throw providerError(503, header); }, runtime));
+    assert.equal(calls, 1); assert.deepEqual(runtime.waits, []);
+  }
+  const runtime = virtualRuntime(); let calls = 0;
+  await assert.rejects(withStudioRecovery(async () => { calls++; runtime.advance(81000); throw providerError(); }, runtime));
+  assert.equal(calls, 1); assert.deepEqual(runtime.waits, []);
+});
+
+test('quota, payment, credential, model and timeout errors are never retried', async () => {
+  for (const error of [providerError(400), providerError(401), providerError(402), providerError(403), providerError(404), providerError(429), new DOMException('synthetic', 'TimeoutError')]) {
+    let calls = 0; const runtime = virtualRuntime();
+    await assert.rejects(withStudioRecovery(async () => { calls++; throw error; }, runtime));
+    assert.equal(calls, 1); assert.deepEqual(runtime.waits, []);
+  }
+});
+
+test('format repair and server retries share a three-call cap and only one format repair', async () => {
+  const runtime = virtualRuntime(); const corrections: (string | null)[] = []; let calls = 0;
+  await assert.rejects(withStudioRecovery(async correction => {
+    corrections.push(correction); calls++;
+    if (calls === 1 || calls === 3) throw new Error('근거가 없는 제안입니다.');
+    throw providerError();
+  }, runtime));
+  assert.equal(calls, 3); assert(corrections[1]); assert.equal(corrections[2], corrections[1]);
+});
+
+test('provider overload diagnosis and retry logs never include arbitrary provider content', async () => {
+  const logs: string[] = []; const original = console.info;
+  console.info = (...args) => { logs.push(args.join(' ')); };
+  try {
+    await assert.rejects(withStudioRecovery(async () => { throw providerError(); }, virtualRuntime()));
+    assert.equal(studioProviderCategory(providerError()), 'provider_overloaded');
+    assert.equal(studioFailureDiagnostics(providerError())[0].category, 'provider_overloaded');
+    assert.equal(logs.length, 2); assert(!logs.join('').includes('do-not-log-secret'));
+  } finally { console.info = original; }
 });
 
 test('diagnostics omit provider bodies, names, prompts and arbitrary issue paths',()=>{
