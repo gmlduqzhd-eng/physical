@@ -540,7 +540,7 @@ export const MobileMissionView = () => {
         <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center relative z-10 mb-8">
           <span className="text-6xl font-black font-mono text-yellow-400 mb-6">{myGroup?.score ?? 0}점</span>
           <div className="text-center font-bold text-slate-500 text-sm mt-4 pb-12">
-            선생님이 시작 버튼을 누를 때까지 대기하세요.
+            {guidedEntry?'오늘 수업이 끝났어요. 선생님의 마무리 안내를 들어요.':'선생님이 시작 버튼을 누를 때까지 대기하세요.'}
           </div>
         </div>
 
@@ -560,6 +560,7 @@ export const MobileMissionView = () => {
           </div>
         )}
 
+        {guidedEntry&&<button disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="px-8 py-4 bg-cyan-700 rounded-2xl font-bold text-lg relative z-10 disabled:opacity-50">내 활동 기록 확인</button>}
         <button onClick={() => navigate('/')} className="mt-8 px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl text-white font-bold text-lg transition-colors border border-slate-700 relative z-10 shadow-xl">처음으로 돌아가기</button>
       </div>
     );

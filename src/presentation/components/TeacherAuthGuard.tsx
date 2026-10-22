@@ -24,8 +24,10 @@ export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
 }
 export function TeacherAuthGuard({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false); const [error, setError] = useState('');
+  const [checking,setChecking]=useState(true);
   useEffect(() => { removeStorage('teacher_master_pin'); removeStorage('teacher_session_auth', 'session'); let active = true;
-    teacherStatus().then(async s => { if (s.authenticated) await ensureClassroomTeacher(); if (active) setAuthenticated(s.authenticated); }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '교사 인증 서버와 접근 코드를 설정해 주세요.'); }); return () => { active = false; };
+    teacherStatus().then(async s => { if (s.authenticated) await ensureClassroomTeacher(); if (active) setAuthenticated(s.authenticated); }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '교사 인증 서버와 접근 코드를 설정해 주세요.'); }).finally(()=>{if(active)setChecking(false);}); return () => { active = false; };
   }, []);
+  if(checking)return <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면"><p role="status">교사 인증을 확인하고 있어요…</p></FlowShell>;
   return authenticated ? <>{children}</> : <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면">{error && <p role="status">{error}</p>}<TeacherLogin onLogin={() => { void ensureClassroomTeacher().then(()=>setAuthenticated(true)).catch(cause=>setError(cause instanceof Error?cause.message:'수업방 인증 실패')); }} /><p className="teacher-auth-note">교사 인증 후에도 DB에서 방 소유권과 권한 만료를 확인합니다. 기존에 소유자 없이 만들어진 방은 자동으로 가져오지 않습니다.</p></FlowShell>;
 }
