@@ -1,3 +1,4 @@
+import {GAMES} from '../domain/gamesData.js';
 import { EXPEDITION_LESSON_CATALOG } from '../domain/expeditionCatalog.js';
 import { isQuestId, QUEST_META } from '../domain/movementQuests.js';
 // 수업 지도안 추천용 게임 메타데이터 카탈로그
@@ -1322,9 +1323,15 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
   },
 ];
 
-export const LESSON_GAME_CATALOG: LessonGameMeta[] = BASE_LESSON_GAME_CATALOG.map(game => isQuestId(game.id) ? {
+const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES.filter(g=>isQuestId(g.type)&&!BASE_LESSON_GAME_CATALOG.some(l=>l.id===g.type)).map(g=>({
+  id:g.type,title:g.name,emoji:g.emoji,route:'/play/'+g.type,description:g.desc,domain:g.domain,sportType:g.sportType,subCategory:g.subCategory,achievementCode:g.achievement.code,grades:g.grades,
+  activityModes:['개인' as const],space:['교실' as const,'체육관' as const],deviceMode:['교사용 1대' as const],recommendedPlayers:{min:1,max:1},intensity:'보통' as const,
+  movementSkills:['도구 조절','선택한 움직임 실행'],learningKeywords:['몸 미션','선택과 비교'],safetyNotes:[],teachingTips:[],noDeviceAlternative:'교사가 종이 카드로 안내해요.',
+}))];
+export const LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(game => isQuestId(game.id) ? {
   ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
-  deviceMode: ['교사용 1대', '모둠별 1대'], intensity: '보통',
+  deviceMode: ['교사용 1대', '모둠별 1대'], intensity: '보통', activityModes:QUEST_META[game.id].team?['짝','모둠']:['개인'],
+  movementSkills:['선택한 동작 실행','방법과 결과 비교'],learningKeywords:[QUEST_META[game.id].name,'선택과 시도','직접 확인'],
   recommendedPlayers: QUEST_META[game.id].team ? { min: 2, max: QUEST_META[game.id].maxPlayers ?? 4 } : { min: 1, max: 1 },
   safetyNotes: ['기기를 거치하고 걸어서 이동한다. 개인 통로를 확보한다.', QUEST_META[game.id].alternative],
   teachingTips: [...QUEST_META[game.id].rules, '첫 연습 후 세 작전을 수행하고 결과를 직접 확인한다. 속도 경쟁과 탈락은 없다.'],

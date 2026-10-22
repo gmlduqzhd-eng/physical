@@ -1410,7 +1410,7 @@ const BASE_GAMES: GameDef[] = [
 
 export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
   ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
-  desc: QUEST_META[game.type].description, physicalActivity: true, durationMinutes: 4,
+  desc: QUEST_META[game.type].description, physicalActivity: true, durationMinutes: 4, playMode: QUEST_META[game.type].team?'협동':'개인', activityType:QUEST_META[game.type].team?'짝':'개인',
   equipment: QUEST_META[game.type].equipment ?? game.equipment,
   safetyTips: ['기기는 거치하고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
 } : game);

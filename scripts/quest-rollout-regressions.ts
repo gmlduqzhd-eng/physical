@@ -11,7 +11,7 @@ const out=path.resolve(process.env.TEST_OUTPUT_DIR||'test-results/quest-rollout'
 const report:{base:string;cases:unknown[];errors:string[];writes:string[]}={base,cases:[],errors:[],writes:[]};
 const browser=await chromium.launch({channel:'chrome',headless:true});
 try{
- for(const width of [390,1024]){
+ for(const width of (process.env.TEST_WIDTHS?.split(',').map(Number)||[390,1024])){
   const context=await browser.newContext({viewport:{width,height:width===390?844:768},hasTouch:true,reducedMotion:'reduce'});
   await context.route('**/*',route=>{
    const r=route.request(),u=new URL(r.url());
@@ -47,7 +47,12 @@ try{
     await button('작전 살펴보기').click();
     const choose=async(round:number)=>{
      const plan=makeQuestRound(id,round,{gentle:true,seated:width===1024,practice:true,players:3});
-     const c=plan.choices.find(c=>!c.path||safeRoute(c.path,plan.blocked!))!;
+     const c=plan.choices.find(c=>(!plan.decision||c.id===plan.decision.answer)&&(!c.path||safeRoute(c.path,plan.blocked!)))!;
+     if(plan.decision&&round===0){
+      const wrong=plan.choices.find(c=>c.id!==plan.decision!.answer)!;
+      await page.getByRole('button',{name:new RegExp('^'+wrong.label)}).click();
+      assert(await page.locator('.mq-primary').isDisabled());await page.getByRole('alert').waitFor();
+     }
      await page.getByRole('button',{name:new RegExp('^'+c.label)}).click();
     };
     await choose(0);await button('동작 연습하기').click();await finish(true);

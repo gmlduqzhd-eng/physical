@@ -35,7 +35,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
   const cue = questCue(plan, activeMs);
   const cueIndex = Math.floor(activeMs / plan.cueMs);
   const selected = plan.choices.find(c => c.id === choice);
-  const validChoice = !!selected && (!selected.path || safeRoute(selected.path, plan.blocked!));
+  const validChoice = !!selected && (!plan.decision || choice===plan.decision.answer) && (!selected.path || safeRoute(selected.path, plan.blocked!));
   const introRules = gameId === 'pass-gate-rescue' && settings.practice ? [
     '삼각형으로 표식 세 개를 놓고 한 표식에서 시작해요.',
     '다음 표식으로 공을 굴리고, 걸어서 공을 회수해요.',
@@ -104,7 +104,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
     queueMicrotask(() => { transition.current = false; });
   };
   const changeChoice = (next: string) => {
-    setChoice(next); setError('');
+    setChoice(next); setError(plan.decision&&next!==plan.decision.answer?plan.decision.explanation:'');
     const path = plan.choices.find(c => c.id === next)?.path;
     if (path && !safeRoute(path, plan.blocked!)) setError(`${plan.blocked! + 1}번은 막혔어요. 다른 길을 골라 보세요.`);
   };
@@ -121,7 +121,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
         <label>진행 속도<select value={settings.gentle ? 'gentle' : 'standard'} onChange={e => setSettings({ ...settings, gentle: e.target.value === 'gentle' })}><option value="gentle">천천히 익히기</option><option value="standard">기본 속도 도전</option></select></label>
         {settings.seated && <p>{meta.alternative} 점수 기준은 같아요.</p>}
         {meta.team && <>
-          {solo ? <p>혼자 해보기: 굴리기와 자리 바꾸기 규칙을 연습해요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => setSettings({ ...settings, practice: e.target.value === 'practice' })}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
+          {solo ? <p>혼자 해보기: 도구와 역할의 규칙을 연습해요. 실제 모둠 참여 기록으로 표시하지 않아요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => setSettings({ ...settings, practice: e.target.value === 'practice' })}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
           {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{Array.from({length:(meta.maxPlayers??4)-1},(_,i)=>i+2).map(n => <option key={n} value={n}>{n}명{gameId==='pass-gate-rescue'?` · 표식 ${n+1}개`:''}</option>)}</select></label>}
         </>}
       </div>
@@ -132,7 +132,7 @@ export function MovementQuest({ gameId, groupId = 'standalone-player', solo = fa
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
       <fieldset className="mq-choices"><legend>어떤 작전으로 해 볼까요?</legend>{plan.choices.map(c => <button key={c.id} type="button" aria-pressed={choice === c.id} onClick={() => changeChoice(c.id)}><strong>{c.label}</strong><span>{c.detail}</span></button>)}</fieldset>
-      {error && <p role="alert" className="mq-error">{error}</p>}
+      {error && <p role="alert" className="mq-error">{error}</p>}{plan.decision&&choice===plan.decision.answer&&<p className="mq-panel">{plan.decision.explanation}</p>}
       {!rehearsed ? <><p>처음에는 짧게 연습해요. 연습에는 점수가 없어요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(true)}>동작 연습하기</button></> : <><p>몸으로 수행한 뒤 한 번만 기록해요. 잘 안 되면 같은 작전을 다시 해도 돼요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>기기 놓고 작전 시작</button></>}
     </>}
     {(phase === 'preview' || phase === 'countdown' || phase === 'active') && <>

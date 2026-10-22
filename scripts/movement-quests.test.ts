@@ -12,7 +12,7 @@ const settings: QuestSettings = { seated: false, gentle: true, practice: true, p
 function records(id: QuestId, config = settings): QuestRecord[] {
   return [0, 1, 2].map(round => {
     const plan = makeQuestRound(id, round, config);
-    const choice = plan.choices.find(c => !c.path || safeRoute(c.path, plan.blocked!))!;
+    const choice = plan.choices.find(c => (!plan.decision||c.id===plan.decision.answer)&&(!c.path || safeRoute(c.path, plan.blocked!)))!;
     const picked=makeQuestRound(id,round,config,choice.id);
     return { round, choice: choice.id, outcome: 'complete', activeMs: picked.timing ? picked.timing.targetSeconds*1000 : questDuration(picked), retries: 0, ...(picked.question?{answer:picked.question.answer}:{}) };
   });
@@ -100,4 +100,17 @@ test('memory and hidden-clock activities reject incorrect claims and preserve th
   assert(questAccurate(time,{activeMs:8000}));assert(!questAccurate(time,{activeMs:20000}));
   const failed=records('stopwatch');failed[0].activeMs=20000;
   assert.equal(questResult('stopwatch',settings,failed),null);
+});
+
+
+test('sports decisions must match the situation and change across rounds; tool trials remain physical',()=>{
+ for(const id of ['base-running-decide','badminton-drop-clear','tabletennis-spin-read'] as const){
+  const first=makeQuestRound(id,0,settings),second=makeQuestRound(id,1,settings);
+  assert(first.decision&&second.decision);assert.notEqual(first.decision.answer,second.decision.answer);
+  const wrong=records(id);wrong[0].choice=first.choices.find(c=>c.id!==first.decision!.answer)!.id;
+  assert.equal(questResult(id,settings,wrong),null);
+ }
+ for(const id of ['target','slingshot-archery','basketball-free-throw','shuttle-run-beep'] as const){
+  assert.notDeepEqual(makeQuestRound(id,0,settings,'near').cues,makeQuestRound(id,0,settings,'far').cues);
+ }
 });

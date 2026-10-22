@@ -1,9 +1,10 @@
+import {SPORTS_QUEST_IDS,SPORTS_QUEST_META,makeSportsQuest,type SportsQuestId} from './sportsMovementQuests.js';
 import type { GameResultDetails } from './gameResultDetails.js';
 import { EXTENDED_QUEST_IDS, EXTENDED_QUEST_META, makeExtendedQuest } from './extendedMovementQuests.js';
 import type { ExtendedQuestId, QuestMetadata } from './extendedMovementQuests.js';
 
 export const PILOT_QUEST_IDS = ['zigzag', 'dribble-rhythm', 'pass-gate-rescue'] as const;
-export const QUEST_IDS = [...PILOT_QUEST_IDS, ...EXTENDED_QUEST_IDS] as const;
+export const QUEST_IDS = [...PILOT_QUEST_IDS, ...EXTENDED_QUEST_IDS, ...SPORTS_QUEST_IDS] as const;
 export type QuestId = typeof QUEST_IDS[number];
 export type QuestSettings = { seated: boolean; gentle: boolean; practice: boolean; players: number; seed?: number };
 export type QuestRecord = { round: number; choice: string; outcome: 'complete' | 'partial'; activeMs: number; retries: number; answer?: string[] };
@@ -12,10 +13,11 @@ export interface QuestRound {
   title: string; goal: string; hint: string; choices: QuestChoice[]; cues: string[]; cueMs: number;
   repeats: number; blocked?: number; roles?: string[]; confirmation: string;
   preview?: string[]; question?: { prompt: string; options: string[]; answer: string[] };
+  decision?: {answer:string;explanation:string};
   timing?: { targetSeconds: number; toleranceSeconds: number };
 }
 export const QUEST_META: Record<QuestId, QuestMetadata> = {
-  ...EXTENDED_QUEST_META,
+  ...EXTENDED_QUEST_META, ...SPORTS_QUEST_META,
   zigzag: {
     equipment: ['바닥 표식 9개', '콩주머니 1개'],
     name: '갈림길 보급 작전', emoji: '🧭',
@@ -55,6 +57,7 @@ export function safeRoute(path: readonly number[], blocked: number): boolean {
 export function makeQuestRound(id: QuestId, round: number, settings: QuestSettings, choiceId?: string): QuestRound {
   if (!Number.isInteger(round) || round < 0 || round > 2) throw new Error('Invalid quest round');
   if ((EXTENDED_QUEST_IDS as readonly string[]).includes(id)) return makeExtendedQuest(id as ExtendedQuestId, round, settings, choiceId);
+  if ((SPORTS_QUEST_IDS as readonly string[]).includes(id)) return makeSportsQuest(id as SportsQuestId,round,settings,choiceId);
   const seated = settings.seated;
   if (id === 'zigzag') {
     const blocked = [4, 1, 5][round];
@@ -120,7 +123,7 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
   if (records.length !== 3 || records.some((record, index) => {
     const plan = makeQuestRound(id, index, settings, record.choice);
     const choice = plan.choices.find(c => c.id === record.choice);
-    return record.round !== index || !choice || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
+    return record.round !== index || !choice || (plan.decision && choice.id!==plan.decision.answer) || (choice.path && !safeRoute(choice.path, plan.blocked!)) ||
       !['complete', 'partial'].includes(record.outcome) || !Number.isFinite(record.activeMs) || record.activeMs < (plan.timing ? 1000 : questDuration(plan)) || record.activeMs > 7200000 ||
       (record.outcome === 'complete' && !questAccurate(plan, record)) ||
       !Number.isInteger(record.retries) || record.retries < 0;
