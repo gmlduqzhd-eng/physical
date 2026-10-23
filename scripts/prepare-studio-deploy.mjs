@@ -46,4 +46,6 @@ await writeFile(join(root, 'vercel.json'), JSON.stringify({
     { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
   ] }],
 }, null, 2));
-console.log(`Prepared ${files.length + 2} allowlisted files in .studio-deploy (no secrets).`);
+// Keep any existing local configuration private when reusing the staging folder.
+await writeFile(join(root, '.vercelignore'), '.env*\n**/.env*\n.vercel/**\nnode_modules/**\n**/node_modules/**\ndist-teacher/**\n');
+console.log(`Prepared ${files.length + 3} allowlisted files in .studio-deploy (no secrets).`);
