@@ -175,7 +175,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
 
       return (
         <g key={i}>
-          <path d={pathData} fill={section.color} stroke="#1e293b" strokeWidth="2" />
+          <path d={pathData} fill={section.color} stroke="var(--forest-line, #ced1c3)" strokeWidth="2" />
           <text
             x={lx}
             y={ly - 8}
@@ -227,7 +227,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
         {/* 포인터 (12시 방향 삼각형) */}
         <div className="relative w-full max-w-[300px] shrink-0">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1 z-10">
-            <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] border-t-yellow-400 drop-shadow-lg" />
+            <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[18px] drop-shadow-lg" style={{ borderTopColor: 'var(--forest-accent, #566d4d)' }} />
           </div>
 
           {/* 룰렛 SVG */}
@@ -241,12 +241,12 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
           >
             <svg viewBox="0 0 300 300" className="w-full h-auto drop-shadow-2xl">
               {/* 외곽 링 */}
-              <circle cx={center} cy={center} r={radius + 8} fill="none" stroke="#334155" strokeWidth="4" />
-              <circle cx={center} cy={center} r={radius} fill="#0f172a" />
+              <circle cx={center} cy={center} r={radius + 8} fill="none" stroke="var(--forest-control-line, #858e7e)" strokeWidth="4" />
+              <circle cx={center} cy={center} r={radius} fill="var(--forest-paper, #fffefa)" />
               {renderSectors()}
               {/* 가운데 원 */}
-              <circle cx={center} cy={center} r="22" fill="#0f172a" stroke="#475569" strokeWidth="3" />
-              <text x={center} y={center} textAnchor="middle" dominantBaseline="middle" fill="#94a3b8" fontWeight="900" fontSize="10">
+              <circle cx={center} cy={center} r="22" fill="var(--forest-paper, #fffefa)" stroke="var(--forest-control-line, #858e7e)" strokeWidth="3" />
+              <text x={center} y={center} textAnchor="middle" dominantBaseline="middle" fill="var(--forest-ink, #303d35)" fontWeight="900" fontSize="10">
                 SPIN
               </text>
             </svg>
@@ -277,7 +277,7 @@ export const WarmupRoulette = ({ isOpen, onClose }: WarmupRouletteProps) => {
             <div className="w-full bg-slate-800/80 rounded-2xl p-5 border border-slate-700 text-center animate-in zoom-in-95 duration-200">
               <div className="text-4xl mb-2">{result.emoji}</div>
               <h3 className="text-xl font-black text-white mb-1">
-                오늘의 워밍업: <span style={{ color: result.color }}>{result.label}</span>
+                오늘의 워밍업: <span style={{ color: 'var(--forest-accent, #566d4d)' }}>{result.label}</span>
               </h3>
 
               {/* 추천 미니게임 — 클릭하면 바로 실행 */}

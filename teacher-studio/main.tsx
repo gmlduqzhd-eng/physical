@@ -3,5 +3,5 @@ import { Studio } from './Studio';
 import { BrowserRouter } from 'react-router-dom';
 import { BackgroundMusicProvider } from '../src/application/BackgroundMusicContext';
 import { ThemeProvider } from '../src/application/ThemeContext';
-import '../src/presentation/CleanBluePalette.css';
+import '../src/presentation/ApplicationPalette.css';
 createRoot(document.getElementById('root')!).render(<ThemeProvider><BrowserRouter><BackgroundMusicProvider><Studio/></BackgroundMusicProvider></BrowserRouter></ThemeProvider>);

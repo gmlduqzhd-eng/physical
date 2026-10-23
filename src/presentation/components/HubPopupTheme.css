@@ -1,4 +1,4 @@
-/* Popup UI shares Clean Blue; the red/green reaction cue remains a game signal. */
+/* Popup UI follows the application palette; the red/green reaction cue remains a game signal. */
 html[data-design=forest] body .hub-page .hub-popup .hub-dialog-primary {
   background:var(--forest-accent)!important;
   color:var(--forest-on)!important;

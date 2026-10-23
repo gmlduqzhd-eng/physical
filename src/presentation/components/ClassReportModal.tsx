@@ -266,34 +266,46 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         else ctx.rect(x, y, width, height);
       };
 
+      // Resolve the active palette when exporting so saved cards match the current screen.
+      const theme = getComputedStyle(document.documentElement);
+      const themeColor = (name: string, fallback: string) => theme.getPropertyValue(name).trim() || fallback;
+      const palette = {
+        bg: themeColor('--forest-bg', '#faf8f2'),
+        paper: themeColor('--forest-paper', '#fffefa'),
+        ink: themeColor('--forest-ink', '#303d35'),
+        muted: themeColor('--forest-muted', '#626b60'),
+        line: themeColor('--forest-line', '#ced1c3'),
+        accent: themeColor('--forest-accent', '#566d4d'),
+        tint: themeColor('--forest-tint', '#edf1e4'),
+      };
       const bgGrad = ctx.createLinearGradient(0, 0, 1080, 1080);
-      bgGrad.addColorStop(0, '#0f172a');
-      bgGrad.addColorStop(0.5, '#0284c7');
-      bgGrad.addColorStop(1, '#0f172a');
+      bgGrad.addColorStop(0, palette.bg);
+      bgGrad.addColorStop(0.5, palette.paper);
+      bgGrad.addColorStop(1, palette.bg);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, 1080, 1080);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.fillStyle = palette.tint;
       ctx.beginPath();
       ctx.arc(900, 200, 300, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = palette.accent;
       ctx.font = 'bold 32px sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText('🏆 땀방울 원정대 스마트 체육 수업 결과', 540, 130);
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = palette.ink;
       ctx.font = 'bold 64px sans-serif';
       fittedText(gameRoom?.name || '신체활동 미션 챌린지', 540, 220, 900, 64);
 
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = palette.muted;
       ctx.font = '28px sans-serif';
       ctx.fillText(new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' }), 540, 280);
 
       // 1등 박스
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.15)';
-      ctx.strokeStyle = '#f59e0b';
+      ctx.fillStyle = palette.tint;
+      ctx.strokeStyle = palette.accent;
       ctx.lineWidth = 4;
       ctx.beginPath();
       roundedRect(140, 340, 800, 340, 32);
@@ -303,43 +315,43 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
       ctx.font = '72px sans-serif';
       ctx.fillText('🥇', 540, 440);
 
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = palette.ink;
       ctx.font = 'bold 52px sans-serif';
       fittedText(`1위 : ${top1.group_name}`, 540, 520, 740, 52);
 
-      ctx.fillStyle = '#fbbf24';
+      ctx.fillStyle = palette.accent;
       ctx.font = 'bold 44px monospace';
       ctx.fillText(`${top1?.score?.toLocaleString() || 0} PTS`, 540, 590);
 
       // 2위
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillStyle = palette.paper;
+      ctx.strokeStyle = palette.line;
       ctx.lineWidth = 2;
       ctx.beginPath();
       roundedRect(140, 720, 380, 180, 24);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillStyle = palette.ink;
       ctx.font = 'bold 34px sans-serif';
       fittedText(`🥈 2위: ${top2?.group_name || '-'}`, 330, 800, 340, 34);
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = palette.accent;
       ctx.font = 'bold 32px monospace';
       ctx.fillText(`${top2?.score?.toLocaleString() || 0} pts`, 330, 855);
 
       // 3위
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+      ctx.fillStyle = palette.paper;
       ctx.beginPath();
       roundedRect(560, 720, 380, 180, 24);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = '#e2e8f0';
+      ctx.fillStyle = palette.ink;
       ctx.font = 'bold 34px sans-serif';
       fittedText(`🥉 3위: ${top3?.group_name || '-'}`, 750, 800, 340, 34);
-      ctx.fillStyle = '#38bdf8';
+      ctx.fillStyle = palette.accent;
       ctx.font = 'bold 32px monospace';
       ctx.fillText(`${top3?.score?.toLocaleString() || 0} pts`, 750, 855);
 
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = palette.muted;
       ctx.font = '24px sans-serif';
       ctx.fillText('땀방울 원정대 • 2022 개정 초등 체육과 인터랙티브 스마트 체육', 540, 990);
 

@@ -1,0 +1,66 @@
+/* Approved pair: Cream Olive in light mode, Pearl Charcoal in dark mode.
+   Shared by the classroom app and the independent teacher studio. */
+html[data-design=forest] {
+  --forest-bg: #faf8f2;
+  --forest-paper: #fffefa;
+  --forest-elevated: #fffefa;
+  --forest-ink: #303d35;
+  --forest-muted: #626b60;
+  --forest-line: #ced1c3;
+  --forest-control-line: #858e7e;
+  --forest-accent: #566d4d;
+  --forest-action: #566d4d;
+  --forest-on: #fff;
+  --forest-tint: #edf1e4;
+  --forest-gold: #87623d;
+  --forest-danger: #9e3833;
+  --forest-overlay: rgb(30 38 29 / 48%);
+  --forest-shadow: rgb(30 38 29 / 12%);
+  --forest-sans: ForestSans, HeaderPretendard, system-ui, sans-serif;
+  --forest-serif: ForestSerif, serif;
+  color-scheme: light;
+  background: var(--forest-bg);
+}
+
+html[data-design=forest].dark-theme {
+  --forest-bg: #171819;
+  --forest-paper: #202224;
+  --forest-elevated: #2b2d30;
+  --forest-ink: #f2f1ec;
+  --forest-muted: #babcc1;
+  --forest-line: #3e4145;
+  --forest-control-line: #747b82;
+  --forest-accent: #d4d7dd;
+  --forest-action: #e6e7ea;
+  --forest-on: #202226;
+  --forest-tint: #30343a;
+  --forest-gold: #d4d7dd;
+  --forest-danger: #f1aba4;
+  --forest-overlay: rgb(0 0 0 / 65%);
+  --forest-shadow: rgb(0 0 0 / 32%);
+  color-scheme: dark;
+}
+
+html[data-design=forest] {
+  --bg: var(--forest-bg);
+  --ink: var(--forest-ink);
+  --muted: var(--forest-muted);
+  --line: var(--forest-line);
+  --accent: var(--forest-accent);
+  --bg-primary: var(--forest-bg);
+  --bg-secondary: var(--forest-paper);
+  --bg-card: var(--forest-paper);
+  --bg-card-hover: var(--forest-tint);
+  --bg-input: var(--forest-paper);
+  --text-primary: var(--forest-ink);
+  --text-secondary: var(--forest-muted);
+  --text-muted: var(--forest-muted);
+  --border-primary: var(--forest-line);
+  --border-secondary: var(--forest-line);
+  --border-color: var(--forest-line);
+  --accent-cyan: var(--forest-accent);
+  --accent-blue: var(--forest-accent);
+  --filter-bg: var(--forest-paper);
+  --badge-bg: var(--forest-tint);
+  --hero-glow: color-mix(in srgb, var(--forest-accent) 10%, transparent);
+}
