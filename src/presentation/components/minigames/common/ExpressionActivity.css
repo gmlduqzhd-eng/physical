@@ -8,3 +8,7 @@ html[data-design=forest] body :is(.expression-activity,.expression-player) .expr
 html[data-design=forest] body :is(.expression-activity,.expression-player) .expression-selected * {
   color: inherit !important;
 }
+
+/* Curriculum and reflection decorations use the same palette as their popup. */
+html[data-design=forest] body .expression-activity [class*="border-purple-"] { border-color:var(--forest-line)!important; }
+html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.expression-selected) { background:var(--forest-tint)!important; }

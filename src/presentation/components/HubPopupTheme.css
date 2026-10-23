@@ -23,3 +23,5 @@ html[data-design=forest] body .hub-page .hub-popup .mbti-result-card :is(p,span)
 }
 html[data-design=forest] .hub-popup .mbti-reaction[data-signal=now] { background:#10b981; color:#052e16; border-color:#059669; }
 html[data-design=forest] .hub-popup .mbti-reaction[data-signal=waiting] { background:color-mix(in srgb,var(--forest-danger) 12%,var(--forest-paper)); color:var(--forest-danger); border-color:var(--forest-danger); }
+
+html[data-design=forest] body .hub-page .hub-popup { border-color:var(--forest-line)!important; }
