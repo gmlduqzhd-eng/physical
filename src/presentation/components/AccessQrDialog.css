@@ -6,7 +6,7 @@
 }
 #access-qr-dialog {
   border: 0;
-  color: #1c3037;
+  color: var(--forest-ink, #1c3037);
   color-scheme: light;
   text-align: center;
   font-family: AccessQrSans, sans-serif;
@@ -27,7 +27,7 @@
   margin: 0;
   padding: 16px;
   border-radius: 0;
-  background: white;
+  background: var(--forest-paper, white);
   box-shadow: none;
   overflow: hidden;
 }
@@ -45,7 +45,7 @@
 #access-qr-dialog p {
   font-size: 13px;
   line-height: 1.5;
-  color: #687d81;
+  color: var(--forest-muted, #687d81);
   margin: 0;
 }
 #access-qr-dialog .qr-stage {
@@ -72,13 +72,13 @@
 #access-qr-dialog .url {
   font-size: 13px;
   margin: 0;
-  color: #687d81;
+  color: var(--forest-muted, #687d81);
 }
 #access-qr-dialog .save {
   display: inline-flex;
   padding: 10px 17px;
-  background: #184e46;
-  color: white;
+  background: var(--forest-accent, #184e46);
+  color: var(--forest-on, white);
   border-radius: 8px;
   font-size: 14px;
   text-decoration: none;
@@ -91,8 +91,8 @@
   height: 44px;
   display: grid;
   place-items: center;
-  background: #eef4f1;
-  color: #53676e;
+  background: var(--forest-tint, #eef4f1);
+  color: var(--forest-muted, #53676e);
   border: 0;
   border-radius: 50%;
   cursor: pointer;
@@ -102,7 +102,7 @@
   height: 21px;
 }
 #access-qr-dialog :is(a, button):focus-visible {
-  outline: 3px solid #13aa99;
+  outline: 3px solid var(--forest-accent, #13aa99);
   outline-offset: 3px;
 }
 @media (max-width: 600px), (max-height: 500px) {

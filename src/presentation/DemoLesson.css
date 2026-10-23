@@ -1,24 +1,24 @@
 .flow.demo-lesson .lesson-wrap { max-width: 1240px; padding: 0 44px 24px; }
-.flow.demo-lesson .demo-banner { margin: 28px 0 0; padding: 14px 18px; border: 1px solid #e4ded2; border-radius: 15px; background: #f0ede3; color: #696c60; font-size: 14px; line-height: 1.8; }
+.flow.demo-lesson .demo-banner { margin: 28px 0 0; padding: 14px 18px; border: 1px solid var(--forest-line, #e4ded2); border-radius: 15px; background: var(--forest-tint, #f0ede3); color: var(--forest-muted, #696c60); font-size: 14px; line-height: 1.8; }
 .flow.demo-lesson .lesson-intro { padding: 27px 0 8px; }
-.flow.demo-lesson .lesson-eyebrow { color: #8b6948; }
-.flow.demo-lesson h1 { color: #333f37; font-size: 39px; }
+.flow.demo-lesson .lesson-eyebrow { color: var(--forest-accent, #8b6948); }
+.flow.demo-lesson h1 { color: var(--forest-ink, #333f37); font-size: 39px; }
 .flow.demo-lesson .chips { gap: 10px; margin: 20px 0 24px; }
-.flow.demo-lesson .chips button { min-height: 48px; padding: 11px 21px; border-radius: 15px; border-color: #e0dfd3; background: #fffefa; color: #52634a; }
-.flow.demo-lesson .chips button[aria-pressed=true] { border-color: #576c50; background: #576c50; color: #fffefa; }
+.flow.demo-lesson .chips button { min-height: 48px; padding: 11px 21px; border-radius: 15px; border-color: var(--forest-line, #e0dfd3); background: var(--forest-paper, #fffefa); color: var(--forest-accent, #52634a); }
+.flow.demo-lesson .chips button[aria-pressed=true] { border-color: var(--forest-line, #576c50); background: var(--forest-accent, #576c50); color: var(--forest-on, #fffefa); }
 .flow.demo-lesson .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 24px; }
-.flow.demo-lesson .steps li { display: flex; align-items: center; min-height: 50px; padding: 12px 16px; border: 1px solid #e4ded2; border-radius: 15px; background: #f0ede3; color: #696c60; line-height: 1.6; }
-.flow.demo-lesson .steps li[aria-current=step] { border-color: #576c50; background: #eef2e5; color: #52634a; font-weight: 700; }
-.flow.demo-lesson .card { padding: 30px; border-color: #e4ded2; border-radius: 23px; background: #fffefa; }
-.flow.demo-lesson .pill { display: inline-block; padding: 5px 12px; background: #eee8dd; color: #806246; }
+.flow.demo-lesson .steps li { display: flex; align-items: center; min-height: 50px; padding: 12px 16px; border: 1px solid var(--forest-line, #e4ded2); border-radius: 15px; background: var(--forest-tint, #f0ede3); color: var(--forest-muted, #696c60); line-height: 1.6; }
+.flow.demo-lesson .steps li[aria-current=step] { border-color: var(--forest-line, #576c50); background: var(--forest-tint, #eef2e5); color: var(--forest-accent, #52634a); font-weight: 700; }
+.flow.demo-lesson .card { padding: 30px; border-color: var(--forest-line, #e4ded2); border-radius: 23px; background: var(--forest-paper, #fffefa); }
+.flow.demo-lesson .pill { display: inline-block; padding: 5px 12px; background: var(--forest-tint, #eee8dd); color: var(--forest-accent, #806246); }
 .flow.demo-lesson .card h2 { margin: 18px 0 14px; }
-.flow.demo-lesson .card p { margin: 10px 0 18px; color: #696c60; line-height: 1.85; }
-.flow.demo-lesson .preview { margin-top: 22px; padding: 20px 22px; border: 1px solid #dce4d2; border-left: 3px solid #879a70; border-radius: 15px; background: #f1f4ea; color: #3b463d; }
+.flow.demo-lesson .card p { margin: 10px 0 18px; color: var(--forest-muted, #696c60); line-height: 1.85; }
+.flow.demo-lesson .preview { margin-top: 22px; padding: 20px 22px; border: 1px solid var(--forest-line, #dce4d2); border-left: 3px solid var(--forest-line, #879a70); border-radius: 15px; background: var(--forest-tint, #f1f4ea); color: var(--forest-ink, #3b463d); }
 .flow.demo-lesson .preview p { margin-bottom: 0; }
-.flow.lesson-shell.demo-lesson .primary { min-height: 50px; padding: 12px 22px; border: 1px solid #576c50; border-radius: 13px; background: #576c50; color: #fffefa; }
-.flow.demo-lesson .notice { border: 1px solid #dce4d2; border-radius: 15px; background: #f1f4ea; color: #52634a; }
-.flow.demo-lesson .big-number { color: #576c50; }
-.flow.demo-lesson .lesson-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #e0dfd3; }
+.flow.lesson-shell.demo-lesson .primary { min-height: 50px; padding: 12px 22px; border: 1px solid var(--forest-line, #576c50); border-radius: 13px; background: var(--forest-accent, #576c50); color: var(--forest-on, #fffefa); }
+.flow.demo-lesson .notice { border: 1px solid var(--forest-line, #dce4d2); border-radius: 15px; background: var(--forest-tint, #f1f4ea); color: var(--forest-accent, #52634a); }
+.flow.demo-lesson .big-number { color: var(--forest-accent, #576c50); }
+.flow.demo-lesson .lesson-footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--forest-line, #e0dfd3); }
 @media (max-width: 760px) {
   .flow.demo-lesson .lesson-wrap { padding: 0 22px 22px; }
   .flow.demo-lesson h1 { font-size: 31px; }

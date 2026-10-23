@@ -2,7 +2,7 @@
 @font-face{font-family:ForestSerif;src:url('/fonts/ForestSerif.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
 
 /* Shared palette for the app, lazy routes, and portals. */
-html[data-design=forest]{--forest-bg:#f7f6f0;--forest-paper:#fffef9;--forest-ink:#283a2d;--forest-muted:#617064;--forest-line:#dce1d4;--forest-accent:#315c42;--forest-on:#fffef6;--forest-tint:#e9eddf;--forest-gold:#8a744e;--forest-sans:ForestSans,system-ui,sans-serif;--forest-serif:ForestSerif,serif;color-scheme:light;background:var(--forest-bg)}
+html[data-design=forest]{--forest-bg:#f7f6f0;--forest-paper:#fffef9;--forest-ink:#283a2d;--forest-muted:#5e6b60;--forest-line:#dce1d4;--forest-accent:#315c42;--forest-on:#fffef6;--forest-tint:#e9eddf;--forest-gold:#8a744e;--forest-sans:ForestSans,system-ui,sans-serif;--forest-serif:ForestSerif,serif;color-scheme:light;background:var(--forest-bg)}
 html[data-design=forest].dark-theme{--forest-bg:#1b241f;--forest-paper:#29362d;--forest-ink:#edf2e7;--forest-muted:#bac9ba;--forest-line:#415142;--forest-accent:#bbd4a2;--forest-on:#1e3524;--forest-tint:#354834;--forest-gold:#c2ad83;color-scheme:dark}
 html[data-design=forest]{--bg-primary:var(--forest-bg);--bg-secondary:var(--forest-paper);--bg-card:var(--forest-paper);--bg-input:var(--forest-paper);--text-primary:var(--forest-ink);--text-secondary:var(--forest-muted);--text-muted:var(--forest-muted);--border-primary:var(--forest-line);--border-secondary:var(--forest-line);--border-color:var(--forest-line);--accent-cyan:var(--forest-accent);--accent-blue:var(--forest-accent)}
 html[data-design=forest] :is(body,#root){background:var(--forest-bg);color:var(--forest-ink);font-family:var(--forest-sans);-webkit-font-smoothing:antialiased;font-synthesis:none}
@@ -188,5 +188,19 @@ html[data-design=forest].light-theme body :where(:not([data-game-color],[data-ga
 html[data-design=forest] body :is(input,select,textarea):where(:not([data-game-color],[data-game-color] *,.outdoor-mode,.outdoor-mode *)){background-color:var(--forest-paper);color:var(--forest-ink);border-color:var(--forest-line)}
 html[data-design=forest] body :where(:not([data-game-color],[data-game-color] *,.outdoor-mode,.outdoor-mode *)):is(button,a):is([class*="from-red-"],[class*="from-rose-"],[class*="from-orange-"],[class~="bg-red-700"],[class~="bg-rose-700"]){color:#fffef6!important}
 html[data-design=forest] body :where(:not([data-game-color],[data-game-color] *,.outdoor-mode,.outdoor-mode *)):is(button,a):is([class*="from-red-"],[class*="from-rose-"],[class*="from-orange-"],[class~="bg-red-700"],[class~="bg-rose-700"]) *{color:inherit!important}
+
+html[data-design=forest] body .hub-page [data-game-card] span[class*="bg-"]{background-color:var(--forest-tint)!important;color:var(--forest-ink)!important;border-color:var(--forest-line)!important}
+
+/* Shared header controls also need the active palette inside lazy route scopes. */
+html[data-design=forest] .header-utilities.header-tools{--ink:var(--forest-ink);--muted:var(--forest-muted);--line:var(--forest-line);--accent:var(--forest-accent)}
+html[data-design=forest] .header-tools .install-confirm{color:var(--forest-on)}
+html[data-design=forest] .background-music-controls{--music-accent:var(--forest-accent);--music-muted:var(--forest-muted);--music-track:var(--forest-line);background:var(--forest-paper);color:var(--forest-ink);border-color:var(--forest-line)}
+html[data-design=forest] .background-music-icon{background:var(--forest-tint);color:var(--forest-accent)}
+html[data-design=forest] .flow .classroom-roster li button{color:var(--forest-ink)}
+html[data-design=forest] .hub-page .hub-primary-filters button[aria-pressed=true] span{background:var(--forest-tint)!important;color:var(--forest-ink)!important}
+html[data-design=forest] .movement-quest :is(.mq-heading p,.mq-footnote){color:var(--forest-muted)}
+html[data-design=forest] .warm-game button.game-stage-primary{color:var(--forest-on)!important}
+html[data-design=forest] .warm-game button.game-stage-primary *{color:inherit!important}
+html[data-design=forest] .warm-game :where(:not([data-game-color],[data-game-color] *,.outdoor-mode,.outdoor-mode *)):is(button,a):is([class~="bg-cyan-500"],[class~="bg-cyan-600"],[class~="bg-cyan-700"],[class~="bg-teal-500"],[class~="bg-teal-600"],[class~="bg-teal-700"],[class~="bg-blue-500"],[class~="bg-blue-600"],[class~="bg-blue-700"],[class~="bg-emerald-500"],[class~="bg-emerald-600"],[class~="bg-emerald-700"]){color:var(--forest-on)!important}
 html[data-design=forest] body .header-utilities.header-tools :is(.share-trigger,.home-tools>summary){background:transparent;color:var(--forest-ink);border-color:var(--forest-line);border-radius:100px;font-weight:500}
 html[data-design=forest] body .header-utilities.header-tools .app-install-trigger{background:var(--forest-accent);color:var(--forest-on);border-color:var(--forest-accent);border-radius:100px;font-weight:550}
