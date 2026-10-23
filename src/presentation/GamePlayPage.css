@@ -1,13 +1,13 @@
 .gameplay-page.has-game-toolbar { padding-top: 76px; }
-.gameplay-toolbar { min-height: 60px; background: #020617; border-bottom: 1px solid #334155; }
+.gameplay-toolbar { min-height: 60px; background: var(--forest-bg); border-bottom: 1px solid var(--forest-line); }
 .gameplay-content > div { min-height: calc(100dvh - 76px); }
 .gameplay-content[hidden] { display: none; }
-.gameplay-content button:focus-visible { outline: 3px solid #22d3ee; outline-offset: 3px; }
+.gameplay-content button:focus-visible { outline: 3px solid var(--forest-accent); outline-offset: 3px; }
 @media (max-width: 480px) {
   .gameplay-toolbar { gap: 8px; }
   .gameplay-toolbar > div { min-width: 0; }
 }
-.game-tools-layout { --game-utility-height:68px; --game-stage-offset:144px; min-height:100dvh; background:#fbf8f2; }
+.game-tools-layout { --game-utility-height:68px; --game-stage-offset:144px; min-height:100dvh; background:var(--forest-bg); }
 .game-tools-layout .gameplay-page { padding-top:var(--game-utility-height); }
 .game-tools-layout .gameplay-page.has-game-toolbar { padding-top:var(--game-stage-offset); }
 .game-tools-layout .gameplay-toolbar { top:var(--game-utility-height); }

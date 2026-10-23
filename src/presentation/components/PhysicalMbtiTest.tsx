@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useModalDialog } from '../../application/useModalDialog';
+import './HubPopupTheme.css';
 import { X, ArrowRight, RotateCcw, Play } from 'lucide-react';
 
 interface PhysicalMbtiTestProps {
@@ -197,7 +198,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="체육 MBTI 테스트" tabIndex={-1}
-      className="max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-purple-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      className="hub-popup max-h-[calc(100dvh-2rem)] overflow-y-auto bg-slate-900 border border-purple-500/40 rounded-3xl max-w-md w-full p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
           aria-label="닫기"
@@ -218,7 +219,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
             </p>
             <button
               onClick={() => setStep('step1')}
-              className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 font-black rounded-2xl shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2 text-lg active:scale-95 transition-all"
+              className="hub-dialog-primary w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 font-black rounded-2xl shadow-xl shadow-purple-500/30 flex items-center justify-center gap-2 text-lg active:scale-95 transition-all"
             >
               테스트 시작하기
               <ArrowRight className="w-5 h-5" />
@@ -229,7 +230,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
         {/* 1단계: 번개 반응속도 */}
         {step === 'step1' && (
           <div className="text-center">
-            <span className="text-xs font-bold text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/30">
+            <span className="hub-dialog-tint text-xs font-bold px-3 py-1 rounded-full border border-purple-500/30">
               1단계 / 3단계: 순발력
             </span>
             <h3 className="text-xl font-black mt-2 mb-1">번개 반응속도 테스트</h3>
@@ -237,7 +238,9 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
 
             <div
               onClick={rxState === 'now' || rxState === 'waiting' ? handleRxClick : undefined}
-              className={`h-48 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all select-none border-2 ${
+              data-game-color={rxState === 'now' || rxState === 'waiting' ? 'reaction' : undefined}
+              data-signal={rxState}
+              className={`mbti-reaction h-48 rounded-2xl flex flex-col items-center justify-center cursor-pointer transition-all select-none border-2 ${
                 rxState === 'now'
                   ? 'bg-emerald-500 border-emerald-300 shadow-xl shadow-emerald-500/40 text-slate-950 font-black text-2xl'
                   : rxState === 'waiting'
@@ -250,7 +253,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
               {rxState === 'ready' && (
                 <button
                   onClick={startStep1}
-                  className="px-6 py-3 bg-purple-600 rounded-xl font-bold text-sm shadow-md"
+                  className="hub-dialog-primary px-6 py-3 bg-purple-600 rounded-xl font-bold text-sm shadow-md"
                 >
                   준비 시작
                 </button>
@@ -268,7 +271,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
             {rxState === 'done' && (
               <button
                 onClick={() => setStep('step2')}
-                className="mt-4 w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
+                className="hub-dialog-primary mt-4 w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
               >
                 다음 단계로 이동 <ArrowRight className="w-4 h-4" />
               </button>
@@ -279,7 +282,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
         {/* 2단계: 5초 폭풍 연타 */}
         {step === 'step2' && (
           <div className="text-center">
-            <span className="text-xs font-bold text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+            <span className="hub-dialog-tint text-xs font-bold px-3 py-1 rounded-full border border-amber-500/30">
               2단계 / 3단계: 근지구력
             </span>
             <h3 className="text-xl font-black mt-2 mb-1">5초 폭풍 연타 테스트</h3>
@@ -294,14 +297,14 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
               {!tapRunning && tapTimeLeft === 5 ? (
                 <button
                   onClick={startStep2}
-                  className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-lg shadow-lg shadow-amber-500/20"
+                  className="hub-dialog-primary w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl text-lg shadow-lg shadow-amber-500/20"
                 >
                   연타 시작하기!
                 </button>
               ) : tapRunning ? (
                 <button
                   onClick={handleTap}
-                  className="w-full py-10 bg-gradient-to-r from-amber-500 to-orange-500 active:scale-95 text-slate-950 font-black text-3xl rounded-2xl shadow-xl shadow-orange-500/30 select-none"
+                  className="hub-dialog-primary w-full py-10 bg-gradient-to-r from-amber-500 to-orange-500 active:scale-95 text-slate-950 font-black text-3xl rounded-2xl shadow-xl shadow-orange-500/30 select-none"
                 >
                   연타!! 💥
                 </button>
@@ -315,7 +318,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
             {!tapRunning && tapTimeLeft === 0 && (
               <button
                 onClick={() => setStep('step3')}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
+                className="hub-dialog-primary w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-bold text-sm flex items-center justify-center gap-1"
               >
                 다음 단계로 이동 <ArrowRight className="w-4 h-4" />
               </button>
@@ -326,7 +329,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
         {/* 3단계: 정확한 1초 맞추기 (리듬 & 밸런스) */}
         {step === 'step3' && (
           <div className="text-center">
-            <span className="text-xs font-bold text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/30">
+            <span className="hub-dialog-tint text-xs font-bold px-3 py-1 rounded-full border border-cyan-500/30">
               3단계 / 3단계: 리듬 감각
             </span>
             <h3 className="text-xl font-black mt-2 mb-1">정확한 1.00초 맞추기</h3>
@@ -340,7 +343,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
               {stopwatchState === 'idle' && (
                 <button
                   onClick={startStep3}
-                  className="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-base"
+                  className="hub-dialog-primary w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black rounded-xl text-base"
                 >
                   타이머 시작
                 </button>
@@ -363,7 +366,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
             {stopwatchState === 'stopped' && (
               <button
                 onClick={() => setStep('result')}
-                className="w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 font-black rounded-2xl text-base shadow-xl shadow-purple-500/30 flex items-center justify-center gap-1.5"
+                className="hub-dialog-primary w-full py-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 font-black rounded-2xl text-base shadow-xl shadow-purple-500/30 flex items-center justify-center gap-1.5"
               >
                 결과 카드 확인하기! ✨
               </button>
@@ -374,7 +377,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
         {/* 결과 발표 */}
         {step === 'result' && (
           <div className="text-center py-2 animate-in zoom-in-95 duration-300">
-            <div className={`p-6 rounded-3xl bg-gradient-to-br ${persona.color} shadow-2xl mb-4 text-white relative overflow-hidden`}>
+            <div className={`mbti-result-card p-6 rounded-3xl bg-gradient-to-br ${persona.color} shadow-2xl mb-4 text-white relative overflow-hidden`}>
               <div className="text-6xl mb-2">{persona.emoji}</div>
               <span className="text-xs uppercase tracking-wider font-extrabold bg-black/20 px-3 py-1 rounded-full backdrop-blur-sm">
                 신체 페르소나 분석 완료

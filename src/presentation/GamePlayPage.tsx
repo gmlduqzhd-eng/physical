@@ -643,7 +643,7 @@ const GamePlaySession = () => {
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[10003] bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm animate-bounce border-2 border-yellow-300">
+        <div className="game-achievement-toast fixed top-20 left-1/2 -translate-x-1/2 z-[10003] bg-gradient-to-r from-yellow-500 to-amber-500 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl font-black text-sm animate-bounce border-2 border-yellow-300">
           🎉 새 배지 획득! {newBadge}
         </div>
       )}
@@ -709,6 +709,7 @@ const GamePlaySession = () => {
                 ].map(({ emoji, label, value }) => (
                   <button
                     key={value}
+                    aria-pressed={rpeSelected === value}
                     onClick={() => {
                       setRpeSelected(value);
                       // RPE 값을 최근 기록에 업데이트
@@ -716,7 +717,7 @@ const GamePlaySession = () => {
                         updateLatestRpe(gameType, value);
                       }
                     }}
-                    className={`min-w-0 whitespace-normal flex flex-col items-center gap-1 px-1 py-2 rounded-xl transition-all border-2 ${
+                    className={`result-rpe-choice min-w-0 whitespace-normal flex flex-col items-center gap-1 px-1 py-2 rounded-xl transition-all border-2 ${
                       rpeSelected === value
                         ? 'bg-cyan-600/30 border-cyan-400 scale-110 shadow-lg shadow-cyan-900/50'
                         : 'bg-slate-900/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800/80'

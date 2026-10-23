@@ -1,0 +1,9 @@
+/* Leave the fixed game utility bar usable without covering the dialog controls. */
+.cooldown-modal { top:var(--game-utility-height, 0px); }
+.cooldown-modal .cooldown-panel { max-height:calc(100dvh - var(--game-utility-height, 0px) - 32px); }
+.cooldown-modal .cooldown-heading { padding-right:40px; }
+.cooldown-modal .cooldown-close { width:44px; height:44px; display:grid; place-items:center; }
+html[data-design=forest] .cooldown-modal .cooldown-panel { background:var(--forest-paper); color:var(--forest-ink); border-color:var(--forest-line); }
+html[data-design=forest] .cooldown-modal .cooldown-tabs button { min-height:44px; color:var(--forest-muted); }
+html[data-design=forest] .cooldown-modal .cooldown-tabs button[aria-pressed=true] { background:var(--forest-accent)!important; color:var(--forest-on)!important; }
+html[data-design=forest] .cooldown-modal .cooldown-tabs button[aria-pressed=true] * { color:inherit!important; }

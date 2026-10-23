@@ -1,0 +1,25 @@
+/* Popup UI shares Clean Blue; the red/green reaction cue remains a game signal. */
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-primary {
+  background:var(--forest-accent)!important;
+  color:var(--forest-on)!important;
+  border-color:var(--forest-accent)!important;
+  box-shadow:none;
+}
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-primary * { color:inherit!important; }
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-primary [class*="fill-"] { fill:currentColor; }
+html[data-design=forest] body .hub-page .hub-popup :where(:not([data-game-color], [data-game-color] *)):is(.text-purple-300,.text-purple-400,.text-amber-300,.text-amber-400) { color:var(--forest-accent)!important; }
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-card { background:var(--forest-paper)!important; color:var(--forest-ink)!important; border-color:var(--forest-line)!important; }
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-tint { background:var(--forest-tint)!important; color:var(--forest-accent)!important; border-color:var(--forest-line)!important; }
+html[data-design=forest] body .hub-page .hub-popup .hub-dialog-muted { color:var(--forest-muted)!important; }
+html[data-design=forest] body .hub-page .hub-popup .mbti-result-card {
+  background:var(--forest-tint)!important;
+  color:var(--forest-ink)!important;
+  border:1px solid var(--forest-line);
+}
+html[data-design=forest] body .hub-page .hub-popup .mbti-result-card :is(p,span) {
+  background:transparent!important;
+  color:var(--forest-ink)!important;
+  opacity:1;
+}
+html[data-design=forest] .hub-popup .mbti-reaction[data-signal=now] { background:#10b981; color:#052e16; border-color:#059669; }
+html[data-design=forest] .hub-popup .mbti-reaction[data-signal=waiting] { background:color-mix(in srgb,var(--forest-danger) 12%,var(--forest-paper)); color:var(--forest-danger); border-color:var(--forest-danger); }

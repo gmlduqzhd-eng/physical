@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { CheckCircle2 } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
+import './common/NativeActivityControls.css';
 
 interface Attempt {
   round: number;
@@ -91,14 +92,14 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               <div className="relative w-64 h-64 mx-auto my-2 rounded-full border-4 border-slate-800 flex items-center justify-center bg-slate-950 overflow-hidden shadow-inner">
                 {/* 1점 바깥 영역 */}
                 <div className="absolute inset-2 rounded-full bg-amber-950/40 border border-amber-800/40 flex items-start justify-center pt-2">
-                  <span className="text-[10px] font-bold text-amber-600">1점 구역</span>
+                  <span className="text-[10px] font-bold text-slate-300">1점 구역</span>
                 </div>
                 {/* 2점 중간 영역 */}
                 <div className="absolute inset-10 rounded-full bg-amber-900/50 border border-amber-600/50 flex items-start justify-center pt-2">
                   <span className="text-[10px] font-bold text-yellow-300">2점 구역</span>
                 </div>
                 {/* 3점 정중앙 버튼 */}
-                <div className="absolute inset-20 rounded-full bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center shadow-lg">
+                <div data-game-color="curling-center" className="absolute inset-20 rounded-full bg-amber-500 flex items-center justify-center shadow-lg">
                   <span className="text-xs font-black text-slate-950">3점 중앙</span>
                 </div>
 
@@ -131,28 +132,28 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => handleRecordAttempt('center')}
-                  className="py-3 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
+                  className="activity-record-choice py-3 rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 active:scale-95 transition-all"
                 >
                   <span className="text-sm">🎯 중앙 표적 (3점)</span>
                   <span className="text-[10px] text-white">정확히 안착!</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('middle')}
-                  className="py-3 bg-amber-700/80 hover:bg-amber-600 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
+                  className="activity-record-choice py-3 rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 active:scale-95 transition-all"
                 >
                   <span className="text-sm">🟡 중간 구역 (2점)</span>
                   <span className="text-[10px] text-white">표적 근처 접근</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('outer')}
-                  className="py-3 bg-amber-800/60 hover:bg-amber-700 text-white rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
+                  className="activity-record-choice py-3 rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 active:scale-95 transition-all"
                 >
                   <span className="text-sm">⚪ 바깥 구역 (1점)</span>
                   <span className="text-[10px] text-yellow-200">원 안에 들어옴</span>
                 </button>
                 <button
                   onClick={() => handleRecordAttempt('miss')}
-                  className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 shadow-md active:scale-95 transition-all"
+                  className="activity-record-choice py-3 rounded-xl font-bold text-xs flex flex-col items-center gap-0.5 active:scale-95 transition-all"
                 >
                   <span className="text-sm">💨 표적 이탈 (0점)</span>
                   <span className="text-[10px] text-slate-400">힘 조절 다시 도전</span>

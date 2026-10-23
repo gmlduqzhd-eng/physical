@@ -1,0 +1,10 @@
+/* Selected controls carry their own text/background pair, including nested icons. */
+html[data-design=forest] body :is(.expression-activity,.expression-player) .expression-selected {
+  background: var(--forest-accent) !important;
+  color: var(--forest-on) !important;
+  border-color: var(--forest-accent) !important;
+  box-shadow: none;
+}
+html[data-design=forest] body :is(.expression-activity,.expression-player) .expression-selected * {
+  color: inherit !important;
+}

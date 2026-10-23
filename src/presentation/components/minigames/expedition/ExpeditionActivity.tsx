@@ -6,6 +6,7 @@ import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import {useVoiceCoach} from '../../../../application/useVoiceCoach';
 import {useAudio} from '../../../../application/useAudio';
 import './ExpeditionActivity.css';
+import '../common/GameWordCue.css';
 
 interface Props { game:ExpeditionSpec;groupId:string;solo:boolean;enqueueAction:(action:{payload:{id:string;amount:number;details:GameResultDetails}})=>void; }
 type Phase='ready'|'tutorial'|'countdown'|'preview'|'active'|'record';
@@ -115,7 +116,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       {phase==='preview'&&<div className="expedition-signal"><h3>기억할 순서 · {seconds}초 뒤 가려져요</h3><ol className="expedition-pattern">{plan.secret!.map((item,i)=><li key={i}>{i+1}. {item}</li>)}</ol><p>기기는 두고 실제 표식으로 이동해요.</p></div>}
       {phase==='countdown'&&<div className="expedition-signal"><h3>주변을 확인하고 준비해요</h3><strong className="expedition-timer">{seconds}</strong></div>}
       {phase==='active'&&<>
-        {plan.wordCue&&<div className="expedition-signal"><p>현재 규칙: {plan.wordCue.rule}</p><strong data-game-color="expedition-word" style={{color:plan.wordCue.color,fontSize:48}}>{plan.wordCue.text}</strong><p>글자와 색이 달라요. 현재 규칙을 따라가요.</p></div>}
+        {plan.wordCue&&<div className="expedition-signal"><p>현재 규칙: {plan.wordCue.rule}</p><strong className="game-word-cue" data-game-color="expedition-word" style={{color:plan.wordCue.color,fontSize:48}}>{plan.wordCue.text}</strong><p>글자와 색이 달라요. 현재 규칙을 따라가요.</p></div>}
         {plan.bingoCells&&<div><p>직접 확인한 빙고: {expeditionBingo(records,plans).lines}줄</p><div className="expedition-bingo">{Array.from({length:9},(_,i)=><span key={i} data-active={plan.bingoCells!.includes(i)}>{i+1} {expeditionBingo(records,plans).cells.includes(i)?'✓':''}</span>)}</div></div>}
         {plan.board&&<div className="expedition-board" role="img" aria-label="실제 바닥 코스를 위한 안내 지도">{Array.from({length:16},(_,i)=><span key={i} data-blocked={plan.board!.blocked.includes(i)}>{i===plan.board!.start?'출발':i===plan.board!.destination?'도착':plan.board!.blocked.includes(i)?'금지 ×':`${Math.floor(i/4)+1}-${i%4+1}`}</span>)}</div>}
         <div className="expedition-signal" role="status" aria-live="polite">

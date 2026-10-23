@@ -5,6 +5,7 @@ import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
+import './ExpressionActivity.css';
 
 interface ExpressionActivityLayoutProps {
   game: ExpressionGameData;
@@ -102,7 +103,7 @@ export const ExpressionActivityLayout = ({
   const currentStep = game.steps[currentStepIdx] || game.steps[0];
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="expression-activity w-full max-w-4xl mx-auto space-y-4">
       {/* 성취기준 세부 모달 */}
       {showAchievementModal && (
         <div
@@ -206,7 +207,7 @@ export const ExpressionActivityLayout = ({
             {/* 진행 단계 헤더 & 남은 시간 */}
             <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-xl bg-purple-600 text-white font-black text-xs shadow-md">
+                <span className="expression-selected px-3 py-1 rounded-xl font-black text-xs">
                   단계 {currentStep.stepNum} / {game.steps.length}
                 </span>
                 <h3 className="font-black text-base sm:text-lg text-white">

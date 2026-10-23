@@ -5,6 +5,7 @@ import type { QuestId, QuestRecord, QuestSettings } from '../../../../domain/mov
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 import { sfxTap, unlockAudio } from '../../../../application/soundEffects';
 import './MovementQuest.css';
+import './GameWordCue.css';
 
 export interface MovementQuestProps {
   gameId: QuestId; variantId?:string; groupId?: string; solo?: boolean;
@@ -133,7 +134,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
     {phase === 'plan' && <>
       <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{plan.goal}</h2><p>{plan.hint}</p>
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
-      {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
+      {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
       <fieldset className="mq-choices"><legend>어떤 작전으로 해 볼까요?</legend>{plan.choices.map(c => <button key={c.id} type="button" aria-pressed={choice === c.id} onClick={() => changeChoice(c.id)}><strong>{c.label}</strong><span>{c.detail}</span></button>)}</fieldset>
       {error && <p role="alert" className="mq-error">{error}</p>}{plan.decision&&choice===plan.decision.answer&&<p className="mq-panel">{plan.decision.explanation}</p>}
@@ -147,7 +148,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
         <span>{phase === 'active' ? plan.timing && !rehearsal ? '시간 표시는 가려져 있어요' : `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음 · ${settings.seated ? '앉아서' : '서서'} 활동` : '주변을 확인해요'}</span>
       </div>
       {phase === 'active' && gameId === 'dribble-rhythm' && <div className="mq-beats" aria-label={`현재 ${cueIndex % 8 + 1}박`}>{Array.from({ length: 8 }, (_, n) => <span key={n} className={cueIndex % 8 === n ? 'is-current' : ''}>{n + 1}</span>)}</div>}
-      {plan.stimulus&&<div className="mq-panel"><p>{plan.stimulus.rule}을 따라가요.</p><strong style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
+      {plan.stimulus&&<div className="mq-panel"><p>{plan.stimulus.rule}을 따라가요.</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       <p className="mq-away">{plan.timing?'활동을 마칠 때 종료 버튼을 한 번 눌러요.':'활동 중 화면을 누르지 않아도 돼요.'} 신호는 동작 안내이며 자동 판정이 아니에요.</p>
       {phase==='active'&&plan.timing&&!rehearsal&&<button className="mq-primary" disabled={paused||activeMs<1000} onClick={()=>setPhase('record')}>목표 시간이 된 것 같아요</button>}
       <button className="mq-secondary" onClick={() => { unlockAudio(); setPaused(!paused); }}>{paused ? '계속하기' : '일시정지'}</button>

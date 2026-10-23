@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { RotateCcw, Video, Volume2, VolumeX, FlipHorizontal, ExternalLink, Repeat, Gauge } from 'lucide-react';
+import './ExpressionActivity.css';
 
 // YouTube IFrame Player API 타입
 declare global {
@@ -268,7 +269,7 @@ export const YouTubeExpressionPlayer = ({
   };
 
   return (
-    <div className="bg-slate-950/90 rounded-2xl border border-purple-500/30 overflow-hidden shadow-xl">
+    <div className="expression-player bg-slate-950/90 rounded-2xl border border-purple-500/30 overflow-hidden shadow-xl">
       {/* 플레이어 상단 컨트롤 바 */}
       <div className="p-3 bg-slate-900/90 border-b border-purple-500/20 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
@@ -291,9 +292,10 @@ export const YouTubeExpressionPlayer = ({
           <button
             type="button"
             onClick={() => setIsMirrored(prev => !prev)}
+            aria-pressed={isMirrored}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
               isMirrored
-                ? 'bg-purple-600 border-purple-400 text-white shadow-md shadow-purple-900/40'
+                ? 'expression-selected'
                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
             }`}
             title="영상을 좌우 반전하여 거울처럼 마주보고 쉽게 안무를 따라 합니다."
@@ -306,9 +308,10 @@ export const YouTubeExpressionPlayer = ({
           <button
             type="button"
             onClick={toggleMetronome}
+            aria-pressed={isMetronomeOn}
             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all border flex items-center gap-1 ${
               isMetronomeOn
-                ? 'bg-amber-600 border-amber-400 text-white shadow-md shadow-amber-900/40 animate-pulse'
+                ? 'expression-selected animate-pulse'
                 : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
             }`}
             title="박자 메트로놈 (BPM)"
@@ -384,7 +387,7 @@ export const YouTubeExpressionPlayer = ({
                 key={beat}
                 className={`w-6 h-6 rounded-md flex items-center justify-center font-black text-xs transition-all ${
                   currentBeat === beat
-                    ? 'bg-amber-400 text-slate-950 scale-110 shadow-lg shadow-amber-400/50'
+                    ? 'expression-selected scale-110'
                     : 'bg-slate-800 text-slate-500'
                 }`}
               >
@@ -424,9 +427,10 @@ export const YouTubeExpressionPlayer = ({
                 key={speed}
                 type="button"
                 onClick={() => setPlaybackRate(speed)}
+                aria-pressed={playbackRate === speed}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all border ${
                   playbackRate === speed
-                    ? 'bg-cyan-600 border-cyan-400 text-white shadow-md shadow-cyan-900/50'
+                    ? 'expression-selected'
                     : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
                 }`}
               >
@@ -456,7 +460,7 @@ export const YouTubeExpressionPlayer = ({
               onClick={handleSetA}
               className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all border ${
                 pointA !== null
-                  ? 'bg-emerald-700 border-emerald-500 text-emerald-100 shadow-sm'
+                  ? 'expression-selected'
                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
               }`}
               title="현재 재생 위치를 A구간(시작점)으로 설정"
@@ -469,7 +473,7 @@ export const YouTubeExpressionPlayer = ({
               disabled={pointA === null}
               className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all border ${
                 pointB !== null
-                  ? 'bg-orange-700 border-orange-500 text-orange-100 shadow-sm'
+                  ? 'expression-selected'
                   : pointA !== null
                     ? 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
                     : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
@@ -481,10 +485,11 @@ export const YouTubeExpressionPlayer = ({
             <button
               type="button"
               onClick={handleToggleLoop}
+              aria-pressed={loopActive}
               disabled={pointA === null || pointB === null}
               className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all border flex items-center gap-1 ${
                 loopActive
-                  ? 'bg-purple-600 border-purple-400 text-white shadow-md shadow-purple-900/50 animate-pulse'
+                  ? 'expression-selected animate-pulse'
                   : pointA !== null && pointB !== null
                     ? 'bg-slate-800 border-slate-700 text-purple-300 hover:bg-slate-700'
                     : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'

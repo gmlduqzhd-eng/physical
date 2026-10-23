@@ -3,6 +3,7 @@ import { Flame, CheckCircle, Trophy, Sparkles, X, ArrowRight } from 'lucide-reac
 import { useDailyStreak } from '../../application/useDailyStreak';
 import { isRecord, localDateKey, readJsonStorage, writeStorage } from '../../application/browserStorage';
 import { useModalDialog } from '../../application/useModalDialog';
+import './HubPopupTheme.css';
 
 interface DailyStreakModalProps {
   isOpen: boolean;
@@ -66,7 +67,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
   };
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="오늘의 3분 땀방울 챌린지" tabIndex={-1} className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="오늘의 3분 땀방울 챌린지" tabIndex={-1} className="hub-popup fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-amber-500/40 rounded-3xl max-w-md max-h-[90dvh] overflow-y-auto w-full p-4 sm:p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
@@ -78,7 +79,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
 
         {/* 상단 스트릭 헤더 */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black text-sm mb-3">
+          <div className="hub-dialog-tint inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 font-black text-sm mb-3">
             <Flame className="w-4 h-4 fill-amber-400 text-amber-400 animate-bounce" />
             <span>{streakData.currentStreak}일 연속 땀방울 달성 중!</span>
           </div>
@@ -96,7 +97,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
               <div
                 className={`w-full max-w-9 aspect-square rounded-xl flex items-center justify-center font-bold text-xs sm:text-sm transition-all ${
                   item.isDone
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
+                    ? 'hub-dialog-primary bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
                     : item.isToday
                     ? 'border-2 border-dashed border-amber-400/80 text-amber-300'
                     : 'bg-slate-700/40 text-slate-500'
@@ -110,7 +111,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
 
         {/* 3단계 루틴 진행 카드 */}
         {completed ? (
-          <div className="bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/40 rounded-2xl p-5 text-center">
+          <div className="hub-dialog-tint border border-amber-500/40 rounded-2xl p-5 text-center">
             <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-2 animate-bounce" />
             <h3 className="text-lg font-black text-amber-300">오늘의 3분 챌린지 완료!</h3>
             <p className="text-xs text-slate-300 mt-1">
@@ -118,7 +119,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
             </p>
             <button
               onClick={onClose}
-              className="mt-4 w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-lg shadow-amber-500/20"
+              className="hub-dialog-primary mt-4 w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-lg shadow-amber-500/20"
             >
               내일 또 만나요!
             </button>
@@ -133,10 +134,10 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
                   key={idx}
                   className={`p-3.5 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
                     isCurrent
-                      ? 'bg-cyan-500/10 border-cyan-400/50 shadow-lg shadow-cyan-500/10'
+                      ? 'hub-dialog-tint border-cyan-400/50 shadow-lg shadow-cyan-500/10'
                       : isPast
-                      ? 'bg-slate-800/40 border-slate-700 opacity-70'
-                      : 'bg-slate-800/30 border-slate-700/40'
+                      ? 'hub-dialog-card border-slate-700'
+                      : 'hub-dialog-card border-slate-700/40'
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -161,7 +162,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
                           setActiveStep(s => s + 1);
                         }
                       }}
-                      className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1 shrink-0"
+                      className="hub-dialog-primary px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs rounded-xl flex items-center gap-1 shrink-0"
                     >
                       {idx === 1 ? '게임 시작' : '다음'}
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -174,7 +175,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
             {activeStep >= 3 && (
               <button
                 onClick={handleFinishRoutine}
-                className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 mt-4"
+                className="hub-dialog-primary w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 flex items-center justify-center gap-2 mt-4"
               >
                 <Sparkles className="w-5 h-5 fill-slate-950" />
                 오늘의 3분 챌린지 도장 찍기! (+100P)

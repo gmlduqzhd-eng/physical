@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Play, CheckCircle2 } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
+import './common/NativeActivityControls.css';
 
 const EMOTIONS = [
   { key: 'joy', name: '기쁨', emoji: '😄', desc: '세상을 다 가진 듯 벅차오르는 행복' },
@@ -116,9 +117,10 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                       key={lvl}
                       type="button"
                       onClick={() => setTemperature(lvl)}
+                      aria-pressed={temperature === lvl}
                       className={`py-2 rounded-xl text-xs font-bold transition-all ${
                         temperature === lvl
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                          ? 'activity-choice-selected'
                           : 'bg-slate-900 border border-slate-800 text-slate-500 hover:text-slate-300'
                       }`}
                     >
@@ -216,9 +218,10 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                       key={lvl}
                       type="button"
                       onClick={() => setPeerGuessTemp(lvl)}
+                      aria-pressed={peerGuessTemp === lvl}
                       className={`py-2 rounded-xl text-xs font-bold transition-all ${
                         peerGuessTemp === lvl
-                          ? 'bg-pink-600 text-white'
+                          ? 'activity-choice-selected'
                           : 'bg-slate-900 border border-slate-800 text-slate-500'
                       }`}
                     >

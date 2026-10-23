@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, ShoppingBag } from 'lucide-react';
 import { useTamagotchi, TAMAGOTCHI_ITEMS } from '../../application/useTamagotchi';
 import { useModalDialog } from '../../application/useModalDialog';
+import './HubPopupTheme.css';
 
 interface DambangTamagotchiModalProps {
   isOpen: boolean;
@@ -31,7 +32,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
   const equippedMedalItem = TAMAGOTCHI_ITEMS.find(i => i.id === state.equippedMedal);
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="내 땀방이와 아이템 상점" tabIndex={-1} className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="내 땀방이와 아이템 상점" tabIndex={-1} className="hub-popup fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-cyan-500/40 rounded-3xl max-w-lg max-h-[90dvh] overflow-y-auto w-full p-4 sm:p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           onClick={onClose}
@@ -45,9 +46,10 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
         <div className="flex flex-wrap items-center gap-2 mb-4 mt-8 border-b border-slate-800 pb-3">
           <button
             onClick={() => setTab('status')}
+            aria-pressed={tab === 'status'}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
               tab === 'status'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                ? 'hub-dialog-primary bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -55,16 +57,17 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
           </button>
           <button
             onClick={() => setTab('shop')}
+            aria-pressed={tab === 'shop'}
             className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-1.5 ${
               tab === 'shop'
-                ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
+                ? 'hub-dialog-primary bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
             아이템 상점
           </button>
-          <div className="ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
+          <div className="hub-dialog-tint ml-auto flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 font-bold text-xs border border-amber-500/30">
             <span>🪙 {state.coins} P</span>
           </div>
         </div>
@@ -72,7 +75,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
         {tab === 'status' ? (
           <div>
             {/* 캐릭터 쇼케이스 영역 */}
-            <div className="relative bg-gradient-to-b from-cyan-950/40 to-slate-950/60 border border-cyan-500/30 rounded-2xl p-6 text-center overflow-hidden mb-5">
+            <div className="hub-dialog-tint relative bg-gradient-to-b from-cyan-950/40 to-slate-950/60 border border-cyan-500/30 rounded-2xl p-6 text-center overflow-hidden mb-5">
               {/* 말풍선 */}
               <div className="inline-block bg-white text-slate-900 font-bold text-xs px-3.5 py-1.5 rounded-full shadow-lg mb-3 animate-pulse">
                 {petMessage}
@@ -136,7 +139,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                 )}
               </button>
 
-              <p className="text-xs text-cyan-300/80 mt-2">💧 캐릭터를 탭하면 기뻐해요!</p>
+              <p className="hub-dialog-muted text-xs mt-2">💧 캐릭터를 탭하면 기뻐해요!</p>
             </div>
 
             {/* 레벨 & 경험치 프로그레스 */}
@@ -171,8 +174,8 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                       onClick={() => equipItem(item)}
                       className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
                         isEquipped
-                          ? 'bg-cyan-500/20 border-cyan-400 shadow-md shadow-cyan-500/20'
-                          : 'bg-slate-800/60 border-slate-700 hover:border-slate-500'
+                          ? 'hub-dialog-tint border-cyan-400 shadow-md shadow-cyan-500/20'
+                          : 'hub-dialog-card border-slate-700 hover:border-slate-500'
                       }`}
                     >
                       <span className="text-2xl">{item.emoji}</span>
@@ -181,7 +184,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                       </span>
                       <span
                         className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${
-                          isEquipped ? 'bg-cyan-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                          isEquipped ? 'hub-dialog-primary bg-cyan-400 text-slate-950' : 'hub-dialog-card text-slate-400'
                         }`}
                       >
                         {isEquipped ? '착용중' : '장착'}
@@ -201,7 +204,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
               return (
                 <div
                   key={item.id}
-                  className="bg-slate-800/70 border border-slate-700/60 rounded-xl p-3 flex items-center justify-between gap-3"
+                  className="hub-dialog-card border border-slate-700/60 rounded-xl p-3 flex items-center justify-between gap-3"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{item.emoji}</span>
@@ -214,7 +217,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                   </div>
                   <div>
                     {isOwned ? (
-                      <span className="text-xs font-bold text-cyan-400 px-3 py-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30">
+                      <span className="hub-dialog-tint text-xs font-bold px-3 py-1.5 rounded-lg border border-cyan-500/30">
                         보유중
                       </span>
                     ) : (
@@ -224,7 +227,7 @@ export const DambangTamagotchiModal: React.FC<DambangTamagotchiModalProps> = ({ 
                         className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                           isLevelLocked || state.coins < item.cost
                             ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                            : 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
+                            : 'hub-dialog-primary bg-amber-500 hover:bg-amber-400 text-slate-950 font-black'
                         }`}
                       >
                         구매 ({item.cost}P)

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Heart, Wind, CheckCircle, X, Activity } from 'lucide-react';
 import { sfxSuccess, sfxTap } from '../../application/soundEffects';
 import { useModalDialog } from '../../application/useModalDialog';
+import './CooldownTimerModal.css';
 
 interface CooldownTimerModalProps {
   isOpen: boolean;
@@ -95,17 +96,17 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
   if (!isOpen) return null;
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="쿨다운과 심박수 회복 루틴" tabIndex={-1} className="fixed inset-0 z-[10010] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-emerald-500/30 w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-3xl p-4 sm:p-6 shadow-2xl relative text-white">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="쿨다운과 심박수 회복 루틴" tabIndex={-1} className="cooldown-modal fixed inset-0 z-[10010] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="cooldown-panel bg-slate-900 border border-emerald-500/30 w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-3xl p-4 sm:p-6 shadow-2xl relative text-white">
         <button
           onClick={handleClose}
           aria-label="쿨다운 루틴 닫기"
-          className="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition-colors"
+          className="cooldown-close absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-800 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-5">
+        <div className="cooldown-heading flex items-center gap-3 mb-5">
           <div className="p-3 bg-emerald-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30">
             <Heart className="w-6 h-6" />
           </div>
@@ -116,9 +117,10 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
         </div>
 
         {/* 탭 */}
-        <div className="grid grid-cols-3 gap-2 p-1 bg-slate-950 rounded-2xl mb-5 border border-slate-800">
+        <div className="cooldown-tabs grid grid-cols-3 gap-2 p-1 bg-slate-950 rounded-2xl mb-5 border border-slate-800">
           <button
             onClick={() => setMode('breath')}
+            aria-pressed={mode === 'breath'}
             className={`py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all ${
               mode === 'breath' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'text-slate-400'
             }`}
@@ -127,6 +129,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
           </button>
           <button
             onClick={() => setMode('pulse')}
+            aria-pressed={mode === 'pulse'}
             className={`py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all ${
               mode === 'pulse' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'text-slate-400'
             }`}
@@ -135,6 +138,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
           </button>
           <button
             onClick={() => setMode('stretch')}
+            aria-pressed={mode === 'stretch'}
             className={`py-2 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all ${
               mode === 'stretch' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'text-slate-400'
             }`}
