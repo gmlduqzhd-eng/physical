@@ -1,17 +1,17 @@
 .background-music-controls {
-  --music-accent:#286b59;
-  --music-track:#dce8e0;
-  --music-muted:#7c9286;
+  --music-accent:var(--forest-accent, #286b59);
+  --music-track:var(--forest-line, #dce8e0);
+  --music-muted:var(--forest-muted, #7c9286);
   width:300px; max-width:100%; padding:14px 16px 8px;
   display:flex; flex-direction:column; gap:8px;
-  border:1px solid #dbe6de; border-radius:17px;
-  background:#fff; color:#1c3037;
+  border:1px solid var(--forest-line, #dbe6de); border-radius:17px;
+  background:var(--forest-paper, #fff); color:var(--forest-ink, #1c3037);
   box-shadow:0 6px 22px #1c4d3d09;
   font-family:LandingPretendard,system-ui,sans-serif;
 }
 .background-music-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .background-music-title { display:flex; align-items:center; gap:10px; }
-.background-music-icon { display:flex; padding:9px; border-radius:11px; background:#eaf3eb; color:#2b6552; }
+.background-music-icon { display:flex; padding:9px; border-radius:11px; background:var(--forest-tint, #eaf3eb); color:var(--forest-accent, #2b6552); }
 .background-music-icon svg { width:20px; height:20px; }
 .background-music-title strong { display:block; font-size:13px; font-weight:700; line-height:1.4; }
 .background-music-title small { display:block; font-size:10px; line-height:1.5; color:var(--music-muted); margin-top:3px; }
@@ -27,10 +27,10 @@
 }
 .background-music-switch-knob {
   position:absolute; left:23px; width:18px; height:18px;
-  border-radius:50%; background:#fff; box-shadow:0 1px 4px #0002;
+  border-radius:50%; background:var(--forest-paper, #fff); box-shadow:0 1px 4px #0002;
   transition:left .15s;
 }
-.background-music-button[aria-pressed=false]::before { background:#96a99e; }
+.background-music-button[aria-pressed=false]::before { background:var(--forest-muted, #96a99e); }
 .background-music-button[aria-pressed=false] .background-music-switch-knob { left:3px; }
 .background-music-button:focus-visible { outline:2px solid var(--music-accent); outline-offset:2px; }
 .background-music-volume { display:flex; align-items:center; gap:11px; color:var(--music-accent); font-size:12px; }
@@ -48,8 +48,8 @@
 .background-music-volume input::-moz-range-thumb { width:16px; height:16px; border:0; border-radius:50%; background:var(--music-accent); }
 .background-music-volume input:focus-visible { outline:2px solid var(--music-accent); outline-offset:2px; border-radius:4px; }
 .background-music-percent { min-width:43px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
-.dark .hub-header .background-music-controls { --music-accent:#7bdcbd; --music-track:#34483e; --music-muted:#a3b8ad; background:#10231e; border-color:#345347; color:#e7f5ed; }
-.dark .hub-header .background-music-icon { background:#203c30; color:#a9e8cc; }
+.dark .hub-header .background-music-controls { --music-accent:var(--forest-accent, #7bdcbd); --music-track:var(--forest-line, #34483e); --music-muted:var(--forest-muted, #a3b8ad); background:var(--forest-paper, #10231e); border-color:var(--forest-line, #345347); color:var(--forest-ink, #e7f5ed); }
+.dark .hub-header .background-music-icon { background:var(--forest-tint, #203c30); color:var(--forest-accent, #a9e8cc); }
 .intro-landing .header-actions { display:flex; align-items:center; gap:12px; }
 @media (max-width:700px) {
   .intro-landing .shell .header { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; }

@@ -1,10 +1,7 @@
 @font-face{font-family:ForestSans;src:url('/fonts/ForestSans.woff2') format('woff2');font-weight:45 920;font-style:normal;font-display:swap}
 @font-face{font-family:ForestSerif;src:url('/fonts/ForestSerif.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
 
-/* Shared palette for the app, lazy routes, and portals. */
-html[data-design=forest]{--forest-bg:#f7f6f0;--forest-paper:#fffef9;--forest-ink:#283a2d;--forest-muted:#5e6b60;--forest-line:#dce1d4;--forest-accent:#315c42;--forest-on:#fffef6;--forest-tint:#e9eddf;--forest-gold:#8a744e;--forest-danger:#9e3833;--forest-sans:ForestSans,system-ui,sans-serif;--forest-serif:ForestSerif,serif;color-scheme:light;background:var(--forest-bg)}
-html[data-design=forest].dark-theme{--forest-bg:#1b241f;--forest-paper:#29362d;--forest-ink:#edf2e7;--forest-muted:#bac9ba;--forest-line:#415142;--forest-accent:#bbd4a2;--forest-on:#1e3524;--forest-tint:#354834;--forest-gold:#c2ad83;--forest-danger:#f1aba4;color-scheme:dark}
-html[data-design=forest]{--bg-primary:var(--forest-bg);--bg-secondary:var(--forest-paper);--bg-card:var(--forest-paper);--bg-input:var(--forest-paper);--text-primary:var(--forest-ink);--text-secondary:var(--forest-muted);--text-muted:var(--forest-muted);--border-primary:var(--forest-line);--border-secondary:var(--forest-line);--border-color:var(--forest-line);--accent-cyan:var(--forest-accent);--accent-blue:var(--forest-accent)}
+/* Palette tokens are supplied by CleanBluePalette.css in both applications. */
 html[data-design=forest] :is(body,#root){background:var(--forest-bg);color:var(--forest-ink);font-family:var(--forest-sans);-webkit-font-smoothing:antialiased;font-synthesis:none}
 html[data-design=forest] :is(body,button,input,select,textarea,p,span,a,label,h1,h2,h3,h4,h5,h6,li,small,strong,summary,.font-sans,.font-mono){font-family:var(--forest-sans)!important}
 html[data-design=forest] :is(.unified-home,.flow,.intro-landing,.teacher-ai,.warm-game){--bg:var(--forest-bg);--ink:var(--forest-ink);--muted:var(--forest-muted);--accent:var(--forest-accent);--line:var(--forest-line);--icon:var(--forest-tint);--bg-primary:var(--forest-bg);--bg-secondary:var(--forest-paper);--bg-card:var(--forest-paper);--bg-input:var(--forest-paper);--text-primary:var(--forest-ink);--text-secondary:var(--forest-muted);--text-muted:var(--forest-muted);--border-primary:var(--forest-line);--border-secondary:var(--forest-line);--accent-cyan:var(--forest-accent);--accent-blue:var(--forest-accent);background:var(--forest-bg);color:var(--forest-ink);font-family:var(--forest-sans);letter-spacing:-.02em}
@@ -28,9 +25,9 @@ html[data-design=forest] .forest-hero-actions a{display:inline-flex;align-items:
 html[data-design=forest] .forest-hero-actions a:first-child{background:var(--forest-accent);border-color:var(--forest-accent);color:var(--forest-on)}
 html[data-design=forest] .forest-hero-actions svg{width:18px;height:18px;flex:none}
 html[data-design=forest] .forest-orbit{height:310px;position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;overflow:visible}
-html[data-design=forest] .forest-ring{position:absolute;width:165px;height:248px;border-radius:49%;background:linear-gradient(115deg,#a0b19a,#2f5537 37%,#25472d);transform:rotate(35deg) translateX(28px);box-shadow:inset 9px 2px 13px #ffffff38,13px 22px 22px #283a2d1e}
-html[data-design=forest] .forest-ring:after{content:'';position:absolute;inset:29px 31px;border-radius:50%;background:var(--forest-bg);box-shadow:inset 7px 1px 13px #17271c3b}
-html[data-design=forest] .forest-ring-back{width:146px;height:223px;background:linear-gradient(120deg,#f7f1dc,#b8a176 45%,#8d7d5b);transform:rotate(-32deg) translate(-50px,9px);z-index:-1}
+html[data-design=forest] .forest-ring{position:absolute;width:165px;height:248px;border-radius:49%;background:var(--forest-accent);transform:rotate(35deg) translateX(28px);box-shadow:none}
+html[data-design=forest] .forest-ring:after{content:'';position:absolute;inset:29px 31px;border-radius:50%;background:var(--forest-bg)}
+html[data-design=forest] .forest-ring-back{width:146px;height:223px;background:var(--forest-line);transform:rotate(-32deg) translate(-50px,9px);z-index:-1}
 html[data-design=forest] .forest-orbit-label{position:absolute;right:0;bottom:4px;font-size:11px;font-weight:400;letter-spacing:.085em;color:var(--forest-muted)}
 
 /* Shared page chrome, cards, forms, and quiet actions. */
@@ -74,8 +71,8 @@ html[data-design=forest] .flow .catalog-card{background:var(--forest-paper);bord
 html[data-design=forest] .flow .catalog-card h3{font-weight:600;font-size:20px;line-height:1.5;letter-spacing:-.035em;color:var(--forest-ink)}
 html[data-design=forest] .flow .catalog-card>.muted{font-size:15px;line-height:1.85;color:var(--forest-muted)}
 html[data-design=forest] .activity-card-icon{background:var(--forest-tint);border-radius:50%;width:43px;height:43px;margin-bottom:18px}
-html[data-design=forest] .catalog-card .card-action .primary{display:flex;width:100%;justify-content:space-between;border:0;border-top:1px solid var(--forest-line);border-radius:0;background:transparent;color:var(--forest-ink);padding:15px 0 0;font-size:14px;font-weight:500}
-html[data-design=forest] .flow .catalog-card .card-action .primary{background:transparent!important;color:var(--forest-ink)!important}
+html[data-design=forest] .catalog-card .card-action .primary{display:flex;width:100%;justify-content:space-between;border:1px solid var(--forest-accent);border-radius:100px;background:var(--forest-accent);color:var(--forest-on);padding:12px 16px;font-size:14px;font-weight:550}
+html[data-design=forest] .flow .catalog-card .card-action .primary{background:var(--forest-accent)!important;color:var(--forest-on)!important}
 html[data-design=forest] .flow.activity-tools-scope .catalog-card>details{background:var(--forest-bg);color:var(--forest-ink);border-color:var(--forest-line);border-radius:10px}
 html[data-design=forest] .flow.activity-tools-scope .catalog-card>details summary{color:var(--forest-ink)}
 html[data-design=forest] .phone-collection{background:var(--forest-tint);color:var(--forest-ink);border-radius:17px;padding:23px 25px;margin-block:24px}
@@ -115,6 +112,7 @@ html[data-design=forest] :is(.teacher-ai .ai-tabs button,.teacher-ai .ai-form fi
 html[data-design=forest] .privacy-page{background:var(--forest-bg);color:var(--forest-ink);padding-top:35px}
 html[data-design=forest] .privacy-page h1{font-size:clamp(29px,4vw,40px)}
 html[data-design=forest] .privacy-page p{line-height:1.85}
+html[data-design=forest] body .privacy-page button{background:var(--forest-accent);border-color:var(--forest-accent);color:var(--forest-on)!important}
 html[data-design=forest] .intro-landing{background:var(--forest-bg);color:var(--forest-ink)}
 html[data-design=forest] .intro-landing :is(.feature,.role-card,.qr-trigger){background:var(--forest-paper);border-color:var(--forest-line);color:var(--forest-ink)}
 html[data-design=forest] .intro-landing .primary{background:var(--forest-accent);color:var(--forest-on);border-color:var(--forest-accent);border-radius:100px}

@@ -35,6 +35,8 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       root.classList.add('dark-theme', 'dark');
       root.classList.remove('light-theme');
     }
+    const background = getComputedStyle(root).getPropertyValue('--forest-bg').trim();
+    if (background) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
