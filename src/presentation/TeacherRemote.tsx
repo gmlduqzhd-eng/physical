@@ -176,7 +176,7 @@ export const TeacherRemote: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col font-sans select-none pb-12">
+    <div className="teacher-remote min-h-[100dvh] bg-slate-950 text-white flex flex-col font-sans select-none pb-12">
       {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-950 text-rose-200">{roomError} <button onClick={refreshRoom} className="underline font-bold">다시 시도</button></div>}
       {/* 액션 피드백 토스트 */}
       {actionFeedback && (

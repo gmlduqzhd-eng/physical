@@ -256,7 +256,7 @@ export const AdminControlPanel = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
+    <div className="teacher-admin min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
         {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
