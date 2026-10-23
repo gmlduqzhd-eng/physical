@@ -738,9 +738,9 @@ const GamePlaySession = () => {
             {/* 🫀 쿨다운 & 심박수 정리운동 버튼 */}
             <button
               onClick={() => setShowCooldownModal(true)}
-              className="w-full mb-4 py-3 bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/50 text-emerald-300 font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+              className="game-result-cooldown w-full mb-4 py-3 border font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
             >
-              <Heart className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+              <Heart className="w-4 h-4" />
               <span>🫀 운동 후 쿨다운 & 심박수 회복 루틴</span>
             </button>
 
