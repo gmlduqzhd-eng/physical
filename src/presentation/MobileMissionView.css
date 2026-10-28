@@ -1,0 +1,4 @@
+.student-guided-room,
+.student-classroom-finished { padding: 24px 16px 64px; gap: 0; }
+.student-classroom-header { position: relative; z-index: 10; width: 100%; max-width: 960px; display: flex; justify-content: flex-end; margin-bottom: 24px; }
+.student-finished-title { color: var(--forest-ink, #19313b); }

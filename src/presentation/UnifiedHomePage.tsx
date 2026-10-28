@@ -1,11 +1,11 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ClipboardCheck, QrCode, UserRound } from 'lucide-react';
+import { ArrowRight, CircleHelp, ClipboardCheck, QrCode, UserRound } from 'lucide-react';
 import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import {PHONE_PLAYS} from '../domain/phonePlayCatalog';
 import {ForestBrand,ForestOrbit} from './components/ForestIdentity';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
-import { HeaderUtilities } from './components/HeaderUtilities';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import './UnifiedHomePage.css';
 
 const domains = [
@@ -18,10 +18,7 @@ export function UnifiedHomePage() {
   const qr = useRef<AccessQrDialogHandle>(null);
   return <div className="unified-home"><div className="shell">
     <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><ForestBrand/></Link>
-      <nav className="header-nav" aria-label="상단 메뉴">
-        <HeaderUtilities/>
-        <div className="header-help"><button type="button" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/>접속 QR</button><Link to="/manual">이용 안내</Link></div>
-      </nav>
+      <HeaderToolbar label="상단 메뉴"><button className="icon-toolbar-action" type="button" title="접속 QR" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/><span>접속 QR</span></button><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
     </header>
     <main><section className="welcome forest-hero" aria-labelledby="home-title"><div><p className="eyebrow">땀방울 원정대 · 함께 움직이는 체육 시간</p><h1 id="home-title">함께 움직이는<br/>시간의 즐거움.</h1><p className="forest-lead">준비는 가볍게, 경험은 풍성하게.<br/>스마트폰 하나로 만나는 {PHONE_PLAYS.length}가지 몸 놀이.</p><nav className="forest-hero-actions" aria-label="추천 놀이 탐색"><Link to="/hub?collection=phone">나에게 맞는 놀이 찾기 <ArrowRight aria-hidden="true"/></Link></nav></div><ForestOrbit/></section>
       <nav className="roles" aria-label="역할 선택">

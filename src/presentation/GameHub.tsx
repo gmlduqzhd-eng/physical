@@ -5,8 +5,7 @@ import {GAMES as HISTORICAL_GAMES} from '../domain/gamesData';
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
 import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
-import { BackgroundMusicButton } from './components/BackgroundMusicButton';
-import { LinkShareButton } from './components/LinkShareButton';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
@@ -262,15 +261,7 @@ export const GameHub = () => {
             <h1><button type="button" onClick={() => navigate('/')} className="hub-brand">땀방울 원정대</button></h1>
             <span className="hub-curriculum"><Award className="w-3.5 h-3.5" /> 2022 개정 체육과 연계</span>
           </div>
-          <div className="hub-header-actions">
-            <div className="hub-qr-share">
-              <button type="button" className="hub-action hub-qr" onClick={() => accessQrDialog.current?.open()} aria-label="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog"><QrCode className="w-4 h-4" /> 접속 QR</button>
-              <LinkShareButton hub />
-            </div>
-            <button type="button" className="hub-action" onClick={() => navigate('/')}><Home className="w-4 h-4" /> 메인 화면</button>
-            <button type="button" className="hub-action" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings className="w-4 h-4" /> 메뉴</button>
-            <BackgroundMusicButton />
-          </div>
+          <HeaderToolbar><button type="button" className="icon-toolbar-action" title="메인 화면" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>메인 화면</span></button><button type="button" className="icon-toolbar-action" title="메뉴" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings aria-hidden="true"/><span>메뉴</span></button></HeaderToolbar>
         </div>
         <p>초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400">운동</span> · <span className="text-blue-400">스포츠</span> · <span className="text-purple-400">표현</span>) · 학년별 {GAMES.length}개 게임</p>
       </header>
@@ -279,6 +270,7 @@ export const GameHub = () => {
           <div ref={menuRef} role="dialog" aria-modal="true" aria-label="허브 메뉴" tabIndex={-1} className="hub-menu bg-slate-900 border border-slate-700 rounded-2xl p-5" onClick={event => event.stopPropagation()}>
             <div className="flex justify-between items-center mb-5"><h2 className="text-lg font-black">메뉴 · 설정</h2><button type="button" onClick={() => setShowMenu(false)} aria-label="메뉴 닫기" className="p-2"><X className="w-5 h-5" /></button></div>
             <div className="hub-menu-items">
+              <button type="button" onClick={() => { setShowMenu(false); requestAnimationFrame(() => { void accessQrDialog.current?.open(); }); }}><QrCode className="w-4 h-4"/>접속 QR 크게 보기</button>
               <button type="button" onClick={() => navigate('/manual')}><BookOpen className="w-4 h-4" /> 사용 설명서</button>
               <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI 수업 준비실</button>
               <button type="button" onClick={toggleTheme}>{isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />} {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}</button>

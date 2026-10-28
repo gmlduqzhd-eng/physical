@@ -22,6 +22,7 @@ const files = [
   'src/application/BackgroundMusicContext.tsx', 'src/application/backgroundMusicRoutes.ts', 'src/application/browserStorage.ts', 'src/application/useModalDialog.ts',
   'src/assets/expedition-theme.mp3',
   'src/presentation/components/HeaderUtilities.tsx', 'src/presentation/components/HeaderUtilities.css',
+  'src/presentation/components/HeaderToolbar.tsx', 'src/presentation/components/HeaderToolbar.css', 'src/presentation/components/HeaderPopover.tsx',
   'src/presentation/components/BackgroundMusicButton.tsx', 'src/presentation/components/BackgroundMusicButton.css',
   'src/presentation/components/LinkShareButton.tsx', 'src/presentation/components/LinkShareButton.css',
   'src/presentation/components/AppInstallButton.tsx',

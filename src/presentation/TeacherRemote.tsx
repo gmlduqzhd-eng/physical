@@ -7,6 +7,7 @@ import { timeOffset } from '../application/timeSync';
 import type { GameRoom } from '../domain/types';
 import { useGameTimer } from '../application/useGameTimer';
 import { sfxWhistle, sfxTap, sfxSuccess, sfxClick, hapticHeavy, hapticDouble } from '../application/soundEffects';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import {
   Volume2, Play, Pause, Plus, Minus, Zap, Waves, ShieldAlert,
   Send, ExternalLink, ArrowLeft, RefreshCw, Trophy, Users, Sparkles
@@ -186,29 +187,13 @@ export const TeacherRemote: React.FC = () => {
       )}
 
       {/* 상단 미니 헤더 */}
-      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
-        <button
-          onClick={() => navigate('/admin')}
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800/60"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>관리자 PC</span>
-        </button>
-
+      <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
             📱 교사 스마트 리모컨
           </span>
-          {currentRoom && (
-            <button
-              onClick={() => void openClassroomBoard(currentRoom.id)}
-              className="p-1.5 text-slate-400 hover:text-cyan-400"
-              title="전광판 새창 열기"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </button>
-          )}
         </div>
+        <HeaderToolbar><button className="icon-toolbar-action" type="button" title="관리자 PC" onClick={() => navigate('/admin')}><ArrowLeft aria-hidden="true"/><span>관리자 PC</span></button><button className="icon-toolbar-action" type="button" title="전광판 새창 열기" disabled={!currentRoom} onClick={() => { if(currentRoom) void openClassroomBoard(currentRoom.id); }}><ExternalLink aria-hidden="true"/><span>전광판 새창 열기</span></button></HeaderToolbar>
       </header>
 
       {/* 학급 방 선택 */}

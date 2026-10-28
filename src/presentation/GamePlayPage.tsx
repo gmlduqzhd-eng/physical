@@ -20,7 +20,8 @@ import './GamePlayPage.css';
 import './GameTheme.css';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { readParticipationCues } from '../domain/participationCues';
-import { HeaderUtilities } from './components/HeaderUtilities';
+import { HeaderToolbar } from './components/HeaderToolbar';
+import { CircleHelp } from 'lucide-react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { useSyncQueue } from '../application/useSyncQueue';
 import { useVoiceCoach } from '../application/useVoiceCoach';
@@ -594,7 +595,7 @@ const GamePlaySession = () => {
 
   return (
     <div className="game-tools-scope game-tools-layout">
-      <nav className="game-utilities-bar" aria-label="이용 설정"><HeaderUtilities/></nav>
+      <div className="game-utilities-bar"><HeaderToolbar><button className="icon-toolbar-action" type="button" onClick={handleReturnToCatalog} title="활동 목록으로"><ArrowLeft aria-hidden="true"/><span>활동 목록으로</span></button><button className="icon-toolbar-action" type="button" onClick={() => navigate('/manual')} title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
     <div className={`warm-game gameplay-page ${hasStarted ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 활동 준비 화면 */}
       {!hasStarted && !gameFinished && (

@@ -1,0 +1,64 @@
+/* Shared icon row: six reachable actions, including at 320px viewport width. */
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] {
+  display:grid; grid-template-columns:repeat(6,44px); align-items:center;
+  justify-items:center; justify-content:end; gap:8px; flex:none; margin:0;
+  color:var(--forest-ink); font-family:var(--forest-sans); width:auto;
+}
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] .header-utilities.header-tools { display:contents; }
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.home-tools,.share-control) { width:44px; min-width:0; }
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action) {
+  display:flex; align-items:center; justify-content:center; width:44px; height:44px;
+  min-width:44px; min-height:44px; margin:0; padding:0; gap:0;
+  border:1px solid var(--forest-line); border-radius:50%; line-height:1;
+  white-space:nowrap; text-decoration:none; background:transparent; color:var(--forest-ink);
+  box-shadow:none; cursor:pointer;
+}
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] .app-install-trigger {
+  background:var(--forest-action); color:var(--forest-on); border-color:var(--forest-accent);
+}
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action)>span {
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+  clip-path:inset(50%); white-space:nowrap;
+}
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action)>svg { width:20px; height:20px; flex:none; }
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(button,summary,a):focus-visible { outline:3px solid var(--forest-accent); outline-offset:3px; }
+html[data-design=forest] body .icon-toolbar .icon-toolbar-action[aria-pressed=true] { background:var(--forest-tint); border-color:var(--forest-accent); }
+@media(max-width:760px) {
+  html[data-design=forest] body :is(header,.hub-header-row):has(>.icon-toolbar) { flex-wrap:wrap; gap:16px; }
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { width:100%; grid-template-columns:repeat(6,minmax(44px,1fr)); gap:2px; }
+}
+@media(max-width:360px) {
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { gap:1px; }
+}
+
+/* Portaled header panels share colors but never inherit header clipping/filters. */
+html[data-design=forest] body :is(.header-popup-layer,.header-modal-layer) {
+  --ink:var(--forest-ink); --muted:var(--forest-muted); --line:var(--forest-line); --accent:var(--forest-accent);
+  font-family:var(--forest-sans); color:var(--forest-ink); font-size:14px; line-height:1.6;
+}
+html[data-design=forest] body .header-popup-layer {
+  position:fixed; z-index:30000; box-sizing:border-box; padding:16px;
+  overflow:auto; overscroll-behavior:contain; overflow-wrap:anywhere;
+  border:1px solid var(--forest-line); border-radius:20px;
+  background:var(--forest-elevated); box-shadow:0 14px 40px var(--forest-shadow);
+}
+html[data-design=forest] body .header-popup-layer * { box-sizing:border-box; }
+html[data-design=forest] body .header-popup-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+html[data-design=forest] body .header-popup-heading>strong { font-size:15px; }
+html[data-design=forest] body .header-popup-layer .header-popup-close {
+  display:grid; place-items:center; width:44px; height:44px; min-width:44px; min-height:44px;
+  border:0; padding:0; border-radius:50%; background:var(--forest-tint); color:var(--forest-ink); cursor:pointer;
+}
+html[data-design=forest] body .header-popup-close>svg { width:20px; height:20px; }
+html[data-design=forest] body .header-music-popover .background-music-controls { width:100%; min-width:0; }
+html[data-design=forest] body .header-music-popover .background-music-volume input { height:44px; }
+html[data-design=forest] body .header-popup-layer input[readonly] { width:100%; min-width:0; margin-top:12px; padding:10px; min-height:44px; border:1px solid var(--forest-line); border-radius:10px; background:var(--forest-paper); color:var(--forest-ink); font:inherit; }
+html[data-design=forest] body .header-share-feedback p { margin:0; }
+html[data-design=forest] body .header-board-popover>button { display:flex; align-items:center; gap:10px; min-height:44px; width:100%; padding:10px; background:transparent; color:inherit; border:0; text-align:left; font:inherit; cursor:pointer; }
+html[data-design=forest] body .header-board-popover>button>svg { width:20px; height:20px; flex:none; }
+html[data-design=forest] body .header-modal-layer .install-backdrop { z-index:30010; padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
+html[data-design=forest] body .header-modal-layer .install-dialog { box-sizing:border-box; max-height:calc(100dvh - 32px); overscroll-behavior:contain; overflow-x:hidden; overflow-wrap:anywhere; }
+html[data-design=forest] body .header-modal-layer .install-heading { position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--forest-elevated); }
+html[data-design=forest] body .header-modal-layer .install-close { position:static; padding:0; min-width:44px; min-height:44px; }
+html[data-design=forest] body .header-modal-layer .install-close>svg { width:20px; height:20px; }
+html[data-design=forest] body .header-modal-layer .install-dialog * { box-sizing:border-box; }

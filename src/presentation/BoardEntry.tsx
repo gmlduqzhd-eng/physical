@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { findRoomByPin, classroomError, joinClassroomBoard } from '../data/classroomRepository';
-import { Monitor, Home } from 'lucide-react';
+import { Monitor } from 'lucide-react';
+import { FlowShell } from './FlowShell';
 
 export const BoardEntry = () => {
   const [boardCode,setBoardCode]=useState('');
@@ -29,12 +30,9 @@ export const BoardEntry = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center justify-center p-6 font-sans relative">
-      <button onClick={() => navigate('/')} className="absolute top-6 left-6 px-4 py-2 bg-white/10 border border-white/20 rounded-xl font-bold hover:bg-white/20 flex items-center gap-2 text-sm">
-        <Home className="w-4 h-4" /> 홈
-      </button>
+    <FlowShell utilities className="board-entry" backLabel="홈으로">
 
-      <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm flex flex-col items-center">
+      <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm mx-auto my-8 flex flex-col items-center">
         <Monitor className="w-20 h-20 text-cyan-400 mb-4" />
         <h1 className="text-2xl font-black mb-2 text-center">TV 전광판 모드</h1>
         <p className="text-slate-300 text-sm mb-6 text-center break-keep">
@@ -58,6 +56,6 @@ export const BoardEntry = () => {
           </button>
         </form>
       </div>
-    </div>
+    </FlowShell>
   );
 };

@@ -1,4 +1,7 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowLeft, CircleHelp } from 'lucide-react';
+import { HeaderToolbar } from './HeaderToolbar';
 import type { RoomGroup, GameRoom, MissionTemplate } from '../../domain/types';
 import { GameIcons as LucideIcons } from '../icons';
 
@@ -15,14 +18,15 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
   return (
     <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col font-sans">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between">
+      <header className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <LucideIcons.Shield className="w-6 h-6 text-cyan-500" />
           <span className="font-black text-lg text-cyan-600">땀방울 원정대</span>
         </div>
 
         <span className="text-sm text-slate-500 font-bold">{gameRoom?.name}</span>
-      </div>
+        <HeaderToolbar><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
+      </header>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">

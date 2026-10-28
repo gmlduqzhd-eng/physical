@@ -4,11 +4,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles, ArrowLeft } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
+import { HeaderPopover } from './components/HeaderPopover';
 import { GameIcons as LucideIcons } from './icons';
 import { ClassReportModal } from './components/ClassReportModal';
 import { sfxWhistle } from '../application/soundEffects';
 import { BoardAccess } from './components/BoardAccess';
+import './ScoreBoard.css';
 
 export const ScoreBoard = () => <BoardAccess><ScoreBoardContent/></BoardAccess>;
 const ScoreBoardContent = () => {
@@ -19,17 +22,15 @@ const ScoreBoardContent = () => {
   const { playSiren } = useAudio();
 
   const handleBackToList = () => {
-    if (window.history.length > 1 && document.referrer && document.referrer.startsWith(window.location.origin)) {
-      navigate(-1);
-      return;
-    }
-    navigate('/admin');
+    navigate('/board');
   };
   
   const sirenPlayed = useRef(false);
   const plankPlayed = useRef(false);
   const whistlePlayed = useRef(false);
   const [showQR, setShowQR] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const prevScoresRef = useRef<{id:string;score:number;rank:number}[]>([]);
@@ -116,20 +117,11 @@ const ScoreBoardContent = () => {
     const top3 = sorted.slice(0, 3);
 
     return (
-      <div className="min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center py-12 px-8 pb-24">
+      <div className="scoreboard-results min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite] pointer-events-none"></div>
         
         {/* 상단 목록 복귀 버튼 */}
-        <div className="w-full max-w-5xl flex justify-start mb-4 relative z-10">
-          <button
-            type="button"
-            onClick={handleBackToList}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-600 text-white font-bold text-sm shadow-lg transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>목록으로</span>
-          </button>
-        </div>
+        <header className="scoreboard-results-header relative z-10"><HeaderToolbar><button className="icon-toolbar-action" type="button" title="목록으로 돌아가기" onClick={handleBackToList}><ArrowLeft aria-hidden="true"/><span>목록으로 돌아가기</span></button><button className="icon-toolbar-action" type="button" title="수업 결과 리포트" onClick={()=>setShowReportModal(true)}><FileText aria-hidden="true"/><span>수업 결과 리포트</span></button></HeaderToolbar></header>
 
         {/* 컨페티 애니메이션 */}
         {confetti.map(p => (
@@ -146,36 +138,36 @@ const ScoreBoardContent = () => {
           @keyframes confettiSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
         `}</style>
 
-        <h1 className="text-3xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 mb-12 drop-shadow-lg relative z-10 tracking-widest">🏆 최종 결과 발표 🏆</h1>
+        <h1 className="scoreboard-results-title font-black relative z-10">🏆 최종 결과 발표 🏆</h1>
 
-        <div className="flex items-end justify-center gap-2 md:gap-6 h-64 md:h-80 mb-16 relative z-10 w-full max-w-5xl mt-12">
+        <div className="scoreboard-podium relative z-10">
           {/* 2nd Place */}
           {top3[1] && (
-            <div className="flex flex-col items-center w-1/3">
-              <div className="bg-slate-200 text-slate-800 px-4 py-2 rounded-t-xl font-black text-2xl mb-2 flex items-center gap-2 shadow-lg"><LucideIcons.Medal className="w-6 h-6 text-slate-500"/> {top3[1].group_name}</div>
-              <div className="text-4xl font-mono font-bold text-slate-300 mb-4 drop-shadow-md">{top3[1].score}점</div>
-              <div className="w-full bg-gradient-to-t from-slate-500 to-slate-300 h-48 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-slate-100">
+            <div className="scoreboard-podium-place" data-rank="2">
+              <div className="scoreboard-podium-name bg-slate-200 text-slate-800 rounded-t-xl font-black flex items-center gap-2 shadow-lg"><LucideIcons.Medal className="w-6 h-6 text-slate-500"/> {top3[1].group_name}</div>
+              <div className="scoreboard-podium-score font-mono font-bold text-slate-300 drop-shadow-md">{top3[1].score}점</div>
+              <div className="scoreboard-podium-block w-full bg-gradient-to-t from-slate-500 to-slate-300 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-slate-100">
                 <span className="text-6xl font-black text-white/50">2</span>
               </div>
             </div>
           )}
           {/* 1st Place */}
           {top3[0] && (
-            <div className="flex flex-col items-center w-1/3 z-10 -mx-4 mb-4">
-              <LucideIcons.Crown className="w-20 h-20 text-yellow-400 mb-2 animate-bounce drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
-              <div className="bg-yellow-400 text-yellow-900 px-6 py-3 rounded-t-xl font-black text-lg md:text-3xl mb-2 shadow-[0_0_20px_rgba(250,204,21,0.3)] flex items-center gap-2"><LucideIcons.Trophy className="w-8 h-8"/> {top3[0].group_name}</div>
-              <div className="text-5xl font-mono font-black text-yellow-400 mb-4 drop-shadow-lg">{top3[0].score}점</div>
-              <div className="w-full bg-gradient-to-t from-yellow-600 to-yellow-400 h-64 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-yellow-200">
+            <div className="scoreboard-podium-place relative z-10" data-rank="1">
+              <LucideIcons.Crown className="scoreboard-podium-crown text-yellow-400 mb-2 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+              <div className="scoreboard-podium-name bg-yellow-400 text-yellow-900 rounded-t-xl font-black shadow-[0_0_20px_rgba(250,204,21,0.3)] flex items-center gap-2"><LucideIcons.Trophy className="w-8 h-8"/> {top3[0].group_name}</div>
+              <div className="scoreboard-podium-score font-mono font-black text-yellow-400 drop-shadow-lg">{top3[0].score}점</div>
+              <div className="scoreboard-podium-block w-full bg-gradient-to-t from-yellow-600 to-yellow-400 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-yellow-200">
                 <span className="text-8xl font-black text-white/50">1</span>
               </div>
             </div>
           )}
           {/* 3rd Place */}
           {top3[2] && (
-            <div className="flex flex-col items-center w-1/3">
-              <div className="bg-orange-300 text-orange-900 px-4 py-2 rounded-t-xl font-black text-2xl mb-2 flex items-center gap-2 shadow-lg"><LucideIcons.Medal className="w-6 h-6 text-orange-700"/> {top3[2].group_name}</div>
-              <div className="text-4xl font-mono font-bold text-orange-300 mb-4 drop-shadow-md">{top3[2].score}점</div>
-              <div className="w-full bg-gradient-to-t from-orange-700 to-orange-400 h-40 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-orange-200">
+            <div className="scoreboard-podium-place" data-rank="3">
+              <div className="scoreboard-podium-name bg-orange-300 text-orange-900 rounded-t-xl font-black flex items-center gap-2 shadow-lg"><LucideIcons.Medal className="w-6 h-6 text-orange-700"/> {top3[2].group_name}</div>
+              <div className="scoreboard-podium-score font-mono font-bold text-orange-300 drop-shadow-md">{top3[2].score}점</div>
+              <div className="scoreboard-podium-block w-full bg-gradient-to-t from-orange-700 to-orange-400 rounded-t-2xl shadow-2xl flex justify-center items-start pt-6 border-t-4 border-orange-200">
                 <span className="text-6xl font-black text-white/50">3</span>
               </div>
             </div>
@@ -183,10 +175,10 @@ const ScoreBoardContent = () => {
         </div>
 
         {/* Badges */}
-        <div className="w-full max-w-5xl grid grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
+        <div className="scoreboard-result-groups relative z-10">
           {sorted.map(s => (
             <div key={s.id} className="bg-white/10 backdrop-blur border border-white/20 p-5 rounded-xl flex flex-col justify-between shadow-lg">
-              <div className="flex justify-between items-center mb-3">
+              <div className="scoreboard-result-group-heading flex justify-between items-center mb-3">
                 <span className="font-bold text-xl text-slate-100 flex items-center gap-2">
                   {(LucideIcons as unknown as Record<string, React.ElementType>)[s.avatar || 'Smile'] && (() => {
                     const Icon = (LucideIcons as unknown as Record<string, React.ElementType>)[s.avatar || 'Smile'];
@@ -268,30 +260,14 @@ const ScoreBoardContent = () => {
 
       <header className="relative z-10 flex justify-between items-center px-4 md:px-12 py-6 md:py-8 flex-wrap gap-4 bg-white/80 backdrop-blur-md border-b border-cyan-200">
         <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={handleBackToList}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-sm shadow-sm transition-colors"
-            title="목록으로 돌아가기"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>목록으로</span>
-          </button>
           <Shield className="w-12 h-12 text-cyan-400" />
           <h1 className="text-xl md:text-4xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600">
             {gameRoom ? gameRoom.name : '폭탄 해체 작전'}
           </h1>
         </div>
 
+        <HeaderToolbar><button className="icon-toolbar-action" type="button" title="목록으로 돌아가기" onClick={handleBackToList}><ArrowLeft aria-hidden="true"/><span>목록으로 돌아가기</span></button><button ref={menuTrigger} className="icon-toolbar-action" type="button" title="전광판 메뉴" aria-expanded={menuOpen} aria-controls={menuOpen ? 'board-header-menu' : undefined} onClick={() => setMenuOpen(!menuOpen)}><MoreHorizontal aria-hidden="true"/><span>전광판 메뉴</span></button><HeaderPopover open={menuOpen} onClose={() => setMenuOpen(false)} anchor={menuTrigger} id="board-header-menu" label="전광판 메뉴" className="header-board-popover"><button type="button" onClick={() => { setMenuOpen(false); menuTrigger.current?.focus(); setShowReportModal(true); }}><FileText aria-hidden="true"/>수업 결과 리포트</button><button type="button" onClick={() => { setMenuOpen(false); menuTrigger.current?.focus(); setShowQR(!showQR); }}><QrCode aria-hidden="true"/>QR 코드 표시</button></HeaderPopover></HeaderToolbar>
         <div className="flex items-center gap-4">
-          {/* 수업 결과 리포트 버튼 */}
-          <button onClick={() => setShowReportModal(true)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="수업 결과 리포트">
-            <FileText className="w-6 h-6 text-cyan-600" />
-          </button>
-          {/* 미니 QR 코드 (지각생 입장용) */}
-          <button onClick={() => setShowQR(!showQR)} className="p-3 bg-white border border-slate-200 rounded-xl hover:bg-cyan-50 transition-colors shadow-sm" title="QR 코드 표시">
-            <QrCode className="w-6 h-6 text-cyan-500" />
-          </button>
           <div className={`flex items-center gap-6 px-8 py-4 rounded-xl border ${isDanger ? 'bg-red-50 border-red-300 animate-pulse' : 'bg-white border-slate-200 shadow-sm'}`}>
             <Clock className={`w-8 h-8 ${isDanger ? 'text-red-600' : 'text-red-500'}`} />
             <span className={`text-5xl font-bold font-mono tracking-wider ${isDanger ? 'text-red-600' : 'text-red-500'}`}>
@@ -368,11 +344,11 @@ const ScoreBoardContent = () => {
 
       {/* QR 코드 패널 */}
       {showQR && (
-        <div className="relative z-10 px-12 py-4 bg-cyan-50 border-b border-cyan-200 flex items-center justify-center gap-6">
+        <div className="scoreboard-join relative z-10">
           <LocalQRCode value={window.location.origin+'/lobby'} alt="입장 QR" className="w-24 h-24 border border-cyan-200 rounded-lg"/>
-          <div>
-            <p className="text-lg font-black text-cyan-800">📱 지금 바로 참여하세요!</p>
-            <p className="text-sm text-cyan-600">QR을 스캔한 뒤 선생님이 알려준 우리 모둠 4자리 PIN을 입력하세요.</p>
+          <div className="scoreboard-join-copy">
+            <p className="scoreboard-join-title">📱 지금 바로 참여하세요!</p>
+            <p>QR을 스캔한 뒤 선생님이 알려준 우리 모둠 4자리 PIN을 입력하세요.</p>
           </div>
         </div>
       )}
@@ -395,7 +371,7 @@ const ScoreBoardContent = () => {
         </div>
       )}
 
-      <main className="relative z-10 p-12 grid grid-cols-2 lg:grid-cols-3 gap-8">
+      <main className="scoreboard-groups relative z-10">
         {(() => {
           const now = Date.now();
           return scores.map((score) => {
@@ -405,8 +381,8 @@ const ScoreBoardContent = () => {
               {score.item_buff_until && new Date(score.item_buff_until).getTime() > now && (
                 <div className="absolute inset-0 bg-yellow-400/10 animate-pulse pointer-events-none"></div>
               )}
-              <div className="flex justify-between items-start mb-4 relative z-10">
-                <div className="flex items-center gap-3">
+              <div className="scoreboard-group-heading flex justify-between items-start mb-4 relative z-10">
+                <div className="scoreboard-group-name flex items-center gap-3">
                   <div className="p-2 bg-slate-100 rounded-lg text-slate-600 border border-slate-200 shadow-sm relative">
                     <AvatarIcon className="w-6 h-6" />
                     {(() => {

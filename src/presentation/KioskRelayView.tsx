@@ -7,6 +7,8 @@ import { findRoomByPin, classroomError } from '../data/classroomRepository';
 import type { RoomGroup } from '../domain/types';
 import { GameIcons as LucideIcons } from './icons';
 import { useNavigate } from 'react-router-dom';
+import { CircleHelp } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
 
 export const KioskRelayView = () => {
   const [pinCode, setPinCode] = useState('');
@@ -46,9 +48,7 @@ export const KioskRelayView = () => {
   if (!room) {
     return (
       <div className="min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
-        <button onClick={() => navigate('/')} className="absolute top-6 left-6 px-4 py-2 bg-white/10 text-white border border-white/20 rounded-xl font-bold hover:bg-white/20 flex items-center gap-2">
-          <LucideIcons.Home className="w-5 h-5"/> 홈
-        </button>
+        <div className="absolute top-6 left-6 right-6"><HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로" onClick={() => navigate('/')}><LucideIcons.Home aria-hidden="true"/><span>홈으로</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
         <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm flex flex-col items-center">
           <LucideIcons.MonitorSmartphone className="w-20 h-20 text-cyan-400 mb-4 animate-pulse" />
           <h1 className="text-2xl font-black mb-2 text-center">공용 키오스크 스테이션 모드</h1>
@@ -75,6 +75,7 @@ export const KioskRelayView = () => {
 
   return (
     <div className="min-h-[100dvh] bg-slate-900 text-white p-6 pt-12 pb-24 flex flex-col items-center relative font-sans overflow-y-auto">
+      <div className="w-full max-w-2xl mb-6"><HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로" onClick={() => navigate('/')}><LucideIcons.Home aria-hidden="true"/><span>홈으로</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
       <button onClick={() => { setRoomId(undefined); setSelectedGroup(null); }} className="mb-4 px-4 py-2 rounded-xl bg-white/10">다른 수업 입장</button>
       {(error || roomError) && <p role="alert" className="mb-4 text-rose-300">{error || roomError}</p>}
       {!isActive && <p className="mb-4 text-amber-300 font-bold">{room.status === 'finished' ? '수업이 종료되었습니다.' : isTimeUp ? '제한 시간이 끝났습니다.' : '선생님이 수업을 시작하거나 재개할 때까지 기다려주세요.'}</p>}

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { HeaderPopover } from './HeaderPopover';
 import { Share2 } from "lucide-react";
 import { AVAILABLE_GAMES as GAMES } from "../../domain/gamesData";
 import "./LinkShareButton.css";
@@ -7,6 +8,8 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
   const [sharing, setSharing] = useState(false);
   const [shareStatus, setShareStatus] = useState("");
   const [manualCopy, setManualCopy] = useState(false);
+  const shareTrigger = useRef<HTMLButtonElement>(null);
+  const feedbackId = useId();
   const shareUrl = "https://physical-pi.vercel.app/";
 
   async function shareLink() {
@@ -41,13 +44,12 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
 
   return (
     <div className="share-control">
-      <button className={hub ? "hub-action share-trigger" : "share-trigger"} type="button" onClick={shareLink} disabled={sharing}>
+      <button ref={shareTrigger} className={hub ? "hub-action share-trigger" : "share-trigger"} type="button" title={sharing ? "공유 중" : "링크 공유"} aria-expanded={Boolean(shareStatus)} aria-controls={shareStatus ? feedbackId : undefined} onClick={shareLink} disabled={sharing}>
         <Share2 aria-hidden="true" />
         <span>{sharing ? "공유 중" : "링크 공유"}</span>
       </button>
-      <div className="share-feedback" role="status">
-        {manualCopy && <button type="button" className="share-dismiss" aria-label="공유 안내 닫기" onClick={() => { setShareStatus(""); setManualCopy(false); }}>닫기</button>}
-        {shareStatus && <p>{shareStatus}</p>}
+      <HeaderPopover open={Boolean(shareStatus)} onClose={() => { setShareStatus(''); setManualCopy(false); }} anchor={shareTrigger} id={feedbackId} label="공유 안내">
+        <div className="header-share-feedback" role="status"><p>{shareStatus}</p></div>
         {manualCopy && (
           <input aria-label="공유할 링크" readOnly value={shareUrl}
             onFocus={(event) => event.currentTarget.select()}
@@ -61,7 +63,7 @@ export function LinkShareButton({ hub = false }: { hub?: boolean }) {
               event.currentTarget.setSelectionRange(0, event.currentTarget.value.length);
             }} />
         )}
-      </div>
+      </HeaderPopover>
     </div>
   );
 }

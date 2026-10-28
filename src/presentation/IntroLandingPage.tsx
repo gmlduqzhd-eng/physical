@@ -1,12 +1,10 @@
 import { useRef } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CircleHelp, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AVAILABLE_GAMES as GAMES } from "../domain/gamesData";
-import accessQr from "../assets/access-qr.svg?inline";
 import {ForestBrand} from './components/ForestIdentity';
 import "./IntroLandingPage.css";
-import { BackgroundMusicButton } from "./components/BackgroundMusicButton";
-import { LinkShareButton } from "./components/LinkShareButton";
+import { HeaderToolbar } from "./components/HeaderToolbar";
 import {
   AccessQrDialog,
   type AccessQrDialogHandle,
@@ -27,29 +25,7 @@ export function IntroLandingPage() {
           <Link className="brand" to="/" aria-label="땀방울 원정대 홈">
             <ForestBrand subtitle="함께 움직이는 체육 시간"/>
           </Link>
-          <div className="header-actions">
-            <BackgroundMusicButton />
-            <div className="access-actions">
-            <button
-              className="qr-trigger"
-              type="button"
-              aria-haspopup="dialog"
-              aria-controls="access-qr-dialog"
-              aria-label="접속 QR 크게 보기"
-              onClick={() => accessQrDialog.current?.open()}
-            >
-              <img src={accessQr} alt="접속 QR" width={111} height={111} />
-              <span>
-                <b>접속 QR</b>
-                <small>카메라로 QR을 스캔하세요.</small>
-                <em>
-                  크게 보기 <ArrowRight aria-hidden="true" />
-                </em>
-              </span>
-            </button>
-            <LinkShareButton />
-            </div>
-          </div>
+          <HeaderToolbar><button className="icon-toolbar-action" type="button" title="접속 QR 크게 보기" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void accessQrDialog.current?.open(); }}><QrCode aria-hidden="true"/><span>접속 QR 크게 보기</span></button><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
         </header>
         <main className="hero">
           <section className="hero-copy">

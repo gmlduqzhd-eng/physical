@@ -7,7 +7,8 @@ import { useGameLogic } from '../application/useGameLogic';
 import { createClassroom, classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { timeOffset } from '../application/timeSync';
 import type { GameRoom, MissionTemplate } from '../domain/types';
-import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone, Sparkles } from 'lucide-react';
+import { ShieldAlert, Play, Pause, RotateCcw, Waves, Bug, Plus, Key, Clock, Home, Volume2, Smartphone, Sparkles, CircleHelp } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import { TemplateBuilder } from './TemplateBuilder';
 import { useGameTimer } from '../application/useGameTimer';
 import { QRCodePanel } from './components/admin/QRCodePanel';
@@ -258,15 +259,13 @@ export const AdminControlPanel = () => {
   return (
     <div className="teacher-admin min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
+        <HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로 돌아가기" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>홈으로 돌아가기</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar>
         <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
         {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 mb-8">
           <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-600">
             <ShieldAlert className="w-10 h-10 text-cyan-500" /> 땀방울 원정대 - 교사 제어 패널
           </h1>
-          <button onClick={() => navigate('/')} className="px-4 py-2 bg-white border border-slate-200 shadow-sm rounded-lg font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors">
-            <Home className="w-4 h-4"/> 홈으로 돌아가기
-          </button>
         </div>
 
         {activeTab !== 'create_template' && (

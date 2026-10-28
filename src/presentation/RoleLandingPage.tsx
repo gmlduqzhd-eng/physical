@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ClipboardCheck, QrCode } from 'lucide-react';
-import { useBackgroundMusic } from '../application/BackgroundMusicContext';
+import { ArrowRight, CircleHelp, ClipboardCheck, Home, QrCode } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import './RoleLandingPage.css';
 export function RoleLandingPage() {
-  const { enabled, toggle } = useBackgroundMusic();
   return <main className="role-start"><div className="role-start-wrap">
     <header className="role-start-header">
       <Link to="/" className="role-start-brand" aria-label="땀방울 원정대 홈"><svg viewBox="0 0 32 38" fill="none" aria-hidden="true"><path d="M16 2C12 9 3 17 3 24a13 13 0 0026 0C29 17 20 9 16 2Z" fill="currentColor"/><path d="M9 23c0 4 2 6 6 7" stroke="white" strokeWidth="2.5" strokeLinecap="round"/></svg>땀방울 원정대</Link>
-      <nav aria-label="이용 설정"><button type="button" aria-pressed={enabled} onClick={toggle}>{enabled ? '음악 끄기' : '음악 켜기'}</button><Link to="/manual">이용 안내 ↗</Link></nav>
+      <HeaderToolbar><Link className="icon-toolbar-action" to="/" title="홈으로"><Home aria-hidden="true"/><span>홈으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
     </header>
     <section className="role-start-hero" aria-labelledby="role-start-title"><p className="role-start-eyebrow">READY, SET, TOGETHER</p><h1 id="role-start-title">오늘의 체육,<br/>함께 시작해요.</h1><p className="role-start-lead">선생님도 학생도, 나에게 맞는 문으로 들어오세요.</p><img className="role-start-art" src="/start-court.svg" alt="" width="280" height="191"/></section>
     <nav className="role-start-cards" aria-label="참여 역할 선택">

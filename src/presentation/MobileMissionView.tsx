@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, CircleHelp, MonitorSmartphone, Sun } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { useSyncQueue } from '../application/useSyncQueue';
@@ -9,13 +11,18 @@ import { GameIcons as LucideIcons } from './icons';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { resolveGuidedGameType } from '../domain/guidedMission';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
+import './MobileMissionView.css';
+
+function StudentRoomHeader() {
+  return <header className="student-classroom-header"><HeaderToolbar><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar></header>;
+}
 
 const SHOP_ITEMS = [
   { id: 'double', name: '점수 2배 물약', cost: 200, desc: '1분간 원정대 미션 점수가 2배가 됩니다.', icon: LucideIcons.Zap, color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200' },
@@ -525,7 +532,8 @@ export const MobileMissionView = () => {
     const isMVP = myRank === 1;
 
     return (
-      <div className="min-h-[100dvh] bg-slate-900 flex flex-col items-center pt-16 pb-20 p-6 relative overflow-y-auto text-white">
+      <div className="student-classroom-finished min-h-[100dvh] bg-slate-900 flex flex-col items-center relative overflow-y-auto text-white">
+        <StudentRoomHeader/>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-[pulse_3s_ease-in-out_infinite]"></div>
         
         {isMVP ? (
@@ -534,7 +542,7 @@ export const MobileMissionView = () => {
           <LucideIcons.Medal className="w-24 h-24 text-slate-400 mb-4 relative z-10" />
         )}
         
-        <h1 className="text-4xl font-black mb-2 text-center text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 relative z-10">게임 종료!</h1>
+        <h1 className="student-finished-title text-4xl font-black mb-2 text-center relative z-10">게임 종료!</h1>
         <p className="text-xl font-bold mb-8 text-slate-300 relative z-10">최종 순위: {myRank}위</p>
         
         <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center relative z-10 mb-8">
@@ -607,7 +615,8 @@ export const MobileMissionView = () => {
     const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
-    return <main className="min-h-[100dvh] bg-slate-50 text-slate-900 p-5 flex items-center justify-center">
+    return <main className="student-guided-room min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col items-center">
+      <StudentRoomHeader/>
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
         <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
         <h1 className="text-3xl font-black mt-2">{myGroup?.group_name || '모둠 활동'}</h1>
@@ -676,30 +685,9 @@ export const MobileMissionView = () => {
       )}
 
       {/* 상단 퀵 컨트롤 (스탠드 모드 + 야외 모드) */}
-      <div className="fixed top-3 right-3 z-50 flex items-center gap-1.5">
-        <button
-          onClick={toggleStandMode}
-          className={`px-2.5 py-1.5 rounded-full text-xs font-black shadow-md border-2 active:scale-95 flex items-center gap-1 ${
-            isStandMode
-              ? 'bg-amber-400 border-amber-300 text-slate-950 shadow-amber-400/40'
-              : 'bg-white/90 border-slate-200 text-slate-700'
-          }`}
-          title="체육관 바닥/콘 거치용 대형 고대비 스탠드 모드"
-        >
-          <span>{isStandMode ? '🎛️ 스탠드 ON' : '📱 폰'}</span>
-        </button>
-        {isWakeLockActive && (
-          <span className="px-2 py-1 bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-full text-[10px] font-black flex items-center gap-1 shadow-sm" title="화면 꺼짐 방지 활성">
-            🔆 켜짐유지
-          </span>
-        )}
-        <button
-          onClick={toggleOutdoorMode}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shadow-md border-2 ${isOutdoorMode ? 'bg-yellow-400 border-yellow-300 text-black' : 'bg-white/80 border-slate-200 text-slate-600'}`}
-          title="야외 시인성 모드"
-        >
-          {isOutdoorMode ? '☀️' : '🌙'}
-        </button>
+      <div className="sticky top-0 z-50 p-3 bg-[var(--forest-bg)] border-b border-[var(--forest-line)]">
+        <HeaderToolbar><button className="icon-toolbar-action" type="button" onClick={toggleStandMode} title="스탠드 모드" aria-pressed={isStandMode}><MonitorSmartphone aria-hidden="true"/><span>스탠드 모드</span></button><button className="icon-toolbar-action" type="button" onClick={toggleOutdoorMode} title="야외 시인성 모드" aria-pressed={isOutdoorMode}><Sun aria-hidden="true"/><span>야외 시인성 모드</span></button></HeaderToolbar>
+        {isWakeLockActive && <span className="block text-xs text-center mt-1" role="status">🔆 화면 꺼짐 방지 활성</span>}
       </div>
 
       {syncWarning && <p role="status" className="mx-4 p-3 bg-amber-100 text-amber-900 rounded-xl text-xs">{syncWarning}</p>}

@@ -118,7 +118,7 @@
 }
 
 .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
   gap: 14px;
   margin-top: 20px;
 }
@@ -132,12 +132,12 @@
 }
 
 .flow.lesson-shell.guided-classroom .classroom-qr-card img {
-  width: min(100%, 160px);
+  width: min(100%, 220px);
   height: auto;
   margin: 8px auto;
 }
 
-.flow.lesson-shell.guided-classroom .classroom-qr-card p {
+.flow.lesson-shell.guided-classroom .classroom-qr-card p:not(.classroom-group-pin) {
   font-size: 13px;
   margin: 0;
 }
@@ -227,9 +227,6 @@
     padding: 23px;
   }
 
-  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 420px) {
@@ -245,15 +242,10 @@
     padding: 16px;
   }
 
-  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
-@media (max-width: 360px) {
-  .flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-qr-grid {
-    grid-template-columns: 1fr;
-  }
+.flow.lesson-shell.guided-classroom .classroom-qr-panel .classroom-presentation:fullscreen .classroom-qr-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
 }
 
 @media print {

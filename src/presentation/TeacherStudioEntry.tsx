@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
+import { ArrowLeft, CircleHelp } from 'lucide-react';
+import { HeaderToolbar } from './components/HeaderToolbar';
 import './TeacherAi.css';
 
 export function TeacherStudioEntry() {
   return <main className="teacher-ai">
-    <header><strong>교사 수업 준비실</strong><Link to="/hub">활동 탐색으로 돌아가기</Link></header>
+    <header><strong>교사 수업 준비실</strong><HeaderToolbar><Link className="icon-toolbar-action" to="/hub" title="활동 탐색으로 돌아가기"><ArrowLeft aria-hidden="true"/><span>활동 탐색으로 돌아가기</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar></header>
     <section className="ai-intro">
       <p className="ai-eyebrow">땀방울 원정대 · GEMINI TEACHER STUDIO</p>
       <h1>교사 전용 AI 도구에서<br/>수업 준비를 이어가세요.</h1>
