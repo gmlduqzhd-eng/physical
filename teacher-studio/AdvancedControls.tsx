@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { OBSERVATIONS, nextChallenge } from '../src/domain/teacherAi';
+import { OBSERVATIONS } from '../src/domain/teacherAi';
+import { adoptLocalChallenge, reviewLocalChallenge, type ChallengeReview } from './localChallenge';
 import type { StudioForm } from './Studio';
 export function AdvancedControls({ form, change }: { form: StudioForm; change: (patch: Partial<StudioForm>) => void }) {
   const [notes, setNotes] = useState('');
@@ -12,7 +13,27 @@ export function AdvancedControls({ form, change }: { form: StudioForm; change: (
 }
 export function LocalChallenge({ activityId }: { activityId: string }) {
   const [rows, setRows] = useState([{ score: '', rpe: '' }, { score: '', rpe: '' }, { score: '', rpe: '' }]);
-  const [confirmed, setConfirmed] = useState(false); const [result, setResult] = useState(''); const [adopted, setAdopted] = useState(false);
-  const clear = () => { setRows([{score:'',rpe:''},{score:'',rpe:''},{score:'',rpe:''}]); setConfirmed(false); setResult(''); setAdopted(false); };
-  return <fieldset><legend>6. 다음 도전 · 외부 전송 없는 규칙 분석</legend><p>AI 생성 기능이 아닙니다. 별명·번호도 개인 이력과 연결될 수 있어 입력받지 않습니다. 교사가 같은 학생·같은 활동의 최근 3회 기록인지 직접 확인하고 숫자만 입력합니다. 공용 기기의 기존 기록을 자동으로 읽지 않습니다. 입력은 새로고침·활동 변경·지우기 때 사라집니다.</p>{rows.map((row,i) => <div className="ai-fields" key={i}><label>{i+1}번째 기록 점수 ({i===0?'가장 최근':i===1?'직전':'가장 이전'})<input type="number" min={0} max={1000000} value={row.score} onChange={e => {setRows(rows.map((v,j) => j===i?{...v,score:e.target.value}:v));setResult('');setAdopted(false);}}/></label><label>운동 자각도 (1~5)<input type="number" min={1} max={5} value={row.rpe} onChange={e => {setRows(rows.map((v,j) => j===i?{...v,rpe:e.target.value}:v));setResult('');setAdopted(false);}}/></label></div>)}<label className="ai-check"><input type="checkbox" checked={confirmed} onChange={e => {setConfirmed(e.target.checked);setResult('');setAdopted(false);}}/>다른 학생의 기록이 섞이지 않았고, 점수가 높을수록 성취가 높은 같은 활동·같은 척도임을 확인했습니다.</label><button disabled={!confirmed} onClick={() => { const valid=rows.every(v=>v.score!==''&&v.rpe!==''&&Number.isFinite(Number(v.score))&&Number(v.score)>=0&&Number(v.score)<=1000000&&Number.isInteger(Number(v.rpe))&&Number(v.rpe)>=1&&Number(v.rpe)<=5); setResult(valid?nextChallenge(rows.map(v=>({gameType:activityId,score:Number(v.score),rpe:Number(v.rpe)})),activityId):'세 기록의 점수와 운동 자각도(1~5)를 모두 확인하세요.');setAdopted(false);}}>기기 안에서 다음 수준 검토</button><button onClick={clear}>기록과 결과 지우기</button>{result && <><label>교사 검토·수정<textarea value={result} onChange={e=>{setResult(e.target.value);setAdopted(false);}}/></label><button onClick={()=>setAdopted(true)}>교사 판단으로 채택</button>{adopted && <p role="status">교사가 검토한 제안으로만 표시합니다. 학생 평가·자동 승급·DB 저장은 하지 않습니다.</p>}</>}</fieldset>;
+  const [confirmed, setConfirmed] = useState(false);
+  const [review, setReview] = useState<ChallengeReview>({ kind: 'empty' });
+  const clear = () => { setRows([{score:'',rpe:''},{score:'',rpe:''},{score:'',rpe:''}]); setConfirmed(false); setReview({ kind: 'empty' }); };
+  const changeRow = (index: number, field: 'score' | 'rpe', value: string) => {
+    setRows(previous => previous.map((row, i) => i === index ? { ...row, [field]: value } : row));
+    setReview({ kind: 'empty' });
+  };
+  return <fieldset><legend>6. 다음 도전 · 외부 전송 없는 규칙 분석</legend>
+    <p>AI 생성 기능이 아닙니다. 별명·번호도 개인 이력과 연결될 수 있어 입력받지 않습니다. 교사가 같은 학생·같은 활동의 최근 3회 기록인지 직접 확인하고 숫자만 입력합니다. 공용 기기의 기존 기록을 자동으로 읽지 않습니다. 입력은 새로고침·활동 변경·지우기 때 사라집니다.</p>
+    {rows.map((row, i) => <div className="ai-fields" key={i}>
+      <label>{i+1}번째 기록 점수 ({i===0?'가장 최근':i===1?'직전':'가장 이전'})<input type="number" min={0} max={1000000} value={row.score} onChange={e => changeRow(i, 'score', e.target.value)}/></label>
+      <label>운동 자각도 (1~5)<input type="number" min={1} max={5} value={row.rpe} onChange={e => changeRow(i, 'rpe', e.target.value)}/></label>
+    </div>)}
+    <label className="ai-check"><input type="checkbox" checked={confirmed} onChange={e => { setConfirmed(e.target.checked); setReview({ kind: 'empty' }); }}/>다른 학생의 기록이 섞이지 않았고, 점수가 높을수록 성취가 높은 같은 활동·같은 척도임을 확인했습니다.</label>
+    <button disabled={!confirmed} onClick={() => setReview(reviewLocalChallenge(rows, activityId))}>기기 안에서 다음 수준 검토</button>
+    <button onClick={clear}>기록과 결과 지우기</button>
+    {review.kind === 'invalid' && <p className="ai-error" role="alert">{review.error}</p>}
+    {review.kind === 'ready' && <>
+      <label>교사 검토·수정<textarea value={review.text} onChange={e => setReview({ kind: 'ready', text: e.target.value, adopted: false })}/></label>
+      <button disabled={!review.text.trim()} onClick={() => setReview(adoptLocalChallenge)}>교사 판단으로 채택</button>
+      {review.adopted && <p role="status">교사가 검토한 제안으로만 표시합니다. 학생 평가·자동 승급·DB 저장은 하지 않습니다.</p>}
+    </>}
+  </fieldset>;
 }

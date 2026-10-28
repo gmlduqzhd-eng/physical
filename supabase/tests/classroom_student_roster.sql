@@ -3,7 +3,7 @@ BEGIN;
 CREATE OR REPLACE FUNCTION pg_temp.assert_ok(value boolean,label text) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'ROSTER TEST FAILED: %',label; END IF; END $$;
 DO $$ DECLARE label text; uid uuid; BEGIN
-  FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','student_c'] LOOP
+  FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','student_c','replacement','expired','new_number','legacy_blank'] LOOP
     uid:=gen_random_uuid();
     INSERT INTO auth.users(id,aud,role) VALUES(uid,'authenticated','authenticated');
     PERFORM set_config('test.'||label,uid::text,true);
@@ -55,9 +55,49 @@ SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting(
 SET LOCAL ROLE authenticated;
 SELECT pg_temp.assert_ok(jsonb_array_length(public.get_classroom_roster(current_setting('test.room')::uuid))=3,'three unique members');
 SELECT pg_temp.assert_ok(public.release_classroom_number(current_setting('test.room')::uuid,8),'owner can release duplicate number');
-SELECT pg_temp.assert_ok((SELECT count(*)=1 FROM jsonb_array_elements(public.get_classroom_roster(current_setting('test.room')::uuid)) v WHERE v->>'nickname' IS NULL),'released member shown as missing');
-UPDATE public.game_rooms SET status='finished' WHERE id=current_setting('test.room')::uuid;
+SELECT pg_temp.assert_ok(jsonb_array_length(public.get_classroom_roster(current_setting('test.room')::uuid))=2,'released device removed from attendance count');
+SELECT pg_temp.assert_ok(NOT public.release_classroom_number(current_setting('test.room')::uuid,8),'release is idempotent');
 RESET ROLE;
-SELECT pg_temp.assert_ok((SELECT count(*)=3 AND count(student_number)=0 AND count(nickname)=0 FROM physical_internal.classroom_members WHERE room_id=current_setting('test.room')::uuid),'finish erases identity but retains member rows');
+SELECT pg_temp.assert_ok(NOT EXISTS(SELECT 1 FROM physical_internal.classroom_members WHERE room_id=current_setting('test.room')::uuid AND user_id=current_setting('test.student_b')::uuid),'released membership deleted');
+
+-- The lost device cannot keep viewing or writing, or revive its blank profile.
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.student_b'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_ok(public.get_my_classroom_profile(current_setting('test.room')::uuid) IS NULL,'released device has no profile');
+SELECT pg_temp.assert_ok((SELECT count(*)=0 FROM public.game_rooms WHERE id=current_setting('test.room')::uuid),'released device cannot read room');
+SELECT pg_temp.assert_ok((SELECT count(*)=0 FROM public.room_groups WHERE room_id=current_setting('test.room')::uuid),'released device cannot read groups');
+DO $$ BEGIN
+  BEGIN PERFORM public.increment_classroom_score(current_setting('test.group_b')::uuid,10,'released-device-write'); RAISE EXCEPTION 'released device wrote score'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  BEGIN PERFORM public.complete_classroom_profile(current_setting('test.room')::uuid,current_setting('test.group_b')::uuid,8,'되살리기'); RAISE EXCEPTION 'released device revived profile'; EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+END $$;
+SELECT pg_temp.assert_ok(public.join_classroom_short_pin_profile('not-a-pin',8,'새기기')->>'error'='invalid_pin','released device needs valid entry code');
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.replacement'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_ok(public.join_classroom_invite_profile(current_setting('test.room')::uuid,'2모둠',current_setting('test.invite_b'),8,'새기기')->>'group_id'=current_setting('test.group_b'),'replacement can register released number using valid QR');
+RESET ROLE;
+
+-- Old blank/expired rows must not inflate counts. Expired identities do not
+-- reserve their number and prevent a new device from joining indefinitely.
+INSERT INTO physical_internal.classroom_members(room_id,user_id,group_id,expires_at,student_number,nickname)
+VALUES(current_setting('test.room')::uuid,current_setting('test.expired')::uuid,current_setting('test.group_b')::uuid,now()-interval '1 minute',11,'만료친구'),
+      (current_setting('test.room')::uuid,current_setting('test.legacy_blank')::uuid,current_setting('test.group_b')::uuid,now()+interval '4 hours',NULL,NULL);
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.teacher_a'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_ok(jsonb_array_length(public.get_classroom_roster(current_setting('test.room')::uuid))=3,'replacement counts once; expired and blank rows excluded');
+RESET ROLE;
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.new_number'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_ok(public.join_classroom_short_pin_profile(current_setting('test.pin_a'),11,'새번호친구')->>'group_id'=current_setting('test.group_a'),'valid entry can reuse expired number');
+RESET ROLE;
+SELECT pg_temp.assert_ok(NOT EXISTS(SELECT 1 FROM physical_internal.classroom_members WHERE room_id=current_setting('test.room')::uuid AND user_id=current_setting('test.expired')::uuid),'expired number holder removed only when number reused');
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.teacher_a'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.assert_ok(jsonb_array_length(public.get_classroom_roster(current_setting('test.room')::uuid))=4,'four active completed profiles');
+UPDATE public.game_rooms SET status='finished' WHERE id=current_setting('test.room')::uuid;
+SELECT pg_temp.assert_ok(public.get_classroom_roster(current_setting('test.room')::uuid)='[]'::jsonb,'finished room no longer exposes roster');
+RESET ROLE;
+SELECT pg_temp.assert_ok((SELECT count(*)=5 AND count(student_number)=0 AND count(nickname)=0 FROM physical_internal.classroom_members WHERE room_id=current_setting('test.room')::uuid),'finish erases identity but retains remaining member rows');
 SELECT 'roster access, PIN, QR, duplicate, legacy, release and finish assertions passed' AS result;
 ROLLBACK;

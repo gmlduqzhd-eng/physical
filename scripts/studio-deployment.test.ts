@@ -15,6 +15,9 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   process.env.GEMINI_MODEL = 'synthetic-model';
   process.env.GEMINI_PUBLIC_DATA_REVIEWED = 'true';
   process.env.NODE_ENV = 'production';
+  process.env.STUDIO_LIMIT_URL = 'https://synthetic-limiter.example';
+  process.env.STUDIO_LIMIT_KEY = 'synthetic-key';
+  process.env.STUDIO_LIMIT_SECRET = 'synthetic-limiter-secret-not-real-123456';
   delete process.env.VERCEL_URL;
   const server = createServer((req, res) => { void handler(req, res); });
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -23,6 +26,15 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   const post = (action: string, body: unknown, token?: string, origin = url) => fetch(url + '/api/studio?action=' + action, {
     method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json', ...(token ? { Cookie: 'physical_studio=' + token } : {}) }, body: JSON.stringify(body),
   });
+  const actualFetch = globalThis.fetch;
+  let limiterMode: 'allow' | 'deny' | 'offline' = 'allow';
+  globalThis.fetch = async (request, init) => {
+    if (String(request).startsWith('https://synthetic-limiter.example/')) {
+      if (limiterMode === 'offline') throw new Error('synthetic-private-error');
+      return new Response(JSON.stringify(limiterMode === 'deny' ? { allowed: false, retrySeconds: 37, reason: 'minute' } : { allowed: true, retrySeconds: 0, reason: JSON.parse(String(init?.body)).request_kind === 'release' ? 'released' : 'accepted' }));
+    }
+    return actualFetch(request, init);
+  };
   try {
     const status = await fetch(url + '/api/studio?action=status');
     assert.deepEqual(await status.json(), { authenticated: false, configured: true, aiReady: true, model: 'synthetic-model', localSetup: false });
@@ -63,6 +75,13 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
       assert.equal(generatedBody.result.sections[0].content.split('\n').length, 3);
       assert.deepEqual(generatedBody.result.safety, selected.safety.slice(0, 2).map(quote => ({ activityId: selected.id, quote })));
       assert.equal(providerCalls, 1);
+      providerCalls = 0; limiterMode = 'deny';
+      const denied = await post('generate', input, token);
+      assert.equal(denied.status, 429); assert.equal(denied.headers.get('retry-after'), '37'); assert.equal(providerCalls, 0);
+      limiterMode = 'offline';
+      const unavailableLimiter = await post('generate', input, token);
+      assert.equal(unavailableLimiter.status, 503); assert(!((await unavailableLimiter.text()).includes('synthetic-private-error'))); assert.equal(providerCalls, 0);
+      limiterMode = 'allow';
       providerUnavailable = true; providerCalls = 0;
       const unavailable = await post('generate', {task:'participation',activityId:'space-occupier',grade:'3~4학년군',goal:'협동과 소통',place:'체육관',device:'태블릿 PC',deviceCount:'모둠별 1대',minutes:40,groupSize:6,classSize:24,consent:true,adultTeacher:true}, token);
       assert.equal(unavailable.status,503);
@@ -71,6 +90,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
     const logout = await post('logout', {}, token);
     assert.equal(logout.status, 200); assert.match(logout.headers.get('set-cookie')!, /Max-Age=0/);
   } finally {
+    globalThis.fetch = actualFetch;
     await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
     for (const key of Object.keys(process.env)) if (!(key in original)) delete process.env[key];
     Object.assign(process.env, original);

@@ -106,13 +106,13 @@ export const Manual = () => {
                 </h4>
                 <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
                   <li>
-                    <strong className="text-white">📱 스마트폰 (49종):</strong> 들고 뛰기, 흔들기, 점프 센서 인식, 화면 터치 등 모바일 기기의 기동성을 극대화한 활동
+                    <strong className="text-white">📱 스마트폰 ({GAMES.filter(game => game.devices.includes('스마트폰')).length}종):</strong> 화면·소리·센서 등을 활용합니다. 활동별 안내에 따라 기기를 안전하게 내려놓거나 거치하고 참여하세요.
                   </li>
                   <li>
-                    <strong className="text-white">📟 태블릿 PC (49종):</strong> 넓은 화면으로 시인성이 뛰어나며, 전술판 드래그, 2인 이상 모둠 짝 활동에 최적화
+                    <strong className="text-white">📟 태블릿 PC ({GAMES.filter(game => game.devices.includes('태블릿 PC')).length}종):</strong> 넓은 화면으로 활동 안내를 함께 보고, 터치·드래그 등 활동별 조작 방법으로 참여합니다.
                   </li>
                   <li>
-                    <strong className="text-white">🖥️ 데스크톱 PC (46종):</strong> 마우스 클릭 및 키보드 조작 완벽 지원 (센서 미지원 PC에서도 클릭/터치 폴백 조작으로 참여 가능)
+                    <strong className="text-white">🖥️ 데스크톱 PC ({GAMES.filter(game => game.devices.includes('데스크톱 PC')).length}종):</strong> 마우스·키보드 등 화면에 안내된 방법으로 참여합니다. 센서가 없는 기기에서는 활동별 대체 조작 안내를 확인하세요.
                   </li>
                 </ul>
               </div>
@@ -124,10 +124,10 @@ export const Manual = () => {
                 </h4>
                 <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
                   <li>
-                    <strong className="text-white"><User className="inline w-3.5 h-3.5 mr-1 text-slate-400" />개인 게임 (36종):</strong> 자신의 체력 측정, 순발력, 민첩성, 밸런스 유지 등 개인별 목표 달성형 도전 과제
+                    <strong className="text-white"><User className="inline w-3.5 h-3.5 mr-1 text-slate-400" />개인 게임 ({GAMES.filter(game => game.playMode === '개인').length}종):</strong> 움직임·반응·균형 등 나에게 맞는 목표로 참여하는 도전 과제
                   </li>
                   <li>
-                    <strong className="text-white"><Users className="inline w-3.5 h-3.5 mr-1 text-amber-400" />협동 게임 (13종):</strong> 2인 짝 또는 모둠원 전원이 협력하여 패스, 전술 침투, 역할 교대, 배려를 발휘하는 팀워크 중심 과제
+                    <strong className="text-white"><Users className="inline w-3.5 h-3.5 mr-1 text-amber-400" />협동 게임 ({GAMES.filter(game => game.playMode === '협동').length}종):</strong> 짝 또는 모둠이 함께 움직이고 역할을 바꾸며 소통하는 활동
                   </li>
                 </ul>
               </div>
@@ -378,14 +378,14 @@ export const Manual = () => {
             </ul>
           </section>
 
-          {/* 7. 닉네임 & 점수 누적 시스템 */}
+          {/* 7. 별명과 개인 활동 기록 */}
           <section className="space-y-4">
             <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">7</span>
-              🏆 닉네임 &amp; 점수 누적 시스템
+              🏆 별명과 내 활동 기록
             </h3>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              회원가입이나 로그인 없이도 내 점수를 기기에 누적할 수 있습니다. 같은 기기·브라우저에서 접속하면 자동으로 이전 기록이 유지됩니다.
+              개인 게임 결과는 현재 탭에서 임시로 확인할 수 있습니다. 별명과 개인 활동 기록은 이 탭의 세션 저장소에 최대 8시간 보관하며, 다음 접근 때 만료된 정보를 삭제합니다. 장기 저장하거나 다른 기기로 동기화하는 기록은 아닙니다.
             </p>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
               <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
@@ -393,13 +393,13 @@ export const Manual = () => {
                   <strong className="text-white">✏️ 닉네임 설정:</strong> 개인 활동 기록을 사용할 때는 실명이나 학번 대신 개인을 알아볼 수 없는 별명을 사용하세요. (예: "튼튼구름")
                 </li>
                 <li>
-                  <strong className="text-white">📊 자동 점수 누적:</strong> 게임을 플레이할 때마다 획득 점수가 자동으로 누적됩니다. 총 점수, 플레이 횟수, 게임별 최고 기록이 모두 저장됩니다.
+                  <strong className="text-white">📊 내 활동 기록:</strong> 완료한 개인 게임의 점수와 참여 횟수 등을 확인할 수 있습니다. 이 기록은 학생의 신체 능력을 진단하거나 비교하는 자료가 아닙니다.
                 </li>
                 <li>
-                  <strong className="text-white">✏️ 닉네임 변경:</strong> 프로필 카드의 연필 아이콘(✏️)을 눌러 언제든 닉네임을 변경할 수 있습니다.
+                  <strong className="text-white">수업 참여 정보:</strong> 수업방 입장에 쓰는 번호와 별명은 수업방 명단에도 저장됩니다. 서버 명단과 기기 저장 정보는 보관 방식이 다르므로 개인정보 안내를 확인하세요.
                 </li>
                 <li>
-                  <strong className="text-white">💾 저장 방식:</strong> 기기의 localStorage에 저장되므로 같은 기기·같은 브라우저에서만 기록이 유지됩니다. 다른 기기에서는 새 프로필이 생성됩니다.
+                  <strong className="text-white">공용 기기 정리:</strong> 수업이 끝나면 <button className="underline" onClick={() => navigate('/privacy')}>개인정보 안내</button>에서 ‘기기 정보 지우기 및 로그아웃’을 눌러 정리하세요. 이 버튼은 진행 중인 수업의 서버 명단까지 삭제하지는 않습니다.
                 </li>
               </ul>
             </div>

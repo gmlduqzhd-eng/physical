@@ -6,7 +6,7 @@ import './QRCodePanel.css';
 
 interface Props { currentRoom: GameRoom; roomGroups: RoomGroup[]; appUrl?: string }
 interface JoinCard { group_name:string; code:string; short_pin:string; image:string }
-interface RosterMember { group_id:string; student_number:number|null; nickname:string|null }
+interface RosterMember { group_id:string; student_number:number; nickname:string }
 
 export const QRCodePanel = ({currentRoom,roomGroups,appUrl}:Props) => {
   const [deviceCodes,setDeviceCodes]=useState<{board_code:string;recovery_code:string}|null>(null);
@@ -29,7 +29,10 @@ export const QRCodePanel = ({currentRoom,roomGroups,appUrl}:Props) => {
       setRosterError('입장 명단을 갱신하지 못했습니다. 연결과 교사 권한을 확인해주세요.');
       return;
     }
-    setRoster(data as RosterMember[]);
+    setRoster(data.filter((member): member is RosterMember =>
+      member && typeof member.group_id==='string' && Number.isInteger(member.student_number)
+      && member.student_number>=1 && member.student_number<=99
+      && typeof member.nickname==='string' && member.nickname.trim().length>=2 && member.nickname.length<=12));
     setRosterError('');
   },[currentRoom.id]);
 
@@ -79,7 +82,7 @@ export const QRCodePanel = ({currentRoom,roomGroups,appUrl}:Props) => {
     if(document.fullscreenElement)await document.exitFullscreen();
   };
   const releaseNumber=async(number:number)=>{
-    if(releasing || !window.confirm(`${number}번의 입장 정보를 비울까요? 학생이 다시 입력할 수 있습니다.`))return;
+    if(releasing || !window.confirm(`${number}번의 기존 기기 참여 권한을 종료할까요? 새 기기에서 모둠 PIN 또는 QR로 다시 입장할 수 있습니다.`))return;
     setReleasing(true);setRosterError('');
     try {
       const {data, error:releaseError}=await supabase.rpc('release_classroom_number',{room_uuid:currentRoom.id,number_value:number});
@@ -109,7 +112,7 @@ export const QRCodePanel = ({currentRoom,roomGroups,appUrl}:Props) => {
           <strong className="classroom-group-count">입장 {members.length}명</strong>
           <p className="classroom-group-pin" aria-label={card.group_name+' 입장 PIN '+card.short_pin}>{card.short_pin||'발급 중'}</p>
           <img src={card.image} alt={card.group_name+' 입장 QR'}/>
-          {showRoster&&<div className="classroom-roster" aria-label={card.group_name+' 입장 명단'}>{members.length ? <ul>{members.map((member,index)=><li key={member.student_number??`missing-${index}`}><span>{member.student_number ? `${member.student_number}번 ${member.nickname}` : '정보 미입력'}</span>{member.student_number&&<button type="button" disabled={releasing} onClick={()=>void releaseNumber(member.student_number!)}>번호 해제</button>}</li>)}</ul> : <p>아직 입장한 학생이 없어요.</p>}</div>}
+          {showRoster&&<div className="classroom-roster" aria-label={card.group_name+' 입장 명단'}>{members.length ? <ul>{members.map(member=><li key={member.student_number}><span>{member.student_number}번 {member.nickname}</span><button type="button" disabled={releasing} onClick={()=>void releaseNumber(member.student_number)}>번호 해제</button></li>)}</ul> : <p>아직 입장한 학생이 없어요.</p>}</div>}
         </article>;
       })}</div>
     </div>

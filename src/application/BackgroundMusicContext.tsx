@@ -10,6 +10,7 @@ import {
 } from "react";
 import { useLocation } from "react-router-dom";
 import { readStorage, writeStorage } from "./browserStorage";
+import { allowsBackgroundMusic } from "./backgroundMusicRoutes";
 import musicSource from "../assets/expedition-theme.mp3";
 
 const preferenceKey = "physical_background_music_v1";
@@ -40,9 +41,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const enabledRef = useRef(enabled);
   const eligibleRef = useRef(false);
   const suppressedRef = useRef(false);
-  const eligible = ["/", "/start", "/hub", "/games", "/hub/tools", "/about", "/manual", "/teacher/setup"].includes(
-    pathname.replace(/\/$/, "") || "/",
-  );
+  const eligible = allowsBackgroundMusic(pathname);
 
   const attemptPlay = useCallback(() => {
     const audio = audioRef.current;

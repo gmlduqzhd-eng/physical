@@ -2,10 +2,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from './teacherSession.js';
 import { defaultGeminiModel, geminiReady, generateStudioAdvice, studioProviderCategory } from './geminiStudio.js';
+import { studioLimit, StudioLimiterUnavailable } from './studioRateLimit.js';
 
 export const maxDuration = 120;
 const scope = 'physical_studio';
-let inFlight = false;
 type Request = IncomingMessage & { body?: unknown };
 
 // Log categories only: provider errors can contain prompts and credentials.
@@ -31,7 +31,8 @@ export function studioFailureDiagnostics(error: unknown) {
   return chain;
 }
 
-// Deployed only in the separate teacher project. No key-setting, file or DB route.
+// Deployed only in the separate teacher project. Its limiter can only access
+// dedicated counters, never student/classroom records or arbitrary database SQL.
 export default async function handler(req: Request, res: ServerResponse) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -56,16 +57,25 @@ export default async function handler(req: Request, res: ServerResponse) {
       const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
       if (!rateLimit('studio-login:' + address, 8, 900000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
       const login = z.object({ code: z.string().min(12).max(128), adultTeacher: z.literal(true) }).strict().parse(body);
+      const admission = await studioLimit('login', String(address));
+      if (!admission.allowed) { res.setHeader('Retry-After', String(admission.retrySeconds)); return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' }); }
       if (!verifyCode(login.code)) return send(401, { error: '기존에 설정한 교사 접근 코드를 확인하세요.' });
       res.setHeader('Set-Cookie', cookie(newSession(scope), false, scope)); return send(200, { authenticated: true });
     }
     if (action === 'logout') { res.setHeader('Set-Cookie', cookie('', true, scope)); return send(200, { authenticated: false }); }
     if (!nonce) return send(401, { error: '성인 교사 인증이 필요합니다.' });
     if (action !== 'generate') return send(404, { error: '없는 기능입니다. 키 설정은 서버에서만 관리합니다.' });
-    if (!rateLimit('studio-ai:' + nonce, 3, 60000) || !rateLimit('studio-all', 3, 60000) || inFlight) return send(429, { error: '한 번에 하나씩, 분당 3회까지 요청합니다. 잠시 후 다시 시도하세요.' });
-    inFlight = true;
-    try { return send(200, await generateStudioAdvice(body)); } finally { inFlight = false; }
+    const admission = await studioLimit('generate', nonce);
+    if (!admission.allowed) {
+      res.setHeader('Retry-After', String(admission.retrySeconds));
+      return send(429, { error: admission.reason === 'daily' ? '오늘의 전체 AI 생성 한도에 도달했습니다. 내일 다시 이용해 주세요.' : '전체 교사 도구에서 한 번에 하나씩, 분당 3회까지 요청합니다. 잠시 후 다시 시도하세요.' });
+    }
+    let generated;
+    try { generated = await generateStudioAdvice(body); }
+    finally { try { await studioLimit('release', nonce, admission.token); } catch { console.warn('studio_limiter_release_pending'); } }
+    return send(200, generated);
   } catch (error) {
+    if (error instanceof StudioLimiterUnavailable) return send(503, { error: error.message });
     if (action === 'generate') console.warn('studio_generation_failure', JSON.stringify(studioFailureDiagnostics(error)));
     // Never log/return provider payloads, prompts, credentials or stack traces.
     let current: unknown = error;

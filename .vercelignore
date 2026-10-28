@@ -8,5 +8,6 @@ supabase
 scripts
 server/geminiStudio.ts
 server/studioHandler.ts
+server/studioRateLimit.ts
 .studio-deploy
 node_modules
