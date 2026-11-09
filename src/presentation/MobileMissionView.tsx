@@ -625,7 +625,7 @@ export const MobileMissionView = () => {
           <p className="text-sm font-bold text-cyan-800">오늘의 활동</p>
           <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
-          <p className="text-sm text-slate-600 mt-3">게임을 끝내면 모둠 점수가 즉시 반영돼요.</p>
+          <p className="text-sm text-slate-600 mt-3">{guidedMission.requires_approval?'게임 결과를 제출하면 선생님 확인 후 점수가 반영돼요.':'게임을 끝내면 모둠 점수가 반영돼요.'}</p>
         </div>
         <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
         <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
@@ -861,7 +861,7 @@ export const MobileMissionView = () => {
                     </div>
                     <div className="flex flex-col items-end">
                       <span className={`mission-amount font-black ${m.gameType ? 'text-base' : 'text-3xl'} ${isOutdoorMode ? 'text-cyan-400' : m.color}`}>{m.gameType ? isCompleted ? '다시 시작 →' : '게임 시작 →' : `+${m.amount}`}</span>
-                      <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? `완료 시 점수 즉시 반영` : `대기 ${m.cooldown}초`}</span>
+                      <span className="text-xs text-slate-400 font-bold mt-1">{m.gameType ? (m.requires_approval?'교사 확인 후 점수 반영':'완료 시 점수 반영') : `대기 ${m.cooldown}초`}</span>
                     </div>
 
                     {cooldown && (
