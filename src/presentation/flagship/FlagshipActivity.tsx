@@ -14,7 +14,7 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  const [ready,setReady]=useState(embedded),[safety,setSafety]=useState(false),[solved,setSolved]=useState(false),[mode,setMode]=useState('assisted'),[confirmed,setConfirmed]=useState(false),[submitted,setSubmitted]=useState(false),[practicePhase,setPracticePhase]=useState(0);
  const resetSolved=useCallback(()=>setSolved(false),[]),markSolved=useCallback(()=>setSolved(true),[]),nextPractice=useCallback(()=>setPracticePhase(n=>Math.min(3,n+1)),[]);
  const meta=FLAGSHIPS.find(g=>g.id===game)!,me=s?.groups.find(g=>g.id===s.groupId)??s?.groups[0];
- const disabled=busy||stale||s?.status!=='playing';
+ const suspended=stale||s?.status!=='playing',disabled=busy||suspended;
  const bossPhase=practice?practicePhase:s?.phase??0;
  const complete=game==='expedition-boss'?bossPhase>=3:['expedition-rescue','expedition-shadow'].includes(game)?solved:!!me?.done;
  const progressKey=s?.runId;
@@ -29,7 +29,7 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  {room&&missing?<p role="status">선생님이 수업방의 ‘대표 원정 진행’에서 이 게임을 열면 연결돼요. 다른 게임을 진행 중이면 선생님께 알려 주세요.</p>:!s?<p role="status">원정 상태 연결 중…</p>:<>
  {s.status!=='playing'&&<p role="status" className="flagship-note">{s.status==='waiting'?'선생님의 수업 시작을 기다려요.':s.status==='finished'?'수업이 종료되어 입력을 마감했어요.':'수업을 잠시 멈췄어요. 화면 입력을 멈추고 선생님을 보세요.'}</p>}
  {game==='expedition-map'&&<MapGame key={s.runId} snapshot={s} send={action} practice={practice} disabled={disabled}/>}
- {game==='expedition-ship'&&<ShipGame key={s.runId} snapshot={s} send={action} practice={practice} disabled={disabled}/>}
+ {game==='expedition-ship'&&<ShipGame key={s.runId} snapshot={s} send={action} practice={practice} disabled={suspended} pending={busy}/>}
  {game==='expedition-loop'&&<LoopGame key={s.runId} snapshot={s} send={action} disabled={disabled}/>}
  {game==='expedition-rescue'&&<RescueGame key={s.runId} disabled={disabled} onSolved={markSolved} onMode={setMode}/>}
  {game==='expedition-shadow'&&<ShadowGame key={s.runId} disabled={disabled} onReset={resetSolved} onSolved={markSolved} onMode={setMode}/>}
