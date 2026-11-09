@@ -1,14 +1,25 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { lstat, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { join, relative, resolve } from 'node:path';
 
 // Exact allowlist: never copy local environments, student API or classroom code.
 const root = resolve('.studio-deploy');
+const workspace=await realpath(process.cwd());
+if(relative(workspace,root)!=='.studio-deploy')throw new Error('Unexpected deployment staging path');
+const previous=await lstat(root).catch(()=>null);
+if(previous?.isSymbolicLink())throw new Error('Deployment staging cannot be a symbolic link');
+const link=await readFile(join(root,'.vercel/project.json'),'utf8').catch(()=>null);
+if(link){const project=JSON.parse(link);if(project.projectId!=='prj_qjH9VLy1bhmDD2vX6LX6nYono9xB'||project.orgId!=='team_YZHSWFgCb4NEhjCA9nORvfin')throw new Error('Unexpected teacher deployment project');}
+// This generated, verified workspace directory alone is replaced. Preserve only
+// the non-secret project link; no old sources or pulled environment files survive.
+await rm(root,{recursive:true,force:true});
+if(link){await mkdir(join(root,'.vercel'),{recursive:true});await writeFile(join(root,'.vercel/project.json'),link);}
 const files = [
   'package.json', 'package-lock.json', 'tsconfig.app.json', 'tsconfig.studio.json',
   'tsconfig.server.json', 'tsconfig.vercel-server.json',
-  'teacher-studio/AdvancedControls.tsx', 'teacher-studio/Studio.tsx', 'teacher-studio/domain.ts',
+  'teacher-studio/AdvancedControls.tsx', 'teacher-studio/Studio.tsx', 'teacher-studio/domain.ts', 'teacher-studio/googleAuthClient.ts', 'teacher-studio/loginConditions.ts',
   'teacher-studio/index.html', 'teacher-studio/main.tsx', 'teacher-studio/studio.css', 'teacher-studio/vite.config.ts',
-  'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts', 'server/studioRateLimit.ts',
+  'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts', 'server/studioRateLimit.ts', 'server/teacherAccounts.ts',
+  'src/presentation/components/TeacherAccountForm.tsx', 'src/presentation/components/GoogleTeacherCallback.tsx', 'src/application/teacherGoogle.ts', 'src/presentation/components/TeacherAuthGuard.css',
   'teacher-studio/studioRequest.ts', 'teacher-studio/localChallenge.ts',
   'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
   'src/domain/expeditionGames.ts', 'src/domain/expeditionCatalog.ts',
@@ -45,7 +56,7 @@ await writeFile(join(root, 'vercel.json'), JSON.stringify({
   headers: [{ source: '/(.*)', headers: [
     { key: 'X-Frame-Options', value: 'DENY' }, { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'Referrer-Policy', value: 'no-referrer' }, { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-    { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
+    { key: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://tjrrtgdhtjdkofwqnxnz.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" },
   ] }],
 }, null, 2));
 // Keep any existing local configuration private when reusing the staging folder.

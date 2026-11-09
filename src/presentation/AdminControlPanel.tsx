@@ -1,3 +1,4 @@
+import { ClassroomScoreReview } from './components/ClassroomScoreReview';
 import {LocalQRCode} from './components/LocalQRCode';
 import { RecoverClassroom } from './components/admin/RecoverClassroom';
 import { useState, useEffect, useRef } from 'react';
@@ -385,6 +386,7 @@ export const AdminControlPanel = () => {
           </div>
         )}
 
+        {selectedRoomId&&currentRoom&&<ClassroomScoreReview roomId={currentRoom.id} finished={currentRoom.status==='finished'}/>}
         {activeTab === 'rooms' && selectedRoomId && currentRoom && (
           <div className="space-y-6">
             <button onClick={() => setSelectedRoomId(null)} className="text-cyan-600 font-bold hover:underline mb-4 inline-block">&larr; 방 목록으로 돌아가기</button>

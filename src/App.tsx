@@ -1,5 +1,8 @@
+import {FlowShell} from './presentation/FlowShell';
+import {GoogleTeacherCallback} from './presentation/components/GoogleTeacherCallback';
+import { cleanClassroomStorage } from './application/storageRetention';
 import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
@@ -23,6 +26,9 @@ const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({
 const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
 const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
 const PlayerRecords = lazy(() => import('./presentation/PlayerRecords').then(m => ({ default: m.PlayerRecords })));
+const TeacherMembers=lazy(()=>import('./presentation/TeacherMembers').then(m=>({default:m.TeacherMembers})));
+const DeviceCheck = lazy(() => import('./presentation/DeviceCheck').then(m => ({ default: m.DeviceCheck })));
+const ClassroomOperations = lazy(() => import('./presentation/ClassroomOperations').then(m => ({ default: m.ClassroomOperations })));
 const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({ default: m.TeacherHome })));
 const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
 const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
@@ -30,6 +36,7 @@ const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ d
 
 function App() {
   useEffect(() => {
+    cleanClassroomStorage();
     syncServerTime();
   }, []);
 
@@ -50,10 +57,15 @@ function App() {
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />
         <Route path="/teacher" element={<TeacherHome />} />
+        <Route path="/teacher/google-callback" element={<FlowShell><GoogleTeacherCallback endpoint="teacher"/></FlowShell>} />
+        <Route path="/teacher/members" element={hasSupabase?<TeacherAuthGuard><TeacherMembers/></TeacherAuthGuard>:<SupabaseRequired/>} />
+        <Route path="/teacher/account-confirmed" element={<Navigate to="/teacher/manage" replace/>} />
+        <Route path="/teacher/manage" element={hasSupabase ? <TeacherAuthGuard><ClassroomOperations /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/teacher/setup" element={hasSupabase ? <TeacherAuthGuard><ClassroomSetup /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/teacher/room/:roomId" element={hasSupabase ? <TeacherAuthGuard><GuidedClassroom /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/demo" element={<DemoLesson />} />
         <Route path="/teacher-ai" element={<TeacherStudioEntry />} />
+        <Route path="/device-check" element={<DeviceCheck />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />

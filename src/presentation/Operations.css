@@ -1,0 +1,9 @@
+.operations-page article + article,.score-review article + article{border-top:1px solid var(--app-border,#cad3cb);margin-top:20px;padding-top:20px}
+.operations-page h3,.score-review h3{overflow-wrap:anywhere}
+.score-review{margin-block:24px}
+.score-review>label{margin-block:14px}
+.score-review .check-row,.operations-page .check-row{display:flex;flex-direction:row;align-items:flex-start;gap:12px;margin-block:14px}
+.score-review .check-row input,.operations-page .check-row input{flex:0 0 auto;width:20px;height:20px;margin-top:3px}
+.device-check-list label{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:12px;margin-block:18px}
+.device-check-list input{flex:0 0 auto;width:20px!important;height:20px;margin-top:3px}
+@media(max-width:600px){.operations-page .row,.score-review .row{flex-wrap:wrap}.operations-page button,.score-review button{min-height:46px;white-space:normal}}

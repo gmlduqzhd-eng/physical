@@ -341,7 +341,7 @@ const GamePlaySession = () => {
     const earned = Math.round(rawScore);
     const classroomScore = earned > 0 ? earned : (hasBattle ? 10 : 0);
     if (hasBattle && battleGroupId && classroomScore !== 0) {
-      enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId }, timestamp: Date.now() });
+      enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId, activityId: gameType }, timestamp: Date.now() });
     }
     const details = normalizeGameResultDetails(selectedVariant?{...payload.details,course:{sourceId:selectedVariant.id,targetId:gameType,sourceName:selectedVariant.name,targetName:baseGameInfo.name,version:1}}:payload.details);
     setResultDetails(details);
@@ -354,7 +354,7 @@ const GamePlaySession = () => {
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
-      speak(hasBattle ? `활동 완료! 모둠 점수 ${classroomScore}점을 기록했습니다!` : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
+      speak(hasBattle ? `활동 완료! 모둠 점수 ${classroomScore}점을 제출했습니다!` : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
     } else {
       sfxFail();
       speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
@@ -670,7 +670,7 @@ const GamePlaySession = () => {
             <p className="text-emerald-400 font-bold text-xs mb-3">활동을 마쳤어요!</p>
             {hasBattle && (
               <p role="status" className="mb-4 text-center text-xs text-cyan-300">
-                {syncWarning || (queueLength === 0 ? '모둠 점수에 즉시 반영되었어요!' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
+                {syncWarning || (queueLength === 0 ? '점수 전송을 마쳤어요. 교사 확인 방식인 수업은 승인 후 반영돼요.' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
               </p>
             )}
             {guidedMode && guidedSubmission.error && (

@@ -7,7 +7,7 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.su
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, { auth: {
-  storageKey: 'physical_supabase_auth', detectSessionInUrl: false,
+  storageKey: 'physical_supabase_auth', detectSessionInUrl: false, flowType:'pkce',
   storage: { getItem: key => readStorage(key, 'session'), setItem: (key,value) => { writeStorage(key,value,'session'); }, removeItem: key => removeStorage(key,'session') },
 } });
 let signingIn: Promise<string> | null = null;

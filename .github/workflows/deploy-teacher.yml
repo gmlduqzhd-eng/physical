@@ -1,0 +1,44 @@
+name: Release teacher studio
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: teacher-production
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    environment: teacher-production
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: team_YZHSWFgCb4NEhjCA9nORvfin
+      VERCEL_PROJECT_ID: prj_qjH9VLy1bhmDD2vX6LX6nYono9xB
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Only release main after verification
+        run: |
+          test "$GITHUB_REF" = refs/heads/main
+          npm ci
+          npm run verify:release
+          npm run prepare:studio:deploy
+          npm install --global vercel@59.23.2
+      - name: Deploy and promote the verified production build
+        working-directory: .studio-deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          test -n "$VERCEL_TOKEN" || { echo 'Configure VERCEL_TOKEN in the teacher-production environment first.'; exit 1; }
+          vercel pull --yes --environment=production --scope "$VERCEL_ORG_ID"
+          vercel build --prod --scope "$VERCEL_ORG_ID"
+          deployment_url=$(vercel deploy --prebuilt --prod --skip-domain --yes --scope "$VERCEL_ORG_ID")
+          DEPLOYMENT_URL="$deployment_url" node --input-type=module -e 'const u=new URL(process.env.DEPLOYMENT_URL);if(u.protocol!=="https:"||!u.hostname.endsWith(".vercel.app")||u.pathname!=="/")process.exit(1)'
+          vercel curl '/api/studio?action=health' --deployment "$deployment_url" --scope "$VERCEL_ORG_ID" -- --fail --silent
+          vercel promote "$deployment_url" --yes --scope "$VERCEL_ORG_ID"
+          node ../scripts/healthcheck.mjs

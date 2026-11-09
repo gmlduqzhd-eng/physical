@@ -21,20 +21,21 @@ export const ScoreRepository = {
     return (await ScoreRepository.saveScoreAction(id, amount, actionId)) === 'saved';
   },
 
-  async saveScoreAction(id: string, amount: number, actionId?: string): Promise<'saved' | 'obsolete' | 'retry'> {
+  async saveScoreAction(id: string, amount: number, actionId?: string, activityId = 'classroom-extra'): Promise<'saved' | 'pending' | 'obsolete' | 'retry'> {
     await ensureClassroomUser().catch(() => {});
     // 오로지 RPC 호출에만 의존하여 동시성(Race Condition)을 방지합니다.
-    const { error } = await supabase.rpc('increment_classroom_score', {
+    const { data, error } = await supabase.rpc('submit_classroom_score', {
       row_id: id,
       amount,
       action_id: actionId || crypto.randomUUID(),
+      activity_id: activityId,
     });
     
     if (error) {
       console.error('Score save failed:', error.code);
-      return error.code === '23503' || error.code === '42501' ? 'obsolete' : 'retry';
+      return error.code === '23503' || error.code === '42501' || error.code === '22023' ? 'obsolete' : 'retry';
     }
     
-    return 'saved';
+    return data?.state === 'pending' ? 'pending' : 'saved';
   }
 };

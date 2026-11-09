@@ -1,6 +1,7 @@
+import { cleanClassroomStorage, isFreshClassroomRecord } from './storageRetention';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ScoreRepository } from '../data/scoreRepository';
-import { readStorage, readJsonStorage, writeStorage, removeStorage, isRecord } from './browserStorage';
+import { readStorage, readJsonStorage, writeStorage, removeStorage, isRecord, deviceStorageGeneration } from './browserStorage';
 
 export interface SyncAction {
   id: string;
@@ -28,28 +29,30 @@ export function parseSyncQueue(value: unknown): SyncAction[] {
   if (!Array.isArray(value)) return [];
   const ids = new Set<string>();
   return value.filter((action): action is SyncAction => {
-    if (!isRecord(action) || typeof action.id !== 'string' || !action.id || action.id.length > 128 || ids.has(action.id) || action.type !== 'INCREMENT_SCORE' || !isRecord(action.payload) || typeof action.payload.id !== 'string' || !Number.isSafeInteger(action.payload.amount) || Math.abs(Number(action.payload.amount)) > 1000000 || !Number.isFinite(action.timestamp)) return false;
+    if (!isRecord(action) || typeof action.id !== 'string' || !action.id || action.id.length > 128 || ids.has(action.id) || action.type !== 'INCREMENT_SCORE' || !isRecord(action.payload) || typeof action.payload.id !== 'string' || !Number.isSafeInteger(action.payload.amount) || Math.abs(Number(action.payload.amount)) > 1000000 || !isFreshClassroomRecord(action.timestamp)) return false;
     ids.add(action.id); return true;
   });
 }
 function loadActions(): SyncAction[] {
+  cleanClassroomStorage();
   const actions: unknown[] = [];
   try {
-    for (let index = 0; index < localStorage.length; index++) {
-      const key = localStorage.key(index);
+    for (let index = 0; index < sessionStorage.length; index++) {
+      const key = sessionStorage.key(index);
       if (key?.startsWith(PREFIX)) actions.push(readJsonStorage(key));
     }
   } catch { /* In-memory submissions remain usable when storage is denied. */ }
   const merged = new Map(parseSyncQueue(actions).map(action => [action.id, action]));
-  for (const action of volatileActions.values()) merged.set(action.id, action);
+  for (const action of volatileActions.values()) {
+    if (isFreshClassroomRecord(action.timestamp)) merged.set(action.id, action);
+    else { volatileActions.delete(action.id); storageFailures.delete(action.id); }
+  }
   return [...merged.values()].sort((left, right) => left.timestamp - right.timestamp);
 }
 function initialQueue(): SyncAction[] {
-  const legacy = parseSyncQueue(readJsonStorage(LEGACY_KEY));
-  let migrated = true;
-  for (const action of legacy) migrated = persistAction(action) && migrated;
-  if (migrated) removeStorage(LEGACY_KEY);
-  return parseSyncQueue([...loadActions(), ...legacy]);
+  removeStorage(LEGACY_KEY);
+  cleanClassroomStorage();
+  return loadActions();
 }
 const inFlight = new Set<string>();
 export const useSyncQueue = (enabled = true) => {
@@ -87,26 +90,31 @@ export const useSyncQueue = (enabled = true) => {
       updateQueue(action ? [...retained, action] : retained);
       setStorageAvailable(storageFailures.size === 0);
     };
+    const clear = () => { volatileActions.clear(); storageFailures.clear(); updateQueue([]); };
+    window.addEventListener('physical-device-cleared', clear);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     window.addEventListener('storage', handleStorage);
     window.addEventListener(QUEUE_EVENT, handleQueueEvent);
-    return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); window.removeEventListener('storage', handleStorage); window.removeEventListener(QUEUE_EVENT, handleQueueEvent); };
+    return () => { window.removeEventListener('physical-device-cleared', clear); window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); window.removeEventListener('storage', handleStorage); window.removeEventListener(QUEUE_EVENT, handleQueueEvent); };
   }, [enabled, updateQueue]);
 
   useEffect(() => {
     if (!enabled || !isOnline || queue.length === 0) return;
     let cancelled = false;
+    if (queue.some(item => !isFreshClassroomRecord(item.timestamp))) { updateQueue(loadActions()); return; }
     const action = [...queue].sort((left, right) => (left.nextRetryAt || 0) - (right.nextRetryAt || 0))[0];
     const delay = Math.max(0, (action.nextRetryAt || 0) - Date.now());
     const timer = window.setTimeout(async () => {
       if (cancelled || inFlight.has(action.id)) return;
+      const generation=deviceStorageGeneration();
       inFlight.add(action.id); setIsSyncing(true);
       try {
         const execute = async () => {
-          const result = await ScoreRepository.saveScoreAction(action.payload.id, action.payload.amount, action.id);
+          const result = await ScoreRepository.saveScoreAction(action.payload.id, action.payload.amount, action.id, typeof action.payload.activityId === 'string' ? action.payload.activityId : 'classroom-extra');
           if (result === 'retry') throw new Error('Score request failed');
-          if (result === 'obsolete') setSyncWarning('삭제된 수업 또는 모둠의 점수는 저장할 수 없어 대기 목록에서 정리했습니다.');
+          if (result === 'obsolete') setSyncWarning('수업 상태·점수 한도·참여 권한 때문에 저장하지 못했습니다. 선생님께 확인해 주세요.');
+          if (result === 'pending') setSyncWarning('게임 점수를 제출했습니다. 선생님이 확인한 뒤 모둠 점수에 반영됩니다.');
           removeStorage(PREFIX + action.id);
           volatileActions.delete(action.id); storageFailures.delete(action.id);
           setStorageAvailable(storageFailures.size === 0);
@@ -116,6 +124,7 @@ export const useSyncQueue = (enabled = true) => {
         if (navigator.locks) await navigator.locks.request('physical-score-' + action.id, execute);
         else await execute();
       } catch {
+        if(generation!==deviceStorageGeneration())return;
         const retries = (action.retryCount || 0) + 1;
         const failed = { ...action, retryCount: retries, nextRetryAt: Date.now() + Math.min(30000, 1000 * 2 ** Math.min(retries, 5)) };
         setStorageAvailable(persistAction(failed));

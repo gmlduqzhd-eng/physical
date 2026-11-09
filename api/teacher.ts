@@ -1,3 +1,4 @@
+import { activeTeacherSession, legacyTeacherEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError, teacherAccountId, sharedTeacherLoginAttempt } from '../server/teacherAccounts.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from '../server/teacherSession.js';
 import { generateAdvice } from '../server/aiService.js';
@@ -8,9 +9,12 @@ export const maxDuration = 60;
 type Request = IncomingMessage & { body?: unknown };
 export default async function handler(req: Request, res: ServerResponse) {
   res.setHeader('Cache-Control', 'no-store'); res.setHeader('X-Content-Type-Options', 'nosniff');
-  const send = (status: number, data: unknown) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
+  const started=Date.now();
+  const send = (status: number, data: unknown) => { console.info(JSON.stringify({event:'teacher_request',status,durationMs:Date.now()-started})); res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
   const action = new URL(req.url ?? '/', 'http://localhost').searchParams.get('action');
-  const nonce = session(req) ?? session(req, 'physical_studio');
+  let nonce = session(req) ?? session(req, 'physical_studio');
+  try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
+  if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
   if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), localSetup: process.env.NODE_ENV !== 'production' && process.env.LOCAL_TEACHER_SETUP === 'true', aiReady: !!process.env.OPENAI_API_KEY && !!process.env.OPENAI_MODEL && process.env.AI_PRIVACY_REVIEWED === 'true' });
   if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return send(405, { error: '허용하지 않는 요청입니다.' }); }
   const origin = req.headers.origin;
@@ -26,10 +30,20 @@ export default async function handler(req: Request, res: ServerResponse) {
       body = JSON.parse(Buffer.concat(chunks).toString());
     } else if (typeof body === 'string') body = JSON.parse(body);
     if (Buffer.byteLength(JSON.stringify(body)) > 12000) return send(413, { error: '입력 크기를 초과했습니다.' });
+    if (action === 'google-login') {
+      const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
+      if (!rateLimit('account:' + address, 8, 900000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
+      const admission=await sharedTeacherLoginAttempt(String(address));
+      if(!admission.allowed){res.setHeader('Retry-After',String(admission.retrySeconds));return send(429,{error:'시도가 많습니다. 15분 후 다시 시도하세요.'});}
+      const account = await googleTeacherLogin(body);
+      res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', account.nonce)));return send(200,{authenticated:true});
+    }
     if (action === 'login') {
+      if(!await legacyTeacherEnabled())return send(401,{error:'공유 접근 코드 사용이 종료되었습니다. 교사 이메일 계정으로 로그인해 주세요.'});
       if (!authConfigured()) return send(503, { error: '교사 인증을 먼저 설정하세요. 서버에서 npm run teacher:setup을 실행하세요.' });
-      const address = req.socket.remoteAddress ?? 'unknown';
+      const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
       if (!rateLimit('login:' + address, 8, 15 * 60 * 1000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
+      if(process.env.NODE_ENV==='production'){const admission=await sharedTeacherLoginAttempt(String(address));if(!admission.allowed){res.setHeader('Retry-After',String(admission.retrySeconds));return send(429,{error:'시도가 많습니다. 15분 후 다시 시도하세요.'});}}
       const code = typeof body === 'object' && body !== null && 'code' in body ? body.code : undefined;
       if (typeof code !== 'string' || !verifyCode(code)) return send(401, { error: '교사 접근 코드가 일치하지 않습니다.' });
       res.setHeader('Set-Cookie', cookie(newSession())); return send(200, { authenticated: true });
@@ -38,13 +52,14 @@ export default async function handler(req: Request, res: ServerResponse) {
     if (!nonce) return send(401, { error: '교사 인증이 필요하거나 만료되었습니다. 다시 로그인하세요.' });
     if (action === 'classroom-authorize') {
       if (!rateLimit('classroom-auth:' + nonce, 6, 60000)) return send(429, { error: '교사 권한 확인 요청이 많습니다.' });
-      return send(200, await authorizeClassroomTeacher((body as { accessToken?: unknown })?.accessToken));
+      return send(200, await authorizeClassroomTeacher((body as { accessToken?: unknown })?.accessToken, teacherAccountId(nonce)));
     }
     if (action !== 'generate') return send(404, { error: '없는 기능입니다.' });
     if (!rateLimit('ai:' + nonce, 12, 60 * 1000)) return send(429, { error: '생성 요청이 많습니다. 잠시 후 다시 시도하세요.' });
     const data = await generateAdvice(body);
     return send(200, data);
   } catch (error) {
+    if (error instanceof TeacherAccountError) return send(error.status, { error: error.message });
     const providerError = publicAiError(error);
     if (providerError) return send(providerError.status, { error: providerError.error });
     // Never return provider payloads, prompt bodies, authentication data or stack traces.

@@ -29,6 +29,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   const actualFetch = globalThis.fetch;
   let limiterMode: 'allow' | 'deny' | 'offline' = 'allow';
   globalThis.fetch = async (request, init) => {
+    if (String(request).includes('/rpc/check_shared_teacher_access'))return new Response('true');
     if (String(request).startsWith('https://synthetic-limiter.example/')) {
       if (limiterMode === 'offline') throw new Error('synthetic-private-error');
       return new Response(JSON.stringify(limiterMode === 'deny' ? { allowed: false, retrySeconds: 37, reason: 'minute' } : { allowed: true, retrySeconds: 0, reason: JSON.parse(String(init?.body)).request_kind === 'release' ? 'released' : 'accepted' }));

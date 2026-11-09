@@ -1,8 +1,9 @@
+import { activeTeacherSession, legacyTeacherEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError } from './teacherAccounts.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from './teacherSession.js';
 import { defaultGeminiModel, geminiReady, generateStudioAdvice, studioProviderCategory } from './geminiStudio.js';
-import { studioLimit, StudioLimiterUnavailable } from './studioRateLimit.js';
+import { studioLimit, studioUsage, StudioLimiterUnavailable } from './studioRateLimit.js';
 
 export const maxDuration = 120;
 const scope = 'physical_studio';
@@ -36,10 +37,20 @@ export function studioFailureDiagnostics(error: unknown) {
 export default async function handler(req: Request, res: ServerResponse) {
   res.setHeader('Cache-Control', 'no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  const send = (status: number, data: unknown) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
+  const started=Date.now();
+  const send = (status: number, data: unknown) => { console.info(JSON.stringify({event:'studio_request',status,durationMs:Date.now()-started})); res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
   const action = new URL(req.url ?? '/', 'http://localhost').searchParams.get('action');
-  const nonce = session(req, scope);
+  let nonce = session(req, scope);
+  try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
+  if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
   if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });
+  if (req.method === 'GET' && action === 'usage') {
+    if(!nonce)return send(401,{error:'교사 인증이 필요합니다.'});
+    try{return send(200,await studioUsage());}catch{return send(503,{error:'사용량 정보를 확인하지 못했습니다.'});}
+  }
+  if (req.method === 'GET' && action === 'health') {
+    try { await studioUsage(); return send(200,{ok:authConfigured()&&geminiReady(),limiter:true}); } catch { return send(503,{ok:false,limiter:false}); }
+  }
   if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return send(405, { error: 'POST 요청이 필요합니다.' }); }
   const allowed = [process.env.STUDIO_ORIGIN, process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined].filter(Boolean);
   if (!req.headers.origin || !allowed.includes(req.headers.origin)) return send(403, { error: '교사 전용 도구에서만 요청할 수 있습니다.' });
@@ -52,7 +63,15 @@ export default async function handler(req: Request, res: ServerResponse) {
       body = JSON.parse(Buffer.concat(chunks).toString());
     } else if (typeof body === 'string') body = JSON.parse(body);
     if (Buffer.byteLength(JSON.stringify(body) ?? '') > 8000) return send(413, { error: '입력이 너무 깁니다.' });
+    if (action === 'google-login') {
+      const address = String(req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown');
+      const admission = await studioLimit('login', address);
+      if (!admission.allowed) { res.setHeader('Retry-After', String(admission.retrySeconds)); return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' }); }
+      const account = await googleTeacherLogin(body);
+      res.setHeader('Set-Cookie', cookie(newSession(scope, account.nonce), false, scope));return send(200,{authenticated:true});
+    }
     if (action === 'login') {
+      if(!await legacyTeacherEnabled())return send(401,{error:'공유 접근 코드 사용이 종료되었습니다. 교사 이메일 계정으로 로그인해 주세요.'});
       if (!authConfigured()) return send(503, { error: '서버의 교사 인증 설정이 필요합니다.' });
       const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
       if (!rateLimit('studio-login:' + address, 8, 900000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
@@ -75,6 +94,7 @@ export default async function handler(req: Request, res: ServerResponse) {
     finally { try { await studioLimit('release', nonce, admission.token); } catch { console.warn('studio_limiter_release_pending'); } }
     return send(200, generated);
   } catch (error) {
+    if (error instanceof TeacherAccountError) return send(error.status, { error: error.message });
     if (error instanceof StudioLimiterUnavailable) return send(503, { error: error.message });
     if (action === 'generate') console.warn('studio_generation_failure', JSON.stringify(studioFailureDiagnostics(error)));
     // Never log/return provider payloads, prompts, credentials or stack traces.

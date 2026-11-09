@@ -1,0 +1,18 @@
+import '../Operations.css';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { supabase } from '../../data/supabase';
+import { AVAILABLE_GAMES } from '../../domain/gamesData';
+type Pending={id:string;groupName:string;activityId:string;amount:number;createdAt:string};
+export function ClassroomScoreReview({roomId,finished=false}:{roomId:string;finished?:boolean}){
+ const dirty=useRef(false);
+ const [pending,setPending]=useState<Pending[]>([]);const [points,setPoints]=useState<Record<string,number>>({});
+ const [review,setReview]=useState(true);const [max,setMax]=useState(10000);const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
+ const reload=useCallback(async()=>{const [policy,list]=await Promise.all([supabase.rpc('classroom_operations',{room_uuid:roomId,operation:'status'}),supabase.rpc('review_classroom_score',{room_uuid:roomId})]);if(policy.error||list.error)throw Error('점수 검토 정보를 읽지 못했습니다. 인증을 확인해 주세요.');if(!dirty.current){setReview(policy.data.reviewScores);setMax(policy.data.maxPoints);}setPending(list.data??[]);},[roomId]);
+ useEffect(()=>{let active=true;const refresh=()=>void reload().catch(e=>{if(active)setMessage(e.message);});refresh();const timer=window.setInterval(refresh,15000);return()=>{active=false;window.clearInterval(timer);};},[reload]);
+ const run=async(action:()=>Promise<void>)=>{setBusy(true);setMessage('');try{await action();await reload();}catch(e){setMessage(e instanceof Error?e.message:'점수 처리 실패');}finally{setBusy(false);}};
+ return <details className="card score-review"><summary>게임 점수 확인 · 대기 {pending.length}건</summary><p>학생 기기의 점수는 실제 운동 수행을 증명하지 않습니다. 교사가 확인·수정한 점수만 반영할 수 있습니다. 정해진 미션의 서버 계산 점수는 별도입니다.</p>
+ <label className="check-row"><input type="checkbox" checked={review} disabled={busy||finished} onChange={e=>{dirty.current=true;setReview(e.target.checked);}}/>게임 점수에 교사 확인 사용</label><label>한 번에 제출·승인할 최대 점수<input type="number" min={1} max={1000000} value={max} disabled={busy||finished} onChange={e=>{dirty.current=true;setMax(Number(e.target.value));}}/></label>
+ <button disabled={busy||finished||!Number.isInteger(max)||max<1||max>1000000} onClick={()=>void run(async()=>{const r=await supabase.rpc('classroom_operations',{room_uuid:roomId,operation:'score-policy',review_scores:review,max_points:max});if(r.error)throw Error('점수 설정을 저장하지 못했습니다.');dirty.current=false;setMessage('점수 설정을 저장했습니다.');})}>점수 설정 저장</button><button disabled={busy} onClick={()=>void run(async()=>{})}>대기 목록 새로고침</button>
+ {!pending.length&&<p>확인을 기다리는 게임 점수가 없습니다.</p>}{pending.map(item=><article key={item.id}><h3>{item.groupName} · {AVAILABLE_GAMES.find(g=>g.type===item.activityId)?.name??'추가 활동'}</h3><p>학생 제출 {item.amount}점 · {new Date(item.createdAt).toLocaleTimeString('ko-KR')}</p><label>반영할 점수<input type="number" min={0} max={max} value={points[item.id]??item.amount} onChange={e=>setPoints(old=>({...old,[item.id]:Number(e.target.value)}))}/></label><div className="row">{[true,false].map(accept=><button key={String(accept)} disabled={busy||finished||(accept&&(!Number.isInteger(points[item.id]??item.amount)||(points[item.id]??item.amount)<0||(points[item.id]??item.amount)>max))} onClick={()=>void run(async()=>{const r=await supabase.rpc('review_classroom_score',{room_uuid:roomId,request_uuid:item.id,approved_points:points[item.id]??item.amount,accept});if(r.error)throw Error('점수를 처리하지 못했습니다. 수업 상태와 한도를 확인해 주세요.');setMessage(accept?'확인한 점수를 반영했습니다.':'해당 점수를 반영하지 않았습니다.');})}>{accept?'확인한 점수 반영':'반영하지 않기'}</button>)}</div></article>)}{message&&<p role="status">{message}</p>}
+ </details>;
+}

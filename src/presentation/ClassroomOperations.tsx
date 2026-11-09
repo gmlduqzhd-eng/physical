@@ -1,0 +1,30 @@
+import './Operations.css';
+import { AVAILABLE_GAMES } from '../domain/gamesData';
+import { activityFingerprint } from '../domain/activityReview';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { supabase } from '../data/supabase';
+import { FlowShell } from './FlowShell';
+import './ClassroomSetup.css';
+type ManagedRoom={id:string;name:string;status:string;deleteAfter:string|null;legacy:boolean;owned:boolean};
+export function ClassroomOperations(){
+ const [activity,setActivity]=useState(AVAILABLE_GAMES[0].type);const [reviewChecks,setReviewChecks]=useState({safety:false,grade:false,curriculum:false});
+ const [legacy,setLegacy]=useState(true);
+ const [rooms,setRooms]=useState<ManagedRoom[]>([]);const [admin,setAdmin]=useState(false);
+ const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const [selected,setSelected]=useState<ManagedRoom|null>(null);const [confirmation,setConfirmation]=useState('');const [maintenance,setMaintenance]=useState<{preview:{rooms:number;expiredMembers:number};recentRuns:{ran_at:string;deleted_rooms:number}[]}|null>(null);
+ const reload=async()=>{
+  const list=await supabase.rpc('managed_classrooms');if(list.error)throw Error('수업 관리 목록을 읽지 못했습니다. 교사 인증을 확인해 주세요.');setRooms(list.data??[]);
+  const account=await supabase.rpc('teacher_account');
+  if(!account.error&&account.data?.role==='admin'&&account.data.enabled){setAdmin(true);const history=await supabase.rpc('classroom_maintenance_status');if(history.error)throw Error('관리자 운영 정보를 읽지 못했습니다.');setMaintenance(history.data);const policy=await supabase.rpc('teacher_login_policy');if(policy.error)throw Error('공유 코드 정책을 확인하지 못했습니다.');setLegacy(policy.data===true);}
+ };
+ useEffect(()=>{let active=true;void reload().catch(e=>{if(active)setMessage(e.message);});return()=>{active=false;};},[]);
+ const run=async(action:()=>Promise<void>)=>{setBusy(true);setMessage('');try{await action();await reload();}catch(e){setMessage(e instanceof Error?e.message:'처리하지 못했습니다.');}finally{setBusy(false);}};
+ return <FlowShell utilities className="classroom-setup operations-page" back="/teacher" backLabel="교사 시작 화면"><p className="eyebrow">수업과 계정 관리</p><h1>{admin?'관리자 운영실':'내 수업 정리'}</h1><p>수업 종료 후 7일이 지나면 매시간 실행되는 정리 작업에서 방·모둠 결과·참여 권한을 삭제합니다. 필요하면 지금 삭제할 수 있습니다. 내려받은 파일과 인증 계정은 별도로 관리합니다.</p>
+ <button disabled={busy} onClick={()=>void run(async()=>{})}>목록 새로고침</button>{message&&<p role="status" className="notice">{message}</p>}
+ <section className="card"><h2>{admin?'전체 수업방':'이 계정에서 만든 수업방'} · {rooms.length}개</h2>{!rooms.length&&<p>관리할 수업방이 없습니다. 다른 기기에서 공유 코드로 만든 방은 복구키로 복구하세요.</p>}<div className="stack">{rooms.map(room=><article key={room.id}><h3>{room.name}</h3><p>{room.status==='finished'?'수업 종료':'진행 또는 대기'} · {room.deleteAfter?`삭제 기준 ${new Date(room.deleteAfter).toLocaleString('ko-KR')}`:room.legacy?'소유자 없는 이전 방 · 자동 삭제 제외':'수업 종료 후 7일 보관'}</p><div className="row">{room.owned&&<Link to={'/teacher/room/'+room.id}>수업 열기</Link>}<button disabled={busy} onClick={()=>{setSelected(room);setConfirmation('');}}>이 수업 즉시 삭제</button></div></article>)}</div></section>
+ {selected&&<section role="region" aria-label="수업 삭제 확인" className="card"><h2>‘{selected.name}’ 수업을 삭제할까요?</h2><p>진행 중이어도 학생 접속과 결과를 즉시 제거합니다. 되돌릴 수 없습니다. 확인하려면 수업 이름을 그대로 입력하세요.</p><label>삭제할 수업 이름<input value={confirmation} onChange={e=>setConfirmation(e.target.value)}/></label><div className="row"><button disabled={busy} onClick={()=>setSelected(null)}>취소</button><button disabled={busy||confirmation!==selected.name} onClick={()=>void run(async()=>{const result=await supabase.rpc('delete_managed_classroom',{room_uuid:selected.id,confirmation});if(result.error||result.data!==true)throw Error('삭제 권한이나 입력한 수업 이름을 확인해 주세요.');setSelected(null);setMessage('수업과 연결된 모둠 결과·참여 권한을 삭제했습니다.');})}>삭제 확정</button></div></section>}
+ {admin&&<section className="card"><h2>회원·공유 코드 관리</h2><Link to="/teacher/members">전체 회원 목록·검색 열기</Link><p>공유 코드: {legacy?'전환 기간 사용 중':'사용 종료'}</p><button disabled={busy} onClick={()=>void run(async()=>{if(!window.confirm(legacy?'기존 공유 코드 세션과 익명 교사 권한을 즉시 종료할까요? 기존 수업방은 이메일 계정에서 복구키로 복구해야 합니다.':'공유 코드 사용을 다시 허용할까요? 코드를 아는 사람은 교사 권한을 얻을 수 있습니다.'))return;const r=await supabase.rpc('teacher_login_policy',{enabled:!legacy});if(r.error)throw Error('공유 코드 정책을 변경하지 못했습니다.');})}>{legacy?'공유 코드 사용 종료':'공유 코드 다시 허용'}</button><p>회원 목록은 별도 회원 관리 탭에서 확인하세요. 가입 승인은 필요하지 않습니다. 비활성화하면 계정 세션과 DB 교사 권한이 거절됩니다. 공유 코드 인증은 별개입니다.</p></section>}
+ {admin&&<section className="card"><h2>활동 자료 점검 기록</h2><p>실제 자료를 읽고 확인한 항목만 기록하세요. 자료가 바뀌면 기존 점검은 현재 자료에 적용되지 않습니다. 이 화면은 내용을 자동 검수하지 않습니다.</p><label>점검한 활동<select value={activity} onChange={e=>{setActivity(e.target.value);setReviewChecks({safety:false,grade:false,curriculum:false});}}>{AVAILABLE_GAMES.map(g=><option key={g.type} value={g.type}>{g.name}</option>)}</select></label><Link target="_blank" rel="noopener noreferrer" to={'/play/'+activity}>활동 안내·실행 화면 열기</Link>{(['safety','grade','curriculum'] as const).map((key,i)=><label className="check-row" key={key}><input type="checkbox" checked={reviewChecks[key]} onChange={e=>setReviewChecks(old=>({...old,[key]:e.target.checked}))}/>{['장소·준비물·안전 안내를 검토함','학년·참여 방식·대체 동작을 검토함','교육과정 연계 근거를 확인함'][i]}</label>)}<button disabled={busy} onClick={()=>void run(async()=>{const game=AVAILABLE_GAMES.find(g=>g.type===activity)!;const r=await supabase.rpc('activity_review_records',{activity,fingerprint:await activityFingerprint(game),...reviewChecks});if(r.error)throw Error('점검 기록을 저장하지 못했습니다.');setMessage('관리자 점검 기록을 저장했습니다. 실제 수업 안전성은 현장에서 다시 확인하세요.');})}>확인한 항목 기록</button></section>}
+ {maintenance&&<section className="card"><h2>자동 정리 점검</h2><p>현재 삭제 대상 방 {maintenance.preview.rooms}개 · 만료 참여 권한 {maintenance.preview.expiredMembers}개</p><p>인증 사용자 자체와 다른 앱의 자료는 자동 삭제하지 않습니다. 사용한 수업 자료 템플릿은 재사용을 위해 보존합니다.</p>{maintenance.recentRuns.map(item=><p key={item.ran_at}>{new Date(item.ran_at).toLocaleString('ko-KR')} · 삭제 방 {item.deleted_rooms}개</p>)}</section>}
+ </FlowShell>;
+}

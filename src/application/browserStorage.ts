@@ -1,9 +1,11 @@
 type StorageKind = 'local' | 'session';
+let generation=0;
+export function deviceStorageGeneration(){return generation;}
 const sessionFallback = new Map<string, string | null>();
 const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_number', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile'];
 let fallbackExpires = Date.now() + 8 * 60 * 60 * 1000;
 function privacyKind(key: string, kind: StorageKind): StorageKind {
-  if (!privateKeys.includes(key)) return kind;
+  if (!privateKeys.includes(key)) return /^(physical_sync_action_|physical_guided_receipt_)/.test(key) ? 'session' : kind;
   if (fallbackExpires <= Date.now()) { privateKeys.forEach(k => sessionFallback.delete(`session:${k}`)); fallbackExpires = Date.now() + 8 * 60 * 60 * 1000; }
   try {
     // Do not migrate old names or histories on shared school devices.
@@ -56,13 +58,17 @@ export function removeStorage(key: string, kind: StorageKind = 'local'): void {
 }
 
 export function clearDeviceInformation() {
+  generation++;
   sessionFallback.clear();
-  for (const storage of [window.localStorage, window.sessionStorage]) {
+  for (const kind of ['localStorage', 'sessionStorage'] as const) {
+    try { const storage = window[kind];
     for (let index = storage.length - 1; index >= 0; index--) {
       const key = storage.key(index);
       if (key && /^(physical_|teacher_|pin_battle_)/.test(key)) storage.removeItem(key);
     }
+    } catch { /* Clear the other storage even when one is denied. */ }
   }
+  window.dispatchEvent?.(new Event('physical-device-cleared'));
 }
 
 export function readJsonStorage(key: string, kind: StorageKind = 'local'): unknown {

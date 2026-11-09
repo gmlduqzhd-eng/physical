@@ -5,6 +5,18 @@ const resultSchema = z.object({ allowed: z.boolean(), retrySeconds: z.number().i
 export type LimitResult = z.infer<typeof resultSchema>;
 export class StudioLimiterUnavailable extends Error { constructor() { super('공통 요청 제한 서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.'); } }
 
+export async function studioUsage() {
+  const url=process.env.STUDIO_LIMIT_URL, key=process.env.STUDIO_LIMIT_KEY, secret=process.env.STUDIO_LIMIT_SECRET;
+  if(!url||!key||!secret)throw new StudioLimiterUnavailable();
+  try {
+    const endpoint=new URL('/rest/v1/rpc/studio_usage_status',url);
+    if(endpoint.protocol!=='https:')throw new Error('HTTPS required');
+    const result=await fetch(endpoint,{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify({server_secret:secret}),signal:AbortSignal.timeout(5000)});
+    if(!result.ok)throw new Error('Usage unavailable');
+    return z.object({used:z.number().int().nonnegative(),dailyLimit:z.number().int().positive(),busySeconds:z.number().int().min(0).max(130),resetAt:z.string()}).parse(await result.json());
+  }catch{throw new StudioLimiterUnavailable();}
+}
+
 export async function studioLimit(kind: 'login' | 'generate' | 'release', actor: string, token: string = randomUUID()): Promise<LimitResult & { token: string }> {
   const url = process.env.STUDIO_LIMIT_URL;
   const key = process.env.STUDIO_LIMIT_KEY;

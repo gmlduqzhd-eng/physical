@@ -1,3 +1,4 @@
+import healthHandler from '../api/health';
 import { createServer } from 'node:http';
 import { parse } from 'dotenv';
 import handler from '../api/teacher';
@@ -16,6 +17,7 @@ const server = createServer(async (req, res) => {
     if (env[key]) process.env[key] = env[key]; else delete process.env[key];
   }
   process.env.LOCAL_TEACHER_SETUP = 'true';
+  if(new URL(req.url??'/', 'http://localhost').pathname==='/api/health')return void healthHandler(req,res);
   if (new URL(req.url ?? '/', 'http://localhost').searchParams.get('action') === 'configure-ai') {
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Content-Type', 'application/json');
     const fail = (status: number, error: string) => { res.statusCode = status; res.end(JSON.stringify({ error })); };

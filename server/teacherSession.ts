@@ -12,8 +12,8 @@ export function verifyCode(code: string) {
   const [salt, hash] = process.env.TEACHER_ACCESS_HASH!.split(':');
   return equal(scryptSync(code, salt, 64).toString('hex'), hash);
 }
-export function newSession(scope = 'physical_teacher') {
-  const payload = Buffer.from(JSON.stringify({ expires: Date.now() + lifetime * 1000, nonce: randomBytes(18).toString('hex') })).toString('base64url');
+export function newSession(scope = 'physical_teacher', accountNonce?: string) {
+  const payload = Buffer.from(JSON.stringify({ expires: Date.now() + lifetime * 1000, nonce: accountNonce ?? randomBytes(18).toString('hex') })).toString('base64url');
   return `${payload}.${mac(payload, scope)}`;
 }
 export function session(req: IncomingMessage, scope = 'physical_teacher'): string | null {

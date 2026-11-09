@@ -29,12 +29,13 @@ interface Props {
   playVictory: any;
 }
 
-export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComplete, setShowScanner, enqueueAction, playVictory }: Props) => {
+export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComplete, setShowScanner, enqueueAction: enqueueOriginal, playVictory }: Props) => {
   const [dismissedRunId, setDismissedRunId] = useState<string | null>(null);
 
   if (!gameRoom.active_minigame) return null;
 
   const minigame = gameRoom.active_minigame;
+  const enqueueAction = (action: {payload: Record<string,unknown>;[key:string]:unknown}) => enqueueOriginal({...action,payload:{...action.payload,activityId:minigame.type??'classroom-extra'}});
   const runId = minigame.run_id || `${minigame.type}_${minigame.end_time || minigame.target_time || minigame.explodesAt || ''}`;
   if (dismissedRunId === runId) return null;
 

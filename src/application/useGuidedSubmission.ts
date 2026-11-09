@@ -1,3 +1,5 @@
+import { deviceStorageGeneration } from './browserStorage';
+import { cleanClassroomStorage, isFreshClassroomRecord } from './storageRetention';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase, ensureClassroomUser } from '../data/supabase';
 import { GUIDED_REFLECTIONS, type GuidedReflection } from '../domain/guidedReflection';
@@ -11,16 +13,19 @@ const keyOf = (roomId: string, groupId: string, missionId: string) => `${PREFIX}
 const valid = (value: unknown): value is Receipt => {
   if (!value || typeof value !== 'object') return false;
   const item = value as Partial<Receipt>;
-  return typeof item.roomId === 'string' && typeof item.groupId === 'string' && typeof item.missionId === 'string' && item.missionId.length <= 128 && typeof item.completed === 'boolean' && typeof item.updatedAt === 'number' && Date.now() - item.updatedAt < 7 * 86400000 && (!item.reflection || GUIDED_REFLECTIONS.some(choice => choice.value === item.reflection));
+  return typeof item.roomId === 'string' && typeof item.groupId === 'string' && typeof item.missionId === 'string' && item.missionId.length <= 128 && typeof item.completed === 'boolean' && typeof item.updatedAt === 'number' && isFreshClassroomRecord(item.updatedAt) && (!item.reflection || GUIDED_REFLECTIONS.some(choice => choice.value === item.reflection));
 };
 function read(key: string): Receipt | null {
-  if (volatile.has(key)) return volatile.get(key) ?? null;
-  try { const raw = localStorage.getItem(key); if (raw) { const value: unknown = JSON.parse(raw); if (valid(value)) return value; } } catch { /* Storage can be unavailable on school devices. */ }
+  cleanClassroomStorage();
+  const cached = volatile.get(key);
+  if (cached && valid(cached)) return cached;
+  volatile.delete(key);
+  try { const raw = sessionStorage.getItem(key); if (raw) { const value: unknown = JSON.parse(raw); if (valid(value)) return value; } } catch { /* Storage can be unavailable on school devices. */ }
   return null;
 }
 function write(key: string, item: Receipt | null): boolean {
   if (item) volatile.set(key, item); else volatile.delete(key);
-  try { if (item) localStorage.setItem(key, JSON.stringify(item)); else localStorage.removeItem(key); window.dispatchEvent(new Event(EVENT)); return true; }
+  try { if (item) sessionStorage.setItem(key, JSON.stringify(item)); else sessionStorage.removeItem(key); window.dispatchEvent(new Event(EVENT)); return true; }
   catch { window.dispatchEvent(new Event(EVENT)); return false; }
 }
 export function useGuidedSubmission(roomId: string | null, groupId: string | null, missionId: string | null) {
@@ -35,11 +40,13 @@ export function useGuidedSubmission(roomId: string | null, groupId: string | nul
     const refresh = () => { setReceipt(key ? read(key) : null); setIsOnline(navigator.onLine); };
     const storageRefresh = (event: StorageEvent) => { if (event.key === key && key) volatile.delete(key); refresh(); };
     refresh();
+    const clear = () => { volatile.clear(); setReceipt(null); };
+    window.addEventListener('physical-device-cleared', clear);
     window.addEventListener(EVENT, refresh);
     window.addEventListener('storage', storageRefresh);
     window.addEventListener('online', refresh);
     window.addEventListener('offline', refresh);
-    return () => { window.removeEventListener(EVENT, refresh); window.removeEventListener('storage', storageRefresh); window.removeEventListener('online', refresh); window.removeEventListener('offline', refresh); };
+    return () => { window.removeEventListener('physical-device-cleared', clear); window.removeEventListener(EVENT, refresh); window.removeEventListener('storage', storageRefresh); window.removeEventListener('online', refresh); window.removeEventListener('offline', refresh); };
   }, [key]);
 
   const enqueueCompletion = useCallback(() => {
@@ -61,6 +68,7 @@ export function useGuidedSubmission(roomId: string | null, groupId: string | nul
     if (!key || !receipt || !isOnline || (receipt.completed && (!receipt.reflection || receipt.saved))) return;
     const run = async () => {
       if (inFlight.has(key)) return;
+      const generation=deviceStorageGeneration();
       inFlight.add(key); setSyncing(true);
       try {
         const latest = read(key);
@@ -84,6 +92,7 @@ export function useGuidedSubmission(roomId: string | null, groupId: string | nul
               if (result.error) throw result.error;
             }
           }
+          if(generation!==deviceStorageGeneration())return;
           latest.completed = true;
           write(key, latest);
         }
@@ -92,6 +101,7 @@ export function useGuidedSubmission(roomId: string | null, groupId: string | nul
           const choice = withChoice.reflection;
           const result = await supabase.rpc('save_guided_reflection', { row_id: withChoice.groupId, mission_id: withChoice.missionId, choice });
           if (result.error || result.data !== true) throw result.error || Error('회고 저장 실패');
+          if(generation!==deviceStorageGeneration())return;
           const current = read(key);
           if (current?.reflection === choice) write(key, { ...current, saved: true });
         }

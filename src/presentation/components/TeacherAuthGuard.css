@@ -5,3 +5,5 @@
 .flow.teacher-auth .teacher-login button{background:var(--forest-accent, #576c50);color:var(--forest-on, #fffefa);border-color:var(--forest-line, #576c50);min-height:48px}
 .flow.teacher-auth .teacher-auth-note{max-width:620px;margin:0 auto 32px;color:var(--forest-muted, #687163);font-size:13px;line-height:1.85}
 @media(max-width:700px){.flow.teacher-auth .teacher-login{margin-top:26px;padding:24px}.flow.teacher-auth .teacher-login button{width:100%}}
+
+.teacher-account-form form{display:grid;gap:14px}.teacher-account-form label{display:grid;gap:6px}.teacher-account-form .ai-check{display:flex;flex-direction:row;align-items:flex-start;gap:10px}.teacher-account-form input:not([type=checkbox]){width:100%;min-width:0;border:1px solid #b9c8c2;border-radius:12px;padding:12px;background:var(--app-surface,#fff);color:inherit}.teacher-account-form button{min-height:46px;border:1px solid #b9c8c2;border-radius:12px;padding:10px 14px}.teacher-account-form p{overflow-wrap:anywhere}

@@ -5,7 +5,7 @@ BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'ROSTER TEST FAILED: %
 DO $$ DECLARE label text; uid uuid; BEGIN
   FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','student_c','replacement','expired','new_number','legacy_blank'] LOOP
     uid:=gen_random_uuid();
-    INSERT INTO auth.users(id,aud,role) VALUES(uid,'authenticated','authenticated');
+    INSERT INTO auth.users(id,aud,role,is_anonymous) VALUES(uid,'authenticated','authenticated',true);
     PERFORM set_config('test.'||label,uid::text,true);
   END LOOP;
   INSERT INTO physical_internal.teacher_access VALUES

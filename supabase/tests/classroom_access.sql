@@ -2,12 +2,15 @@
 -- Run inside a transaction and ROLLBACK. All fixtures are synthetic and anonymous.
 CREATE OR REPLACE FUNCTION pg_temp.assert_ok(value boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'ACCESS TEST FAILED: %',label; END IF; END; $$;
 DO $$ DECLARE label text; uid uuid; BEGIN
- FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','outsider'] LOOP uid:=gen_random_uuid(); INSERT INTO auth.users(id,aud,role) VALUES(uid,'authenticated','authenticated'); PERFORM set_config('test.'||label,uid::text,true); END LOOP;
+ FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','outsider'] LOOP uid:=gen_random_uuid(); INSERT INTO auth.users(id,aud,role,is_anonymous) VALUES(uid,'authenticated','authenticated',true); PERFORM set_config('test.'||label,uid::text,true); END LOOP;
  INSERT INTO physical_internal.teacher_access VALUES(current_setting('test.teacher_a')::uuid,now()+interval '2 hours'),(current_setting('test.teacher_b')::uuid,now()+interval '2 hours');
 END; $$;
 SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('test.teacher_a'),'role','authenticated')::text,true);
 SET LOCAL ROLE authenticated;
 SELECT set_config('test.room_a',(public.create_secure_classroom('Security fixture A',NULL,ARRAY['1모둠','2모둠'])->>'id'),true);
+-- This suite verifies legacy scoring compatibility; the review path has its own suite.
+SELECT public.classroom_operations(current_setting('test.room_a')::uuid,'score-policy',NULL,false,10000);
+UPDATE public.game_rooms SET status='playing' WHERE id=current_setting('test.room_a')::uuid;
 SELECT pg_temp.assert_ok((SELECT count(*)=1 FROM public.game_rooms),'teacher sees only owned room');
 SELECT set_config('test.group_a',(SELECT id::text FROM public.room_groups WHERE room_id=current_setting('test.room_a')::uuid AND group_name='1모둠'),true);
 SELECT set_config('test.group_a2',(SELECT id::text FROM public.room_groups WHERE room_id=current_setting('test.room_a')::uuid AND group_name='2모둠'),true);

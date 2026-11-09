@@ -1,3 +1,4 @@
+import deployedHandler from '../server/studioHandler';
 import { createServer } from 'node:http';
 import { readFile, writeFile } from 'node:fs/promises';
 import { parse } from 'dotenv';
@@ -17,11 +18,13 @@ const server = createServer(async (req, res) => {
   const send = (status: number, data: unknown) => { res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
   if (new URL(req.url ?? '/', origin).pathname !== '/api/studio') return send(404, { error: '없는 경로입니다.' });
   const env: Record<string, string> = {};
-  for (const file of ['.env.teacher.local', '.env.gemini.local']) Object.assign(env, await readFile(file, 'utf8').then(parse).catch(() => ({})));
-  for (const key of ['TEACHER_ACCESS_HASH', 'TEACHER_SESSION_SECRET', 'GEMINI_API_KEY', 'GEMINI_MODEL', 'GEMINI_PUBLIC_DATA_REVIEWED']) {
+  for (const file of ['.env.teacher.local', '.env.gemini.local', '.env.local', '.env.studio-limit.local']) Object.assign(env, await readFile(file, 'utf8').then(parse).catch(() => ({})));
+  for (const key of ['TEACHER_ACCESS_HASH', 'TEACHER_SESSION_SECRET', 'GEMINI_API_KEY', 'GEMINI_MODEL', 'GEMINI_PUBLIC_DATA_REVIEWED', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'STUDIO_LIMIT_URL', 'STUDIO_LIMIT_KEY', 'STUDIO_LIMIT_SECRET']) {
     if (env[key]) process.env[key] = env[key]; else delete process.env[key];
   }
   const action = new URL(req.url ?? '/', origin).searchParams.get('action');
+  process.env.STUDIO_ORIGIN=origin;
+  if (['google-login','oauth-config','usage','health'].includes(action??'') || session(req,scope)?.startsWith('acct:')) return void deployedHandler(req,res);
   const nonce = session(req, scope);
   if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: true });
   if (req.method !== 'POST') return send(405, { error: 'POST 요청이 필요합니다.' });
