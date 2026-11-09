@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createLocalPoseSession,CAMERA_SETUP_TIMEOUT,type PoseState,type PoseDetector,type PoseEnvironment} from '../src/application/localPoseSession';
 import {assessArmFrame} from '../src/application/poseFeedback';
+import {compatiblePoseDetector,poseCameraConstraints} from '../src/application/poseRuntime';
 import {screenTilt,relativeTilt,requestOrientationAccess} from '../src/application/shipOrientation';
 
 const deferred=<T>()=>{let resolve!:(value:T)=>void;let reject!:(error:unknown)=>void;const promise=new Promise<T>((yes,no)=>{resolve=yes;reject=no;});return {resolve,reject,promise};};
@@ -17,7 +18,7 @@ function rig(){
  const env:PoseEnvironment={camera:async()=>stream,detector:async()=>model,video:()=>video,now:()=>now,frame:(run:FrameRequestCallback)=>{frames.set(++id,run);return id;},cancelFrame:(n:number)=>{frames.delete(n);},timer:(run:()=>void,ms:number)=>{timers.set(++id,{at:now+ms,run});return id as unknown as ReturnType<typeof setTimeout>;},cancelTimer:(n:ReturnType<typeof setTimeout>)=>{timers.delete(n as unknown as number);},emit:(s:PoseState)=>states.push(s)};
  const session=createLocalPoseSession(env);
  const advance=(ms:number,move=true)=>{now+=ms;if(move)video.currentTime+=ms/1000;for(const [key,t] of [...timers])if(now>=t.at){timers.delete(key);t.run();}const queued=[...frames.values()];frames.clear();queued.forEach(run=>run(now));};
- return {env,session,stream,video,track,states,advance,latest:()=>states.at(-1)!,stats:()=>({calls,closes,frames:frames.size,timers:timers.size}),empty:()=>{landmarks=[];},breakInference:()=>{throwInference=true;}};
+ return {env,session,stream,video,track,model,states,advance,elapse:(ms:number)=>{now+=ms;},latest:()=>states.at(-1)!,stats:()=>({calls,closes,frames:frames.size,timers:timers.size}),empty:()=>{landmarks=[];},breakInference:()=>{throwInference=true;}};
 }
 
 test('portrait/landscape/upside-down steering uses the screen axis, rejects invalid signals and calibrates raw saturated angles',()=>{
@@ -64,3 +65,47 @@ test('video pause immediately clears the pose and no frozen frame is inferred',a
 test('pose alignment feedback distinguishes empty frame, shoulder, wrist and arm overlap without lowering confidence',()=>{const points=Array.from({length:33},()=>({x:.5,y:.5,visibility:1}));points[16]={x:.8,y:.2,visibility:1};assert(assessArmFrame(points).value);assert.match(assessArmFrame([]).message,/몸을 찾지/);points[12].visibility=.6;assert.equal(assessArmFrame(points).value,null);assert.match(assessArmFrame(points).message,/어깨/);points[12].visibility=1;points[16].visibility=.6;assert.match(assessArmFrame(points).message,/손목/);points[16].visibility=NaN;assert.equal(assessArmFrame(points).value,null);points[16]={x:1.1,y:.2,visibility:1};assert.equal(assessArmFrame(points).value,null);points[16]={x:.5,y:.5,visibility:1};assert.match(assessArmFrame(points).message,/겹치지/);});
 
 test('back camera preserves non-mirrored game input and stopping clears camera diagnostics',async()=>{const r=rig();r.env.requestedFacing=()=>'environment';await r.session.start();r.advance(150);assert.equal(r.latest().cameraFacing,'unknown');assert(Math.abs(r.latest().value!.x-.8)<.0001);assert(r.latest().diagnostic!.wrist);r.session.stop();assert.equal(r.latest().diagnostic,undefined);assert.equal(r.latest().cameraFacing,undefined);});
+
+test('camera profiles limit capture load, preserve explicit facing and never request audio or a device identity',()=>{
+ for(const mode of ['auto','compatibility'] as const){const c=poseCameraConstraints(mode,'environment');assert.equal(c.audio,false);assert.equal((c.video as MediaTrackConstraints).facingMode,'environment');assert.deepEqual((c.video as MediaTrackConstraints).frameRate,{ideal:24,max:30});assert(!JSON.stringify(c).includes('deviceId'));}
+ assert.deepEqual((poseCameraConstraints('auto','user').video as MediaTrackConstraints).width,{ideal:640});assert.deepEqual((poseCameraConstraints('compatibility','user').video as MediaTrackConstraints).width,{ideal:480});
+});
+
+test('GPU initialization falls back once to CPU; explicit compatibility never retries GPU',async()=>{
+ const r=rig(),engines:string[]=[];const create=async(engine:'CPU'|'GPU')=>{engines.push(engine);if(engine==='GPU')throw Error('context unavailable');return r.model;};
+ const model=await compatiblePoseDetector(create);assert.deepEqual(engines,['GPU','CPU']);assert.equal(model.engine,'CPU');model.close();assert.equal(r.stats().closes,1);
+ engines.length=0;await compatiblePoseDetector(create,true);assert.deepEqual(engines,['CPU']);
+ await assert.rejects(compatiblePoseDetector(async()=>{throw Error('both failed');}),/both failed/);
+});
+
+test('slow inference backs off while fast fresh frames recover cadence and an empty wrist is never reused',async()=>{
+ const r=rig(),detect=r.model.detectForVideo;let cost=150;r.env.interval=()=>84;r.model.detectForVideo=(v,t)=>{const result=detect(v,t);r.elapse(cost);return result;};
+ await r.session.start();r.advance(100);assert.equal(r.stats().calls,1);r.advance(50);assert.equal(r.stats().calls,1);r.advance(100);assert.equal(r.stats().calls,2);cost=0;r.advance(150);assert.equal(r.stats().calls,3);r.advance(50);assert.equal(r.stats().calls,3);r.advance(40);assert.equal(r.stats().calls,4);r.empty();r.advance(90);assert.equal(r.latest().value,null);assert.equal(r.latest().status,'lost');r.session.dispose();
+});
+
+test('paused live stream resumes once, waits for a new frame, and removes resume listeners on stop',async()=>{
+ const r=rig();let paused=false,plays=0;Object.defineProperty(r.video,'paused',{get:()=>paused});r.video.play=async()=>{plays++;paused=false;};
+ await r.session.start();r.advance(150);assert(r.latest().value);paused=true;r.video.dispatchEvent(new Event('pause'));assert.equal(r.latest().value,null);await Promise.resolve();assert.equal(plays,2);r.advance(150,false);assert.equal(r.stats().calls,1);assert.equal(r.latest().value,null);r.advance(150);assert.equal(r.latest().status,'tracking');r.session.stop();paused=true;r.track.dispatchEvent(new Event('unmute'));assert.equal(plays,2);assert.equal(r.stats().frames,0);
+});
+
+test('mute/unmute never uses a stale pose or reopens camera permission',async()=>{
+ const r=rig();let cameras=0;r.env.camera=async()=>{cameras++;return r.stream;};await r.session.start();r.advance(150);r.track.muted=true;r.track.dispatchEvent(new Event('mute'));assert.equal(r.latest().value,null);r.track.muted=false;r.track.dispatchEvent(new Event('unmute'));assert.equal(r.latest().value,null);r.advance(150,false);assert.equal(r.latest().status,'lost');r.advance(150);assert.equal(r.latest().status,'tracking');assert.equal(cameras,1);r.session.dispose();
+});
+
+test('GPU runtime failure clears judgement, replaces only the model and caps CPU retry at one',async()=>{
+ const r=rig(),pending=deferred<PoseDetector>();r.model.engine='GPU';const cpu={engine:'CPU' as const,detectForVideo:()=>{throw Error('CPU failed');},close:()=>{}};let models=0,cameras=0;
+ r.env.camera=async()=>{cameras++;return r.stream;};r.env.detector=async(engine)=>{models++;return engine==='CPU'?pending.promise:r.model;};
+ await r.session.start();r.advance(150);assert(r.latest().value);r.breakInference();r.advance(150);assert.equal(r.latest().value,null);assert.equal(r.latest().status,'lost');assert.equal(r.stats().closes,1);assert.equal(r.track.stops,0);pending.resolve(cpu);await new Promise<void>(resolve=>setImmediate(resolve));r.advance(200);assert.equal(r.latest().status,'error');assert.equal(models,2);assert.equal(cameras,1);assert.equal(r.track.stops,1);assert.equal(r.stats().frames,0);
+});
+
+test('stopping or timing out GPU recovery disposes late CPU model without restarting a stream',async()=>{
+ for(const timeout of [false,true]){const r=rig(),pending=deferred<PoseDetector>();r.model.engine='GPU';r.env.detector=async(engine)=>engine==='CPU'?pending.promise:r.model;await r.session.start();r.breakInference();r.advance(150);if(timeout)r.advance(CAMERA_SETUP_TIMEOUT+1);else r.session.stop();let closed=0;pending.resolve({engine:'CPU',detectForVideo:()=>{throw Error('must not run');},close:()=>closed++});await new Promise<void>(resolve=>setImmediate(resolve));assert.equal(closed,1);assert.equal(r.track.stops,1);assert.equal(r.stats().frames,0);assert.equal(r.latest().status,timeout?'error':'off');}
+});
+
+test('an unresumable pause fails closed with an action instead of retrying playback indefinitely',async()=>{
+ const r=rig();let paused=false,plays=0;Object.defineProperty(r.video,'paused',{get:()=>paused});r.video.play=async()=>{if(++plays>1)throw Error('play rejected');};await r.session.start();r.advance(150);paused=true;r.video.dispatchEvent(new Event('pause'));await Promise.resolve();await Promise.resolve();assert.equal(r.latest().status,'error');assert.equal(r.latest().value,null);assert.equal(plays,2);assert.equal(r.track.stops,1);assert.equal(r.stats().frames,0);
+});
+
+test('video waiting during model initialization keeps loading state and releases a late model on stop',async()=>{
+ const r=rig(),pending=deferred<PoseDetector>();r.env.detector=()=>pending.promise;const start=r.session.start();await Promise.resolve();await Promise.resolve();r.video.dispatchEvent(new Event('waiting'));assert.equal(r.latest().status,'loading');assert.equal(r.latest().value,null);r.session.stop();let closed=0;pending.resolve({detectForVideo:()=>({landmarks:[]}),close:()=>closed++});await start;assert.equal(closed,1);assert.equal(r.track.stops,1);assert.equal(r.latest().status,'off');
+});

@@ -12,6 +12,8 @@ export function PoseControls({pose,assisted,setAssisted,disabled}:{pose:ReturnTy
  return <div className="pose-controls flagship-note">
   <p>카메라 영상과 추정은 이 기기 안에서만 처리해요. 영상·얼굴·움직임 좌표를 서버나 외부 AI에 보내거나 파일로 저장하지 않아요.</p>
   <ol className="pose-guide"><li>기기를 거치하고 밝은 곳에서 카메라를 바라봐요.</li><li>미리 보기로 상체·양쪽 어깨·오른손목이 화면에 들어오게 맞춰요.</li><li>오른팔을 편안하게 조금 펼쳐요. 앉은 자세로도 할 수 있어요.</li></ol>
+  <label>카메라 처리 모드<select aria-label="카메라 처리 모드" value={pose.mode} disabled={disabled||pose.status==='loading'} onChange={e=>{setAssisted(false);void pose.changeMode(e.target.value as 'auto'|'compatibility');}}><option value="auto">자동 최적화</option><option value="compatibility">호환 모드 · 끊길 때 선택</option></select></label>
+  <p className="pose-preview-caption">반복해서 끊기면 호환 모드로 바꿔 보세요. 모드를 바꾸면 카메라를 새로 시작합니다. 화면을 떠나면 자동으로 꺼집니다.</p>
   <div className="pose-actions"><button disabled={disabled||pose.status==='loading'} onClick={()=>{pose.stop();setAssisted(false);void pose.start();}}>{active?'기기 안에서 카메라 인식 다시 시작':'기기 안에서 카메라 인식 켜기'}</button><button disabled={disabled||pose.status==='loading'} onClick={()=>{setAssisted(false);void pose.switchCamera();}}>{pose.facingMode==='user'?'후면':'전면'} 카메라로 전환</button><button onClick={()=>{pose.stop();setAssisted(true);}}>카메라 끄고 터치 연습</button></div>
   <p role={pose.status==='error'?'alert':'status'}>{pose.message&&!assisted?pose.message:status}</p>
   {intermittent&&active&&<p className="pose-intermittent" role="status">인식이 반복해서 끊겼어요. 미리 보기로 어깨와 오른손목이 함께 보이게 맞추고, 몸과 손이 겹치지 않도록 작은 동작부터 해 보세요. 끊기는 동안에는 판정하지 않아요. 계속 어려우면 터치 연습으로 참여할 수 있어요.</p>}
