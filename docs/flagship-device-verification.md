@@ -45,3 +45,17 @@
 새 외부 AI·DB 테이블·계정·키·유료 서비스를 추가하지 않았다. 영상·얼굴·손목 경로를 업로드/저장하지 않으며, 기기 식별자·브라우저 fingerprint도 수집하지 않는다. 기기 확인의 숫자와 상태는 화면 메모리에만 있다. 기존 수업방 권한과 7일 보관·즉시 삭제는 유지한다.
 
 참고한 브라우저 기준: [방향 이벤트](https://developer.mozilla.org/en-US/docs/Web/API/Window/deviceorientation_event), [방향 권한 요청](https://developer.mozilla.org/en-US/docs/Web/API/DeviceOrientationEvent/requestPermission_static), [카메라 트랙 ended](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/ended_event).
+
+
+## S25 화면 피드백 이후 보완
+
+사용자가 제공한 S25 화면에는 서버 응답 1495ms와 기울기 입력 0.77/신호 수신이 표시되었다. 이는 해당 화면에서 서버와 기울기 수신이 동작했다는 증거이며 보정·회전·수업 전체 시험을 모두 통과했다는 뜻은 아니다. 카메라는 ‘팔·손목을 찾지 못함’으로 표시되었고, 실제로 팔을 보여 준 상태였는지는 확인 중이다.
+
+- 인식 실패를 몸 미포착·오른쪽 어깨 미포착·오른손목 미포착·어깨/손목 겹침으로 나누어 안내한다. 신뢰도 경계 .65는 낮추지 않으며, 화면 밖 좌표나 비정상 수치를 성공으로 처리하지 않는다.
+- ‘내 기기에서만 카메라 미리 보기’를 선택한 경우에만 영상을 표시한다. 기본값은 꺼짐이고, 중지/오류/이동 시 감춘다. 영상·얼굴을 사진·영상 파일로 저장하거나 외부로 전송하지 않는다. 기기 확인 화면의 이전 ‘화면에 표시하지 않는다’ 문구는 이 선택형 표시 방식에 맞게 정정했다.
+- 전면/후면 카메라 전환을 추가한다. 전환할 때 이전 스트림을 종료하고 새 스트림을 요청한다. 실제 방향은 getSettings의 facingMode만 확인하고 deviceId/groupId 등 식별 정보는 읽거나 보관하지 않는다. 지원되지 않는 경우 실제 방향을 확인했다고 표시하지 않는다.
+- 인식 안내의 중복 출력을 없애고, 모바일 카메라 버튼은 한 줄씩 넓게 배치했다.
+- 실제 로컬 모델로 Google의 공개 pose.jpg 예시를 캔버스 스트림에 넣어 인식 성공과 빈 프레임 미인식, 전환 시 이전 트랙 종료를 확인했다. 사용자의 사진이나 학생 영상은 모델에 넣지 않았다. 공개 테스트 사진은 ignored QA 경로에만 두고 소스/운영 배포에 포함하지 않는다. 이 시험은 S25 실기기 정확도 검증을 대신하지 않는다.
+- 자동 기기 회귀는 14개로 확장했다(인식 실패 원인 구분·후면 입력/진단 초기화 추가).
+
+참고: [공식 Pose Landmarker](https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker?tab=Web), [트랙의 실제 설정](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/getSettings).

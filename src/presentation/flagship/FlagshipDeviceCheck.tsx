@@ -14,7 +14,7 @@ export function FlagshipDeviceCheck(){
   <h3>1. 기기를 거치하고 카메라 확인</h3>
   <PoseControls pose={pose} assisted={assisted} setAssisted={setAssisted} disabled={false}/>
   {pose.status==='tracking'&&pose.value&&<p role="status">실제 영상에서 오른팔·손목 추정값 수신 중 · 가상 발사 각도 {Math.round(pose.value.angle)}°</p>}
-  <p>팔을 화면 밖으로 옮기면 ‘찾지 못했어요’로 바뀌고 판정이 멈추는지 확인해요. 영상 자체는 화면에 표시하지 않아요.</p>
+  <p>팔을 화면 밖으로 옮기면 ‘찾지 못했어요’로 바뀌고 판정이 멈추는지 확인해요. 미리 보기는 원할 때만 켤 수 있고, 이 기기 화면에만 표시돼요.</p>
   <h3>2. 제자리에서 기울기 확인</h3>
   <button disabled={tilt.status==='requesting'} aria-pressed={tilt.enabled} onClick={()=>{if(tilt.enabled)tilt.stop();else void tilt.start();}}>기울기 시험 {tilt.enabled?'끄기':'켜기'}</button>
   <button disabled={tilt.status!=='tracking'} onClick={tilt.calibrate}>현재 자세를 가운데로 보정</button>

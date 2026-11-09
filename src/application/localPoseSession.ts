@@ -1,9 +1,11 @@
-import { armInput, type PosePoint } from '../domain/flagship';
+import type {armInput,PosePoint} from '../domain/flagship';
+import {assessArmFrame,type PoseDiagnostics} from './poseFeedback';
 
-export type PoseState = { status: 'off'|'loading'|'tracking'|'lost'|'error'; message: string; value: ReturnType<typeof armInput> };
+export type PoseState = { status: 'off'|'loading'|'tracking'|'lost'|'error'; message: string; value: ReturnType<typeof armInput>; diagnostic?:PoseDiagnostics; cameraFacing?:'user'|'environment'|'unknown' };
 export type PoseDetector = { detectForVideo(video: HTMLVideoElement, timestamp: number): { landmarks: PosePoint[][] }; close(): void };
 export type PoseEnvironment = {
   camera(): Promise<MediaStream>;
+  requestedFacing?(): 'user'|'environment';
   detector(): Promise<PoseDetector>;
   video(): HTMLVideoElement | null;
   now(): number;
@@ -30,16 +32,17 @@ export function createLocalPoseSession(env: PoseEnvironment) {
   let generation = 0, disposed = false, starting = false, frame = 0;
   let stream: MediaStream | null = null, detector: PoseDetector | null = null;
   let deadline: ReturnType<typeof setTimeout> | null = null;
+  let cameraFacing:PoseState['cameraFacing'];
   const removers: Array<() => void> = [];
   const close = (d: PoseDetector | null) => { try { d?.close(); } catch { /* already released */ } };
-  const publish = (status: PoseState['status'], message = '', value: PoseState['value'] = null) => { if (!disposed) env.emit({ status, message, value }); };
+  const publish = (status: PoseState['status'], message = '', value: PoseState['value'] = null, diagnostic?:PoseDiagnostics) => { if (!disposed) env.emit({ status, message, value, diagnostic, cameraFacing }); };
   const release = () => {
     generation++; starting = false; env.cancelFrame(frame);
     if (deadline !== null) env.cancelTimer(deadline); deadline = null;
     removers.splice(0).forEach(remove => remove());
     stream?.getTracks().forEach(track => track.stop()); stream = null;
     const video = env.video(); if (video) { video.pause(); video.srcObject = null; }
-    close(detector); detector = null;
+    close(detector); detector = null; cameraFacing=undefined;
   };
   const stop = (message = '') => { release(); publish('off', message); };
   const fail = (message: string) => { release(); publish('error', message); };
@@ -51,6 +54,9 @@ export function createLocalPoseSession(env: PoseEnvironment) {
       const camera = await env.camera();
       if (epoch !== generation || disposed) { camera.getTracks().forEach(track => track.stop()); return; }
       stream = camera;
+      const actualFacing=camera.getVideoTracks()[0]?.getSettings?.().facingMode;
+      cameraFacing=actualFacing==='user'||actualFacing==='environment'?actualFacing:'unknown';
+      const mirrored=(cameraFacing==='unknown'?env.requestedFacing?.()??'user':cameraFacing)==='user';
       const video = env.video(); if (!video) throw Error('Missing video');
       const ended = () => { if (epoch === generation) fail('카메라 연결이 끊겼어요. 다른 앱의 카메라 사용·사이트 권한을 확인하고 다시 켜 주세요.'); };
       const muted = () => { if (epoch === generation) publish('lost', '카메라 영상이 잠시 멈췄어요. 판정을 멈추고 새 영상을 기다려요.'); };
@@ -79,8 +85,9 @@ export function createLocalPoseSession(env: PoseEnvironment) {
           if (now - previousInference >= 125) {
             previousInference = now; previousVideoTime = video.currentTime;
             try {
-              const result = model.detectForVideo(video, now), value = armInput(result.landmarks[0] ?? []);
-              publish(value ? 'tracking' : 'lost', value ? '' : '팔·손목을 찾지 못했어요. 판정을 멈추고 위치를 조절해 주세요.', value);
+              const result = model.detectForVideo(video, now), assessment=assessArmFrame(result.landmarks[0]??[]);
+              const value=assessment.value?(mirrored?assessment.value:{...assessment.value,x:1-assessment.value.x}):null;
+              publish(value?'tracking':'lost',assessment.message,value,assessment.diagnostic);
             } catch { fail('동작 인식을 중지했어요. 카메라를 다시 켜거나 터치 연습으로 계속할 수 있어요.'); return; }
           }
         } else if (now - advancedAt > 6000) { fail('카메라 영상이 갱신되지 않아 인식을 종료했어요. 카메라를 다시 켜거나 터치 연습을 선택해 주세요.'); return; }

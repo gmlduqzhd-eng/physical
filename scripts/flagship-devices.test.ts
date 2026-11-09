@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createLocalPoseSession,CAMERA_SETUP_TIMEOUT,type PoseState,type PoseDetector} from '../src/application/localPoseSession';
+import {createLocalPoseSession,CAMERA_SETUP_TIMEOUT,type PoseState,type PoseDetector,type PoseEnvironment} from '../src/application/localPoseSession';
+import {assessArmFrame} from '../src/application/poseFeedback';
 import {screenTilt,relativeTilt,requestOrientationAccess} from '../src/application/shipOrientation';
 
 const deferred=<T>()=>{let resolve!:(value:T)=>void;let reject!:(error:unknown)=>void;const promise=new Promise<T>((yes,no)=>{resolve=yes;reject=no;});return {resolve,reject,promise};};
@@ -13,7 +14,7 @@ function rig(){
  const model:PoseDetector={detectForVideo:()=>{calls++;if(throwInference)throw Error('fixture');return {landmarks};},close:()=>closes++};
  const events=new EventTarget();
  const video={addEventListener:events.addEventListener.bind(events),removeEventListener:events.removeEventListener.bind(events),dispatchEvent:events.dispatchEvent.bind(events),readyState:2,currentTime:0,srcObject:null,muted:false,playsInline:false,pause:()=>{},play:async()=>{}} as unknown as HTMLVideoElement;
- const env={camera:async()=>stream,detector:async()=>model,video:()=>video,now:()=>now,frame:(run:FrameRequestCallback)=>{frames.set(++id,run);return id;},cancelFrame:(n:number)=>{frames.delete(n);},timer:(run:()=>void,ms:number)=>{timers.set(++id,{at:now+ms,run});return id as unknown as ReturnType<typeof setTimeout>;},cancelTimer:(n:ReturnType<typeof setTimeout>)=>{timers.delete(n as unknown as number);},emit:(s:PoseState)=>states.push(s)};
+ const env:PoseEnvironment={camera:async()=>stream,detector:async()=>model,video:()=>video,now:()=>now,frame:(run:FrameRequestCallback)=>{frames.set(++id,run);return id;},cancelFrame:(n:number)=>{frames.delete(n);},timer:(run:()=>void,ms:number)=>{timers.set(++id,{at:now+ms,run});return id as unknown as ReturnType<typeof setTimeout>;},cancelTimer:(n:ReturnType<typeof setTimeout>)=>{timers.delete(n as unknown as number);},emit:(s:PoseState)=>states.push(s)};
  const session=createLocalPoseSession(env);
  const advance=(ms:number,move=true)=>{now+=ms;if(move)video.currentTime+=ms/1000;for(const [key,t] of [...timers])if(now>=t.at){timers.delete(key);t.run();}const queued=[...frames.values()];frames.clear();queued.forEach(run=>run(now));};
  return {env,session,stream,video,track,states,advance,latest:()=>states.at(-1)!,stats:()=>({calls,closes,frames:frames.size,timers:timers.size}),empty:()=>{landmarks=[];},breakInference:()=>{throwInference=true;}};
@@ -59,3 +60,7 @@ test('video playback rejection closes the acquired camera and gives an error',as
 });
 
 test('video pause immediately clears the pose and no frozen frame is inferred',async()=>{const r=rig();await r.session.start();r.advance(150);assert(r.latest().value);Object.defineProperty(r.video,'paused',{value:true,configurable:true});r.video.dispatchEvent(new Event('pause'));assert.equal(r.latest().status,'lost');assert.equal(r.latest().value,null);const calls=r.stats().calls;r.advance(200);assert.equal(r.stats().calls,calls);r.session.dispose();});
+
+test('pose alignment feedback distinguishes empty frame, shoulder, wrist and arm overlap without lowering confidence',()=>{const points=Array.from({length:33},()=>({x:.5,y:.5,visibility:1}));points[16]={x:.8,y:.2,visibility:1};assert(assessArmFrame(points).value);assert.match(assessArmFrame([]).message,/몸을 찾지/);points[12].visibility=.6;assert.equal(assessArmFrame(points).value,null);assert.match(assessArmFrame(points).message,/어깨/);points[12].visibility=1;points[16].visibility=.6;assert.match(assessArmFrame(points).message,/손목/);points[16].visibility=NaN;assert.equal(assessArmFrame(points).value,null);points[16]={x:1.1,y:.2,visibility:1};assert.equal(assessArmFrame(points).value,null);points[16]={x:.5,y:.5,visibility:1};assert.match(assessArmFrame(points).message,/겹치지/);});
+
+test('back camera preserves non-mirrored game input and stopping clears camera diagnostics',async()=>{const r=rig();r.env.requestedFacing=()=>'environment';await r.session.start();r.advance(150);assert.equal(r.latest().cameraFacing,'unknown');assert(Math.abs(r.latest().value!.x-.8)<.0001);assert(r.latest().diagnostic!.wrist);r.session.stop();assert.equal(r.latest().diagnostic,undefined);assert.equal(r.latest().cameraFacing,undefined);});
