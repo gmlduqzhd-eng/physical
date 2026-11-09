@@ -40,7 +40,7 @@ export function trajectory(angle:number,power:number,wind:number){
  for(let t=0;t<=8;t+=.04){const x=5+Math.cos(rad)*v*t+.5*wind*t*t,y=8+Math.sin(rad)*v*t-5*t*t;points.push({x,y});if(t>.04&&y<=0)break;}return points;
 }
 export const RESCUE_ROUNDS=[{target:50,wind:0},{target:70,wind:-2},{target:85,wind:2}];
-export function rescueHit(angle:number,power:number,round:number){const r=RESCUE_ROUNDS[round];if(!r||!Number.isFinite(angle)||!Number.isFinite(power))return false;const end=trajectory(angle,power,r.wind).at(-1)!;return Math.abs(end.x-r.target)<=9;}
+export function rescueHit(angle:number,power:number,round:number){const r=RESCUE_ROUNDS[round];if(!r||!Number.isFinite(angle)||!Number.isFinite(power))return false;const points=trajectory(angle,power,r.wind),end=points[points.length-1];return Math.abs(end.x-r.target)<=9;}
 export type PosePoint={x:number;y:number;visibility?:number};
 export function armInput(points:PosePoint[]){
  const shoulder=points[12],wrist=points[16];if(!shoulder||!wrist||![shoulder.x,shoulder.y,wrist.x,wrist.y].every(Number.isFinite)||(shoulder.visibility??0)<.65||(wrist.visibility??0)<.65||Math.hypot(wrist.x-shoulder.x,wrist.y-shoulder.y)<.08)return null;
