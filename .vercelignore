@@ -3,9 +3,11 @@
 teacher-studio
 dist-teacher
 outputs
-docs
+docs/*
+!docs/licenses/
 supabase
-scripts
+scripts/*
+!scripts/prepare-vision.mjs
 server/geminiStudio.ts
 server/studioHandler.ts
 server/studioRateLimit.ts

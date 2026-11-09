@@ -1,3 +1,5 @@
+import {FLAGSHIP_GAMES,isFlagship} from '../domain/flagship';
+import {FlagshipActivity} from './flagship/FlagshipActivity';
 import {RetiredGameNotice} from './components/minigames/common/RetiredGameNotice';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
 import {mergedMovementMeta} from '../domain/mergedMovementVariants';
@@ -218,6 +220,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 });
 
 QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
+FLAGSHIP_GAMES.forEach(g=>{GAME_TITLES[g.type]={name:g.name,emoji:g.emoji,domain:g.domain,code:g.achievement.code,target:g.achievement.title};});
 PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:p.emoji,domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
 
 SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
@@ -278,7 +281,7 @@ const GamePlaySession = () => {
 
   const handleStartGame = () => {
     setHasStarted(true);
-    const hasOwnIntro = EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
+    const hasOwnIntro = isFlagship(gameType||'') || EXPEDITION_BY_ID.get(gameType || '')?.kind === 'B' || ['pulse-detective', 'posture-guardian', 'rolling-curling', 'pass-gate-rescue', 'dribble-rhythm', 'open-space-tactician', 'emotion-thermometer', 'partner-robot-lab', 'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(gameType || '');
     setIsCountingDown(!hasOwnIntro && !isPhonePlay(gameType||'') && !isQuestId(gameType || '') && !isSafetyLessonId(gameType||'')&&!variantsFor(gameType||'').length);
   };
 
@@ -333,7 +336,8 @@ const GamePlaySession = () => {
   const gameInfo=useMemo(()=>selectedVariant?{...baseGameInfo,name:`${baseGameInfo.name} · ${selectedVariant.name}`,target:'통합 활동의 선택 코스'}:baseGameInfo,[baseGameInfo,selectedVariant]);
   const participationCues = (readParticipationCues(hash, gameType || '')||(selectedVariant?readParticipationCues(hash,selectedVariant.id):null));
   const movementMeta=selectedVariant&&mergedMovementMeta(selectedVariant.id);
-  const activityPlan = movementMeta?{title:movementMeta.name,setup:movementMeta.setup,safety:movementMeta.alternative}:getPhysicalActivityPlan(selectedVariant?.id||gameType||'', EXPRESSION_GAMES.some(game=>game.id===(selectedVariant?.id||gameType)));
+  const flagshipMeta=FLAGSHIP_GAMES.find(g=>g.type===gameType);
+  const activityPlan = flagshipMeta?{title:flagshipMeta.achievement.title,setup:flagshipMeta.equipment?.join(' · ')||'',safety:flagshipMeta.safetyTips?.[0]||''}:movementMeta?{title:movementMeta.name,setup:movementMeta.setup,safety:movementMeta.alternative}:getPhysicalActivityPlan(selectedVariant?.id||gameType||'', EXPRESSION_GAMES.some(game=>game.id===(selectedVariant?.id||gameType)));
 
   // 게임 완료 시 모둠 점수 및 활동 기록 즉시 반영
   const commitResult = useCallback((payload: { amount: number; details?: GameResultDetails }) => {
@@ -418,6 +422,7 @@ const GamePlaySession = () => {
 
   const renderBaseGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
+    if(isFlagship(gameType))return <FlagshipActivity key={key} game={gameType} room={hasBattle?battleRoomId:null} group={hasBattle?battleGroupId:null} onFinish={details=>localEnqueueAction({payload:{amount:100,details}})}/>;
     const phone=PHONE_PLAY_BY_ID.get(gameType);
     if(phone)return <PhonePlay key={key} {...commonProps} play={phone} solo={soloMode} onExit={handleReturnToCatalog}/>;
     if(isSafetyLessonId(gameType))return <SafetyLesson key={key} {...commonProps} gameId={gameType} solo={soloMode} onExit={handleReturnToCatalog}/>;

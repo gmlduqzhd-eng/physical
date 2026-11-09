@@ -26,6 +26,7 @@ const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({
 const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
 const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
 const PlayerRecords = lazy(() => import('./presentation/PlayerRecords').then(m => ({ default: m.PlayerRecords })));
+const FlagshipCollection=lazy(()=>import('./presentation/flagship/FlagshipCollection').then(m=>({default:m.FlagshipCollection})));
 const TeacherMembers=lazy(()=>import('./presentation/TeacherMembers').then(m=>({default:m.TeacherMembers})));
 const DeviceCheck = lazy(() => import('./presentation/DeviceCheck').then(m => ({ default: m.DeviceCheck })));
 const ClassroomOperations = lazy(() => import('./presentation/ClassroomOperations').then(m => ({ default: m.ClassroomOperations })));
@@ -60,6 +61,7 @@ function App() {
         {/* 소개·역할 선택·활동 탐색을 한 메인 화면에서 시작 */}
         <Route path="/" element={<UnifiedHomePage />} />
         <Route path="/start" element={<UnifiedHomePage />} />
+        <Route path="/expeditions" element={<FlagshipCollection/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />

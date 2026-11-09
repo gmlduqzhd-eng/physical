@@ -1,3 +1,5 @@
+import {isFlagship} from '../domain/flagship';
+import {FlagshipControl} from './flagship/FlagshipControl';
 import { ClassroomScoreReview } from './components/ClassroomScoreReview';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -75,6 +77,7 @@ export function GuidedClassroom() {
         <section className="card guided-time-card"><h2>남은 활동 시간</h2><p className="big-number" aria-live="off">{mins}:{secs}</p><p>현재 미션: {missions[0]?.title || '선택한 활동 참여'}</p><Link className="guided-text-link" to={game ? `/play/${game.type}` : '/hub'}>활동 규칙 확인 →</Link></section>
       </div>
 
+      {game&&isFlagship(game.type)&&<FlagshipControl roomId={room.id} game={game.type}/>}
       {isGuidedLesson && room.status !== 'finished' && <section className="card guided-help" aria-label="도움 요청"><div className="guided-review-heading"><div><h2>도움 요청 <span className="guided-count">{helpRequests.length}</span></h2><p>먼저 요청한 모둠부터 살펴보세요.</p></div></div>{helpRequests.length ? <div className="guided-review-list">{helpRequests.map(group => <div className="guided-review-row" key={group.id}><strong>{group.group_name}</strong><button disabled={busy} onClick={() => void resolveHelp(group.id)}>도움 완료</button></div>)}</div> : <p className="muted">도움이 필요한 모둠이 없어요.</p>}</section>}
 
 

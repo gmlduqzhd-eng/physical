@@ -1,3 +1,5 @@
+import {isFlagship} from '../../../domain/flagship';
+import {FlagshipActivity} from '../../flagship/FlagshipActivity';
 import {RetiredGameNotice} from './common/RetiredGameNotice';
 import {EXPEDITION_BY_ID} from '../../../domain/expeditionGames';
 import {ExpeditionActivity} from './expedition/ExpeditionActivity';
@@ -45,6 +47,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
     const eventType=minigame.type==='team_battle'?(minigame.subType||'volcano'):minigame.type;
     if(getRemovedGame(eventType))return <RetiredGameNotice id={eventType} roomId={gameRoom.id} groupId={groupId}/>;
     const complete=(action:{payload:{id:string;amount:number;details?:import('../../../domain/gameResultDetails').GameResultDetails}})=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()});
+    if(isFlagship(eventType))return <FlagshipActivity key={sessionKey} game={eventType} room={gameRoom.id} group={groupId} onFinish={details=>complete({payload:{id:groupId,amount:100,details}})}/>;
     const native=EXPEDITION_BY_ID.get(eventType);if(native?.kind==='B'&&!getMergedGame(eventType))return <ExpeditionActivity game={native} groupId={groupId} solo={false} enqueueAction={complete}/>;
     const merged=getMergedGame(eventType);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={complete}>{null}</ConsolidatedActivity>;
     if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;

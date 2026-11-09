@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run prepare:vision && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node scripts/runtime-regressions.cjs",
@@ -53,12 +53,15 @@
     "test:safety:ui": "tsx scripts/safety-lessons-regressions.ts",
     "test:operations": "tsx --test scripts/operations.test.ts scripts/teacher-account-api.test.ts",
     "healthcheck": "node scripts/healthcheck.mjs",
-    "verify:release": "npm run lint && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
-    "test:regression": "tsx --test scripts/background-music-routes.test.ts scripts/participation-cues.test.ts scripts/studio-ui-state.test.ts scripts/studio-rate-limit.test.ts"
+    "verify:release": "npm run lint && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
+    "test:regression": "tsx --test scripts/background-music-routes.test.ts scripts/participation-cues.test.ts scripts/studio-ui-state.test.ts scripts/studio-rate-limit.test.ts",
+    "prepare:vision": "node scripts/prepare-vision.mjs",
+    "test:flagship": "tsx --test scripts/flagship.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",
     "@ai-sdk/openai": "4.0.97",
+    "@mediapipe/tasks-vision": "1.2.2",
     "@supabase/supabase-js": "^2.108.2",
     "ai": "7.0.145",
     "clsx": "^2.1.1",

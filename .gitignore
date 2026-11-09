@@ -32,3 +32,6 @@ dist-ssr
 /supabase/.temp/
 /dist-teacher/
 /.studio-deploy/
+
+# Same-origin ML runtime/model, regenerated with pinned integrity checks
+/public/vision/

@@ -1,8 +1,10 @@
+import {FLAGSHIP_IDS} from './flagship';
 import { GAMES } from './gamesData';
 
 // These activities have their own introduction and a result callback. Keep the
 // wider catalog searchable while giving a teacher a manageable starting set.
 export const FEATURED_GAME_IDS = [
+  ...FLAGSHIP_IDS,
   'zigzag', 'dribble-rhythm', 'pass-gate-rescue',
   'space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator',
   'pulse-detective', 'posture-guardian', 'rolling-curling',

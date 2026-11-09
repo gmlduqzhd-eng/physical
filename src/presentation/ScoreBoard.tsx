@@ -1,3 +1,5 @@
+import {isFlagship} from '../domain/flagship';
+import {FlagshipControl} from './flagship/FlagshipControl';
 import {LocalQRCode} from './components/LocalQRCode';
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -17,7 +19,7 @@ export const ScoreBoard = () => <BoardAccess><ScoreBoardContent/></BoardAccess>;
 const ScoreBoardContent = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
-  const { scores, gameRoom, loading, error, refresh } = useGameLogic(roomId);
+  const { scores, gameRoom, template, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, isDanger } = useGameTimer(gameRoom);
   const { playSiren } = useAudio();
 
@@ -246,6 +248,7 @@ const ScoreBoardContent = () => {
         </div>
       )}
 
+      {template?.buttons?.[0]?.gameType&&isFlagship(template.buttons[0].gameType)&&<div className="relative z-10"><FlagshipControl roomId={gameRoom.id} game={template.buttons[0].gameType} readOnly/></div>}
       {/* 순위 역전 토스트 알림 */}
       {toast && (
         <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[9999] bg-gradient-to-r from-orange-500 to-red-500 text-white px-10 py-5 rounded-2xl shadow-2xl text-3xl font-black animate-bounce border-2 border-yellow-300">
