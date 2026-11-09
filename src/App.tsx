@@ -1,8 +1,8 @@
 import {FlowShell} from './presentation/FlowShell';
 import {GoogleTeacherCallback} from './presentation/components/GoogleTeacherCallback';
 import { cleanClassroomStorage } from './application/storageRetention';
-import { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
@@ -34,6 +34,12 @@ const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(
 const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
 const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
 
+function RouteScrollReset() {
+  const { pathname } = useLocation();
+  useLayoutEffect(() => { window.scrollTo({ top: 0, left: 0, behavior: 'instant' }); }, [pathname]);
+  return null;
+}
+
 function App() {
   useEffect(() => {
     cleanClassroomStorage();
@@ -46,6 +52,7 @@ function App() {
   return (
     <ThemeProvider>
     <BrowserRouter>
+      <RouteScrollReset />
       <BackgroundMusicProvider>
       <KakaoInAppNotice />
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>

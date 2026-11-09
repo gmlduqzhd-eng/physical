@@ -14,7 +14,7 @@
 .flow.activity-tools-scope .chips button{border-color:var(--forest-line, #dedfd2);border-radius:24px;background:var(--forest-paper, #fffefa);color:var(--forest-accent, #52634a);padding:10px 18px;min-height:46px;font-size:14px}
 .flow.activity-tools-scope .chips button[aria-pressed=true]{background:var(--forest-accent, #576c50);color:var(--forest-on, #fffefa);border-color:var(--forest-line, #576c50)}
 .flow.activity-tools-scope label{font-size:14px;color:var(--forest-accent, #52634a);font-weight:700}
-.flow.activity-tools-scope :is(input,select){background:var(--forest-paper, #fffefa);color:var(--forest-ink, #354239);border:1px solid var(--forest-line, #cbd1bf);border-radius:13px;font-size:16px;min-height:50px}
+.flow.activity-tools-scope :is(input:not([type=checkbox]):not([type=radio]),select){background:var(--forest-paper, #fffefa);color:var(--forest-ink, #354239);border:1px solid var(--forest-line, #cbd1bf);border-radius:13px;font-size:16px;min-height:50px}
 .flow.activity-tools-scope details{border:1px solid var(--forest-line, #e0dfd3);background:var(--forest-paper, #fffefa);border-radius:15px;padding:16px 18px}
 .flow.activity-tools-scope summary{font-size:14px;line-height:1.6;color:var(--forest-accent, #52634a);min-height:24px}
 .flow.activity-tools-scope .grid.three{gap:22px}
