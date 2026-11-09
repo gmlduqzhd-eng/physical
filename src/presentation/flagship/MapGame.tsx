@@ -1,8 +1,10 @@
 import {useState} from 'react';
 import {STATIONS,STATION_NAMES,mapOrder,type ExpeditionSnapshot} from '../../domain/flagship';
+import {useReportDevice} from './deviceStatusContext';
 import {StationScanner} from './StationScanner';
 export type ExpeditionAction=(kind:string,data?:Record<string,unknown>)=>Promise<boolean>;
 export function MapGame({snapshot:s,send,practice,disabled}:{snapshot:ExpeditionSnapshot;send:ExpeditionAction;practice:boolean;disabled:boolean}){
+ useReportDevice('touch','manual');
  const [token,setToken]=useState(''),[confirmed,setConfirmed]=useState(false),[message,setMessage]=useState('');
  const me=s.groups.find(g=>g.id===s.groupId)??s.groups[0];
  return <><div className="expedition-map" aria-label="공유 탐사 지도"><svg viewBox="0 0 600 220" role="img" aria-label={`원정길 ${s.phase} / 3 개방`}><path d="M65 165 Q150 20 250 120 T535 65" fill="none" stroke="var(--forest-line)" strokeWidth="14" strokeDasharray="12 10"/>{STATIONS.map((station,i)=><g key={station} transform={`translate(${100+i*200},${i===1?75:135})`}><circle r="45" fill={me.visited.includes(station)?'#d4edc4':'#eee8da'}/><text textAnchor="middle" y="6" fill="#243d32" fontSize="22">{STATION_NAMES[station]}</text></g>)}</svg><p className="flagship-progress">기지 관문 <strong>{s.phase} / 3</strong></p></div>

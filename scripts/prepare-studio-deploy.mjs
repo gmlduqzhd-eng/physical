@@ -21,7 +21,7 @@ const files = [
   'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts', 'server/studioRateLimit.ts', 'server/teacherAccounts.ts',
   'src/presentation/components/TeacherAccountForm.tsx', 'src/presentation/components/GoogleTeacherCallback.tsx', 'src/application/teacherGoogle.ts', 'src/presentation/components/TeacherAuthGuard.css',
   'teacher-studio/studioRequest.ts', 'teacher-studio/localChallenge.ts',
-  'src/domain/flagship.ts', 'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
+  'src/domain/publicLessonTransfer.ts', 'src/domain/expeditionWorkshop.ts', 'src/domain/flagship.ts', 'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
   'src/domain/expeditionGames.ts', 'src/domain/expeditionCatalog.ts',
   'src/domain/gameLifecycle.ts', 'src/domain/safetyLessons.ts', 'src/domain/gameResultDetails.ts',
   'src/domain/expeditionRules.ts',

@@ -2,7 +2,7 @@ import {isFlagship} from '../domain/flagship';
 import {FlagshipControl} from './flagship/FlagshipControl';
 import { ClassroomScoreReview } from './components/ClassroomScoreReview';
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
 import { timeOffset } from '../application/timeSync';
@@ -19,6 +19,8 @@ import './GuidedClassroom.css';
 export function GuidedClassroom() {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location=useLocation();
+  const setupNotice=typeof location.state?.setupNotice==='string'?location.state.setupNotice:'';
   const { gameRoom: room, scores, template, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, timeLeft } = useGameTimer(room);
   const [busy, setBusy] = useState(false);
@@ -63,7 +65,7 @@ export function GuidedClassroom() {
       <div role="alert" className="error"><p>{accessMissing ? '현재 접속 정보로 이 수업방을 열 수 없습니다. 방이 만료·삭제되었거나, 이 탭에 수업방 소유 권한이 없을 수 있습니다.' : error || '수업을 찾지 못했습니다.'}</p><button onClick={refresh}>다시 확인</button></div>
       {accessMissing && <section className="card guided-reconnect" aria-label="수업방 재접속 안내"><h1>수업방 다시 연결하기</h1><p>수업을 만든 탭이 열려 있다면 그 탭에서 새로고침해 주세요. 새 탭이나 다른 기기에서는 교사 인증만으로 이전 수업방을 가져올 수 없습니다.</p><p>원래 탭을 닫았다면 미리 보관한 수업 PIN과 교사 복구키로 복구할 수 있습니다. 복구키가 없다면 원래 탭을 먼저 확인해 주세요.</p><Link to="/teacher/setup?resume=1">이 탭에서 만든 수업 목록 보기</Link><RecoverClassroom onRecovered={id=>navigate('/teacher/room/'+id,{replace:true})}/></section>}
     </> : <>
-      <div className="guided-intro"><p className="eyebrow">{status}</p><h1>{room.name}</h1><p>모둠의 참여와 활동 시간을 한눈에 살펴보세요.</p></div>
+      {setupNotice&&<p role="alert" className="notice">{setupNotice}</p>}<div className="guided-intro"><p className="eyebrow">{status}</p><h1>{room.name}</h1><p>모둠의 참여와 활동 시간을 한눈에 살펴보세요.</p></div>
       <div className="grid guided-overview">
         <section className="card guided-action-card">
           <h2>수업 조작</h2>

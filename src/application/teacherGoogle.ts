@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import {savePublicSetupReturn} from '../domain/publicLessonTransfer';
 type Endpoint='teacher'|'studio';
 const clients:Partial<Record<Endpoint,()=>Promise<SupabaseClient>>>={};
 const callbacks:Partial<Record<Endpoint,Promise<void>>>={};
@@ -17,6 +18,7 @@ export async function beginTeacherGoogle(endpoint:Endpoint){
  const {data,error}=await client.auth.signInWithOAuth({provider:'google',options:{redirectTo,skipBrowserRedirect:true,scopes:'openid email',queryParams:{prompt:'select_account'}}});
  if(error||!data.url)throw Error('Google 로그인 창을 열지 못했습니다. 잠시 후 다시 시도해 주세요.');
  window.dispatchEvent(new Event('physical-teacher-oauth-start'));
+ if(endpoint==='teacher')savePublicSetupReturn();
  location.assign(data.url);
 }
 export function finishTeacherGoogle(endpoint:Endpoint):Promise<void>{

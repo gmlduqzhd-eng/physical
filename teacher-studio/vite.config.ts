@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath } from 'node:url';
 export default defineConfig({
+  cacheDir: fileURLToPath(new URL('../node_modules/.vite-studio', import.meta.url)),
+  optimizeDeps: { include: ['qrcode'] },
   root: fileURLToPath(new URL('.', import.meta.url)),
   plugins: [react(), { name: 'deny-environment-files', configureServer(server) {
     server.middlewares.use((req, res, next) => {

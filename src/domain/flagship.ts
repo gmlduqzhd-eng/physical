@@ -1,5 +1,6 @@
 import type {GameDef} from './gamesData.js';
 import type {LessonGameMeta} from '../data/lessonGameCatalog.js';
+import type {GroupWorkshop,WorkshopSnapshot} from './expeditionWorkshop.js';
 
 export const FLAGSHIP_IDS=['expedition-map','expedition-ship','expedition-loop','expedition-rescue','expedition-shadow','expedition-boss'] as const;
 export type FlagshipId=typeof FLAGSHIP_IDS[number];
@@ -24,15 +25,15 @@ export function groupClue(index:number,seed:number){const order=mapOrder(seed);r
 export const SHIP_TARGETS=[{x:25,y:25},{x:75,y:65},{x:50,y:30}];
 export interface ShipState{x:number;y:number;vx:number;vy:number;checkpoint:number;bumps:number}
 export const initialShip=():ShipState=>({x:50,y:80,vx:0,vy:0,checkpoint:0,bumps:0});
-export function shipStep(s:ShipState,x:number,y:number,ms:number):ShipState{
- const dt=Math.min(0.5,Math.max(0,ms/1000));const vx=(s.vx+Math.max(-1,Math.min(1,x))*32*dt)*Math.pow(.35,dt),vy=(s.vy+Math.max(-1,Math.min(1,y))*32*dt)*Math.pow(.35,dt);
+export function shipStep(s:ShipState,x:number,y:number,ms:number,tuning={radius:9,drag:.35,gain:32,speed:14},targets:readonly {x:number;y:number}[]=SHIP_TARGETS):ShipState{
+ const dt=Math.min(0.5,Math.max(0,ms/1000));const vx=(s.vx+Math.max(-1,Math.min(1,x))*tuning.gain*dt)*Math.pow(tuning.drag,dt),vy=(s.vy+Math.max(-1,Math.min(1,y))*tuning.gain*dt)*Math.pow(tuning.drag,dt);
  const nx=s.x+vx*dt,ny=s.y+vy*dt,bump=nx<5||nx>95||ny<5||ny>95;const p={...s,x:Math.max(5,Math.min(95,nx)),y:Math.max(5,Math.min(95,ny)),vx:bump?-vx*.3:vx,vy:bump?-vy*.3:vy,bumps:s.bumps+(bump?1:0)};
- const target=SHIP_TARGETS[s.checkpoint];if(target&&Math.hypot(p.x-target.x,p.y-target.y)<9&&Math.hypot(vx,vy)<14)p.checkpoint++;return p;
+ const target=targets[s.checkpoint];if(target&&Math.hypot(p.x-target.x,p.y-target.y)<tuning.radius&&Math.hypot(vx,vy)<tuning.speed)p.checkpoint++;return p;
 }
 export const LOOP_PATTERNS=[[1,0,1,0,1,0,1,0],[0,1,0,1,0,1,0,1],[1,0,0,1,0,0,1,0],[1,1,0,0,1,1,0,0]];
-export function rhythmScore(taps:number[],pattern:number[],beatMs=600){
+export function rhythmScore(taps:number[],pattern:number[],beatMs=600,tolerance=beatMs*.3){
  const used=new Set<number>();let hits=0,totalError=0;
- for(const t of taps){if(!Number.isFinite(t)||t<0||t>=beatMs*8)continue;const beat=Math.round(t/beatMs);if(beat<8&&pattern[beat]&&!used.has(beat)&&Math.abs(t-beat*beatMs)<=beatMs*.3){used.add(beat);hits++;totalError+=Math.abs(t-beat*beatMs);}}
+ for(const t of taps){if(!Number.isFinite(t)||t<0||t>=beatMs*8)continue;const beat=Math.round(t/beatMs);if(beat<8&&pattern[beat]&&!used.has(beat)&&Math.abs(t-beat*beatMs)<=tolerance){used.add(beat);hits++;totalError+=Math.abs(t-beat*beatMs);}}
  const expected=pattern.filter(Boolean).length;return {hits,expected,misses:Math.max(0,taps.length-hits),accuracy:Math.max(0,Math.round((hits-Math.max(0,taps.length-hits)*.25)/expected*100)),meanError:hits?Math.round(totalError/hits):0};
 }
 export function trajectory(angle:number,power:number,wind:number){
@@ -40,7 +41,7 @@ export function trajectory(angle:number,power:number,wind:number){
  for(let t=0;t<=8;t+=.04){const x=5+Math.cos(rad)*v*t+.5*wind*t*t,y=8+Math.sin(rad)*v*t-5*t*t;points.push({x,y});if(t>.04&&y<=0)break;}return points;
 }
 export const RESCUE_ROUNDS=[{target:50,wind:0},{target:70,wind:-2},{target:85,wind:2}];
-export function rescueHit(angle:number,power:number,round:number){const r=RESCUE_ROUNDS[round];if(!r||!Number.isFinite(angle)||!Number.isFinite(power))return false;const points=trajectory(angle,power,r.wind),end=points[points.length-1];return Math.abs(end.x-r.target)<=9;}
+export function rescueHit(angle:number,power:number,round:number,radius=9){const r=RESCUE_ROUNDS[round];if(!r||!Number.isFinite(angle)||!Number.isFinite(power))return false;const points=trajectory(angle,power,r.wind),end=points[points.length-1];return Math.abs(end.x-r.target)<=radius;}
 export type PosePoint={x:number;y:number;visibility?:number};
 export function armInput(points:PosePoint[]){
  const shoulder=points[12],wrist=points[16];if(!shoulder||!wrist||![shoulder.x,shoulder.y,wrist.x,wrist.y].every(Number.isFinite)||(shoulder.visibility??0)<.65||(wrist.visibility??0)<.65||Math.hypot(wrist.x-shoulder.x,wrist.y-shoulder.y)<.08)return null;
@@ -48,5 +49,5 @@ export function armInput(points:PosePoint[]){
 }
 export function shadowDistance(a:{x:number;y:number},b:{x:number;y:number},mirror:boolean){return Math.hypot(a.x-(mirror?1-b.x:b.x),a.y-b.y);}
 
-export type GroupProgress={id:string;name:string;visited:Station[];vote:string|null;done:boolean;ship:ShipState;axes:{value:number;at:number;claimed:boolean;mine:boolean}[];loop:number[];quality:number;mode:string};
-export type ExpeditionSnapshot={runId:string;game:FlagshipId;seed:number;phase:number;status:string;revision:number;serverTime:number;startedAt:number;event:string;groups:GroupProgress[];clue:string|null;codes?:Record<Station,string>;owner:boolean;groupId:string|null};
+export type GroupProgress={id:string;name:string;visited:Station[];vote:string|null;done:boolean;ship:ShipState;axes:{value:number;at:number;claimed:boolean;mine:boolean}[];loop:number[];quality:number;mode:string;workshop?:GroupWorkshop};
+export type ExpeditionSnapshot={runId:string;game:FlagshipId;seed:number;phase:number;status:string;revision:number;serverTime:number;startedAt:number;event:string;groups:GroupProgress[];clue:string|null;codes?:Record<Station,string>;owner:boolean;groupId:string|null;workshop?:WorkshopSnapshot};
