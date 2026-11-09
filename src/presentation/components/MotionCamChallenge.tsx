@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { X, Camera, RefreshCw, AlertCircle, Play } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
 import { useVoiceCoach } from '../../application/useVoiceCoach';
 import { useModalDialog } from '../../application/useModalDialog';
+import {useMotionCamera} from '../../application/useMotionCamera';
 
 interface MotionCamChallengeProps {
   isOpen: boolean;
@@ -13,169 +14,13 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
   const { playBeep } = useAudio();
   const { speak, stop } = useVoiceCoach();
 
-  const [cameraActive, setCameraActive] = useState<boolean>(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [motionCount, setMotionCount] = useState<number>(0);
-  const [motionEnergy, setMotionEnergy] = useState<number>(0);
-  const [isStarting, setIsStarting] = useState(false);
-
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const prevImageData = useRef<ImageData | null>(null);
-  const animFrameId = useRef<number | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const lastTriggerTime = useRef<number>(0);
-  const lastFrameTime = useRef(0);
-  const countRef = useRef(0);
-  const requestSequence = useRef(0);
-  const requestPending = useRef(false);
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
-  const trackingRef = useRef(false);
-
-  const stopCamera = useCallback(() => {
-    requestSequence.current += 1;
-    requestPending.current = false;
-    trackingRef.current = false;
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    if (animFrameId.current !== null) {
-      cancelAnimationFrame(animFrameId.current);
-      animFrameId.current = null;
-    }
-    if (videoRef.current) videoRef.current.srcObject = null;
-    prevImageData.current = null;
-    lastTriggerTime.current = 0;
-    setCameraActive(false);
-    setIsStarting(false);
-    setMotionEnergy(0);
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) { stopCamera(); stop(); }
-    return stopCamera;
-  }, [isOpen, stopCamera, stop]);
-
-  const startCamera = async () => {
-    if (requestPending.current || trackingRef.current) return;
-    setErrorMsg(null);
-    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      setErrorMsg('이 브라우저에서는 카메라를 사용할 수 없습니다. HTTPS 주소를 크롬이나 사파리에서 열어 주세요.');
-      return;
-    }
-    requestPending.current = true;
-    setIsStarting(true);
-    const sequence = ++requestSequence.current;
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: 320, height: 240 },
-        audio: false
-      });
-      if (!isOpenRef.current || sequence !== requestSequence.current) {
-        stream.getTracks().forEach(track => track.stop());
-        return;
-      }
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        if (!isOpenRef.current || sequence !== requestSequence.current) {
-          stream.getTracks().forEach(track => track.stop());
-          return;
-        }
-        setCameraActive(true);
-        trackingRef.current = true;
-        speak('카메라 모션 감지가 시작되었습니다. 2미터 뒤로 물러서서 몸을 움직여보세요!', true);
-        startMotionTracking();
-        stream.getVideoTracks().forEach(track => track.addEventListener('ended', () => {
-          if (streamRef.current !== stream) return;
-          stopCamera();
-          setErrorMsg('카메라 연결이 종료되었습니다. 다시 켜기를 눌러 주세요.');
-        }, { once: true }));
-      } else { stopCamera(); }
-    } catch (error) {
-      if (!isOpenRef.current || sequence !== requestSequence.current) return;
-      stopCamera();
-      const name = error instanceof Error ? error.name : '';
-      setErrorMsg(name === 'NotFoundError' ? '사용할 카메라를 찾을 수 없습니다. 카메라가 있는 기기에서 열어 주세요.'
-        : name === 'NotReadableError' ? '다른 앱이 카메라를 사용 중입니다. 해당 앱을 닫고 다시 시도해 주세요.'
-        : name === 'NotAllowedError' ? '카메라 접근이 거부되었습니다. 브라우저 주소창의 사이트 권한에서 카메라를 허용한 후 다시 켜 주세요.'
-        : '카메라를 시작할 수 없습니다. 브라우저와 카메라 연결을 확인한 후 다시 시도해 주세요.');
-    } finally {
-      if (sequence === requestSequence.current) {
-        requestPending.current = false;
-        setIsStarting(false);
-      }
-    }
-  };
-
-  const startMotionTracking = () => {
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) { stopCamera(); return; }
-
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) { stopCamera(); setErrorMsg('이 브라우저에서는 모션 감지를 실행할 수 없습니다.'); return; }
-    canvas.width = 64;
-    canvas.height = 48;
-
-    const checkFrame = (timestamp: number) => {
-      if (!trackingRef.current) return;
-      if (timestamp - lastFrameTime.current < 100) {
-        animFrameId.current = requestAnimationFrame(checkFrame);
-        return;
-      }
-      lastFrameTime.current = timestamp;
-      if (!video.videoWidth || !video.videoHeight) {
-        animFrameId.current = requestAnimationFrame(checkFrame);
-        return;
-      }
-
-      try {
-      ctx.drawImage(video, 0, 0, 64, 48);
-
-      const currentImageData = ctx.getImageData(0, 0, 64, 48);
-      const curr = currentImageData.data;
-
-      if (prevImageData.current) {
-        const prev = prevImageData.current.data;
-        let diffScore = 0;
-
-        for (let i = 0; i < curr.length; i += 4) {
-          const rDiff = Math.abs(curr[i] - prev[i]);
-          const gDiff = Math.abs(curr[i + 1] - prev[i + 1]);
-          const bDiff = Math.abs(curr[i + 2] - prev[i + 2]);
-          if (rDiff + gDiff + bDiff > 80) {
-            diffScore++;
-          }
-        }
-
-        const energy = Math.min(100, Math.floor((diffScore / (64 * 48)) * 300));
-        setMotionEnergy(energy);
-
-        // 움직임이 특정 임계치(35% 이상)를 넘고, 쿨다운(700ms)이 지났을 때 카운트
-        const now = Date.now();
-        if (energy > 35 && now - lastTriggerTime.current > 700) {
-          lastTriggerTime.current = now;
-          const next = ++countRef.current;
-          setMotionCount(next);
-          playBeep();
-          if (next % 5 === 0) speak(`${next}회 달성! 좋아요!`, true);
-        }
-      }
-
-      prevImageData.current = currentImageData;
-      animFrameId.current = requestAnimationFrame(checkFrame);
-      } catch {
-        stopCamera();
-        setErrorMsg('카메라 화면을 읽을 수 없습니다. 카메라를 다시 켜 주세요.');
-      }
-    };
-
-    animFrameId.current = requestAnimationFrame(checkFrame);
-  };
+  const camera=useMotionCamera(),stopCamera=camera.stop,videoRef=camera.video,canvasRef=camera.canvas;
+  const cameraActive=camera.status==='tracking'||camera.status==='lost',isStarting=camera.status==='loading';
+  const errorMsg=camera.status==='error'?camera.message:null,motionCount=camera.count,motionEnergy=camera.energy;
+  const previousCount=useRef(0);
+  useEffect(()=>{if(!isOpen){stopCamera();stop();}},[isOpen,stopCamera,stop]);
+  useEffect(()=>{if(motionCount>previousCount.current){playBeep();if(motionCount%5===0)speak(motionCount+'회 감지했어요.',true);}previousCount.current=motionCount;},[motionCount,playBeep,speak]);
+  const startCamera=()=>{void camera.start();};
 
   const handleClose = () => {
     stopCamera();
@@ -202,7 +47,7 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
           </div>
           <h2 className="text-xl font-black">모션 감지 캠 챌린지</h2>
           <p className="text-xs text-slate-400">
-            폰을 바닥에 세워두고 온몸으로 점프하거나 팔을 흔드세요!
+            기기를 안정적으로 거치하고 개인 공간에서 작은 팔 동작으로 시작해요.
           </p>
         </div>
 
@@ -213,6 +58,9 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
           </div>
         )}
 
+        <label className="block text-sm mb-3">모션 카메라 모드<select aria-label="모션 카메라 모드" className="block w-full min-w-0 rounded-xl p-3 mt-2 bg-slate-800 text-white" value={camera.mode} disabled={isStarting} onChange={e=>void camera.changeMode(e.target.value as 'auto'|'compatibility')}><option value="auto">자동 최적화</option><option value="compatibility">호환 모드 · 끊길 때 선택</option></select></label>
+        <p className="text-xs text-slate-400 mb-3">영상은 이 기기 안에서만 비교하며 저장·전송하지 않아요. 화면 변화 횟수이며 자세·운동 횟수의 정확한 측정이 아닙니다.</p>
+        {camera.message&&<p role="status" className="text-sm mb-3">{camera.message}</p>}
         {/* 비디오 & 모션 감지 디스플레이 */}
         <div className="relative bg-slate-950 rounded-2xl overflow-hidden aspect-video border border-slate-800 mb-4 flex items-center justify-center">
           <video
@@ -236,7 +84,7 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
           ) : (
             <div className="absolute top-3 left-3 bg-black/60 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-              모션 감지 중
+              {camera.status==='tracking'?'새 영상 감지 중':'영상 복구 대기 · 판정 중지'}
             </div>
           )}
         </div>
@@ -266,10 +114,11 @@ export const MotionCamChallenge: React.FC<MotionCamChallengeProps> = ({ isOpen, 
           </div>
         )}
 
+        {cameraActive&&<button onClick={stopCamera} className="w-full py-3 mb-3 rounded-xl bg-slate-800 text-white">카메라 끄기</button>}
         <div className="flex gap-2">
           {cameraActive && (
             <button
-              onClick={() => { countRef.current = 0; setMotionCount(0); prevImageData.current = null; lastTriggerTime.current = Date.now(); }}
+              onClick={camera.reset}
               className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1 border border-slate-700"
             >
               <RefreshCw className="w-3.5 h-3.5" /> 카운트 초기화

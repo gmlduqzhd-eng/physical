@@ -8,7 +8,7 @@ import { useAudio } from '../application/useAudio';
 import { useOutdoorMode } from '../application/useOutdoorMode';
 import { useWakeLock } from '../application/useWakeLock';
 import { GameIcons as LucideIcons } from './icons';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import {MissionQrScanner} from './components/MissionQrScanner';
 import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -295,41 +295,13 @@ export const MobileMissionView = () => {
     }
   };
 
-  const handleTreasureFoundRef = useRef(handleTreasureFound);
-  useEffect(() => { handleTreasureFoundRef.current = handleTreasureFound; });
-
   const [showScanner, setShowScanner] = useState(false);
-
-  useEffect(() => {
-    if (showScanner) {
-      if (!document.getElementById('reader')) return;
-      let handled = false;
-      const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: { width: 250, height: 250 } }, false);
-      scanner.render(
-        (decodedText) => {
-          if (handled) return;
-          handled = true;
-          void scanner.clear().catch(() => {});
-          setShowScanner(false);
-          
-          if (decodedText.startsWith('TREASURE_')) {
-            setTimeout(() => handleTreasureFoundRef.current(decodedText), 100);
-            return;
-          }
-
-          const mission = template?.buttons?.find((m: import('../domain/types').MissionButton) => m.id === decodedText);
-          if (mission) {
-             const fakeEvent = { preventDefault: () => {}, clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 };
-             setTimeout(() => handleMissionCompleteRef.current(mission as import('../domain/types').MissionButton, fakeEvent as unknown as React.MouseEvent), 100);
-          } else {
-             alert('❌ 게임에 등록되지 않은 QR 코드입니다.');
-          }
-        },
-        () => {}
-      );
-      return () => { scanner.clear().catch(()=>{}); };
-    }
-  }, [showScanner, template]);
+  const handleScannedQr=(decodedText:string)=>{
+    setShowScanner(false);
+    if(decodedText.startsWith('TREASURE_')){void handleTreasureFound(decodedText);return;}
+    const mission=template?.buttons?.find((m:import('../domain/types').MissionButton)=>m.id===decodedText);
+    if(mission){const event={preventDefault:()=>{},clientX:window.innerWidth/2,clientY:window.innerHeight/2};void handleMissionCompleteRef.current(mission,event as unknown as React.MouseEvent);}
+  };
 
   useEffect(() => {
     if (gameRoom && gameRoom.status === 'waiting') {
@@ -592,7 +564,7 @@ export const MobileMissionView = () => {
               <span className="text-white font-bold">QR 미션 스캐너</span>
               <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-3 py-1 rounded font-bold text-sm">닫기</button>
             </div>
-            <div id="reader" className="flex-1 w-full bg-black" style={{ minHeight: '300px' }}></div>
+            <div className="flex-1 overflow-y-auto text-white"><MissionQrScanner key={`${roomId}:${groupId}`} missionIds={template?.buttons?.map(m=>m.id)??[]} onRead={handleScannedQr} disabled={Boolean(isLocked||cooldown)}/></div>
           </div>
         )}
       </>
@@ -799,7 +771,7 @@ export const MobileMissionView = () => {
                 <span className="text-white font-bold">QR 미션 스캐너</span>
                 <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-3 py-1 rounded font-bold text-sm">닫기</button>
               </div>
-              <div id="reader" className="flex-1 w-full bg-black" style={{ minHeight: '300px' }}></div>
+              <div className="flex-1 overflow-y-auto text-white"><MissionQrScanner key={`${roomId}:${groupId}`} missionIds={template?.buttons?.map(m=>m.id)??[]} onRead={handleScannedQr} disabled={Boolean(isLocked||cooldown)}/></div>
             </div>
           )}
           {isLocked && !myGroup?.is_hacked && (

@@ -53,12 +53,13 @@
     "test:safety:ui": "tsx scripts/safety-lessons-regressions.ts",
     "test:operations": "tsx --test scripts/operations.test.ts scripts/teacher-account-api.test.ts",
     "healthcheck": "node scripts/healthcheck.mjs",
-    "verify:release": "npm run lint && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
+    "verify:release": "npm run lint && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:camera && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
     "test:regression": "tsx --test scripts/background-music-routes.test.ts scripts/participation-cues.test.ts scripts/studio-ui-state.test.ts scripts/studio-rate-limit.test.ts",
     "prepare:vision": "node scripts/prepare-vision.mjs",
     "test:flagship": "tsx --test scripts/flagship.test.ts",
     "test:flagship:devices": "tsx --test scripts/flagship-devices.test.ts",
-    "test:workshop": "tsx --test scripts/expedition-workshop.test.ts"
+    "test:workshop": "tsx --test scripts/expedition-workshop.test.ts",
+    "test:camera": "tsx --test scripts/camera-stability.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",
