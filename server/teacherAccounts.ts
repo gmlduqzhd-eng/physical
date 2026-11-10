@@ -51,6 +51,14 @@ export async function legacyTeacherEnabled(){
   if(!response.ok)throw new TeacherAccountError(503,'교사 인증 정책을 확인하지 못했습니다.');
   return (await response.json())===true;
 }
+export async function legacyTeacherLoginEnabled(){
+  const secret=process.env.CLASSROOM_TEACHER_BOOTSTRAP??process.env.STUDIO_LIMIT_SECRET;
+  if(process.env.NODE_ENV!=='production'&&!secret)return true;
+  if(!secret)throw new TeacherAccountError(503,'교사 인증 서버 설정을 확인해 주세요.');
+  const response=await authFetch('/rest/v1/rpc/check_shared_teacher_login',{server_secret:secret});
+  if(!response.ok)throw new TeacherAccountError(503,'교사 로그인 전환 상태를 확인하지 못했습니다.');
+  return (await response.json())===true;
+}
 export async function sharedTeacherLoginAttempt(address:string){
   const secret=process.env.CLASSROOM_TEACHER_BOOTSTRAP;
   if(!secret)throw new TeacherAccountError(503,'교사 로그인 제한 서버 설정을 확인해 주세요.');

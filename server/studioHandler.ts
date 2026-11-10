@@ -1,4 +1,4 @@
-import { activeTeacherSession, legacyTeacherEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError } from './teacherAccounts.js';
+import { activeTeacherSession, legacyTeacherLoginEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError } from './teacherAccounts.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
 import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from './teacherSession.js';
@@ -43,7 +43,7 @@ export default async function handler(req: Request, res: ServerResponse) {
   let nonce = session(req, scope);
   try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
   if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
-  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });
+  if (req.method === 'GET' && action === 'status') {try{return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled:await legacyTeacherLoginEnabled(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });}catch{return send(503,{error:'교사 로그인 전환 상태를 확인하지 못했습니다.'});}}
   if (req.method === 'GET' && action === 'usage') {
     if(!nonce)return send(401,{error:'교사 인증이 필요합니다.'});
     try{return send(200,await studioUsage());}catch{return send(503,{error:'사용량 정보를 확인하지 못했습니다.'});}
@@ -71,7 +71,7 @@ export default async function handler(req: Request, res: ServerResponse) {
       res.setHeader('Set-Cookie', cookie(newSession(scope, account.nonce), false, scope));return send(200,{authenticated:true});
     }
     if (action === 'login') {
-      if(!await legacyTeacherEnabled())return send(401,{error:'공유 접근 코드 사용이 종료되었습니다. 교사 이메일 계정으로 로그인해 주세요.'});
+      if(!await legacyTeacherLoginEnabled())return send(401,{error:'새 공유 코드 로그인이 종료되었습니다. Google 계정으로 로그인해 주세요.'});
       if (!authConfigured()) return send(503, { error: '서버의 교사 인증 설정이 필요합니다.' });
       const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
       if (!rateLimit('studio-login:' + address, 8, 900000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });

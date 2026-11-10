@@ -2,10 +2,18 @@ import {parseLoginConditions} from '../teacher-studio/loginConditions';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isFreshClassroomRecord,CLASSROOM_STORAGE_TTL,cleanClassroomStorage } from '../src/application/storageRetention';
-import { activeTeacherSession,googleTeacherLogin,TeacherAccountError,sharedTeacherLoginAttempt } from '../server/teacherAccounts';
+import { activeTeacherSession,googleTeacherLogin,TeacherAccountError,sharedTeacherLoginAttempt,legacyTeacherLoginEnabled } from '../server/teacherAccounts';
 import { requestStudio,StudioRequestError } from '../teacher-studio/studioRequest';
 import { activityFingerprint } from '../src/domain/activityReview';
 import { AVAILABLE_GAMES } from '../src/domain/gamesData';
+
+test('shared-code cutover rejects new logins without revoking unexpired existing sessions',async()=>{
+ const original=globalThis.fetch,before={...process.env};
+ Object.assign(process.env,{NODE_ENV:'production',VITE_SUPABASE_URL:'https://synthetic-accounts.example',VITE_SUPABASE_ANON_KEY:'synthetic-key',CLASSROOM_TEACHER_BOOTSTRAP:'synthetic-bootstrap-not-real-123456789'});
+ globalThis.fetch=async input=>{const path=new URL(String(input)).pathname;if(path.endsWith('/check_shared_teacher_login'))return new Response('false');if(path.endsWith('/check_shared_teacher_access'))return new Response('true');throw Error('Unexpected request');};
+ try{assert.equal(await legacyTeacherLoginEnabled(),false);assert.equal(await activeTeacherSession('synthetic-existing-session'),true);}
+ finally{globalThis.fetch=original;for(const key of Object.keys(process.env))if(!(key in before))delete process.env[key];Object.assign(process.env,before);}
+});
 
 test('classroom records expire after eight hours and reject future/corrupt timestamps',()=>{
  const now=Date.now();assert(isFreshClassroomRecord(now,now));

@@ -1,6 +1,6 @@
 {
   "framework": "vite",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run verify:deploy",
   "outputDirectory": "dist",
   "rewrites": [
     {

@@ -29,7 +29,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   const actualFetch = globalThis.fetch;
   let limiterMode: 'allow' | 'deny' | 'offline' = 'allow';
   globalThis.fetch = async (request, init) => {
-    if (String(request).includes('/rpc/check_shared_teacher_access'))return new Response('true');
+    if (String(request).includes('/rpc/check_shared_teacher_access')||String(request).includes('/rpc/check_shared_teacher_login'))return new Response('true');
     if (String(request).startsWith('https://synthetic-limiter.example/')) {
       if (limiterMode === 'offline') throw new Error('synthetic-private-error');
       return new Response(JSON.stringify(limiterMode === 'deny' ? { allowed: false, retrySeconds: 37, reason: 'minute' } : { allowed: true, retrySeconds: 0, reason: JSON.parse(String(init?.body)).request_kind === 'release' ? 'released' : 'accepted' }));
@@ -38,7 +38,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   };
   try {
     const status = await fetch(url + '/api/studio?action=status');
-    assert.deepEqual(await status.json(), { authenticated: false, configured: true, aiReady: true, model: 'synthetic-model', localSetup: false });
+    assert.deepEqual(await status.json(), { authenticated: false, configured: true, legacyLoginEnabled: true, aiReady: true, model: 'synthetic-model', localSetup: false });
     assert.equal(status.headers.get('cache-control'), 'no-store');
     assert.equal((await post('generate', {})).status, 401);
     assert.equal((await post('generate', {}, newSession())).status, 401);
