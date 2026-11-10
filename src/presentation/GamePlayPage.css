@@ -2,6 +2,7 @@
 .gameplay-toolbar { min-height: 60px; background: var(--forest-bg); border-bottom: 1px solid var(--forest-line); }
 .gameplay-content > div { min-height: calc(100dvh - 76px); }
 .gameplay-content[hidden] { display: none; }
+.gameplay-toolbar .game-toolbar-title :is(strong,small) { white-space:normal; overflow:visible; text-overflow:clip; overflow-wrap:anywhere; }
 .gameplay-content button:focus-visible { outline: 3px solid var(--forest-accent); outline-offset: 3px; }
 .warm-game .game-result-cooldown { background:var(--forest-tint); color:var(--forest-ink); border-color:var(--forest-control-line); }
 .warm-game .game-result-cooldown:hover { background:var(--forest-paper); }

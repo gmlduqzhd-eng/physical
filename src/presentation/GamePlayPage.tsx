@@ -10,7 +10,7 @@ import {isSafetyLessonId,SAFETY_LESSONS,SAFETY_LESSON_IDS} from '../domain/safet
 import {SafetyLesson} from './components/minigames/common/SafetyLesson';
 import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
 import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { GAMES } from '../domain/gamesData';
 import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
 import { MovementQuest } from './components/minigames/common/MovementQuest';
@@ -269,6 +269,25 @@ const GamePlaySession = () => {
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
   const completionRef = useRef(false);
+  const gameLayoutRef = useRef<HTMLDivElement>(null);
+  const gameToolbarRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const layout = gameLayoutRef.current;
+    const toolbar = gameToolbarRef.current;
+    if (!hasStarted || !layout || !toolbar) return;
+    // Reserve the actual wrapped heading height, including after fonts or viewport changes.
+    const measure = () => {
+      const utilities = parseFloat(getComputedStyle(layout).getPropertyValue('--game-utility-height')) || 68;
+      layout.style.setProperty('--game-stage-offset', `${utilities + Math.ceil(toolbar.getBoundingClientRect().height)}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(toolbar);
+    return () => {
+      observer.disconnect();
+      layout.style.removeProperty('--game-stage-offset');
+    };
+  }, [hasStarted]);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
 
@@ -599,7 +618,7 @@ const GamePlaySession = () => {
   const renderGame=()=>variantsFor(gameType).length?<ConsolidatedActivity targetId={gameType} selected={variantId} solo={soloMode} groupId={dummyGroupId} enqueueAction={localEnqueueAction}>{renderBaseGame()}</ConsolidatedActivity>:renderBaseGame();
 
   return (
-    <div className="game-tools-scope game-tools-layout">
+    <div ref={gameLayoutRef} className="game-tools-scope game-tools-layout">
       <div className="game-utilities-bar"><HeaderToolbar><button className="icon-toolbar-action" type="button" onClick={handleReturnToCatalog} title="활동 목록으로"><ArrowLeft aria-hidden="true"/><span>활동 목록으로</span></button><button className="icon-toolbar-action" type="button" onClick={() => navigate('/manual')} title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
     <div className={`warm-game gameplay-page ${hasStarted ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 활동 준비 화면 */}
@@ -656,7 +675,7 @@ const GamePlaySession = () => {
 
       {/* 상단 네비게이션 */}
       {hasStarted && (
-        <div className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
+        <div ref={gameToolbarRef} className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
           <button onClick={handleReturnToCatalog} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
           <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
           {showDetailedResult && <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button>}

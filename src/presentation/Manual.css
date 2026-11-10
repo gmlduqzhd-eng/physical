@@ -26,3 +26,8 @@
 .manual-page .manual-content button[class*="bg-cyan-6"] *,.manual-page .manual-content button[class*="bg-purple-6"] *,.manual-page .manual-content button[class*="bg-emerald-6"] *{color:inherit!important}
 @media(max-width:700px){.flow.manual-page .manual-ai-link{align-items:stretch;flex-direction:column;gap:16px;padding:20px}.manual-ai-link button{width:100%}.flow.manual-page .manual-tabs{gap:8px}.flow.manual-page .manual-tabs button{font-size:13px;padding:10px}.manual-page .manual-content>.rounded-3xl{padding:20px!important}.manual-page .manual-content .text-sm{font-size:14px}}
 @media print{.manual-page{background:white!important}.manual-page .manual-content .shadow-2xl{box-shadow:none!important}}
+
+/* Multi-line activity choices need a full-width text column, not inline-flex sizing. */
+html[data-design=forest] .flow.manual-page button.lesson-game-option,
+.flow.manual-page button.lesson-game-option{display:block;min-width:0;max-width:100%;height:auto;border-radius:16px;white-space:normal;overflow-wrap:anywhere}
+.lesson-game-option p{white-space:normal;overflow-wrap:anywhere;line-height:1.7}

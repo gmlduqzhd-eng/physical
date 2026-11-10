@@ -18,3 +18,11 @@
 .flow.classroom-setup .lesson-preset-list button{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 15px;text-align:left;min-height:54px}
 .flow.classroom-setup .lesson-preset-list span{color:var(--forest-accent, #52634a);font-size:14px}
 @media(max-width:700px){.flow.classroom-setup .steps{gap:7px}.flow.classroom-setup .steps li{font-size:12px;padding:10px 5px;min-height:46px}.flow.classroom-setup .card:not(.catalog-card){padding:22px}.flow.classroom-setup .card>.row>button{flex:1 1 100%}.flow.classroom-setup .card .grid{gap:12px}}
+
+.lesson-package-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+html[data-design=forest] .flow.classroom-setup .lesson-package-option,
+.flow.classroom-setup .lesson-package-option{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px;padding:16px;min-width:0;max-width:100%;height:auto;border-radius:16px;text-align:left;white-space:normal;overflow-wrap:anywhere}
+.lesson-package-option strong{font-size:16px}
+.lesson-package-option span{font-size:13px;line-height:1.8;font-weight:400;min-width:0}
+html[data-design=forest] .flow.classroom-setup .lesson-preset-list button{border-radius:16px;min-width:0;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:700px){.lesson-package-options{grid-template-columns:minmax(0,1fr)}}

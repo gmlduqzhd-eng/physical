@@ -804,10 +804,10 @@ export const GameHub = () => {
                     <div className="flex items-start gap-3.5 mb-2.5">
                       <GameMotionIcon gameType={game.type} domain={game.domain} size="md" showBadge={true} />
                       <div className="flex-1 min-w-0 pt-0.5">
-                        <h3 className="font-black text-base text-white line-clamp-2 group-hover:text-cyan-300 transition-colors">
+                        <h3 className="font-black text-base text-white group-hover:text-cyan-300 transition-colors">
                           {game.name}
                         </h3>
-                        <p className="text-slate-400 text-xs font-medium line-clamp-1 mt-1">
+                        <p className="text-slate-400 text-xs font-medium mt-1">
                           {game.desc}
                         </p>
                       </div>
@@ -815,10 +815,10 @@ export const GameHub = () => {
 
                     {/* 세부 활동 카테고리 & 성취기준 요지 */}
                     <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 mb-3">
-                      <div className="text-[11px] font-bold text-slate-300 truncate">
+                      <div className="text-[11px] font-bold text-slate-300">
                         🎯 {game.subCategory}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate mt-0.5">
+                      <div className="text-[10px] text-slate-400 mt-0.5">
                         {game.achievement.title}
                       </div>
                     </div>
@@ -879,8 +879,8 @@ export const GameHub = () => {
               <button key={game.type} onClick={() => navigate(`/play/${game.type}`)} className={`p-3 rounded-xl border ${domainColor} flex items-center gap-3 hover:scale-[1.02] transition-all text-left group`}>
                 <GameMotionIcon gameType={game.type} domain={game.domain} size="sm" showBadge={false} />
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-white truncate group-hover:text-cyan-300 transition-colors whitespace-nowrap">{game.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate whitespace-nowrap">{game.subCategory}</p>
+                  <p className="font-bold text-sm text-white group-hover:text-cyan-300 transition-colors">{game.name}</p>
+                  <p className="text-[10px] text-slate-400">{game.subCategory}</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-cyan-400 shrink-0" />
               </button>

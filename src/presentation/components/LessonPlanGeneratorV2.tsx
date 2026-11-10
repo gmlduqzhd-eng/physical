@@ -685,7 +685,7 @@ export const LessonPlanGeneratorV2 = () => {
 
           {/* 🙋 학생 자기평가 */}
           <SectionCard title="🙋 학생 자기평가" id="selfEval">
-            <div className="flex gap-4 mb-3">{['😊 잘했어요', '🙂 조금 더 연습할래요', '😐 아직 어려워요'].map(e => <span key={e} className="px-3 py-1.5 bg-slate-800 rounded-xl text-xs font-bold text-slate-300 border border-slate-700">{e}</span>)}</div>
+            <div className="flex flex-wrap gap-3 mb-3">{['😊 잘했어요', '🙂 조금 더 연습할래요', '😐 아직 어려워요'].map(e => <span key={e} className="px-3 py-1.5 bg-slate-800 rounded-xl text-xs font-bold text-slate-300 border border-slate-700">{e}</span>)}</div>
             {plan.selfEval.items.map((it, i) => <div key={i} className="text-xs text-slate-300 flex items-start gap-2 mb-1"><span className="text-emerald-400">☐</span>{it}</div>)}
           </SectionCard>
 
@@ -898,16 +898,16 @@ export const LessonPlanGeneratorV2 = () => {
                 <div className="max-h-64 overflow-y-auto space-y-2 pr-1">
                   {filteredGames.map(g => (
                     <button key={g.id} onClick={() => { setSelectedGame(g); setShowGamePicker(false); }}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${selectedGame?.id === g.id ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-500 dark:border-purple-600' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}>
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">{g.emoji}</span>
+                      className={`lesson-game-option w-full text-left p-3 rounded-xl border transition-all ${selectedGame?.id === g.id ? 'bg-purple-100 dark:bg-purple-900/30 border-purple-500 dark:border-purple-600' : 'bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700/50'}`}>
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0">{g.emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-900 dark:text-white">{g.title}</span>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="basis-full text-xs font-bold text-slate-900 dark:text-white">{g.title}</span>
                             <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-400 border border-slate-300 dark:border-slate-700">{g.domain}</span>
                             <span className={`text-[9px] px-1.5 py-0.5 rounded border ${g.intensity === '높음' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-300 dark:border-red-700/40' : g.intensity === '보통' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-700/40' : 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-700/40'}`}>{g.intensity}</span>
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{g.description}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{g.description}</p>
                         </div>
                         <ExternalLink className="w-3 h-3 text-slate-400 dark:text-slate-600 shrink-0" />
                       </div>
