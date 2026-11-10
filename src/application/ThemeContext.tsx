@@ -1,5 +1,4 @@
 import { useState, useLayoutEffect, createContext, useContext, type ReactNode } from 'react';
-import { readStorage, writeStorage } from './browserStorage';
 
 type Theme = 'dark' | 'light';
 
@@ -19,14 +18,11 @@ const ThemeContext = createContext<ThemeContextType>({
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = readStorage('physical_theme');
-    return (saved === 'light' || saved === 'dark') ? saved : 'light';
-  });
+  // Every fresh visit starts in daylight; manual changes last for this visit.
+  const [theme, setTheme] = useState<Theme>('light');
 
   // 첫 페인트 전에 .dark 클래스를 적용해 dark: 변형의 깜빡임을 방지
   useLayoutEffect(() => {
-    writeStorage('physical_theme', theme);
     const root = document.documentElement;
     if (theme === 'light') {
       root.classList.add('light-theme');
