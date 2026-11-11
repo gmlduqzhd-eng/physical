@@ -155,6 +155,20 @@ async function main() {
     assert.equal(player.render().profile.totalPlays, 1);
     view.resetProfile();
   });
+  check('participation counts survive repeated results, recent-list rollover and reload', () => {
+    const player = actor(profiles.usePlayerProfile); let view = player.render();
+    view.resetProfile(); view = player.render();
+    for(let i=0;i<24;i++){
+      const participation=['performed','observed','rested'][i%3];
+      view.addGameResult('stretch','분류 시험',participation==='performed'?100:0,undefined,undefined,{participation});
+      view=player.render();
+    }
+    assert.equal(view.profile.totalPlays,24); assert.equal(view.profile.recentGames.length,20);
+    assert.deepEqual({...view.profile.participationCounts},{performed:8,observed:8,rested:8});
+    const reloaded=profiles.normalizePlayerProfile(JSON.parse(sessionData.get('physical_player_profile')));
+    assert.deepEqual({...profiles.recordCounts(reloaded)},{performed:8,observed:8,rested:8,other:0});
+    view.resetProfile();
+  });
   check('RPE feedback remains attached to the previous game after replay result', () => {
     sessionData.delete('physical_player_profile');
     const player = actor(profiles.usePlayerProfile); let view = player.render();

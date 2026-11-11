@@ -29,6 +29,7 @@ interface Props {
 
 export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 1라운드 설계, 2: 1라운드 로봇 표현, 3: 역할 교대 안내, 4: 2라운드 설계, 5: 2라운드 표현, 6: 최종 창의 칭찬
+  const [challenge,setChallenge]=useState(false),[showDesign,setShowDesign]=useState(false);
   const [seated,setSeated]=useState(false),[difference,setDifference]=useState<string[]>([]),[compared,setCompared]=useState(false),[comparison,setComparison]=useState('');
   const [labStep, setLabStep] = useState<number>(1);
 
@@ -76,7 +77,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl"><label className="activity-brief"><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉은 작은 팔·손·발끝 동작으로 재현하기</label>{seated&&<p>서거나 크게 움직일 필요 없이 같은 카드의 방향·순서를 작은 손짓으로 표현해요.</p>}
           {/* Step 1: 1라운드 설계 */}
-          {labStep === 1 && (
+          {labStep===1&&<label className="activity-brief"><input type="checkbox" checked={challenge} onChange={e=>setChallenge(e.target.checked)}/>도전: 두 번째 설계에서 한 부위만 바꾸고 기억해서 찾아요.</label>}{labStep === 1 && (
             <div className="py-2">
               <div className="flex justify-between items-center mb-3">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-950 text-purple-300 border border-purple-800">
@@ -227,7 +228,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
               <h3 className="text-lg font-black text-white text-center mb-1">새로운 로봇 동작 조합</h3>
               <p className="text-xs text-slate-400 text-center mb-4">
-                친구 B가 1라운드와 다른 새로운 조합을 만들어보세요!
+                {challenge?'한 부위만 바꿔야 다음 시범으로 갈 수 있어요.':'친구 B가 새로운 조합을 만들어보세요!'}
               </p>
 
               {/* 팔 동작 */}
@@ -288,7 +289,8 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => setLabStep(5)}
+                disabled={challenge&&changed.length!==1}
+                onClick={() => {setShowDesign(false);setLabStep(5);}}
                 className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white rounded-2xl font-black text-sm shadow-lg"
               >
                 2라운드 시퀀스 확정! 시연하기
@@ -341,10 +343,10 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
           )}
 
           {/* Step 6: 상호 칭찬 및 리포트 */}
-          {labStep===6&&<section className="activity-brief"><h3>두 설계 비교 · 친구가 바꾼 부위 찾기</h3><p>A 설계: {arm1.name} → {leg1.name} → {body1.name}</p><p>B 설계: {arm2.name} → {leg2.name} → {body2.name}</p>{['팔','다리','몸통','같음'].map(part=><button key={part} aria-pressed={difference.includes(part)} onClick={()=>{setCompared(false);setDifference(old=>old.includes(part)?old.filter(v=>v!==part):[...old,part]);}}>{part}</button>)}<button onClick={()=>{const expected=changed.length?changed:['같음'];const right=expected.length===difference.length&&expected.every(v=>difference.includes(v));setCompared(right);setComparison(right?'고른 두 설계의 바뀐 부위를 확인했어요.':'두 카드의 이름을 비교하고 다시 골라요.');}}>두 설계의 차이 확인</button><p role="status">{comparison}</p></section>}{labStep === 6 && (
+          {labStep===6&&<section className="activity-brief"><h3>두 설계 비교 · 친구가 바꾼 부위 찾기</h3><p>A 설계: {arm1.name} → {leg1.name} → {body1.name}</p>{(!challenge||showDesign||compared)?<p>B 설계: {arm2.name} → {leg2.name} → {body2.name}</p>:<p>B 설계는 잠시 가렸어요. 시범에서 달라진 한 부위를 떠올려요.</p>}{challenge&&<button onClick={()=>setShowDesign(v=>!v)}>{showDesign?'설계 다시 가리기':'B 설계 다시 보기'}</button>}{['팔','다리','몸통','같음'].map(part=><button key={part} aria-pressed={difference.includes(part)} onClick={()=>{setCompared(false);setDifference(old=>old.includes(part)?old.filter(v=>v!==part):[...old,part]);}}>{part}</button>)}<button onClick={()=>{const expected=changed.length?changed:['같음'];const right=expected.length===difference.length&&expected.every(v=>difference.includes(v));setCompared(right);setComparison(right?'고른 두 설계의 바뀐 부위를 확인했어요.':'두 카드의 이름을 비교하고 다시 골라요.');}}>두 설계의 차이 확인</button><p role="status">{comparison}</p></section>}{labStep === 6 && (
             <div className="py-2 animate-in fade-in duration-300 text-center">
               <span className="text-5xl block mb-2">⭐🤝</span>
-              <h3 className="text-xl font-black text-white mb-1">연구소 최종 협력 완료!</h3>
+              <h3 className="text-xl font-black text-white mb-1">두 설계를 확인하고 칭찬해요!</h3>
               <p className="text-xs text-slate-400 mb-5">
                 서로의 창의적인 움직임을 칭찬하는 한마디를 선물하세요.
               </p>
@@ -391,7 +393,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
 
               <button
                 disabled={!compared}
-                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{participation:'performed',metrics:{'재현 방법':seated?'앉은 작은 동작':'편한 기본 동작','설계 차이':difference.join(' · '),'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
+                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{participation:'performed',metrics:{'재현 방법':seated?'앉은 작은 동작':'편한 기본 동작','도전 방법':challenge?'한 부위 바꾸고 기억하기':'두 설계 보며 비교','설계 차이':difference.join(' · '),'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 로봇 연구소 활동 완료

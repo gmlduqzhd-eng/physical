@@ -49,5 +49,5 @@ export function armInput(points:PosePoint[]){
 }
 export function shadowDistance(a:{x:number;y:number},b:{x:number;y:number},mirror:boolean){return Math.hypot(a.x-(mirror?1-b.x:b.x),a.y-b.y);}
 
-export type GroupProgress={id:string;name:string;visited:Station[];vote:string|null;done:boolean;ship:ShipState;axes:{value:number;at:number;claimed:boolean;mine:boolean}[];loop:number[];quality:number;mode:string;workshop?:GroupWorkshop};
+export type GroupProgress={id:string;name:string;visited:Station[];vote:string|null;done:boolean;ship:ShipState;axes:{value:number;at:number;claimed:boolean;mine:boolean}[];loop:number[];quality:number;mode:string;exchange?:{checkpoint:number;pending:boolean;mine:boolean;readyCount:number;swapped:boolean}|null;workshop?:GroupWorkshop};
 export type ExpeditionSnapshot={runId:string;game:FlagshipId;seed:number;phase:number;status:string;revision:number;serverTime:number;startedAt:number;event:string;groups:GroupProgress[];clue:string|null;codes?:Record<Station,string>;owner:boolean;groupId:string|null;workshop?:WorkshopSnapshot};

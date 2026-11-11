@@ -4,7 +4,7 @@ import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Awa
 import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
-import type { GameResultDetails } from '../../../../domain/gameResultDetails';
+import {expressionAssessment,type GameResultDetails} from '../../../../domain/gameResultDetails';
 import './ExpressionActivity.css';
 import {ActivityProgress} from './ActivityProgress';
 
@@ -31,11 +31,13 @@ export const ExpressionActivityLayout = ({
   const [showAchievementModal, setShowAchievementModal] = useState<boolean>(false);
 
   // 평가 점수 상태 (각 루브릭 항목별 1~5점)
-  const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 0));
+  const [ratings, setRatings] = useState<number[]>([]);
   const [selfReflection, setSelfReflection] = useState<string>('');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
   const [smallMovement,setSmallMovement]=useState(false);
   const [performed,setPerformed]=useState<number[]>([]);
+  const assessment=expressionAssessment(game.steps,game.rubric,performed);
+  const markPerformed=(i:number,checked:boolean)=>{const next=checked?[...new Set([...performed,i])]:performed.filter(v=>v!==i);setPerformed(next);setRatings(expressionAssessment(game.steps,game.rubric,next).map(()=>0));};
   const [videoPlaying,setVideoPlaying]=useState(false);
   const [followVideo,setFollowVideo]=useState(!!game.videoInfo);
   const [useVideo,setUseVideo]=useState(false);
@@ -99,11 +101,11 @@ export const ExpressionActivityLayout = ({
     completedRef.current = true;
     sfxSuccess();
     setPhase('result');
-    const avgScore = Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100);
+    const avgScore = (ratings.length?Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100):0);
     onComplete(performed.length?avgScore:0, {
-      participation:performed.length?'performed':'observed',
+      completion:performed.length===game.steps.length?'complete':'partial',participation:performed.length?'performed':'observed',
       ...(performed.length?{ratings}:{}),
-      criteria: game.rubric.map(item => item.criterion),
+      criteria: assessment.map(item => item.criterion),
       selfReflection,
       totalTime: totalElapsedTime,
       metrics:{'진행 확인':game.steps.map((_,i)=>`${i+1}단계 ${performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}`).join(' / '),'기록 기준':'별점은 자기·짝의 감상이며 자동 운동 능력 평가가 아니에요.','참여 방법':smallMovement?'앉아서 또는 작은 동작':'기본 표현'},
@@ -255,7 +257,7 @@ export const ExpressionActivityLayout = ({
                 <span><strong>표현 꿀팁:</strong> {smallMovement?'앉거나 작은 팔·손 동작을 골라도 같은 표현 목표예요. 불편하면 멈추고 쉬어요.':currentStep.actionTip}</span>
               </div>
             </div>
-            <label className="activity-brief flex gap-3"><input type="checkbox" checked={performed.includes(currentStepIdx)} onChange={e=>setPerformed(old=>e.target.checked?[...old,currentStepIdx]:old.filter(i=>i!==currentStepIdx))}/>이 단계의 몸 표현에 참여했어요. 쉬거나 설명만 봤다면 선택하지 않아요.</label>
+            <label className="activity-brief flex gap-3"><input type="checkbox" checked={performed.includes(currentStepIdx)} onChange={e=>markPerformed(currentStepIdx,e.target.checked)}/>이 단계의 몸 표현에 참여했어요. 쉬거나 설명만 봤다면 선택하지 않아요.</label>
 
             {/* 단계 이동 제어 바 */}
             <div className="expression-step-controls flex items-center justify-between pt-2">
@@ -313,10 +315,10 @@ export const ExpressionActivityLayout = ({
             </p>
           </div>
 
-          <fieldset className="activity-brief"><legend>단계별 직접 참여 확인</legend>{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>setPerformed(old=>e.target.checked?[...old,i]:old.filter(n=>n!==i))}/>{step.title} · {performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}</label>)}<p>0개를 선택하면 설명을 확인한 기록으로 남겨요. 타이머나 별점으로 실제 수행을 판정하지 않아요.</p></fieldset>
+          <fieldset className="activity-brief"><legend>단계별 직접 참여 확인</legend>{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>markPerformed(i,e.target.checked)}/>{step.title} · {performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}</label>)}<p>0개를 선택하면 설명을 확인한 기록으로 남겨요. 타이머나 별점으로 실제 수행을 판정하지 않아요.</p></fieldset>
           {/* 루브릭 항목 리스트 */}
           <div className="space-y-4">
-            {performed.length>0&&game.rubric.map((item, idx) => (
+            {performed.length>0&&assessment.map((item, idx) => (
               <div key={idx} className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
@@ -390,18 +392,18 @@ export const ExpressionActivityLayout = ({
           </div>
 
           <div>
-            <h3 className="text-2xl font-black text-white">표현 활동 성공 완료!</h3>
+            <h3 className="text-2xl font-black text-white">표현 활동 기록 확인</h3>
             <p className="text-sm text-slate-400 mt-1">
-              {game.name}을(를) 훌륭하게 수행하고 과정 평가를 마쳤습니다.
+              {game.name}을(를) 참여한 단계를 확인하고 감상을 남겼습니다.
             </p>
           </div>
 
           {/* 점수 및 기록 카드 */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-lg mx-auto text-center">
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-              <div className="text-xs text-slate-400 font-bold">성취 평가</div>
+              <div className="text-xs text-slate-400 font-bold">직접 감상</div>
               <div className="text-2xl font-black text-yellow-300 mt-1">
-                {Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100)}점
+                {(ratings.length?Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100):0)}점
               </div>
             </div>
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
@@ -431,7 +433,7 @@ export const ExpressionActivityLayout = ({
               onClick={() => {
                 completedRef.current = false;
                 setTotalElapsedTime(0);
-                setRatings(game.rubric.map(() => 0));
+                setRatings([]);setPerformed([]);
                 setSelfReflection('');
                 setIsTimerRunning(true);
                 setPhase('countdown');

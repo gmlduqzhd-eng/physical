@@ -1,12 +1,13 @@
 import type {PhonePlay} from './phonePlayCatalog.js';
+export const phoneFillOptions=(round:number)=>[['멈춤'],['손바닥 펴기','손가락으로 작은 원'],['작은 팔 물결','손바닥 방향 바꾸기']][Math.max(0,Math.min(2,round))];
 export function phoneMemoryTask(p:PhonePlay,round:number,easy=false,challenge=false,fill?:string){
- const base=Array.from({length:easy?Math.min(2,p.cues.length):challenge?4:Math.min(3,p.cues.length)},(_,i)=>p.cues[(i+round)%p.cues.length]);
+ let base=Array.from({length:easy?Math.min(2,p.cues.length):challenge?4:Math.min(3,p.cues.length)},(_,i)=>p.cues[(i+round)%p.cues.length]);
  let expected=[...base],shown=[...base],prompt='처음 익힌 기본 동작 순서 되짚기',rule=p.rounds[round];
  if(p.id==='phone-play-006'){const missing=round%base.length;expected=[base[missing]];shown=base.map((c,i)=>i===missing?'빈칸 · 빠진 동작을 기억해요':c);prompt='시범에서 빠진 동작 하나 고르기';rule=`처음 순서를 익힌 뒤 ${missing+1}번째 빈칸의 동작을 찾아 몸으로 표현해요.`;}
  if(p.id==='phone-play-014'){expected=[...base].reverse();prompt='거꾸로 표현한 동작 순서';rule='기본 순서를 익힌 뒤 마지막 동작부터 거꾸로 몸으로 해요.';}
- if(p.id==='phone-play-033'){expected=[...base.slice(0,3),fill&&p.cues.includes(fill)?fill:p.cues[round%p.cues.length]];shown=[...base.slice(0,3),'내가 고른 네 번째 동작'];prompt='빈 박자를 채운 네 동작의 순서';rule='네 번째 박자에 넣을 동작을 고르고, 세 동작과 이어 몸으로 표현해요.';}
+ if(p.id==='phone-play-033'){base=Array.from({length:3},(_,i)=>p.cues[(i+round)%p.cues.length]);const options=phoneFillOptions(round);expected=[...base,fill&&options.includes(fill)?fill:options[0]];shown=[...base,'내가 고른 네 번째 동작'];prompt='빈 박자를 채운 네 동작의 순서';rule='세 동작 뒤 네 번째 박자에 선택한 멈춤·작은 손짓을 넣어요.'+(easy?' 쉬운 방법은 박자를 천천히 말하며 이어가요.':'');}
  if(p.id==='phone-play-003')rule='새 신호가 나올 때 바로 앞 신호의 동작을 해요. 첫 신호에서는 준비하고 기다려요.';
- if(p.id==='phone-play-012'){expected=base.slice(0,Math.min(base.length,round+2));rule='끝 자세를 기억해 다음 동작 하나와 연결해요. 과제가 바뀌면 연결을 하나 더 익혀요.';}
+ if(p.id==='phone-play-012'){base=Array.from({length:challenge?4:Math.min(3,round+2)},(_,i)=>p.cues[(i+round)%p.cues.length]);expected=[...base];shown=[...base];prompt=`이번에 익힌 ${base.length}개 동작의 연결 순서`;rule='끝 자세를 기억해 다음 동작 하나와 연결해요. 과제가 바뀌면 연결을 하나 더 익혀요.';}
  if(p.id==='phone-play-028'){const swap=(text:string)=>text.replaceAll('왼','__SIDE__').replaceAll('오른','왼').replaceAll('__SIDE__','오른');expected=base.map(c=>p.cues.includes(swap(c))?swap(c):c);prompt='좌우를 바꾸어 읽은 기본 순서';rule='오른쪽·왼쪽이 있는 신호는 반대편 동작으로 바꾸어 표현해요.';}
  return {base,expected,shown,prompt,rule};
 }

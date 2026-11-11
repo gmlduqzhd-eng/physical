@@ -38,6 +38,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
   const [ratingRhythm, setRatingRhythm] = useState<number>(0);
   const [ratingTeamwork, setRatingTeamwork] = useState<number>(0);
   const [feedbackTag, setFeedbackTag] = useState<string>('');
+  const [nextPractice,setNextPractice]=useState('');
 
   const beatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completionRef = useRef(false);
@@ -98,7 +99,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
           gameId: 'body-rhythm-orchestrator',
           score: totalScore,
           amount: totalScore,
-          details: { participation:'performed', ratings: [ratingCreativity, ratingRhythm, ratingTeamwork], criteria: ['독창적 표현력', '비트와 박자감', '모둠 협동·조화'], selfReflection: feedbackTag },
+          details: { participation:'performed', ratings: [ratingCreativity, ratingRhythm, ratingTeamwork], criteria: ['독창적 표현력', '비트와 박자감', '모둠 협동·조화'], selfReflection: feedbackTag,metrics:{'다음 시도':nextPractice||'선택 생략'} },
         },
       });
     }
@@ -121,7 +122,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         '발표 후 상대 모둠이 태블릿으로 창의성·박자감·협동심 별점을 매겨 피드백을 전달합니다.',
       ]}
       onExit={onExit}
-      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(0); setRatingRhythm(0); setRatingTeamwork(0); setFeedbackTag(''); completionRef.current = false; }}
+      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(0); setRatingRhythm(0); setRatingTeamwork(0); setFeedbackTag('');setNextPractice(''); completionRef.current = false; }}
     >
       {({ onComplete }) => (
         <div className="w-full max-w-lg mx-auto flex flex-col gap-5 p-4 text-white">
@@ -321,7 +322,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
                 ))}
               </div>
 
-              <button
+              <label className="activity-brief">다음 발표에서 바꿀 한 가지 (선택)<select value={nextPractice} onChange={e=>setNextPractice(e.target.value)}><option value="">응답 생략</option>{['시작 박자를 말이나 손짓으로 먼저 맞추기','한 마디씩 작은 동작으로 나누어 연습하기','먼저 이끄는 역할을 바꾸어 함께 연습하기'].map(v=><option key={v}>{v}</option>)}</select></label><button
                 disabled={[ratingCreativity,ratingRhythm,ratingTeamwork].some(v=>v<1)}
                 onClick={handleFinishReview}
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-bold text-lg text-white shadow-lg active:scale-95 mt-2"

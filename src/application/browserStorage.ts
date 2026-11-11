@@ -3,7 +3,7 @@ let generation=0;
 export function deviceStorageGeneration(){return generation;}
 const sessionFallback = new Map<string, string | null>();
 const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_number', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile', 'dambang_tamagotchi_v1', 'dambang_daily_streak_v1'];
-export const isPrivateDeviceKey = (key: string) => privateKeys.includes(key) || /^(physical_best_|physical_badges$|physical_total_plays$|dambang_)/.test(key);
+export const isPrivateDeviceKey = (key: string) => privateKeys.includes(key) || /^(physical_best_|physical_badges$|physical_total_plays$|physical_played_games$|dambang_)/.test(key);
 const knownPrivateKeys = new Set(privateKeys.concat(['physical_badges', 'physical_total_plays']));
 function clearPrivate(storage: Storage) {
   knownPrivateKeys.forEach(key => storage.removeItem(key));

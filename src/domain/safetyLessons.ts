@@ -37,8 +37,18 @@ export const SAFETY_LESSONS:Record<SafetyLessonId,SafetyLessonSpec>={
 };
 export const isSafetyLessonId=(id:string):id is SafetyLessonId=>(SAFETY_LESSON_IDS as readonly string[]).includes(id);
 export interface SafetyLearningRecord {scenario:number;answer:string;mode:'roleplay'|'read'}
-export function safetyLessonResult(id:SafetyLessonId,records:SafetyLearningRecord[],seconds:number):{amount:number;details:GameResultDetails}|null{
+export function safetyLessonResult(id:SafetyLessonId,records:SafetyLearningRecord[],seconds:number,scenarioSet:'core'|'alternate'='core'):{amount:number;details:GameResultDetails}|null{
  const spec=SAFETY_LESSONS[id];
  if(records.length!==spec.scenarios.length||!Number.isFinite(seconds)||seconds<0||records.some((r,i)=>r.scenario!==i||r.answer!==spec.scenarios[i].answer||!['roleplay','read'].includes(r.mode)))return null;
- return {amount:records.length*100,details:{participation:records.some(r=>r.mode==='roleplay')?'performed':'observed',totalTime:Math.round(seconds),metrics:{'학습 확인':`${records.length}/3 안전한 선택과 설명 확인`,'학습 방식':records.map((r,i)=>`${i+1}: ${r.mode==='roleplay'?'교실 역할 표현':'읽고 설명 확인'}`).join(' / '),'점수 기준':'안전한 상황 선택과 학습 확인 · 실제 응급처치 역량 평가 아님','시간 범위':'학습 시작부터 확인까지의 경과 시간 · 실제 활동 시간 아님','자료 확인일':'2026-10-22','기록 버전':'안전 학습 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요'}}};
+ return {amount:records.length*100,details:{learning:{confirmed:records.length,total:spec.scenarios.length,source:'safety'},completion:'complete',participation:records.some(r=>r.mode==='roleplay')?'performed':'observed',totalTime:Math.round(seconds),metrics:{'상황 묶음':scenarioSet==='alternate'?'다른 상황에서 같은 이유 확인':'기본 상황','학습 확인':`${records.length}/3 안전한 선택과 설명 확인`,'학습 방식':records.map((r,i)=>`${i+1}: ${r.mode==='roleplay'?'교실 역할 표현':'읽고 설명 확인'}`).join(' / '),'점수 기준':'안전한 상황 선택과 학습 확인 · 실제 응급처치 역량 평가 아님','시간 범위':'학습 시작부터 확인까지의 경과 시간 · 실제 활동 시간 아님','자료 확인일':'2026-10-22','기록 버전':'안전 학습 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요'}}};
 }
+
+// Alternative contexts reuse the reviewed choices, reasons and role-play boundaries.
+const ALTERNATE_CONTEXTS:Record<SafetyLessonId,string[]>={
+ 'cpr-compression-110':['그림 속 체육관 입구에 사람이 쓰러져 있고 이동하는 운반 수레가 보여요.','안전한 곳의 그림 속 사람이 반응하지 않고 정상 호흡도 없어요. 가까이에 어른과 AED가 있어요.','친구가 쉬는 시간에 사람 몸으로 압박을 연습하자고 제안해요.'],
+ 'aed-defibrillator-pad':['이전에 본 것과 다른 모양의 AED 그림이 등장했어요. 어떤 안내부터 따를까요?','AED가 분석 중이라고 말하는데 옆 사람이 환자에게 손을 대려고 해요.','상황 카드에서 AED가 충격 불필요라고 안내했어요. 다음 도움을 어떻게 연결할까요?'],
+ 'water-rescue-throw':['물놀이 상황 그림에서 친구가 힘들어하고, 나는 물 밖 안전한 곳에 있어요.','구조 장비를 가져온 어른이 물 밖에서 도와주고 있어요. 어린이는 어떤 역할을 할까요?','구조요원이 사람을 물 밖으로 옮겼고 주변 친구들이 모여 있어요. 어떻게 도울까요?'],
+ 'heatwave-pm25-shield':['가상 상황: 뜨거운 운동장에서 긴 달리기 놀이를 계획했어요.','가상 상황: 야외 공기 상태가 좋지 않은데 모둠이 밖에서 계속 경기하자고 해요.','가상 상황 카드 속 친구가 더운 곳에서 움직이다 어지럽다고 말했어요.'],
+ 'rice-treatment-firstaid':['표식 걷기를 하던 그림 속 친구가 발목을 접질려 걷기 어렵다고 말해요.','보건교사가 냉찜질을 준비하며 그림 카드에서 도구를 골라 달라고 해요.','다친 부위의 모양이 변하고 감각도 이상하다는 상황 카드예요. 누구에게 연결할까요.'],
+};
+export function safetyScenarios(id:SafetyLessonId,set:'core'|'alternate'='core'){return SAFETY_LESSONS[id].scenarios.map((scenario,i)=>({...scenario,situation:set==='alternate'?ALTERNATE_CONTEXTS[id][i]:scenario.situation}));}

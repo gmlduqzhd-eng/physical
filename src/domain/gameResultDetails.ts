@@ -1,5 +1,7 @@
 import type { ExpeditionRecord } from './expeditionRules.js';
 export interface GameResultDetails {
+  learning?:{confirmed:number;total:number;source:'safety'};
+  completion?:'complete'|'partial';
   participation?:'performed'|'observed'|'rested';
   course?:{sourceId:string;targetId:string;sourceName:string;targetName:string;version:1};
   activity?:{gameId:string;specId:string;soloPreview:boolean;rounds:ExpeditionRecord[]};
@@ -14,6 +16,8 @@ export function normalizeGameResultDetails(value: unknown): GameResultDetails | 
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const data = value as Record<string, unknown>;
   const result: GameResultDetails = {};
+  if(data.learning&&typeof data.learning==='object'){const v=data.learning as Record<string,unknown>;if(v.source==='safety'&&Number.isInteger(v.confirmed)&&Number.isInteger(v.total)&&Number(v.confirmed)>=0&&Number(v.confirmed)<=Number(v.total)&&Number(v.total)<=10)result.learning={confirmed:Number(v.confirmed),total:Number(v.total),source:'safety'};}
+  if(data.completion==='complete'||data.completion==='partial')result.completion=data.completion;
   if(['performed','observed','rested'].includes(String(data.participation)))result.participation=data.participation as GameResultDetails['participation'];
   if(data.course&&typeof data.course==='object'&&!Array.isArray(data.course)){const c=data.course as Record<string,unknown>;if(c.version===1&&typeof c.sourceId==='string'&&/^[a-z0-9_-]{1,100}$/.test(c.sourceId)&&typeof c.targetId==='string'&&/^[a-z0-9_-]{1,100}$/.test(c.targetId)&&typeof c.sourceName==='string'&&typeof c.targetName==='string')result.course={sourceId:c.sourceId,targetId:c.targetId,sourceName:c.sourceName.slice(0,100),targetName:c.targetName.slice(0,100),version:1};}
   if(data.activity && typeof data.activity==='object' && !Array.isArray(data.activity)){
@@ -44,3 +48,9 @@ export function normalizeGameResultDetails(value: unknown): GameResultDetails | 
 }
 
 export const earnsParticipationReward=(score:number,details?:GameResultDetails)=>details?.participation?details.participation==='performed':score>0;
+
+export const participationKind=(details?:GameResultDetails)=>details?.participation==='observed'?'observed':details?.participation==='rested'?'rested':'performed';
+export function classroomResultScore(score:number,details?:GameResultDetails){return details?.participation==='observed'||details?.participation==='rested'?0:Math.max(0,Math.round(score));}
+export const canReportCompletion=(details?:GameResultDetails)=>details?.completion!=='partial'&&participationKind(details)==='performed';
+
+export function expressionAssessment(steps:{title:string}[],rubric:{criterion:string;desc:string}[],performed:number[]){const indexes=[...new Set(performed)].filter(i=>Number.isInteger(i)&&i>=0&&i<steps.length).sort((a,b)=>a-b);return indexes.length===steps.length?rubric:indexes.map(i=>({criterion:`${i+1}단계 · ${steps[i].title}`,desc:'참여한 이 단계에서 편한 동작으로 고른 모양·박자·의도를 표현했나요? 크기나 신체 조건을 비교하지 않아요.'}));}

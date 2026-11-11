@@ -19,8 +19,9 @@ interface Props {
 }
 
 export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) => {
-  // 1: 감정 & 온도 선택, 2: 15초 신체 표현 타이머, 3: 짝 감상 선택, 4: 감상 공유 리포트
-  const [firstRound,setFirstRound]=useState<{emotion:string;temperature:number;guess:string;guessTemperature:number}|null>(null);
+  // 1: 가상 감정 & 온도 선택, 2: 15초 신체 표현 타이머, 3: 짝 감상 선택, 4: 감상 공유 리포트
+  const [scene,setScene]=useState('보물 상자를 여는 탐험가');
+  const [firstRound,setFirstRound]=useState<{emotion:string;temperature:number;guess:string;guessTemperature:number;scene:string}|null>(null);
   const [reveal,setReveal]=useState(false);
   const [phase, setPhase] = useState<number>(1);
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0]>(EMOTIONS[0]);
@@ -70,7 +71,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
       activityType="짝"
       expectedMinutes={4}
       instructions={[
-        '오늘 몸으로 표현해보고 싶은 감정과 감정의 온도(강도 1~5단계)를 고릅니다.',
+        '실제 기분 대신 가상 등장인물의 감정과 표현 강도를 고릅니다.',
         '15초 동안 카메라나 사진 없이 온몸의 움직임으로 그 감정을 펼쳐보입니다.',
         '짝꿍은 친구의 몸짓을 바라보며 어떤 감정과 온도가 느껴졌는지 선택합니다.',
         '서로의 생각이 같거나 달라도 좋습니다! 느낌의 다양성을 나누어 보세요.',
@@ -89,9 +90,10 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                 1단계: 표현할 감정과 온도를 정하세요
               </h3>
               <p className="text-xs text-slate-400 text-center mb-5">
-                (짝꿍에게는 비밀로 하고 나만의 감정을 설정해 보세요!)
+                (짝꿍에게는 잠시 가리고 등장인물의 감정을 정해 보세요!)
               </p>
 
+<label className="activity-brief">가상 연기 상황<select value={scene} onChange={e=>setScene(e.target.value)}>{['보물 상자를 여는 탐험가','출발 신호를 기다리는 우주인','바람이 잦아든 숲의 안내자'].map(v=><option key={v}>{v}</option>)}</select></label><p>자신의 실제 기분을 공개할 필요가 없어요. 등장인물의 느낌은 서로 다르게 해석해도 돼요.</p>
               {/* 감정 카드 선택 */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-6">
                 {EMOTIONS.map(emo => (
@@ -296,7 +298,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
               </div>
 
               <button
-                onClick={() => {if(!firstRound){setFirstRound({emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp});setPhase(1);setExpressTimer(15);setIsTimerRunning(false);setPeerGuessEmotion('');setReveal(false);return;}onComplete('두 사람이 표현자·감상자를 바꾸어 비교했어요.',{participation:'performed',metrics:{'친구 A 표현':`${firstRound.emotion} · ${firstRound.temperature}단계 / 친구 B 감상 ${firstRound.guess} · ${firstRound.guessTemperature}단계`,'친구 B 표현':`${selectedEmotion.name} · ${temperature}단계 / 친구 A 감상 ${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌의 이유를 함께 이야기했어요.'});}}
+                onClick={() => {if(!firstRound){setFirstRound({emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp,scene});setPhase(1);setExpressTimer(15);setIsTimerRunning(false);setPeerGuessEmotion('');setReveal(false);return;}onComplete('두 사람이 표현자·감상자를 바꾸어 비교했어요.',{participation:'performed',metrics:{'가상 상황':`A: ${firstRound.scene} / B: ${scene}`,'친구 A 표현':`${firstRound.emotion} · ${firstRound.temperature}단계 / 친구 B 감상 ${firstRound.guess} · ${firstRound.guessTemperature}단계`,'친구 B 표현':`${selectedEmotion.name} · ${temperature}단계 / 친구 A 감상 ${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌의 이유를 함께 이야기했어요.'});}}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> {firstRound?'두 역할 비교하고 완료하기':'역할 바꾸어 두 번째 표현하기'}

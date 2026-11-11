@@ -13,6 +13,7 @@ scripts/*
 !scripts/prepare-vision.mjs
 !scripts/games-improvements.test.ts
 !scripts/second-game-review.test.ts
+!scripts/third-game-review.test.ts
 !scripts/phone-play.test.ts
 !scripts/movement-quests.test.ts
 !scripts/expedition-games.test.ts

@@ -30,8 +30,8 @@ test('missing, reverse and fill memory games require their own actual answers',(
  const missing=PHONE_PLAY_BY_ID.get('phone-play-006')!,reverse=PHONE_PLAY_BY_ID.get('phone-play-014')!,fill=PHONE_PLAY_BY_ID.get('phone-play-033')!;
  const m=phoneMemoryTask(missing,1);assert.deepEqual(m.expected,[m.base[1]]);assert(m.shown[1].includes('빈칸'));assert.equal(m.expected.length,1);
  const r=phoneMemoryTask(reverse,0);assert.deepEqual(r.expected,[...r.base].reverse());assert.notDeepEqual(r.expected,r.base);
- const f=phoneMemoryTask(fill,0,false,false,fill.cues[1]);assert.equal(f.expected.length,4);assert.equal(f.expected[3],fill.cues[1]);
- const record:PhoneRecord={round:0,outcome:'complete',elapsedMs:fill.seconds*1000,count:0,answer:f.expected,participants:[1],fill:fill.cues[1]};assert(phoneRecordValid(fill,record,1));assert(!phoneRecordValid(fill,{...record,answer:f.expected.slice(0,3)},1));
+ const f=phoneMemoryTask(fill,0,false,false,'멈춤');assert.equal(f.expected.length,4);assert.equal(f.expected[3],'멈춤');
+ const record:PhoneRecord={round:0,outcome:'complete',elapsedMs:fill.seconds*1000,count:0,answer:f.expected,participants:[1],fill:'멈춤'};assert(phoneRecordValid(fill,record,1));assert(!phoneRecordValid(fill,{...record,answer:f.expected.slice(0,3)},1));
 });
 test('movie confirmation concerns this scene, and edited creation roles retain the chosen sequence',()=>{
  const p=PHONE_PLAY_BY_ID.get('phone-play-029')!,chosen=[p.cues[2],p.cues[0]];

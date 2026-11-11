@@ -18,7 +18,10 @@ interface Props {
 }
 
 export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
-  const [targetBest,setTargetBest]=useState(()=>Number(readStorage('physical_best_curling_target_v2'))||0);
+  const [ball,setBall]=useState('soft'),[line,setLine]=useState('1'),[target,setTarget]=useState('1'),[posture,setPosture]=useState('standing');
+  const conditionKey=`physical_best_curling_target_v3_${ball}_${line}_${target}_${posture}`;
+  const targetBest=Math.max(0,Math.min(15,Number(readStorage(conditionKey))||0));
+  const conditionText=`${({soft:'부드러운 공',tennis:'테니스공',paper:'종이공'})[ball as 'soft']} · ${line}번 출발선 · ${target}번 표적 · ${posture==='seated'?'앉아서':'서서'}`;
   const undo=()=>{setAttempts(old=>old.slice(0,-1));setShowSummary(false);setForceReflection('');};
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [forceReflection, setForceReflection] = useState<string>('');
@@ -73,12 +76,13 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
         '매 시도마다 힘의 세기를 미세하게 조절하며 중앙에 가깝게 보내보세요.',
       ]}
       colorTheme="amber"
-      onFinish={enqueueAction ? (score, details) => {const best=Math.max(targetBest,totalScore);setTargetBest(best);writeStorage('physical_best_curling_target_v2',String(best));enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() });} : undefined}
+      onFinish={enqueueAction ? (score, details) => {const best=Math.max(targetBest,totalScore);writeStorage(conditionKey,String(best));enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() });} : undefined}
       onExit={onExit}
       onRestart={() => { setAttempts([]); setForceReflection(''); setShowSummary(false); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
+          <fieldset className="activity-brief" disabled={attempts.length>0}><legend>같은 조건끼리 표적 기록 비교</legend><label>공<select value={ball} onChange={e=>setBall(e.target.value)}><option value="soft">부드러운 공</option><option value="tennis">테니스공</option><option value="paper">종이공</option></select></label><label>출발선 번호<select value={line} onChange={e=>setLine(e.target.value)}>{['1','2','3'].map(v=><option key={v}>{v}</option>)}</select></label><label>표적 조건 번호<select value={target} onChange={e=>setTarget(e.target.value)}>{['1','2','3'].map(v=><option key={v}>{v}</option>)}</select></label><label>참여 자세<select value={posture} onChange={e=>setPosture(e.target.value)}><option value="standing">서서 편하게</option><option value="seated">앉아서 편하게</option></select></label><p>교사가 실제 공·출발 위치·표적 크기를 확인해 번호를 붙여요. 위치나 크기를 바꾸면 다른 번호를 선택하고 새로 기록해요. 거리나 신체 능력을 자동 측정하지 않아요.</p></fieldset><p>{conditionText} · 이 조건의 확인한 최고 {targetBest}/15점</p>
           {!showSummary ? (
             <div>
               {/* 상단 라운드 및 점수 */}
@@ -213,7 +217,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => onComplete(`공 굴림 컬링 5회 시도 · 직접 입력한 구역 합계 ${totalScore}점`, {participation:'performed',metrics:{'표적 점수':`${totalScore}/15점 · 확인한 최고 ${Math.max(targetBest,totalScore)}/15점`,'다섯 번 결과':attempts.map((a,i)=>`${i+1}차 ${({center:'중앙',middle:'중간',outer:'바깥',miss:'이탈'})[a.zone]} · ${a.score}점`).join(' / '),'앞뒤 비교':`처음 두 번 ${earlyScore}점 / 마지막 두 번 ${lateScore}점`},selfReflection:forceReflection||'선택하지 않음'})}
+                onClick={() => onComplete(`공 굴림 컬링 5회 시도 · 직접 입력한 구역 합계 ${totalScore}점`, {participation:'performed',metrics:{'표적 조건':conditionText,'표적 점수':`${totalScore}/15점 · 확인한 최고 ${Math.max(targetBest,totalScore)}/15점`,'다섯 번 결과':attempts.map((a,i)=>`${i+1}차 ${({center:'중앙',middle:'중간',outer:'바깥',miss:'이탈'})[a.zone]} · ${a.score}점`).join(' / '),'앞뒤 비교':`처음 두 번 ${earlyScore}점 / 마지막 두 번 ${lateScore}점`},selfReflection:forceReflection||'선택하지 않음'})}
                 className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 컬링 원정 결과 저장하기

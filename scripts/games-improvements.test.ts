@@ -56,7 +56,7 @@ test('creative choices change active sequences; strategy choices select the actu
  for(const p of PHONE_PLAYS.filter(p=>p.kind==='decision')){assert.deepEqual(phoneRoundCues(p,1,'기본 방법',[],'seated'),[p.seated]);assert.equal(phoneRoundCues(p,1,'기본 방법',[],'small')[0],p.easy);assert.notEqual(phoneStrategies(p,0)[0].id,phoneStrategies(p,1)[0].id);}
 });
 test('memory challenge uses four concrete items and validates the sequence shown before movement',()=>{
- for(const p of PHONE_PLAYS.filter(p=>p.kind==='memory')){const task=phoneMemoryTask(p,0,false,true),answer=task.expected;assert.equal(task.base.length,4);const record={round:0,outcome:'complete' as const,elapsedMs:p.seconds*1000,count:0,participants:[1],answer,challenge:true};assert(phoneRecordValid(p,record,1));assert(!phoneRecordValid(p,{...record,answer:[]},1));}
+ for(const p of PHONE_PLAYS.filter(p=>p.kind==='memory')){const task=phoneMemoryTask(p,0,false,true),answer=task.expected;assert.equal(task.base.length,p.id==='phone-play-033'?3:4);const record={round:0,outcome:'complete' as const,elapsedMs:p.seconds*1000,count:0,participants:[1],answer,challenge:true};assert(phoneRecordValid(p,record,1));assert(!phoneRecordValid(p,{...record,answer:[]},1));}
 });
 test('all 34 standalone expeditions provide rehearsal, relaxed pacing and alternatives',()=>{
  const games=AVAILABLE_GAMES.filter(g=>EXPEDITION_BY_ID.get(g.type)?.kind==='B');assert.equal(games.length,34);for(const g of games)assert(isRevampedExpedition(g.type),g.type);

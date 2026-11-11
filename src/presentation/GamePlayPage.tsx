@@ -16,7 +16,7 @@ import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/
 import { MovementQuest } from './components/minigames/common/MovementQuest';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
-import { earnsParticipationReward, normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
+import { earnsParticipationReward, classroomResultScore,canReportCompletion,normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { GameResultDetailsView } from './components/GameResultDetailsView';
 import './GamePlayPage.css';
 import './GameTheme.css';
@@ -366,14 +366,14 @@ const GamePlaySession = () => {
     const details = normalizeGameResultDetails(selectedVariant?{...payload.details,course:{sourceId:selectedVariant.id,targetId:gameType,sourceName:selectedVariant.name,targetName:baseGameInfo.name,version:1}}:payload.details);
     const quietRecord=details?.participation==='rested'||details?.participation==='observed';
     const earned=quietRecord?0:Math.round(rawScore);
-    const classroomScore = quietRecord?0:earned > 0 ? earned : (hasBattle ? 10 : 0);
+    const classroomScore = classroomResultScore(earned,details);
     if (hasBattle && battleGroupId && classroomScore !== 0) {
       enqueueClassroomScore({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: battleGroupId, amount: classroomScore, roomId: battleRoomId, activityId: gameType }, timestamp: Date.now() });
     }
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
-    if (guidedMode&&!quietRecord) {
+    if (guidedMode&&canReportCompletion(details)) {
       enqueueGuidedCompletion();
     }
 
@@ -694,19 +694,19 @@ const GamePlaySession = () => {
             </div>
             <span className="text-6xl mb-3">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
-            <p className="text-emerald-400 font-bold text-xs mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):'활동을 마쳤어요!'}</p>
+            <p className="text-emerald-400 font-bold text-xs mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
             {hasBattle && (
               <p role="status" className="mb-4 text-center text-xs text-cyan-300">
-                {quietResult?'휴식·관찰은 이 기기에 기록하며 수행 완료나 모둠 점수로 제출하지 않아요.':syncWarning || (queueLength === 0 ? '점수 전송을 마쳤어요. 교사 확인 방식인 수업은 승인 후 반영돼요.' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
+                {resultDetails?.completion==='partial'&&!quietResult?'일부 수행 기록이에요. 화면에 표시한 점수만 반영하며 완료 신고는 보내지 않아요.':quietResult?'휴식·관찰은 이 기기에 기록하며 수행 완료나 모둠 점수로 제출하지 않아요.':syncWarning || (queueLength === 0 ? '점수 전송을 마쳤어요. 교사 확인 방식인 수업은 승인 후 반영돼요.' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
               </p>
             )}
-            {guidedMode && !quietResult && guidedSubmission.error && (
+            {guidedMode && !quietResult && resultDetails?.completion!=='partial' && guidedSubmission.error && (
               <div role="status" className="mb-4 text-center text-sm text-cyan-300">
                 <p>{guidedSubmission.error}</p>
                 {!guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}
               </div>
             )}
-            {guidedMode && !quietResult && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="mt-2 text-xs text-cyan-200">{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
+            {guidedMode && !quietResult && resultDetails?.completion!=='partial' && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="mt-2 text-xs text-cyan-200">{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
             <p className="text-sm leading-relaxed mb-4">이 점수는 이 활동의 참여·감상·화면 규칙 기록이에요. 게임마다 기준이 달라 서로 다른 게임의 점수를 체력이나 운동 능력 순위로 비교하지 않아요.</p><div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">참여·감상·화면 규칙 점수 · 자동 체력 측정 아님</span>
               <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
@@ -774,7 +774,7 @@ const GamePlaySession = () => {
 
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
-            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
+            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기

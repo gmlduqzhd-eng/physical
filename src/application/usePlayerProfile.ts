@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
+import { participationKind, normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
 import { deviceStorageGeneration, isRecord, nonnegativeNumber, readJsonStorage, removeStorage, writeStorage } from './browserStorage';
 
 export interface GameRecord {
@@ -15,6 +15,7 @@ export interface GameRecord {
 export interface PlayerProfile {
   nickname: string;
   totalScore: number;
+  participationCounts?:Record<'performed'|'observed'|'rested',number>;
   totalPlays: number;
   highScores: Record<string, number>; // gameType -> highest score
   playCounts: Record<string, number>; // gameType -> play count
@@ -45,6 +46,7 @@ export const normalizePlayerProfile = (value: unknown): PlayerProfile | null => 
     nickname: value.nickname.trim().slice(0, 20),
     totalScore: nonnegativeNumber(value.totalScore),
     totalPlays: Math.floor(nonnegativeNumber(value.totalPlays)),
+    ...(isRecord(value.participationCounts)?{participationCounts:Object.fromEntries(['performed','observed','rested'].map(k=>[k,Math.floor(nonnegativeNumber((value.participationCounts as Record<string,unknown>)[k]))])) as PlayerProfile['participationCounts']}:{ }),
     highScores: numberMap(value.highScores),
     playCounts: numberMap(value.playCounts),
     recentGames,
@@ -120,8 +122,10 @@ export const usePlayerProfile = () => {
       const newPlayCounts = { ...current.playCounts };
       newPlayCounts[gameType] = (newPlayCounts[gameType] || 0) + 1;
 
+      const counts=recordCounts(current);const kind=participationKind(details);
       const updated: PlayerProfile = {
         ...current,
+        participationCounts:{performed:counts.performed,observed:counts.observed,rested:counts.rested,[kind]:counts[kind]+1},
         totalScore: Math.max(0, current.totalScore + score),
         totalPlays: current.totalPlays + 1,
         highScores: newHighScores,
@@ -150,3 +154,5 @@ export const usePlayerProfile = () => {
 
   return { profile, createProfile, updateNickname, addGameResult, updateLatestRpe, resetProfile, hasProfile: !!profile };
 };
+
+export function recordCounts(profile:PlayerProfile|null){const counts=profile?.participationCounts??{performed:0,observed:0,rested:0};const result={...counts};if(profile&&!profile.participationCounts)for(const r of profile.recentGames)result[participationKind(r.details)]++;return {...result,other:Math.max(0,(profile?.totalPlays??0)-result.performed-result.observed-result.rested)};}

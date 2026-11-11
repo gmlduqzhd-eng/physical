@@ -137,7 +137,7 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
       !Number.isInteger(record.retries) || record.retries < 0;
   })) return null;
   const completed = records.filter(r => r.outcome === 'complete').length;
-  return { amount: completed * 100, details: { totalTime: Math.round(records.reduce((s, r) => s + r.activeMs, 0) / 1000), metrics: {
+  return { amount: completed * 100, details: {participation:'performed',completion:completed===3?'complete':'partial', totalTime: Math.round(records.reduce((s, r) => s + r.activeMs, 0) / 1000), metrics: {
     ...(records.some(r=>r.reflection)?{'느낌 돌아보기':records.map((r,i)=>`${i+1}: ${r.reflection||'기록 안 함'}`).join(' / ')}:{}),
     '기록 방식': '활동 후 직접 확인 · 센서 측정 아님', '작전 달성': `${completed}/3 · 직접 확인`,
     '참여 방식': settings.practice ? '혼자 규칙 연습 · 모둠 참여 미확인' : `${settings.players}명 함께 활동 · 직접 확인`,
