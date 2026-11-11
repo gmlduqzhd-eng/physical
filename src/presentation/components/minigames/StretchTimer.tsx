@@ -1,3 +1,5 @@
+import {stretchCompletion} from '../../../domain/fourthGameRules';
+import {useActivityPause} from '../../../application/ActivityPauseContext';
 import { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
 import './common/MovementQuest.css';
@@ -116,14 +118,15 @@ const PoseIllustration = ({ poseId,seated=false }: { poseId: StretchPose['id'];s
 };
 
 export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
+  const classroomPaused=useActivityPause();
   const [seated,setSeated]=useState(false);
   const [poseIdx,setPoseIdx]=useState(0),[duration,setDuration]=useState(7),[timeLeft,setTimeLeft]=useState(7);
   const [phase,setPhase]=useState<'ready'|'active'|'confirm'>('ready'),[paused,setPaused]=useState(false),[confirmed,setConfirmed]=useState(false);
   const [records,setRecords]=useState<{performed:boolean;duration:number;seated:boolean}[]>([]);const finishedRef=useRef(false);const current=POSES[poseIdx];
   useEffect(()=>{const hide=()=>{if(document.hidden)setPaused(true);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
-  useEffect(()=>{if(phase!=='active'||paused)return;const timer=setInterval(()=>{if(!document.hidden)setTimeLeft(t=>Math.max(0,t-1));},1000);return()=>clearInterval(timer);},[phase,paused]);
+  useEffect(()=>{if(phase!=='active'||paused||classroomPaused)return;const timer=setInterval(()=>{if(!document.hidden)setTimeLeft(t=>Math.max(0,t-1));},1000);return()=>clearInterval(timer);},[phase,paused,classroomPaused]);
   useEffect(()=>{if(phase==='active'&&timeLeft===0){setPhase('confirm');sfxCoin();}},[phase,timeLeft]);
-  const next=(performed:boolean)=>{if(finishedRef.current)return;const values=[...records,{performed,duration,seated}];if(poseIdx<POSES.length-1){setRecords(values);setPoseIdx(n=>n+1);setConfirmed(false);setPhase('ready');return;}finishedRef.current=true;sfxSuccess();enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,amount:values.some(v=>v.performed)?100:0,details:{participation:values.some(v=>v.performed)?'performed':'rested',criteria:POSES.map(p=>p.name),metrics:{'수행 확인':values.map((v,i)=>POSES[i].name+': '+(v.performed?'직접 참여 확인':'쉬거나 건너뜀')+(v.seated?' · 앉은 자세':' · 기본 자세')).join(' / '),'기록 기준':'시간 경과로 수행을 판정하지 않아요. 직접 확인한 참여 기록이에요.','선택 시간':values.map((v,i)=>`${POSES[i].name} ${v.duration}초 안내`).join(' / ')} }},timestamp:Date.now()});};
+  const next=(performed:boolean)=>{if(finishedRef.current)return;const values=[...records,{performed,duration,seated}];if(poseIdx<POSES.length-1){setRecords(values);setPoseIdx(n=>n+1);setConfirmed(false);setPhase('ready');return;}finishedRef.current=true;sfxSuccess();enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,amount:values.some(v=>v.performed)?100:0,details:{completion:stretchCompletion(values.map(v=>v.performed)),participation:values.some(v=>v.performed)?'performed':'rested',criteria:POSES.map(p=>p.name),metrics:{'수행 확인':values.map((v,i)=>POSES[i].name+': '+(v.performed?'직접 참여 확인':'쉬거나 건너뜀')+(v.seated?' · 앉은 자세':' · 기본 자세')).join(' / '),'기록 기준':'시간 경과로 수행을 판정하지 않아요. 직접 확인한 참여 기록이에요.','선택 시간':values.map((v,i)=>`${POSES[i].name} ${v.duration}초 안내`).join(' / ')} }},timestamp:Date.now()});};
   return <section className="movement-quest" aria-label="스트레칭 타이머"><header><p>준비·정리 도구 · 직접 참여 확인</p><h1>스트레칭 타이머</h1><p>{poseIdx+1} / {POSES.length} · {current.name}</p></header><PoseIllustration poseId={current.id} seated={seated}/><p>{seated?'앉은 채 손과 팔로 이 동작의 방향을 작고 편안하게 표현해요. 발은 바닥에 두어요.':current.desc}</p><p>서거나 앉아서 편한 범위로 작게 해요. 억지로 늘리거나 참지 않고 불편하면 멈춰요.</p>
   {phase==='ready'&&<><label><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉은 팔·손 동작으로 참여하기</label><label>내가 고르는 안내 시간<select value={duration} onChange={e=>setDuration(Number(e.target.value))}>{[7,12,20].map(n=><option key={n} value={n}>{n}초</option>)}</select></label><p>선택 시간은 화면 안내 시간이며 운동 처방이나 수행 기준이 아니에요.</p><button onClick={()=>{setTimeLeft(duration);setPaused(false);setPhase('active');}}>내 속도로 스트레칭 시작</button></>}
   {phase==='active'&&<><strong className="text-5xl">{timeLeft}초</strong><p role="status">{paused?'멈췄어요. 준비되면 이어가요.':'자기 속도로 동작을 살펴요.'}</p><button onClick={()=>setPaused(v=>!v)}>{paused?'이어서 하기':'잠깐 쉬기'}</button><button onClick={()=>setPhase('confirm')}>안내를 멈추고 수행 확인</button></>}

@@ -63,3 +63,5 @@ html[data-design=forest] .warm-game .game-achievement-toast{background:var(--for
 
 html[data-design=forest] body .warm-game .result-rpe-choice[aria-pressed=true]{background:var(--forest-accent)!important;border-color:var(--forest-accent)!important;color:var(--forest-on)!important;box-shadow:none}
 html[data-design=forest] body .warm-game .result-rpe-choice[aria-pressed=true] *{color:inherit!important}
+/* Keep classroom pause outside game palettes and retain mounted activity state. */
+.activity-classroom-pause{position:fixed;inset:144px 12px auto;z-index:12000;margin:auto;max-width:620px;padding:28px;border:2px solid #687d5b;border-radius:24px;background:#fffdf6;color:#243d32;box-shadow:0 0 0 200vmax #f4f2e9e8;font:700 18px/1.7 system-ui;overflow-wrap:anywhere}

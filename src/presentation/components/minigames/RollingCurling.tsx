@@ -23,14 +23,15 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
   const targetBest=Math.max(0,Math.min(15,Number(readStorage(conditionKey))||0));
   const conditionText=`${({soft:'부드러운 공',tennis:'테니스공',paper:'종이공'})[ball as 'soft']} · ${line}번 출발선 · ${target}번 표적 · ${posture==='seated'?'앉아서':'서서'}`;
   const undo=()=>{setAttempts(old=>old.slice(0,-1));setShowSummary(false);setForceReflection('');};
+  const [editing,setEditing]=useState<number|null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [forceReflection, setForceReflection] = useState<string>('');
   const [showSummary, setShowSummary] = useState<boolean>(false);
 
-  const currentRound = attempts.length + 1;
+  const currentRound = editing===null?attempts.length+1:editing+1;
 
   const handleRecordAttempt = (zone: 'center' | 'middle' | 'outer' | 'miss') => {
-    if (attempts.length >= 5) return;
+    if (attempts.length >= 5&&editing===null) return;
     sfxCoin();
     const scores = { center: 3, middle: 2, outer: 1, miss: 0 };
     const newAttempt: Attempt = {
@@ -38,7 +39,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
       zone,
       score: scores[zone],
     };
-    const nextAttempts = [...attempts, newAttempt];
+    const nextAttempts = editing===null?[...attempts,newAttempt]:attempts.map((a,i)=>i===editing?newAttempt:a);setEditing(null);
     setAttempts(nextAttempts);
 
     if (nextAttempts.length === 5) {
@@ -78,12 +79,12 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
       colorTheme="amber"
       onFinish={enqueueAction ? (score, details) => {const best=Math.max(targetBest,totalScore);writeStorage(conditionKey,String(best));enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() });} : undefined}
       onExit={onExit}
-      onRestart={() => { setAttempts([]); setForceReflection(''); setShowSummary(false); }}
+      onRestart={() => { setEditing(null);setAttempts([]); setForceReflection(''); setShowSummary(false); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
           <fieldset className="activity-brief" disabled={attempts.length>0}><legend>같은 조건끼리 표적 기록 비교</legend><label>공<select value={ball} onChange={e=>setBall(e.target.value)}><option value="soft">부드러운 공</option><option value="tennis">테니스공</option><option value="paper">종이공</option></select></label><label>출발선 번호<select value={line} onChange={e=>setLine(e.target.value)}>{['1','2','3'].map(v=><option key={v}>{v}</option>)}</select></label><label>표적 조건 번호<select value={target} onChange={e=>setTarget(e.target.value)}>{['1','2','3'].map(v=><option key={v}>{v}</option>)}</select></label><label>참여 자세<select value={posture} onChange={e=>setPosture(e.target.value)}><option value="standing">서서 편하게</option><option value="seated">앉아서 편하게</option></select></label><p>교사가 실제 공·출발 위치·표적 크기를 확인해 번호를 붙여요. 위치나 크기를 바꾸면 다른 번호를 선택하고 새로 기록해요. 거리나 신체 능력을 자동 측정하지 않아요.</p></fieldset><p>{conditionText} · 이 조건의 확인한 최고 {targetBest}/15점</p>
-          {!showSummary ? (
+          {attempts.length>0&&<section className="activity-brief"><h3>회차를 골라 입력 고치기</h3>{attempts.map((a,i)=><button key={i} aria-pressed={editing===i} onClick={()=>{setEditing(i);setShowSummary(false);setForceReflection('');}}>{i+1}회 · {a.score}점 수정</button>)}{editing!==null&&<p role="status">{editing+1}회 기록을 수정해요. 아래에서 실제 구역을 다시 고르면 나머지 기록은 유지됩니다.</p>}</section>}{!showSummary ? (
             <div>
               {/* 상단 라운드 및 점수 */}
               <div className="flex justify-between items-center mb-4">
@@ -135,7 +136,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
                 실제 공이 멈춘 위치를 아래 버튼에서 선택하세요. 참여 점수와 표적 점수는 따로 기록해요.
               </p>
 
-              <p>이 탭의 확인한 표적 최고 합계: {targetBest}/15점</p>{attempts.length>0&&<button onClick={undo}>직전 시도 되돌리기</button>}{/* 멈춘 구역 선택 버튼들 */}
+              <p>이 탭의 확인한 표적 최고 합계: {targetBest}/15점</p>{attempts.length>0&&editing===null&&<button onClick={undo}>직전 시도 되돌리기</button>}{/* 멈춘 구역 선택 버튼들 */}
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => handleRecordAttempt('center')}

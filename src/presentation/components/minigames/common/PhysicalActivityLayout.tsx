@@ -1,3 +1,4 @@
+import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import { useGameTimeouts } from './useGameTimeouts';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Play, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
@@ -49,6 +50,7 @@ export const PhysicalActivityLayout = ({
   onRestart,
   children,
 }: Props) => {
+  const classroomPaused=useActivityPause();
   const scheduleTimeout = useGameTimeouts();
   const navigate = useNavigate();
   // flow: 'intro' -> 'countdown' -> 'active' -> 'completed'
@@ -63,13 +65,13 @@ export const PhysicalActivityLayout = ({
   const submittedRef = useRef(false);
 
   useEffect(() => {
-    if (step !== 'countdown') return;
+    if (step !== 'countdown'||classroomPaused) return;
     const timer = scheduleTimeout(() => {
       if (countdown <= 1) setStep('active');
       else setCountdown(countdown - 1);
     }, 1000);
     return () => clearTimeout(timer);
-  }, [step, countdown, scheduleTimeout]);
+  }, [step, countdown, scheduleTimeout,classroomPaused]);
 
   const handleStartActivity = () => {
     if(safetyItems.some(item=>!safetyChecked.includes(item.id)))return;

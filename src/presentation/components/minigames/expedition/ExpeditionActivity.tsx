@@ -1,3 +1,6 @@
+import {ActivityCueControls} from '../common/ActivityCueControls';
+import {useActivityPause} from '../../../../application/ActivityPauseContext';
+import {paceExpeditionSteps} from '../../../../domain/fourthGameRules';
 import {ActivityDemo} from '../common/ActivityDemo';
 import {ActivityProgress} from '../common/ActivityProgress';
 import {useCallback,useEffect,useRef,useState} from 'react';
@@ -16,6 +19,8 @@ const fourPlayers=new Set(['T01','T02','T07','T21','T22','T24','T33','T35','T36'
 const expeditionMinimumPlayers=(game:ExpeditionSpec)=>game.spec[0]==='T'?(fourPlayers.has(game.spec)?4:2):game.players;
 
 export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
+  const classroomPaused=useActivityPause();
+  const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
   const revamped=isRevampedExpedition(game.id);
   const [resumeAvailable,setResumeAvailable]=useState(false),[resetRequested,setResetRequested]=useState(false);
   const [gentle,setGentle]=useState(false),[alternative,setAlternative]=useState(false),[practicing,setPracticing]=useState(false);
@@ -39,11 +44,11 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const beginRound=useCallback((index:number,all:ExpeditionRound[])=>{
     elapsed.current=0;remaining.current=all[index].secret?5:3;setSeconds(remaining.current);setRound(index);setStep(0);setBeat(0);setPaused(false);resetRecord(all[index]);setPhase(all[index].secret?'preview':'countdown');
   },[resetRecord]);
-  const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpedition(Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players)),revamped&&gentle);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
+  const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpeditionSteps(paceExpedition(Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players)),revamped&&gentle),pace);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
   const stopActivity=()=>{if(phase!=='active'||paused)return;elapsed.current+=Math.max(0,performance.now()-last.current);last.current=performance.now();stop();setPhase('record');};
 
   useEffect(()=>{
-    if(!['countdown','preview','active'].includes(phase)||paused||!plan)return;
+    if(!['countdown','preview','active'].includes(phase)||paused||classroomPaused||!plan)return;
     last.current=performance.now();
     const timer=setInterval(()=>{
       const now=performance.now(),delta=Math.max(0,now-last.current);last.current=now;
@@ -62,14 +67,14 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       }else{stop();setPhase('record');}
     },100);
     return()=>clearInterval(timer);
-  },[phase,paused,plan,current,step,game.bpm,stop,revamped,gentle]);
+  },[phase,paused,plan,current,step,game.bpm,stop,revamped,gentle,classroomPaused]);
   useEffect(()=>{
     const onVisibility=()=>{if(document.hidden&&phase!=='ready'&&phase!=='record'){setPaused(true);stop();}};
     document.addEventListener('visibilitychange',onVisibility);return()=>document.removeEventListener('visibilitychange',onVisibility);
   },[phase,stop]);
-  useEffect(()=>{if(!sound||paused)return;if(phase==='active'&&current)speak(alternative?game.alternative:current.instruction,true);else if(phase==='record')speak('라운드가 끝났어요. 직접 확인한 기록을 입력해 주세요.',true);},[phase,current,paused,sound,speak,alternative,game.alternative]);
-  useEffect(()=>{if(sound&&!paused&&phase==='active'&&current?.beats)playBeep();},[beat,phase,current,sound,paused,playBeep]);
-  useEffect(()=>{if(sound&&!paused&&phase==='active'&&current&&!current.beats)playBeep();},[phase,current,sound,paused,playBeep]);
+  useEffect(()=>{if(!sound||paused||classroomPaused)return;if(phase==='active'&&current)speak(alternative?game.alternative:current.instruction,true);else if(phase==='record')speak('라운드가 끝났어요. 직접 확인한 기록을 입력해 주세요.',true);},[phase,current,paused,sound,speak,alternative,game.alternative,classroomPaused]);
+  useEffect(()=>{if(sound&&!paused&&!classroomPaused&&phase==='active'&&current?.beats)playBeep();},[beat,phase,current,sound,paused,playBeep,classroomPaused]);
+  useEffect(()=>{if(sound&&!paused&&!classroomPaused&&phase==='active'&&current&&!current.beats)playBeep();},[phase,current,sound,paused,playBeep,classroomPaused]);
   useEffect(()=>()=>stop(),[stop]);
 
   const toggleNumber=(n:number)=>setParticipants(previous=>previous.includes(n)?previous.filter(x=>x!==n):[...previous,n]);
@@ -102,8 +107,8 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
 
   return <section className="expedition-activity" aria-label={game.name} data-expedition={game.spec} data-phase={phase} data-revamped={revamped} data-practice={practicing}>
     <div className="expedition-heading"><span>🧭 {game.name}</span><small>{phase==='ready'?'준비':`${round+1}/${game.rounds} 라운드`}</small></div>
-    <ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.outcome==='rest'?'rest':r.outcome==='observe'?'observe':r.outcome==='partial'?'partial':r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
-    {phase==='ready'?<><ActivityDemo steps={createExpeditionRound(game,round,players).steps.map(s=>s.instruction)} equipment={game.equipment} roles={createExpeditionRound(game,round,players).roles} board={createExpeditionRound(game,round,players).board}/>
+    <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={phase!=='ready'}/><ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.outcome==='rest'?'rest':r.outcome==='observe'?'observe':r.outcome==='partial'?'partial':r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
+    {phase==='ready'?<>{!compact&&<ActivityDemo steps={createExpeditionRound(game,round,players).steps.map(s=>s.instruction)} equipment={game.equipment} roles={createExpeditionRound(game,round,players).roles} board={createExpeditionRound(game,round,players).board}/>}
       <p className="expedition-lead">{game.desc}</p>
       {!solo&&<label>참여 인원<select disabled={resumeAvailable} aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
       {solo&&players>1&&<p className="expedition-note">혼자 해보기에서는 여러 역할의 진행을 체험해요. 번호 확인은 실제 모둠원이 참여했다는 자동 인증이 아니에요.</p>}

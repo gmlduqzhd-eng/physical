@@ -37,7 +37,11 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
   if (!gameRoom.active_minigame) return null;
 
   const minigame = gameRoom.active_minigame;
-  const enqueueAction = (action: {payload: Record<string,unknown>;[key:string]:unknown}) => enqueueOriginal({...action,payload:{...action.payload,activityId:minigame.type??'classroom-extra'}});
+  const enqueueAction = (action: {payload: Record<string,unknown>;[key:string]:unknown}) => {
+    const details=action.payload.details as {participation?:string}|undefined;
+    if(details?.participation==='observed'||details?.participation==='rested')return;
+    enqueueOriginal({...action,payload:{...action.payload,activityId:minigame.type??'classroom-extra'}});
+  };
   const runId = minigame.run_id || `${minigame.type}_${minigame.end_time || minigame.target_time || minigame.explodesAt || ''}`;
   if (dismissedRunId === runId) return null;
 

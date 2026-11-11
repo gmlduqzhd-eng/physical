@@ -1,3 +1,5 @@
+import {ActivityCueControls} from './ActivityCueControls';
+import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {mergedMovementMeta,makeMergedMovementRound} from '../../../../domain/mergedMovementVariants';
 import { useEffect, useRef, useState } from 'react';
 import { makeQuestRound, questAccurate, questCue, questDuration, questResult, QUEST_META, safeRoute } from '../../../../domain/movementQuests';
@@ -17,6 +19,8 @@ export interface MovementQuestProps {
 type Phase = 'intro' | 'plan' | 'preview' | 'countdown' | 'active' | 'record' | 'done';
 
 export function MovementQuest({ gameId,variantId, groupId = 'standalone-player', solo = false, enqueueAction, onExit }: MovementQuestProps) {
+  const classroomPaused=useActivityPause();
+  const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
   const meta = (variantId&&mergedMovementMeta(variantId))||QUEST_META[gameId];
   const [settings, setSettings] = useState<QuestSettings>({ seated: false, gentle: true, practice: solo || !meta.team, players: Math.min(3,meta.maxPlayers??4), seed: Math.floor(Math.random()*1000) });
   const [reflection,setReflection]=useState('');
@@ -35,7 +39,8 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   const [error, setError] = useState('');
   const saved = useRef(false);
   const transition = useRef(false);
-  const plan = variantId?makeMergedMovementRound(variantId,round,settings,choice):makeQuestRound(gameId, round, settings, choice);
+  const basePlan = variantId?makeMergedMovementRound(variantId,round,settings,choice):makeQuestRound(gameId, round, settings, choice);
+  const plan={...basePlan,cueMs:Math.ceil(basePlan.cueMs*pace)};
   const duration = phase === 'countdown' ? 3000 : phase === 'preview' ? settings.gentle ? 7000 : 5000 : rehearsal ? plan.cueMs * Math.min(4, plan.cues.length) : questDuration(plan);
   const cue = questCue(plan, activeMs);
   const cueIndex = Math.floor(activeMs / plan.cueMs);
@@ -56,7 +61,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   }, []);
 
   useEffect(() => {
-    if (!['active', 'countdown', 'preview'].includes(phase) || paused) return;
+    if (!['active', 'countdown', 'preview'].includes(phase) || paused||classroomPaused) return;
     let last = performance.now();
     const interval = window.setInterval(() => {
       const now = performance.now();
@@ -65,17 +70,17 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       if (!document.hidden) setActiveMs(previous => Math.min(duration, previous + delta));
     }, 50);
     return () => window.clearInterval(interval);
-  }, [phase, paused, duration]);
+  }, [phase, paused, duration,classroomPaused]);
 
   useEffect(() => {
-    if (paused || activeMs < duration) return;
+    if (paused || classroomPaused||activeMs < duration) return;
     if (phase === 'preview') { setActiveMs(0); setPhase('countdown'); }
     else if (phase === 'countdown') { setActiveMs(0); setPhase('active'); }
     else if (phase === 'active') { setPhase('record'); window.speechSynthesis?.cancel(); }
-  }, [phase, activeMs, duration, paused]);
+  }, [phase, activeMs, duration, paused,classroomPaused]);
 
   useEffect(() => {
-    if (phase !== 'active' || paused || document.hidden) return;
+    if (phase !== 'active' || paused || classroomPaused||document.hidden) return;
     if (sound) sfxTap();
     if (voice && gameId !== 'dribble-rhythm' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -84,7 +89,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       window.speechSynthesis.speak(message);
     }
     return () => window.speechSynthesis?.cancel();
-  }, [phase, paused, sound, voice, gameId, cue, cueIndex]);
+  }, [phase, paused, sound, voice, gameId, cue, cueIndex,classroomPaused]);
 
   const start = (practice: boolean) => {
     if (!validChoice || transition.current) return;
@@ -117,7 +122,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
 
   return <section className="movement-quest" data-quest={gameId} data-movement-variant={variantId} data-phase={phase} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
     <header className="mq-heading"><span aria-hidden="true">{meta.emoji}</span><div><p>몸으로 푸는 원정 미션</p><h1>{meta.name}</h1></div><span className="mq-pill">{phase === 'intro' ? '준비' : `${round + 1} / 3 작전`}</span></header>
-    <div className="mq-progress" aria-label={`${records.length}개 작전 기록 완료`}>{[0, 1, 2].map(i => <span key={i} className={i < records.length ? 'is-complete' : ''}>{i < records.length ? records[i].outcome === 'complete' ? '◆' : '◇' : i + 1}</span>)}</div>
+    <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/><div className="mq-progress" aria-label={`${records.length}개 작전 기록 완료`}>{[0, 1, 2].map(i => <span key={i} className={i < records.length ? 'is-complete' : ''}>{i < records.length ? records[i].outcome === 'complete' ? '◆' : '◇' : i + 1}</span>)}</div>
     <ActivityProgress steps={[0,1,2].map(n=>(variantId?makeMergedMovementRound(variantId,n,settings):makeQuestRound(gameId,n,settings)).title)} current={round} results={records.map(r=>r.outcome)}/>
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
@@ -134,9 +139,9 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       {meta.sources&&<details className="mq-panel"><summary>확인한 공식 안내</summary>{meta.sources.map(source=><p key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></p>)}</details>}
       <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>
     </>}
-    {phase === 'plan' && <><ActivityDemo steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>
+    {phase === 'plan' && <>{!compact&&<ActivityDemo steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>}
       {records.length>0&&<p className="activity-brief">앞 작전: {records.at(-1)!.outcome==='complete'?'참여를 직접 확인했어요. 다음 선택을 비교해요.':'도전한 부분을 남겼어요. 이번에는 쉬운 방법이나 다른 작전을 골라도 돼요.'}</p>}
-      <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{plan.goal}</h2><p>{plan.hint}</p>
+      <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{compact?plan.title:plan.goal}</h2>{!compact&&<p>{plan.hint}</p>}
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
       {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}

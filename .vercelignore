@@ -14,6 +14,8 @@ scripts/*
 !scripts/games-improvements.test.ts
 !scripts/second-game-review.test.ts
 !scripts/third-game-review.test.ts
+!scripts/fourth-game-review.test.ts
+!scripts/fourth-game-workflows.cjs
 !scripts/phone-play.test.ts
 !scripts/movement-quests.test.ts
 !scripts/expedition-games.test.ts

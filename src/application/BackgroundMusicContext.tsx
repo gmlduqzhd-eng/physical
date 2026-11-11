@@ -29,6 +29,7 @@ const BackgroundMusicContext = createContext<{
   setVolume: (value: number) => void;
   toggle: () => void;
   suppress: (value: boolean) => void;
+  suspendLesson: (value: boolean) => void;
 } | null>(null);
 
 export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
@@ -41,6 +42,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const enabledRef = useRef(enabled);
   const eligibleRef = useRef(false);
   const suppressedRef = useRef(false);
+  const lessonPausedRef=useRef(false);
   const eligible = allowsBackgroundMusic(pathname);
 
   const attemptPlay = useCallback(() => {
@@ -50,6 +52,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
       !enabledRef.current ||
       !eligibleRef.current ||
       suppressedRef.current ||
+      lessonPausedRef.current ||
       document.hidden
     )
       return;
@@ -66,6 +69,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     },
     [attemptPlay],
   );
+  const suspendLesson=useCallback((value:boolean)=>{lessonPausedRef.current=value;if(value)audioRef.current?.pause();else attemptPlay();},[attemptPlay]);
 
   const toggle = useCallback(() => {
     const next = !enabledRef.current;
@@ -117,7 +121,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   }, [attemptPlay]);
 
   return (
-    <BackgroundMusicContext.Provider value={{ enabled, volume, setVolume, toggle, suppress }}>
+    <BackgroundMusicContext.Provider value={{ enabled, volume, setVolume, toggle, suppress,suspendLesson }}>
       <audio
         ref={audioRef}
         data-background-music="expedition"

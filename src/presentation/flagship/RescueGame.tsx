@@ -1,4 +1,5 @@
 import {rescueInputMode} from '../../domain/flagshipParticipation';
+import {createActiveClock} from '../../domain/gameReviewGuards';
 import {useEffect,useRef,useState} from 'react';
 import {RESCUE_ROUNDS,rescueHit,trajectory} from '../../domain/flagship';
 import {useLocalPose} from '../../application/useLocalPose';
@@ -8,15 +9,17 @@ export function RescueGame({disabled,onSolved,onMode,onReset,level='normal'}:{le
  const rules=LEVEL_RULES[level];
  const pose=useLocalPose(),[assisted,setAssisted]=useState(true),[angle,setAngle]=useState(45),[power,setPower]=useState(35),[round,setRound]=useState(0),[shot,setShot]=useState<{x:number;y:number}[]|null>(null),[at,setAt]=useState(0),[message,setMessage]=useState(''),[charging,setCharging]=useState(false);
  const [history,setHistory]=useState<{goal:number;angle:number;power:number;landing:number;hit:boolean}[]>([]);
- const launched=useRef(false),chargeStart=useRef(0),roundStart=useRef(0),usedAssistance=useRef(false);
- useEffect(()=>{if(!assisted&&pose.value)setAngle(Math.round(pose.value.angle));},[pose.value,assisted]);
+ const launched=useRef(false),chargeStart=useRef(0),usedAssistance=useRef(false);
+ const running=useRef(disabled);running.current=disabled;
+ useEffect(()=>{if(!assisted&&pose.value&&!shot)setAngle(Math.round(pose.value.angle));},[pose.value,assisted,shot]);
  useEffect(()=>{if(round<3)onMode(rescueInputMode(usedAssistance.current,assisted));},[assisted,onMode,round]);
  const stopPose=pose.stop;
  const changeMode=(next:boolean)=>{if(round>=3)return;setCharging(false);setAssisted(next);};
  useEffect(()=>{const hide=()=>{if(document.hidden)setCharging(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
  useEffect(()=>{if(disabled){stopPose();setCharging(false);}},[disabled,stopPose]);
  useEffect(()=>{if(!charging)return;const timer=setInterval(()=>setPower(Math.round(15+(Math.sin((performance.now()-chargeStart.current)/900-Math.PI/2)+1)*37)),40);return()=>clearInterval(timer);},[charging]);
- useEffect(()=>{if(!shot)return;roundStart.current=performance.now();const timer=setInterval(()=>{const i=Math.floor((performance.now()-roundStart.current)/20);setAt(Math.min(i,shot.length-1));if(i>=shot.length-1)clearInterval(timer);},20);return()=>clearInterval(timer);},[shot]);
+ useEffect(()=>{if(!assisted&&pose.status!=='tracking')setCharging(false);},[assisted,pose.status]);
+ useEffect(()=>{if(!shot)return;const clock=createActiveClock(performance.now());const timer=setInterval(()=>{const elapsed=clock.sample(performance.now(),running.current||document.hidden);const i=Math.floor(elapsed/20);setAt(Math.min(i,shot.length-1));if(i>=shot.length-1)clearInterval(timer);},20);return()=>clearInterval(timer);},[shot]);
  const launch=()=>{usedAssistance.current ||= assisted;onMode(rescueInputMode(usedAssistance.current,assisted));setCharging(false);const r=RESCUE_ROUNDS[Math.min(round,2)];const points=trajectory(angle,power,r.wind);launched.current=rescueHit(angle,power,round,rules.rescueRadius);setHistory(old=>[...old,{goal:round+1,angle,power,landing:points.at(-1)!.x,hit:launched.current}].slice(-6));setShot(points);setAt(0);const difference=points.at(-1)!.x-r.target;setMessage(launched.current?'구조 캡슐이 목표에 도착했어요!':difference<0?'목표 앞에 도착했어요. 각도는 두고 추진력 한 항목부터 바꾸어 비교해요.':'목표를 지나쳤어요. 각도는 두고 추진력 한 항목부터 바꾸어 비교해요.');};
  const r=RESCUE_ROUNDS[Math.min(round,2)],path=shot??trajectory(angle,power,r.wind),point=shot?.[at],ready=!disabled&&(assisted||pose.status==='tracking');
  return <><PoseControls pose={pose} assisted={assisted} setAssisted={changeMode} disabled={disabled||round>=3}/><p>짝이 바람을 살펴 몸짓으로 안내하고, 조종자는 팔의 방향과 타이밍을 조절해요. 한 목표마다 역할을 바꿔요.</p><p className="flagship-progress">구조 목표 {Math.min(round+1,3)} / 3 · 바람 {r.wind===0?'잔잔':r.wind<0?'← 맞바람':'뒷바람 →'}</p><svg className="flagship-rescue" viewBox="0 0 160 110" role="img" aria-label="구조 캡슐 예상 경로와 도착 목표"><rect width="160" height="110" rx="5" fill="#e5eee3"/><path d="M0 100H160" stroke="#66806a" strokeWidth="2"/><rect x={r.target-rules.rescueRadius} y="94" width={rules.rescueRadius*2} height="7" rx="2" fill="#dfaa58"/><text x={r.target} y="90" textAnchor="middle" fontSize="6" fill="#273e31">구조 지점</text><polyline points={path.map(p=>`${p.x},${100-p.y}`).join(' ')} fill="none" stroke="#577c6a" strokeWidth=".7" strokeDasharray="2 2"/>{point&&<circle cx={point.x} cy={100-point.y} r="2.5" fill="#ca784c"/>}<circle cx="5" cy="92" r="3" fill="#587450"/></svg>

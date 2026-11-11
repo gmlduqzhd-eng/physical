@@ -1,3 +1,4 @@
+import {useActivityPause} from '../../../application/ActivityPauseContext';
 import { useState, useEffect } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Play, CheckCircle2 } from 'lucide-react';
@@ -11,6 +12,7 @@ const EMOTIONS = [
   { key: 'confidence', name: '자신감', emoji: '🦁', desc: '어떤 도전도 해낼 수 있는 당당한 용기' },
   { key: 'calm', name: '차분함', emoji: '🍃', desc: '잔잔한 호수처럼 평화롭고 고요한 숨결' },
 ];
+type EmotionRound={emotion:string;temperature:number;guess:string;guessTemperature:number;scene:string};
 
 interface Props {
   groupId?: string;
@@ -19,9 +21,11 @@ interface Props {
 }
 
 export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) => {
+  const classroomPaused=useActivityPause();
   // 1: 가상 감정 & 온도 선택, 2: 15초 신체 표현 타이머, 3: 짝 감상 선택, 4: 감상 공유 리포트
   const [scene,setScene]=useState('보물 상자를 여는 탐험가');
-  const [firstRound,setFirstRound]=useState<{emotion:string;temperature:number;guess:string;guessTemperature:number;scene:string}|null>(null);
+  const [firstRound,setFirstRound]=useState<EmotionRound|null>(null),[secondRound,setSecondRound]=useState<EmotionRound|null>(null);
+  const [actor,setActor]=useState<'A'|'B'>('A');
   const [reveal,setReveal]=useState(false);
   const [phase, setPhase] = useState<number>(1);
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0]>(EMOTIONS[0]);
@@ -34,12 +38,12 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!isTimerRunning) return;
+    if (!isTimerRunning||classroomPaused) return;
     const interval = setInterval(() => {
       setExpressTimer(t => (t <= 1 ? 0 : t - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [isTimerRunning]);
+  }, [isTimerRunning,classroomPaused]);
 
   useEffect(() => {
     if (isTimerRunning && expressTimer === 0) {
@@ -54,6 +58,8 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
     setIsTimerRunning(true);
     sfxCoin();
   };
+  const restore=(round:EmotionRound)=>{setScene(round.scene);setSelectedEmotion(EMOTIONS.find(e=>e.name===round.emotion)??EMOTIONS[0]);setTemperature(round.temperature);setPeerGuessEmotion(round.guess);setPeerGuessTemp(round.guessTemperature);setExpressTimer(15);setIsTimerRunning(false);setReveal(false);};
+  const retryRole=(role:'A'|'B')=>{const current={emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp,scene};setSecondRound(current);setActor(role);restore(role==='A'?firstRound!:current);setPeerGuessEmotion('');setPhase(1);};
 
   useEffect(() => {
     const hide = () => { if (document.hidden) setIsTimerRunning(false); };
@@ -79,7 +85,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
-      onRestart={() => { setFirstRound(null); setReveal(false); setPhase(1); setSelectedEmotion(EMOTIONS[0]); setTemperature(3); setPeerGuessEmotion(''); setPeerGuessTemp(3); setExpressTimer(15); setIsTimerRunning(false); }}
+      onRestart={() => { setFirstRound(null);setSecondRound(null);setActor('A'); setReveal(false); setPhase(1); setSelectedEmotion(EMOTIONS[0]); setTemperature(3); setPeerGuessEmotion(''); setPeerGuessTemp(3); setExpressTimer(15); setIsTimerRunning(false); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
@@ -157,7 +163,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
           {/* Phase 2: 15초 동안 실제 몸 전체로 감정 표현 */}
           {phase === 2 && (
             <div className="py-6 text-center">
-              <p>표현자: {firstRound?'친구 B':'친구 A'} · 감상자: {firstRound?'친구 A':'친구 B'}</p><button onClick={()=>setReveal(v=>!v)}>{reveal?'표현자의 선택 다시 가리기':'표현자만 선택 확인하기'}</button>
+              <p>표현자: {actor==='B'?'친구 B':'친구 A'} · 감상자: {actor==='B'?'친구 A':'친구 B'}</p><button onClick={()=>setReveal(v=>!v)}>{reveal?'표현자의 선택 다시 가리기':'표현자만 선택 확인하기'}</button>
               <div className="inline-block px-3 py-1 rounded-full bg-purple-950 border border-purple-800 text-xs font-bold text-purple-300 mb-2">
                 {reveal?`선택한 감정: ${selectedEmotion.name} (${temperature}단계 강도)`:'감상자에게는 선택을 가리고 몸 표현을 보여 주세요.'}
               </div>
@@ -297,11 +303,11 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                 </p>
               </div>
 
-              <button
-                onClick={() => {if(!firstRound){setFirstRound({emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp,scene});setPhase(1);setExpressTimer(15);setIsTimerRunning(false);setPeerGuessEmotion('');setReveal(false);return;}onComplete('두 사람이 표현자·감상자를 바꾸어 비교했어요.',{participation:'performed',metrics:{'가상 상황':`A: ${firstRound.scene} / B: ${scene}`,'친구 A 표현':`${firstRound.emotion} · ${firstRound.temperature}단계 / 친구 B 감상 ${firstRound.guess} · ${firstRound.guessTemperature}단계`,'친구 B 표현':`${selectedEmotion.name} · ${temperature}단계 / 친구 A 감상 ${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌의 이유를 함께 이야기했어요.'});}}
+              {firstRound&&actor==='B'&&<section className="activity-brief"><h4>한 역할만 다시 표현하기</h4><p>A의 결과를 바꾸어도 B의 비교 기록은 유지하고, B만 다시 하면 A를 유지해요.</p><button onClick={()=>retryRole('A')}>A 역할만 다시 표현하기</button><button onClick={()=>retryRole('B')}>B 역할만 다시 표현하기</button></section>}<button
+                onClick={() => {if(actor==='A'){setFirstRound({emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp,scene});setActor('B');if(secondRound){restore(secondRound);setPhase(4);}else{setPhase(1);setExpressTimer(15);setIsTimerRunning(false);setPeerGuessEmotion('');setReveal(false);}return;}if(!firstRound)return;onComplete('두 사람이 표현자·감상자를 바꾸어 비교했어요.',{participation:'performed',metrics:{'가상 상황':`A: ${firstRound.scene} / B: ${scene}`,'친구 A 표현':`${firstRound.emotion} · ${firstRound.temperature}단계 / 친구 B 감상 ${firstRound.guess} · ${firstRound.guessTemperature}단계`,'친구 B 표현':`${selectedEmotion.name} · ${temperature}단계 / 친구 A 감상 ${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌의 이유를 함께 이야기했어요.'});}}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
-                <CheckCircle2 className="w-4 h-4" /> {firstRound?'두 역할 비교하고 완료하기':'역할 바꾸어 두 번째 표현하기'}
+                <CheckCircle2 className="w-4 h-4" /> {actor==='B'?'두 역할 비교하고 완료하기':'역할 바꾸어 두 번째 표현하기'}
               </button>
             </div>
           )}

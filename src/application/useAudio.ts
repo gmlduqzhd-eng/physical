@@ -1,11 +1,15 @@
+import {useActivityPause} from './ActivityPauseContext';
 import { useCallback, useEffect, useRef } from 'react';
 
 // 브라우저 AudioContext를 활용한 절차적 사운드 생성 엔진 (외부 MP3 파일 의존성 제거)
 export const useAudio = () => {
+  const paused=useActivityPause(),pausedRef=useRef(paused);pausedRef.current=paused;
   const audioCtx = useRef<AudioContext | null>(null);
   const lastSirenPlay = useRef(0);
 
+  useEffect(()=>{if(paused&&audioCtx.current){void audioCtx.current.close().catch(()=>{});audioCtx.current=null;}},[paused]);
   const getAudioCtx = useCallback(() => {
+    if(pausedRef.current)return null;
     try {
     if (!audioCtx.current || audioCtx.current.state === 'closed') {
       const AudioCtxConstructor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;

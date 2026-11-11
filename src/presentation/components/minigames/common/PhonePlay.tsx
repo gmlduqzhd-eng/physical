@@ -1,3 +1,6 @@
+import {ActivityCueControls} from './ActivityCueControls';
+import {validPhoneFill} from '../../../../domain/fourthGameRules';
+import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {useEffect,useRef,useState} from 'react';
 import {phonePlayerRange,phoneRecordValid,phoneSafety,phoneSequence,phoneSetup,phoneTarget,type PhonePlay as Play,type PhoneRecord} from '../../../../domain/phonePlayCatalog';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
@@ -10,6 +13,8 @@ import {PhonePlayIcon} from '../../PhonePlayIcon';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
 export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
+ const classroomPaused=useActivityPause();
+ const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
  const range=phonePlayerRange(p);
  const [phase,setPhase]=useState<Phase>('intro'),[round,setRound]=useState(0),[practice,setPractice]=useState(true),[rehearsed,setRehearsed]=useState(false);
  const [players,setPlayers]=useState(solo?1:range.min),[seated,setSeated]=useState(false),[level,setLevel]=useState('기본 방법'),[voice,setVoice]=useState(false),[sound,setSound]=useState(true);
@@ -20,14 +25,14 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
  const [comparison,setComparison]=useState(''),[fill,setFill]=useState(''),[rawCount,setRawCount]=useState(''),[carry,setCarry]=useState(0),[goals,setGoals]=useState<string[]>([]),[individual,setIndividual]=useState<string[]>([]);
  const submitted=useRef(false),transition=useRef(false);
  const memory=phoneMemoryTask(p,round,level==='쉬운 방법',level==='추가 도전',fill),observation=phoneObservation(p),roundCheck=phoneRoundCheck(p,round);
- const sequence=p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:p.seconds*1000;
+ const sequence=p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:Math.max(p.seconds*1000,phoneRoundCues(p,round,level,created,strategy).length*6000*pace);
  const activeCues=phoneRoundCues(p,round,level,created,strategy);
- const cueIndex=Math.floor(elapsed/6000),cue=activeCues[cueIndex%activeCues.length];
+ const cueIndex=Math.floor(elapsed/(6000*pace)),cue=activeCues[cueIndex%activeCues.length];
  const leader=(round+cueIndex)%players+1;
  const displayCue=seated?p.seated:p.kind==='team'?(p.id==='phone-play-008'?phoneRoles(p,players,round)[leader-1].role:phoneTeamMotion(p,round)):cue;
  const options=phoneStrategies(p,round);
  const roles=phoneRoles(p,players,round,created,seated);
- const decisionReady=(p.kind!=='decision'||!!choice)&&(p.kind!=='create'||created.length>=2)&&(p.kind!=='observe'||!!before)&&(p.id!=='phone-play-033'||!!fill)&&(p.id!=='phone-play-061'||Array.from({length:players},(_,i)=>goals[i]).every(v=>v!==undefined&&/^\d{1,2}$/.test(v)));
+ const decisionReady=(p.kind!=='decision'||!!choice)&&(p.kind!=='create'||created.length>=2)&&(p.kind!=='observe'||!!before)&&(p.id!=='phone-play-033'||validPhoneFill(fill,phoneFillOptions(round)))&&(p.id!=='phone-play-061'||Array.from({length:players},(_,i)=>goals[i]).every(v=>v!==undefined&&/^\d{1,2}$/.test(v)));
  const accurate=p.kind==='memory'?JSON.stringify(answer)===JSON.stringify(memory.expected):p.kind==='estimate'?Math.abs(elapsed-phoneTarget(round)*1000)<=3500:true;
  const validCount=count===''||/^\d{1,3}$/.test(count);const countsReady=p.id!=='phone-play-061'||Array.from({length:players},(_,i)=>individual[i]).every(v=>v!==undefined&&/^\d{1,2}$/.test(v));
  const goalsMet=p.id!=='phone-play-061'||individual.every((v,i)=>Number(v)>=Number(goals[i]));
@@ -39,22 +44,22 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   return()=>{document.removeEventListener('visibilitychange',hide);window.speechSynthesis?.cancel();};
  },[]);
  useEffect(()=>{
-  if(!['active','countdown'].includes(phase)||paused)return;
+  if(!['active','countdown'].includes(phase)||paused||classroomPaused)return;
   let last=performance.now();
   const timer=window.setInterval(()=>{const now=performance.now();const delta=now-last;last=now;if(!document.hidden)setElapsed(n=>Math.min(duration,n+delta));},100);
   return()=>window.clearInterval(timer);
- },[phase,paused,duration]);
+ },[phase,paused,duration,classroomPaused]);
  useEffect(()=>{
-  if(paused||elapsed<duration)return;
+  if(paused||classroomPaused||elapsed<duration)return;
   if(phase==='countdown'){setElapsed(0);setPhase('active');}
   else if(phase==='active'){setPhase('record');window.speechSynthesis?.cancel();}
- },[phase,elapsed,duration,paused]);
+ },[phase,elapsed,duration,paused,classroomPaused]);
  useEffect(()=>{
-  if(phase!=='active'||paused||document.hidden)return;
+  if(phase!=='active'||paused||classroomPaused||document.hidden)return;
   if(sound)sfxTap();
   if(voice&&p.kind!=='memory'&&p.kind!=='estimate'&&window.speechSynthesis){const text=new SpeechSynthesisUtterance(displayCue+(seated?' 앉은 대안으로 해요.':''));text.lang='ko-KR';window.speechSynthesis.cancel();window.speechSynthesis.speak(text);}
   return()=>window.speechSynthesis?.cancel();
- },[phase,paused,voice,sound,p.kind,displayCue,cueIndex,seated]);
+ },[phase,paused,voice,sound,p.kind,displayCue,cueIndex,seated,classroomPaused]);
  const resetRecord=()=>{setMoved(false);setChecked(false);setParticipants([]);setAnswer([]);setCount('');setQuick(false);setAfter('');setComparison('');setIndividual([]);setRawCount('');};
  const start=(isPractice:boolean)=>{
   if(transition.current||!decisionReady)return;transition.current=true;unlockAudio();resetRecord();setPractice(isPractice);setElapsed(0);setPaused(false);setPhase('countdown');queueMicrotask(()=>{transition.current=false;});
@@ -66,7 +71,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   if(!phoneRecordValid(p,record,players))return;
   transition.current=true;
   const next=[...records,record];
-  if(round<2){setNextHint(phoneNextHint(p,outcome,round));setRecords(next);setRound(n=>n+1);setChoice('');if(p.id==='phone-play-009')setCarry(record.remainder??0);if(p.kind==='decision')setStrategy('core');if(p.kind==='create')setCreated(old=>[...old].reverse());if(p.kind==='observe'){setBefore(after||before);setAfter('');}setPhase('plan');resetRecord();setElapsed(0);}
+  if(round<2){setNextHint(phoneNextHint(p,outcome,round));setRecords(next);setRound(n=>n+1);setFill('');setChoice('');if(p.id==='phone-play-009')setCarry(record.remainder??0);if(p.kind==='decision')setStrategy('core');if(p.kind==='create')setCreated(old=>[...old].reverse());if(p.kind==='observe'){setBefore(after||before);setAfter('');}setPhase('plan');resetRecord();setElapsed(0);}
   else{
    submitted.current=true;setRecords(next);setPhase('done');
    const amount=next.reduce((total,r)=>total+(r.outcome==='complete'?100:r.outcome==='partial'?50:0),0);
@@ -78,7 +83,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
  };
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
-  <ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/>
+  <ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/><ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/>
   {phase==='intro'&&<>
    <p className="pp-lead">{p.goal}</p><div className="pp-badges"><span>약 {p.minutes}분</span><span>{p.intensity} 강도</span><span>{p.players} · {range.min===range.max?range.min:`${range.min}~${range.max}`}명</span><span>스마트폰 1대</span></div>
    <section className="pp-panel"><h2>이렇게 준비해요</h2><p>{phoneSetup(p)}</p><ol>{p.rules.map(rule=><li key={rule}>{rule}</li>)}</ol><p><strong>완료 기준</strong> · {p.check}</p><p>화면 점수는 직접 확인한 참여 기록이에요. 기기가 동작이나 체력을 판정하지 않아요.</p></section>
@@ -92,8 +97,8 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
    <button className="pp-primary" onClick={()=>setPhase('plan')}>놀이 방법 익히기</button>
   </>}
   {phase==='plan'&&<>
-   <h2>{p.rounds[round]}</h2>{nextHint&&<p className="pp-notice">앞 과제에서 이어가기 · {nextHint}</p>}<p>{seated?p.seated:level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules.join(' ')}</p>
-   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map((c,i)=><li key={i}>{c}</li>)}</ol><p>{p.kind==='memory'?memory.rule:roundCheck}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이며, 6초 신호마다 다음 번호가 이어받아요. 마지막 번호 다음에는 1번으로 돌아와요.</p>}</section>
+   <h2>{p.rounds[round]}</h2>{nextHint&&<p className="pp-notice">앞 과제에서 이어가기 · {nextHint}</p>}{!compact&&<p>{seated?p.seated:level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules.join(' ')}</p>}
+   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map((c,i)=><li key={i}>{c}</li>)}</ol><p>{p.kind==='memory'?memory.rule:roundCheck}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이며, {(6*pace).toFixed(1)}초 신호마다 다음 번호가 이어받아요. 마지막 번호 다음에는 1번으로 돌아와요.</p>}</section>
    {players>1&&<section className="pp-panel"><h3>이번 과제의 자리별 동작·신호</h3><div className="activity-role-cards">{roles.map(r=><p key={r.seat}><strong>{r.seat}번 자리</strong>{r.role}</p>)}</div><p>실명 대신 이 놀이 안의 자리 번호예요. 과제가 바뀌면 담당도 바뀌며 모두 몸으로 참여해요.</p></section>}
    {p.kind==='decision'&&<><p className="pp-notice">가상 상황 카드 · {phoneScenario(p,round)} · 실제 교실과 다르면 교사가 참여 방법을 조정해요.</p><fieldset><legend>‘{p.rounds[round]}’을 어떤 방법으로 실행할까요?</legend>{options.map(option=><button key={option.id} aria-pressed={choice===option.id} onClick={()=>{setChoice(option.id);setStrategy(option.id);}}><strong>{option.label}</strong><p>{option.guide}</p></button>)}<p>상황에 맞는 방법을 직접 고르고 몸으로 비교해요. 선택 결과가 활동 중 안내에 반영돼요.</p>{p.options&&<details><summary>원래 상황의 안전 계획 살펴보기</summary><p>{p.options[0]} · {p.check}</p></details>}</fieldset></>}
    {p.kind==='create'&&<fieldset><legend>우리 동작 문장 만들기 · 두 개 이상 순서대로 선택</legend><p>{created.join(' → ')||'선택한 동작이 활동 중 순서대로 나타나요.'}</p>{p.cues.map(c=><button key={c} disabled={created.includes(c)} onClick={()=>setCreated(old=>[...old,c])}>{c}</button>)}<button onClick={()=>setCreated([])}>동작 문장 다시 만들기</button><p>다음 과제에서는 앞서 만든 문장을 거꾸로 받아 바꾸어 볼 수 있어요.</p></fieldset>}
@@ -106,7 +111,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
     <p>{paused?'잠깐 쉬고 있어요':phase==='countdown'?'기기를 내려놓고 주변을 확인해요':p.rounds[round]}</p>
     <strong>{paused?'일시정지':phase==='countdown'?Math.max(1,Math.ceil((duration-elapsed)/1000)):p.kind==='memory'?(p.id==='phone-play-006'?memory.shown[cueIndex%memory.shown.length]:p.id==='phone-play-003'?'새 신호: '+sequence[cueIndex%sequence.length]+' · 앞 신호의 동작을 해요':memory.rule):p.kind==='estimate'?'걸음으로 시간을 가늠해요':displayCue}</strong>
     <p>{phase==='active'&&p.kind!=='estimate'?`${Math.ceil((duration-elapsed)/1000)}초 남음`:phase==='active'?'시간 표시는 가렸어요.':'4초 뒤 시작해요.'}</p>
-   </div><p>{seated?p.seated:p.goal}</p><p>화면 조작 없이 동작에 집중해요.</p>
+   </div>{!compact&&<p>{seated?p.seated:p.goal}</p>}<p>화면 조작 없이 동작에 집중해요.</p>
    {phase==='active'&&players>1&&<p data-phone-leader={leader}>지금 이끄는 사람: {leader}번 · 다른 친구도 자기 공간에서 함께 움직여요.</p>}
    {phase==='active'&&p.kind==='estimate'&&!practice&&<button className="pp-primary" disabled={paused||elapsed<1000} onClick={()=>{setPhase('record');window.speechSynthesis?.cancel();}}>멈췄어요 · 시간 확인</button>}
    <button onClick={()=>{setPaused(v=>!v);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 쉬기'}</button>

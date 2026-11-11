@@ -1,3 +1,5 @@
+import {rhythmWindow} from '../../../domain/fourthGameRules';
+import {useActivityPause} from '../../../application/ActivityPauseContext';
 import { useState, useEffect, useRef } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { Sparkles, Music, Users, Star, Play, RotateCcw, Volume2, CheckCircle2 } from 'lucide-react';
@@ -27,8 +29,10 @@ interface Props {
 }
 
 export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onExit }: Props) => {
+  const classroomPaused=useActivityPause();
   // setup (카드 확인 및 동작 설계) -> practice (메트로놈과 합 맞추기) -> showtime (상대 모둠 발표) -> peer_review (동료 평가) -> finished
   const [phase, setPhase] = useState<'setup' | 'practice' | 'showtime' | 'peer_review' | 'finished'>('setup');
+  const [practiceStart,setPracticeStart]=useState(1),[practiceCount,setPracticeCount]=useState(1);
   const [currentBeat, setCurrentBeat] = useState<number>(1);
   const [isPlayingBeat, setIsPlayingBeat] = useState<boolean>(false);
   const [cards, setCards] = useState<MovementCard[]>(DEFAULT_CARDS);
@@ -45,20 +49,20 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
 
   // 메트로놈 / 비트 재생 (BPM 90 = 667ms 간격)
   useEffect(() => {
-    if (!isPlayingBeat) {
+    if (!isPlayingBeat||classroomPaused) {
       if (beatTimerRef.current) clearInterval(beatTimerRef.current);
       return;
     }
 
     beatTimerRef.current = setInterval(() => {
-      setCurrentBeat(b => (b % 4) + 1);
+      setCurrentBeat(b => phase==='practice'?rhythmWindow(b,practiceStart,practiceCount):(b%4)+1);
       sfxClick();
     }, 60000 / 90);
 
     return () => {
       if (beatTimerRef.current) clearInterval(beatTimerRef.current);
     };
-  }, [isPlayingBeat]);
+  }, [isPlayingBeat,classroomPaused,phase,practiceStart,practiceCount]);
 
   const randomizeCards = () => {
     sfxCoin();
@@ -122,7 +126,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         '발표 후 상대 모둠이 태블릿으로 창의성·박자감·협동심 별점을 매겨 피드백을 전달합니다.',
       ]}
       onExit={onExit}
-      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(0); setRatingRhythm(0); setRatingTeamwork(0); setFeedbackTag('');setNextPractice(''); completionRef.current = false; }}
+      onRestart={() => { setPracticeStart(1);setPracticeCount(1);setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(0); setRatingRhythm(0); setRatingTeamwork(0); setFeedbackTag('');setNextPractice(''); completionRef.current = false; }}
     >
       {({ onComplete }) => (
         <div className="w-full max-w-lg mx-auto flex flex-col gap-5 p-4 text-white">
@@ -163,7 +167,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               <button
                 onClick={() => {
                   setPhase('practice');
-                  setCurrentBeat(1);
+                  setCurrentBeat(practiceStart);
                   setIsPlayingBeat(true);
                   sfxCoin();
                 }}
@@ -176,7 +180,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
 
           {(phase === 'practice' || phase === 'showtime') && (
             <div className="flex flex-col gap-4">
-              <button type="button" onClick={() => setIsPlayingBeat(playing => !playing)} aria-pressed={isPlayingBeat} className="min-h-11 px-4 py-2 rounded-xl bg-slate-800 text-cyan-300 font-bold">
+              {phase==='practice'&&<section className="activity-brief"><h3>작게 나누어 연결해요</h3><label>연습 범위<select aria-label="리듬 연습 범위" value={`${practiceStart}:${practiceCount}`} onChange={e=>{const [start,count]=e.target.value.split(':').map(Number);setPracticeStart(start);setPracticeCount(count);setCurrentBeat(start);}}>{[[1,1],[2,1],[3,1],[4,1],[1,2],[2,2],[3,2],[1,4]].map(([start,count])=><option key={`${start}:${count}`} value={`${start}:${count}`}>{count===1?`${start}마디만 반복`:count===2?`${start}~${start+1}마디 연결`:'1~4마디 전체 연결'}</option>)}</select></label><p>한 마디를 익히고 두 마디로, 마지막에 전체를 연결해요. 순서 변경은 연습 중에만 적용해요.</p></section>}<button type="button" onClick={() => setIsPlayingBeat(playing => !playing)} aria-pressed={isPlayingBeat} className="min-h-11 px-4 py-2 rounded-xl bg-slate-800 text-cyan-300 font-bold">
                 {isPlayingBeat ? '비트 일시 정지' : '비트 다시 재생'} · 90 BPM
               </button>
               {/* 상단 비트 인디케이터 메트로놈 */}
@@ -216,7 +220,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               {phase === 'practice' && (
                 <button
                   onClick={() => {
-                    setPhase('showtime');
+                    setCurrentBeat(1);setPhase('showtime');
                     sfxSuccess();
                   }}
                   className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 font-bold text-lg text-white shadow-lg active:scale-95 flex items-center justify-center gap-2"

@@ -1,3 +1,6 @@
+import {ActivityPauseBoundary} from '../application/ActivityPauseContext';
+import {classroomResultMessage} from '../domain/fourthGameRules';
+import {useClassroomActivityStatus} from '../application/useClassroomActivityStatus';
 import {FLAGSHIP_GAMES,isFlagship} from '../domain/flagship';
 import {FlagshipActivity} from './flagship/FlagshipActivity';
 import {RetiredGameNotice} from './components/minigames/common/RetiredGameNotice';
@@ -248,6 +251,7 @@ const GamePlaySession = () => {
   const guidedRequested = !soloMode && searchParams.get('guided') === '1';
   const missionId = soloMode ? null : searchParams.get('mission');
   const guidedMode = hasBattle && !!missionId;
+  const classroomActivity=useClassroomActivityStatus(hasBattle?battleRoomId:null);
   const variantId=searchParams.get('variant');
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
@@ -346,12 +350,13 @@ const GamePlaySession = () => {
   }, [gameType]);
 
   // The shared music preference controls the game's synthesized BGM too.
-  const { enabled: musicEnabled, volume: musicVolume } = useBackgroundMusic();
+  const { enabled: musicEnabled, volume: musicVolume,suspendLesson } = useBackgroundMusic();
+  useEffect(()=>{suspendLesson(classroomActivity.paused);return()=>suspendLesson(false);},[classroomActivity.paused,suspendLesson]);
   useEffect(() => {
-    if (musicEnabled && !gameFinished) startBgm(musicVolume);
+    if (musicEnabled && !gameFinished&&!classroomActivity.paused) startBgm(musicVolume);
     else stopBgm();
     return () => stopBgm();
-  }, [musicEnabled, musicVolume, gameFinished]);
+  }, [musicEnabled, musicVolume, gameFinished,classroomActivity.paused]);
 
   const baseGameInfo=GAME_TITLES[gameType||''];
   const gameInfo=useMemo(()=>selectedVariant?{...baseGameInfo,name:`${baseGameInfo.name} · ${selectedVariant.name}`,target:'통합 활동의 선택 코스'}:baseGameInfo,[baseGameInfo,selectedVariant]);
@@ -380,7 +385,7 @@ const GamePlaySession = () => {
     // 성공/실패 효과음
     if (earned > 0) {
       sfxSuccess();
-      speak(hasBattle ? `활동 완료! 모둠 점수 ${classroomScore}점을 제출했습니다!` : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
+      speak(hasBattle ? `참여 기록을 이 기기에 남겼어요. 전송 상태와 교사 확인은 화면에서 살펴보세요.` : `참여 기록 ${earned}점을 이 기기에 남겼어요.`, true);
     } else {
       sfxTap();
       speak('확인한 도전을 기록했어요. 다음에는 다른 방법도 골라 보세요.', true);
@@ -407,10 +412,10 @@ const GamePlaySession = () => {
   }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion,selectedVariant,baseGameInfo,scoreKey]);
 
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
-    if (completionRef.current || !Number.isFinite(action.payload.amount)) return;
+    if (classroomActivity.paused||completionRef.current || !Number.isFinite(action.payload.amount)) return;
     completionRef.current = true;
     commitResult(action.payload);
-  }, [commitResult]);
+  }, [commitResult,classroomActivity.paused]);
 
   const handleReturnToCatalog = () => {
     // Stop active animation timers before rendering the full catalog on mobile.
@@ -623,6 +628,7 @@ const GamePlaySession = () => {
   return (
     <div ref={gameLayoutRef} className="game-tools-scope game-tools-layout">
       <div className="game-utilities-bar"><HeaderToolbar><button className="icon-toolbar-action" type="button" onClick={handleReturnToCatalog} title="활동 목록으로"><ArrowLeft aria-hidden="true"/><span>활동 목록으로</span></button><button className="icon-toolbar-action" type="button" onClick={() => navigate('/manual')} title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
+      <ActivityPauseBoundary paused={classroomActivity.paused} message={classroomActivity.message}>
     <div className={`warm-game gameplay-page ${hasStarted ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 활동 준비 화면 */}
       {!hasStarted && !gameFinished && (
@@ -697,7 +703,7 @@ const GamePlaySession = () => {
             <p className="text-emerald-400 font-bold text-xs mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
             {hasBattle && (
               <p role="status" className="mb-4 text-center text-xs text-cyan-300">
-                {resultDetails?.completion==='partial'&&!quietResult?'일부 수행 기록이에요. 화면에 표시한 점수만 반영하며 완료 신고는 보내지 않아요.':quietResult?'휴식·관찰은 이 기기에 기록하며 수행 완료나 모둠 점수로 제출하지 않아요.':syncWarning || (queueLength === 0 ? '점수 전송을 마쳤어요. 교사 확인 방식인 수업은 승인 후 반영돼요.' : !storageAvailable ? '점수 전송을 위해 이 화면을 열어 두세요.' : !isOnline ? '연결이 돌아오면 모둠 점수를 자동으로 전송합니다.' : '모둠 점수를 반영하고 있습니다…')}
+                {classroomResultMessage({quiet:quietResult,partial:resultDetails?.completion==='partial',queue:queueLength,online:isOnline,warning:syncWarning??'',score:classroomResultScore(lastEarnedScore,resultDetails)})}{!storageAvailable&&queueLength>0&&' 이 화면을 열어 두세요.'}
               </p>
             )}
             {guidedMode && !quietResult && resultDetails?.completion!=='partial' && guidedSubmission.error && (
@@ -794,7 +800,7 @@ const GamePlaySession = () => {
       />
 
 
-    </div></div>
+    </div></ActivityPauseBoundary></div>
   );
 };
 

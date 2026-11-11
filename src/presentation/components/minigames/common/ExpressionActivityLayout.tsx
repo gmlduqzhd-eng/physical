@@ -1,3 +1,5 @@
+import {ActivityCueControls} from './ActivityCueControls';
+import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import { useGameTimeouts } from './useGameTimeouts';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Award } from 'lucide-react';
@@ -21,6 +23,8 @@ export const ExpressionActivityLayout = ({
   onExit,
   prepared = false,
 }: ExpressionActivityLayoutProps) => {
+  const classroomPaused=useActivityPause();
+  const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
   const scheduleTimeout = useGameTimeouts();
   // 단계: 'countdown' -> 'active' -> 'rubric' -> 'result'
   const [phase, setPhase] = useState<'countdown' | 'active' | 'rubric' | 'result'>(prepared ? 'active' : 'countdown');
@@ -47,20 +51,20 @@ export const ExpressionActivityLayout = ({
 
   // 카운트다운 3초
   useEffect(() => {
-    if (phase !== 'countdown'||!isTimerRunning) return;
+    if (phase !== 'countdown'||!isTimerRunning||classroomPaused) return;
     if (countdown > 0) {
       const timer = scheduleTimeout(() => setCountdown(c => c - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setPhase('active');
-      setTimeLeft(game.steps[0]?.durationSeconds || 30);
+      setTimeLeft(Math.ceil((game.steps[0]?.durationSeconds||30)*pace));
       setIsTimerRunning(true);
     }
-  }, [phase, countdown, game.steps, scheduleTimeout,isTimerRunning]);
+  }, [phase, countdown, game.steps, scheduleTimeout,isTimerRunning,classroomPaused,pace]);
 
   // 활동 타이머
   useEffect(() => {
-    if (phase !== 'active' || !isTimerRunning || (followVideo&&useVideo&&!videoPlaying)) return;
+    if (phase !== 'active' || !isTimerRunning || classroomPaused|| (followVideo&&useVideo&&!videoPlaying)) return;
     const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
       if (timeLeft > 1) {
@@ -68,30 +72,30 @@ export const ExpressionActivityLayout = ({
       } else if (currentStepIdx < game.steps.length - 1) {
         const nextIdx = currentStepIdx + 1;
         setCurrentStepIdx(nextIdx);
-        setTimeLeft(game.steps[nextIdx]?.durationSeconds || 30);
+        setTimeLeft(Math.ceil((game.steps[nextIdx]?.durationSeconds||30)*pace));
       } else {
         setPhase('rubric');
         setTimeLeft(0);
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo]);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo,classroomPaused,pace]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
       const nextIdx = currentStepIdx + 1;
       setCurrentStepIdx(nextIdx);
-      setTimeLeft(game.steps[nextIdx].durationSeconds);
+      setTimeLeft(Math.ceil(game.steps[nextIdx].durationSeconds*pace));
     } else {
       setPhase('rubric');
     }
-  }, [currentStepIdx, game.steps]);
+  }, [currentStepIdx, game.steps,pace]);
 
   const handlePrevStep = () => {
     if (currentStepIdx > 0) {
       const prevIdx = currentStepIdx - 1;
       setCurrentStepIdx(prevIdx);
-      setTimeLeft(game.steps[prevIdx].durationSeconds);
+      setTimeLeft(Math.ceil(game.steps[prevIdx].durationSeconds*pace));
     }
   };
 
@@ -116,7 +120,7 @@ export const ExpressionActivityLayout = ({
 
   return (
     <div className="expression-activity w-full max-w-4xl mx-auto space-y-4">
-      <ActivityProgress steps={game.steps.map(step=>step.title)} current={currentStepIdx} results={game.steps.slice(0,currentStepIdx).map((_,i)=>performed.includes(i)?'complete':'partial')}/>
+      <ActivityCueControls pace={pace} compact={compact} onPace={value=>{setTimeLeft(t=>Math.ceil(t*value/pace));setPace(value);}} onCompact={setCompact} paceDisabled={isTimerRunning}/><ActivityProgress steps={game.steps.map(step=>step.title)} current={currentStepIdx} results={game.steps.slice(0,currentStepIdx).map((_,i)=>performed.includes(i)?'complete':'partial')}/>
       <div className="activity-brief"><label><input type="checkbox" checked={smallMovement} onChange={e=>setSmallMovement(e.target.checked)}/>앉아서 또는 작은 팔·손 동작으로 표현하기</label><p>기기는 놓고 개인 공간에서 표현해요. 이동·접촉·점프를 해야만 참여한 것으로 기록되는 활동은 아니에요.</p>{!isTimerRunning&&(phase==='active'||phase==='countdown')&&<p role="status">안내가 멈췄어요. 주변을 확인한 뒤 ‘계속 진행’을 눌러요.</p>}{phase==='countdown'&&!isTimerRunning&&<button onClick={()=>setIsTimerRunning(true)}>계속 진행</button>}</div>
       {/* 성취기준 세부 모달 */}
       {showAchievementModal && (
@@ -213,7 +217,7 @@ export const ExpressionActivityLayout = ({
               initialVideoId={game.videoInfo.videoId}
               videoTitle={game.videoInfo.title}
               defaultBpm={game.videoInfo.defaultBpm || 100}
-              paused={!isTimerRunning}
+              paused={!isTimerRunning||classroomPaused}
               onPlaybackChange={playbackChange}
             />
           )}
@@ -250,11 +254,11 @@ export const ExpressionActivityLayout = ({
             {/* 동작 가이드 & 팁 */}
             <div className="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 space-y-3">
               <div className="text-sm sm:text-base text-slate-200 font-bold leading-relaxed">
-                👉 {smallMovement?`‘${currentStep.title}’의 모양·방향·빠르기를 자기 자리에서 작은 팔·손 동작으로 표현해요. 앉아서도 같은 표현 목표를 선택해요.`:currentStep.guide}
+                👉 {compact?currentStep.title:smallMovement?`‘${currentStep.title}’의 모양·방향·빠르기를 자기 자리에서 작은 팔·손 동작으로 표현해요. 앉아서도 같은 표현 목표를 선택해요.`:currentStep.guide}
               </div>
               <div className="text-xs text-purple-300 bg-purple-950/40 p-3 rounded-xl border border-purple-500/20 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 shrink-0 text-purple-400" />
-                <span><strong>표현 꿀팁:</strong> {smallMovement?'앉거나 작은 팔·손 동작을 골라도 같은 표현 목표예요. 불편하면 멈추고 쉬어요.':currentStep.actionTip}</span>
+                <span>{compact&&<details><summary>자세한 동작 설명</summary><p>{currentStep.guide}</p></details>}<strong>표현 꿀팁:</strong> {smallMovement?'앉거나 작은 팔·손 동작을 골라도 같은 표현 목표예요. 불편하면 멈추고 쉬어요.':currentStep.actionTip}</span>
               </div>
             </div>
             <label className="activity-brief flex gap-3"><input type="checkbox" checked={performed.includes(currentStepIdx)} onChange={e=>markPerformed(currentStepIdx,e.target.checked)}/>이 단계의 몸 표현에 참여했어요. 쉬거나 설명만 봤다면 선택하지 않아요.</label>
@@ -439,7 +443,7 @@ export const ExpressionActivityLayout = ({
                 setPhase('countdown');
                 setCountdown(3);
                 setCurrentStepIdx(0);
-                setTimeLeft(game.steps[0]?.durationSeconds || 30);
+                setTimeLeft(Math.ceil((game.steps[0]?.durationSeconds||30)*pace));
               }}
               className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition-colors flex items-center gap-1.5"
             >

@@ -1,0 +1,3 @@
+export function ActivityCueControls({pace,compact,onPace,onCompact,paceDisabled=false}:{pace:number;compact:boolean;onPace:(value:number)=>void;onCompact:(value:boolean)=>void;paceDisabled?:boolean}){
+ return <details className="activity-brief"><summary>수업 안내 조절 · 신호 속도·짧은 카드</summary><label>신호 전환 속도<select aria-label="신호 전환 속도" value={pace} disabled={paceDisabled} onChange={e=>onPace(Number(e.target.value))}><option value={1}>기본 안내</option><option value={1.3}>조금 여유 있게 · 1.3배 시간</option><option value={1.6}>더 여유 있게 · 1.6배 시간</option></select></label><label><input type="checkbox" checked={compact} onChange={e=>onCompact(e.target.checked)}/>수업 중 짧은 동작 카드로 보기</label><p>교사가 설명과 공간을 확인한 뒤 골라요. 진행 중인 시간은 멈춘 뒤 조절하며, 수행 기준이나 능력을 자동으로 바꾸지 않아요.</p></details>;
+}

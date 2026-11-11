@@ -226,7 +226,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
                 </span>
                 <span className="text-xs text-slate-400 font-bold">2단계: 새 동작 선택</span>
               </div>
-              <h3 className="text-lg font-black text-white text-center mb-1">새로운 로봇 동작 조합</h3>
+              <h3 className="text-lg font-black text-white text-center mb-1">새로운 로봇 동작 조합</h3><section className="activity-brief"><p role="status">현재 바뀐 부위 {changed.length}개{changed.length?` · ${changed.join(' · ')}`:''}</p><button onClick={()=>{setArm2(arm1);setLeg2(leg1);setBody2(body1);setCompared(false);setDifference([]);setShowDesign(false);}}>A 설계 복사하고 한 부위 고르기</button><p>복사 뒤 팔·다리·몸통 중 한 부위의 카드만 바꿔 보세요.</p></section>
               <p className="text-xs text-slate-400 text-center mb-4">
                 {challenge?'한 부위만 바꿔야 다음 시범으로 갈 수 있어요.':'친구 B가 새로운 조합을 만들어보세요!'}
               </p>

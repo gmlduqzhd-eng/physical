@@ -59,6 +59,27 @@ SELECT pg_temp.ws_call('a','expedition-ship','rotate','g1','{"requestId":"111111
 SELECT pg_temp.ws_call('a','expedition-ship','rotate','g1','{"requestId":"11111111-1111-4111-8111-111111111111"}');
 SELECT pg_temp.ws_check((SELECT groups->current_setting('ws.g1')->'workshop'->>'roleSwaps'='1' AND groups->current_setting('ws.g1')->'axes'->0->'user'='null'::jsonb AND groups->current_setting('ws.g1')->'axes'->1->'user'='null'::jsonb FROM physical_internal.expeditions WHERE room_id=current_setting('ws.room')::uuid AND game='expedition-ship'),'role rotation idempotent and releases both controllers');
 SELECT pg_temp.ws_call('a','expedition-ship','readiness','g1','{"kind":"camera","state":"lost","rawAngle":123,"studentName":"DO_NOT_STORE"}');
+-- Fourth review: expired-controller recovery and status-only RLS reads.
+SELECT pg_temp.ws_call('a','expedition-ship','claim','g1','{"slot":0,"controlVersion":2}');
+SELECT pg_temp.ws_denied('b','expedition-ship','claim','g1','{"slot":0,"controlVersion":2}','22023','fresh ship controller cannot be taken over');
+UPDATE physical_internal.expeditions SET groups=jsonb_set(groups,ARRAY[current_setting('ws.g1'),'axes','0','at'],to_jsonb(extract(epoch FROM clock_timestamp())*1000-11000)) WHERE room_id=current_setting('ws.room')::uuid AND game='expedition-ship';
+SELECT pg_temp.ws_call('b','expedition-ship','claim','g1','{"slot":0,"controlVersion":2}');
+SELECT pg_temp.ws_check((SELECT groups->current_setting('ws.g1')->'axes'->0->>'user'=current_setting('ws.b') FROM physical_internal.expeditions WHERE room_id=current_setting('ws.room')::uuid AND game='expedition-ship'),'expired ship controller can be reclaimed by own group');
+SELECT pg_temp.ws_call('b','expedition-ship','release','g1','{"slot":0}');
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('ws.a'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.ws_check((SELECT status='playing' FROM public.game_rooms WHERE id=current_setting('ws.room')::uuid),'member reads only own activity room status');
+RESET ROLE;
+UPDATE public.game_rooms SET status='paused' WHERE id=current_setting('ws.room')::uuid;
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.ws_check((SELECT status='paused' FROM public.game_rooms WHERE id=current_setting('ws.room')::uuid),'member receives paused activity room status');
+RESET ROLE;
+SELECT pg_temp.ws_denied('a','expedition-ship','claim','g1','{"slot":0}','42501','paused room still rejects gameplay writes');
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('ws.other'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.ws_check((SELECT count(*)=0 FROM public.game_rooms WHERE id=current_setting('ws.room')::uuid),'unrelated teacher cannot read activity room status');
+RESET ROLE;
+UPDATE public.game_rooms SET status='playing' WHERE id=current_setting('ws.room')::uuid;
 SELECT pg_temp.ws_check(pg_temp.ws_call('owner','expedition-ship')::text NOT LIKE '%DO_NOT_STORE%' AND pg_temp.ws_call('owner','expedition-ship')::text NOT LIKE '%rawAngle%','readiness stores only coarse allowlist');
 SELECT pg_temp.ws_denied('a','expedition-ship','readiness','g1','{"kind":"camera","state":"ready","runId":"00000000-0000-4000-8000-000000000000"}','22023','stale run cannot report readiness');
 SELECT pg_temp.ws_denied('owner','expedition-ship','difficulty',NULL,jsonb_build_object('target',current_setting('ws.g1'),'level','easy'),'22023','playing course changes rejected');
@@ -150,5 +171,9 @@ SELECT pg_temp.ws_call('owner','expedition-boss','observe',NULL,jsonb_build_obje
 SELECT pg_temp.ws_check(pg_temp.ws_call('owner','expedition-boss')->'workshop'->'observations'->current_setting('ws.g1') ? '고른 역할 참여','finished owner may finish observation summary');
 UPDATE physical_internal.classroom_members SET expires_at=now()-interval '1 second' WHERE user_id=current_setting('ws.a')::uuid;
 SELECT pg_temp.ws_denied('a','expedition-boss','view',NULL,'{}','42501','expired membership cannot read final workshop');
+SELECT set_config('request.jwt.claims',jsonb_build_object('sub',current_setting('ws.a'),'role','authenticated')::text,true);
+SET LOCAL ROLE authenticated;
+SELECT pg_temp.ws_check((SELECT count(*)=0 FROM public.game_rooms WHERE id=current_setting('ws.room')::uuid),'expired member cannot read activity room status');
+RESET ROLE;
 SELECT jsonb_build_object('assertions',count(*),'passed',jsonb_agg(label)) AS workshop_result FROM pg_temp.workshop_results;
 ROLLBACK;

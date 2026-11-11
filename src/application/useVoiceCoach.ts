@@ -1,3 +1,4 @@
+import {useActivityPause} from './ActivityPauseContext';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readStorage, writeStorage } from './browserStorage';
 
@@ -12,6 +13,7 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
     const saved = readStorage('voice_coach_enabled');
     return saved !== null ? saved === 'true' : true;
   });
+  const paused=useActivityPause(),pausedRef=useRef(paused);pausedRef.current=paused;
   const synth = useRef<SpeechSynthesis | null>(null);
   const koreanVoice = useRef<SpeechSynthesisVoice | null>(null);
 
@@ -34,6 +36,7 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
     }
   }, []);
 
+  useEffect(()=>{if(paused)synth.current?.cancel();},[paused]);
   const toggleEnabled = useCallback(() => {
     setEnabled(prev => {
       const next = !prev;
@@ -46,7 +49,7 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
   }, []);
 
   const speak = useCallback((text: string, priority = false) => {
-    if (!enabled || options.enabled === false || !synth.current) return;
+    if (pausedRef.current||!enabled || options.enabled === false || !synth.current) return;
 
     try {
       if (priority) {

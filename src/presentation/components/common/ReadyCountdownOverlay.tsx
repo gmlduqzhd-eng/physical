@@ -1,3 +1,4 @@
+import {useActivityPause} from '../../../application/ActivityPauseContext';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { sfxCountdown, sfxSuccess, hapticTap, hapticHeavy } from '../../../application/soundEffects';
 import { FastForward, Smartphone, Volume2 } from 'lucide-react';
@@ -13,6 +14,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
   message = '스마트폰을 바닥에 두거나 주머니에 넣으세요!',
   seconds = 3,
 }) => {
+  const classroomPaused=useActivityPause();
   const [count, setCount] = useState(seconds);
   const onCompleteRef = useRef(onComplete);
   const completedRef = useRef(false);
@@ -26,6 +28,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
   }, [onComplete]);
 
   useEffect(() => {
+    if(classroomPaused)return;
     if (count <= 0) {
       sfxSuccess();
       hapticHeavy();
@@ -43,7 +46,7 @@ export const ReadyCountdownOverlay: React.FC<ReadyCountdownOverlayProps> = ({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [count, finish]);
+  }, [count, finish,classroomPaused]);
 
   return (
     <div className="game-countdown fixed inset-0 z-[10001] overflow-y-auto bg-slate-950/90 backdrop-blur-md flex flex-col items-center p-4 text-white text-center select-none animate-in fade-in duration-200">
