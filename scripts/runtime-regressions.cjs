@@ -38,14 +38,16 @@ function actor(hook) {
   const state = { states: [], effects: [], cursor: 0, queue: [] };
   return { render() { active = state; state.cursor = 0; state.queue = []; const result = hook(); for (const effect of state.queue) effect(); return result; } };
 }
-const data = new Map();
+const data = new Map(), sessionData = new Map();
 let storageDenied = false;
-const storage = {
-  getItem(key) { if (storageDenied) throw new Error('Storage denied'); return data.get(key) ?? null; },
-  setItem(key, value) { if (storageDenied) throw new Error('Storage denied'); data.set(key, value); },
-  removeItem(key) { if (storageDenied) throw new Error('Storage denied'); data.delete(key); },
-};
-const browser = { localStorage: storage, sessionStorage: storage, isSecureContext: true };
+const makeStorage = map => ({
+ get length(){return map.size;},key(index){return [...map.keys()][index]??null;},
+ getItem(key){if(storageDenied)throw Error('Storage denied');return map.get(key)??null;},
+ setItem(key,value){if(storageDenied)throw Error('Storage denied');map.set(key,value);},
+ removeItem(key){if(storageDenied)throw Error('Storage denied');map.delete(key);},
+});
+const storage=makeStorage(data),sessionStore=makeStorage(sessionData);
+const browser = { localStorage: storage, sessionStorage: sessionStore, isSecureContext: true };
 const modules = new Map();
 function load(filename) {
   filename = path.resolve(repo, filename);
@@ -53,7 +55,7 @@ function load(filename) {
   const exports = {};
   modules.set(filename, exports);
   const context = {
-    exports, window: browser, localStorage: storage, sessionStorage: storage, Date: FixedDate, console,
+    exports, window: browser, localStorage: storage, sessionStorage: sessionStore, Date: FixedDate, console,
     require(name) { if (name === 'react') return hooks; if (name.startsWith('.')) return load(path.join(path.dirname(filename), name + '.ts')); throw new Error(name); },
   };
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText, context, { filename });
@@ -130,7 +132,7 @@ async function main() {
     const player = actor(profiles.usePlayerProfile); let view = player.render();
     view.resetProfile(); view = player.render(); view.createProfile('previous-session');
     view = player.render(); view.addGameResult('stretch', '이전 활동', 99); view = player.render();
-    data.set('physical_private_expires', String(fixedTime - 1));
+    sessionData.set('physical_private_expires', String(fixedTime - 1));
     try { replayStateUpdaters = true; view.addGameResult('stretch', '새 활동', 100); }
     finally { replayStateUpdaters = false; }
     view = player.render(); assert.equal(view.profile.nickname, '익명 원정대원');
@@ -146,7 +148,7 @@ async function main() {
     assert.equal(view.profile.recentGames[0].score, -300);
     assert.equal(view.profile.totalScore, 0);
     assert.equal(view.profile.highScores.fate_card, 0);
-    const reloaded = profiles.normalizePlayerProfile(JSON.parse(data.get('physical_player_profile')));
+    const reloaded = profiles.normalizePlayerProfile(JSON.parse(sessionData.get('physical_player_profile')));
     assert.equal(reloaded.recentGames[0].score, -300);
     assert.equal(reloaded.totalPlays, 1);
     view.addGameResult('reaction', '반응', -300);
@@ -154,33 +156,43 @@ async function main() {
     view.resetProfile();
   });
   check('RPE feedback remains attached to the previous game after replay result', () => {
-    data.delete('physical_player_profile');
+    sessionData.delete('physical_player_profile');
     const player = actor(profiles.usePlayerProfile); let view = player.render();
     view.addGameResult('reaction', '반응', 17); view = player.render();
     view.updateLatestRpe('reaction', 4); view = player.render();
     view.addGameResult('reaction', '반응', 30); view = player.render();
     assert.equal(view.profile.recentGames[1].rpe, 4); assert.equal(view.profile.recentGames[0].rpe, undefined);
-    assert.equal(JSON.parse(data.get('physical_player_profile')).recentGames[1].rpe, 4);
+    assert.equal(JSON.parse(sessionData.get('physical_player_profile')).recentGames[1].rpe, 4);
   });
   check('daily completion is idempotent and consecutive local days preserve streak', () => {
-    data.set('dambang_daily_streak_v1', JSON.stringify({ currentStreak: 6, bestStreak: 6, lastCompletedDate: '2026-10-01', history: ['2026-10-01'], points: 600 }));
+    sessionData.set('dambang_daily_streak_v1', JSON.stringify({ currentStreak: 6, bestStreak: 6, lastCompletedDate: '2026-10-01', history: ['2026-10-01'], points: 600 }));
     const streak = actor(streaks.useDailyStreak); let view = streak.render();
     view.completeTodayMission(100); view.completeTodayMission(100); view = streak.render();
     assert.equal(view.streakData.currentStreak, 7); assert.equal(view.streakData.points, 700); assert.equal(view.isTodayCompleted(), true);
-    assert.equal(JSON.parse(data.get('dambang_daily_streak_v1')).lastCompletedDate, '2026-10-02');
+    assert.equal(JSON.parse(sessionData.get('dambang_daily_streak_v1')).lastCompletedDate, '2026-10-02');
   });
   check('missed day resets displayed streak; corrupt histories remain usable', () => {
-    data.set('dambang_daily_streak_v1', JSON.stringify({ currentStreak: 10, lastCompletedDate: '2026-09-29', history: null, points: 'bad' }));
+    sessionData.set('dambang_daily_streak_v1', JSON.stringify({ currentStreak: 10, lastCompletedDate: '2026-09-29', history: null, points: 'bad' }));
     const view = actor(streaks.useDailyStreak).render(); assert.equal(view.streakData.currentStreak, 0); assert.equal(view.streakData.points, 0);
   });
   check('rapid pet purchases charge once and cannot bypass required level', () => {
-    data.delete('dambang_tamagotchi_v1');
+    sessionData.delete('dambang_tamagotchi_v1');
     const pet = actor(pets.useTamagotchi); let view = pet.render();
     const cap = pets.TAMAGOTCHI_ITEMS.find(item => item.id === 'cap');
     const crown = pets.TAMAGOTCHI_ITEMS.find(item => item.id === 'crown');
     assert.equal(view.buyItem(cap), true); assert.equal(view.buyItem(cap), false); assert.equal(view.buyItem(crown), false);
     view = pet.render(); assert.equal(view.state.coins, 250);
     view.addXpAndCoins(10000, 20); view = pet.render(); assert.equal(view.level, 10); assert.equal(view.currentLevelXp, 100);
+  });
+  check('expired pet and daily state cannot be written back by a mounted screen', () => {
+    const pet=actor(pets.useTamagotchi);let p=pet.render();p.addXpAndCoins(500,500);p=pet.render();
+    sessionData.set('physical_private_expires',String(fixedTime-1));p.addXpAndCoins(10,5);p=pet.render();assert.equal(p.state.xp,130);assert.equal(p.state.coins,355);
+    const streak=actor(streaks.useDailyStreak);let v=streak.render();v.completeTodayMission(100);v=streak.render();
+    sessionData.set('physical_private_expires',String(fixedTime-1));v.completeTodayMission(50);v=streak.render();assert.equal(v.streakData.points,50);assert.equal(v.streakData.currentStreak,1);
+  });
+  check('device clear removes pet and daily history from both storage areas',()=>{
+    data.set('dambang_tamagotchi_v1','legacy');sessionData.set('dambang_daily_streak_v1','private');helpers.clearDeviceInformation();
+    assert.equal(data.has('dambang_tamagotchi_v1'),false);assert.equal(sessionData.has('dambang_daily_streak_v1'),false);
   });
   check('corrupt pet inventory/equipment is normalized', () => {
     const state = pets.normalizeTamagotchiState({ xp: -1, coins: 'bad', inventory: null, equippedHat: 'unknown' });

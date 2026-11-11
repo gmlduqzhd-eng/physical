@@ -42,6 +42,7 @@ export interface GameDef {
   durationMinutes?: number;
   equipment?: string[];
   safetyTips?: string[];
+  spaces?: string[];
   physicalActivity?: boolean;
   devices: DeviceType[];
   playMode: PlayMode;
@@ -1423,7 +1424,7 @@ export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
   ...game,name:SAFETY_LESSONS[game.type].name,emoji:SAFETY_LESSONS[game.type].emoji,desc:SAFETY_LESSONS[game.type].description,
   subCategory:'안전 상황 학습',achievement:{code:'연계 확인 필요',title:'상황 판단과 도움 요청',desc:SAFETY_LESSONS[game.type].description},
   physicalActivity:false,durationMinutes:5,playMode:'개인',activityType:'개인',equipment:SAFETY_LESSONS[game.type].equipment,safetyTips:[SAFETY_LESSONS[game.type].boundary],
-} : game);
+} : EXPRESSION_GAMES.some(e=>e.id===game.type)?(()=>{const e=EXPRESSION_GAMES.find(e=>e.id===game.type)!;return {...game,name:e.name,desc:e.desc,subCategory:e.subCategory,equipment:e.equipment,safetyTips:e.safetyTips,spaces:e.spaces};})() : game);
 
 export const AVAILABLE_GAMES=GAMES.filter(game=>isAvailableGame(game.type));
 

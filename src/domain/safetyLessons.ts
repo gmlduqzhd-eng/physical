@@ -40,5 +40,5 @@ export interface SafetyLearningRecord {scenario:number;answer:string;mode:'rolep
 export function safetyLessonResult(id:SafetyLessonId,records:SafetyLearningRecord[],seconds:number):{amount:number;details:GameResultDetails}|null{
  const spec=SAFETY_LESSONS[id];
  if(records.length!==spec.scenarios.length||!Number.isFinite(seconds)||seconds<0||records.some((r,i)=>r.scenario!==i||r.answer!==spec.scenarios[i].answer||!['roleplay','read'].includes(r.mode)))return null;
- return {amount:records.length*100,details:{totalTime:Math.round(seconds),metrics:{'학습 확인':`${records.length}/3 안전한 선택과 설명 확인`,'학습 방식':records.map((r,i)=>`${i+1}: ${r.mode==='roleplay'?'교실 역할 표현':'읽고 설명 확인'}`).join(' / '),'점수 기준':'안전한 상황 선택과 학습 확인 · 실제 응급처치 역량 평가 아님','시간 범위':'학습 시작부터 확인까지의 경과 시간 · 실제 활동 시간 아님','자료 확인일':'2026-10-22','기록 버전':'안전 학습 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요'}}};
+ return {amount:records.length*100,details:{participation:records.some(r=>r.mode==='roleplay')?'performed':'observed',totalTime:Math.round(seconds),metrics:{'학습 확인':`${records.length}/3 안전한 선택과 설명 확인`,'학습 방식':records.map((r,i)=>`${i+1}: ${r.mode==='roleplay'?'교실 역할 표현':'읽고 설명 확인'}`).join(' / '),'점수 기준':'안전한 상황 선택과 학습 확인 · 실제 응급처치 역량 평가 아님','시간 범위':'학습 시작부터 확인까지의 경과 시간 · 실제 활동 시간 아님','자료 확인일':'2026-10-22','기록 버전':'안전 학습 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요'}}};
 }

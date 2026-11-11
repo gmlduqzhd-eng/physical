@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {PHONE_CATEGORIES,PHONE_PLAYS,phonePlayerRange,phoneRecordValid,phoneSequence,type PhoneRecord} from '../src/domain/phonePlayCatalog';
+import {PHONE_CATEGORIES,PHONE_PLAYS,phonePlayerRange,phoneRecordValid,type PhoneRecord} from '../src/domain/phonePlayCatalog';
+import {phoneMemoryTask} from '../src/domain/phoneTaskRules';
 import {GAMES,AVAILABLE_GAMES} from '../src/domain/gamesData';
 import {LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
 import {matchesActivitySearch} from '../src/domain/activitySearch';
@@ -26,7 +27,7 @@ test('every released play has distinct instructions, three real tasks, and a coh
 });
 test('elapsed time never substitutes for participation; invalid memory, counts, or repeated participants cannot earn full records',()=>{
  for(const p of PHONE_PLAYS){const players=phonePlayerRange(p).min;
-  const record:PhoneRecord={round:0,outcome:'complete',elapsedMs:p.kind==='estimate'?8000:p.seconds*1000,count:4,answer:p.kind==='memory'?phoneSequence(p,0):[],participants:Array.from({length:players},(_,i)=>i+1)};
+  const record:PhoneRecord={round:0,outcome:'complete',elapsedMs:p.kind==='estimate'?8000:p.seconds*1000,count:4,answer:p.kind==='memory'?phoneMemoryTask(p,0).expected:[],participants:Array.from({length:players},(_,i)=>i+1)};
   assert(phoneRecordValid(p,record,players),p.id);
   assert(!phoneRecordValid(p,{...record,elapsedMs:0},players));assert(!phoneRecordValid(p,{...record,participants:[]},players));assert(!phoneRecordValid(p,{...record,participants:[1,1]},players));assert(!phoneRecordValid(p,{...record,count:-1},players));assert(!phoneRecordValid(p,{...record,count:100},players));
   if(p.kind==='memory')assert(!phoneRecordValid(p,{...record,answer:[]},players));

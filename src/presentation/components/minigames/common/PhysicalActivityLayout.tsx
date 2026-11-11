@@ -230,7 +230,7 @@ export const PhysicalActivityLayout = ({
               </div>
             </div>
 
-            {onFinish&&<><label className="flex items-start gap-3 my-4 text-left"><input type="checkbox" checked={performed} onChange={e=>setPerformed(e.target.checked)}/><span>실제로 참여한 내용과 결과를 확인했어요.</span></label><button className="game-stage-primary w-full p-4 mb-4 rounded-xl bg-cyan-700 text-white" disabled={!performed} onClick={()=>{if(!performed||submittedRef.current)return;submittedRef.current=true;onFinish(100,{...completionDetails,selfReflection:completionDetails.selfReflection,metrics:{...completionDetails.metrics,'활동 요약':completionSummary,'기록 기준':'직접 확인한 참여 100점 · 신체 능력 측정 아님',...(selfRating?{'자기 느낌':String(selfRating)}:{})}});}}>확인한 참여 결과 기록하기</button></>}
+            {onFinish&&<><label className="flex items-start gap-3 my-4 text-left"><input type="checkbox" checked={performed} onChange={e=>setPerformed(e.target.checked)}/><span>실제로 참여한 내용과 결과를 확인했어요.</span></label><button className="game-stage-primary w-full p-4 mb-4 rounded-xl bg-cyan-700 text-white" disabled={!performed} onClick={()=>{if(!performed||submittedRef.current)return;submittedRef.current=true;onFinish(100,{...completionDetails,participation:'performed',selfReflection:completionDetails.selfReflection,metrics:{...completionDetails.metrics,'활동 요약':completionSummary,'기록 기준':'직접 확인한 참여 100점 · 신체 능력 측정 아님',...(selfRating?{'자기 느낌':String(selfRating)}:{})}});}}>확인한 참여 결과 기록하기</button></>}
             <div className="flex gap-2">
               <button
                 onClick={handleReplay}

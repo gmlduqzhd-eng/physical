@@ -17,7 +17,8 @@ const POSES: StretchPose[] = [
   { id: 'shoulder_roll', name: '어깨 돌리기', desc: '양손을 어깨에 올리고 팔꿈치로 원을 그리며 돌리세요!', duration: 7 },
 ];
 
-const PoseIllustration = ({ poseId }: { poseId: StretchPose['id'] }) => {
+const PoseIllustration = ({ poseId,seated=false }: { poseId: StretchPose['id'];seated?:boolean }) => {
+  if(seated)return <svg viewBox="0 0 160 170" className="w-44 h-44 mx-auto" role="img" aria-label="앉은 작은 팔 동작 시범"><path d="M45 100H110V150M45 65V150" fill="none" stroke="#879477" strokeWidth="6"/><circle cx="80" cy="35" r="15" fill="#eac780"/><path d="M80 50V100H105V148" fill="none" stroke="#526c53" strokeWidth="10" strokeLinecap="round"/><path d={poseId==='reach_sky'?'M80 60L50 30M80 60L110 30':poseId==='side_stretch'?'M80 60L105 45L112 65M80 65L52 78':'M80 60L52 66L65 53M80 60L108 66L95 53'} fill="none" stroke="#526c53" strokeWidth="8" strokeLinecap="round"/><text x="80" y="166" textAnchor="middle" fontSize="10">편한 범위의 예시 · 모양을 똑같이 만들 필요 없어요</text></svg>;
   if (poseId === 'reach_sky') {
     // 기지개 켜기: 두 팔을 Y자로 하늘을 향해 높이 뻗고 몸통을 곧게 편 자세
     return (
@@ -115,16 +116,17 @@ const PoseIllustration = ({ poseId }: { poseId: StretchPose['id'] }) => {
 };
 
 export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
+  const [seated,setSeated]=useState(false);
   const [poseIdx,setPoseIdx]=useState(0),[duration,setDuration]=useState(7),[timeLeft,setTimeLeft]=useState(7);
   const [phase,setPhase]=useState<'ready'|'active'|'confirm'>('ready'),[paused,setPaused]=useState(false),[confirmed,setConfirmed]=useState(false);
-  const [records,setRecords]=useState<{performed:boolean;duration:number}[]>([]);const finishedRef=useRef(false);const current=POSES[poseIdx];
+  const [records,setRecords]=useState<{performed:boolean;duration:number;seated:boolean}[]>([]);const finishedRef=useRef(false);const current=POSES[poseIdx];
   useEffect(()=>{const hide=()=>{if(document.hidden)setPaused(true);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
   useEffect(()=>{if(phase!=='active'||paused)return;const timer=setInterval(()=>{if(!document.hidden)setTimeLeft(t=>Math.max(0,t-1));},1000);return()=>clearInterval(timer);},[phase,paused]);
   useEffect(()=>{if(phase==='active'&&timeLeft===0){setPhase('confirm');sfxCoin();}},[phase,timeLeft]);
-  const next=(performed:boolean)=>{if(finishedRef.current)return;const values=[...records,{performed,duration}];if(poseIdx<POSES.length-1){setRecords(values);setPoseIdx(n=>n+1);setConfirmed(false);setPhase('ready');return;}finishedRef.current=true;sfxSuccess();enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,amount:values.some(v=>v.performed)?100:0,details:{criteria:POSES.map(p=>p.name),metrics:{'수행 확인':values.map((v,i)=>POSES[i].name+': '+(v.performed?'직접 참여 확인':'쉬거나 건너뜀')).join(' / '),'기록 기준':'시간 경과로 수행을 판정하지 않아요. 직접 확인한 참여 기록이에요.','선택 시간':values.map((v,i)=>`${POSES[i].name} ${v.duration}초 안내`).join(' / ')} }},timestamp:Date.now()});};
-  return <section className="movement-quest" aria-label="스트레칭 타이머"><header><p>준비·정리 도구 · 직접 참여 확인</p><h1>스트레칭 타이머</h1><p>{poseIdx+1} / {POSES.length} · {current.name}</p></header><PoseIllustration poseId={current.id}/><p>{current.desc}</p><p>서거나 앉아서 편한 범위로 작게 해요. 억지로 늘리거나 참지 않고 불편하면 멈춰요.</p>
-  {phase==='ready'&&<><label>내가 고르는 안내 시간<select value={duration} onChange={e=>setDuration(Number(e.target.value))}>{[7,12,20].map(n=><option key={n} value={n}>{n}초</option>)}</select></label><p>선택 시간은 화면 안내 시간이며 운동 처방이나 수행 기준이 아니에요.</p><button onClick={()=>{setTimeLeft(duration);setPaused(false);setPhase('active');}}>내 속도로 스트레칭 시작</button></>}
+  const next=(performed:boolean)=>{if(finishedRef.current)return;const values=[...records,{performed,duration,seated}];if(poseIdx<POSES.length-1){setRecords(values);setPoseIdx(n=>n+1);setConfirmed(false);setPhase('ready');return;}finishedRef.current=true;sfxSuccess();enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,amount:values.some(v=>v.performed)?100:0,details:{participation:values.some(v=>v.performed)?'performed':'rested',criteria:POSES.map(p=>p.name),metrics:{'수행 확인':values.map((v,i)=>POSES[i].name+': '+(v.performed?'직접 참여 확인':'쉬거나 건너뜀')+(v.seated?' · 앉은 자세':' · 기본 자세')).join(' / '),'기록 기준':'시간 경과로 수행을 판정하지 않아요. 직접 확인한 참여 기록이에요.','선택 시간':values.map((v,i)=>`${POSES[i].name} ${v.duration}초 안내`).join(' / ')} }},timestamp:Date.now()});};
+  return <section className="movement-quest" aria-label="스트레칭 타이머"><header><p>준비·정리 도구 · 직접 참여 확인</p><h1>스트레칭 타이머</h1><p>{poseIdx+1} / {POSES.length} · {current.name}</p></header><PoseIllustration poseId={current.id} seated={seated}/><p>{seated?'앉은 채 손과 팔로 이 동작의 방향을 작고 편안하게 표현해요. 발은 바닥에 두어요.':current.desc}</p><p>서거나 앉아서 편한 범위로 작게 해요. 억지로 늘리거나 참지 않고 불편하면 멈춰요.</p>
+  {phase==='ready'&&<><label><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉은 팔·손 동작으로 참여하기</label><label>내가 고르는 안내 시간<select value={duration} onChange={e=>setDuration(Number(e.target.value))}>{[7,12,20].map(n=><option key={n} value={n}>{n}초</option>)}</select></label><p>선택 시간은 화면 안내 시간이며 운동 처방이나 수행 기준이 아니에요.</p><button onClick={()=>{setTimeLeft(duration);setPaused(false);setPhase('active');}}>내 속도로 스트레칭 시작</button></>}
   {phase==='active'&&<><strong className="text-5xl">{timeLeft}초</strong><p role="status">{paused?'멈췄어요. 준비되면 이어가요.':'자기 속도로 동작을 살펴요.'}</p><button onClick={()=>setPaused(v=>!v)}>{paused?'이어서 하기':'잠깐 쉬기'}</button><button onClick={()=>setPhase('confirm')}>안내를 멈추고 수행 확인</button></>}
-  {phase==='confirm'&&<><p>타이머가 끝났어요. 실제 참여 여부를 직접 확인해요.</p><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>편한 범위에서 이 동작을 해 보았어요.</label><button disabled={!confirmed} onClick={()=>next(true)}>{poseIdx===2?'참여 확인하고 마치기':'참여 확인하고 다음 동작'}</button><button onClick={()=>next(false)}>쉬었어요 · {poseIdx===2?'마치기':'다음 동작'}</button></>}
+  {phase==='confirm'&&<><p>{timeLeft===0?'선택한 안내 시간이 끝났어요.':'안내를 직접 멈췄어요.'} 실제 참여 여부를 직접 확인해요.</p><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>편한 범위에서 이 동작을 해 보았어요.</label><button disabled={!confirmed} onClick={()=>next(true)}>{poseIdx===2?'참여 확인하고 마치기':'참여 확인하고 다음 동작'}</button><button onClick={()=>next(false)}>쉬었어요 · {poseIdx===2?'마치기':'다음 동작'}</button></>}
   </section>;
 };

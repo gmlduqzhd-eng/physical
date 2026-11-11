@@ -1,3 +1,4 @@
+import {EXPEDITION_BY_ID} from '../../../../domain/expeditionGames.js';
 import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData.js';
 export interface ExpressionStep {
   stepNum: number;
@@ -35,9 +36,11 @@ export interface ExpressionGameData {
   steps: ExpressionStep[];
   rubric: ExpressionRubricItem[];
   safetyTips: string[];
+  equipment?: string[];
+  spaces?: string[];
 }
 
-export const EXPRESSION_GAMES: ExpressionGameData[] = [
+const EXPRESSION_SOURCE: ExpressionGameData[] = [
   // ==========================================
   // [1~2학년군] 기본 움직임 & 자연·사물 모방 표현 (8종)
   // ==========================================
@@ -773,8 +776,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
       defaultBpm: 125,
     },
     steps: [
-      { stepNum: 1, title: '양발 모아 비트 점프 (1박 1도약)', durationSeconds: 30, guide: '줄넘기를 돌리지 않고 가상 줄넘기(맨손 스윙) 또는 실제 줄넘기로 비트에 점프합니다.', actionTip: '줄 없이 팔 돌리기나 앉은 손 박자를 골라도 됩니다. 실제 줄은 교사가 공간과 참여 방법을 확인한 뒤 사용합니다.' },
-      { stepNum: 2, title: '번갈아 뛰기 & 십자 크로스 스텝', durationSeconds: 30, guide: '줄 없이 발을 번갈아 짚거나 앉아서 손으로 X자와 펼침 모양을 바꾸며 박자를 표현합니다.', actionTip: '손목 스냅을 몸 중심 가까이 붙입니다.' },
+      { stepNum: 1, title: '팔·손 또는 편한 발 디딤으로 박자 맞추기', durationSeconds: 30, guide: '줄 없이 팔을 작게 돌리거나 손 박자·편한 발 디딤을 골라 한 박자씩 표현합니다. 점프는 필수 동작이 아닙니다.', actionTip: '앉은 손 박자도 같은 참여 방법입니다. 줄이나 추가 도구 없이 자기 공간에서 표현합니다.' },
+      { stepNum: 2, title: '번갈아 짚기 & 손 모양 바꾸기', durationSeconds: 30, guide: '줄 없이 발을 번갈아 짚거나 앉아서 손으로 X자와 펼침 모양을 바꾸며 박자를 표현합니다.', actionTip: '손목 스냅을 몸 중심 가까이 붙입니다.' },
       { stepNum: 3, title: '내가 고르는 박자 피날레', durationSeconds: 20, guide: '마지막 구간에는 줄을 내려놓고 편한 발 디딤이나 앉은 팔 동작으로 익힌 박자를 이어 마무리합니다.', actionTip: '높이 뛰기나 두 번 돌리기를 요구하지 않습니다. 교사가 확인한 기본 동작이나 맨손 대안 중 편한 방법을 고릅니다.' },
     ],
     rubric: [
@@ -868,3 +871,18 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
   },
   ...EXPEDITION_EXPRESSIONS,
 ];
+
+// Canonical material is shared by cards, gameplay, lesson preparation and AI sources.
+const descriptions:Record<string,string>={
+ music_jumprope:'음악을 듣고 줄 없는 팔 동작·편한 발 디딤·쉼 중 맞는 방법을 골라 박자를 표현해요.',
+ cheerleading_team:'닿지 않는 개인 공간에서 편한 팔 모양·손짓·구호로 함께 박자를 표현해요. 쌓기나 스턴트는 하지 않아요.',
+ world_folk_dance:'훌라의 손짓과 민속춤의 세 박자 발 디딤을 비접촉·제자리 또는 앉은 팔 동작으로 표현해요.',
+};
+export const EXPRESSION_GAMES:ExpressionGameData[]=EXPRESSION_SOURCE.map(game=>{
+ const expedition=EXPEDITION_BY_ID.get(game.id);
+ const equipment=expedition?.equipment??(game.id==='magic_scarf'?['스카프 · 손에 잡고 사용']:game.id==='ribbon_gymnast'?['리본 또는 긴 끈 · 손잡이를 놓지 않음']:['거치한 기기 1대 · 별도 도구 없이 표현']);
+ return {...game,desc:descriptions[game.id]??game.desc,subCategory:game.subCategory.replace('스턴트 치어리딩','비접촉 치어리딩'),equipment,spaces:['교실','체육관','다목적실'],
+  safetyTips:[...new Set(['기기는 거치하고, 서로 닿지 않는 개인 공간을 교사가 확인합니다.','앉거나 작은 팔·손 동작을 골라도 되며, 불편하면 멈추고 쉽니다.',...(expedition?[expedition.safety]:game.safetyTips.filter(t=>!/팔짱|돌풍 회전|점프 동작 후/.test(t)))])],
+  rubric:game.rubric.map(item=>item.criterion==='신체 선의 아름다움'?{criterion:'선택한 모양 표현',desc:'내게 편한 범위에서 원·물결 등 선택한 모양을 구별해 표현했나요?'}:item.criterion==='체력과 지구력'?{criterion:'내 속도와 휴식 선택',desc:'편한 동작·속도·휴식을 선택하고 박자의 차이를 살펴보았나요?'}:item.criterion==='모션의 절도와 각도'?{criterion:'편안한 방향 표현',desc:'내게 편한 팔 범위로 방향이나 모양을 구별해 표현했나요?'}:item),
+ };
+});

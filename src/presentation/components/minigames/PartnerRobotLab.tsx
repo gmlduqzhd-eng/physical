@@ -29,6 +29,7 @@ interface Props {
 
 export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 1라운드 설계, 2: 1라운드 로봇 표현, 3: 역할 교대 안내, 4: 2라운드 설계, 5: 2라운드 표현, 6: 최종 창의 칭찬
+  const [seated,setSeated]=useState(false),[difference,setDifference]=useState<string[]>([]),[compared,setCompared]=useState(false),[comparison,setComparison]=useState('');
   const [labStep, setLabStep] = useState<number>(1);
 
   // 1라운드 (학생 A 설계, 학생 B 로봇)
@@ -41,6 +42,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
   const [leg2, setLeg2] = useState(LEG_CARDS[1]);
   const [body2, setBody2] = useState(BODY_CARDS[1]);
 
+  const changed=[arm1.id!==arm2.id?'팔':'',leg1.id!==leg2.id?'다리':'',body1.id!==body2.id?'몸통':''].filter(Boolean);
   const [praise1, setPraise1] = useState<string>('');
   const [praise2, setPraise2] = useState<string>('');
 
@@ -69,10 +71,10 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
-      onRestart={() => { setLabStep(1); setArm1(ARM_CARDS[0]); setLeg1(LEG_CARDS[0]); setBody1(BODY_CARDS[0]); setArm2(ARM_CARDS[1]); setLeg2(LEG_CARDS[1]); setBody2(BODY_CARDS[1]); setPraise1(''); setPraise2(''); }}
+      onRestart={() => { setSeated(false);setDifference([]);setCompared(false);setComparison('');setLabStep(1); setArm1(ARM_CARDS[0]); setLeg1(LEG_CARDS[0]); setBody1(BODY_CARDS[0]); setArm2(ARM_CARDS[1]); setLeg2(LEG_CARDS[1]); setBody2(BODY_CARDS[1]); setPraise1(''); setPraise2(''); }}
     >
       {({ onComplete }) => (
-        <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
+        <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl"><label className="activity-brief"><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉은 작은 팔·손·발끝 동작으로 재현하기</label>{seated&&<p>서거나 크게 움직일 필요 없이 같은 카드의 방향·순서를 작은 손짓으로 표현해요.</p>}
           {/* Step 1: 1라운드 설계 */}
           {labStep === 1 && (
             <div className="py-2">
@@ -339,7 +341,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
           )}
 
           {/* Step 6: 상호 칭찬 및 리포트 */}
-          {labStep === 6 && (
+          {labStep===6&&<section className="activity-brief"><h3>두 설계 비교 · 친구가 바꾼 부위 찾기</h3><p>A 설계: {arm1.name} → {leg1.name} → {body1.name}</p><p>B 설계: {arm2.name} → {leg2.name} → {body2.name}</p>{['팔','다리','몸통','같음'].map(part=><button key={part} aria-pressed={difference.includes(part)} onClick={()=>{setCompared(false);setDifference(old=>old.includes(part)?old.filter(v=>v!==part):[...old,part]);}}>{part}</button>)}<button onClick={()=>{const expected=changed.length?changed:['같음'];const right=expected.length===difference.length&&expected.every(v=>difference.includes(v));setCompared(right);setComparison(right?'고른 두 설계의 바뀐 부위를 확인했어요.':'두 카드의 이름을 비교하고 다시 골라요.');}}>두 설계의 차이 확인</button><p role="status">{comparison}</p></section>}{labStep === 6 && (
             <div className="py-2 animate-in fade-in duration-300 text-center">
               <span className="text-5xl block mb-2">⭐🤝</span>
               <h3 className="text-xl font-black text-white mb-1">연구소 최종 협력 완료!</h3>
@@ -388,7 +390,8 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{metrics:{'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
+                disabled={!compared}
+                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{participation:'performed',metrics:{'재현 방법':seated?'앉은 작은 동작':'편한 기본 동작','설계 차이':difference.join(' · '),'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 로봇 연구소 활동 완료

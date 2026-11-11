@@ -1,6 +1,7 @@
 import React from 'react';
-import { isRecord, readJsonStorage } from '../../application/browserStorage';
+import { isRecord, localDateKey, readJsonStorage } from '../../application/browserStorage';
 import { useModalDialog } from '../../application/useModalDialog';
+import {earnsParticipationReward} from '../../domain/gameResultDetails';
 import { normalizePlayerProfile } from '../../application/usePlayerProfile';
 import { GameResultDetailsView } from './GameResultDetailsView';
 import { normalizeTamagotchiState } from '../../application/useTamagotchi';
@@ -30,7 +31,7 @@ const ALL_BADGES: BadgeInfo[] = [
   { id: 'explorer', name: '탐험가', emoji: '🌍', category: '협동/탐험', desc: '서로 다른 미니게임 10종을 완료함', condition: '미니게임 10종 완료' },
   { id: 'collector', name: '수집가', emoji: '💎', category: '협동/탐험', desc: '서로 다른 미니게임 30종을 완료함', condition: '미니게임 30종 완료' },
   { id: 'tamagotchi_max', name: '땀방울의 수호자', emoji: '🐥', category: '체력/운동', desc: '땀방이를 꾸준히 키워 레벨 5에 도달함', condition: '다마고치 레벨 5 달성' },
-  { id: 'streak_7', name: '체육 개근왕', emoji: '🔥', category: '체력/운동', desc: '7일 연속 체육 미션 수행 완료', condition: '데일리 스트릭 7일' },
+  { id: 'streak_7', name: '오늘의 준비 확인', emoji: '🔥', category: '체력/운동', desc: '이번 탭에서 오늘의 준비 활동을 직접 확인함', condition: '오늘 준비 확인 · 최대 8시간 보관' },
 ];
 
 export const BadgeArchiveModal: React.FC<BadgeArchiveModalProps> = ({ isOpen, onClose }) => {
@@ -47,9 +48,9 @@ export const BadgeArchiveModal: React.FC<BadgeArchiveModalProps> = ({ isOpen, on
   const profile = normalizePlayerProfile(readJsonStorage('physical_player_profile'));
   const pet = normalizeTamagotchiState(readJsonStorage('dambang_tamagotchi_v1'));
   const streak = normalizeDailyStreak(readJsonStorage('dambang_daily_streak_v1'));
-  unlockedBadges.first_play ||= !!profile && profile.totalPlays > 0;
+  unlockedBadges.first_play ||= !!profile && profile.recentGames.some(r=>earnsParticipationReward(r.score,r.details));
   unlockedBadges.tamagotchi_max ||= pet.xp >= 400;
-  unlockedBadges.streak_7 ||= Math.max(streak.bestStreak, streak.currentStreak) >= 7;
+  unlockedBadges.streak_7 ||= streak.lastCompletedDate===localDateKey();
 
   const unlockedCount = ALL_BADGES.filter(b => unlockedBadges[b.id]).length;
 

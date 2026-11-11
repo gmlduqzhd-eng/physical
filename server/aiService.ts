@@ -9,7 +9,7 @@ import type { ZodType } from 'zod';
 export const catalog = GAMES.map(game => {
   const lesson = LESSON_GAME_CATALOG.find(item => item.id === game.type);
   return { id: game.type, name: game.name, description: game.desc, grades: game.grades, devices: game.devices,
-    space: lesson?.space ?? [], equipment: game.equipment ?? [], safety: [...new Set([...(game.safetyTips ?? []), ...(lesson?.safetyNotes ?? [])])],
+    space: game.spaces ?? lesson?.space ?? [], equipment: game.equipment ?? [], safety: [...new Set([...(game.safetyTips ?? []), ...(lesson?.safetyNotes ?? [])])],
     duration: game.durationMinutes ?? null, deviceMode: lesson?.deviceMode ?? [], playMode: game.playMode, goal: game.subCategory };
 });
 export type CatalogItem = typeof catalog[number];

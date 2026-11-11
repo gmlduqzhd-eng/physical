@@ -1,3 +1,4 @@
+import {readStorage,writeStorage} from '../../../application/browserStorage';
 import { useState } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { CheckCircle2 } from 'lucide-react';
@@ -17,6 +18,8 @@ interface Props {
 }
 
 export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
+  const [targetBest,setTargetBest]=useState(()=>Number(readStorage('physical_best_curling_target_v2'))||0);
+  const undo=()=>{setAttempts(old=>old.slice(0,-1));setShowSummary(false);setForceReflection('');};
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [forceReflection, setForceReflection] = useState<string>('');
   const [showSummary, setShowSummary] = useState<boolean>(false);
@@ -70,7 +73,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
         '매 시도마다 힘의 세기를 미세하게 조절하며 중앙에 가깝게 보내보세요.',
       ]}
       colorTheme="amber"
-      onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
+      onFinish={enqueueAction ? (score, details) => {const best=Math.max(targetBest,totalScore);setTargetBest(best);writeStorage('physical_best_curling_target_v2',String(best));enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() });} : undefined}
       onExit={onExit}
       onRestart={() => { setAttempts([]); setForceReflection(''); setShowSummary(false); }}
     >
@@ -125,10 +128,10 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <p className="text-xs text-slate-300 text-center mb-4 mt-2">
-                실제 공이 멈춘 위치를 아래 버튼에서 선택하세요.
+                실제 공이 멈춘 위치를 아래 버튼에서 선택하세요. 참여 점수와 표적 점수는 따로 기록해요.
               </p>
 
-              {/* 멈춘 구역 선택 버튼들 */}
+              <p>이 탭의 확인한 표적 최고 합계: {targetBest}/15점</p>{attempts.length>0&&<button onClick={undo}>직전 시도 되돌리기</button>}{/* 멈춘 구역 선택 버튼들 */}
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   onClick={() => handleRecordAttempt('center')}
@@ -187,7 +190,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
                 </div>
               </div>
 
-              {/* 힘 조절 성찰 질문 */}
+              <button onClick={undo}>마지막 시도 다시 기록하기</button>{/* 힘 조절 성찰 질문 */}
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-5">
                 <span className="text-xs font-bold text-slate-300 block mb-2">
                   마지막으로, 힘을 어떻게 조절했나요?
@@ -210,7 +213,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => onComplete(`공 굴림 컬링 5회 시도 · 직접 입력한 구역 합계 ${totalScore}점`, {metrics:{'다섯 번 결과':attempts.map((a,i)=>`${i+1}차 ${a.zone} · ${a.score}점`).join(' / '),'앞뒤 비교':`처음 두 번 ${earlyScore}점 / 마지막 두 번 ${lateScore}점`},selfReflection:forceReflection||'선택하지 않음'})}
+                onClick={() => onComplete(`공 굴림 컬링 5회 시도 · 직접 입력한 구역 합계 ${totalScore}점`, {participation:'performed',metrics:{'표적 점수':`${totalScore}/15점 · 확인한 최고 ${Math.max(targetBest,totalScore)}/15점`,'다섯 번 결과':attempts.map((a,i)=>`${i+1}차 ${({center:'중앙',middle:'중간',outer:'바깥',miss:'이탈'})[a.zone]} · ${a.score}점`).join(' / '),'앞뒤 비교':`처음 두 번 ${earlyScore}점 / 마지막 두 번 ${lateScore}점`},selfReflection:forceReflection||'선택하지 않음'})}
                 className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 컬링 원정 결과 저장하기

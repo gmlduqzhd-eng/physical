@@ -38,6 +38,7 @@ export const ExpressionActivityLayout = ({
   const [performed,setPerformed]=useState<number[]>([]);
   const [videoPlaying,setVideoPlaying]=useState(false);
   const [followVideo,setFollowVideo]=useState(!!game.videoInfo);
+  const [useVideo,setUseVideo]=useState(false);
   const completedRef = useRef(false);
   const playbackChange=useCallback((playing:boolean)=>setVideoPlaying(playing),[]);
   useEffect(()=>{const hide=()=>{if(document.hidden)setIsTimerRunning(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
@@ -57,7 +58,7 @@ export const ExpressionActivityLayout = ({
 
   // 활동 타이머
   useEffect(() => {
-    if (phase !== 'active' || !isTimerRunning || (followVideo&&!videoPlaying)) return;
+    if (phase !== 'active' || !isTimerRunning || (followVideo&&useVideo&&!videoPlaying)) return;
     const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
       if (timeLeft > 1) {
@@ -72,7 +73,7 @@ export const ExpressionActivityLayout = ({
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying]);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
@@ -94,13 +95,14 @@ export const ExpressionActivityLayout = ({
 
   // 루브릭 평가 제출 및 완료
   const handleFinishRubric = () => {
-    if (completedRef.current || ratings.some(rating => rating < 1)) return;
+    if (completedRef.current || (performed.length>0&&ratings.some(rating => rating < 1))) return;
     completedRef.current = true;
     sfxSuccess();
     setPhase('result');
     const avgScore = Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100);
     onComplete(performed.length?avgScore:0, {
-      ratings,
+      participation:performed.length?'performed':'observed',
+      ...(performed.length?{ratings}:{}),
       criteria: game.rubric.map(item => item.criterion),
       selfReflection,
       totalTime: totalElapsedTime,
@@ -204,7 +206,7 @@ export const ExpressionActivityLayout = ({
       {phase === 'active' && (
         <div className="space-y-4 animate-in fade-in duration-200">
           {/* 유튜브 영상 연계 플레이어 (영상 정보가 있는 게임) */}
-          {game.videoInfo && (
+          {game.videoInfo && useVideo && (
             <YouTubeExpressionPlayer
               initialVideoId={game.videoInfo.videoId}
               videoTitle={game.videoInfo.title}
@@ -213,7 +215,7 @@ export const ExpressionActivityLayout = ({
               onPlaybackChange={playbackChange}
             />
           )}
-          {game.videoInfo&&<div className="activity-brief"><label><input type="checkbox" checked={followVideo} onChange={e=>setFollowVideo(e.target.checked)}/>영상의 재생·멈춤에 활동 시간을 맞추기</label>{followVideo&&!videoPlaying&&<p role="status">영상 재생을 기다려요. 영상이 막히면 위 선택을 끄고 글 안내로 진행할 수 있어요.</p>}</div>}
+          {game.videoInfo&&<div className="activity-brief"><p>영상 사용을 선택하면 YouTube 외부 플레이어와 연결됩니다. 영상·카메라 없이 글 안내로도 참여할 수 있어요.</p><button onClick={()=>{setUseVideo(v=>!v);setVideoPlaying(false);}}>{useVideo?'영상 연결 끄고 글 안내로':'영상 사용하기 · YouTube 연결'}</button><label><input type="checkbox" checked={followVideo} onChange={e=>setFollowVideo(e.target.checked)}/>영상의 재생·멈춤에 활동 시간을 맞추기</label>{followVideo&&useVideo&&!videoPlaying&&<p role="status">영상 재생을 기다려요. 영상이 막히면 위 선택을 끄고 글 안내로 진행할 수 있어요.</p>}</div>}
 
           {/* 단계별 네비게이션 & 타이머 카드 */}
           <div className="bg-slate-900/90 border border-purple-500/30 rounded-3xl p-6 shadow-2xl space-y-4">
@@ -250,7 +252,7 @@ export const ExpressionActivityLayout = ({
               </div>
               <div className="text-xs text-purple-300 bg-purple-950/40 p-3 rounded-xl border border-purple-500/20 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 shrink-0 text-purple-400" />
-                <span><strong>표현 꿀팁:</strong> {currentStep.actionTip}</span>
+                <span><strong>표현 꿀팁:</strong> {smallMovement?'앉거나 작은 팔·손 동작을 골라도 같은 표현 목표예요. 불편하면 멈추고 쉬어요.':currentStep.actionTip}</span>
               </div>
             </div>
             <label className="activity-brief flex gap-3"><input type="checkbox" checked={performed.includes(currentStepIdx)} onChange={e=>setPerformed(old=>e.target.checked?[...old,currentStepIdx]:old.filter(i=>i!==currentStepIdx))}/>이 단계의 몸 표현에 참여했어요. 쉬거나 설명만 봤다면 선택하지 않아요.</label>
@@ -314,7 +316,7 @@ export const ExpressionActivityLayout = ({
           <fieldset className="activity-brief"><legend>단계별 직접 참여 확인</legend>{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>setPerformed(old=>e.target.checked?[...old,i]:old.filter(n=>n!==i))}/>{step.title} · {performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}</label>)}<p>0개를 선택하면 설명을 확인한 기록으로 남겨요. 타이머나 별점으로 실제 수행을 판정하지 않아요.</p></fieldset>
           {/* 루브릭 항목 리스트 */}
           <div className="space-y-4">
-            {game.rubric.map((item, idx) => (
+            {performed.length>0&&game.rubric.map((item, idx) => (
               <div key={idx} className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
@@ -365,16 +367,16 @@ export const ExpressionActivityLayout = ({
             />
           </div>
 
-          <p role="status" className="text-xs text-purple-300">모든 평가 항목에 별점을 선택하면 제출할 수 있습니다. 성찰 한마디는 자유롭게 작성하세요.</p>
+          <p role="status" className="text-xs text-purple-300">실제 참여한 경우 별점을 선택해요. 설명만 확인했다면 별점 없이 기록할 수 있어요.</p>
           <div className="flex justify-end pt-2">
             <button
               type="button"
               onClick={handleFinishRubric}
-              disabled={ratings.some(rating => rating < 1)}
+              disabled={performed.length>0&&ratings.some(rating => rating < 1)}
               className="game-stage-primary px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trophy className="w-4 h-4" />
-              <span>평가 완료 및 활동 결과 보기</span>
+              <span>{performed.length?'평가 완료 및 활동 결과 보기':'설명만 확인 · 평가 없이 기록'}</span>
             </button>
           </div>
         </div>

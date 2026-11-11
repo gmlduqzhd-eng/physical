@@ -1,5 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { isRecord, localDateKey, nonnegativeNumber, readJsonStorage, writeStorage } from './browserStorage';
+import { useCallback } from 'react';
+import {usePrivateSessionState} from './usePrivateSessionState';
+import { isRecord, localDateKey, nonnegativeNumber } from './browserStorage';
 
 export interface DailyStreakState {
   currentStreak: number;
@@ -24,12 +25,11 @@ export const normalizeDailyStreak = (value: unknown): DailyStreakState => {
 };
 
 export const useDailyStreak = () => {
-  const [streakData, setStreakData] = useState<DailyStreakState>(() => normalizeDailyStreak(readJsonStorage(STORAGE_KEY)));
-  useEffect(() => { writeStorage(STORAGE_KEY, JSON.stringify(streakData)); }, [streakData]);
+  const {state:streakData,current,update:setStreakData}=usePrivateSessionState(STORAGE_KEY,normalizeDailyStreak);
 
   const isTodayCompleted = useCallback(() => {
-    return streakData.lastCompletedDate === localDateKey();
-  }, [streakData.lastCompletedDate]);
+    return current().lastCompletedDate === localDateKey();
+  }, [current]);
 
   // 완료 처리 함수
   const completeTodayMission = useCallback((bonusPoints = 50) => {
@@ -55,7 +55,7 @@ export const useDailyStreak = () => {
 
       return nextData;
     });
-  }, []);
+  }, [setStreakData]);
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);

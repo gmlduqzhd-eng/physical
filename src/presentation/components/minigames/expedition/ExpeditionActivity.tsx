@@ -1,3 +1,4 @@
+import {ActivityDemo} from '../common/ActivityDemo';
 import {ActivityProgress} from '../common/ActivityProgress';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ExpeditionSpec} from '../../../../domain/expeditionGames';
@@ -16,6 +17,7 @@ const expeditionMinimumPlayers=(game:ExpeditionSpec)=>game.spec[0]==='T'?(fourPl
 
 export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const revamped=isRevampedExpedition(game.id);
+  const [resumeAvailable,setResumeAvailable]=useState(false),[resetRequested,setResetRequested]=useState(false);
   const [gentle,setGentle]=useState(false),[alternative,setAlternative]=useState(false),[practicing,setPracticing]=useState(false);
   const [practicePlan,setPracticePlan]=useState<ExpeditionRound>();
   const [phase,setPhase]=useState<Phase>('ready');
@@ -28,6 +30,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const [participants,setParticipants]=useState<number[]>([]),[checks,setChecks]=useState<string[]>([]),[counts,setCounts]=useState<string[]>([]),[answer,setAnswer]=useState<string[]>([]);
   const [source,setSource]=useState<'self-report'|'peer-report'>('self-report');
   const [revealed,setRevealed]=useState(false),[error,setError]=useState(''),[arrivals,setArrivals]=useState<(number|null)[]>([]);
+  const saving=useRef(false);
   const remaining=useRef(0),elapsed=useRef(0),last=useRef(0),completed=useRef(false);
   const {speak,stop}=useVoiceCoach();const {playBeep}=useAudio();
   useEffect(()=>{window.scrollTo(0,0);},[phase,round]);
@@ -36,7 +39,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const beginRound=useCallback((index:number,all:ExpeditionRound[])=>{
     elapsed.current=0;remaining.current=all[index].secret?5:3;setSeconds(remaining.current);setRound(index);setStep(0);setBeat(0);setPaused(false);resetRecord(all[index]);setPhase(all[index].secret?'preview':'countdown');
   },[resetRecord]);
-  const start=()=>{completed.current=false;const all=paceExpedition(Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players)),revamped&&gentle);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
+  const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpedition(Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players)),revamped&&gentle);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
   const stopActivity=()=>{if(phase!=='active'||paused)return;elapsed.current+=Math.max(0,performance.now()-last.current);last.current=performance.now();stop();setPhase('record');};
 
   useEffect(()=>{
@@ -70,19 +73,19 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   useEffect(()=>()=>stop(),[stop]);
 
   const toggleNumber=(n:number)=>setParticipants(previous=>previous.includes(n)?previous.filter(x=>x!==n):[...previous,n]);
-  const save=(allConfirmed=false)=>{
-    if(completed.current||!plan||practicing)return;
-    if(plan.secret&&!revealed){setError('기억해서 수행한 순서를 먼저 기록하고 정답을 확인해 주세요.');return;}
-    const record:ExpeditionRecord={round:round+1,kind:plan.kind,source,participants:allConfirmed?Array.from({length:players},(_,i)=>i+1):[...participants].sort((a,b)=>a-b),counts:allConfirmed?plan.targets.map(t=>t.goal):counts.map(v=>v.trim()===''?NaN:Number(v)),checks:allConfirmed?[...plan.checks]:checks,answer:[...answer],correct:checkExpeditionAnswer(game,plan,answer,players),elapsedMs:Math.round(elapsed.current),...(plan.timing==='arrival'?{arrivals:arrivals.map(t=>t??-1)}:{})};
+  const save=(allConfirmed:boolean|'rest'|'observe'|'partial'=false)=>{
+    const quiet=allConfirmed==='rest'||allConfirmed==='observe',full=allConfirmed===true;
+    if(completed.current||saving.current||!plan||practicing)return;
+    if(!quiet&&plan.secret&&!revealed){setError('기억해서 수행한 순서를 먼저 기록하고 정답을 확인해 주세요.');return;}
+    const record:ExpeditionRecord={round:round+1,kind:plan.kind,source,participants:quiet?[]:full?Array.from({length:players},(_,i)=>i+1):[...participants].sort((a,b)=>a-b),counts:quiet?plan.targets.map(()=>0):full?plan.targets.map(t=>t.goal):counts.map(v=>v.trim()===''?NaN:Number(v)),checks:quiet?[]:full?[...plan.checks]:checks,answer:quiet?[]:[...answer],correct:!quiet&&checkExpeditionAnswer(game,plan,answer,players),outcome:quiet?allConfirmed as 'rest'|'observe':allConfirmed==='partial'?'partial':full||participants.length===players&&plan.checks.every(c=>checks.includes(c))?'complete':'partial',alternative,gentle,elapsedMs:Math.round(elapsed.current),...(plan.timing==='arrival'?{arrivals:arrivals.map(t=>t??-1)}:{})};
     const problem=validateExpeditionRecord(plan,record,players);if(problem){setError(problem);return;}
-    if(plan.timing==='arrival'&&arrivals.some(t=>t===null)){setError('도착하지 않은 번호가 있어요. 다음 라운드에서 다시 시도할 수 있도록 미도착을 직접 확인해 주세요.');return;}
-    const next=[...records,record];setRecords(next);setError('');
+    if(!quiet&&plan.timing==='arrival'&&arrivals.some(t=>t===null)){setError('도착하지 않은 번호가 있어요. 다음 라운드에서 다시 시도할 수 있도록 미도착을 직접 확인해 주세요.');return;}
+    saving.current=true;const next=[...records.filter(r=>r.round!==record.round),record];setRecords(next);setError('');queueMicrotask(()=>{saving.current=false;});
     if(round+1<plans.length){beginRound(round+1,plans);return;}
-    if(game.spec==='T41'&&Array.from({length:players},(_,i)=>i+1).some(n=>new Set(next.filter(r=>r.participants.includes(n)).map(r=>r.kind)).size<2)){setError('각 번호가 서로 다른 두 종류 이상에 참여해야 빙고를 마칠 수 있어요.');return;}
     completed.current=true;stop();
     const time=Math.round(next.reduce((sum,r)=>sum+r.elapsedMs,0)/1000);
     const times=next.map(r=>Math.round(r.elapsedMs/100)/10);
-    enqueueAction({payload:{id:groupId,amount:expeditionScore(next,plans),details:{totalTime:time,metrics:{'기록 방식':source==='peer-report'?'짝과 함께 확인해 직접 입력':'스스로 확인해 직접 입력','참여 방식':solo?'혼자 진행을 체험한 기록 · 실제 모둠 참여 미확인':`${players}명 참여 확인 · 직접 입력`,'라운드':`${next.length}/${plans.length} 완료`,...(revamped?{'진행 선택':`${gentle?'여유 있게':'기본 속도'} · ${alternative?'대체 동작':'기본 동작'} · 사전 연습 완료`}:{}),...(plan.bingoCells?{'직접 확인한 빙고':`${expeditionBingo(next,plans).lines}줄`}:{}),'점수 기준':'직접 입력한 성공과 화면 문제 비교 · 실제 신체 활동량 미측정',...(game.spec==='S30'?{'왕복 기록':times.map((t,i)=>`${i+1}차 ${t}초`).join(' / '),'기록 간 차이':`${Math.round((Math.max(...times)-Math.min(...times))*10)/10}초 · 속도나 거리 미측정`}:{})},activity:{gameId:game.id,specId:game.spec,soloPreview:solo,rounds:next}}}});
+    enqueueAction({payload:{id:groupId,amount:expeditionScore(next,plans),details:{participation:next.some(r=>r.outcome==='complete'||r.outcome==='partial')?'performed':next.some(r=>r.outcome==='observe')?'observed':'rested',totalTime:time,metrics:{'기록 방식':source==='peer-report'?'짝과 함께 확인해 직접 입력':'스스로 확인해 직접 입력','참여 방식':solo?'혼자 진행을 체험한 기록 · 실제 모둠 참여 미확인':`설정 인원 ${players}명 · 실제 참여 번호는 라운드별 기록 확인`,'라운드':`${next.length}/${plans.length} 기록 · ${next.filter(r=>r.outcome==='rest').length}회 휴식 · ${next.filter(r=>r.outcome==='observe').length}회 관찰`,'라운드별 선택':next.map(r=>`${r.round}차 ${r.alternative?'대체 동작':'기본 동작'} · ${r.gentle?'여유 안내':'기본 안내'}`).join(' / '),...(revamped?{'진행 선택':`${gentle?'여유 있게':'기본 속도'} · ${alternative?'대체 동작':'기본 동작'} · 사전 안내 확인 (연습 선택)`}:{}),...(plan.bingoCells?{'직접 확인한 빙고':`${expeditionBingo(next,plans).lines}줄`}:{}),'점수 기준':'직접 입력한 성공과 화면 문제 비교 · 실제 신체 활동량 미측정',...(game.spec==='S30'?{'왕복 기록':times.map((t,i)=>`${i+1}차 ${t}초`).join(' / '),'기록 간 차이':`${Math.round((Math.max(...times)-Math.min(...times))*10)/10}초 · 속도나 거리 미측정`}:{})},activity:{gameId:game.id,specId:game.spec,soloPreview:solo,rounds:next}}}});
   };
   const addAnswer=(value:string)=>{
     if(revealed)return;
@@ -99,20 +102,20 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
 
   return <section className="expedition-activity" aria-label={game.name} data-expedition={game.spec} data-phase={phase} data-revamped={revamped} data-practice={practicing}>
     <div className="expedition-heading"><span>🧭 {game.name}</span><small>{phase==='ready'?'준비':`${round+1}/${game.rounds} 라운드`}</small></div>
-    <ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
-    {phase==='ready'?<>
+    <ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.outcome==='rest'?'rest':r.outcome==='observe'?'observe':r.outcome==='partial'?'partial':r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
+    {phase==='ready'?<><ActivityDemo steps={createExpeditionRound(game,round,players).steps.map(s=>s.instruction)} equipment={game.equipment} roles={createExpeditionRound(game,round,players).roles} board={createExpeditionRound(game,round,players).board}/>
       <p className="expedition-lead">{game.desc}</p>
-      {!solo&&<label>참여 인원<select aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
+      {!solo&&<label>참여 인원<select disabled={resumeAvailable} aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
       {solo&&players>1&&<p className="expedition-note">혼자 해보기에서는 여러 역할의 진행을 체험해요. 번호 확인은 실제 모둠원이 참여했다는 자동 인증이 아니에요.</p>}
       <p>기기는 거치하고 몸 활동을 해요. 라운드가 끝난 뒤 수행한 기록을 직접 입력해요.</p>
       <details><summary>준비물·안전·대체 동작</summary><p>{game.equipment.join(' · ')} · {game.space}</p><p>{game.safety}</p><p>{game.alternative}</p></details>
       {revamped&&<fieldset><legend>우리에게 맞는 방법</legend><button aria-pressed={gentle} onClick={()=>setGentle(!gentle)}>여유 있는 안내 {gentle?'켜짐':'꺼짐'}</button><button aria-pressed={alternative} onClick={()=>setAlternative(!alternative)}>대체 동작 {alternative?'켜짐':'꺼짐'}</button><p>{alternative?game.alternative:'원래 규칙과 역할을 유지하고, 먼저 짧게 연습해요.'}</p></fieldset>}
       <section className="activity-brief"><h3>공간과 도구를 먼저 놓아요</h3><div className="activity-role-cards">{game.equipment.map((tool,i)=><p key={i}><strong>준비 {i+1}</strong>{tool}</p>)}</div><p>활동 장소: {game.space}</p><p>교사가 출발·활동·돌아올 위치를 정해요. 기기는 이동 통로 밖에 놓고 도구 확인→몸 활동→기록 순서로 진행해요.</p></section>
-      <button className="expedition-primary" onClick={start}>원정 시작</button>
+      {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 보존하고 현재 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpedition([createExpeditionRound(game,i,players)],gentle)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 현재 라운드 이어가기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작하겠습니다.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}>원정 시작</button>}
     </>:phase==='tutorial'?<div className="expedition-signal">
       <h2>먼저 8초만 연습해요</h2><ol><li>기기를 거치하고 준비물을 놓아요.</li><li>{plans[0].steps[0].instruction}</li><li>신호가 끝나면 돌아와 직접 기록해요. 실수해도 다시 참여해요.</li></ol>
       <p>이번 목표: {plans[0].targets.map(t=>`${t.label} ${t.goal}`).join(' · ')||'표시된 시간과 역할을 비교하기'}</p><p>{game.safety}</p>
-      <button className="expedition-primary" onClick={()=>beginRound(0,[practicePlan!])}>점수 없는 연습 시작</button>
+      <button className="expedition-primary" onClick={()=>beginRound(0,[practicePlan!])}>점수 없는 연습 시작</button><button onClick={()=>{setPracticing(false);beginRound(0,plans);}}>글 안내 확인 · 첫 작전으로</button>
     </div>:<>
       {records.length>0&&<p className="activity-brief">앞 라운드에서 직접 확인한 횟수: {records.at(-1)!.counts.join(' · ')||'화면 문제·역할 확인'} · 이번 목표와 비교하고 수행이 어려우면 대체 동작을 선택해요.</p>}
       <div className="expedition-round-title"><h2>{plan.title}</h2><p className="expedition-note">{source==='peer-report'?'짝과 함께 확인한 기록':'직접 확인한 기록'} · 센서나 카메라를 사용하지 않아요.</p></div>
@@ -128,9 +131,9 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
           {current.beats&&<><strong className="expedition-beat">{beat+1}박 · {alternative?'양팔 번갈아 움직이기':current.beats[beat]}</strong><div className="expedition-beats" aria-hidden="true">{Array.from({length:8},(_,i)=><span key={i} className={i===beat?'selected':''}>{i+1}</span>)}</div></>}
           {plan.timing==='estimate'?<p>시간 표시는 가려져 있어요. 느낌으로 걸어 보세요.</p>:<strong className="expedition-timer">{plan.timing?Math.floor(elapsed.current/1000):seconds}<small>초</small></strong>}
         </div>
-        {plan.timing==='arrival'?<div className="expedition-participants">{arrivals.map((t,i)=><button key={i} disabled={paused||t!==null} onClick={()=>arrival(i)}>{i+1}번 {t===null?'도착 확인':`${Math.round(t/100)/10}초 도착`}</button>)}</div>:plan.timing&&<button className="expedition-primary" disabled={paused} onClick={stopActivity}>{plan.timing==='estimate'?'지금 끝내기':'왕복 도착 기록'}</button>}
+        {plan.timing==='arrival'?<div className="expedition-participants">{arrivals.map((t,i)=><button key={i} disabled={paused||t!==null} onClick={()=>arrival(i)}>관찰자: {i+1}번 {t===null?'도착 확인':`${Math.round(t/100)/10}초 도착`}</button>)}</div>:plan.timing&&<button className="expedition-primary" disabled={paused} onClick={stopActivity}>{plan.timing==='estimate'?'지금 끝내기':'왕복 도착 기록'}</button>}
       </>}
-      {phase!=='record'&&<div className="expedition-controls"><button aria-pressed={paused} onClick={()=>{setPaused(!paused);stop();}}>{paused?'계속하기':'일시정지'}</button><button aria-pressed={!sound} onClick={()=>{setSound(!sound);stop();}}>{sound?'소리 끄기':'소리 켜기'}</button><button onClick={()=>{stop();setPaused(false);setPhase('ready');}}>준비로 돌아가기</button></div>}
+      {phase!=='record'&&<div className="expedition-controls"><button aria-pressed={paused} onClick={()=>{setPaused(!paused);stop();}}>{paused?'계속하기':'일시정지'}</button><button aria-pressed={!sound} onClick={()=>{setSound(!sound);stop();}}>{sound?'소리 끄기':'소리 켜기'}</button><button onClick={()=>{stop();setPaused(false);setResumeAvailable(!practicing);setPhase('ready');}}>기록 유지하고 참여 방법 바꾸기</button></div>}
       {paused&&<p role="status" className="expedition-note">잠시 멈췄어요. 주변을 확인한 뒤 계속하기를 눌러 주세요.</p>}
       {phase==='record'&&practicing&&<div className="expedition-record"><h3>연습을 마쳤어요</h3><p>내 공간과 도구가 준비됐나요? 어려우면 준비 화면에서 대체 동작을 골라도 돼요. 연습은 기록과 점수에 넣지 않아요.</p><button onClick={()=>{setPracticing(false);setPhase('ready');}}>준비 다시 하기</button><button className="expedition-primary" onClick={()=>{setPracticing(false);beginRound(0,plans);}}>첫 작전 시작</button></div>}
       {phase==='record'&&!practicing&&<div className="expedition-record">
@@ -148,10 +151,10 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         {plan.checks.map(check=><label className="expedition-check" key={check}><input type="checkbox" checked={checks.includes(check)} onChange={e=>setChecks(previous=>e.target.checked?[...previous,check]:previous.filter(c=>c!==check))}/>{check}</label>)}
         <label>누가 확인했나요?<select aria-label="기록 확인 방식" value={source} onChange={e=>setSource(e.target.value as typeof source)}><option value="self-report">스스로 확인해 입력</option><option value="peer-report">짝과 함께 확인해 입력</option></select></label>
         <button className="expedition-primary" onClick={()=>save()}>{round+1<plans.length?'기록하고 다음 라운드':'기록하고 원정 마치기'}</button></details>
-        <p className="expedition-note">입력한 내용은 수행 신고이며, 교사 인증이나 자동 측정 기록이 아니에요.</p>
+        <button onClick={()=>save('partial')}>입력한 일부 수행·도전만 기록</button><p className="expedition-note">입력한 내용은 수행 신고이며, 교사 인증이나 자동 측정 기록이 아니에요.</p>
         {error&&<p role="alert" className="expedition-error">{error}</p>}
         <button onClick={()=>beginRound(round,plans)}>이번 라운드 다시 하기</button>
       </div>}
-    </>}
+    </>}{plan&&!practicing&&phase!=='ready'&&phase!=='tutorial'&&<div className="activity-brief"><button onClick={()=>save('rest')}>이번 라운드 휴식 · 0점 기록</button><button onClick={()=>save('observe')}>이번 라운드 관찰 참여 · 0점 기록</button><p>휴식·관찰을 실제 수행으로 표시하지 않고 다음 라운드로 가요.</p></div>}
   </section>;
 }

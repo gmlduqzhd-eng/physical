@@ -69,5 +69,5 @@ export function ExpeditionTutorial({game}:{game:string}){
 
 export function BossContribution({snapshot:s}:{snapshot:ExpeditionSnapshot}){
  const route=BOSS_ROUTES[settingsOf(s).route];
- return <p>선택한 경로 {ROUTE_NAMES[settingsOf(s).route]} · 현재 {Math.min(3,s.phase+1)}/{route.length}관문. 모둠마다 조작·탐사·신호·확인 역할을 나누고 모두의 기여가 모이면 열려요.</p>;
+ return <section className="flagship-note"><p>선택한 경로 {ROUTE_NAMES[settingsOf(s).route]} · 현재 {Math.min(3,s.phase+1)}/{route.length}관문</p><div className="activity-role-cards">{s.groups.map(group=>{const w=groupWorkshop(group,s);return <article key={group.id}><h4>{group.name}</h4><ol>{route.map((game,i)=>{const contribution=w.contributions?.find(c=>c.game===game);return <li key={i}>{i+1}관문 · {contribution?contribution.done?'참여 확인':'진행 중':i<s.phase?'공동 관문 개방':'개별 기록 확인 대기'}</li>;})}</ol><p>다음 역할: {roleSeats(w.members,w.roleRound).map(r=>`${r.seat}번 ${r.role}`).join(' · ')}</p><p>{group.done?'기기를 놓고 작은 동작으로 정리해요.':'조작·탐사·신호·확인 역할을 나누어 아래 관문에 참여해요.'}</p></article>;})}</div><p>표시는 모둠의 입력 기록이며 실제 수행은 교사가 확인해요.</p></section>;
 }

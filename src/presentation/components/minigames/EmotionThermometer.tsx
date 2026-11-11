@@ -20,6 +20,8 @@ interface Props {
 
 export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) => {
   // 1: 감정 & 온도 선택, 2: 15초 신체 표현 타이머, 3: 짝 감상 선택, 4: 감상 공유 리포트
+  const [firstRound,setFirstRound]=useState<{emotion:string;temperature:number;guess:string;guessTemperature:number}|null>(null);
+  const [reveal,setReveal]=useState(false);
   const [phase, setPhase] = useState<number>(1);
   const [selectedEmotion, setSelectedEmotion] = useState<typeof EMOTIONS[0]>(EMOTIONS[0]);
   const [temperature, setTemperature] = useState<number>(3); // 1~5 단계
@@ -76,7 +78,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
-      onRestart={() => { setPhase(1); setSelectedEmotion(EMOTIONS[0]); setTemperature(3); setPeerGuessEmotion(''); setPeerGuessTemp(3); setExpressTimer(15); setIsTimerRunning(false); }}
+      onRestart={() => { setFirstRound(null); setReveal(false); setPhase(1); setSelectedEmotion(EMOTIONS[0]); setTemperature(3); setPeerGuessEmotion(''); setPeerGuessTemp(3); setExpressTimer(15); setIsTimerRunning(false); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
@@ -142,7 +144,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
               </div>
 
               <button
-                onClick={() => setPhase(2)}
+                onClick={() => {setReveal(false);setPhase(2);handleStartExpress();}}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg shadow-purple-500/20"
               >
                 감정 설정 완료! 15초 신체 표현 시작
@@ -153,9 +155,9 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
           {/* Phase 2: 15초 동안 실제 몸 전체로 감정 표현 */}
           {phase === 2 && (
             <div className="py-6 text-center">
-              <span className="text-6xl block mb-2 animate-bounce">{selectedEmotion.emoji}</span>
+              <p>표현자: {firstRound?'친구 B':'친구 A'} · 감상자: {firstRound?'친구 A':'친구 B'}</p><button onClick={()=>setReveal(v=>!v)}>{reveal?'표현자의 선택 다시 가리기':'표현자만 선택 확인하기'}</button>
               <div className="inline-block px-3 py-1 rounded-full bg-purple-950 border border-purple-800 text-xs font-bold text-purple-300 mb-2">
-                선택한 감정: {selectedEmotion.name} ({temperature}단계 강도)
+                {reveal?`선택한 감정: ${selectedEmotion.name} (${temperature}단계 강도)`:'감상자에게는 선택을 가리고 몸 표현을 보여 주세요.'}
               </div>
               <h3 className="text-xl font-black text-white mb-2">
                 온몸으로 감정을 마음껏 펼쳐보세요!
@@ -164,7 +166,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                 카메라는 작동하지 않습니다. 짝꿍이 감상할 수 있도록 몸짓, 걸음걸이, 호흡으로 표현하세요.
               </p>
 
-              {isTimerRunning&&<button type="button" onClick={()=>setIsTimerRunning(false)}>잠깐 쉬기</button>}
+              <strong className="text-4xl block my-3">남은 안내: {expressTimer}초</strong>{isTimerRunning&&<button type="button" onClick={()=>setIsTimerRunning(false)}>잠깐 쉬기</button>}
               {isTimerRunning ? (
                 <div className="my-6">
                   <div className="text-7xl font-black text-purple-400 font-mono mb-2">{expressTimer}초</div>
@@ -177,7 +179,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                   onClick={handleStartExpress}
                   className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-base shadow-lg active:scale-95 transition-all inline-flex items-center gap-2"
                 >
-                  <Play className="w-5 h-5" /> 15초 표현 타이머 출발
+                  <Play className="w-5 h-5" /> {expressTimer===15?'15초 안내 시작':'남은 시간 이어서 하기'}
                 </button>
               )}
             </div>
@@ -288,16 +290,16 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                 <p className="text-purple-300 font-bold mb-1">💡 감상 배움 이야기:</p>
                 <p>
                   {selectedEmotion.name === peerGuessEmotion
-                    ? '서로의 마음이 잘 통했네요! 온몸으로 전한 감정이 친구의 마음에 정확히 가닿았습니다.'
+                    ? '두 사람이 고른 표현 이름이 같았어요. 어떤 움직임을 보고 그렇게 생각했는지 이야기해요.'
                     : '표현과 느낌이 서로 달라도 괜찮아요! 같은 움직임도 사람마다 저마다의 감정으로 다채롭게 해석될 수 있습니다.'}
                 </p>
               </div>
 
               <button
-                onClick={() => onComplete(`표현과 감상을 서로 비교했어요.`,{metrics:{'표현 선택':`${selectedEmotion.name} · ${temperature}단계`,'짝 감상':`${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌을 함께 이야기했어요.'})}
+                onClick={() => {if(!firstRound){setFirstRound({emotion:selectedEmotion.name,temperature,guess:peerGuessEmotion,guessTemperature:peerGuessTemp});setPhase(1);setExpressTimer(15);setIsTimerRunning(false);setPeerGuessEmotion('');setReveal(false);return;}onComplete('두 사람이 표현자·감상자를 바꾸어 비교했어요.',{participation:'performed',metrics:{'친구 A 표현':`${firstRound.emotion} · ${firstRound.temperature}단계 / 친구 B 감상 ${firstRound.guess} · ${firstRound.guessTemperature}단계`,'친구 B 표현':`${selectedEmotion.name} · ${temperature}단계 / 친구 A 감상 ${peerGuessEmotion} · ${peerGuessTemp}단계`},selfReflection:'같거나 다른 느낌의 이유를 함께 이야기했어요.'});}}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
-                <CheckCircle2 className="w-4 h-4" /> 감정 표현 완료하기
+                <CheckCircle2 className="w-4 h-4" /> {firstRound?'두 역할 비교하고 완료하기':'역할 바꾸어 두 번째 표현하기'}
               </button>
             </div>
           )}

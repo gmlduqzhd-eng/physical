@@ -2,8 +2,8 @@ type StorageKind = 'local' | 'session';
 let generation=0;
 export function deviceStorageGeneration(){return generation;}
 const sessionFallback = new Map<string, string | null>();
-const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_number', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile'];
-export const isPrivateDeviceKey = (key: string) => privateKeys.includes(key) || /^(physical_best_|physical_badges$|physical_total_plays$)/.test(key);
+const privateKeys = ['physical_supabase_auth', 'physical_student_name', 'physical_student_number', 'physical_student_role', 'physical_last_room', 'physical_last_group', 'physical_last_group_name', 'physical_player_profile', 'dambang_tamagotchi_v1', 'dambang_daily_streak_v1'];
+export const isPrivateDeviceKey = (key: string) => privateKeys.includes(key) || /^(physical_best_|physical_badges$|physical_total_plays$|dambang_)/.test(key);
 const knownPrivateKeys = new Set(privateKeys.concat(['physical_badges', 'physical_total_plays']));
 function clearPrivate(storage: Storage) {
   knownPrivateKeys.forEach(key => storage.removeItem(key));
@@ -73,7 +73,7 @@ export function clearDeviceInformation() {
     try { const storage = window[kind];
     for (let index = storage.length - 1; index >= 0; index--) {
       const key = storage.key(index);
-      if (key && /^(physical_|teacher_|pin_battle_)/.test(key)) storage.removeItem(key);
+      if (key && /^(physical_|teacher_|pin_battle_|dambang_)/.test(key)) storage.removeItem(key);
     }
     } catch { /* Clear the other storage even when one is denied. */ }
   }

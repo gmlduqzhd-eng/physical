@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {AVAILABLE_GAMES,GAMES,hasAntiCheatSensor} from '../src/domain/gamesData';
 import {MERGED_GAMES,getRemovedGame,mergedGameUrl} from '../src/domain/gameLifecycle';
 import {EXPRESSION_GAMES} from '../src/presentation/components/minigames/expression/expressionGamesData';
-import {PHONE_PLAYS,phoneSequence,phoneRecordValid} from '../src/domain/phonePlayCatalog';
+import {PHONE_PLAYS,phoneRecordValid} from '../src/domain/phonePlayCatalog';
+import {phoneMemoryTask} from '../src/domain/phoneTaskRules';
 import {phoneRoles,phoneRoundCues,phoneStrategies,phoneNextHint} from '../src/domain/phonePlayProgression';
 import {EXPEDITION_BY_ID} from '../src/domain/expeditionGames';
 import {isRevampedExpedition} from '../src/domain/expeditionRevamps';
@@ -55,7 +56,7 @@ test('creative choices change active sequences; strategy choices select the actu
  for(const p of PHONE_PLAYS.filter(p=>p.kind==='decision')){assert.deepEqual(phoneRoundCues(p,1,'기본 방법',[],'seated'),[p.seated]);assert.equal(phoneRoundCues(p,1,'기본 방법',[],'small')[0],p.easy);assert.notEqual(phoneStrategies(p,0)[0].id,phoneStrategies(p,1)[0].id);}
 });
 test('memory challenge uses four concrete items and validates the sequence shown before movement',()=>{
- for(const p of PHONE_PLAYS.filter(p=>p.kind==='memory')){const answer=phoneSequence(p,0,false,true);assert.equal(answer.length,4);const record={round:0,outcome:'complete' as const,elapsedMs:p.seconds*1000,count:0,participants:[1],answer,challenge:true};assert(phoneRecordValid(p,record,1));assert(!phoneRecordValid(p,{...record,answer:answer.slice(0,3)},1));}
+ for(const p of PHONE_PLAYS.filter(p=>p.kind==='memory')){const task=phoneMemoryTask(p,0,false,true),answer=task.expected;assert.equal(task.base.length,4);const record={round:0,outcome:'complete' as const,elapsedMs:p.seconds*1000,count:0,participants:[1],answer,challenge:true};assert(phoneRecordValid(p,record,1));assert(!phoneRecordValid(p,{...record,answer:[]},1));}
 });
 test('all 34 standalone expeditions provide rehearsal, relaxed pacing and alternatives',()=>{
  const games=AVAILABLE_GAMES.filter(g=>EXPEDITION_BY_ID.get(g.type)?.kind==='B');assert.equal(games.length,34);for(const g of games)assert(isRevampedExpedition(g.type),g.type);

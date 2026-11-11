@@ -5,6 +5,7 @@ import type { QuestId, QuestRecord, QuestSettings } from '../../../../domain/mov
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 import { sfxTap, unlockAudio } from '../../../../application/soundEffects';
 import './MovementQuest.css';
+import {ActivityDemo} from './ActivityDemo';
 import {ActivityProgress} from './ActivityProgress';
 import './GameWordCue.css';
 
@@ -133,7 +134,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       {meta.sources&&<details className="mq-panel"><summary>확인한 공식 안내</summary>{meta.sources.map(source=><p key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></p>)}</details>}
       <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>
     </>}
-    {phase === 'plan' && <>
+    {phase === 'plan' && <><ActivityDemo steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>
       {records.length>0&&<p className="activity-brief">앞 작전: {records.at(-1)!.outcome==='complete'?'참여를 직접 확인했어요. 다음 선택을 비교해요.':'도전한 부분을 남겼어요. 이번에는 쉬운 방법이나 다른 작전을 골라도 돼요.'}</p>}
       <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{plan.goal}</h2><p>{plan.hint}</p>
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}

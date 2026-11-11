@@ -28,7 +28,7 @@ const files = [
   'src/domain/expeditionRules.ts',
   'src/domain/movementQuests.ts', 'src/domain/extendedMovementQuests.ts',
   'src/domain/sportsMovementQuests.ts', 'src/domain/reflectionMovementQuests.ts',
-  'src/domain/phonePlayCatalog.ts', 'src/domain/phonePlayExpansion.ts', 'src/domain/phonePlayVisuals.ts',
+  'src/domain/phonePlayCatalog.ts', 'src/domain/phoneTaskRules.ts', 'src/domain/phonePlayExpansion.ts', 'src/domain/phonePlayVisuals.ts',
   'src/presentation/components/minigames/expedition/expeditionExpressionData.ts',
   'src/presentation/TeacherAi.css', 'src/presentation/ApplicationPalette.css', 'src/application/ThemeContext.tsx',
   'src/application/BackgroundMusicContext.tsx', 'src/application/backgroundMusicRoutes.ts', 'src/application/browserStorage.ts', 'src/application/useModalDialog.ts',

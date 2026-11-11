@@ -34,10 +34,10 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
   const [cards, setCards] = useState<MovementCard[]>(DEFAULT_CARDS);
 
   // 동료 평가 점수 (별점 1~5)
-  const [ratingCreativity, setRatingCreativity] = useState<number>(5);
-  const [ratingRhythm, setRatingRhythm] = useState<number>(5);
-  const [ratingTeamwork, setRatingTeamwork] = useState<number>(5);
-  const [feedbackTag, setFeedbackTag] = useState<string>('칼군무 완벽! ⭐');
+  const [ratingCreativity, setRatingCreativity] = useState<number>(0);
+  const [ratingRhythm, setRatingRhythm] = useState<number>(0);
+  const [ratingTeamwork, setRatingTeamwork] = useState<number>(0);
+  const [feedbackTag, setFeedbackTag] = useState<string>('');
 
   const beatTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const completionRef = useRef(false);
@@ -81,7 +81,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
   useEffect(()=>{const hide=()=>{if(document.hidden)setIsPlayingBeat(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
 
   const handleFinishReview = () => {
-    if (completionRef.current) return;
+    if (completionRef.current || [ratingCreativity,ratingRhythm,ratingTeamwork].some(v=>v<1)) return;
     completionRef.current = true;
     setIsPlayingBeat(false);
     sfxSuccess();
@@ -98,7 +98,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
           gameId: 'body-rhythm-orchestrator',
           score: totalScore,
           amount: totalScore,
-          details: { ratings: [ratingCreativity, ratingRhythm, ratingTeamwork], criteria: ['독창적 표현력', '비트와 박자감', '모둠 협동·조화'], selfReflection: feedbackTag },
+          details: { participation:'performed', ratings: [ratingCreativity, ratingRhythm, ratingTeamwork], criteria: ['독창적 표현력', '비트와 박자감', '모둠 협동·조화'], selfReflection: feedbackTag },
         },
       });
     }
@@ -121,7 +121,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         '발표 후 상대 모둠이 태블릿으로 창의성·박자감·협동심 별점을 매겨 피드백을 전달합니다.',
       ]}
       onExit={onExit}
-      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(5); setRatingRhythm(5); setRatingTeamwork(5); setFeedbackTag('칼군무 완벽! ⭐'); completionRef.current = false; }}
+      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(0); setRatingRhythm(0); setRatingTeamwork(0); setFeedbackTag(''); completionRef.current = false; }}
     >
       {({ onComplete }) => (
         <div className="w-full max-w-lg mx-auto flex flex-col gap-5 p-4 text-white">
@@ -322,6 +322,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               </div>
 
               <button
+                disabled={[ratingCreativity,ratingRhythm,ratingTeamwork].some(v=>v<1)}
                 onClick={handleFinishReview}
                 className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 font-bold text-lg text-white shadow-lg active:scale-95 mt-2"
               >
@@ -335,7 +336,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
               <Sparkles className="w-16 h-16 text-cyan-400 animate-bounce" />
               <div>
                 <h4 className="text-2xl font-black text-white">리듬 표현 활동 완수!</h4>
-                <p className="text-sm text-slate-400 mt-1">움직임 언어와 리듬 표현 성취기준 달성</p>
+                <p className="text-sm text-slate-400 mt-1">친구가 직접 선택한 감상 기록 · 성취기준 자동 판정 아님</p>
               </div>
 
               <div className="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex flex-col gap-2 text-left">

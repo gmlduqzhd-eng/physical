@@ -63,7 +63,7 @@
     "verify:deploy": "node scripts/verify-deploy.mjs main",
     "verify:studio-deploy": "node scripts/verify-deploy.mjs studio",
     "test:deploy-gate": "tsx --test scripts/deployment-gate.test.ts",
-    "test:game-review": "tsx --test scripts/games-improvements.test.ts scripts/phone-play.test.ts scripts/movement-quests.test.ts scripts/expedition-games.test.ts scripts/physical-activity-plans.test.ts scripts/safety-lessons.test.ts"
+    "test:game-review": "tsx --test scripts/games-improvements.test.ts scripts/phone-play.test.ts scripts/movement-quests.test.ts scripts/expedition-games.test.ts scripts/physical-activity-plans.test.ts scripts/safety-lessons.test.ts scripts/second-game-review.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",

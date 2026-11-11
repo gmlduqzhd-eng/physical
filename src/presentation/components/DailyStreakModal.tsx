@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Flame, CheckCircle, Trophy, Sparkles, X, ArrowRight } from 'lucide-react';
+import {usePrivateSessionState} from '../../application/usePrivateSessionState';
 import { useDailyStreak } from '../../application/useDailyStreak';
-import { isRecord, localDateKey, readJsonStorage, writeStorage } from '../../application/browserStorage';
+import { isRecord, localDateKey, readJsonStorage } from '../../application/browserStorage';
 import { useModalDialog } from '../../application/useModalDialog';
 import './HubPopupTheme.css';
 
@@ -11,32 +12,23 @@ interface DailyStreakModalProps {
   onLaunchGame: (gameType: string) => void;
 }
 
+function normalizeRoutine(value:unknown):{date:string;step:number;gameStartedAt?:number}{
+ const today=localDateKey();
+ if(!isRecord(value)||value.date!==today||typeof value.step!=='number'||!Number.isFinite(value.step))return {date:today,step:0};
+ let step=Math.max(0,Math.min(3,Math.floor(value.step)));
+ if(step===1&&typeof value.gameStartedAt==='number'){
+  const profile=readJsonStorage('physical_player_profile');
+  if(isRecord(profile)&&Array.isArray(profile.recentGames)&&profile.recentGames.some(record=>isRecord(record)&&record.gameType==='reaction'&&typeof record.playedAt==='number'&&record.playedAt>=(value.gameStartedAt as number)))step=2;
+ }
+ return {date:today,step,...(typeof value.gameStartedAt==='number'?{gameStartedAt:value.gameStartedAt}:{})};
+}
 export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onClose, onLaunchGame }) => {
   const { streakData, isTodayCompleted, completeTodayMission } = useDailyStreak();
-  const [activeStep, setActiveStep] = useState<number>(() => {
-    const progress = readJsonStorage('dambang_daily_routine', 'session');
-    if (!isRecord(progress) || progress.date !== localDateKey() || typeof progress.step !== 'number' || !Number.isFinite(progress.step)) return 0;
-    const step = Math.max(0, Math.min(3, Math.floor(progress.step)));
-    if (step === 1 && typeof progress.gameStartedAt === 'number') {
-      const profile = readJsonStorage('physical_player_profile');
-      if (isRecord(profile) && Array.isArray(profile.recentGames) && profile.recentGames.some(record =>
-        isRecord(record) && record.gameType === 'reaction' && typeof record.playedAt === 'number' && record.playedAt >= (progress.gameStartedAt as number)
-      )) return 2;
-    }
-    return step;
-  });
-  const [routineDate, setRoutineDate] = useState(localDateKey);
+  const {state:routine,update:updateRoutine}=usePrivateSessionState('dambang_daily_routine',normalizeRoutine);
+  const activeStep=routine.date===localDateKey()?routine.step:0;
+  const setActiveStep=(change:number|((n:number)=>number))=>updateRoutine(old=>({date:localDateKey(),step:typeof change==='number'?change:change(old.date===localDateKey()?old.step:0)}));
   const completed = isTodayCompleted();
   const dialogRef = useModalDialog(isOpen, onClose);
-  useEffect(() => {
-    if (isOpen && routineDate !== localDateKey()) {
-      setRoutineDate(localDateKey());
-      setActiveStep(0);
-    }
-  }, [isOpen, routineDate]);
-  useEffect(() => {
-    writeStorage('dambang_daily_routine', JSON.stringify({ date: routineDate, step: activeStep }), 'session');
-  }, [activeStep, routineDate]);
 
   if (!isOpen) return null;
 
@@ -81,9 +73,9 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
         <div className="text-center mb-6">
           <div className="hub-dialog-tint inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-500/30 font-black text-sm mb-3">
             <Flame className="w-4 h-4 fill-amber-400 text-amber-400 animate-bounce" />
-            <span>{streakData.currentStreak}일 연속 땀방울 달성 중!</span>
+            <span>이번 탭에서 오늘의 참여 {completed?'확인 완료':'준비 중'}</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight">오늘의 3분 땀방울 챌린지</h2>
+          <h2 className="text-2xl font-black tracking-tight">오늘의 3분 땀방울 챌린지</h2><p className="small">공용 기기 보호를 위해 이 탭에서 최대 8시간만 보관해요. 장기 개근·개인 이력으로 사용하지 않아요.</p>
           <p className="text-sm text-slate-400 mt-1">하루 3분, 가벼운 신체활동으로 활력을 충전해요!</p>
         </div>
 
@@ -115,7 +107,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
             <Trophy className="w-12 h-12 text-amber-400 mx-auto mb-2 animate-bounce" />
             <h3 className="text-lg font-black text-amber-300">오늘의 3분 챌린지 완료!</h3>
             <p className="text-xs text-slate-300 mt-1">
-              내일도 잊지 말고 스트릭 불꽃을 이어가세요! (+100 땀방울 획득)
+              오늘의 참여를 이 탭에서 확인했어요. (+100 땀방울 획득)
             </p>
             <button
               onClick={onClose}
@@ -155,7 +147,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
                       onClick={() => {
                         if (idx === 1) {
                           // Restore the routine after the game only when a result exists.
-                          writeStorage('dambang_daily_routine', JSON.stringify({ date: localDateKey(), step: 1, gameStartedAt: Date.now() }), 'session');
+                          updateRoutine(()=>({date:localDateKey(),step:1,gameStartedAt:Date.now()}));
                           onLaunchGame('reaction');
                           onClose();
                         } else {

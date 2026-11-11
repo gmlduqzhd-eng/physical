@@ -16,6 +16,7 @@ export interface ExpeditionRecord {
   round:number; kind:string; source:'self-report'|'peer-report'; participants:number[];
   counts:number[]; checks:string[]; answer:string[]; correct:boolean; elapsedMs:number;
   arrivals?:number[];
+  outcome?:'complete'|'partial'|'rest'|'observe'; alternative?:boolean;gentle?:boolean;
 }
 const colors=['빨강 ●','파랑 ▲','노랑 ■','초록 ◆'];
 const pick=(n:number,random:()=>number)=>Math.min(n-1,Math.max(0,Math.floor(random()*n)));
@@ -116,7 +117,7 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'T36': {const pieces=shuffled(['1','2','3','4'],random);plan.steps=tasks([`각자 경로에서 자기 번호 조각을 가져와요. 목표 암호는 ${pieces.join(' → ')}입니다.`,'모둠이 가져온 네 조각을 목표 순서로 조립해요.'],15);plan.question={prompt:'조립한 암호',options:['1','2','3','4'],answer:pieces,ordered:true};break;}
     case 'T37': sequence(round%2?['모양 분류: 원 물건을 원 바구니로','모양 분류: 네모 물건을 네모 바구니로']:['색 분류: 빨강 물건을 빨강 바구니로','색 분류: 파랑 물건을 파랑 바구니로'],'수집 칸에서 새 목적지로 옮겨요');plan.checks=['현재 분류 규칙으로 바구니를 바꿨어요.'];break;
     case 'T38': roleCycle(['북 기지: 빨강 조각','동 기지: 파랑 조각','남 기지: 노랑 조각','서 기지: 초록 조각']);plan.steps=tasks(['자기 통로에서 화면이 요청한 보급품을 맡은 기지로 전달해요.'],25);plan.targets=Array.from({length:players},(_,i)=>({label:`${i+1}번 요청 해결`,goal:1}));break;
-    case 'T39': plan.timing='arrival';plan.targetSeconds=12;roleCycle(['긴 걷기: 바로 출발','옆걸음: 2초 뒤 출발','표식 돌아가기: 바로 출발','짧은 걷기: 4초 뒤 출발']);plan.steps=tasks(['각자 경로의 출발 시점을 조절해 10~14초 안에 함께 도착해요. 도착하면 거치된 기기에서 자기 번호로 직접 확인해요.'],60);plan.targets=[];break;
+    case 'T39': plan.timing='arrival';plan.targetSeconds=12;roleCycle(['긴 걷기: 바로 출발','옆걸음: 2초 뒤 출발','표식 돌아가기: 바로 출발','짧은 걷기: 4초 뒤 출발']);plan.steps=tasks(['각자 경로의 출발 시점을 조절해 10~14초 안에 함께 도착해요. 도착한 참여자는 기기로 접근하지 않고 멈춰요. 기기 옆의 관찰 담당이 각 번호의 도착을 눌러 기록해요.'],60);plan.targets=[];break;
     case 'T40': plan.steps=tasks(['여섯 받기 표식을 준비하고 공을 패스해요.','같은 라운드에서 사용한 받기 표식은 다시 사용하지 않아요.','전원이 서로 다른 표식에서 받고 다음 라운드에 사용 상태를 초기화해요.'],10);plan.question={prompt:'참여 번호 순으로 사용한 받기 표식',options:['1번 표식','2번 표식','3번 표식','4번 표식','5번 표식','6번 표식'],answer:[],ordered:false};plan.kind='unique';break;
     case 'T41': {const kinds=['이동','리듬','공 조작'];plan.kind=kinds[round];roleCycle(Array(players).fill(kinds[round]+' 구역'));plan.steps=round===1?[beats(['왼발','오른발','팔 위','팔 옆','왼발','오른발','팔 앞','팔 모음'],'8박자 걷기와 팔 뻗기를 연결해요.')]:tasks([kinds[round]+': '+['표식 두 곳을 옆걸음으로 다녀와요.','','개인 통로에서 공을 굴리고 회수해요.'][round]],24);plan.checks=['이 구역에서 참여한 번호를 모두 확인했어요.'];break;}
     case 'T42': {const stations=['발놀림','공 굴리기','리듬 스텝','옆걸음 운반'];roleCycle(stations);plan.kind='순환 '+round;plan.steps=tasks(['각자 맡은 구역을 동시에 수행해요. 교대음 뒤 다음 구역으로 이동해요.'],24);plan.checks=['전원이 배정된 구역을 수행하고 교대했어요.'];break;}
@@ -139,22 +140,25 @@ export function checkExpeditionAnswer(game:ExpeditionSpec,plan:ExpeditionRound,a
   return answer.length===plan.question.answer.length&&answer.every((a,i)=>a===plan.question!.answer[i]);
 }
 export function validateExpeditionRecord(plan:ExpeditionRound,record:ExpeditionRecord,players:number):string|null {
-  if(record.participants.length!==players||new Set(record.participants).size!==players||record.participants.some(n=>n<1||n>players))return '참여한 번호를 모두 확인해 주세요.';
-  if(plan.checks.some(check=>!record.checks.includes(check)))return '라운드 확인 항목을 직접 확인해 주세요.';
+  const quiet=record.outcome==='rest'||record.outcome==='observe',partial=record.outcome==='partial';
+  if(quiet){if(record.participants.length||record.counts.some(n=>n!==0)||record.answer.length||record.checks.length||record.correct)return '휴식·관찰은 실제 수행 기록과 구분해야 해요.';return Number.isFinite(record.elapsedMs)&&record.elapsedMs>=0?null:'활동 시간을 확인해 주세요.';}
+  if(record.participants.length>(players)||(!partial&&record.participants.length!==players)||(partial&&!record.participants.length)||new Set(record.participants).size!==record.participants.length||record.participants.some(n=>!Number.isInteger(n)||n<1||n>players))return '실제로 참여한 번호를 확인해 주세요.';
+  if(!partial&&plan.checks.some(check=>!record.checks.includes(check)))return '라운드 확인 항목을 직접 확인해 주세요.';
   if(record.counts.length!==plan.targets.length||record.counts.some((n,i)=>!Number.isInteger(n)||n<0||n>plan.targets[i].goal))return '성공 횟수를 목표 범위 안의 숫자로 입력해 주세요.';
   if(!Number.isFinite(record.elapsedMs)||record.elapsedMs<0)return '활동 시간을 다시 확인해 주세요.';
-  if(plan.allocation&&(record.answer.length!==plan.allocation.counts.length||record.answer.some((v,i)=>Number(v)!==plan.allocation!.counts[i])))return '직접 확인한 섬별 인원이 제시된 정원과 같아야 해요.';
-  if(plan.kind==='unique'&&(record.answer.length!==players||new Set(record.answer).size!==players))return '각자 서로 다른 받기 표식을 선택해 주세요. 같은 표식은 이번 라운드에 다시 쓸 수 없어요.';
-  if(plan.question&&plan.kind!=='unique'&&record.answer.length!==(plan.kind==='choice'?1:plan.question.answer.length))return '수행한 답이나 순서를 빠짐없이 기록해 주세요.';
+  if(!partial&&plan.allocation&&(record.answer.length!==plan.allocation.counts.length||record.answer.some((v,i)=>Number(v)!==plan.allocation!.counts[i])))return '직접 확인한 섬별 인원이 제시된 정원과 같아야 해요.';
+  if(!partial&&plan.kind==='unique'&&(record.answer.length!==players||new Set(record.answer).size!==players))return '각자 서로 다른 받기 표식을 선택해 주세요. 같은 표식은 이번 라운드에 다시 쓸 수 없어요.';
+  if(!partial&&plan.question&&plan.kind!=='unique'&&record.answer.length!==(plan.kind==='choice'?1:plan.question.answer.length))return '수행한 답이나 순서를 빠짐없이 기록해 주세요.';
   return null;
 }
 export function expeditionScore(records:ExpeditionRecord[],plans:ExpeditionRound[]):number{
   if(!records.length)return 0;
   const average=records.reduce((sum,r,i)=>{
-    const plan=plans[i];let ratio=plan.targets.length?r.counts.reduce((a,b)=>a+b,0)/plan.targets.reduce((a,b)=>a+b.goal,0):1;
+    const plan=plans[i];if(!plan||r.outcome==='rest'||r.outcome==='observe')return sum;let ratio=plan.targets.length?r.counts.reduce((a,b)=>a+b,0)/plan.targets.reduce((a,b)=>a+b.goal,0):1;
     if(plan.question&&!r.correct)ratio=0;
     if(plan.timing==='estimate')ratio=Math.max(0,1-Math.abs(r.elapsedMs/1000-plan.targetSeconds!)/plan.targetSeconds!);
     if(plan.timing==='arrival')ratio=(r.arrivals||[]).filter(t=>Math.abs(t/1000-plan.targetSeconds!)<=2).length/Math.max(1,r.participants.length);
+    if(r.outcome==='partial')ratio=Math.min(.5,ratio*r.participants.length/Math.max(1,plan.roles.length));
     return sum+ratio;
   },0)/records.length;
   return Math.round(average*100);

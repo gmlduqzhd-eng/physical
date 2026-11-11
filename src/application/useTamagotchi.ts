@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { isRecord, nonnegativeNumber, readJsonStorage, writeStorage } from './browserStorage';
+import { useCallback } from 'react';
+import {usePrivateSessionState} from './usePrivateSessionState';
+import { isRecord, nonnegativeNumber } from './browserStorage';
 
 export interface TamagotchiItem {
   id: string;
@@ -54,27 +55,24 @@ export const normalizeTamagotchiState = (value: unknown): TamagotchiState => {
 };
 
 export const useTamagotchi = () => {
-  const [state, setState] = useState<TamagotchiState>(() => normalizeTamagotchiState(readJsonStorage(STORAGE_KEY)));
-  const stateRef = useRef(state);
+  const {state,current:currentState,update}=usePrivateSessionState(STORAGE_KEY,normalizeTamagotchiState);
 
   const level = Math.min(10, Math.floor(state.xp / 100) + 1);
   const currentLevelXp = level === 10 ? 100 : state.xp % 100;
   const nextLevelXp = 100;
 
   const save = useCallback((nextState: TamagotchiState) => {
-    stateRef.current = nextState;
-    setState(nextState);
-    writeStorage(STORAGE_KEY, JSON.stringify(nextState));
-  }, []);
+    update(()=>nextState);
+  }, [update]);
 
   const addXpAndCoins = useCallback((xpGain: number, coinGain: number) => {
     if (!Number.isFinite(xpGain) || !Number.isFinite(coinGain) || xpGain < 0 || coinGain < 0) return;
-    const current = stateRef.current;
+    const current = currentState();
     save({ ...current, xp: current.xp + xpGain, coins: current.coins + coinGain });
-  }, [save]);
+  }, [save,currentState]);
 
   const buyItem = useCallback((item: TamagotchiItem) => {
-    const current = stateRef.current;
+    const current = currentState();
     const catalogItem = TAMAGOTCHI_ITEMS.find(candidate => candidate.id === item.id);
     if (!catalogItem || current.coins < catalogItem.cost || current.inventory.includes(item.id)
       || Math.floor(current.xp / 100) + 1 < catalogItem.requiredLevel) return false;
@@ -85,10 +83,10 @@ export const useTamagotchi = () => {
     };
     save(next);
     return true;
-  }, [save]);
+  }, [save,currentState]);
 
   const equipItem = useCallback((item: TamagotchiItem) => {
-    const current = stateRef.current;
+    const current = currentState();
     const catalogItem = TAMAGOTCHI_ITEMS.find(candidate => candidate.id === item.id);
     if (!catalogItem || !current.inventory.includes(item.id)) return;
     const next: TamagotchiState = { ...current };
@@ -100,7 +98,7 @@ export const useTamagotchi = () => {
       next.equippedMedal = next.equippedMedal === item.id ? '' : item.id;
     }
     save(next);
-  }, [save]);
+  }, [save,currentState]);
 
   return {
     state,

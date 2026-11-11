@@ -2,11 +2,14 @@ import {useEffect,useRef,useState} from 'react';
 import {SAFETY_LESSONS,safetyLessonResult,type SafetyLessonId,type SafetyLearningRecord} from '../../../../domain/safetyLessons';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import './MovementQuest.css';
+import {ActivityReviewRecord} from '../../ActivityReviewRecord';
+import {AVAILABLE_GAMES} from '../../../../domain/gamesData';
 import {ActivityProgress} from './ActivityProgress';
 
 interface Props {gameId:SafetyLessonId;groupId?:string;solo?:boolean;enqueueAction?:(action:{id:string;type:string;payload:{id:string;amount:number;details:GameResultDetails};timestamp:number})=>void;onExit?:()=>void}
 export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,onExit}:Props){
  const spec=SAFETY_LESSONS[gameId];
+ const [reason,setReason]=useState(false);
  const [phase,setPhase]=useState<'intro'|'scenario'|'explain'|'rehearsal'|'done'>('intro');
  const [index,setIndex]=useState(0),[selected,setSelected]=useState(''),[confirmed,setConfirmed]=useState(false);
  const [records,setRecords]=useState<SafetyLearningRecord[]>([]);
@@ -22,7 +25,7 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
    if(!result){transition.current=false;return;}
    saved.current=true;setRecords(next);setPhase('done');
    enqueueAction?.({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,...result},timestamp:Date.now()});
-  }else{setRecords(next);setIndex(index+1);setSelected('');setConfirmed(false);setPhase('scenario');}
+  }else{setRecords(next);setIndex(index+1);setSelected('');setConfirmed(false);setReason(false);setPhase('scenario');}
   queueMicrotask(()=>{transition.current=false;});
  };
  const sourceLinks=<details className="mq-panel"><summary>확인한 공식 자료 · 2026-10-22</summary><ul>{spec.sources.map(s=><li key={s.url}><a href={s.url} target="_blank" rel="noreferrer">{s.label}</a></li>)}</ul></details>;
@@ -32,7 +35,7 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
   <ActivityProgress steps={spec.scenarios.map(s=>s.title)} current={index} results={records.map(()=>'complete')}/>
   {phase==='intro'&&<>
    <p className="mq-lead">{spec.description}</p><ol className="mq-rules"><li>가상 상황을 읽고 안전한 선택을 골라요.</li><li>이유를 확인한 뒤 교실에서 말·손짓으로 표현해요.</li><li>몸짓이 불편하면 읽고 설명을 확인해도 학습을 마칠 수 있어요.</li></ol>
-   <div className="mq-panel"><h2>수업 준비</h2><p>{spec.equipment.join(' · ')}</p><p>{spec.boundary}</p></div><details className="mq-panel"><summary>교사용 지도 메모·자료 검토 이력</summary><p>콘텐츠가 확인한 공식 자료 기준일: 2026-10-22. 이 날짜는 오늘 현장에서 검토했다는 뜻이 아니에요.</p><ol><li>공식 자료 링크와 학교의 최신 안내를 수업 전에 다시 확인해요.</li><li>장비·교실 역할 표현과 실제 위급 상황을 구분해요. 학생에게 실제 처치를 시키지 않아요.</li><li>선택 이유를 말해 보게 하고, 읽기·손짓 등 참여 방법을 허용해요.</li></ol><a href="/teacher/manage" target="_blank" rel="noreferrer">관리자 자료 점검 기록 확인·관리</a></details>{sourceLinks}
+   <div className="mq-panel"><h2>수업 준비</h2><p>{spec.equipment.join(' · ')}</p><p>{spec.boundary}</p></div><details className="mq-panel"><summary>교사용 지도 메모·자료 검토 이력</summary><p>콘텐츠가 확인한 공식 자료 기준일: 2026-10-22. 이 날짜는 오늘 현장에서 검토했다는 뜻이 아니에요.</p><ol><li>공식 자료 링크와 학교의 최신 안내를 수업 전에 다시 확인해요.</li><li>장비·교실 역할 표현과 실제 위급 상황을 구분해요. 학생에게 실제 처치를 시키지 않아요.</li><li>선택 이유를 말해 보게 하고, 읽기·손짓 등 참여 방법을 허용해요.</li></ol><a href="/teacher/manage" target="_blank" rel="noreferrer">관리자 자료 점검 기록 확인·관리</a></details>{sourceLinks}<ActivityReviewRecord game={AVAILABLE_GAMES.find(g=>g.type===gameId)!}/>
    <button className="mq-primary" onClick={()=>{started.current=performance.now();setPhase('scenario');}}>안전 상황 살펴보기</button>
   </>}
   {(phase==='scenario'||phase==='explain'||phase==='rehearsal')&&<><p className="mq-kicker">상황 {index+1} · {current.title}</p><h2>{current.situation}</h2>
@@ -40,7 +43,7 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
     <fieldset className="mq-choices"><legend>어떤 선택이 안전할까요?</legend>{[...current.choices].sort((a,b)=>index%2?a.id.localeCompare(b.id):b.id.localeCompare(a.id)).map(c=><button key={c.id} aria-pressed={selected===c.id} onClick={()=>{setSelected(c.id);if(c.id===current.answer)setPhase('explain');}}>{c.label}</button>)}</fieldset>
     {selected&&<p role="alert" className="mq-error">{current.choices.find(c=>c.id===selected)?.feedback}</p>}
    </>}
-   {phase==='explain'&&<div className="mq-panel"><h3>선택한 이유를 확인해요</h3><p>{current.explanation}</p><button className="mq-primary" onClick={()=>{setConfirmed(false);setPhase('rehearsal');}}>교실 역할 표현으로</button></div>}
+   {phase==='explain'&&<div className="mq-panel"><h3>선택한 이유를 확인해요</h3><p>{current.explanation}</p><label><input type="checkbox" checked={reason} onChange={e=>setReason(e.target.checked)}/>안전한 선택의 이유를 말이나 손짓으로 설명하거나 글로 확인했어요.</label><button disabled={!reason} className="mq-primary" onClick={()=>{setConfirmed(false);setPhase('rehearsal');}}>교실 역할 표현으로</button></div>}
    {phase==='rehearsal'&&<>
     <div className="mq-signal"><p>기기는 놓고 말·손짓으로 표현해요</p><strong>{current.rehearsal}</strong></div>
     <p>{spec.boundary}</p><label className="mq-panel"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>안전한 교실 표현을 해 보았거나 설명을 읽고 확인했어요</label>
