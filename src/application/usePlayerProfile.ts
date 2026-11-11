@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
-import { isRecord, nonnegativeNumber, readJsonStorage, removeStorage, writeStorage } from './browserStorage';
+import { deviceStorageGeneration, isRecord, nonnegativeNumber, readJsonStorage, removeStorage, writeStorage } from './browserStorage';
 
 export interface GameRecord {
   gameType: string;
@@ -60,9 +60,21 @@ const saveProfile = (profile: PlayerProfile) => {
 
 export const usePlayerProfile = () => {
   const [profile, setProfile] = useState<PlayerProfile | null>(() => loadProfile());
-  useEffect(() => { if (profile) saveProfile(profile); }, [profile]);
+  const storageGeneration=useRef(deviceStorageGeneration());
+  const currentSession=useCallback(()=>{readJsonStorage(STORAGE_KEY);const current=deviceStorageGeneration();if(current!==storageGeneration.current){storageGeneration.current=current;return false;}return true;},[]);
+  useEffect(() => { if (profile) {if(currentSession())saveProfile(profile);else setProfile(null);} }, [profile,currentSession]);
+  useEffect(() => {
+    const refresh = () => { if (!currentSession()) setProfile(null); };
+    window.addEventListener?.('physical-device-cleared', refresh);
+    window.addEventListener?.('focus', refresh);
+    return () => {
+      window.removeEventListener?.('physical-device-cleared', refresh);
+      window.removeEventListener?.('focus', refresh);
+    };
+  }, [currentSession]);
 
   const createProfile = useCallback((nickname: string) => {
+    currentSession();
     const newProfile: PlayerProfile = {
       nickname: nickname.trim().slice(0, 20) || '익명 원정대원',
       totalScore: 0,
@@ -74,21 +86,25 @@ export const usePlayerProfile = () => {
     };
     setProfile(newProfile);
     return newProfile;
-  }, []);
+  }, [currentSession]);
 
   const updateNickname = useCallback((nickname: string) => {
+    const validSession = currentSession();
     setProfile(prev => {
+      if(!validSession)return null;
       if (!prev) return prev;
       const updated = { ...prev, nickname: nickname.trim().slice(0, 20) || prev.nickname };
       return updated;
     });
-  }, []);
+  }, [currentSession]);
 
   const addGameResult = useCallback((gameType: string, gameName: string, score: number, difficulty?: string, rpe?: number, details?: GameResultDetails, scoreKey?:string) => {
     // The losing fate card is a completed play, even though its result is a penalty.
     if (!Number.isFinite(score) || (score < 0 && !(gameType === 'fate_card' && score === -300)) || !gameType) return;
+    // Capture expiry once before React may replay a state updater in Strict Mode.
+    const validSession = currentSession();
     setProfile(prev => {
-      const current = prev || {
+      const current = (validSession?prev:null) || {
         nickname: '익명 원정대원',
         totalScore: 0,
         totalPlays: 0,
@@ -115,7 +131,7 @@ export const usePlayerProfile = () => {
       saveProfile(updated);
       return updated;
     });
-  }, []);
+  }, [currentSession]);
 
   const resetProfile = useCallback(() => {
     removeStorage(STORAGE_KEY);
@@ -124,11 +140,13 @@ export const usePlayerProfile = () => {
 
   const updateLatestRpe = useCallback((gameType: string, rpe: number) => {
     if (!Number.isInteger(rpe) || rpe < 1 || rpe > 5) return;
+    const validSession = currentSession();
     setProfile(previous => {
+      if(!validSession)return null;
       if (!previous || previous.recentGames[0]?.gameType !== gameType) return previous;
       return { ...previous, recentGames: previous.recentGames.map((record, index) => index === 0 ? { ...record, rpe } : record) };
     });
-  }, []);
+  }, [currentSession]);
 
   return { profile, createProfile, updateNickname, addGameResult, updateLatestRpe, resetProfile, hasProfile: !!profile };
 };

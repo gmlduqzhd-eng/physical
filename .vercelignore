@@ -6,9 +6,17 @@ dist-teacher
 outputs
 docs/*
 !docs/licenses/
+!docs/game-review-225-2026-10-22.json
+!docs/game-revamp-roadmap.json
 supabase
 scripts/*
 !scripts/prepare-vision.mjs
+!scripts/games-improvements.test.ts
+!scripts/phone-play.test.ts
+!scripts/movement-quests.test.ts
+!scripts/expedition-games.test.ts
+!scripts/physical-activity-plans.test.ts
+!scripts/safety-lessons.test.ts
 !scripts/verify-deploy.mjs
 !scripts/deployment-gate.test.ts
 !scripts/runtime-regressions.cjs

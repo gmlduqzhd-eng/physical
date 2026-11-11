@@ -104,7 +104,7 @@ import { ExpressionGameViewer } from './components/minigames/expression/Expressi
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
 import { CurriculumGameRouter } from './components/minigames/curriculum/CurriculumGameRouter';
 import { ArrowLeft, Home, RotateCcw, Trophy } from 'lucide-react';
-import { startBgm, stopBgm, sfxSuccess, sfxFail } from '../application/soundEffects';
+import { startBgm, stopBgm, sfxSuccess, sfxTap } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
@@ -262,7 +262,8 @@ const GamePlaySession = () => {
   const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
   const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
-  const [hasStarted, setHasStarted] = useState(!!routeState?.activityPrepared);
+  const ownsPreparation=isFlagship(gameType||'')||isPhonePlay(gameType||'')||isQuestId(gameType||'')||isSafetyLessonId(gameType||'')||EXPEDITION_BY_ID.get(gameType||'')?.kind==='B'||['stretch','rolling-curling','emotion-thermometer','partner-robot-lab','body-rhythm-orchestrator'].includes(gameType||'');
+  const [hasStarted, setHasStarted] = useState(!!routeState?.activityPrepared||ownsPreparation);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
@@ -379,8 +380,8 @@ const GamePlaySession = () => {
       sfxSuccess();
       speak(hasBattle ? `활동 완료! 모둠 점수 ${classroomScore}점을 제출했습니다!` : `화면 게임 완료! ${earned}점을 기록했습니다!`, true);
     } else {
-      sfxFail();
-      speak('수고하셨습니다! 다음엔 더 잘할 수 있어요!', true);
+      sfxTap();
+      speak('확인한 도전을 기록했어요. 다음에는 다른 방법도 골라 보세요.', true);
     }
 
     // 땀방이 다마고치 경험치 및 코인 적립
@@ -423,7 +424,7 @@ const GamePlaySession = () => {
     setLastEarnedScore(0);
     setRpeSelected(null);
     setKey(prev => prev + 1);
-    setHasStarted(false);
+    setHasStarted(ownsPreparation);
   };
 
   if (!gameType || !gameInfo) {
@@ -704,8 +705,8 @@ const GamePlaySession = () => {
               </div>
             )}
             {guidedMode && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="mt-2 text-xs text-cyan-200">{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
-            <div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
-              <span className="text-slate-400 text-sm font-bold mb-1">화면 게임 점수 · 신체 활동 증거 아님</span>
+            <p className="text-sm leading-relaxed mb-4">이 점수는 이 활동의 참여·감상·화면 규칙 기록이에요. 게임마다 기준이 달라 서로 다른 게임의 점수를 체력이나 운동 능력 순위로 비교하지 않아요.</p><div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
+              <span className="text-slate-400 text-sm font-bold mb-1">참여·감상·화면 규칙 점수 · 자동 체력 측정 아님</span>
               <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>

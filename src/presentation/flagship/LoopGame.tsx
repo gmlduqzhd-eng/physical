@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {rhythmTimingHint} from '../../domain/expeditionGuidance';
 import {rhythmScore,type ExpeditionSnapshot} from '../../domain/flagship';
 import {expeditionRhythm,rulesOf,settingsOf} from '../../domain/expeditionWorkshop';
 import {useReportDevice} from './deviceStatusContext';
@@ -24,7 +25,7 @@ export function LoopGame({snapshot:s,send,disabled}:{snapshot:ExpeditionSnapshot
  <p>●에서 움직임과 입력, ·에서 쉬어요. 100 BPM · 8박자 · {settingsOf(s).move}</p><button disabled={disabled} onClick={()=>{if(sound)setSound(false);else void enableAudio();}}>리듬 소리 {sound?'끄기':'켜기'}</button>
  {audioError&&<p role="status">{audioError}</p>}
  <button disabled={disabled||recording} onClick={async()=>{await enableAudio();setTaps([]);setConfirmed(false);setTime(-2400);start.current=performance.now()+2400;setRecording(true);}}>4박 준비 후 박자 기록</button><p role="status">{recording?(time<0?`준비 ${Math.ceil(-time/600)}`:`기록 중 ${Math.min(8,Math.floor(time/600)+1)} / 8`):taps.length?`입력 맞음 ${score.hits}/${score.expected} · 박자 정확도 ${score.accuracy}%`:'모둠의 동작을 먼저 연습한 뒤 기록해요.'}</p>
- {!recording&&taps.length>0&&<p>입력 시점: {taps.map(t=>Math.round(t)).join(' · ')} ms (첫 박자부터)</p>}
+ {!recording&&taps.length>0&&<div className="flagship-note"><p>{rhythmTimingHint(taps,pattern)}</p><div className="flagship-beats" aria-label="목표 박자와 직접 입력 비교">{pattern.map((v,i)=><span key={i}>{i+1}: {v?'●':'·'} / {loop[i]?'입력':'쉼'}</span>)}</div><details><summary>입력 시간 상세</summary><p>{taps.map(t=>Math.round(t)).join(' · ')} ms (첫 박자부터)</p></details></div>}
  <button className="flagship-tap" disabled={disabled||!recording||time<0} onClick={()=>{const t=performance.now()-start.current;if(t>=0&&t<4800)setTaps(old=>old.length<24?[...old,t]:old);}}>박자 입력 · 손뼉/동작 후 누르기</button>
  <label className="flagship-check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>모둠이 몸으로 리듬을 표현했고 다음에는 역할을 바꿔요.</span></label><button disabled={disabled||recording||!confirmed||!taps.length} onClick={()=>void send('loop',{taps,loop,quality:score.accuracy,movementConfirmed:true})}>우리 리듬을 도시에 연결</button><p>박자 입력의 시간만 계산해요. 몸 동작은 모둠·교사가 확인하며 음성이나 마이크 소리를 녹음하지 않아요. {rules.quality}% 이상이면 다음 관문에 기여하고 다시 연습해 바꿀 수 있어요.</p><p className="flagship-progress">연결된 모둠 {s.groups.filter(g=>g.done).length} / {s.groups.length} · 우리 모둠 {me.quality}%</p></>;
 }

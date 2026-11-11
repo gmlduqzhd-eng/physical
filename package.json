@@ -53,7 +53,7 @@
     "test:safety:ui": "tsx scripts/safety-lessons-regressions.ts",
     "test:operations": "tsx --test scripts/operations.test.ts scripts/teacher-account-api.test.ts",
     "healthcheck": "node scripts/healthcheck.mjs",
-    "verify:release": "npm run lint && npm run test:ui && npm run test:deploy-gate && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:camera && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
+    "verify:release": "npm run lint && npm run test:ui && npm run test:game-review && npm run test:deploy-gate && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:camera && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
     "test:regression": "tsx --test scripts/background-music-routes.test.ts scripts/participation-cues.test.ts scripts/studio-ui-state.test.ts scripts/studio-rate-limit.test.ts",
     "prepare:vision": "node scripts/prepare-vision.mjs",
     "test:flagship": "tsx --test scripts/flagship.test.ts",
@@ -62,7 +62,8 @@
     "test:camera": "tsx --test scripts/camera-stability.test.ts",
     "verify:deploy": "node scripts/verify-deploy.mjs main",
     "verify:studio-deploy": "node scripts/verify-deploy.mjs studio",
-    "test:deploy-gate": "tsx --test scripts/deployment-gate.test.ts"
+    "test:deploy-gate": "tsx --test scripts/deployment-gate.test.ts",
+    "test:game-review": "tsx --test scripts/games-improvements.test.ts scripts/phone-play.test.ts scripts/movement-quests.test.ts scripts/expedition-games.test.ts scripts/physical-activity-plans.test.ts scripts/safety-lessons.test.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",

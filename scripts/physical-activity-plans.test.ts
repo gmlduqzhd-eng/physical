@@ -5,8 +5,8 @@ import { EXPEDITION_GAMES } from '../src/domain/expeditionGames';
 import { EXPRESSION_GAMES } from '../src/presentation/components/minigames/expression/expressionGamesData';
 import { getPhysicalActivityPlan, PHYSICAL_ACTIVITY_PLANS } from '../src/domain/physicalActivityPlans';
 
-test('all 225 catalog games have a safe, accessible movement routine', () => {
-  assert.equal(GAMES.length, 225);
+test('every current and historical catalog entry has movement preparation and an alternative', () => {
+  assert(GAMES.length>=225);
   const expressionIds = new Set(EXPRESSION_GAMES.map(game => game.id));
   for (const game of GAMES) {
     const plan = getPhysicalActivityPlan(game.type, expressionIds.has(game.type));

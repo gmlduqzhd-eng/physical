@@ -11,6 +11,8 @@ import {RescueGame} from './RescueGame';
 import {ShadowGame} from './ShadowGame';
 import type {GameResultDetails} from '../../domain/gameResultDetails';
 import './flagship.css';
+import {expeditionNextStep} from '../../domain/expeditionGuidance';
+import '../components/minigames/common/ActivityProgress.css';
 
 export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=false,practiceSettings}:{practiceSettings?:WorkshopSettings;game:FlagshipId;room?:string|null;group?:string|null;onFinish:(details:GameResultDetails)=>void;embedded?:boolean}){
  const {snapshot:s,practice,missing,error,busy,stale,refresh,action}=useExpedition(room,game,group);
@@ -23,6 +25,7 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  const complete=game==='expedition-boss'?bossPhase>=3:['expedition-rescue','expedition-shadow'].includes(game)?solved:!!me?.done;
  const level=me&&s?groupWorkshop(me,s).level:'normal',config=s?settingsOf(s):DEFAULT_WORKSHOP;
  const progressKey=s?.runId+':'+level+':'+config.route;
+ const guidance=s?expeditionNextStep(s,game):null;
  useEffect(()=>{setSolved(false);setConfirmed(false);setSubmitted(false);setPracticePhase(0);},[progressKey]);
  const finish=async()=>{if(!confirmed||!complete||submitted||disabled)return;
   if(['expedition-rescue','expedition-shadow'].includes(game)&&!await action('complete',{mode,movementConfirmed:true}))return;
@@ -32,7 +35,7 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  {!embedded&&<ExpeditionTutorial game={game}/>} {!ready?<>{practice&&s&&<WorkshopEditor value={config} onChange={settings=>void action('settings',{settings})}/>}<p>{meta.desc}</p><p>권장: {meta.device} · {meta.minutes}분 · 한 라운드마다 역할 교대</p><ul>{FLAGSHIP_SAFETY.map(v=><li key={v}>{v}</li>)}</ul><p>앉아서도 작은 팔·손 동작과 길 짚기로 같은 역할을 맡을 수 있어요. 카메라와 센서는 해당 기능의 켜기 버튼을 누를 때만 시작해요.</p><label className="flagship-check"><input type="checkbox" checked={safety} onChange={e=>setSafety(e.target.checked)}/><span>주변 공간·기기 거치·참여 의사를 함께 확인했어요.</span></label><button className="flagship-primary" disabled={!safety} onClick={()=>setReady(true)}>원정 준비 완료</button></>:<>
  {error&&<div role="alert" className="flagship-note"><p>{error}</p><button onClick={()=>void refresh()}>연결 다시 확인</button></div>}
  {room&&missing?<p role="status">선생님이 수업방의 ‘대표 원정 진행’에서 이 게임을 열면 연결돼요. 다른 게임을 진행 중이면 선생님께 알려 주세요.</p>:!s?<p role="status">원정 상태 연결 중…</p>:<>
- {!embedded&&<LessonSchedule snapshot={s} send={action}/>}<p className="flagship-kicker">{LEVEL_NAMES[level]} 코스 · 가상 게임 규칙 조절</p>{me&&game!=='expedition-boss'&&<RoleRotation snapshot={s} group={me} send={action} disabled={disabled}/>} {s.status!=='playing'&&<p role="status" className="flagship-note">{s.status==='waiting'?'선생님의 수업 시작을 기다려요.':s.status==='finished'?'수업이 종료되어 입력을 마감했어요.':'수업을 잠시 멈췄어요. 화면 입력을 멈추고 선생님을 보세요.'}</p>}
+ {!embedded&&<LessonSchedule snapshot={s} send={action}/>}<p className="flagship-kicker">{LEVEL_NAMES[level]} 코스 · 가상 게임 규칙 조절</p>{guidance&&<section className="flagship-note" aria-label="지금 할 일"><h3>{guidance.title}</h3><p>{guidance.instruction}</p></section>}{me&&game!=='expedition-boss'&&<RoleRotation snapshot={s} group={me} send={action} disabled={disabled}/>} {s.status!=='playing'&&<p role="status" className="flagship-note">{s.status==='waiting'?'선생님의 수업 시작을 기다려요.':s.status==='finished'?'수업이 종료되어 입력을 마감했어요.':'수업을 잠시 멈췄어요. 화면 입력을 멈추고 선생님을 보세요.'}</p>}
  {game==='expedition-map'&&<MapGame key={s.runId+level} snapshot={s} send={action} practice={practice} disabled={disabled}/>}
  {game==='expedition-ship'&&<ShipGame key={s.runId+level} snapshot={s} send={action} practice={practice} disabled={suspended} pending={busy}/>}
  {game==='expedition-loop'&&<LoopGame key={s.runId+level} snapshot={s} send={action} disabled={disabled}/>}

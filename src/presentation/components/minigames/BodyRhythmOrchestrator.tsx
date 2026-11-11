@@ -15,9 +15,9 @@ interface MovementCard {
 
 const DEFAULT_CARDS: MovementCard[] = [
   { beat: 1, bodyPart: '팔과 손', space: '높은 공간 (머리 위)', effort: '가볍고 부드럽게 (바람)', relationship: '모둠원 전원 동시', icon: '🍃', desc: '머리 위로 바람이 불듯 부드럽게 흔들기' },
-  { beat: 2, bodyPart: '가슴과 어깨', space: '중간 공간 (수평)', effort: '강하고 절도 있게 (번개)', relationship: '좌우 짝과 마주보기', icon: '⚡', desc: '절도 있게 쿵-짝 어깨 튕기기' },
-  { beat: 3, bodyPart: '발과 무릎', space: '낮은 공간 (바닥)', effort: '무겁고 단단하게 (거인)', relationship: '차례대로 순서 릴레이', icon: '🪨', desc: '바닥을 쿵쿵 울리며 묵직한 스텝' },
-  { beat: 4, bodyPart: '전신', space: '온몸 펼치기', effort: '순간 정지 (동상)', relationship: '등 맞대고 정지', icon: '🗿', desc: '마지막 비트에 모두 함께 멋진 포즈로 얼음!' },
+  { beat: 2, bodyPart: '가슴과 어깨', space: '중간 공간 (수평)', effort: '강하고 절도 있게 (번개)', relationship: '좌우 짝과 마주보기', icon: '⚡', desc: '편안한 범위에서 작게 어깨와 팔 움직이기' },
+  { beat: 3, bodyPart: '발과 무릎', space: '낮은 공간 (바닥)', effort: '무겁고 단단하게 (거인)', relationship: '차례대로 순서 릴레이', icon: '🪨', desc: '발을 가볍게 번갈아 짚거나 앉아서 손으로 박자 표현' },
+  { beat: 4, bodyPart: '전신', space: '온몸 펼치기', effort: '순간 정지 (동상)', relationship: '서로 닿지 않고 정지', icon: '🗿', desc: '마지막 비트에 모두 함께 멋진 포즈로 얼음!' },
 ];
 
 interface Props {
@@ -61,10 +61,10 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
 
   const randomizeCards = () => {
     sfxCoin();
-    const bodyParts = ['머리와 목', '팔과 손목', '골반과 허리', '발목과 무릎'];
+    const bodyParts = ['손과 손가락', '팔과 손목', '어깨와 팔', '발끝과 손끝'];
     const spaces = ['높은 공간', '중간 공간', '낮은 바닥 공간', '지그재그 공간'];
-    const efforts = ['바람처럼 부드럽게', '번개처럼 강렬하게', '거인처럼 무겁게', '깃털처럼 사뿐사뿐'];
-    const relationships = ['모둠원 전원 일치', '1번부터 릴레이', '짝과 손바닥 마주치며', '서로 다른 방향 보며'];
+    const efforts = ['바람처럼 부드럽게', '번개처럼 짧고 작게', '거인처럼 천천히', '깃털처럼 가볍게'];
+    const relationships = ['모둠원 전원 일치', '1번부터 릴레이', '짝과 닿지 않고 손바닥 마주 보며', '서로 다른 방향 보며'];
 
     setCards(prev =>
       prev.map(c => {
@@ -77,6 +77,8 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
       })
     );
   };
+
+  useEffect(()=>{const hide=()=>{if(document.hidden)setIsPlayingBeat(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
 
   const handleFinishReview = () => {
     if (completionRef.current) return;
@@ -119,6 +121,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         '발표 후 상대 모둠이 태블릿으로 창의성·박자감·협동심 별점을 매겨 피드백을 전달합니다.',
       ]}
       onExit={onExit}
+      onRestart={() => { setPhase('setup'); setCurrentBeat(1); setIsPlayingBeat(false); setCards(DEFAULT_CARDS); setRatingCreativity(5); setRatingRhythm(5); setRatingTeamwork(5); setFeedbackTag('칼군무 완벽! ⭐'); completionRef.current = false; }}
     >
       {({ onComplete }) => (
         <div className="w-full max-w-lg mx-auto flex flex-col gap-5 p-4 text-white">

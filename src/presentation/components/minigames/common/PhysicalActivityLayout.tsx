@@ -2,6 +2,7 @@ import { useGameTimeouts } from './useGameTimeouts';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { Play, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 
 export interface SafetyItem {
   id: string;
@@ -21,11 +22,12 @@ interface Props {
   instructions: string[];
   safetyItems?: SafetyItem[];
   colorTheme?: string;
-  onFinish?: (score: number) => void;
+  onFinish?: (score: number, details: GameResultDetails) => void;
   onExit?: () => void;
+  onRestart?: () => void;
   children: (props: {
     phase: 'activity' | 'result';
-    onComplete: (summary?: string) => void;
+    onComplete: (summary?: string, details?: GameResultDetails) => void;
     onReplay: () => void;
   }) => ReactNode;
 }
@@ -41,8 +43,10 @@ export const PhysicalActivityLayout = ({
   expectedMinutes,
   equipment = [],
   instructions,
+  safetyItems = [],
   onFinish,
   onExit,
+  onRestart,
   children,
 }: Props) => {
   const scheduleTimeout = useGameTimeouts();
@@ -52,7 +56,11 @@ export const PhysicalActivityLayout = ({
   const [countdown, setCountdown] = useState(3);
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [completionSummary, setCompletionSummary] = useState<string>('');
+  const [completionDetails, setCompletionDetails] = useState<GameResultDetails>({});
+  const [safetyChecked, setSafetyChecked] = useState<string[]>([]);
+  const [performed, setPerformed] = useState(false);
   const completedRef = useRef(false);
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     if (step !== 'countdown') return;
@@ -64,25 +72,26 @@ export const PhysicalActivityLayout = ({
   }, [step, countdown, scheduleTimeout]);
 
   const handleStartActivity = () => {
+    if(safetyItems.some(item=>!safetyChecked.includes(item.id)))return;
     completedRef.current = false;
     setStep('countdown');
     setCountdown(3);
   };
 
-  const handleActivityComplete = (summary?: string) => {
+  const handleActivityComplete = (summary?: string, details: GameResultDetails = {}) => {
     if (completedRef.current) return;
     completedRef.current = true;
     if (summary) setCompletionSummary(summary);
+    setCompletionDetails(details);
     setStep('completed');
-    if (onFinish) {
-      onFinish(500);
-    }
   };
 
   const handleReplay = () => {
+    onRestart?.();
     completedRef.current = false;
     setSelfRating(null);
     setCompletionSummary('');
+    setCompletionDetails({});setPerformed(false);submittedRef.current=false;
     setStep('countdown');
     setCountdown(3);
   };
@@ -138,8 +147,10 @@ export const PhysicalActivityLayout = ({
             </ol>
           </div>
 
+          {!!safetyItems.length&&<fieldset className="bg-slate-900/90 rounded-2xl p-4 mb-4"><legend>이 활동의 안전과 준비</legend>{safetyItems.map(item=><label className="flex items-start gap-3 my-3" key={item.id}><input type="checkbox" className="mt-1 w-5 h-5 shrink-0" checked={safetyChecked.includes(item.id)} onChange={e=>setSafetyChecked(old=>e.target.checked?[...old,item.id]:old.filter(id=>id!==item.id))}/><span>{item.text}</span></label>)}</fieldset>}
           <button
             onClick={handleStartActivity}
+            disabled={safetyItems.some(item=>!safetyChecked.includes(item.id))}
             className="game-stage-primary w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
           >
             <Play className="w-5 h-5 fill-current" /> 활동 시작하기 (3초 카운트)
@@ -180,7 +191,7 @@ export const PhysicalActivityLayout = ({
             </div>
             <h2 className="text-2xl font-black text-white mb-1">{title} 완료!</h2>
             <p className="text-xs text-emerald-400 font-bold mb-4">
-              성취기준 {achievementCode} 학습 목표를 성공적으로 수행했습니다.
+              직접 확인한 참여 기록입니다. 성취기준 달성이나 운동 능력을 자동 판정하지 않습니다.
             </p>
 
             {completionSummary && (
@@ -219,6 +230,7 @@ export const PhysicalActivityLayout = ({
               </div>
             </div>
 
+            {onFinish&&<><label className="flex items-start gap-3 my-4 text-left"><input type="checkbox" checked={performed} onChange={e=>setPerformed(e.target.checked)}/><span>실제로 참여한 내용과 결과를 확인했어요.</span></label><button className="game-stage-primary w-full p-4 mb-4 rounded-xl bg-cyan-700 text-white" disabled={!performed} onClick={()=>{if(!performed||submittedRef.current)return;submittedRef.current=true;onFinish(100,{...completionDetails,selfReflection:completionDetails.selfReflection,metrics:{...completionDetails.metrics,'활동 요약':completionSummary,'기록 기준':'직접 확인한 참여 100점 · 신체 능력 측정 아님',...(selfRating?{'자기 느낌':String(selfRating)}:{})}});}}>확인한 참여 결과 기록하기</button></>}
             <div className="flex gap-2">
               <button
                 onClick={handleReplay}

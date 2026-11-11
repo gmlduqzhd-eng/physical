@@ -1,3 +1,4 @@
+import {ActivityProgress} from '../common/ActivityProgress';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import type {ExpeditionSpec} from '../../../../domain/expeditionGames';
 import {createExpeditionRound,checkExpeditionAnswer,expeditionScore,expeditionBingo,validateExpeditionRecord,type ExpeditionRecord,type ExpeditionRound} from '../../../../domain/expeditionRules';
@@ -98,6 +99,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
 
   return <section className="expedition-activity" aria-label={game.name} data-expedition={game.spec} data-phase={phase} data-revamped={revamped} data-practice={practicing}>
     <div className="expedition-heading"><span>🧭 {game.name}</span><small>{phase==='ready'?'준비':`${round+1}/${game.rounds} 라운드`}</small></div>
+    <ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
     {phase==='ready'?<>
       <p className="expedition-lead">{game.desc}</p>
       {!solo&&<label>참여 인원<select aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
@@ -105,12 +107,14 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       <p>기기는 거치하고 몸 활동을 해요. 라운드가 끝난 뒤 수행한 기록을 직접 입력해요.</p>
       <details><summary>준비물·안전·대체 동작</summary><p>{game.equipment.join(' · ')} · {game.space}</p><p>{game.safety}</p><p>{game.alternative}</p></details>
       {revamped&&<fieldset><legend>우리에게 맞는 방법</legend><button aria-pressed={gentle} onClick={()=>setGentle(!gentle)}>여유 있는 안내 {gentle?'켜짐':'꺼짐'}</button><button aria-pressed={alternative} onClick={()=>setAlternative(!alternative)}>대체 동작 {alternative?'켜짐':'꺼짐'}</button><p>{alternative?game.alternative:'원래 규칙과 역할을 유지하고, 먼저 짧게 연습해요.'}</p></fieldset>}
+      <section className="activity-brief"><h3>공간과 도구를 먼저 놓아요</h3><div className="activity-role-cards">{game.equipment.map((tool,i)=><p key={i}><strong>준비 {i+1}</strong>{tool}</p>)}</div><p>활동 장소: {game.space}</p><p>교사가 출발·활동·돌아올 위치를 정해요. 기기는 이동 통로 밖에 놓고 도구 확인→몸 활동→기록 순서로 진행해요.</p></section>
       <button className="expedition-primary" onClick={start}>원정 시작</button>
     </>:phase==='tutorial'?<div className="expedition-signal">
       <h2>먼저 8초만 연습해요</h2><ol><li>기기를 거치하고 준비물을 놓아요.</li><li>{plans[0].steps[0].instruction}</li><li>신호가 끝나면 돌아와 직접 기록해요. 실수해도 다시 참여해요.</li></ol>
       <p>이번 목표: {plans[0].targets.map(t=>`${t.label} ${t.goal}`).join(' · ')||'표시된 시간과 역할을 비교하기'}</p><p>{game.safety}</p>
       <button className="expedition-primary" onClick={()=>beginRound(0,[practicePlan!])}>점수 없는 연습 시작</button>
     </div>:<>
+      {records.length>0&&<p className="activity-brief">앞 라운드에서 직접 확인한 횟수: {records.at(-1)!.counts.join(' · ')||'화면 문제·역할 확인'} · 이번 목표와 비교하고 수행이 어려우면 대체 동작을 선택해요.</p>}
       <div className="expedition-round-title"><h2>{plan.title}</h2><p className="expedition-note">{source==='peer-report'?'짝과 함께 확인한 기록':'직접 확인한 기록'} · 센서나 카메라를 사용하지 않아요.</p></div>
       <details className="expedition-roles" open={phase==='active'}><summary>이번 라운드 역할</summary><ul>{plan.roles.map(role=><li key={role}>{role}</li>)}</ul><p>번호는 이 게임 안에서 역할을 나누기 위한 번호예요.</p></details>
       {phase==='preview'&&<div className="expedition-signal"><h3>기억할 순서 · {seconds}초 뒤 가려져요</h3><ol className="expedition-pattern">{plan.secret!.map((item,i)=><li key={i}>{i+1}. {item}</li>)}</ol><p>기기는 두고 실제 표식으로 이동해요.</p></div>}

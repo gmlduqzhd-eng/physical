@@ -44,7 +44,6 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
   const totalScore = attempts.reduce((sum, a) => sum + a.score, 0);
   const earlyScore = attempts.slice(0, 2).reduce((sum, a) => sum + a.score, 0);
   const lateScore = attempts.slice(3, 5).reduce((sum, a) => sum + a.score, 0);
-  const isImproved = lateScore >= earlyScore;
 
   return (
     <PhysicalActivityLayout
@@ -71,8 +70,9 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
         '매 시도마다 힘의 세기를 미세하게 조절하며 중앙에 가깝게 보내보세요.',
       ]}
       colorTheme="amber"
-      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
+      onRestart={() => { setAttempts([]); setForceReflection(''); setShowSummary(false); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
@@ -181,9 +181,9 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
                   <span className="font-mono font-bold text-yellow-300">{lateScore}점</span>
                 </div>
                 <div className="pt-2 border-t border-slate-800 text-center font-bold text-emerald-400">
-                  {isImproved
-                    ? '✨ 후반으로 갈수록 힘을 조절해 표적에 더 가까워졌어요!'
-                    : '🌱 반복 연습하며 나만의 공 굴리기 감각을 찾아가는 중이에요!'}
+                  {lateScore > earlyScore
+                    ? '직접 입력한 후반 두 번의 구역 점수 합계가 더 높아요.'
+                    : lateScore === earlyScore ? '직접 입력한 처음과 마지막 두 번의 구역 점수 합계가 같아요.' : '직접 입력한 후반 합계가 낮아요. 다음에는 한 가지 조절만 바꾸어 비교해요.'}
                 </div>
               </div>
 
@@ -210,7 +210,7 @@ export const RollingCurling = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => onComplete(`공 굴림 컬링 5회 시도 (${totalScore}점), 힘 조절 성찰: "${forceReflection || '적당하게 조절함'}" 기록 완료!`)}
+                onClick={() => onComplete(`공 굴림 컬링 5회 시도 · 직접 입력한 구역 합계 ${totalScore}점`, {metrics:{'다섯 번 결과':attempts.map((a,i)=>`${i+1}차 ${a.zone} · ${a.score}점`).join(' / '),'앞뒤 비교':`처음 두 번 ${earlyScore}점 / 마지막 두 번 ${lateScore}점`},selfReflection:forceReflection||'선택하지 않음'})}
                 className="w-full py-4 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 text-slate-950 rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 컬링 원정 결과 저장하기

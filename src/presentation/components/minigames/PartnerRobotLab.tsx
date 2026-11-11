@@ -5,20 +5,20 @@ import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
 
 const ARM_CARDS = [
   { id: 'gear', name: '톱니바퀴 회전', emoji: '⚙️', desc: '양팔을 90도로 꺾고 째깍째깍 톱니바퀴처럼 돌리기' },
-  { id: 'laser', name: '하늘 레이저 빔', emoji: '⚡', desc: '두 팔을 하늘 높이 힘차게 발사하듯 번갈아 뻗기' },
+  { id: 'laser', name: '하늘 레이저 빔', emoji: '⚡', desc: '편안한 높이에서 팔을 번갈아 천천히 뻗기' },
   { id: 'wave', name: '안테나 파동', emoji: '📡', desc: '손가락 끝부터 어깨까지 부드러운 물결 파동 보내기' },
 ];
 
 const LEG_CARDS = [
-  { id: 'stamp', name: '강철 스탬프 걷기', emoji: '🥾', desc: '무릎을 직각으로 높이 올려 쿵쿵 절도 있게 전진' },
-  { id: 'spring', name: '용수철 바운스', emoji: '🦿', desc: '제자리에서 무릎 반동을 이용해 가볍게 콩콩 뛰기' },
-  { id: 'slide', name: '호버크래프트 미끄러짐', emoji: '🛹', desc: '발을 바닥에 스치며 좌우로 부드럽게 미끄러지기' },
+  { id: 'stamp', name: '강철 스탬프 걷기', emoji: '🥾', desc: '제자리에서 발을 번갈아 가볍게 들거나 앉아서 발끝 움직이기' },
+  { id: 'spring', name: '용수철 바운스', emoji: '🦿', desc: '발을 바닥에 둔 채 무릎을 편안한 범위에서 작게 굽혔다 펴기' },
+  { id: 'slide', name: '호버크래프트 미끄러짐', emoji: '🛹', desc: '미끄러지지 않고 제자리에서 좌우 발끝을 번갈아 짚기' },
 ];
 
 const BODY_CARDS = [
-  { id: 'twist', name: '지그재그 트위스트', emoji: '🔄', desc: '상체와 하체를 반대 방향으로 절도 있게 비틀기' },
+  { id: 'twist', name: '지그재그 트위스트', emoji: '🔄', desc: '몸통을 비틀지 않고 어깨와 팔로 작은 지그재그 표현하기' },
   { id: 'charge', name: '배터리 충전 숨쉬기', emoji: '🔋', desc: '몸을 웅크렸다가 가슴을 활짝 펴며 에너지 채우기' },
-  { id: 'balance', name: '자이로 센서 균형', emoji: '⚖️', desc: '한 발로 중심을 잡으며 상체를 좌우로 기울이기' },
+  { id: 'balance', name: '자이로 센서 균형', emoji: '⚖️', desc: '두 발을 바닥에 두거나 앉아서 팔로 작은 좌우 균형 표현하기' },
 ];
 
 interface Props {
@@ -67,8 +67,9 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
         '자동으로 역할을 바꾸어 2라운드를 진행하고 서로의 창의성을 칭찬합니다.',
       ]}
       colorTheme="purple"
-      onFinish={enqueueAction ? (score) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score }, timestamp: Date.now() }) : undefined}
+      onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
+      onRestart={() => { setLabStep(1); setArm1(ARM_CARDS[0]); setLeg1(LEG_CARDS[0]); setBody1(BODY_CARDS[0]); setArm2(ARM_CARDS[1]); setLeg2(LEG_CARDS[1]); setBody2(BODY_CARDS[1]); setPraise1(''); setPraise2(''); }}
     >
       {({ onComplete }) => (
         <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl">
@@ -387,7 +388,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               </div>
 
               <button
-                onClick={() => onComplete(`파트너 로봇 2라운드 상호 설계·표현 완료! 칭찬 교환: "${praise1 || '절도 있는 표현'}" / "${praise2 || '창의적 프로그래밍'}"`)}
+                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{metrics:{'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
                 className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" /> 로봇 연구소 활동 완료

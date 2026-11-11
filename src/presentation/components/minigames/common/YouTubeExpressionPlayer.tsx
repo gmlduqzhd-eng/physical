@@ -15,6 +15,8 @@ interface YouTubeExpressionPlayerProps {
   videoTitle?: string;
   defaultBpm?: number;
   enableMirror?: boolean;
+  paused?: boolean;
+  onPlaybackChange?: (playing:boolean)=>void;
 }
 
 // YouTube IFrame API 스크립트 로드 (앱 전체에서 1회만)
@@ -57,6 +59,8 @@ export const YouTubeExpressionPlayer = ({
   initialVideoId = 'dQw4w9WgXcQ',
   videoTitle = '신체표현 동작 가이드 영상',
   defaultBpm = 100,
+  paused = false,
+  onPlaybackChange,
 }: YouTubeExpressionPlayerProps) => {
   const [customUrl, setCustomUrl] = useState('');
   const [activeVideoId, setActiveVideoId] = useState(initialVideoId);
@@ -77,6 +81,7 @@ export const YouTubeExpressionPlayer = ({
 
   // Player refs
   const playerRef = useRef<any>(null);
+  const playbackRef=useRef(onPlaybackChange);playbackRef.current=onPlaybackChange;
   const containerRef = useRef<HTMLDivElement>(null);
   const loopIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playerContainerId = useRef(`yt-player-${Math.random().toString(36).slice(2, 9)}`);
@@ -132,7 +137,8 @@ export const YouTubeExpressionPlayer = ({
             setPlayerError(false);
             event.target.setPlaybackRate(playbackRateRef.current);
           },
-          onError: () => { if (!destroyed) setPlayerError(true); },
+          onStateChange:(event:{data:number})=>{if(!destroyed)playbackRef.current?.(event.data===1);},
+          onError: () => { if (!destroyed) {setPlayerError(true);playbackRef.current?.(false);} },
         },
       });
     };
@@ -147,6 +153,8 @@ export const YouTubeExpressionPlayer = ({
       }
     };
   }, [activeVideoId]);
+  useEffect(()=>{const p=playerRef.current;if(paused){p?.pauseVideo?.();setIsMetronomeOn(false);}else if(p?.getPlayerState?.()===2)p.playVideo?.();},[paused]);
+  useEffect(()=>{const hide=()=>{if(document.hidden){playerRef.current?.pauseVideo?.();setIsMetronomeOn(false);playbackRef.current?.(false);}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
 
   // 배속 변경 시 플레이어에 적용
   useEffect(() => {

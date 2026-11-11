@@ -33,5 +33,5 @@ test('all 61 redesign candidates are implemented once and all original 225 game 
  const audit=JSON.parse(readFileSync(new URL('../docs/game-review-225-2026-10-22.json',import.meta.url),'utf8'));
  const implemented=[...QUEST_IDS,...REVAMPED_EXPEDITION_IDS,...SAFETY_LESSON_IDS];assert.equal(implemented.length,61);assert.equal(new Set(implemented).size,61);
  assert.deepEqual(new Set(implemented),new Set(audit.rows.filter((r:{decision:string})=>r.decision==='개편').map((r:{id:string})=>r.id)));
- assert.equal(GAMES.length,225);assert.equal(new Set(GAMES.map(g=>g.type)).size,225);
+ assert(GAMES.length>=225);assert.equal(new Set(GAMES.map(g=>g.type)).size,GAMES.length);
 });

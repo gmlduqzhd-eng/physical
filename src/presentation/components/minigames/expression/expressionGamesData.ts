@@ -57,7 +57,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
-      { stepNum: 1, title: '땅속 씨앗 웅크리기', durationSeconds: 20, guide: '무릎을 꿇고 머리를 땅에 대며 세상에서 가장 작은 씨앗이 되어 웅크립니다.', actionTip: '숨을 천천히 쉬며 온몸의 힘을 뺍니다.' },
+      { stepNum: 1, title: '땅속 씨앗 웅크리기', durationSeconds: 20, guide: '의자에 앉거나 두 발을 딛고 몸 앞에서 양팔을 작게 모아 작은 씨앗을 표현합니다. 머리는 바닥에 대지 않습니다.', actionTip: '숨을 천천히 쉬며 온몸의 힘을 뺍니다.' },
       { stepNum: 2, title: '봄비 맞고 떡잎 틔우기', durationSeconds: 25, guide: '따스한 봄비를 맞고 양손을 조심스럽게 머리 위로 올려 떡잎을 틔웁니다.', actionTip: '손가락을 오므렸다가 활짝 펴보세요.' },
       { stepNum: 3, title: '줄기 뻗고 꽃봉오리 열기', durationSeconds: 30, guide: '천천히 일어나 발끝으로 서며 온몸을 길게 늘이고 두 팔로 커다란 꽃을 피웁니다.', actionTip: '바람에 살랑이는 꽃잎처럼 좌우로 흔들어 봅니다.' },
     ],
@@ -84,7 +84,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '가벼운 이슬비 발걸음', durationSeconds: 25, guide: '발끝으로 총총 소리 없이 걸으며 손가락으로 빗방울을 바닥에 톡톡 떨어뜨립니다.', actionTip: '몸을 가볍고 작게 만들어 움직입니다.' },
-      { stepNum: 2, title: '거센 돌풍과 비바람', durationSeconds: 25, guide: '바람에 날리는 나뭇가지처럼 온몸을 좌우로 크게 회전하며 휘몰아칩니다.', actionTip: '방향을 불규칙하게 바꾸며 달려봅니다.' },
+      { stepNum: 2, title: '거센 돌풍과 비바람', durationSeconds: 25, guide: '바람에 날리는 나뭇가지처럼 자기 자리에서 팔의 크기와 빠르기를 편한 범위로 바꾸어 표현합니다.', actionTip: '자기 자리를 유지하며 작은 팔 움직임의 방향을 바꿔 봅니다. 이동할 때는 빈 통로를 확인하고 걷습니다.' },
       { stepNum: 3, title: '천둥 번개 쾅! 스톱!', durationSeconds: 20, guide: '양팔을 번쩍 들며 번개처럼 번쩍인 뒤, 쾅! 소리와 함께 힘찬 정지 동작을 만듭니다.', actionTip: '정지 순간 온몸의 근육에 힘을 줍니다.' },
       { stepNum: 4, title: '구름 개고 무지개 햇살', durationSeconds: 20, guide: '평화로운 햇살처럼 미소를 지으며 양팔로 커다란 반원 무지개를 그립니다.', actionTip: '숨을 깊게 들이쉬며 편안하게 정지합니다.' },
     ],
@@ -111,8 +111,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '물결 치는 파도 곡선', durationSeconds: 30, guide: '스카프 끝을 잡고 천천히 8자 곡선을 그리며 허공에 파도를 만듭니다.', actionTip: '손목 스냅을 부드럽게 유영하듯 움직입니다.' },
-      { stepNum: 2, title: '하늘 높이 던지고 잡기', durationSeconds: 25, guide: '스카프를 공중으로 가볍게 던진 뒤, 떨어지는 동안 한 바퀴 돌고 안전하게 낚아챕니다.', actionTip: '눈은 스카프를 끝까지 주시합니다.' },
-      { stepNum: 3, title: '바람 요정 망토 질주', durationSeconds: 25, guide: '스카프를 목 뒤에 대고 바람의 저항을 느끼며 가볍게 교실을 유영합니다.', actionTip: '친구와 스카프가 엉키지 않게 거리를 유지합니다.' },
+      { stepNum: 2, title: '손에 잡고 높낮이 표현하기', durationSeconds: 25, guide: '스카프를 손에 잡은 채 몸 앞에서 편한 높이로 올렸다 내립니다. 던지거나 몸을 돌리지 않고 높낮이를 표현합니다.', actionTip: '손과 스카프가 주변에 닿지 않는 범위를 고릅니다.' },
+      { stepNum: 3, title: '바람 요정의 제자리 물결', durationSeconds: 25, guide: '스카프를 손에 잡고 몸 앞에서 바람의 모양을 표현합니다. 목에 걸거나 감지 않고 자기 자리를 지킵니다.', actionTip: '친구와 스카프가 엉키지 않게 거리를 유지합니다.' },
     ],
     rubric: [
       { criterion: '도구 궤적의 유려함', desc: '스카프의 움직임과 몸의 움직임이 일체감을 이루었는가?' },
@@ -137,7 +137,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '지글지글 알갱이 진동', durationSeconds: 20, guide: '바닥에 웅크리고 프라이팬의 열기가 전해지듯 잘게 몸을 떨며 진동합니다.', actionTip: '점점 떨림의 진폭을 키워갑니다.' },
-      { stepNum: 2, title: '팡! 팝콘 폭발 점프', durationSeconds: 30, guide: '신호음이나 박자에 맞춰 허공으로 사지(양팔·양다리)를 별 모양으로 활짝 펴며 점프!', actionTip: '착지할 때는 무릎을 살짝 굽혀 충격을 흡수합니다.' },
+      { stepNum: 2, title: '팡! 팝콘이 피어나는 모양', durationSeconds: 30, guide: '신호음이나 박자에 맞춰 두 발을 딛거나 앉은 자세에서 팔과 손으로 별 모양을 표현합니다.', actionTip: '점프 대신 편안한 팔 범위와 손가락 움직임을 선택할 수 있습니다.' },
       { stepNum: 3, title: '푹신한 버터 팝콘 정지', durationSeconds: 20, guide: '튀어 오른 후 가장 독창적이고 재미있는 팝콘 포즈로 3초간 얼음!', actionTip: '우스꽝스럽고 익살맞은 표정을 곁들입니다.' },
     ],
     rubric: [
@@ -163,8 +163,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '1인자: 인형사의 창작 모션', durationSeconds: 30, guide: 'A가 천천히 팔과 다리를 구부리고 펴며 독특한 관절 모션을 만듭니다.', actionTip: '따라 하기 쉽게 적당한 속도로 움직입니다.' },
-      { stepNum: 2, title: '2인자: 그림자의 싱크로 복제', durationSeconds: 30, guide: 'B가 A의 등 뒤 1m에서 A의 실루엣을 똑같이 복사하여 움직입니다.', actionTip: 'A의 시선과 손가락 끝 각도까지 모방합니다.' },
-      { stepNum: 3, title: '역할 교대 및 듀엣 피날레', durationSeconds: 30, guide: '역할을 바꾸어 진행한 뒤, 마지막에 서로 마주보고 악수하는 포즈로 마무리합니다.', actionTip: '서로의 창의적인 동작을 칭찬합니다.' },
+      { stepNum: 2, title: '2인자: 그림자의 싱크로 복제', durationSeconds: 30, guide: '서로의 동작을 볼 수 있는 위치와 닿지 않는 간격을 교사와 정하고, B가 A의 동작을 편한 범위로 따라 표현합니다.', actionTip: 'A의 시선과 손가락 끝 각도까지 모방합니다.' },
+      { stepNum: 3, title: '역할 교대 및 듀엣 피날레', durationSeconds: 30, guide: '역할을 바꾸어 진행한 뒤, 마지막에 서로 닿지 않고 손을 흔드는 인사로 마무리합니다.', actionTip: '서로의 창의적인 동작을 칭찬합니다.' },
     ],
     rubric: [
       { criterion: '관찰력과 반응 속도', desc: '친구의 미세한 움직임 변화를 놓치지 않고 따라 했는가?' },
@@ -214,8 +214,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
-      { stepNum: 1, title: '초록불: 힘찬 자동차 질주', durationSeconds: 25, guide: '핸들을 잡은 자세로 교실의 빈 공간을 자유롭게 가속하며 달립니다.', actionTip: '다른 차(친구)와 부딪치지 않는 방어 운전!' },
-      { stepNum: 2, title: '노랑불: 초저속 슬로모션', durationSeconds: 25, guide: '시간이 멈춘 것처럼 달리는 동작 그대로 극단적으로 느리게 움직입니다.', actionTip: '한 발로 선 채 균형을 유지하며 서서히 착지합니다.' },
+      { stepNum: 1, title: '초록불: 제자리 자동차 출발', durationSeconds: 25, guide: '자기 자리에서 핸들 모양의 팔과 편한 발 디딤 또는 앉은 손동작으로 자동차 출발을 표현합니다.', actionTip: '다른 친구와 닿지 않고 자기 자리를 지킵니다.' },
+      { stepNum: 2, title: '노랑불: 초저속 슬로모션', durationSeconds: 25, guide: '시간이 느려지는 것처럼 팔과 손동작의 속도를 천천히 바꿉니다.', actionTip: '두 발을 편히 딛거나 앉아서 느린 움직임을 표현합니다.' },
       { stepNum: 3, title: '빨간불: 0초 급정지 석상', durationSeconds: 20, guide: '소리와 함께 그 자리에 돌처럼 단 1mm도 흔들리지 않고 굳습니다.', actionTip: '숨만 쉬며 눈동자도 고정합니다.' },
     ],
     rubric: [
@@ -271,8 +271,8 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '우주복 착용 및 에어로크 진출', durationSeconds: 25, guide: '단단한 헬멧과 장갑을 조이는 마임 후, 무중력 공간으로 첫발을 내딛습니다.', actionTip: '모든 관절이 물속에 잠긴 듯 저항을 느끼며 움직입니다.' },
-      { stepNum: 2, title: '3차원 공간 궤적 유영', durationSeconds: 30, guide: '낮은 공간(포복형 유영), 중간 공간, 높은 공간(한 발 점프 유영)으로 곡선 이동합니다.', actionTip: '시선은 저 멀리 지구를 바라보며 평온함을 유지합니다.' },
-      { stepNum: 3, title: '우주 미아 위기와 로프 회수', durationSeconds: 25, guide: '안전 로프를 잡고 끌어당기며 몸을 회전시켜 정거장 문으로 복귀합니다.', actionTip: '긴장감 있는 표정 연기를 함께합니다.' },
+      { stepNum: 2, title: '3차원 공간 궤적 유영', durationSeconds: 30, guide: '자기 자리에서 손의 높이를 낮게·가운데·높게 바꾸어 곡선을 표현합니다. 앉아서도 같은 순서로 참여합니다.', actionTip: '시선은 저 멀리 지구를 바라보며 평온함을 유지합니다.' },
+      { stepNum: 3, title: '우주 미아 위기와 로프 회수', durationSeconds: 25, guide: '실제 로프 없이 양손을 번갈아 몸 앞으로 모으며 정거장으로 돌아오는 장면을 표현합니다.', actionTip: '긴장감 있는 표정 연기를 함께합니다.' },
     ],
     rubric: [
       { criterion: '공간 레벨 활용', desc: '상·중·하 공간의 높낮이를 적극적으로 다채롭게 활용했는가?' },
@@ -296,7 +296,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
-      { stepNum: 1, title: '타오르는 불꽃의 직선 공격', durationSeconds: 25, guide: '강하고 날카로운 손동작과 폭발적인 직선 스텝으로 화염의 에너지를 뿜어냅니다.', actionTip: '호흡을 강하게 내뱉으며 힘을 줍니다.' },
+      { stepNum: 1, title: '타오르는 불꽃의 직선 공격', durationSeconds: 25, guide: '팔과 손끝으로 짧은 직선 모양을 만들며 불꽃을 표현합니다. 다른 사람을 향해 뻗지 않습니다.', actionTip: '호흡을 참지 않고 편안한 크기와 속도로 표현합니다.' },
       { stepNum: 2, title: '흐르는 강의 곡선 파동', durationSeconds: 25, guide: '어깨에서 팔꿈치, 손가락 끝으로 이어지는 유려한 물결 웨이브를 만듭니다.', actionTip: '관절을 부드럽게 굴립니다.' },
       { stepNum: 3, title: '대지의 거대한 암석 기둥', durationSeconds: 20, guide: '발을 바닥에 깊숙이 박고 어떤 태풍에도 흔들리지 않는 바위의 무게감을 유지합니다.', actionTip: '하체 코어에 단단히 힘을 줍니다.' },
     ],
@@ -323,7 +323,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '1번 조각: 기둥 베이스 설치', durationSeconds: 20, guide: '첫 번째 학생이 중심이 되는 기하학적 받침대 자세를 취하고 정지합니다.', actionTip: '오래 버틸 수 있는 안정적인 스쿼트나 지탱 자세를 선택합니다.' },
-      { stepNum: 2, title: '2~3번 조각: 연결 가지 확장', durationSeconds: 25, guide: '다음 학생들이 1번 조각의 빈 공간 사이로 팔, 다리를 통과시키며 조각을 확장합니다.', actionTip: '직접 체중을 싣지 않고 시각적 접촉(터치)만 합니다.' },
+      { stepNum: 2, title: '2~3번 조각: 연결 가지 확장', durationSeconds: 25, guide: '다음 학생들은 다른 학생과 닿지 않는 자기 공간에서 팔의 방향과 높이를 이어 하나의 그림처럼 조각을 확장합니다.', actionTip: '친구 몸에 기대거나 손대지 않고, 서로 떨어진 모양의 연결을 살펴봅니다.' },
       { stepNum: 3, title: '마지막 조각: 화룡점정 피날레', durationSeconds: 20, guide: '마지막 모둠원이 조각상의 상단에 날개나 왕관 포즈를 더해 5초간 완벽 정지합니다.', actionTip: '모둠 전체가 숨을 멈추고 하나의 예술 작품이 됩니다.' },
     ],
     rubric: [
@@ -431,9 +431,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
-      { stepNum: 1, title: '손목 스냅 뱀 모양 물결', durationSeconds: 25, guide: '바닥 위에 리본을 올려두고 손목을 좌우로 빠르게 털어 뱀이 기어가듯 물결을 만듭니다.', actionTip: '팔 전체가 아닌 손목의 미세한 스냅을 활용합니다.' },
-      { stepNum: 2, title: '머리 위 거대한 도넛 나선', durationSeconds: 25, guide: '팔을 머리 위로 쭉 뻗고 리본을 빙글빙글 원형으로 돌리며 발레리나 턴을 돕니다.', actionTip: '발끝으로 서서 회전 반경을 넓힙니다.' },
-      { stepNum: 3, title: '던지기 비행과 캐치 피날레', durationSeconds: 25, guide: '리본 손잡이를 위로 살짝 띄웠다가 공중제비 후 다시 잡고 우아하게 무릎을 꿇습니다.', actionTip: '마지막 순간까지 리본 끝이 바닥에 닿지 않게 유지합니다.' },
+      { stepNum: 1, title: '손목으로 작은 뱀 모양 물결', durationSeconds: 25, guide: '리본 손잡이를 손에 잡고 편한 범위에서 손목을 천천히 좌우로 움직여 작은 물결을 만듭니다.', actionTip: '팔 전체가 아닌 손목의 미세한 스냅을 활용합니다.' },
+      { stepNum: 2, title: '몸 앞의 작은 도넛 나선', durationSeconds: 25, guide: '두 발을 편히 딛고 몸 앞에서 리본으로 작은 원을 그립니다. 다른 사람과 도구가 닿지 않는지 확인합니다.', actionTip: '발을 편히 딛고 편한 팔 범위 안에서 원의 크기를 비교합니다.' },
+      { stepNum: 3, title: '손에 잡은 물결 피날레', durationSeconds: 25, guide: '리본 손잡이를 손에 잡은 채 몸 앞에서 물결을 작게 만든 뒤 천천히 멈춥니다. 던지기·공중제비·회전을 하지 않습니다.', actionTip: '도구를 내려놓기 전에 주변을 살피고, 앉아서도 작은 손목 물결로 마무리할 수 있습니다.' },
     ],
     rubric: [
       { criterion: '도구 제어 능력', desc: '리본이 엉키지 않고 끝까지 형태를 유지했는가?' },
@@ -459,7 +459,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     steps: [
       { stepNum: 1, title: '60 BPM 거북이 템포', durationSeconds: 25, guide: '아주 느린 박자에 맞춰 한 걸음을 딛는 데 2초씩 걸리며 공기를 가르듯 천천히 걷습니다.', actionTip: '느린 동작 속에서도 중심이 흔들리지 않게 집중합니다.' },
       { stepNum: 2, title: '100 BPM 보통 걸음 템포', durationSeconds: 25, guide: '경쾌한 팝 음악 템포에 맞춰 팔을 앞뒤로 흔들며 활기차게 워킹합니다.', actionTip: '리듬에 맞춰 고개를 가볍게 끄덕입니다.' },
-      { stepNum: 3, title: '140 BPM 번개 스프린트 템포', durationSeconds: 25, guide: '숨 가쁜 빠른 비트에 맞춰 제자리에서 발을 마구 구르며 재즈 댄스 탭을 밟습니다.', actionTip: '발 앞꿈치로만 빠르게 탭합니다.' },
+      { stepNum: 3, title: '빠른 음악을 작은 동작으로 표현', durationSeconds: 25, guide: '음악을 들으며 자기 속도로 작은 발 디딤이나 앉은 손 박자를 표현합니다. 음악의 모든 박자를 따라 할 필요는 없습니다.', actionTip: '발이나 손 중 편안한 움직임을 골라 박자를 나눕니다.' },
     ],
     rubric: [
       { criterion: '박자 감각과 즉각성', desc: '템포가 바뀔 때 지체 없이 걸음걸이 속도를 전환했는가?' },
@@ -512,7 +512,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     steps: [
       { stepNum: 1, title: '아이 컨택과 호흡 일치', durationSeconds: 20, guide: '서로의 눈을 바라보며 동시에 숨을 들이쉬고 내쉬며 템포를 맞춥니다.', actionTip: '말을 하지 않고 눈빛과 고개 끄덕임만 사용합니다.' },
       { stepNum: 2, title: '유리창 닦기 듀엣 모션', durationSeconds: 30, guide: '손바닥을 마주대듯 허공 10cm 앞에 두고 원을 그리며 동일한 속도로 움직입니다.', actionTip: '누가 리드하는지 모를 정도로 자연스럽게 맞춥니다.' },
-      { stepNum: 3, title: '좌우 사이드 스텝 싱크로', durationSeconds: 25, guide: '동시에 오른쪽으로 2걸음, 왼쪽으로 2걸음 점프하며 대칭 완벽성을 증명합니다.', actionTip: '발이 바닥에 닿는 타이밍까지 맞추어 봅니다.' },
+      { stepNum: 3, title: '좌우 사이드 스텝 싱크로', durationSeconds: 25, guide: '자기 자리에서 오른쪽과 왼쪽 발끝을 번갈아 짚거나 앉아서 팔을 번갈아 펴며 대칭을 표현합니다.', actionTip: '발이 바닥에 닿는 타이밍까지 맞추어 봅니다.' },
     ],
     rubric: [
       { criterion: '동기화 일치도', desc: '두 사람의 팔 각도와 발걸음 타이밍이 하나처럼 일치했는가?' },
@@ -624,7 +624,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '진양조 느린 원무', durationSeconds: 25, guide: '손을 잡고 오른쪽으로 천천히 걸으며 보름달의 장엄함을 신체로 느낍니다.', actionTip: '앞 사람의 발걸음 속도와 보폭을 맞춥니다.' },
-      { stepNum: 2, title: '중모리 남생아 놀아라', durationSeconds: 25, guide: '가운데로 한두 명이 뛰어나와 익살맞은 남생이 춤을 추고 들어갑니다.', actionTip: '나머지 친구들은 힘찬 박수와 후렴구로 호응합니다.' },
+      { stepNum: 2, title: '중모리 남생아 놀아라', durationSeconds: 25, guide: '가운데의 빈 통로를 확인하고 한두 명이 걸어 나와 익살맞은 남생이 춤을 추고 들어갑니다.', actionTip: '나머지 친구들은 힘찬 박수와 후렴구로 호응합니다.' },
       { stepNum: 3, title: '자진모리 청어엮기 & 풀기', durationSeconds: 35, guide: '선두를 따라 팔 아래로 통과하며 촘촘히 엮였다가 시원하게 풀어냅니다.', actionTip: '손을 절대 놓치지 않고 끈끈하게 연결합니다.' },
     ],
     rubric: [
@@ -656,7 +656,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     steps: [
       { stepNum: 1, title: '하와이 훌라: 알로하 물결 사위', durationSeconds: 30, guide: '골반을 좌우로 부드럽게 8자 흔들며 양손으로 야자수와 바다 물결을 그립니다.', actionTip: '손끝에 감정을 싣고 시선은 손끝을 따라갑니다.' },
       { stepNum: 2, title: '이스라엘 마임: 생명의 물 탭', durationSeconds: 30, guide: '손을 잡고 원 안으로 4걸음 모였다가 박수를 치며 뒤로 4걸음 물러납니다.', actionTip: '발바닥 전체로 대지를 힘차게 딛습니다.' },
-      { stepNum: 3, title: '체코 폴카: 경쾌한 힐앤토 홉스텝', durationSeconds: 30, guide: '발뒤꿈치-발끝 찍고 홉! 파트너와 팔짱을 끼고 3박자 회전 질주를 즐깁니다.', actionTip: '상체를 곧게 세우고 활짝 웃으며 뜁니다.' },
+      { stepNum: 3, title: '체코 폴카: 경쾌한 힐앤토 홉스텝', durationSeconds: 30, guide: '발뒤꿈치-발끝 찍고 홉! 파트너와 닿지 않고 자기 자리에서 세 박자의 발 디딤이나 앉은 팔 동작을 주고받습니다.', actionTip: '편한 자세와 자기 속도로 표현하며, 점프나 접촉은 요구하지 않습니다.' },
     ],
     rubric: [
       { criterion: '세계 문화 감수성', desc: '각 나라 춤의 독특한 리듬과 정서를 바르게 이해하고 표현했는가?' },
@@ -712,7 +712,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '군중의 분주한 발걸음', durationSeconds: 25, guide: '시계태엽처럼 바쁘게 오가는 현대 도시인의 걸음을 교차 동선으로 표현합니다.', actionTip: '무표정하고 기계적인 움직임을 연출합니다.' },
-      { stepNum: 2, title: '주인공의 깨어남과 독무', durationSeconds: 30, guide: '모두가 멈춘 가운데 주인공이 날아오르는 듯한 자유로운 점프와 턴을 펼칩니다.', actionTip: '감정의 고조를 온몸의 크기로 확대합니다.' },
+      { stepNum: 2, title: '주인공의 깨어남과 독무', durationSeconds: 30, guide: '모두가 멈춘 가운데 주인공이 자기 자리에서 팔의 높이와 크기를 바꾸어 날아오르는 장면을 표현합니다.', actionTip: '감정의 고조를 온몸의 크기로 확대합니다.' },
       { stepNum: 3, title: '전원 합창 앙상블 피날레', durationSeconds: 30, guide: '주인공의 에너지를 받아 모둠원 전원이 손을 뻗으며 희망찬 대형으로 집결합니다.', actionTip: '가슴을 활짝 펴고 턱을 들어 올립니다.' },
     ],
     rubric: [
@@ -743,7 +743,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     },
     steps: [
       { stepNum: 1, title: '기본 모션 콤보 (High V -> T -> Low V)', durationSeconds: 30, guide: '팔꿈치를 굽히지 않고 주먹을 꽉 쥔 채 칼로 자르듯 절도 있게 모션을 끊어칩니다.', actionTip: '어깨에 힘을 주고 주먹의 엄지 방향을 정확히 맞춥니다.' },
-      { stepNum: 2, title: '토치 점프 & 클래핑 구호', durationSeconds: 25, guide: '“빅토리! 땀방울!” 구호를 외치며 박수를 치고 두 발을 모아 힘차게 점프합니다.', actionTip: '배에서 나오는 쩌렁쩌렁한 목소리로 구호를 외칩니다.' },
+      { stepNum: 2, title: '토치 포즈 & 클래핑 구호', durationSeconds: 25, guide: '“빅토리! 땀방울!” 구호를 외치며 박수를 치고 자기 자리에서 편한 발 디딤이나 앉은 팔 동작으로 구호의 박자를 표현합니다.', actionTip: '편안한 목소리나 손짓을 골라 구호의 박자를 전달합니다.' },
       { stepNum: 3, title: '모둠 인간 피라미드 포즈 (노 스턴트)', durationSeconds: 25, guide: '앞줄은 한쪽 무릎을 꿇고 뒷줄은 하이-V를 취하며 입체적인 2단 전광판 포즈를 만듭니다.', actionTip: '탑을 쌓지 않고 앞뒤 높낮이 배치만으로 웅장함을 연출합니다.' },
     ],
     rubric: [
@@ -773,9 +773,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
       defaultBpm: 125,
     },
     steps: [
-      { stepNum: 1, title: '양발 모아 비트 점프 (1박 1도약)', durationSeconds: 30, guide: '줄넘기를 돌리지 않고 가상 줄넘기(맨손 스윙) 또는 실제 줄넘기로 비트에 점프합니다.', actionTip: '무릎 탄력만을 이용해 가볍게 1cm만 뜁니다.' },
-      { stepNum: 2, title: '번갈아 뛰기 & 십자 크로스 스텝', durationSeconds: 30, guide: '조깅하듯 한 발씩 번갈아 뛴 뒤, 팔을 교차(X자 엇걸기)하여 줄을 넘습니다.', actionTip: '손목 스냅을 몸 중심 가까이 붙입니다.' },
-      { stepNum: 3, title: '피날레 더블 언더 (씽씽이) 도전', durationSeconds: 20, guide: '마지막 10초간 높은 점프와 빠른 2회전 스윙으로 폭발적인 피날레를 장식합니다.', actionTip: '점프할 때 무릎을 가슴으로 당기지 않고 하체를 곧게 폅니다.' },
+      { stepNum: 1, title: '양발 모아 비트 점프 (1박 1도약)', durationSeconds: 30, guide: '줄넘기를 돌리지 않고 가상 줄넘기(맨손 스윙) 또는 실제 줄넘기로 비트에 점프합니다.', actionTip: '줄 없이 팔 돌리기나 앉은 손 박자를 골라도 됩니다. 실제 줄은 교사가 공간과 참여 방법을 확인한 뒤 사용합니다.' },
+      { stepNum: 2, title: '번갈아 뛰기 & 십자 크로스 스텝', durationSeconds: 30, guide: '줄 없이 발을 번갈아 짚거나 앉아서 손으로 X자와 펼침 모양을 바꾸며 박자를 표현합니다.', actionTip: '손목 스냅을 몸 중심 가까이 붙입니다.' },
+      { stepNum: 3, title: '내가 고르는 박자 피날레', durationSeconds: 20, guide: '마지막 구간에는 줄을 내려놓고 편한 발 디딤이나 앉은 팔 동작으로 익힌 박자를 이어 마무리합니다.', actionTip: '높이 뛰기나 두 번 돌리기를 요구하지 않습니다. 교사가 확인한 기본 동작이나 맨손 대안 중 편한 방법을 고릅니다.' },
     ],
     rubric: [
       { criterion: '음악 비트 일치도', desc: '줄이 바닥을 치는 소리와 음악의 비트가 정확히 일치하는가?' },
@@ -804,9 +804,9 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
       defaultBpm: 130,
     },
     steps: [
-      { stepNum: 1, title: '원-투 복싱 잽 & 가드 바운스', durationSeconds: 30, guide: '턱밑에 가드를 올리고 왼손 잽, 오른손 스트레이트를 비트에 맞춰 연속으로 뻗습니다.', actionTip: '펀치를 칠 때 허리를 함께 비틀어 파워를 냅니다.' },
+      { stepNum: 1, title: '원-투 복싱 잽 & 가드 바운스', durationSeconds: 30, guide: '턱밑에 가드를 올리고 왼손 잽, 오른손 스트레이트를 비트에 맞춰 연속으로 뻗습니다.', actionTip: '몸통을 강하게 비틀지 않고 사람을 향하지 않는 작은 팔 동작으로 표현합니다.' },
       { stepNum: 2, title: '위빙 회피 & 어퍼컷 콤보', durationSeconds: 30, guide: '상체의 U자 회피(위빙) 후 밑에서 위로 턱을 치는 강력한 어퍼컷 연결!', actionTip: '무릎을 굽혀 체중을 아래에서 위로 밀어 올립니다.' },
-      { stepNum: 3, title: '프론트 푸시 킥 & 니킥 질주', durationSeconds: 30, guide: '복부를 보호하며 앞차기 4회, 무릎 당겨치기 4회를 빠른 비트에 맞추어 폭격합니다.', actionTip: '호흡을 “칫! 칫!” 짧고 굵게 내뱉습니다.' },
+      { stepNum: 3, title: '발끝과 무릎으로 박자 표현', durationSeconds: 30, guide: '제자리에서 발끝을 편한 범위로 번갈아 짚거나 앉아서 손으로 네 박자를 표현합니다. 친구를 향한 발차기는 하지 않습니다.', actionTip: '숨을 참지 않고 편한 속도와 크기의 동작을 선택합니다.' },
     ],
     rubric: [
       { criterion: '타격감과 절도', desc: '펀치와 킥이 흐느적거리지 않고 끝점에서 절도 있게 멈추는가?' },
@@ -831,7 +831,7 @@ export const EXPRESSION_GAMES: ExpressionGameData[] = [
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
       { stepNum: 1, title: '1단계: 아무렇지 않은 척 일상 위장', durationSeconds: 20, guide: '교실 곳곳에서 책을 읽거나 멍때리며 일반적인 일상 연기를 합니다.', actionTip: '시작 신호가 울리기 전까지 춤출 기색을 숨깁니다.' },
-      { stepNum: 2, title: '2단계: 첫 번째 댄서의 도화선 점화', durationSeconds: 25, guide: '1번 학생이 센터로 뛰어나와 인상적인 독무를 시작합니다.', actionTip: '주변 친구들은 놀라워하는 표정 연기를 합니다.' },
+      { stepNum: 2, title: '2단계: 첫 번째 댄서의 도화선 점화', durationSeconds: 25, guide: '1번 학생이 빈 통로를 확인하고 가운데로 걸어 나와 인상적인 독무를 시작합니다.', actionTip: '주변 친구들은 놀라워하는 표정 연기를 합니다.' },
       { stepNum: 3, title: '3단계: 2배씩 번지는 도미노 합류', durationSeconds: 35, guide: '한 마디마다 2명씩 무대로 합류하여 마지막에 모둠 전원이 거대 군무를 폭발시킵니다.', actionTip: '합류하는 순간 폭발적인 에너지를 방출합니다.' },
     ],
     rubric: [

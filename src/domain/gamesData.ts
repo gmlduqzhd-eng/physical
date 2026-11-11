@@ -1551,16 +1551,6 @@ export function isPhysicalActivityGame(game: GameDef): boolean {
   return KNOWN_PHYSICAL_TYPES.has(game.type);
 }
 
-const ANTI_CHEAT_GAMES = new Set([
-  'run',
-  'jump',
-  'relay-mission-runner',
-  'space-occupier',
-  'freeze',
-  'red_green',
-]);
-
-export function hasAntiCheatSensor(type: string): boolean {
-  return ANTI_CHEAT_GAMES.has(type);
-}
+/** Current activities do not authenticate physical performance with a sensor. */
+export function hasAntiCheatSensor(_type: string): boolean { return false; }
 

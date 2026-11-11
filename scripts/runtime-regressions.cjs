@@ -9,12 +9,16 @@ const ts = createRequire(path.join(repo, 'package.json'))('typescript');
 const fixedTime = new Date('2026-10-02T00:30:00+09:00').getTime();
 class FixedDate extends Date { constructor(...args) { super(...(args.length ? args : [fixedTime])); } static now() { return fixedTime; } }
 let active;
+let replayStateUpdaters = false;
 const hooks = {
   useState(initial) {
     const index = active.cursor++;
     const actor = active;
     if (!(index in actor.states)) actor.states[index] = typeof initial === 'function' ? initial() : initial;
-    return [actor.states[index], next => { actor.states[index] = typeof next === 'function' ? next(actor.states[index]) : next; }];
+    return [actor.states[index], next => {
+      if (typeof next === 'function' && replayStateUpdaters) next(actor.states[index]);
+      actor.states[index] = typeof next === 'function' ? next(actor.states[index]) : next;
+    }];
   },
   useRef(initial) {
     const index = active.cursor++;
@@ -121,6 +125,17 @@ async function main() {
     storageDenied = false; assert.equal(helpers.readStorage('quota_setting'), 'new');
     assert.equal(helpers.writeStorage('quota_setting', 'saved'), true);
     assert.equal(data.get('quota_setting'), 'saved');
+  });
+  check('expired identities cannot return when React replays a game result updater', () => {
+    const player = actor(profiles.usePlayerProfile); let view = player.render();
+    view.resetProfile(); view = player.render(); view.createProfile('previous-session');
+    view = player.render(); view.addGameResult('stretch', '이전 활동', 99); view = player.render();
+    data.set('physical_private_expires', String(fixedTime - 1));
+    try { replayStateUpdaters = true; view.addGameResult('stretch', '새 활동', 100); }
+    finally { replayStateUpdaters = false; }
+    view = player.render(); assert.equal(view.profile.nickname, '익명 원정대원');
+    assert.equal(view.profile.totalScore, 100); assert.equal(view.profile.totalPlays, 1);
+    assert.equal(view.profile.recentGames.length, 1); view.resetProfile();
   });
   check('a losing fate card records a completed play and survives profile reload', () => {
     const player = actor(profiles.usePlayerProfile); let view = player.render();

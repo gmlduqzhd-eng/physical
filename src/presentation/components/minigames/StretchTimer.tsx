@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
+import './common/MovementQuest.css';
 
 interface Props { groupId: string; enqueueAction: (a: any) => void; }
 
@@ -114,83 +115,16 @@ const PoseIllustration = ({ poseId }: { poseId: StretchPose['id'] }) => {
 };
 
 export const StretchTimer = ({ groupId, enqueueAction }: Props) => {
-  const [poseIdx, setPoseIdx] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(POSES[0].duration);
-  const [finished, setFinished] = useState(false);
-  const finishedRef = useRef(false);
-
-  useEffect(() => {
-    if (finished) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [finished]);
-
-  useEffect(() => {
-    if (finished || timeLeft > 0) return;
-
-    sfxCoin();
-    if (poseIdx + 1 >= POSES.length) {
-      if (!finishedRef.current) {
-        finishedRef.current = true;
-        setFinished(true);
-        sfxSuccess();
-        enqueueAction({
-          id: Math.random().toString(),
-          type: 'INCREMENT_SCORE',
-          payload: { id: groupId, amount: 500 },
-          timestamp: Date.now()
-        });
-      }
-    } else {
-      const nextIdx = poseIdx + 1;
-      setPoseIdx(nextIdx);
-      setTimeLeft(POSES[nextIdx].duration);
-    }
-  }, [timeLeft, poseIdx, finished, groupId, enqueueAction]);
-
-  const current = POSES[poseIdx] || POSES[0];
-
-  return (
-    <div className="min-h-[100dvh] bg-teal-950 flex flex-col items-center justify-center p-6 pt-16 relative overflow-hidden z-[9999] select-none text-white">
-      <div className="text-sky-300 font-bold text-sm mb-1">{poseIdx + 1} / {POSES.length} 단계</div>
-      <h1 className="text-3xl font-black mb-1 text-center">🧘 스트레칭 타이머</h1>
-      <p className="text-slate-300 text-xs mb-6 text-center">동작을 보고 천천히 따라 해보세요!</p>
-
-      {/* 정확한 자세 일러스트 */}
-      <div className="mb-4">
-        <PoseIllustration poseId={current.id} />
-      </div>
-
-      <h2 className="text-2xl font-black text-sky-200 mb-1">{current.name}</h2>
-      <p className="text-slate-200 text-sm mb-6 text-center max-w-xs">{current.desc}</p>
-
-      <div className="text-7xl font-black text-white mb-6">
-        {timeLeft}<span className="text-2xl font-bold ml-1">초</span>
-      </div>
-
-      <div className="w-full max-w-xs h-4 bg-teal-900 rounded-full overflow-hidden border border-teal-700">
-        <div
-          className="h-full bg-teal-400 transition-all duration-1000"
-          style={{ width: `${((current.duration - timeLeft) / current.duration) * 100}%` }}
-        />
-      </div>
-
-      {finished && (
-        <div className="absolute inset-0 z-50 bg-black/85 flex flex-col items-center justify-center">
-          <div className="text-5xl font-black text-sky-300 mb-2">✨ 스트레칭 완료!</div>
-          <p className="text-xl text-white font-bold mb-4">+500점 획득</p>
-        </div>
-      )}
-    </div>
-  );
+  const [poseIdx,setPoseIdx]=useState(0),[duration,setDuration]=useState(7),[timeLeft,setTimeLeft]=useState(7);
+  const [phase,setPhase]=useState<'ready'|'active'|'confirm'>('ready'),[paused,setPaused]=useState(false),[confirmed,setConfirmed]=useState(false);
+  const [records,setRecords]=useState<{performed:boolean;duration:number}[]>([]);const finishedRef=useRef(false);const current=POSES[poseIdx];
+  useEffect(()=>{const hide=()=>{if(document.hidden)setPaused(true);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
+  useEffect(()=>{if(phase!=='active'||paused)return;const timer=setInterval(()=>{if(!document.hidden)setTimeLeft(t=>Math.max(0,t-1));},1000);return()=>clearInterval(timer);},[phase,paused]);
+  useEffect(()=>{if(phase==='active'&&timeLeft===0){setPhase('confirm');sfxCoin();}},[phase,timeLeft]);
+  const next=(performed:boolean)=>{if(finishedRef.current)return;const values=[...records,{performed,duration}];if(poseIdx<POSES.length-1){setRecords(values);setPoseIdx(n=>n+1);setConfirmed(false);setPhase('ready');return;}finishedRef.current=true;sfxSuccess();enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{id:groupId,amount:values.some(v=>v.performed)?100:0,details:{criteria:POSES.map(p=>p.name),metrics:{'수행 확인':values.map((v,i)=>POSES[i].name+': '+(v.performed?'직접 참여 확인':'쉬거나 건너뜀')).join(' / '),'기록 기준':'시간 경과로 수행을 판정하지 않아요. 직접 확인한 참여 기록이에요.','선택 시간':values.map((v,i)=>`${POSES[i].name} ${v.duration}초 안내`).join(' / ')} }},timestamp:Date.now()});};
+  return <section className="movement-quest" aria-label="스트레칭 타이머"><header><p>준비·정리 도구 · 직접 참여 확인</p><h1>스트레칭 타이머</h1><p>{poseIdx+1} / {POSES.length} · {current.name}</p></header><PoseIllustration poseId={current.id}/><p>{current.desc}</p><p>서거나 앉아서 편한 범위로 작게 해요. 억지로 늘리거나 참지 않고 불편하면 멈춰요.</p>
+  {phase==='ready'&&<><label>내가 고르는 안내 시간<select value={duration} onChange={e=>setDuration(Number(e.target.value))}>{[7,12,20].map(n=><option key={n} value={n}>{n}초</option>)}</select></label><p>선택 시간은 화면 안내 시간이며 운동 처방이나 수행 기준이 아니에요.</p><button onClick={()=>{setTimeLeft(duration);setPaused(false);setPhase('active');}}>내 속도로 스트레칭 시작</button></>}
+  {phase==='active'&&<><strong className="text-5xl">{timeLeft}초</strong><p role="status">{paused?'멈췄어요. 준비되면 이어가요.':'자기 속도로 동작을 살펴요.'}</p><button onClick={()=>setPaused(v=>!v)}>{paused?'이어서 하기':'잠깐 쉬기'}</button><button onClick={()=>setPhase('confirm')}>안내를 멈추고 수행 확인</button></>}
+  {phase==='confirm'&&<><p>타이머가 끝났어요. 실제 참여 여부를 직접 확인해요.</p><label><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/>편한 범위에서 이 동작을 해 보았어요.</label><button disabled={!confirmed} onClick={()=>next(true)}>{poseIdx===2?'참여 확인하고 마치기':'참여 확인하고 다음 동작'}</button><button onClick={()=>next(false)}>쉬었어요 · {poseIdx===2?'마치기':'다음 동작'}</button></>}
+  </section>;
 };
-

@@ -10,7 +10,7 @@ const testEnv=Object.fromEntries(Object.entries(process.env).filter(([key])=>
   !/^(OPENAI_|GEMINI_|TEACHER_|CLASSROOM_|STUDIO_|SUPABASE_|VITE_SUPABASE_|LOCAL_TEACHER_)/.test(key)));
 testEnv.NODE_ENV='test';
 const checks=target==='main'
-  ? ['lint','test:ui','test:deploy-gate','check:server:node','test','test:teacher','test:studio','test:studio:deployment','test:flagship','test:workshop','test:flagship:devices','test:camera','test:operations','test:regression','test:classroom-refresh']
+  ? ['lint','test:ui','test:game-review','test:deploy-gate','check:server:node','test','test:teacher','test:studio','test:studio:deployment','test:flagship','test:workshop','test:flagship:devices','test:camera','test:operations','test:regression','test:classroom-refresh']
   : ['check:server:node','test:studio'];
 for(const command of [...checks,...(target==='main'?['build','build:studio']:['build:studio'])]){
   const build=command==='build'||command==='build:studio';

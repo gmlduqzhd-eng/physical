@@ -47,12 +47,12 @@ export const PHONE_GAME_DEFS:GameDef[]=PHONE_PLAYS.map(p=>({
  recommendedDevice:'스마트폰',devices:['스마트폰','태블릿 PC','데스크톱 PC'],playMode:p.players==='혼자'?'개인':'협동',activityType:p.players==='혼자'?'개인':p.players,
 }));
 
-export interface PhoneRecord {round:number;outcome:'complete'|'partial';elapsedMs:number;count:number;answer:string[];participants:number[];easy?:boolean}
-export function phoneSequence(p:PhonePlay,round:number,easy=false):string[]{const cues=p.cues;return Array.from({length:Math.min(easy?2:4,cues.length)},(_,i)=>cues[(i+round)%cues.length]);}
+export interface PhoneRecord {round:number;outcome:'complete'|'partial';elapsedMs:number;count:number;answer:string[];participants:number[];easy?:boolean;challenge?:boolean;strategy?:'core'|'small'|'seated';created?:string[];before?:string;after?:string}
+export function phoneSequence(p:PhonePlay,round:number,easy=false,challenge=false):string[]{const cues=p.cues;return Array.from({length:easy?Math.min(2,cues.length):challenge?4:Math.min(4,cues.length)},(_,i)=>cues[(i+round)%cues.length]);}
 export function phoneTarget(round:number){return [8,10,12][round]??10;}
 export function phoneRecordValid(p:PhonePlay,r:PhoneRecord,players:number):boolean{
  return Number.isInteger(r.round)&&r.round>=0&&r.round<3&&['complete','partial'].includes(r.outcome)&&Number.isFinite(r.elapsedMs)&&r.elapsedMs>=(p.kind==='estimate'?1000:p.seconds*1000)&&r.elapsedMs<=120000
   &&Number.isInteger(r.count)&&r.count>=0&&r.count<=99&&Array.isArray(r.participants)&&r.participants.length>0&&new Set(r.participants).size===r.participants.length&&r.participants.every(n=>Number.isInteger(n)&&n>=1&&n<=players)
   &&Array.isArray(r.answer)&&r.answer.length<=4&&r.answer.every(s=>p.cues.includes(s))
-  &&(r.outcome!=='complete'||(r.participants.length===players&&(p.kind!=='memory'||JSON.stringify(r.answer)===JSON.stringify(phoneSequence(p,r.round,r.easy===true)))&&(p.kind!=='count'||r.count>0)&&(p.kind!=='estimate'||Math.abs(r.elapsedMs-phoneTarget(r.round)*1000)<=3500)));
+  &&(r.outcome!=='complete'||(r.participants.length===players&&(p.kind!=='memory'||JSON.stringify(r.answer)===JSON.stringify(phoneSequence(p,r.round,r.easy===true,r.challenge===true)))&&(p.kind!=='count'||r.count>0)&&(p.kind!=='estimate'||Math.abs(r.elapsedMs-phoneTarget(r.round)*1000)<=3500)));
 }

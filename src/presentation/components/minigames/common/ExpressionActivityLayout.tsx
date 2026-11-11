@@ -6,6 +6,7 @@ import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
 import './ExpressionActivity.css';
+import {ActivityProgress} from './ActivityProgress';
 
 interface ExpressionActivityLayoutProps {
   game: ExpressionGameData;
@@ -33,11 +34,17 @@ export const ExpressionActivityLayout = ({
   const [ratings, setRatings] = useState<number[]>(game.rubric.map(() => 0));
   const [selfReflection, setSelfReflection] = useState<string>('');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
+  const [smallMovement,setSmallMovement]=useState(false);
+  const [performed,setPerformed]=useState<number[]>([]);
+  const [videoPlaying,setVideoPlaying]=useState(false);
+  const [followVideo,setFollowVideo]=useState(!!game.videoInfo);
   const completedRef = useRef(false);
+  const playbackChange=useCallback((playing:boolean)=>setVideoPlaying(playing),[]);
+  useEffect(()=>{const hide=()=>{if(document.hidden)setIsTimerRunning(false);};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
 
   // 카운트다운 3초
   useEffect(() => {
-    if (phase !== 'countdown') return;
+    if (phase !== 'countdown'||!isTimerRunning) return;
     if (countdown > 0) {
       const timer = scheduleTimeout(() => setCountdown(c => c - 1), 1000);
       return () => clearTimeout(timer);
@@ -46,11 +53,11 @@ export const ExpressionActivityLayout = ({
       setTimeLeft(game.steps[0]?.durationSeconds || 30);
       setIsTimerRunning(true);
     }
-  }, [phase, countdown, game.steps, scheduleTimeout]);
+  }, [phase, countdown, game.steps, scheduleTimeout,isTimerRunning]);
 
   // 활동 타이머
   useEffect(() => {
-    if (phase !== 'active' || !isTimerRunning) return;
+    if (phase !== 'active' || !isTimerRunning || (followVideo&&!videoPlaying)) return;
     const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
       if (timeLeft > 1) {
@@ -65,7 +72,7 @@ export const ExpressionActivityLayout = ({
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout]);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
@@ -92,11 +99,12 @@ export const ExpressionActivityLayout = ({
     sfxSuccess();
     setPhase('result');
     const avgScore = Math.round((ratings.reduce((a, b) => a + b, 0) / (ratings.length * 5)) * 100);
-    onComplete(avgScore, {
+    onComplete(performed.length?avgScore:0, {
       ratings,
       criteria: game.rubric.map(item => item.criterion),
       selfReflection,
       totalTime: totalElapsedTime,
+      metrics:{'진행 확인':game.steps.map((_,i)=>`${i+1}단계 ${performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}`).join(' / '),'기록 기준':'별점은 자기·짝의 감상이며 자동 운동 능력 평가가 아니에요.','참여 방법':smallMovement?'앉아서 또는 작은 동작':'기본 표현'},
     });
   };
 
@@ -104,6 +112,8 @@ export const ExpressionActivityLayout = ({
 
   return (
     <div className="expression-activity w-full max-w-4xl mx-auto space-y-4">
+      <ActivityProgress steps={game.steps.map(step=>step.title)} current={currentStepIdx} results={game.steps.slice(0,currentStepIdx).map((_,i)=>performed.includes(i)?'complete':'partial')}/>
+      <div className="activity-brief"><label><input type="checkbox" checked={smallMovement} onChange={e=>setSmallMovement(e.target.checked)}/>앉아서 또는 작은 팔·손 동작으로 표현하기</label><p>기기는 놓고 개인 공간에서 표현해요. 이동·접촉·점프를 해야만 참여한 것으로 기록되는 활동은 아니에요.</p>{!isTimerRunning&&(phase==='active'||phase==='countdown')&&<p role="status">안내가 멈췄어요. 주변을 확인한 뒤 ‘계속 진행’을 눌러요.</p>}{phase==='countdown'&&!isTimerRunning&&<button onClick={()=>setIsTimerRunning(true)}>계속 진행</button>}</div>
       {/* 성취기준 세부 모달 */}
       {showAchievementModal && (
         <div
@@ -199,8 +209,11 @@ export const ExpressionActivityLayout = ({
               initialVideoId={game.videoInfo.videoId}
               videoTitle={game.videoInfo.title}
               defaultBpm={game.videoInfo.defaultBpm || 100}
+              paused={!isTimerRunning}
+              onPlaybackChange={playbackChange}
             />
           )}
+          {game.videoInfo&&<div className="activity-brief"><label><input type="checkbox" checked={followVideo} onChange={e=>setFollowVideo(e.target.checked)}/>영상의 재생·멈춤에 활동 시간을 맞추기</label>{followVideo&&!videoPlaying&&<p role="status">영상 재생을 기다려요. 영상이 막히면 위 선택을 끄고 글 안내로 진행할 수 있어요.</p>}</div>}
 
           {/* 단계별 네비게이션 & 타이머 카드 */}
           <div className="bg-slate-900/90 border border-purple-500/30 rounded-3xl p-6 shadow-2xl space-y-4">
@@ -233,13 +246,14 @@ export const ExpressionActivityLayout = ({
             {/* 동작 가이드 & 팁 */}
             <div className="bg-slate-950/70 p-5 rounded-2xl border border-slate-800 space-y-3">
               <div className="text-sm sm:text-base text-slate-200 font-bold leading-relaxed">
-                👉 {currentStep.guide}
+                👉 {smallMovement?`‘${currentStep.title}’의 모양·방향·빠르기를 자기 자리에서 작은 팔·손 동작으로 표현해요. 앉아서도 같은 표현 목표를 선택해요.`:currentStep.guide}
               </div>
               <div className="text-xs text-purple-300 bg-purple-950/40 p-3 rounded-xl border border-purple-500/20 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 shrink-0 text-purple-400" />
                 <span><strong>표현 꿀팁:</strong> {currentStep.actionTip}</span>
               </div>
             </div>
+            <label className="activity-brief flex gap-3"><input type="checkbox" checked={performed.includes(currentStepIdx)} onChange={e=>setPerformed(old=>e.target.checked?[...old,currentStepIdx]:old.filter(i=>i!==currentStepIdx))}/>이 단계의 몸 표현에 참여했어요. 쉬거나 설명만 봤다면 선택하지 않아요.</label>
 
             {/* 단계 이동 제어 바 */}
             <div className="expression-step-controls flex items-center justify-between pt-2">
@@ -297,6 +311,7 @@ export const ExpressionActivityLayout = ({
             </p>
           </div>
 
+          <fieldset className="activity-brief"><legend>단계별 직접 참여 확인</legend>{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>setPerformed(old=>e.target.checked?[...old,i]:old.filter(n=>n!==i))}/>{step.title} · {performed.includes(i)?'참여 확인':'쉬거나 설명만 확인'}</label>)}<p>0개를 선택하면 설명을 확인한 기록으로 남겨요. 타이머나 별점으로 실제 수행을 판정하지 않아요.</p></fieldset>
           {/* 루브릭 항목 리스트 */}
           <div className="space-y-4">
             {game.rubric.map((item, idx) => (
