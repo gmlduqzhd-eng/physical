@@ -15,6 +15,7 @@
 - [권한 매트릭스](docs/SERVER_HARDENING_PERMISSION_MATRIX.md)
 - [실제 검증 결과와 미실행 항목](docs/SERVER_HARDENING_VERIFICATION.md)
 - [백업·운영 적용·실동작 확인 기록](docs/SERVER_HARDENING_PRODUCTION_20261113.md)
+- [남은 Security Advisor 경고 점검과 후속 보완](docs/SECURITY_ADVISOR_REVIEW_20261113.md)
 
 `supabase_schema.sql`은 파괴적 구형 설치를 차단한다. 빈 Supabase DB에는
 `supabase/install_empty.psql`을, 기존 DB에는 검토한 신규 migration만 사용한다.

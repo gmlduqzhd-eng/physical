@@ -1,6 +1,6 @@
 # 최종 Data API 권한 매트릭스
 
-기준 HEAD: `96aa15b`. 격리 native Supabase에 기존 30개 + 신규 3개 migration을 설치한 실제 카탈로그 결과다. 운영의 다른 앱 객체를 이관하거나 권한을 변경한 결과가 아니다.
+기준 HEAD: `96aa15b`의 최초 권한 검증에 후속 Advisor 보완 2개를 반영했다. 기존 30개 + 첫 보완 3개 + 후속 2개, 총 35개 migration이 기준이다. 후속 변경은 health의 불필요한 DEFINER 제거와 공유 작성자 함수의 NULL 거절이며 실행 ACL/테이블 권한은 바꾸지 않는다.
 
 `authenticated`는 학생의 익명 로그인 JWT에도 부여된다. 이 역할만으로 교사를 판별하지 않는다. 아래 허용은 SQL 진입 권한이며, 실제 행/동작은 기존 소유권·교사 자격·멤버십·만료 조건으로 제한된다.
 
@@ -63,7 +63,7 @@ PUBLIC EXECUTE는 아래 모든 함수에서 없다. `anon`이 실행 가능한 
 | `classroom_effect(uuid,text,uuid,text)` | 없음 | 허용 | 아니오 |
 | `classroom_maintenance_status()` | 없음 | 허용 | 아니오 |
 | `classroom_operations(uuid,text,integer,boolean,integer)` | 없음 | 허용 | 아니오 |
-| `classroom_service_health()` | 허용 | 없음 | 예 |
+| `classroom_service_health()` | 허용 | 없음 | 아니오 |
 | `complete_classroom_profile(uuid,uuid,integer,text)` | 없음 | 허용 | 아니오 |
 | `create_guided_classroom(text,text,integer,integer,integer)` | 없음 | 허용 | 아니오 |
 | `create_secure_classroom(text,uuid,text[])` | 없음 | 허용 | 아니오 |

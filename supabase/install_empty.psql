@@ -37,5 +37,7 @@ SET LOCAL physical.empty_install='transactional';
 \ir migrations/20261113091515_repair_boss_retry_reference.sql
 \ir migrations/20261113091733_explicit_core_data_api_grants.sql
 \ir migrations/20261113092338_optimize_classroom_policy_and_fk_indexes.sql
+\ir migrations/20261113123020_reduce_health_rpc_privileges.sql
+\ir migrations/20261113123026_reject_missing_translation_author_hash.sql
 \ir bootstrap/finish_empty_install.sql
 COMMIT;
