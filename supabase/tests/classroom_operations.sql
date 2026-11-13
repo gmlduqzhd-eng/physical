@@ -1,5 +1,7 @@
+\ir assert_isolated.sql
 BEGIN;
 CREATE FUNCTION pg_temp.check_it(value boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'OPERATIONS FAILED: %',label; END IF; END $$;
+GRANT EXECUTE ON FUNCTION pg_temp.check_it(boolean,text) TO authenticated,anon;
 DO $$ DECLARE uid uuid; label text; BEGIN
  FOREACH label IN ARRAY ARRAY['owner','other','student','account','admin'] LOOP
   uid:=gen_random_uuid();INSERT INTO auth.users(id,aud,role,is_anonymous,email,email_confirmed_at) VALUES(uid,'authenticated','authenticated',label NOT IN ('account','admin'),CASE WHEN label IN ('account','admin') THEN uid||'@example.invalid' ELSE NULL END,CASE WHEN label IN ('account','admin') THEN now() ELSE NULL END);

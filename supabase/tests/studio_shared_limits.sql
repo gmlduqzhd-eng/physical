@@ -1,3 +1,4 @@
+\ir assert_isolated.sql
 BEGIN;
 INSERT INTO physical_studio_limits.config(id,secret_hash,daily_limit,budget_day,used)
 VALUES(true,encode(extensions.digest('synthetic-limiter-test-secret-12345678','sha256'),'hex'),100,(now() AT TIME ZONE 'Asia/Seoul')::date,0)

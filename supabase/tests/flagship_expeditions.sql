@@ -1,5 +1,7 @@
+\ir assert_isolated.sql
 BEGIN;
 CREATE FUNCTION pg_temp.check_it(value boolean,label text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'FLAGSHIP FAILED: %',label; END IF; END $$;
+GRANT EXECUTE ON FUNCTION pg_temp.check_it(boolean,text) TO authenticated,anon;
 DO $$ DECLARE uid uuid; label text; BEGIN
  FOREACH label IN ARRAY ARRAY['owner','other','a','b','c','d','viewer'] LOOP
  uid:=gen_random_uuid();INSERT INTO auth.users(id,aud,role,is_anonymous) VALUES(uid,'authenticated','authenticated',true);PERFORM set_config('exp.'||label,uid::text,true);END LOOP;

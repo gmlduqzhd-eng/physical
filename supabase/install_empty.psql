@@ -1,0 +1,41 @@
+-- EMPTY Supabase DB ONLY. Use psql -X -v ON_ERROR_STOP=1.
+-- Intermediate historical permissions stay invisible until COMMIT.
+\set ON_ERROR_STOP on
+BEGIN;
+SET LOCAL physical.empty_install='transactional';
+\ir bootstrap/empty_database.sql
+\ir migrations/20261002125640_classroom_reliable_scoring.sql
+\ir migrations/20261002130051_classroom_mission_review.sql
+\ir migrations/20261002131823_classroom_invoker_attack_safety.sql
+\ir migrations/20261002132533_classroom_boss_completion.sql
+\ir migrations/20261020013733_classroom_scoped_access.sql
+\ir migrations/20261020015439_classroom_display_and_recovery.sql
+\ir migrations/20261020021605_classroom_result_read_access.sql
+\ir migrations/20261020113525_guided_completion_reliability_and_reflection.sql
+\ir migrations/20261020114740_guided_help_and_class_goal.sql
+\ir migrations/20261020120828_atomic_guided_classroom_creation.sql
+\ir migrations/20261020150000_four_digit_group_entry.sql
+\ir migrations/20261020160000_classroom_student_roster.sql
+\ir migrations/20261022070524_classroom_join_failed_attempts.sql
+\ir migrations/20261028053549_revoke_replaced_student_membership.sql
+\ir migrations/20261028053600_studio_shared_request_limits.sql
+\ir migrations/20261109005005_classroom_operations.sql
+\ir migrations/20261109005013_approved_teacher_accounts.sql
+\ir migrations/20261109005024_retention_and_operations_admin.sql
+\ir migrations/20261109005323_activity_review_records.sql
+\ir migrations/20261109005325_teacher_login_and_admin_guards.sql
+\ir migrations/20261109010140_legacy_teacher_cutover.sql
+\ir migrations/20261109011908_google_membership.sql
+\ir migrations/20261109012527_google_identity_guards.sql
+\ir migrations/20261109023047_flagship_expeditions.sql
+\ir migrations/20261109023919_flagship_runtime_guards.sql
+\ir migrations/20261109024411_flagship_boss_sequence.sql
+\ir migrations/20261109054736_expedition_workshop.sql
+\ir migrations/20261109060342_expedition_workshop_compatibility.sql
+\ir migrations/20261110021822_reviewed_access_and_teacher_transition.sql
+\ir migrations/20261111042633_expedition_shared_handoff_and_recording_guards.sql
+\ir migrations/20261113091515_repair_boss_retry_reference.sql
+\ir migrations/20261113091733_explicit_core_data_api_grants.sql
+\ir migrations/20261113092338_optimize_classroom_policy_and_fk_indexes.sql
+\ir bootstrap/finish_empty_install.sql
+COMMIT;

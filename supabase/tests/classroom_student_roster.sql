@@ -1,14 +1,16 @@
+\ir assert_isolated.sql
 -- Execute as one transaction against a test database. ROLLBACK preserves all real rooms.
 BEGIN;
 CREATE OR REPLACE FUNCTION pg_temp.assert_ok(value boolean,label text) RETURNS void LANGUAGE plpgsql AS $$
 BEGIN IF value IS DISTINCT FROM true THEN RAISE EXCEPTION 'ROSTER TEST FAILED: %',label; END IF; END $$;
+GRANT EXECUTE ON FUNCTION pg_temp.assert_ok(boolean,text) TO authenticated,anon;
 DO $$ DECLARE label text; uid uuid; BEGIN
   FOREACH label IN ARRAY ARRAY['teacher_a','teacher_b','student_a','student_b','student_c','replacement','expired','new_number','legacy_blank'] LOOP
     uid:=gen_random_uuid();
     INSERT INTO auth.users(id,aud,role,is_anonymous) VALUES(uid,'authenticated','authenticated',true);
     PERFORM set_config('test.'||label,uid::text,true);
   END LOOP;
-  INSERT INTO physical_internal.teacher_access VALUES
+  INSERT INTO physical_internal.teacher_access(user_id,expires_at) VALUES
     (current_setting('test.teacher_a')::uuid,now()+interval '2 hours'),
     (current_setting('test.teacher_b')::uuid,now()+interval '2 hours');
 END $$;

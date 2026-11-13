@@ -1,4 +1,24 @@
-# React + TypeScript + Vite
+# 땀방울 원정대
+
+저장소: `gmlduqzhd-eng/physical`. 앱은 React + TypeScript + Vite이며,
+배포 빌드 설정은 `vercel.json`을 기준으로 한다.
+
+## 2026-11-13 서버 보완 작업
+
+기준 HEAD는 `96aa15b058fe8b0e6939ddf7c0cdc29b2ac498fe`이고 작업 브랜치는
+`codex/server-hardening-20261113`이다. 기존 미커밋 폴더와 분리해 작성했다.
+**운영 DB 적용·초기화·배포·push는 하지 않았다.**
+
+- [신규 설치·기존 DB 업그레이드 절차](docs/SERVER_HARDENING_RUNBOOK.md)
+- [권한 매트릭스](docs/SERVER_HARDENING_PERMISSION_MATRIX.md)
+- [실제 검증 결과와 미실행 항목](docs/SERVER_HARDENING_VERIFICATION.md)
+
+`supabase_schema.sql`은 파괴적 구형 설치를 차단한다. 빈 Supabase DB에는
+`supabase/install_empty.psql`을, 기존 DB에는 검토한 신규 migration만 사용한다.
+기존 migration 파일을 다시 실행해 운영을 복구하거나 과거 작업 폴더를 통째로
+배포하지 않는다. 자세한 순서와 검증 명령은 위 문서를 따른다.
+
+## 기존 개발 템플릿 안내
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

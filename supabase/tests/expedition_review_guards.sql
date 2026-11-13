@@ -1,6 +1,8 @@
+\ir assert_isolated.sql
 BEGIN;
 CREATE TEMP TABLE workshop_results(label text);
 CREATE FUNCTION pg_temp.ws_check(ok boolean,label text) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$ BEGIN IF ok IS DISTINCT FROM true THEN RAISE EXCEPTION 'WORKSHOP FAILED: %',label; END IF; INSERT INTO pg_temp.workshop_results VALUES(label); END $$;
+GRANT EXECUTE ON FUNCTION pg_temp.ws_check(boolean,text) TO authenticated,anon;
 DO $$ DECLARE uid uuid; label text; BEGIN
  FOREACH label IN ARRAY ARRAY['owner','other','a','b','c','d','e','f','viewer'] LOOP
   uid:=gen_random_uuid();INSERT INTO auth.users(id,aud,role,is_anonymous) VALUES(uid,'authenticated','authenticated',true);PERFORM set_config('ws.'||label,uid::text,true);

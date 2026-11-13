@@ -1,3 +1,5 @@
+\ir assert_isolated.sql
+BEGIN;
 -- Transaction-only assertions; no real room, account or result writes.
 DO $$ DECLARE table_name text; role_name text; BEGIN
  FOREACH table_name IN ARRAY ARRAY['bomb_defusal_scores','game_controls'] LOOP
@@ -41,3 +43,4 @@ DO $$ DECLARE status jsonb; BEGIN
 END; $$;
 RESET ROLE;
 SELECT 'reviewed access assertions passed' AS result;
+ROLLBACK;
