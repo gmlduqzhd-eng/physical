@@ -5,7 +5,8 @@
 dist-teacher
 outputs
 docs/*
-!docs/licenses/
+!docs/licenses
+!docs/licenses/MediaPipe-Apache-2.0.txt
 !docs/game-review-225-2026-10-22.json
 !docs/game-revamp-roadmap.json
 supabase
