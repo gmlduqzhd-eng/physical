@@ -7,11 +7,14 @@
 
 기준 HEAD는 `96aa15b058fe8b0e6939ddf7c0cdc29b2ac498fe`이고 작업 브랜치는
 `codex/server-hardening-20261113`이다. 기존 미커밋 폴더와 분리해 작성했다.
-**운영 DB 적용·초기화·배포·push는 하지 않았다.**
+최초 격리 검증 이후 명시 승인을 받아 2026-11-13 신규 마이그레이션 3개를
+운영 DB에 적용하고 실제 교사·학생·TV 동작을 확인한 뒤 배포했다.
+운영 초기화와 비밀 교체는 수행하지 않았다.
 
 - [신규 설치·기존 DB 업그레이드 절차](docs/SERVER_HARDENING_RUNBOOK.md)
 - [권한 매트릭스](docs/SERVER_HARDENING_PERMISSION_MATRIX.md)
 - [실제 검증 결과와 미실행 항목](docs/SERVER_HARDENING_VERIFICATION.md)
+- [백업·운영 적용·실동작 확인 기록](docs/SERVER_HARDENING_PRODUCTION_20261113.md)
 
 `supabase_schema.sql`은 파괴적 구형 설치를 차단한다. 빈 Supabase DB에는
 `supabase/install_empty.psql`을, 기존 DB에는 검토한 신규 migration만 사용한다.

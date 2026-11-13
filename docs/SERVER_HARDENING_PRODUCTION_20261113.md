@@ -68,6 +68,19 @@ statements를 같은 transaction 안에 등록했다. 적용 후 이번 실행�
 - 종료 trigger가 번호·별명을 NULL로 비웠다. 결과 권한용 membership 자체는 기존 정책대로
   유지된다. 테스트 JWT는 로그아웃했고 이번에 생성한 합성 Auth 사용자만 정확히 식별해 제거했다.
 
+## 배포와 최종 공개 확인
+
+배포 패키지에서 MediaPipe 라이선스가 제외되는 문제로 첫 staged build가 차단됐다.
+공개 도메인에는 전환하지 않았으며 `.vercelignore`의 디렉터리/파일 예외를 명시해 고쳤다.
+dry-run에서 해당 파일 포함과 private 파일 미포함을 확인했다. 변경은 `gmlduqzhd-eng`
+계정의 `main`에 push했고 기존 Vercel 프로젝트의 Git 배포가 READY로 완료됐다.
+원격 배포 gate의 회귀 검사·서버 타입 검사·메인/교사 UI 빌드도 통과했다.
+
+공개 메인·classroom API·교사 studio·교사 API 모두 HTTP 200/health OK였다.
+실제 브라우저에서도 수정한 Google 로그인 안내와 종료한 시험 방의 TV 결과 2,000점이
+표시됐다. 교사 studio의 소스 변경/별도 신규 배포나 실제 AI 생성 검사는 포함하지 않았다.
+테스트 VM과 로컬 PostgreSQL은 종료했다.
+
 ## Advisor 및 검증 한계
 
 운영 Advisor에서 RLS initplan 경고 6건과 FK 인덱스 누락 7건이 사라졌다. 새 인덱스는
