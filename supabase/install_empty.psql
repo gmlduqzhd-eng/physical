@@ -39,5 +39,7 @@ SET LOCAL physical.empty_install='transactional';
 \ir migrations/20261113092338_optimize_classroom_policy_and_fk_indexes.sql
 \ir migrations/20261113123020_reduce_health_rpc_privileges.sql
 \ir migrations/20261113123026_reject_missing_translation_author_hash.sql
+\ir migrations/20261113135026_prepare_private_translation_rpc_schema.sql
+\ir migrations/20261113135028_isolate_shared_translation_rpc_implementations.sql
 \ir bootstrap/finish_empty_install.sql
 COMMIT;

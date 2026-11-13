@@ -1,5 +1,8 @@
 # 남은 Security Advisor 점검과 안전 보완
 
+이 문서는 첫 후속 보완 당시의 기록이다. 아래 공유 번역 RPC 24건의 후속 조치와 최신
+검증은 [비공개 구현 분리 기록](TRANSLATION_RPC_ISOLATION_20261113.md)을 따른다.
+
 대상: `gmlduqzhd-eng/physical`, Supabase `tjrrtgdhtjdkofwqnxnz`.
 기준 HEAD `0792fec817896c98eaa7ebcd222e8368063f0c64`. 운영 기존 40개 방·221개 모둠·
 60,940점에는 이전 단계에서 종료한 합성 시험 방 1개/2,000점이 포함된다.

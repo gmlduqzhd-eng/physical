@@ -49,7 +49,7 @@ try{
   await run("SET physical.test_database='on'");
   if(!verifyOnly){
   await assertSql("to_regclass('public.game_rooms') IS NULL AND (SELECT count(*)=0 FROM auth.users)",'pristine app/Auth fixture required');
-  assert(patches.length===3&&baseline.length===30&&followups.length===2,'baseline, three original supplements and two advisor repairs identified');
+  assert(patches.length===3&&baseline.length===30&&followups.length===4,'baseline, three original supplements and four advisor repairs identified');
   const install=fs.readFileSync(path.join(root,'supabase/install_empty.psql'),'utf8');
   const ordered=[...install.matchAll(/^\\ir migrations\/(.+)$/gm)].map(m=>m[1]);
   assert(JSON.stringify(ordered)===JSON.stringify(migrations),'empty installer includes every migration once in ascending order');
@@ -106,7 +106,7 @@ try{
 
   phase='complete empty installation';
   await run(flat('supabase/install_empty.psql'));
-  pass('empty DB installation: base + all 35 ordered migrations + finalization');
+  pass('empty DB installation: base + all 37 ordered migrations + finalization');
   } else {
     await assertSql("to_regclass('public.game_rooms') IS NOT NULL AND (SELECT count(*)=0 FROM auth.users) AND (SELECT count(*)=0 FROM public.game_rooms)",'installed empty fixture required for --verify');
   }

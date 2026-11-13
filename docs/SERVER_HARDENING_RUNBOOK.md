@@ -42,7 +42,7 @@ psql -X -v ON_ERROR_STOP=1 -f supabase/install_empty.psql
 ```
 
 실행 순서는 기본 스키마 → 파일명 오름차순의 기존 30개 migration → 첫 보완 3개 →
-후속 Advisor 보완 2개 → finalization이다. 총 35개이며 전체가 한 transaction에서 실행되고
+후속 Advisor 보완 2개 → 선택적 공유 RPC 경계 보완 2개 → finalization이다. 총 37개이며 전체가 한 transaction에서 실행되고
 오류 시 전부 rollback된다. 후속 항목은 [Advisor 보완 기록](SECURITY_ADVISOR_REVIEW_20261113.md)을 따른다.
 초기 테이블은 RLS가 켜져 있고 client 접근은 닫혀 있다. 기존 migration이 일시적으로
 생성하는 과거 ledger 정책 4개도 commit 전에 제거된다. 이전 migration을 편집하거나
@@ -58,7 +58,7 @@ psql -X -v ON_ERROR_STOP=1 -f supabase/install_empty.psql
 ### psql 설치 후 이력 등록
 
 이 설치기는 SQL 스키마를 설치하며 Supabase CLI migration 이력을 임의로 조작하지
-않는다. 위 설치가 **새 DB에서 전부 성공했음을 확인한 뒤에만** 설치한 35개 버전을
+않는다. 위 설치가 **새 DB에서 전부 성공했음을 확인한 뒤에만** 설치한 37개 버전을
 CLI 이력에 등록한다. 그렇지 않으면 이후 `db push`가 기존 파일을 다시 실행할 수 있다.
 확인한 CLI 2.102.0의 `migration repair --help`는 여러 version과 `--status applied`,
 `--db-url`을 지원한다. 다른 버전은 먼저 `--help`를 확인한다.

@@ -6,7 +6,7 @@ import path from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-for(const script of ['test-server-hardening.mjs','test-server-hardening-live.mjs','test-security-advisor.mjs','inspect-server-hardening.mjs']){
+for(const script of ['test-server-hardening.mjs','test-server-hardening-live.mjs','test-security-advisor.mjs','test-translation-rpc-isolation.mjs','inspect-server-hardening.mjs']){
   test(script+' rejects unsafe targets and never reflects private configuration',()=>{
     const dir=fs.mkdtempSync(path.join(os.tmpdir(),'physical-hardening-'));
     const config=path.join(dir,'fixture.local');
