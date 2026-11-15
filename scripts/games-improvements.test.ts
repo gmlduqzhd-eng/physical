@@ -12,8 +12,8 @@ import {FLAGSHIP_IDS,type ExpeditionSnapshot} from '../src/domain/flagship';
 import {expeditionNextStep,rhythmTimingHint} from '../src/domain/expeditionGuidance';
 import {readStorage,writeStorage,isPrivateDeviceKey,deviceStorageGeneration,clearDeviceInformation} from '../src/application/browserStorage';
 
-test('all 214 current activities and 111 retained course addresses remain distinct and routable',()=>{
- assert.equal(AVAILABLE_GAMES.length,214);assert.equal(GAMES.length,331);assert.equal(new Set(GAMES.map(g=>g.type)).size,331);assert.equal(MERGED_GAMES.length,111);
+test('all 152 current activities and 111 retained course addresses remain distinct and routable',()=>{
+ assert.equal(AVAILABLE_GAMES.length,152);assert.equal(GAMES.length,331);assert.equal(new Set(GAMES.map(g=>g.type)).size,331);assert.equal(MERGED_GAMES.length,111);
  for(const game of MERGED_GAMES){assert(AVAILABLE_GAMES.some(g=>g.type===game.target));assert(mergedGameUrl('/play/'+game.id,game.id,'?room=retained','')?.includes('variant='+game.id));}
  assert(getRemovedGame('coin_flip'));assert(AVAILABLE_GAMES.every(g=>!hasAntiCheatSensor(g.type)));
 });
@@ -37,7 +37,7 @@ test('denied browser storage keeps game records only in bounded memory',()=>{
  try{writeStorage('physical_best_phone-play-001','local-only');assert.equal(readStorage('physical_best_phone-play-001'),'local-only');clock+=9*3600000;assert.equal(readStorage('physical_best_phone-play-001'),null);}finally{Date.now=realNow;Object.defineProperty(globalThis,'window',{configurable:true,value:previous});}
 });
 test('expression guides remove the reviewed tumbling, running, neck wrapping and forced contact instructions',()=>{
- const active=new Set(AVAILABLE_GAMES.map(g=>g.type)),games=EXPRESSION_GAMES.filter(g=>active.has(g.id));assert.equal(games.length,37);
+ const active=new Set(AVAILABLE_GAMES.map(g=>g.type)),games=EXPRESSION_GAMES.filter(g=>active.has(g.id));assert.equal(games.length,35);
  const positive=/공중제비 후|목 뒤에 대고|팔짱을 끼고|회전 질주|머리를 땅에 대며|높은 점프와 빠른 2회전|방향을 불규칙하게 바꾸며 달려|교실의 빈 공간을 자유롭게 가속하며 달립|빠른 비트에 맞추어 폭격|한 바퀴 돌고 안전하게 낚아챕/;
  for(const game of games)for(const step of game.steps){assert(!positive.test(step.title+' '+step.guide+' '+step.actionTip),game.id);assert(step.durationSeconds>0&&step.guide);}
  const ribbon=games.find(g=>g.id==='ribbon_gymnast')!;assert(ribbon.steps[2].guide.includes('손에 잡은 채'));
@@ -58,8 +58,8 @@ test('creative choices change active sequences; strategy choices select the actu
 test('memory challenge uses four concrete items and validates the sequence shown before movement',()=>{
  for(const p of PHONE_PLAYS.filter(p=>p.kind==='memory')){const task=phoneMemoryTask(p,0,false,true),answer=task.expected;assert.equal(task.base.length,p.id==='phone-play-033'?3:4);const record={round:0,outcome:'complete' as const,elapsedMs:p.seconds*1000,count:0,participants:[1],answer,challenge:true};assert(phoneRecordValid(p,record,1));assert(!phoneRecordValid(p,{...record,answer:[]},1));}
 });
-test('all 34 standalone expeditions provide rehearsal, relaxed pacing and alternatives',()=>{
- const games=AVAILABLE_GAMES.filter(g=>EXPEDITION_BY_ID.get(g.type)?.kind==='B');assert.equal(games.length,34);for(const g of games)assert(isRevampedExpedition(g.type),g.type);
+test('all 26 standalone expeditions provide rehearsal, relaxed pacing and alternatives',()=>{
+ const games=AVAILABLE_GAMES.filter(g=>EXPEDITION_BY_ID.get(g.type)?.kind==='B');assert.equal(games.length,26);for(const g of games)assert(isRevampedExpedition(g.type),g.type);
 });
 test('six flagship guides reflect actual waiting, voting, control and finishing states',()=>{
  const group={id:'group',name:'모둠',visited:[],vote:null,done:false,ship:{checkpoint:0},axes:[],loop:[],quality:0};

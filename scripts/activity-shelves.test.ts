@@ -12,12 +12,12 @@ test('every shelf entry is an available activity and no activity sits on two she
 });
 test('a similar activity points at a representative that is itself shown, never at another hidden one',()=>{
  for(const [id,target] of SIMILAR_TO){assert.notEqual(id,target);assert(!SIMILAR_TO.has(target),`${id} → ${target} chains`);assert.equal(similarRepresentative(id)?.type,target);if(activityShelf(id)==='similar')assert(shelfLabel(id).startsWith('비슷한 활동: ')&&shelfLabel(id).length>8,id);else assert.equal(activityShelf(id),'understanding',id);}
- assert.equal(SIMILAR_TO.size,60);
+ assert.equal(SIMILAR_TO.size,19);
 });
-test('nothing is removed: every available activity has exactly one shelf and the counts add up',()=>{
+test('every available activity has exactly one shelf and the counts add up',()=>{
  const count={core:0,more:0,similar:0,understanding:0};for(const g of AVAILABLE_GAMES)count[activityShelf(g.type)]++;
  assert.equal(count.core+count.more+count.similar+count.understanding,AVAILABLE_GAMES.length);assert.equal(count.core,CORE_ACTIVITY_IDS.length);assert.equal(count.understanding,UNDERSTANDING_IDS.length);
- assert(count.similar>=58&&count.similar<=60,'two understanding activities are also similar and count as understanding');
+ assert.equal(count.similar,[...SIMILAR_TO.keys()].filter(id=>!UNDERSTANDING_IDS.includes(id)).length,'an activity that is both similar and understanding counts as understanding');
 });
 test('understanding activities are not counted as movement time',()=>{
  for(const id of UNDERSTANDING_IDS)assert(!isMovementActivity(AVAILABLE_GAMES.find(g=>g.type===id)!),id);

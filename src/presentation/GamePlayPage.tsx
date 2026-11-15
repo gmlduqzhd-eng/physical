@@ -224,7 +224,7 @@ Object.values(CURRICULUM_GAMES_META).forEach(cm => {
 
 QUEST_IDS.forEach(id => { GAME_TITLES[id] = { ...GAME_TITLES[id], name: QUEST_META[id].name, emoji: QUEST_META[id].emoji, target: QUEST_META[id].description }; });
 FLAGSHIP_GAMES.forEach(g=>{GAME_TITLES[g.type]={name:g.name,emoji:g.emoji,domain:g.domain,code:g.achievement.code,target:g.achievement.title};});
-PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:p.emoji,domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
+ALL_PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:p.emoji,domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
 
 SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
 
@@ -804,5 +804,5 @@ const GamePlaySession = () => {
   );
 };
 
-import {PHONE_PLAY_BY_ID,PHONE_PLAYS,isPhonePlay} from '../domain/phonePlayCatalog';
+import {PHONE_PLAY_BY_ID,ALL_PHONE_PLAYS,isPhonePlay} from '../domain/phonePlayCatalog';
 import {PhonePlay} from './components/minigames/common/PhonePlay';

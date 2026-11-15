@@ -1,4 +1,5 @@
 import {phoneMemoryTask,phoneFillOptions} from './phoneTaskRules.js';
+import {isAvailableGame} from './gameLifecycle.js';
 import type {GameDef} from './gamesData.js';
 import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
 import {PHONE_PLAY_VISUALS,type PhonePlayVisual} from './phonePlayVisuals.js';
@@ -27,18 +28,21 @@ const rows:PhonePlayRow[]=[
  [91,'움직임 뒤 몸의 날씨',7,'observe','혼자','제자리','작은 움직임 전후의 몸 느낌을 날씨 몸짓으로 표현해요.','편안한 제자리걸음 뒤 멈춰 몸 느낌을 살펴요|맑음·구름·바람 중 가까운 느낌을 팔로 표현해요|좋고 나쁨을 겨루지 않고 바뀐 느낌을 기억해요','걸음 전 몸 느낌을 표현해요|작은 걸음 뒤 느낌을 표현해요|쉬어 본 뒤 달라진 점을 표현해요','작은 걸음|편안히 멈춤|느낌을 몸짓으로','움직임 전후의 느낌을 비교했나요?','발을 옮기지 않고 손을 천천히 펴요.','느낌이 달라진 이유를 한 문장으로 말해요.','앉아서 손바닥 펴기 전후의 몸 느낌을 살펴요.','pulse-detective'],
 ];
 
-export const PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
+/** 지금까지 만든 놀이 전부. 옛 기록과 옛 주소를 읽을 때 쓴다. */
+export const ALL_PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
  ...PHONE_PLAY_VISUALS[`phone-play-${String(n).padStart(3,'0')}`],
  id:`phone-play-${String(n).padStart(3,'0')}`,name,category:PHONE_CATEGORIES[c],kind,players,space,
  intensity:c===7||c===1?'낮음':'보통',minutes:players==='모둠'?6:4,seconds:players==='모둠'?36:24,
  goal,rules:rules.split('|'),rounds:rounds.split('|'),cues:cues.split('|'),check,easy,hard,seated,related,options:options?.split('|'),
 }));
-export const PHONE_PLAY_BY_ID=new Map(PHONE_PLAYS.map(p=>[p.id,p]));
+/** 목록에 보이는 놀이. 2026-11 정리로 모은 놀이는 빠진다. */
+export const PHONE_PLAYS:PhonePlay[]=ALL_PHONE_PLAYS.filter(p=>isAvailableGame(p.id));
+export const PHONE_PLAY_BY_ID=new Map(ALL_PHONE_PLAYS.map(p=>[p.id,p]));
 export const isPhonePlay=(id:string)=>PHONE_PLAY_BY_ID.has(id);
 export const phonePlayerRange=(p:PhonePlay)=>p.players==='혼자'?{min:1,max:1}:p.players==='짝'?{min:2,max:2}:{min:3,max:6};
 export const phoneSetup=(p:PhonePlay)=>`${p.space==='제자리'?'팔다리를 펼쳐도 닿지 않는 제자리 공간':p.space==='두 걸음'?'각자 두 걸음 왕복할 통로':'서로 겹치지 않는 넉넉한 개인 통로'} · 스마트폰 1대는 활동 구역 밖 안전한 곳에 내려놓아요. 표시물·가구·촬영은 필요 없어요.`;
 export const phoneSafety=['기기를 손에 들고 움직이지 않아요. 이동은 걷기로 하고 기기 쪽으로 접근하지 않아요.','서로 닿지 않는 간격을 확인하고 불편하면 멈추거나 작은 동작을 선택해요. 눈을 감거나 접촉을 강요하지 않아요.'];
-export const PHONE_GAME_DEFS:GameDef[]=PHONE_PLAYS.map(p=>({
+export const PHONE_GAME_DEFS:GameDef[]=ALL_PHONE_PLAYS.map(p=>({
  type:p.id,name:p.name,emoji:p.emoji,desc:p.goal,
  color:'from-teal-600 to-cyan-700',border:'border-teal-400/40',glow:'hover:shadow-teal-500/30',difficulty:p.kind==='decision'?3:2,
  domain:p.category==='리듬·표현'?'표현':'운동',subCategory:p.category,

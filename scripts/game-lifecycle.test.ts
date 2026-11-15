@@ -8,7 +8,7 @@ import {normalizePlayerProfile} from '../src/application/usePlayerProfile';
 import {resolveGuidedGameType} from '../src/domain/guidedMission';
 test('all 117 decisions have a direct live destination or a tombstone, with no chains or lost metadata',()=>{
  const a=JSON.parse(readFileSync('docs/game-review-225-2026-10-22.json','utf8'));
- assert.equal(MERGED_GAMES.length,111);assert.equal(REMOVED_GAMES.length,6);
+ assert.equal(MERGED_GAMES.length,111);assert.equal(REMOVED_GAMES.length,68);
  assert.deepEqual(new Set(MERGED_GAMES.map(g=>g.id)),new Set(a.rows.filter((r:{decision:string})=>r.decision==='통합').map((r:{id:string})=>r.id)));
  for(const m of MERGED_GAMES){assert.equal(a.rows.find((r:{id:string})=>r.id===m.id).target,m.target);assert(GAMES.some(g=>g.type===m.target));assert(!MERGED_GAMES.some(g=>g.id===m.target));assert(!REMOVED_GAMES.some(g=>g.id===m.target));}
  assert.equal(GAMES.length,225);assert.equal(new Set(GAMES.map(g=>g.type)).size,225);
