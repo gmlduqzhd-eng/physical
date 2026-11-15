@@ -75,17 +75,33 @@ function readGameInventory() {
       active = { game: game.type, name: game.name, engine, viewport, mobile, pageErrors: [], consoleErrors: [], status: 'pass' };
       try {
         await page.goto(base + playPrefix + encodeURIComponent(game.type), { waitUntil: 'domcontentloaded' });
+        // Activities with their own introduction (phone plays, movement quests, expeditions, flagship,
+        // safety lessons and a few stand-alone games) open straight into the game area; the others
+        // show the shared preparation screen with a start button first.
         const normal = page.getByRole('button', { name: '활동 시작', exact: true });
-        await normal.waitFor({ state: 'visible', timeout: 15000 });
-        await activate(normal);
-        const skip = page.getByRole('button', { name: /준비 완료/ });
-        if (await skip.count()) await activate(skip);
-        else {
-          const expedition = page.getByRole('button', { name: '원정 시작', exact: true });
-          await activate(await expedition.count() ? expedition : page.getByRole('button', { name: /활동 시작하기/ }));
-          await page.waitForTimeout(3300);
+        const content = page.locator('.gameplay-content');
+        const retired = page.locator('[data-retired]');
+        await normal.or(content).or(retired).first().waitFor({ state: 'visible', timeout: 15000 });
+        if (await retired.count()) {
+          // A retired game shows a notice with a link to its replacement and never starts.
+          active.retired = true;
+          active.replacement = await retired.locator('a[href*="/play/"]').first().getAttribute('href');
+          if (!active.replacement || active.pageErrors.length) active.status = 'fail';
+          report.cases.push(active);
+          if (active.status === 'fail') console.log('FAIL ' + viewport.width + ' ' + game.type + ' retired notice without a replacement link');
+          continue;
         }
-        await page.locator('.gameplay-content').waitFor({ state: 'visible' });
+        active.redirectedTo = new URL(page.url()).pathname.split('/').pop() !== encodeURIComponent(game.type) ? new URL(page.url()).pathname + new URL(page.url()).search : undefined;
+        active.sharedPreparation = await normal.isVisible();
+        if (active.sharedPreparation) {
+          await activate(normal);
+          const skip = page.getByRole('button', { name: /준비 완료/ });
+          const own = page.getByRole('button', { name: '원정 시작', exact: true }).or(page.getByRole('button', { name: /활동 시작하기/ }));
+          await skip.or(own).or(content).first().waitFor({ state: 'visible', timeout: 8000 });
+          if (await skip.count()) await activate(skip);
+          else if (await own.count()) { await activate(own.first()); await page.waitForTimeout(3300); }
+        }
+        await content.waitFor({ state: 'visible', timeout: 15000 });
         await page.waitForTimeout(350);
         active.layout = await page.evaluate(expectedWidth => ({
           width: window.innerWidth,
@@ -122,6 +138,15 @@ function readGameInventory() {
           active.status = 'fail';
           await page.screenshot({ path: path.join(work, `catalog-fail-${engine}-${viewport.width}-${game.type}.png`), fullPage: true });
         }
+        // The touched control may have opened an information dialog (for example the curriculum note of an
+        // expression activity). Close it the way a person would before leaving the game.
+        const infoDialog = page.locator('[role="dialog"][aria-modal="true"]:not([aria-labelledby="activity-check-title"])').last();
+        if (await infoDialog.count() && await infoDialog.isVisible()) {
+          const close = infoDialog.getByRole('button', { name: /닫기|확인|돌아가기/ }).first();
+          if (await close.count()) await activate(close); else await page.keyboard.press('Escape');
+          await infoDialog.waitFor({ state: 'hidden', timeout: 3000 });
+          active.closedDialog = true;
+        }
         const activityDialog = page.locator('[role="dialog"][aria-labelledby="activity-check-title"]');
         if (await activityDialog.count()) await activate(activityDialog.getByRole('button', { name: '활동 목록으로' }));
         else {
@@ -136,7 +161,8 @@ function readGameInventory() {
         }
         }
         await page.waitForURL(url => url.pathname === hubPath, { timeout: 10000 });
-        await page.getByRole('heading', { name: /어떤 활동을 해 볼까요|땀방울 원정대|혼자 해보기/ }).first().waitFor({ state: 'visible', timeout: 10000 });
+        // The catalog is back when its activity cards are on screen (the hero heading has changed over time).
+        await page.locator('[data-game-card]').first().waitFor({ state: 'visible', timeout: 10000 });
         active.returnToHub = true;
         if (active.pageErrors.length) active.status = 'fail';
       } catch (error) { active.status = 'fail'; active.error = error.message; }
