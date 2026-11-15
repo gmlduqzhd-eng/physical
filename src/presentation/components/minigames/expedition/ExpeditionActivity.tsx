@@ -47,7 +47,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const plan=(practicing?practicePlan:plans[round])!,current=plan?.steps[step];
   const resetRecord=useCallback((next:ExpeditionRound)=>{setParticipants([]);setChecks([]);setCounts(next.targets.map(()=>''));setAnswer(next.allocation?next.allocation.labels.map(()=>''):[]);setArrivals(Array(players).fill(null));setRevealed(false);setError('');setDetailOpen(false);},[players]);
   const beginRound=useCallback((index:number,all:ExpeditionRound[])=>{
-    elapsed.current=0;remaining.current=all[index].secret?5:3;setSeconds(remaining.current);setRound(index);setStep(0);setBeat(0);setPaused(false);resetRecord(all[index]);setPhase(all[index].secret?'preview':'countdown');
+    elapsed.current=0;remaining.current=all[index].secret?Math.max(5,all[index].secret!.length*2):3;setSeconds(remaining.current);setRound(index);setStep(0);setBeat(0);setPaused(false);resetRecord(all[index]);setPhase(all[index].secret?'preview':'countdown');
   },[resetRecord]);
   const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpeditionSteps(paceExpedition(drafted,revamped&&gentle),pace);setSeed(n=>n+1);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
   const stopActivity=()=>{if(phase!=='active'||paused)return;elapsed.current+=Math.max(0,performance.now()-last.current);last.current=performance.now();stop();setPhase('record');};

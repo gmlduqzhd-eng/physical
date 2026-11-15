@@ -9,7 +9,7 @@ export function expeditionGameDef(game: ExpeditionSpec): GameDef {
     difficulty: 2, domain: game.kind === 'A' || game.family === 'rhythm' ? '표현' : game.family === 'equipment' ? '스포츠' : '운동',
     subCategory: '몸으로 참여하는 원정 활동',
     achievement: { code: '연계 확인 필요', title: '신체 활동과 협동', desc: '공식 성취기준 연계는 교사 확인이 필요합니다.' },
-    grades: ['1~2학년', '3~4학년군', '5~6학년군'],
+    grades: game.grades ?? ['1~2학년', '3~4학년군', '5~6학년군'],
     activityType: game.players > 2 ? '모둠' : game.players === 2 ? '짝' : '개인',
     durationMinutes: game.kind === 'A' ? Math.ceil(game.expressionSteps!.reduce((sum,s)=>sum+s.seconds,0)/60) : 4,
     equipment: game.equipment, safetyTips: [game.safety, game.alternative], physicalActivity: true,

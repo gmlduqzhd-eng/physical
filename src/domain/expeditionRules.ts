@@ -19,6 +19,9 @@ export interface ExpeditionRecord {
   outcome?:'complete'|'partial'|'rest'|'observe'; alternative?:boolean;gentle?:boolean;
 }
 const colors=['빨강 ●','파랑 ▲','노랑 ■','초록 ◆'];
+/** 우리 자리 찾기의 표식 여섯 개(2줄 × 3칸). 행·열 좌표 대신 색과 모양으로 찾는다. */
+export const SPOT_MARKS=['빨강 ●','파랑 ▲','노랑 ■','초록 ◆','보라 ★','주황 ♥'] as const;
+const SHAPES=['한 줄','세모','네모'];
 const pick=(n:number,random:()=>number)=>Math.min(n-1,Math.max(0,Math.floor(random()*n)));
 export function shuffled<T>(items:T[],random:()=>number=Math.random):T[]{
   const result=[...items];for(let i=result.length-1;i>0;i--){const j=pick(i+1,random);[result[i],result[j]]=[result[j],result[i]];}return result;
@@ -53,10 +56,11 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
   const sequence=(labels:string[],verb:string)=>{plan.steps=tasks(labels.map(label=>`${verb}: ${label}`));};
   const roleCycle=(roles:string[])=>{plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${roles[(i+round)%roles.length]}`);};
   const memory=(items:string[],prompt:string)=>{plan.secret=items;plan.steps=tasks(['공개한 순서를 떠올리며 실제 표식에서 수행해요. 기기는 거치해 둡니다.'],items.length*6);plan.question={prompt,options:[...new Set([...items,...colors])],answer:items,ordered:true};plan.checks=['활동 중 순서 안내를 다시 보지 않고 시도했어요.'];};
+  const finish=()=>{if(game.minSeconds)plan.steps=plan.steps.map(step=>step.beats?step:{...step,seconds:Math.max(step.seconds,game.minSeconds!)});return plan;};
   switch(game.spec){
     case 'S01': sequence(noRepeatPath(3,colors,random).flatMap(c=>[c,'중앙 출발점']),'표식을 다녀와요');plan.targets=[{label:'중앙으로 돌아온 왕복 수',goal:3}];plan.checks=['매번 중앙으로 돌아왔어요.'];break;
     case 'S02': sequence(noRepeatPath(5,colors,random),'앞 지점에서 바로 다음 색으로 걸어요');plan.checks=['중앙 귀환 없이 색 사이를 이어 갔어요.'];break;
-    case 'S03': {const directions=noRepeatPath(4,['왼쪽','오른쪽'],random);plan.steps=directions.map((d,i)=>({title:i%2?'반전 규칙':'정상 규칙',instruction:`${i%2?'반전! 반대쪽':'정상! 부른 쪽'}으로 옆걸음. 지령: ${d} · 이동: ${i%2?(d==='왼쪽'?'오른쪽':'왼쪽'):d}`,seconds:8}));break;}
+    case 'S03': {const directions=noRepeatPath(4,['왼쪽','오른쪽'],random),flips=shuffled([false,false,true,true],random);plan.steps=directions.map((d,i)=>({title:flips[i]?'거꾸로':'그대로',instruction:`${flips[i]?'거꾸로!':'그대로!'} ${d} · ${flips[i]?'부른 쪽의 반대로':'부른 쪽으로'} 옆걸음`,seconds:8}));plan.checks=['“거꾸로!”에는 반대쪽, “그대로!”에는 부른 쪽으로 움직였어요.'];break;}
     case 'S04': plan.board=makeBoard(round,random);sequence(plan.board.path.map(i=>`${Math.floor(i/4)+1}행 ${i%4+1}열`),'금지 칸을 피해 정한 길로 걸어요');plan.checks=['금지 칸을 지나지 않았어요.'];break;
     case 'S05': memory(noRepeatPath(3+round,colors,random),'기억해서 방문한 순서');break;
     case 'S06': {const nums=shuffled([1,2,3,4,5,6],random),a=nums[0],b=nums[1];plan.steps=tasks([`목표 합 ${a+b}. 바닥 숫자 1~6에서 합을 만드는 두 곳을 방문하고 돌아와요.`],20);plan.question={prompt:`방문한 두 숫자 (합 ${a+b})`,options:['1','2','3','4','5','6'],answer:[String(a),String(b)],ordered:false};plan.kind='sum';break;}
@@ -84,18 +88,18 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'S33': sequence([`${turn} 문으로 공 굴리기·짝은 옆걸음으로 막기`,'공격과 수비 역할 바꾸기',`${other} 문으로 굴리기·옆걸음으로 막기`],'분리된 통로에서 공을 막아요');roleCycle(['공 굴리기','문 수비']);plan.checks=['공격과 수비를 모두 했어요.'];break;
     case 'S34': sequence(['짝에게 공 보내기','보낸 사람은 세 표식 중 빈자리로 이동','새 위치에서 다시 받기'],'세 표식으로 패스 연결');plan.targets=[{label:'끊김 없이 연결',goal:3}];plan.checks=['두 사람이 공 보내기와 자리 이동을 모두 했어요.'];break;
     case 'S35': sequence(rotate(['1번 정거장: 왼손','2번 정거장: 오른손','3번 정거장: 양손 번갈아'],round),'풍선을 띄우며 방문해요. 떨어지면 현재 구간부터 다시');break;
-    case 'S36': sequence(noRepeatPath(3,colors,random).flatMap(c=>[`${c} 문으로 발 드리블`,`${c} 문 뒤 원 안에 공 멈추기`]),'색문 탈출');plan.checks=['각 문 뒤 원 안에서 공을 멈추어 봤어요.'];break;
+    case 'S36': sequence(noRepeatPath(3,colors,random).flatMap(c=>[`${c} 콘까지 발로 공 몰기`,`${c} 콘 옆에서 발바닥으로 공 멈추기`]),'색 콘 드리블');plan.checks=['콘마다 발바닥으로 공을 멈추어 봤어요.'];break;
     case 'S37': sequence(['왼쪽 표식으로 옆걸음해 부드러운 공 받기','가운데로 돌아온 뒤 오른쪽 표식으로 이동해 받기','보내기·받기 역할 바꾸기'],'한 걸음 리시브');roleCycle(['공 보내기','옆걸음 리시브']);break;
     case 'S38': sequence(rotate(['1번 정거장: 라켓 위 공을 멈추기','2번 정거장: 한 번 튀기고 받기','3번 정거장: 방향 바꿔 돌아오기'],round),'라켓으로 세 정거장을 걸어요');plan.checks=['세 정거장의 다른 동작을 시도했어요.'];break;
     case 'S39': plan.bingoCells=shuffled([round*3,round*3+1,round*3+2],random);plan.targets=plan.bingoCells.map(cell=>({label:`${cell+1}번 칸`,goal:1}));plan.steps=tasks([`${number}번 출발 위치에서 배정된 세 숫자 표적으로 굴려요.`,'회수 신호에 공을 가져오고 출발 위치를 바꿔요.']);plan.checks=['공을 직접 회수하고 출발 위치를 바꿨어요.'];plan.kind='bingo';break;
     case 'S40': sequence([`${turn} 쪽 한 걸음: 각자 스카프 띄우고 오른손으로 상대 스카프 받기`,`${other} 쪽 한 걸음: 왼손으로 바꿔 받기`],'서로 부딪치지 않는 거리에서 바꿔잡기');plan.targets=[{label:'오른손 조합',goal:2},{label:'왼손 조합',goal:2}];break;
-    case 'T01': {const positions=shuffled(Array.from({length:16},(_,i)=>i),random).slice(0,players);plan.steps=tasks(['개인 통로의 바닥 격자에서 자신에게 배정된 좌표를 찾아 이동해요.'],20);plan.roles=positions.map((p,i)=>`${i+1}번: ${Math.floor(p/4)+1}행 ${p%4+1}열`);plan.checks=['화면에 배정된 좌표를 전원이 직접 확인했어요.'];break;}
-    case 'T02': sequence([['삼각형','사각형','마름모'][round],'각자의 통로로 흩어져 걷기','같은 대형을 다시 만들기'],'다른 사람을 밀지 않고 대형을 만들어요');plan.checks=[`${['삼각형','사각형','마름모'][round]} 대형을 직접 보고 확인했어요.`];break;
+    case 'T01': {const spots=shuffled([...SPOT_MARKS],random).slice(0,players);plan.steps=tasks(['내가 맡은 색·모양 표식을 찾아 걸어가 서요. 모두 서면 손을 들어요.'],20);plan.roles=spots.map((spot,i)=>`${i+1}번: ${spot}`);plan.checks=['모두 자기 표식에 섰어요.'];break;}
+    case 'T02': {const shape=SHAPES[round%SHAPES.length];sequence([`${shape} 모양으로 서기`,'흩어져 천천히 걷기',`다시 ${shape} 모양으로 서기`],'서로 밀지 않고 모양을 만들어요');plan.checks=[`${shape} 모양을 서로 보고 확인했어요.`];break;}
     case 'T03': {const first=1+pick(players-1,random);plan.allocation={labels:['왼쪽 섬','오른쪽 섬'],counts:[first,players-first]};plan.steps=tasks([`왼쪽 섬 ${first}명, 오른쪽 섬 ${players-first}명으로 나누어 이동해요.`],20);plan.targets=[];break;}
     case 'T04': plan.board=makeBoard(round,random);plan.steps=tasks(['개인 통로에서 지도에 남아 있는 길을 정해 보급품을 옮겨요.','출발점으로 돌아와 바뀐 도로를 확인해요.']);plan.checks=['막힌 도로 대신 연결된 다른 길로 이동했어요.'];break;
     case 'T05': memory(shuffled(colors,random).slice(0,players),'번호 순으로 실제 섰던 색 표식');plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${i+1}번째 배치 기억`);break;
-    case 'T06': {const word=turn,color=other;const meaning=round%2===0;plan.wordCue={text:word,color:['#bf3030','#1e5db8','#926b00','#23733f'][(round+1)%4],rule:meaning?'글자의 뜻':'글자의 색'};plan.steps=tasks([`현재 규칙: ${meaning?'글자의 뜻':'글자의 색'}. 각자의 네 갈래 통로에서 답을 다녀와요.`],18);plan.question={prompt:'다녀온 길의 표식',options:colors,answer:[meaning?word:color],ordered:true};break;}
-    case 'T07': plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${[['1→2→3→4','2→4→6→8','1→3→5→7','8→6→4→2'][(i+round)%4]]}`);plan.steps=tasks(['각자의 숫자 통로에서 배정받은 순서를 따라 걷고 돌아와요.'],24);plan.checks=['전원이 자신에게 배정된 서로 다른 숫자 규칙을 시도했어요.'];break;
+    case 'T06': {const word=turn,color=other;const meaning=round<2;plan.wordCue={text:word,color:['#bf3030','#1e5db8','#926b00','#23733f'][(round+1)%4],rule:meaning?'글자의 뜻':'글자의 색'};plan.steps=tasks([`이번 규칙: ${meaning?'글자의 뜻':'글자의 색'}. 한 사람씩 맞는 색 표식을 다녀와요.`],18);plan.question={prompt:'다녀온 길의 표식',options:colors,answer:[meaning?word:color],ordered:true};break;}
+    case 'T07': plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${[['1→2→3→4','2→4→6→8','1→3→5→7','8→6→4→2'][(i+round)%4]]}`);plan.steps=tasks(['숫자줄에서 내 순서대로 카드를 밟고 돌아와요. 한 사람씩 차례로 해요.'],24);plan.checks=['전원이 자신에게 배정된 서로 다른 숫자 규칙을 시도했어요.'];break;
     case 'T08': plan.board=makeBoard(round,random);plan.steps=tasks(['시작과 도착, 금지 칸을 보고 걸을 길을 정해요.','개인별로 분리된 바닥 미로에서 정한 길을 걸어요.'],15);plan.checks=['화면 지도와 실제 바닥 표식의 길을 비교했어요.'];break;
     case 'T09': roleCycle(['앞쪽을 교실 앞','앞쪽을 교실 오른쪽','앞쪽을 교실 뒤','앞쪽을 교실 왼쪽']);sequence(rotate(['앞','오른쪽','뒤','왼쪽'],round),'자기 기준 앞쪽에서 화살표를 해석해 걸어요');plan.checks=['기준 앞쪽이 바뀌어도 자기 경로를 따라갔어요.'];break;
     case 'T10': {const reverse=round%2===1;plan.steps=noRepeatPath(4,['초록 ●','파랑 ▲'],random).map(c=>({title:reverse?'규칙 교환':'기본 규칙',instruction:`${c}: ${(c.startsWith('초록')!==reverse)?'앞으로 걷기':'옆걸음'}. 틀려도 다음 신호부터 다시 참여해요.`,seconds:8}));break;}
@@ -113,15 +117,15 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'T31': sequence(['천 위 가벼운 공을 옆걸음으로 운반','넓은 회전 구간 통과','공이 떨어지지 않게 천을 함께 낮추고 도착'],'천 가장자리를 잡고 공동 배송');plan.checks=['손을 놓지 않고 서로 속도를 맞추어 봤어요.'];break;
     case 'T32': sequence(['짧은 홈통으로 공을 다음 사람에게 굴리기','보낸 사람은 빈 통로로 줄 끝에 이동','새 위치에서 홈통을 연결해 받기'],'움직이는 공 수로');plan.checks=['전원이 보내기 후 줄 끝으로 이동했어요.'];break;
     case 'T33': roleCycle(['사각 코스 앞 변','사각 코스 오른 변','사각 코스 뒤 변','사각 코스 왼 변']);plan.steps=tasks(['자기 변의 출발 바구니와 도착 바구니 사이를 왕복해 보급품을 옮겨요.'],25);plan.targets=Array.from({length:players},(_,i)=>({label:`${i+1}번 통로 배송`,goal:2}));break;
-    case 'T34': plan.steps=tasks(['개인 통로에서 고리를 한 걸음 앞쪽으로 옮겨요.','고리 안으로 걸어 들어간 뒤 다음 고리를 옮겨 도착해요.'],12);plan.checks=['다른 사람의 통로를 침범하지 않고 각자 다리를 건넜어요.'];break;
-    case 'T35': {const design=rotate(colors,round);plan.steps=tasks([`자기 구역에서 콘을 옮겨 설계도를 복원해요: ${design.join(' → ')}.`,'서로의 구역과 설계도를 비교해요. 다음 라운드에는 두 색 위치가 바뀌어요.'],15);plan.question={prompt:'번호 순으로 배치한 콘 색',options:colors,answer:design,ordered:true};plan.checks=['설계도와 실제 배치를 직접 비교했어요.'];break;}
+    case 'T34': plan.steps=tasks(['뒤에 있는 발판을 한 걸음 앞에 놓아요.','앞 발판으로 걸어 들어가고, 이것을 되풀이해 도착해요.'],12);plan.checks=['다른 사람의 통로를 침범하지 않고 각자 다리를 건넜어요.'];break;
+    case 'T35': {const design=rotate(colors,round);plan.steps=tasks([`한 사람이 콘 하나씩, 1~4번 자리에 이 순서로 놓아요: ${design.join(' → ')}.`,'그림과 실제 콘 순서를 비교해요. 다음 라운드에는 순서가 한 칸씩 돌아가요.'],15);plan.question={prompt:'번호 순으로 배치한 콘 색',options:colors,answer:design,ordered:true};plan.checks=['설계도와 실제 배치를 직접 비교했어요.'];break;}
     case 'T36': {const pieces=shuffled(['1','2','3','4'],random);plan.steps=tasks([`각자 경로에서 자기 번호 조각을 가져와요. 목표 암호는 ${pieces.join(' → ')}입니다.`,'모둠이 가져온 네 조각을 목표 순서로 조립해요.'],15);plan.question={prompt:'조립한 암호',options:['1','2','3','4'],answer:pieces,ordered:true};break;}
-    case 'T37': sequence(round%2?['모양 분류: 원 물건을 원 바구니로','모양 분류: 네모 물건을 네모 바구니로']:['색 분류: 빨강 물건을 빨강 바구니로','색 분류: 파랑 물건을 파랑 바구니로'],'수집 칸에서 새 목적지로 옮겨요');plan.checks=['현재 분류 규칙으로 바구니를 바꿨어요.'];break;
+    case 'T37': sequence(round===2?['모양 나누기: 둥근 공은 첫째 바구니로','모양 나누기: 네모난 콩주머니는 둘째 바구니로']:['색 나누기: 빨강 콩주머니는 빨강 바구니로','색 나누기: 파랑 콩주머니는 파랑 바구니로'],'모아 둔 곳에서 옮겨요');plan.checks=['현재 분류 규칙으로 바구니를 바꿨어요.'];break;
     case 'T38': roleCycle(['북 기지: 빨강 조각','동 기지: 파랑 조각','남 기지: 노랑 조각','서 기지: 초록 조각']);plan.steps=tasks(['자기 통로에서 화면이 요청한 보급품을 맡은 기지로 전달해요.'],25);plan.targets=Array.from({length:players},(_,i)=>({label:`${i+1}번 요청 해결`,goal:1}));break;
     case 'T39': plan.timing='arrival';plan.targetSeconds=12;roleCycle(['긴 걷기: 바로 출발','옆걸음: 2초 뒤 출발','표식 돌아가기: 바로 출발','짧은 걷기: 4초 뒤 출발']);plan.steps=tasks(['각자 경로의 출발 시점을 조절해 10~14초 안에 함께 도착해요. 도착한 참여자는 기기로 접근하지 않고 멈춰요. 기기 옆의 관찰 담당이 각 번호의 도착을 눌러 기록해요.'],60);plan.targets=[];break;
     case 'T40': plan.steps=tasks(['여섯 받기 표식을 준비하고 공을 패스해요.','같은 라운드에서 사용한 받기 표식은 다시 사용하지 않아요.','전원이 서로 다른 표식에서 받고 다음 라운드에 사용 상태를 초기화해요.'],10);plan.question={prompt:'참여 번호 순으로 사용한 받기 표식',options:['1번 표식','2번 표식','3번 표식','4번 표식','5번 표식','6번 표식'],answer:[],ordered:false};plan.kind='unique';break;
     case 'T41': {const kinds=['이동','리듬','공 조작'];plan.kind=kinds[round];roleCycle(Array(players).fill(kinds[round]+' 구역'));plan.steps=round===1?[beats(['왼발','오른발','팔 위','팔 옆','왼발','오른발','팔 앞','팔 모음'],'8박자 걷기와 팔 뻗기를 연결해요.')]:tasks([kinds[round]+': '+['표식 두 곳을 옆걸음으로 다녀와요.','','개인 통로에서 공을 굴리고 회수해요.'][round]],24);plan.checks=['이 구역에서 참여한 번호를 모두 확인했어요.'];break;}
-    case 'T42': {const stations=['발놀림','공 굴리기','리듬 스텝','옆걸음 운반'];roleCycle(stations);plan.kind='순환 '+round;plan.steps=tasks(['각자 맡은 구역을 동시에 수행해요. 교대음 뒤 다음 구역으로 이동해요.'],24);plan.checks=['전원이 배정된 구역을 수행하고 교대했어요.'];break;}
+    case 'T42': {const stations=['공 굴리기 구역: 짝에게 공을 굴려 주고받기','옆걸음 운반 구역: 콩주머니를 들고 옆걸음으로 왕복'];roleCycle(stations);plan.kind='순환 '+round;plan.steps=tasks(['내 구역의 동작을 해요.','교대음이 나면 구역을 바꿔요.'],24);plan.checks=['전원이 배정된 구역을 수행하고 교대했어요.'];break;}
     case 'T43': plan.steps=tasks(['콘 사이 옆걸음과 지그재그 걷기 중 원하는 경로를 함께 고르세요.','선택한 경로를 걸어 방 끝까지 이동하고 모여요.'],12);plan.question={prompt:'모둠이 선택해 수행한 경로',options:['콘 사이 옆걸음','지그재그 걷기'],answer:[],ordered:false};plan.kind='choice';break;
     case 'T44': roleCycle(['발 구르기','팔 벌려 걷기','콩주머니 운반','공 굴리기']);plan.steps=tasks(['각자 맡은 장치에서 개인 목표를 채우고 교대해요.'],25);plan.targets=Array.from({length:players},(_,i)=>({label:`${i+1}번 장치 수리`,goal:3}));plan.checks=['각자 목표를 확인하고 다음 장치로 역할을 바꿨어요.'];break;
     case 'T46': {const order=shuffled(['걷기 구역','옆걸음 구역','표식 돌기 구역','공 굴리기 구역'],random);memory(order,'기억해서 중복 없이 방문한 구역 순서');plan.question!.options=['걷기 구역','옆걸음 구역','표식 돌기 구역','공 굴리기 구역'];break;}
@@ -130,7 +134,7 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
   }
   if(plan.steps.length===0)throw new Error('Missing steps: '+game.spec);
   if(plan.targets[0]?.label==='직접 확인한 성공')plan.targets=[{label:'안내된 구간을 수행한 수',goal:plan.steps.length}];
-  return plan;
+  return finish();
 }
 
 export function checkExpeditionAnswer(game:ExpeditionSpec,plan:ExpeditionRound,answer:string[],players:number):boolean {
