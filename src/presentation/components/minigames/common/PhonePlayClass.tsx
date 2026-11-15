@@ -48,7 +48,7 @@ export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace
  };
  const left=Math.max(0,Math.ceil((duration-elapsed)/1000));
  const big=stopped?'멈춤':phase==='countdown'?String(left):phase==='brief'?view.brief:cue;
- return <section className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} aria-label={`${p.name} 반 전체 진행`}>
+ return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} aria-label={`${p.name} 반 전체 진행`}>
   <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round?'now':'next'}>{i+1}</li>)}</ol></header>
   {['countdown','brief','active'].includes(phase)&&<>
    <div className="pp-signal pc-signal" role="status" aria-live={phase==='active'?'off':'polite'}>
@@ -64,6 +64,6 @@ export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace
    <button onClick={()=>record('rest')}>쉬거나 지켜봤어요</button>
   </div>}
   {phase==='done'&&<p role="status">반 전체 참여 기록을 저장했어요.</p>}
-  {phase!=='done'&&<button className="pp-exit" onClick={onLeave}>반 전체 진행 그만두기</button>}
+  {phase!=='done'&&<button className="pp-exit" onClick={onLeave}>닫기 · 반 전체 진행 그만두기</button>}
  </section>;
 }
