@@ -10,7 +10,9 @@ import { supabase } from '../data/supabase';
 import { classroomError, openClassroomBoard } from '../data/classroomRepository';
 import { GAMES } from '../domain/gamesData';
 import { GUIDED_REFLECTIONS, reflectionLabel } from '../domain/guidedReflection';
-import { resolveGuidedGameType } from '../domain/guidedMission';
+import { guidedEntries, withNextActivity, MAX_LESSON_ACTIVITIES } from '../domain/guidedMission';
+import { ActivityPicker } from './ActivityLibrary';
+import type { GameDef } from '../domain/gamesData';
 import { QRCodePanel } from './components/admin/QRCodePanel';
 import { RecoverClassroom } from './components/admin/RecoverClassroom';
 import { LessonShell } from './LessonShell';
@@ -26,6 +28,8 @@ export function GuidedClassroom() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [nextGame, setNextGame] = useState<GameDef | null>(null);
   const missions = template && Array.isArray(template.buttons) ? template.buttons : [];
   const helpRequests = scores.filter(group => group.help_requested_at).sort((a, b) => String(a.help_requested_at).localeCompare(String(b.help_requested_at)));
 
@@ -37,6 +41,21 @@ export function GuidedClassroom() {
       if (result.error || !result.data?.length) throw Error('수업 상태를 바꾸지 못했습니다. 인증과 연결을 확인하세요.');
       refresh();
     } catch (cause) { setMessage(classroomError(cause, '수업 변경 실패')); }
+    finally { setBusy(false); }
+  };
+
+  // Move the whole class to another activity without a new room or re-joining.
+  // The owner's template gains one more guided mission; student screens follow within the refresh interval.
+  const changeActivity = async () => {
+    if (!room || !template || !nextGame || busy) return;
+    const next = withNextActivity(room.name, template.name, missions, nextGame, crypto.randomUUID());
+    if ('error' in next) { setMessage(next.error); return; }
+    setBusy(true); setMessage('');
+    try {
+      const result = await supabase.from('mission_templates').update({ buttons: next.buttons }).eq('id', template.id).select('id');
+      if (result.error || !result.data?.length) throw Error('활동을 바꾸지 못했습니다. 인증과 연결을 확인하세요.');
+      setNextGame(null); setPicking(false); setMessage(`${nextGame.name}(으)로 바꿨어요. 학생 화면은 15초 안에 바뀌어요.`); refresh();
+    } catch (cause) { setMessage(classroomError(cause, '활동 변경 실패')); }
     finally { setBusy(false); }
   };
 
@@ -52,8 +71,12 @@ export function GuidedClassroom() {
   };
 
   const status = room?.status === 'waiting' ? '학생 참여 안내' : room?.status === 'paused' ? '잠시 멈춤' : room?.status === 'finished' ? '수업 종료' : '수업 진행 중';
-  const game = GAMES.find(item => item.type === missions[0]?.gameType) || GAMES.find(item => item.name === room?.name);
-  const guidedMissionIds = new Set(missions.filter(button => resolveGuidedGameType(room?.name, template?.name, missions, button.id)).map(button => button.id));
+  // One room can run several activities in a row; the last guided mission is the one students see now.
+  const activities = guidedEntries(room?.name, template?.name, missions);
+  const current = activities.at(-1);
+  const game = GAMES.find(item => item.type === current?.gameType) || GAMES.find(item => item.name === room?.name);
+  const guidedMissionIds = new Set(activities.map(entry => entry.mission.id));
+  const currentDone = scores.filter(group => current && (group.completed_missions || []).includes(current.mission.id)).length;
   const isGuidedLesson = guidedMissionIds.size > 0;
   const completed = scores.flatMap(group => (group.completed_missions || []).filter(id => guidedMissionIds.has(id)).map(id => ({ group, missionId: id })));
   const completedGroupCount = new Set(completed.map(item => item.group.id)).size;
@@ -70,14 +93,23 @@ export function GuidedClassroom() {
         <section className="card guided-action-card">
           <h2>수업 조작</h2>
           <p>{room.status === 'waiting' ? '학생에게 아래의 우리 모둠 QR을 보여 주세요.' : room.status === 'finished' ? '오늘의 활동을 함께 돌아보세요.' : '모둠별 활동 진행과 점수를 실시간으로 살펴보세요.'}</p>
-          <p className="muted">등록된 모둠 {scores.length}개 · 완료 모둠 {completedGroupCount}개</p>
+          <p className="muted">등록된 모둠 {scores.length}개 · {activities.length>1?`지금 활동 완료 ${currentDone}개`:`완료 모둠 ${completedGroupCount}개`}</p>
           <div className="guided-quick-actions">
             {['waiting', 'playing', 'paused'].includes(room.status) && <button className="primary" disabled={busy} onClick={() => void mutate(room.status === 'playing' ? { status: 'paused', started_at: null, global_time_modifier: timeLeft - 300 } : { status: 'playing', started_at: new Date(Date.now() + timeOffset).toISOString() })}>{room.status === 'waiting' ? '수업 시작' : room.status === 'playing' ? '일시정지' : '수업 이어가기'}</button>}
             {room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ global_time_modifier: room.global_time_modifier + 60 })}>+1분</button>}
           </div>
         </section>
-        <section className="card guided-time-card"><h2>남은 활동 시간</h2><p className="big-number" aria-live="off">{mins}:{secs}</p><p>현재 미션: {missions[0]?.title || '선택한 활동 참여'}</p><Link className="guided-text-link" to={game ? `/play/${game.type}` : '/hub'}>활동 규칙 확인 →</Link></section>
+        <section className="card guided-time-card"><h2>남은 활동 시간</h2><p className="big-number" aria-live="off">{mins}:{secs}</p><p>{activities.length>1?`${activities.length}번째 활동 · `:'현재 활동: '}{game?.name || current?.mission.title || '선택한 활동 참여'}</p><Link className="guided-text-link" to={game ? `/play/${game.type}` : '/hub'}>활동 규칙 확인 →</Link></section>
       </div>
+
+      {isGuidedLesson && room.status !== 'finished' && <section id="guided-next-activity" className="card guided-next-activity" aria-label="다음 활동">
+        <h2>다음 활동으로 바꾸기</h2>
+        {activities.length > 1 && <ol className="guided-activity-trail">{activities.map(entry => <li key={entry.mission.id} aria-current={entry === current ? 'step' : undefined}>{GAMES.find(item => item.type === entry.gameType)?.name || entry.mission.title}{entry === current ? ' · 지금' : ''}</li>)}</ol>}
+        {activities.length >= MAX_LESSON_ACTIVITIES ? <p className="muted">한 수업방에서는 활동을 {MAX_LESSON_ACTIVITIES}개까지 이어갈 수 있어요.</p>
+        : nextGame ? <div className="notice"><p><strong>{nextGame.name}</strong>(으)로 바꿉니다. 수업방과 모둠, 점수는 그대로이고 학생은 다시 입장하지 않아요. 학생 화면은 15초 안에 바뀌고, 하던 게임은 끝까지 할 수 있어요.</p>{isFlagship(nextGame.type) && <p>대표 원정은 수업방을 새로 만들 때만 준비돼요. 다른 활동을 골라 주세요.</p>}<div className="row"><button onClick={() => setNextGame(null)}>다시 고르기</button><button className="primary" disabled={busy || isFlagship(nextGame.type)} onClick={() => void changeActivity()}>이 활동으로 바꾸기</button></div></div>
+        : picking ? <><div className="row"><button onClick={() => setPicking(false)}>닫기</button></div><ActivityPicker onSelect={selected => { setNextGame(selected); window.requestAnimationFrame(() => document.getElementById('guided-next-activity')?.scrollIntoView({ block: 'start' })); }}/></>
+        : <><p>수업방을 새로 만들지 않고, 학생이 다시 입장하지 않아도 다음 활동으로 넘어갈 수 있어요.</p><button disabled={busy} onClick={() => setPicking(true)}>다음 활동 고르기</button></>}
+      </section>}
 
       {game&&isFlagship(game.type)&&<FlagshipControl roomId={room.id} game={game.type} lessonMinutes={room.setup_minutes??undefined}/>}
       {isGuidedLesson && room.status !== 'finished' && <section className="card guided-help" aria-label="도움 요청"><div className="guided-review-heading"><div><h2>도움 요청 <span className="guided-count">{helpRequests.length}</span></h2><p>먼저 요청한 모둠부터 살펴보세요.</p></div></div>{helpRequests.length ? <div className="guided-review-list">{helpRequests.map(group => <div className="guided-review-row" key={group.id}><strong>{group.group_name}</strong><button disabled={busy} onClick={() => void resolveHelp(group.id)}>도움 완료</button></div>)}</div> : <p className="muted">도움이 필요한 모둠이 없어요.</p>}</section>}
