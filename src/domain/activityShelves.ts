@@ -51,3 +51,6 @@ export const isMovementActivity=(game:Pick<GameDef,'type'|'physicalActivity'>)=>
 export function similarRepresentative(id:string):GameDef|undefined{const target=SIMILAR_TO.get(id);return target?AVAILABLE_GAMES.find(game=>game.type===target):undefined;}
 export const CORE_ACTIVITIES:GameDef[]=CORE_ACTIVITY_IDS.map(id=>{const game=AVAILABLE_GAMES.find(item=>item.type===id);if(!game)throw new Error(`핵심 활동이 목록에 없습니다: ${id}`);return game;});
 export const shelfLabel=(id:string)=>{const shelf=activityShelf(id);return shelf==='understanding'?'이해·정리 활동 · 움직이는 시간은 짧아요':shelf==='similar'?`비슷한 활동: ${similarRepresentative(id)?.name??''}`:'';};
+/** "혼자 해보기" lists only activities one person can really do alone: no partner, group or second device. */
+export const isSoloActivity=(game:Pick<GameDef,'activityType'>)=>game.activityType==='개인';
+export const SOLO_ACTIVITIES:GameDef[]=AVAILABLE_GAMES.filter(isSoloActivity);

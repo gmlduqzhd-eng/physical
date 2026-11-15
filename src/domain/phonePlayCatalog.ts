@@ -42,7 +42,7 @@ export const PHONE_GAME_DEFS:GameDef[]=PHONE_PLAYS.map(p=>({
  type:p.id,name:p.name,emoji:p.emoji,desc:p.goal,
  color:'from-teal-600 to-cyan-700',border:'border-teal-400/40',glow:'hover:shadow-teal-500/30',difficulty:p.kind==='decision'?3:2,
  domain:p.category==='리듬·표현'?'표현':'운동',subCategory:p.category,
- achievement:{code:'연계 확인 필요',title:'준비물 없는 몸 놀이',desc:'실제 움직임과 선택·협력·자기 확인을 연결하는 놀이입니다. 성취기준 코드를 임의로 부여하지 않습니다.'},
+ achievement:{code:'연계 확인 필요',title:'준비물 없는 신체 놀이',desc:'실제 움직임과 선택·협력·자기 확인을 연결하는 놀이입니다. 성취기준 코드를 임의로 부여하지 않습니다.'},
  grades:p.kind==='decision'?['3~4학년군','5~6학년군']:['1~2학년','3~4학년군','5~6학년군'],
  durationMinutes:p.minutes,equipment:['스마트폰 1대 · 별도 준비물 없음'],safetyTips:[...phoneSafety,p.seated],physicalActivity:true,
  recommendedDevice:'스마트폰',devices:['스마트폰','태블릿 PC','데스크톱 PC'],playMode:p.players==='혼자'?'개인':'협동',activityType:p.players==='혼자'?'개인':p.players,

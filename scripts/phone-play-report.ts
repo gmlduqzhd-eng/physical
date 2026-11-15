@@ -8,7 +8,7 @@ const excluded=[
 ];
 const counts=Object.fromEntries(PHONE_CATEGORIES.map(c=>[c,candidates.filter(p=>p.category===c).length]));
 fs.writeFileSync(out+'/catalog.json',JSON.stringify({candidateCount:candidates.length,releasedCount:PHONE_PLAYS.length,categories:counts,excluded,plays:candidates},null,2));
-let md='# 스마트폰만으로 하는 몸 놀이 100가지\n\n스마트폰 1대는 활동 구역 밖에 내려놓습니다. 별도 준비물·카메라·마이크·GPS는 필요하지 않습니다. PC에서도 안내를 열 수 있습니다. 점수는 직접 확인한 수행 기록이며 자동 측정·체력 판정이 아닙니다.\n\n';
+let md='# 스마트폰만으로 하는 신체 놀이 100가지\n\n스마트폰 1대는 활동 구역 밖에 내려놓습니다. 별도 준비물·카메라·마이크·GPS는 필요하지 않습니다. PC에서도 안내를 열 수 있습니다. 점수는 직접 확인한 수행 기록이며 자동 측정·체력 판정이 아닙니다.\n\n';
 md+='| 분류 | 개수 |\n|---|---:|\n'+Object.entries(counts).map(([c,n])=>`| ${c} | ${n} |`).join('\n')+'\n\n';
 md+='## 중복 검토로 추가하지 않은 초안 12개\n\n| 초안 | 기존 활동 | 처리 이유 |\n|---|---|---|\n'+excluded.map(row=>'| '+row.join(' | ')+' |').join('\n')+'\n\n기존 활동·링크·기록은 삭제하지 않습니다. 새 목록의 이름·횟수·시간 차이만으로 독립 항목을 만들지 않고 규칙·상호작용·성공 기준을 함께 검토했습니다.\n\n';
 for(const category of PHONE_CATEGORIES){md+=`## ${category}\n\n| 번호 | 놀이 | 인원 | 시간 | 공간 | 목표 |\n|---|---|---|---|---|---|\n`;md+=candidates.filter(p=>p.category===category).map(p=>`| ${p.id.split('-').at(-1)} | ${p.name} | ${p.players} | 약 ${p.minutes}분 | ${p.space} | ${p.goal} |`).join('\n')+'\n\n';}

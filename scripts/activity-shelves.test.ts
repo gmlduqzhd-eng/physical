@@ -23,3 +23,11 @@ test('understanding activities are not counted as movement time',()=>{
  for(const id of UNDERSTANDING_IDS)assert(!isMovementActivity(AVAILABLE_GAMES.find(g=>g.type===id)!),id);
  assert(isMovementActivity(AVAILABLE_GAMES.find(g=>g.type==='red_green')!));assert.equal(shelfLabel('red_green'),'');
 });
+test('the solo list holds only activities for one person and leaves pair, group and flagship activities out',async()=>{
+ const {SOLO_ACTIVITIES,isSoloActivity}=await import('../src/domain/activityShelves');
+ assert(SOLO_ACTIVITIES.length>60&&SOLO_ACTIVITIES.length<AVAILABLE_GAMES.length);
+ for(const game of SOLO_ACTIVITIES)assert.equal(game.activityType,'개인',game.type);
+ for(const game of AVAILABLE_GAMES.filter(g=>g.activityType==='짝'||g.activityType==='모둠'))assert(!isSoloActivity(game),game.type);
+ assert(!SOLO_ACTIVITIES.some(g=>g.type.startsWith('expedition-')),'flagship expeditions need a group');
+ assert(SOLO_ACTIVITIES.some(g=>g.type==='stretch')&&SOLO_ACTIVITIES.some(g=>g.type==='phone-play-001'));
+});
