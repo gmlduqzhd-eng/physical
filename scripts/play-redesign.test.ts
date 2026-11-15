@@ -54,3 +54,12 @@ test('shared-screen cues distinguish waiting from moving and support seated part
  assert(moving>0&&waiting>0);const small=Array.from({length:8},(_,i)=>sharedScreenCue('signals',0,i*3000,true).title);assert(small.some(c=>c.includes('무릎')));assert(small.every(c=>!c.includes('발 번갈아')));
  assert.equal(sharedScreenCue('rhythm',0,0,false).active,true);assert.equal(sharedScreenCue('rhythm',0,600,false).active,false);
 });
+test('every shared-screen cue names the movement it shows, and an empty beat shows rest',()=>{
+ const label:Record<string,string>={open:'손바닥 펴기',wings:'팔 작게 펼치기',step:'제자리 발 번갈아 디디기',knees:'양손 무릎 가볍게 짚기'};
+ for(const id of ['signals','rhythm','relay'] as const)for(const seated of [false,true])for(let round=0;round<3;round++)for(let t=0;t<20000;t+=300){
+  const cue=sharedScreenCue(id,round,t,seated);
+  if(cue.move==='rest'){assert.equal(id,'rhythm');assert.equal(cue.active,false);assert.equal(cue.title,'편하게 쉬는 박자');}
+  else assert(cue.title.endsWith(label[cue.move]),`${id} ${cue.title} shows ${cue.move}`);
+  assert.notEqual(cue.move,seated?'step':'knees');
+ }
+});
