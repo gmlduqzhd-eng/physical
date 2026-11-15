@@ -12,6 +12,7 @@ docs/*
 supabase
 scripts/*
 !scripts/prepare-vision.mjs
+!scripts/play-redesign.test.ts
 !scripts/games-improvements.test.ts
 !scripts/second-game-review.test.ts
 !scripts/third-game-review.test.ts

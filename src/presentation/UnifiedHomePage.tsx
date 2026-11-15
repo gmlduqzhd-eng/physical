@@ -8,6 +8,7 @@ import {ForestBrand,ForestOrbit} from './components/ForestIdentity';
 import { AccessQrDialog, type AccessQrDialogHandle } from './components/AccessQrDialog';
 import { HeaderToolbar } from './components/HeaderToolbar';
 import './UnifiedHomePage.css';
+import {FeaturedExperiences} from './components/FeaturedExperiences';
 
 const domains = [
   { name: '운동', description: '체력·건강·기본 움직임' },
@@ -21,7 +22,8 @@ export function UnifiedHomePage() {
     <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><ForestBrand/></Link>
       <HeaderToolbar label="상단 메뉴"><button className="icon-toolbar-action" type="button" title="접속 QR" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/><span>접속 QR</span></button><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
     </header><HomeAccountTabs/>
-    <main><section className="welcome forest-hero" aria-labelledby="home-title"><div><p className="eyebrow">땀방울 원정대 · 함께 움직이는 체육 시간</p><h1 id="home-title">함께 움직이는<br/>시간의 즐거움.</h1><p className="forest-lead">준비는 가볍게, 경험은 풍성하게.<br/>스마트폰 하나로 만나는 {PHONE_PLAYS.length}가지 몸 놀이.</p><nav className="forest-hero-actions" aria-label="추천 놀이 탐색"><Link to="/hub?collection=phone">나에게 맞는 놀이 찾기 <ArrowRight aria-hidden="true"/></Link></nav></div><ForestOrbit/></section>
+    <main><section className="welcome forest-hero" aria-labelledby="home-title"><div><p className="eyebrow">땀방울 원정대 · 함께 움직이는 체육 시간</p><h1 id="home-title">내 신호와 네 움직임이<br/>하나의 원정으로.</h1><p className="forest-lead">단서를 나누고, 방향을 맞추고, 박자를 연결해요.<br/>로그인 없이 먼저 원리를 체험해 보세요.</p><nav className="forest-hero-actions" aria-label="대표 놀이 탐색"><Link to="/try/map">바로 원리 체험하기 <ArrowRight aria-hidden="true"/></Link><Link to="/together">공용 화면 한 대로 시작</Link></nav></div><ForestOrbit/></section>
+      <FeaturedExperiences/>
       <nav className="roles" aria-label="역할 선택">
         <Link to="/teacher" className="role teacher"><div className="role-top"><span className="icon"><ClipboardCheck aria-hidden="true"/></span></div><div className="role-copy"><h2>선생님, 수업을 준비해요.</h2><p>활동을 고르고 모둠을 구성하면<br/>오늘의 수업을 시작할 수 있어요.</p></div><span className="action">교사로 시작하기 <ArrowRight aria-hidden="true"/></span></Link>
         <Link to="/lobby" className="role student"><div className="role-top"><span className="icon"><QrCode aria-hidden="true"/></span></div><div className="role-copy"><h2>학생은 바로 참여해요.</h2><p>선생님이 알려주신 QR이나 코드로<br/>우리 수업에 함께해요.</p></div><span className="action">수업 참여하기 <ArrowRight aria-hidden="true"/></span></Link>

@@ -34,6 +34,9 @@ const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({
 const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
 const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
 const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
+const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage').then(m=>({default:m.PlayExperiencePage})));
+const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
+const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
 function RouteScrollReset() {
   const { pathname } = useLocation();
@@ -62,6 +65,10 @@ function App() {
         <Route path="/" element={<UnifiedHomePage />} />
         <Route path="/start" element={<UnifiedHomePage />} />
         <Route path="/expeditions" element={<FlagshipCollection/>} />
+        <Route path="/try" element={<PlayExperiencePage/>} />
+        <Route path="/try/:kind" element={<PlayExperiencePage/>} />
+        <Route path="/together" element={<SharedScreenLesson/>} />
+        <Route path="/lessons" element={<LessonRecipes/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />

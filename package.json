@@ -53,7 +53,7 @@
     "test:safety:ui": "tsx scripts/safety-lessons-regressions.ts",
     "test:operations": "tsx --test scripts/operations.test.ts scripts/teacher-account-api.test.ts",
     "healthcheck": "node scripts/healthcheck.mjs",
-    "verify:release": "npm run lint && npm run test:ui && npm run test:game-review && npm run test:deploy-gate && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:camera && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
+    "verify:release": "npm run lint && npm run test:play-redesign && npm run test:ui && npm run test:game-review && npm run test:deploy-gate && npm run check:server:node && npm test && npm run test:teacher && npm run test:studio && npm run test:studio:deployment && npm run test:flagship && npm run test:workshop && npm run test:flagship:devices && npm run test:camera && npm run test:operations && npm run test:regression && npm run test:classroom-refresh && npm run build && npm run build:studio",
     "test:regression": "tsx --test scripts/background-music-routes.test.ts scripts/participation-cues.test.ts scripts/studio-ui-state.test.ts scripts/studio-rate-limit.test.ts",
     "prepare:vision": "node scripts/prepare-vision.mjs",
     "test:flagship": "tsx --test scripts/flagship.test.ts",
@@ -68,7 +68,9 @@
     "test:db:advisor": "node scripts/test-security-advisor.mjs",
     "test:db:translation": "node scripts/test-translation-rpc-isolation.mjs",
     "test:db:hardening:live": "node scripts/test-server-hardening-live.mjs",
-    "test:db:hardening:safety": "node --test scripts/server-hardening-safety.test.mjs"
+    "test:db:hardening:safety": "node --test scripts/server-hardening-safety.test.mjs",
+    "test:play-redesign": "tsx --test scripts/play-redesign.test.ts",
+    "test:db:play": "node scripts/test-cooperative-map.mjs"
   },
   "dependencies": {
     "@ai-sdk/google": "4.0.100",

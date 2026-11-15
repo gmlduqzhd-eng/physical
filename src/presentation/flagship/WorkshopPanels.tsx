@@ -2,6 +2,10 @@ import {useEffect,useRef,useState} from 'react';
 import type {ExpeditionSnapshot,GroupProgress} from '../../domain/flagship';
 import {BOSS_ROUTES,DEFAULT_WORKSHOP,LESSON_PACKAGES,LESSON_STEPS,LEVEL_NAMES,LEVELS,MOVES,OBSERVATION_TAGS,ROUTE_NAMES,SHIP_COURSES,expeditionReport,groupWorkshop,readinessLabel,roleSeats,settingsOf,workshopSchema,type WorkshopSettings} from '../../domain/expeditionWorkshop';
 import type {ExpeditionAction} from './MapGame';
+import {experienceForGame} from '../../domain/playRecipes';
+import {ExperienceTutorial} from './ExperienceTutorial';
+import {movementRoleSeats} from '../../domain/movementRoles';
+import {SUPPORT_CHOICES} from '../../domain/cooperativeMap';
 
 function useServerClock(s:ExpeditionSnapshot){
  const offset=useRef(s.serverTime-Date.now());
@@ -20,13 +24,14 @@ export function ExpeditionWorld({snapshot:s}:{snapshot:ExpeditionSnapshot}){
   {active==='expedition-ship'&&<svg className="world-space" viewBox="0 0 110 110" role="img" aria-label="서버에서 받은 모든 모둠 우주선의 현재 위치"><rect width="110" height="110" rx="8" fill="#193c3c"/>{SHIP_COURSES[settingsOf(s).shipCourse].map((t,i)=><g key={i}><circle cx={t.x+5} cy={t.y+5} r="5" fill="#dfbd68"/><text x={t.x+5} y={t.y+7} textAnchor="middle" fontSize="5" fill="#193c3c">{i+1}</text></g>)}{s.groups.map((g,i)=><g key={g.id} transform={`translate(${g.ship.x+5},${g.ship.y+5})`}><circle r="3.5" fill={['#bcd8ad','#f0ca8b','#b7d8ef','#e7bad8'][i%4]} stroke="#fff" strokeWidth=".6"/><text y="1.5" textAnchor="middle" fontSize="3.5" fill="#193c3c">{i+1}</text></g>)}</svg>}
   {active==='expedition-loop'&&<div className="world-city" aria-label="우리 반의 리듬 발전 상태">{s.groups.map((g,i)=><div key={g.id} data-lit={g.done} data-beat={g.loop[beat]===1}><b>모둠 {i+1}</b><span aria-hidden="true">{g.loop[beat]?'♫':'·'}</span><small>{g.quality}%</small></div>)}</div>}
   <div className="world-fleet">{s.groups.map((g,i)=><div className="world-lane" key={g.id}><b>{g.name}</b><div className="world-track"><span style={{left:`${Math.min(94,g.ship.checkpoint*26+g.visited.length*6+(g.done?16:2))}%`}} aria-hidden="true">{g.done?'✦':'◆'}</span></div><small>{g.done?'참여 완료':s.game==='expedition-ship'?`정거장 ${g.ship.checkpoint}/3`:s.game==='expedition-loop'?`리듬 ${g.quality}%`:`모둠 ${i+1} 기여 중`}</small></div>)}</div>
+  {s.groups.some(g=>g.support&&g.support!=='none')&&<div className="flagship-note" aria-label="모둠 도움 신호"><h4>서로 연결할 도움</h4><ul>{s.groups.filter(g=>g.support&&g.support!=='none').map(g=><li key={g.id}>{g.name} · {SUPPORT_CHOICES.find(c=>c.id===g.support)?.label}</li>)}</ul><small>모둠이 보낸 요청·제안이며 완료 여부는 바꾸지 않아요.</small></div>}
   <p>{done}/{s.groups.length}모둠 참여 완료 · 순위 경쟁 없이 함께 완성해요.</p><p className="flagship-kicker">기지·다리·도시는 진행을 표현한 그림입니다. 세부 기록은 아래에서 확인해요.</p>
  </section>;
 }
 
 export function RoleRotation({snapshot:s,group:g,send,disabled}:{snapshot:ExpeditionSnapshot;group:GroupProgress;send:ExpeditionAction;disabled:boolean}){
  const now=useServerClock(s),w=groupWorkshop(g,s),config=settingsOf(s),due=now-w.roleAt>=config.roleEvery*60000;
- return <section className="workshop-roles" aria-label="모둠 역할 교대"><h3>모두의 차례 · {w.roleRound+1}라운드</h3><p>처음에 자리 1~{w.members}을 정해요. 자리 번호는 사람이나 계정에 연결하지 않아요.</p><div className="role-seats">{roleSeats(w.members,w.roleRound).map(r=><p key={r.seat}><b>자리 {r.seat}</b><span>{r.role}</span></p>)}</div><p role="status">{due?'역할을 바꿀 시간이에요. 기기를 내려놓고 조작 역할부터 바꿔요.':`${config.roleEvery}분마다 또는 한 라운드 뒤 역할을 바꿔요.`}</p><button disabled={disabled||!s.workshop} onClick={()=>void send('rotate')}>기기를 내려놓고 역할 교대했어요</button><small>교대 버튼 기록 {w.roleSwaps}회 · 버튼만으로 실제 참여를 판단하지 않아요.</small></section>;
+ return <section className="workshop-roles" aria-label="모둠 역할 교대"><h3>모두의 차례 · {w.roleRound+1}라운드</h3><p>처음에 자리 1~{w.members}을 정해요. 자리 번호는 사람이나 계정에 연결하지 않아요.</p><div className="role-seats">{movementRoleSeats(s.game,w.members,w.roleRound).map(r=><div key={r.seat}><b>자리 {r.seat} · {r.role}</b><p>{r.action}</p><small>편한 대안: {r.alternative}</small></div>)}</div><p role="status">{due?'역할을 바꿀 시간이에요. 기기를 내려놓고 조작 역할부터 바꿔요.':`${config.roleEvery}분마다 또는 한 라운드 뒤 역할을 바꿔요.`}</p><button disabled={disabled||!s.workshop} onClick={()=>void send('rotate')}>기기를 내려놓고 역할 교대했어요</button><small>교대 버튼 기록 {w.roleSwaps}회 · 버튼만으로 실제 참여를 판단하지 않아요.</small></section>;
 }
 
 export function ReadinessBoard({snapshot:s}:{snapshot:ExpeditionSnapshot}){
@@ -64,6 +69,7 @@ export function ExpeditionReport({snapshot:s,send,busy}:{snapshot:ExpeditionSnap
 
 export function ExpeditionTutorial({game}:{game:string}){
  const [step,setStep]=useState(0),[done,setDone]=useState(false),[value,setValue]=useState(0);
+ const experience=experienceForGame(game);if(experience)return <ExperienceTutorial kind={experience.id}/>;
  return <details className="workshop-tutorial"><summary>처음인가요? 30초 체험 안내</summary><p>체험 입력은 실제 원정·점수·센서에 연결되지 않아요.</p><ol><li aria-current={step===0?'step':undefined}>주변 공간을 보고 기기를 내려놓아요.</li><li aria-current={step===1?'step':undefined}>작은 동작 뒤 화면 신호를 연결해요.</li><li aria-current={step===2?'step':undefined}>친구에게 역할을 넘겨요.</li></ol>{step===0&&<button onClick={()=>setStep(1)}>기기 거치·주변 공간 확인했어요</button>}{step===1&&<><p>{game==='expedition-map'?'몸짓으로 강·탑·숲 중 한 길을 알려 주고 신호를 눌러요.':game==='expedition-ship'?'제자리에서 작은 손 동작 뒤 연습 조종 값을 바꿔요.':game==='expedition-loop'?'작은 손뼉을 한 번 친 뒤 박자 신호를 눌러요.':'편안하게 오른손을 움직인 뒤 신호를 눌러요.'}</p><button onClick={()=>setValue(n=>n+1)}>몸 동작 후 체험 신호 연결 {value>0?'✓':''}</button><button disabled={!value} onClick={()=>setStep(2)}>다음</button></>}{step===2&&<button onClick={()=>setDone(true)}>친구에게 역할을 넘겼어요</button>}{done&&<p role="status">준비됐어요! 실제 원정에서는 모둠이 함께 확인해요.</p>}<button onClick={()=>{setStep(0);setDone(false);setValue(0);}}>체험 처음부터</button></details>;
 }
 
