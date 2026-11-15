@@ -253,3 +253,4 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+.guided-activity-trail{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0;margin:12px 0;counter-reset:activity}.guided-activity-trail li{counter-increment:activity;padding:6px 12px;border-radius:999px;border:1px solid currentColor;opacity:.7;font-size:14px}.guided-activity-trail li::before{content:counter(activity) ". "}.guided-activity-trail li[aria-current=step]{opacity:1;font-weight:800}

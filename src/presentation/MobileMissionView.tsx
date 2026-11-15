@@ -13,7 +13,7 @@ import { MiniGameOverlay } from './components/minigames/MiniGameOverlay';
 import { WaitingScreen } from './components/WaitingScreen';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
-import { resolveGuidedGameType } from '../domain/guidedMission';
+import { currentGuidedEntry } from '../domain/guidedMission';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
@@ -39,7 +39,8 @@ export const MobileMissionView = () => {
   const { roomId, groupId } = useParams<{ roomId: string, groupId: string }>();
   const navigate = useNavigate();
   const { scores, gameRoom, template, loading: roomLoading, error: roomError, refresh: refreshRoom } = useGameLogic(roomId);
-  const guidedEntry = template && Array.isArray(template.buttons) ? template.buttons.map(mission => ({ mission, gameType: resolveGuidedGameType(gameRoom?.name, template.name, template.buttons, mission.id) })).find(entry => entry.gameType) : undefined;
+  // The teacher can move the class to another activity; the latest guided mission is the current one.
+  const guidedEntry = template ? currentGuidedEntry(gameRoom?.name, template.name, template.buttons) : undefined;
   const guidedSubmission = useGuidedSubmission(guidedEntry ? roomId ?? null : null, guidedEntry ? groupId ?? null : null, guidedEntry?.mission.id ?? null);
   const { isTimeUp, mins, secs } = useGameTimer(gameRoom);
   const { enqueueAction, isOnline, queueLength, isSyncing, storageAvailable, syncWarning } = useSyncQueue();
@@ -584,7 +585,7 @@ export const MobileMissionView = () => {
 
   const displayScore = myGroup?.score ?? 0;
   if (guidedEntry && roomId && groupId) {
-    const { mission: guidedMission, gameType: guidedGameType } = guidedEntry;
+    const { mission: guidedMission, gameType: guidedGameType, order: guidedOrder } = guidedEntry;
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
     return <main className="student-guided-room min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col items-center">
@@ -592,9 +593,9 @@ export const MobileMissionView = () => {
       <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
         <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
         <h1 className="text-3xl font-black mt-2">{myGroup?.group_name || '모둠 활동'}</h1>
-        <p className="text-slate-600 mt-2">{gameRoom?.name} · 남은 시간 {mins}:{secs}</p>
+        <p className="text-slate-600 mt-2">{guidedOrder>1?`오늘의 ${guidedOrder}번째 활동`:gameRoom?.name} · 남은 시간 {mins}:{secs}</p>
         <div className="bg-cyan-50 border border-cyan-100 rounded-2xl p-5 mt-6">
-          <p className="text-sm font-bold text-cyan-800">오늘의 활동</p>
+          <p className="text-sm font-bold text-cyan-800">{guidedOrder>1?'선생님이 바꾼 새 활동':'오늘의 활동'}</p>
           <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
           <p className="text-sm text-slate-600 mt-3">{guidedMission.requires_approval?'게임 결과를 제출하면 선생님 확인 후 점수가 반영돼요.':'게임을 끝내면 모둠 점수가 반영돼요.'}</p>
