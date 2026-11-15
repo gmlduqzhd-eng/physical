@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CLASS_TOOLS,roundRobin,leagueTable,leagueMatchCount,matchKey,makeLadder,traceLadder,ladderResults,drawNumber,splitGroups,rollDice,ladderLabels,formatClock,type Rng} from '../src/domain/classTools';
+import {CLASS_TOOLS,roundRobin,leagueTable,leagueMatchCount,matchKey,bumpScore,homeAwayScore,numberSubject,makeLadder,traceLadder,ladderResults,drawNumber,splitGroups,rollDice,ladderLabels,formatClock,type Rng} from '../src/domain/classTools';
 
 const seeded=(seed:number):Rng=>()=>{seed=(seed*1664525+1013904223)%4294967296;return seed/4294967296;};
 
@@ -51,4 +51,21 @@ test('number draw never repeats, groups differ by at most one, dice stay within 
  const dice=rollDice(200,seeded(3));assert(dice.every(d=>d>=1&&d<=6));assert.equal(new Set(dice).size,6);
  assert.equal(formatClock(0),'0:00.0');assert.equal(formatClock(75_340),'1:15.3');
  assert.equal(new Set(CLASS_TOOLS.map(t=>t.id)).size,CLASS_TOOLS.length);
+});
+test('a win is credited to the team that scored, even when the higher-numbered team is the home side',()=>{
+ for(let teams=3;teams<=8;teams++){
+  const rounds=roundRobin(teams),flipped=rounds.flatMap(r=>r.matches).filter(m=>m.home>m.away);
+  assert(flipped.length>0,`${teams} teams have matches where the home team has the higher number`);
+  for(const m of [...flipped,...rounds.flatMap(r=>r.matches).filter(x=>x.home<x.away)]){
+   // the home team scores 3, the away team 1, through the same helper the screen uses
+   let s=bumpScore(m,null,0,3);s=bumpScore(m,s,1,1);
+   assert.deepEqual(homeAwayScore(m,s),[3,1]);
+   const table=leagueTable(teams,rounds,{[matchKey(m)]:s}),by=Object.fromEntries(table.map(r=>[r.team,r]));
+   assert.deepEqual([by[m.home].win,by[m.home].points,by[m.away].loss,by[m.away].points],[1,3,1,0],`${teams}팀 ${m.home+1}팀(홈) vs ${m.away+1}팀`);
+  }
+ }
+ assert.deepEqual(bumpScore({home:2,away:0},[1,1],0,-5),[1,0],'scores never go below zero');
+});
+test('the dice sentence uses the right particle for each number',()=>{
+ assert.deepEqual([1,2,3,4,5,6,7,8,9,10,11,12].map(numberSubject),['1이','2가','3이','4가','5가','6이','7이','8이','9가','10이','11이','12가']);
 });

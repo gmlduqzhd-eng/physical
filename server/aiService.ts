@@ -53,7 +53,7 @@ const taskDirectives: Record<TeacherInput['task'],string> = {
   "observation": "observation은 관찰 요약,다음 차시 아이디어 2개 section. 관찰 요약 content는 '교사가 선택한 관찰 항목: '+observations를 ' · '로 연결한 문자열+'. 구체적인 장면·학생별 수행은 제공되지 않았습니다.'와 정확히 같아야 한다. 관찰 장면을 추측하지 않는다. 다음 차시 아이디어만 AI 제안이며 이미 관찰된 사실처럼 쓰지 않는다.",
   "group": "group은 모둠 결과 요약,활동 조정안 2개 section. 모둠 결과 요약 content는 '교사가 입력한 범주: '+aggregate.groups+' / '+aggregate.participants+' / '+aggregate.completion+' / '+aggregate.cooperation+'. 개인·모둠별 결과는 제공되지 않았습니다.'와 정확히 같아야 한다. 활동 조정안만 AI 제안이다. 순위/개인/모둠 이름이나 없는 수행 사실을 만들지 않는다.",
   "reflection": "reflection은 sections heading 성찰 질문, content에 학년과 활동에 맞는 질문 3개를 줄바꿈으로 작성한다.",
-  "participation": "participation은 sections heading이 오늘의 몸 미션, 역할 바꾸기, 기다리는 동안인 정확히 3개다. 각 content는 초등학생에게 보여줄 100자 이내의 짧은 한 문장이다. 화면 터치나 타이머를 실제 신체 활동의 증거라고 주장하지 않는다. 역할 바꾸기는 짝 또는 모둠의 수행자와 관찰자가 서로 바꾸는 방법을 제안한다. 기다리는 동안은 반드시 '제자리에서'로 시작하며 대기 장소를 벗어나지 않고 참여할 방법을 제안한다. 해당 활동 원자료에서 가능한 수행 관찰·차례 확인·구두 협의 등의 행동을 선택하고, 걷거나 뛰며 이동하는 대기를 제안하지 않는다. 모든 문장은 해당 활동 원자료에 근거하되 새로운 안전 수치와 필수 장비를 창작하지 않는다."
+  "participation": "participation은 sections heading이 오늘의 신체 놀이, 역할 바꾸기, 기다리는 동안인 정확히 3개다. 각 content는 초등학생에게 보여줄 100자 이내의 짧은 한 문장이다. 화면 터치나 타이머를 실제 신체 활동의 증거라고 주장하지 않는다. 역할 바꾸기는 짝 또는 모둠의 수행자와 관찰자가 서로 바꾸는 방법을 제안한다. 기다리는 동안은 반드시 '제자리에서'로 시작하며 대기 장소를 벗어나지 않고 참여할 방법을 제안한다. 해당 활동 원자료에서 가능한 수행 관찰·차례 확인·구두 협의 등의 행동을 선택하고, 걷거나 뛰며 이동하는 대기를 제안하지 않는다. 모든 문장은 해당 활동 원자료에 근거하되 새로운 안전 수치와 필수 장비를 창작하지 않는다."
 };
 export function instructionsFor(input: TeacherInput) { return instructions + "\n현재 요청은 "+input.task+" 하나뿐이다. 다른 기능의 결과를 추가하지 않는다.\n"+taskDirectives[input.task]+(input.task==='mission'?`\n협동 미션 본문에 '${input.groupSize}명'과 '${input.activityMinutes}분'을 반드시 명시한다. 해당 인원이 모두 참여하는 역할 분담과 정해진 시간 내 역할 교대를 구체적으로 제안한다.`:'')+"\nrecommend/alternative면 sections는 반드시 빈 배열이다. 그 외 작업은 recommendations가 빈 배열이다. plan 이외에는 모든 minutes가 null이다."; }
 
@@ -84,7 +84,7 @@ export function validateOutput(raw: unknown, input: TeacherInput, material = sou
     difficulty: ['기초', '보통', '도전'], plan: ['도입', '준비운동', '본활동', '정리', '안전 지도'],
     mission: ['협동 목표', '역할과 진행', '완료 확인'], observation: ['관찰 요약', '다음 차시 아이디어'],
     group: ['모둠 결과 요약', '활동 조정안'], reflection: ['성찰 질문'], safety: [],
-    participation: ['오늘의 몸 미션', '역할 바꾸기', '기다리는 동안'],
+    participation: ['오늘의 신체 놀이', '역할 바꾸기', '기다리는 동안'],
   };
   if (expected[input.task] && JSON.stringify(result.sections.map(s => s.heading)) !== JSON.stringify(expected[input.task])) throw new Error('필수 수업 항목이 누락되었습니다.');
   if (input.task === 'difficulty') {

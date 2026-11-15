@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {SPORT_EVENTS,SPORT_BY_ID,SPORT_GROUPS,RECOMMENDED_SPORTS,SPORT_FILTERS,filterSports,rankTeams,formatResult,addMedals,medalStandings,parseMedalTally,LESSON_STAGES} from '../src/domain/sportsClassroom';
+import {awardReady,startScores,parseLessonProgress,blankResults,TEAM_COLORS,SPORT_EVENTS,SPORT_BY_ID,SPORT_GROUPS,RECOMMENDED_SPORTS,SPORT_FILTERS,filterSports,rankTeams,formatResult,addMedals,medalStandings,parseMedalTally,LESSON_STAGES} from '../src/domain/sportsClassroom';
 
 test('all 28 sports carry what a lesson needs: rules, gear, safety, warm-up, roles, a goal and a reflection',()=>{
  assert.equal(SPORT_EVENTS.length,28);assert.equal(new Set(SPORT_EVENTS.map(e=>e.id)).size,28);assert.equal(LESSON_STAGES.length,6);
@@ -35,4 +35,22 @@ test('class medals add up across lessons, sort gold first and ignore damaged sto
  tally=addMedals(tally,[{team:1,medal:'bronze'}]);assert.equal(medalStandings(tally)[0].team,'홍팀');
  assert.deepEqual(parseMedalTally({청팀:{gold:2,silver:-1,bronze:'x'},악성:{gold:9},홍팀:null}),{청팀:{gold:2,silver:0,bronze:0}});
  assert.deepEqual(parseMedalTally('nope'),{});assert.deepEqual(parseMedalTally(JSON.parse(JSON.stringify(tally))),tally);
+});
+test('medals wait until every team has a result, and an unplayed golf team cannot win',()=>{
+ const basketball=SPORT_BY_ID.get('basketball')!,golf=SPORT_BY_ID.get('golf')!,relay=SPORT_BY_ID.get('relay')!;
+ assert(golf.lowerWins,'golf is the lower-score-wins sport');
+ assert.equal(awardReady(blankResults().slice(0,2)),false,'nobody played yet');
+ assert.deepEqual(startScores(basketball,[null,null,null]),[0,0,0],'starting a score match puts every team on 0');
+ assert.deepEqual(startScores(golf,[null,4]),[null,4],'golf teams must record their own strokes');
+ assert.deepEqual(startScores(relay,[null,12.3]),[null,12.3]);
+ assert.equal(awardReady([null,4]),false);assert.equal(awardReady([3,4]),true);assert.equal(awardReady([12.3,null]),false);
+ assert.deepEqual(rankTeams(golf,[{team:0,value:null},{team:1,value:4}]).map(r=>r.team),[1]);
+ for(const c of TEAM_COLORS)assert.match(c,/^var\(--sports-team-\d\)$/,'team colours come from theme-aware CSS variables');
+});
+test('lesson progress survives a refresh only for the same sport and only when it is valid',()=>{
+ const ok={sport:'archery',stage:3,teams:3,level:'hard',scores:[2,null,5,null],awarded:true};
+ assert.deepEqual(parseLessonProgress(ok,'archery'),ok);
+ assert.equal(parseLessonProgress(ok,'golf'),null);
+ for(const bad of [{...ok,stage:9},{...ok,teams:5},{...ok,level:'x'},{...ok,scores:[1,2]},{...ok,scores:[1,'a',null,null]},null,'x'])assert.equal(parseLessonProgress(bad,'archery'),null);
+ assert.equal(parseLessonProgress({...ok,awarded:'yes'},'archery')!.awarded,false);
 });

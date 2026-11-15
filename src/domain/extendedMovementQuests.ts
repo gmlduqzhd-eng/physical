@@ -34,7 +34,7 @@ function routeChoices() { return [
 export function makeExtendedQuest(id: ExtendedQuestId, round: number, s: QuestSettings, selected?: string): QuestRound {
   const choices = (a:string,b:string) => [{id:'easy',label:a,detail:'내가 편하게 할 수 있는 방법이에요.'},{id:'challenge',label:b,detail:'익숙해지면 다른 방법에 도전해요.'}];
   const hard=selected==='challenge', cueMs=s.gentle?4500:3500;
-  const plan:QuestRound={title:['규칙 익히기','방법 바꾸기','연결 도전'][round],goal:'선택한 몸 미션을 연결해요',hint:fixed,choices:[],cues:[],cueMs,repeats:1,confirmation:'선택한 움직임을 안전한 범위에서 시도했어요'};
+  const plan:QuestRound={title:['규칙 익히기','방법 바꾸기','연결 도전'][round],goal:'선택한 신체 놀이를 연결해요',hint:fixed,choices:[],cues:[],cueMs,repeats:1,confirmation:'선택한 움직임을 안전한 범위에서 시도했어요'};
   const move=(standing:string,alternative:string)=>s.seated?alternative:standing;
   switch(id){
     case 'jump': plan.choices=choices('한 걸음씩 딛기','낮게 건너기');plan.goal='세 섬을 방문하고 출발 섬으로 돌아오기';plan.cues=(round===0?[1,2,3,2,1]:round===1?[1,3,2,3,1]:[1,2,1,3,1]).map(n=>move(`${n}번 섬 · ${hard?'낮게 건너고 조용히 멈추기':'한 걸음 딛고 멈추기'}`,`${n}번 표식에 팔을 뻗어 짚기`));plan.hint='건너기가 불편하면 언제든 딛기로 바꾸어요. 높이와 횟수를 측정하지 않아요.';break;

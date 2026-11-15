@@ -35,7 +35,7 @@ test('maximum length Korean and Unicode cue links survive encoding and reading',
 test('student participation AI output needs the exact three short grounded sections', () => {
   const input: TeacherInput = { task: 'participation', activityId: cues.activityId, grade: '3~4학년군', goal: '협동과 소통', place: '체육관', device: '태블릿 PC', deviceCount: '모둠별 1대', minutes: 40, groupSize: 6, activityMinutes: 10, classSize: 24, weather: '제약 없음', observations: [], aggregate: null, consent: true };
   const source = sources(input)[0];
-  const output: TeacherOutput = { title: '교사 검토용 참여 안내', recommendations: [], sections: [cues.mission, cues.roles, cues.waiting].map((content, index) => ({ heading: ['오늘의 몸 미션', '역할 바꾸기', '기다리는 동안'][index], minutes: null, content, citations: [{ activityId: source.id, field: 'description', quote: source.description }] })), safety: source.safety.slice(0, 1).map(quote => ({ activityId: source.id, quote })), teacherChecks: ['모두 참여할 수 있는 동작인가요?'] };
+  const output: TeacherOutput = { title: '교사 검토용 참여 안내', recommendations: [], sections: [cues.mission, cues.roles, cues.waiting].map((content, index) => ({ heading: ['오늘의 신체 놀이', '역할 바꾸기', '기다리는 동안'][index], minutes: null, content, citations: [{ activityId: source.id, field: 'description', quote: source.description }] })), safety: source.safety.slice(0, 1).map(quote => ({ activityId: source.id, quote })), teacherChecks: ['모두 참여할 수 있는 동작인가요?'] };
   assert.doesNotThrow(() => validateOutput(output, input));
   assert.throws(() => validateOutput({ ...output, sections: output.sections.slice(0, 2) }, input));
   assert.throws(() => validateOutput({ ...output, sections: output.sections.map((section, index) => index === 0 ? { ...section, content: '가'.repeat(101) } : section) }, input));

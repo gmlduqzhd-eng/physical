@@ -19,3 +19,4 @@
 @media(max-width:520px){.tools-lane{grid-template-columns:54px 1fr;row-gap:8px}.tools-lane button{grid-column:auto}}
 @media(prefers-reduced-motion:reduce){.tools-trace{animation:none;stroke-dashoffset:0}.tools-big strong{animation:none}}
 @media print{.tools-bar,.tools-tabs,.tools-side button,.tools-draw{display:none}}
+.play-experiences[hidden],.class-tools [hidden]{display:none!important}

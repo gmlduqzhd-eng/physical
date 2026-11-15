@@ -25,3 +25,6 @@ test('stored journeys are filtered: unknown kinds, bad dates and extra stamps ar
  assert(isJourneyKind('safety')&&!isJourneyKind('x')&&!isJourneyKind(3));
  assert.equal(localDate(new Date(2026,0,5)),'2026-01-05');
 });
+test('arrival missions do not ask a whole group to balance on one leg while linked together',()=>{
+ for(const i of JOURNEY_ISLANDS)assert.doesNotMatch(i.quest,/어깨동무.*한 발|한 발.*어깨동무/,i.id);
+});

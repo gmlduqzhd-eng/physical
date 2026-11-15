@@ -3,7 +3,7 @@ import {Link,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
 import {readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxPop,sfxSuccess,unlockAudio} from '../application/soundEffects';
-import {JOURNEY_ISLANDS,JOURNEY_KINDS,JOURNEY_TOTAL,STAMPS_PER_ISLAND,addStamp,islandStamps,isJourneyKind,journeyProgress,kindCounts,parseJourney,undoStamp,type JourneyKind,type JourneyStamp} from '../domain/classJourney';
+import {JOURNEY_ISLANDS,JOURNEY_KINDS,JOURNEY_TOTAL,STAMPS_PER_ISLAND,addStamp,islandStamps,isJourneyKind,journeyProgress,kindCounts,localDate,parseJourney,undoStamp,type JourneyKind,type JourneyStamp} from '../domain/classJourney';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassJourney.css';
@@ -16,7 +16,7 @@ const KIND_LABEL=Object.fromEntries(JOURNEY_KINDS.map(k=>[k.id,k.label])) as Rec
 export function ClassJourney(){
  const [params]=useSearchParams(),suggested=params.get('suggest');
  const [stamps,setStamps]=useState<JourneyStamp[]>(()=>parseJourney(readJsonStorage(JOURNEY_KEY)));
- const [kind,setKind]=useState<JourneyKind>(isJourneyKind(suggested)?suggested:'play'),[confirm,setConfirm]=useState(false),[fresh,setFresh]=useState(false);
+ const [kind,setKind]=useState<JourneyKind>(isJourneyKind(suggested)?suggested:'play'),[confirm,setConfirm]=useState(false),[confirmUndo,setConfirmUndo]=useState(false),[fresh,setFresh]=useState(false);
  const progress=journeyProgress(stamps),save=(next:JourneyStamp[])=>{setStamps(next);writeStorage(JOURNEY_KEY,JSON.stringify(next));};
  const stamp=()=>{if(progress.finished)return;unlockAudio();const next=addStamp(stamps,kind);save(next);setFresh(true);if(journeyProgress(next).justArrived)sfxSuccess();else sfxPop();};
  const arrival=fresh?progress.justArrived:null,target=progress.sailingTo===null?null:JOURNEY_ISLANDS[progress.sailingTo];
@@ -31,7 +31,8 @@ export function ClassJourney(){
     <ul className="journey-stamps" aria-label={`${island.name} 도장 ${got.length}개`}>{Array.from({length:STAMPS_PER_ISLAND},(_,s)=><li key={s} data-filled={got[s]?'yes':'no'} title={got[s]?`${KIND_LABEL[got[s].kind]} · ${got[s].date}`:undefined}>{got[s]?KIND_ICON[got[s].kind]:''}</li>)}</ul></li>;})}</ol>
   <section className="recipe-card" aria-label="도장 찍기"><h2>오늘 수업 도장 찍기</h2>
    <div className="sports-filters" role="group" aria-label="오늘 한 수업">{JOURNEY_KINDS.map(k=><button key={k.id} aria-pressed={kind===k.id} onClick={()=>setKind(k.id)}><span aria-hidden="true">{k.icon}</span> {k.label}</button>)}</div>
-   <div className="flagship-row"><button className="primary journey-go" disabled={progress.finished} onClick={stamp}>{progress.finished?'원정을 마쳤어요':`${KIND_ICON[kind]} 도장 찍기`}</button><button disabled={!stamps.length} onClick={()=>{save(undoStamp(stamps));setFresh(false);}}>방금 찍은 도장 취소</button><button disabled={!stamps.length} onClick={()=>setConfirm(true)}>새 원정 시작</button></div>
+   <div className="flagship-row"><button className="primary journey-go" disabled={progress.finished} onClick={stamp}>{progress.finished?'원정을 마쳤어요':`${KIND_ICON[kind]} 도장 찍기`}</button><button disabled={!stamps.length} onClick={()=>{setConfirmUndo(true);setConfirm(false);}}>마지막 도장 취소</button><button disabled={!stamps.length} onClick={()=>{setConfirm(true);setConfirmUndo(false);}}>새 원정 시작</button></div>
+   {confirmUndo&&stamps.length>0&&<div className="sports-confirm" role="alert"><p>{stamps.at(-1)!.date===localDate()?'오늘':stamps.at(-1)!.date} 찍은 {KIND_LABEL[stamps.at(-1)!.kind]} 도장을 취소할까요?</p><button onClick={()=>setConfirmUndo(false)}>그대로 두기</button><button className="primary" onClick={()=>{save(undoStamp(stamps));setFresh(false);setConfirmUndo(false);}}>네, 취소해요</button></div>}
    {confirm&&<div className="sports-confirm" role="alert"><p>지금까지 찍은 도장 {stamps.length}개를 모두 지우고 처음부터 시작할까요? 되돌릴 수 없어요.</p><button onClick={()=>setConfirm(false)}>그대로 두기</button><button className="primary" onClick={()=>{removeStorage(JOURNEY_KEY);setStamps([]);setConfirm(false);setFresh(false);}}>모두 지우고 새로 시작</button></div>}
    {stamps.length>0&&<p className="sports-muted">지금까지 · {kindCounts(stamps).filter(k=>k.count).map(k=>`${k.label} ${k.count}번`).join(', ')}</p>}
    <p className="sports-muted">도장은 이 기기에만 수업 종류와 날짜로 저장돼요. 학생 이름이나 개인 기록은 담지 않아요. 다른 기기에서는 보이지 않아요.</p></section>

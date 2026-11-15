@@ -1,4 +1,5 @@
 import {CROWD_GOAL_DATA,CROWD_HALLOWEEN_CARDS,CROWD_SOURCE,CROWD_THEME_DATA} from './crowdSafetyData.js';
+import {CROWD_THEME_GRADE_TEXT} from './crowdSafetyGrades.js';
 
 /** 다중밀집 안전 교실: 학년군 × 상황 주제. 판단 → 몸으로 익히기 → 생각 확인 → 약속. */
 export type CrowdGrade='1-2'|'3-4'|'5-6';
@@ -44,20 +45,37 @@ export const isCrowdGrade=(value:unknown):value is CrowdGrade=>value==='1-2'||va
 export const crowdTheme=(id:string|null|undefined)=>CROWD_THEMES.find(t=>t.id===id)??CROWD_THEMES[0];
 
 export interface CrowdDecision {goal:CrowdGoalId;title:string;situation:string;choices:{text:string;safe:boolean;feedback:string}[]}
-/** 주제와 학년군에 맞는 상황 카드. 안전한 선택이 늘 같은 자리에 오지 않게 카드마다 순서를 바꾼다. */
+/**
+ * 안전한 선택이 첫째에 오는지(true) 카드마다 정한다. 늘 같은 자리도, 첫째·둘째 번갈아 나오는 것도 아니게
+ * 섞인 무늬에서 고르고, 주제·학년군마다 다른 무늬가 되도록 글자로 정한다. 같은 수업은 늘 같은 순서다.
+ */
+export function safeFirstPattern(n:number,seed:string):boolean[]{
+ let h=7;for(const ch of seed)h=(h*31+ch.charCodeAt(0))>>>0;
+ if(n<=1)return [h%2===0];
+ if(n===2)return h%2?[true,false]:[false,true];
+ if(n===3)return [[true,true,false],[true,false,false],[false,true,true],[false,false,true]][h%4];
+ const base=[true,true,false,false,true,false],shift=h%base.length;
+ return Array.from({length:n},(_,i)=>base[(i+shift)%base.length]);
+}
+/** 주제와 학년군에 맞는 상황 카드. 할로윈은 학년군마다 원본 글이 따로 있고, 나머지 주제는 1~2·3~4학년용으로 다시 쓴 글을 쓴다. */
 export function crowdDecisions(themeId:string,grade:CrowdGrade):CrowdDecision[]{
- const theme=crowdTheme(themeId);
+ const theme=crowdTheme(themeId),rewrite=grade==='5-6'?undefined:CROWD_THEME_GRADE_TEXT[theme.id]?.[grade];
  const cards=theme.situations.length
-  ?theme.situations.map(s=>{const why=CROWD_WHY[s.goal as CrowdGoalId];return {goal:s.goal,title:s.place,situation:s.situation,right:s.right,wrong:s.wrong,rightFeedback:why,wrongFeedback:'다시 살펴봐요. '+why};})
+  ?theme.situations.map((s,i)=>{const why=CROWD_WHY[s.goal as CrowdGoalId],[situation,right,wrong]=rewrite?.[i]??[s.situation,s.right,s.wrong];return {goal:s.goal,title:s.place,situation,right,wrong,rightFeedback:why,wrongFeedback:'다시 살펴봐요. '+why};})
   :CROWD_HALLOWEEN_CARDS[grade];
+ const order=safeFirstPattern(cards.length,`${theme.id}/${grade}`);
  return cards.map((c,i)=>{
   const safe={text:c.right,safe:true,feedback:c.rightFeedback},risky={text:c.wrong,safe:false,feedback:c.wrongFeedback};
-  return {goal:c.goal as CrowdGoalId,title:c.title,situation:c.situation,choices:(i+theme.id.length)%2?[risky,safe]:[safe,risky]};
+  return {goal:c.goal as CrowdGoalId,title:c.title,situation:c.situation,choices:order[i]?[safe,risky]:[risky,safe]};
  });
 }
-/** 학년군의 확인 질문 여섯 개. 원본은 정답이 늘 첫째라서 한 문제 걸러 순서를 뒤집는다. */
-export const crowdChecks=(grade:CrowdGrade)=>CROWD_GOALS.map((g,i)=>{const c=g.checks[grade],flip=i%2===1;
- return {goal:g.id as CrowdGoalId,title:g.title,question:c.question,options:flip?[...c.options].reverse():c.options,answer:flip?c.options.length-1-c.answer:c.answer};});
+/** 1~2학년 첫 질문은 원본이 할로윈 축제를 가리켜서, 어느 주제에도 맞는 말로 바꾼다. */
+const CHECK_OVERRIDE:Partial<Record<CrowdGoalId,Partial<Record<CrowdGrade,CrowdCheck>>>>={
+ route:{'1-2':{question:'사람이 많은 곳에 들어가기 전에 무엇을 먼저 볼까요?',options:['나갈 수 있는 길','재미있는 구경거리만'],answer:0}},
+};
+/** 학년군의 확인 질문 여섯 개. 원본은 정답이 늘 첫째라서 질문마다 고정된 순서로 섞는다. */
+export const crowdChecks=(grade:CrowdGrade)=>{const order=safeFirstPattern(CROWD_GOALS.length,`checks/${grade}`);return CROWD_GOALS.map((g,i)=>{const c=CHECK_OVERRIDE[g.id as CrowdGoalId]?.[grade]??g.checks[grade],flip=c.answer===0?!order[i]:order[i];
+ return {goal:g.id as CrowdGoalId,title:g.title,question:c.question,options:flip?[...c.options].reverse():c.options,answer:flip?c.options.length-1-c.answer:c.answer};});};
 /** 생각 확인 결과. 틀린 목표를 돌려줘 다시 살펴보게 한다. */
 export function crowdCheckResult(grade:CrowdGrade,answers:readonly (number|null)[]){
  const checks=crowdChecks(grade),missed=checks.filter((c,i)=>answers[i]!==c.answer).map(c=>c.goal);

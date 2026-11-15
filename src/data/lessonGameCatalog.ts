@@ -1337,7 +1337,7 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
 const CATALOG_WITH_QUESTS:LessonGameMeta[]=[...BASE_LESSON_GAME_CATALOG,...GAMES.filter(g=>(isQuestId(g.type)||isSafetyLessonId(g.type))&&!BASE_LESSON_GAME_CATALOG.some(l=>l.id===g.type)).map(g=>({
   id:g.type,title:g.name,emoji:g.emoji,route:'/play/'+g.type,description:g.desc,domain:g.domain,sportType:g.sportType,subCategory:g.subCategory,achievementCode:g.achievement.code,grades:g.grades,
   activityModes:['개인' as const],space:['교실' as const,'체육관' as const],deviceMode:['교사용 1대' as const],recommendedPlayers:{min:1,max:1},intensity:'보통' as const,
-  movementSkills:['도구 조절','선택한 움직임 실행'],learningKeywords:['몸 미션','선택과 비교'],safetyNotes:[],teachingTips:[],noDeviceAlternative:'교사가 종이 카드로 안내해요.',
+  movementSkills:['도구 조절','선택한 움직임 실행'],learningKeywords:['신체 놀이','선택과 비교'],safetyNotes:[],teachingTips:[],noDeviceAlternative:'교사가 종이 카드로 안내해요.',
 }))];
 export const ALL_LESSON_GAME_CATALOG: LessonGameMeta[] = CATALOG_WITH_QUESTS.map(game => isQuestId(game.id) ? {
   ...game, title: QUEST_META[game.id].name, description: QUEST_META[game.id].description,
