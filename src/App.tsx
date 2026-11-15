@@ -36,6 +36,15 @@ const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then
 const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
 const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage').then(m=>({default:m.PlayExperiencePage})));
 const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
+const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
+const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({default:m.ClassTools})));
+const SafetyClassroom = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.SafetyClassroom})));
+const CrowdSafetyLesson = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.CrowdSafetyLesson})));
+const ClassJourney = lazy(() => import('./presentation/ClassJourney').then(m=>({default:m.ClassJourney})));
+const SportDeepDive = lazy(() => import('./presentation/SportDeepDive').then(m=>({default:m.SportDeepDive})));
+const AngleLab = lazy(() => import('./presentation/AngleLab').then(m=>({default:m.AngleLab})));
+const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:m.MoreApps})));
+const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
 function RouteScrollReset() {
@@ -69,6 +78,15 @@ function App() {
         <Route path="/try/:kind" element={<PlayExperiencePage/>} />
         <Route path="/together" element={<SharedScreenLesson/>} />
         <Route path="/lessons" element={<LessonRecipes/>} />
+        <Route path="/sports" element={<SportsClassroom/>} />
+        <Route path="/sports/:sportId" element={<SportLesson/>} />
+        <Route path="/sports/:sportId/deep" element={<SportDeepDive/>} />
+        <Route path="/lab/angle" element={<AngleLab/>} />
+        <Route path="/more" element={<MoreApps/>} />
+        <Route path="/tools" element={<ClassTools/>} />
+        <Route path="/safety" element={<SafetyClassroom/>} />
+        <Route path="/journey" element={<ClassJourney/>} />
+        <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />

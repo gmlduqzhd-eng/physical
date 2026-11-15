@@ -1,0 +1,11 @@
+.safety-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:8px 0 18px}
+.play-experiences .safety-options button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-height:64px;padding:12px 14px;border-radius:16px;text-align:left}.safety-options small{color:var(--forest-muted);font-weight:500}
+.play-experiences .safety-options button[aria-pressed=true],.play-experiences .safety-choices button[aria-pressed=true]{background:var(--forest-tint);border-color:var(--forest-accent);font-weight:800}
+.play-experiences a.safety-start{display:inline-flex;margin:4px 0 12px;min-height:54px;font-size:18px}
+.safety-situation{font-size:clamp(18px,2.2vw,24px);line-height:1.7}
+.safety-choices{display:grid;gap:10px;margin:14px 0}.play-experiences .safety-choices button{min-height:60px;padding:14px 16px;border-radius:16px;text-align:left;justify-content:flex-start;font-size:clamp(16px,1.9vw,20px);line-height:1.5;white-space:normal}
+.play-experiences .safety-choices button[data-result=safe]{border-color:var(--forest-accent);background:var(--forest-tint)}.play-experiences .safety-choices button[data-result=safe]::before{content:'⭕ '}
+.play-experiences .safety-choices button[data-result=risky]{border-style:dashed}.play-experiences .safety-choices button[data-result=risky]::before{content:'✋ '}
+.safety-rule{padding:12px 14px;border:1px dashed var(--forest-control-line);border-radius:14px;font-size:15px}
+.safety-checks{padding-left:22px}.safety-checks>li{margin:0 0 20px;font-size:18px}
+.safety-promise{font-size:clamp(24px,4vw,44px);font-weight:800;line-height:1.4;text-align:center;margin:20px 0}

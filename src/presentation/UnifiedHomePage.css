@@ -6,3 +6,9 @@
 @media(max-width:650px){.unified-home .phone-home-link{display:block;padding:22px}.unified-home .phone-home-link a{justify-content:center;margin-top:20px;white-space:normal}.unified-home .phone-home-link h2{font-size:21px}}
 
 .unified-home .home-account-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px 0 0}.unified-home .home-account-tabs a,.unified-home .home-account-tabs button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:12px;padding:10px 16px;font:inherit;font-weight:700;color:inherit;text-decoration:none;background:transparent}.unified-home .home-account-tabs a:hover,.unified-home .home-account-tabs button:hover,.unified-home .home-account-tabs .member-tab{background:var(--app-surface,#eef3ea);border-color:var(--app-border,#cdd6c8)}
+
+.unified-home .encyclopedia{margin:32px 0;padding:28px 0;border-top:1px solid var(--forest-line,#d5dfd6)}.unified-home .encyclopedia h2{font-size:24px;font-weight:600;margin:8px 0 18px;color:var(--forest-ink,#204a40)}
+.unified-home .encyclopedia-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.unified-home .encyclopedia-grid a{display:flex;flex-direction:column;gap:6px;padding:18px;border:1px solid var(--forest-line,#d5dfd6);border-radius:20px;background:var(--forest-paper,#fff);color:var(--forest-ink,#204a40);text-decoration:none;min-height:132px}
+.unified-home .encyclopedia-grid a:hover,.unified-home .encyclopedia-grid a:focus-visible{border-color:var(--forest-accent,#566d4d)}
+.unified-home .encyclopedia-grid span{font-size:30px;line-height:1.2}.unified-home .encyclopedia-grid strong{font-size:19px}.unified-home .encyclopedia-grid small{font-size:14px;line-height:1.5;color:var(--forest-muted,#5d6b62)}
