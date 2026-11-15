@@ -21,3 +21,22 @@ node scripts/game-catalog-smoke.cjs http://127.0.0.1:5173 scream,multi_touch,cir
 ```
 
 The same catalog startup check can target a preview or production URL after deployment. JSON reports and screenshots are saved under the ignored `test-results/game-catalog/` directory. Set `TEST_OUTPUT_DIR` to save them elsewhere. The regression fixtures require the development server.
+
+## Catalog check in CI
+
+The `catalog` job of `Application checks` builds the app, serves it with `vite preview` and runs `npm run test:catalog:ci`: every registered activity at 390×844 with the Playwright Chromium build. It takes about eight minutes. Locally:
+
+```sh
+npm run build
+npx vite preview --host 127.0.0.1 --port 4173 --strictPort
+npm run test:catalog:ci
+```
+
+How the script reads the current screens:
+
+- An activity with its own introduction (phone plays, movement quests, expeditions, flagship expeditions, safety lessons and a few stand-alone games) opens straight into the game area. The others show the shared preparation screen with `활동 시작` first.
+- A retired game shows its notice and must link to a replacement. It is recorded as `retired` and nothing is started.
+- A merged game is followed to its target course and recorded with `redirectedTo`.
+- If the touched control opened an information dialog, the script closes it before leaving the game.
+- The catalog is recognised by its activity cards.
+
