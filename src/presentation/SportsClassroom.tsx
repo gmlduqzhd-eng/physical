@@ -1,4 +1,5 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
+import {useRunningClock} from '../application/useRunningClock';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
 import {readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
@@ -42,15 +43,9 @@ export function SportsClassroom(){
  </section></FlowShell>;
 }
 
-function useClock(running:boolean){
- const [ms,setMs]=useState(0),base=useRef(0);
- useEffect(()=>{if(!running)return;let last=performance.now();const t=setInterval(()=>{const now=performance.now();if(!document.hidden)base.current+=now-last;last=now;setMs(base.current);},100);return()=>clearInterval(t);},[running]);
- return {ms,reset:()=>{base.current=0;setMs(0);}};
-}
-
 function ScoreMatch({event,teams,scores,setScores}:{event:SportEvent;teams:number;scores:(number|null)[];setScores:(next:(number|null)[])=>void}){
  const [seconds,setSeconds]=useState(event.timers[0]),[running,setRunning]=useState(false);
- const clock=useClock(running),left=Math.max(0,seconds-Math.floor(clock.ms/1000)),ended=useRef(false);
+ const clock=useRunningClock(running),left=Math.max(0,seconds-Math.floor(clock.ms/1000)),ended=useRef(false);
  useEffect(()=>{if(running&&left===0&&!ended.current){ended.current=true;setRunning(false);sfxWhistle();}if(running&&left>0&&left<=3)sfxCountdown();},[left,running]);
  const add=(team:number,amount:number)=>setScores(scores.map((s,i)=>i===team?Math.max(0,(s??0)+amount):s));
  return <>
@@ -67,7 +62,7 @@ function ScoreMatch({event,teams,scores,setScores}:{event:SportEvent;teams:numbe
 
 function TimeMatch({event,teams,scores,setScores}:{event:SportEvent;teams:number;scores:(number|null)[];setScores:(next:(number|null)[])=>void}){
  const [running,setRunning]=useState(false),[penalties,setPenalties]=useState<number[]>(()=>Array(teams).fill(0));
- const clock=useClock(running),now=clock.ms/1000;
+ const clock=useRunningClock(running),now=clock.ms/1000;
  const finish=(team:number)=>{const next=scores.map((s,i)=>i===team?Math.round((now+(penalties[i]??0))*10)/10:s);setScores(next);if(next.slice(0,teams).every(v=>v!==null)){setRunning(false);sfxWhistle();}};
  return <>
   <div className="sports-timer"><strong aria-live="off">{formatResult(event,now)}</strong><div className="flagship-row">

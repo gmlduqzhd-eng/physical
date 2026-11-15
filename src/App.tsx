@@ -37,6 +37,7 @@ const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ d
 const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage').then(m=>({default:m.PlayExperiencePage})));
 const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
 const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
+const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({default:m.ClassTools})));
 const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
@@ -73,6 +74,7 @@ function App() {
         <Route path="/lessons" element={<LessonRecipes/>} />
         <Route path="/sports" element={<SportsClassroom/>} />
         <Route path="/sports/:sportId" element={<SportLesson/>} />
+        <Route path="/tools" element={<ClassTools/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />
