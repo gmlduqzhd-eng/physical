@@ -60,5 +60,5 @@ export function phoneRecordValid(p:PhonePlay,r:PhoneRecord,players:number):boole
   &&(r.remainder===undefined||r.remainder===0||r.remainder===1)
   &&(r.individual===undefined||r.count===r.individual.reduce((n,v)=>n+v,0))
   &&([r.goals,r.individual].every(list=>list===undefined||list.length===players&&list.every(n=>Number.isInteger(n)&&n>=0&&n<=99)))
-  &&(r.outcome!=='complete'||(r.participants.length===players&&(p.kind!=='memory'||JSON.stringify(r.answer)===JSON.stringify(phoneMemoryTask(p,r.round,r.easy===true,r.challenge===true,r.fill).expected))&&(p.kind!=='observe'||['compared','uncertain','skip'].includes(r.comparison??''))&&(p.kind!=='count'||r.count>0)&&(!r.goals||!r.individual||r.individual.every((v,i)=>v>=r.goals![i]))&&(p.kind!=='estimate'||Math.abs(r.elapsedMs-phoneTarget(r.round)*1000)<=3500)));
+  &&(r.outcome!=='complete'||(r.participants.length===players&&(p.kind!=='memory'||JSON.stringify(r.answer)===JSON.stringify(phoneMemoryTask(p,r.round,r.easy===true,r.challenge===true,r.fill).expected))&&(p.kind!=='observe'||['compared','uncertain','skip'].includes(r.comparison??''))&&(p.kind!=='count'||r.count>0)&&(p.kind!=='estimate'||Math.abs(r.elapsedMs-phoneTarget(r.round)*1000)<=3500)));
 }

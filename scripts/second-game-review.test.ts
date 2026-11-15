@@ -45,7 +45,7 @@ test('team games show concrete shared motions and rotate the signal reader',()=>
 });
 test('paired counting carries one remainder and personal counts must add to the recorded total',()=>{
  assert.deepEqual(phoneBundle(5,0),{count:2,remainder:1});assert.deepEqual(phoneBundle(4,1),{count:2,remainder:1});assert.deepEqual(phoneBundle(3,1),{count:2,remainder:0});
- const p=PHONE_PLAY_BY_ID.get('phone-play-061')!,r:PhoneRecord={round:0,outcome:'complete',elapsedMs:p.seconds*1000,count:6,answer:[],participants:[1,2,3],goals:[1,2,3],individual:[1,2,3]};assert(phoneRecordValid(p,r,3));assert(!phoneRecordValid(p,{...r,count:7},3));assert(!phoneRecordValid(p,{...r,individual:[6]},3));assert(!phoneRecordValid(p,{...r,goals:[3,3,3]},3));
+ const p=PHONE_PLAY_BY_ID.get('phone-play-061')!,r:PhoneRecord={round:0,outcome:'complete',elapsedMs:p.seconds*1000,count:6,answer:[],participants:[1,2,3],goals:[1,2,3],individual:[1,2,3]};assert(phoneRecordValid(p,r,3));assert(!phoneRecordValid(p,{...r,count:7},3));assert(!phoneRecordValid(p,{...r,individual:[6]},3));assert(phoneRecordValid(p,{...r,goals:[3,3,3]},3),'a result below a personal goal is still an honest complete record');
 });
 test('observation measures are game-specific and decision circumstances change each round',()=>{
  assert.equal(phoneObservation(PHONE_PLAY_BY_ID.get('phone-play-017')!).label,'두 팔의 높이 관찰');

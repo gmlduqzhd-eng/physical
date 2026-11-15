@@ -52,7 +52,11 @@ export default async function handler(req: Request, res: ServerResponse) {
     if (!nonce) return send(401, { error: '교사 인증이 필요하거나 만료되었습니다. 다시 로그인하세요.' });
     if (action === 'classroom-authorize') {
       if (!rateLimit('classroom-auth:' + nonce, 6, 60000)) return send(429, { error: '교사 권한 확인 요청이 많습니다.' });
-      return send(200, await authorizeClassroomTeacher((body as { accessToken?: unknown })?.accessToken, teacherAccountId(nonce)));
+      const authorized = await authorizeClassroomTeacher((body as { accessToken?: unknown })?.accessToken, teacherAccountId(nonce));
+      // Sliding renewal: an active classroom keeps the same signed identity for another full period.
+      // Google accounts only: already-issued shared-code sessions keep their original expiry.
+      if (session(req) === nonce && teacherAccountId(nonce)) res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', nonce)));
+      return send(200, authorized);
     }
     if (action !== 'generate') return send(404, { error: '없는 기능입니다.' });
     if (!rateLimit('ai:' + nonce, 12, 60 * 1000)) return send(429, { error: '생성 요청이 많습니다. 잠시 후 다시 시도하세요.' });

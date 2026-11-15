@@ -81,3 +81,9 @@ test('29 redesigned expedition flows keep native puzzles, roles, bingo and all s
     const rehearsal=expeditionRehearsal(adapted[0]);assert.equal(rehearsal.steps.length,1);assert.equal(rehearsal.steps[0].seconds,8);assert.equal(rehearsal.timing,undefined);
   }
 });
+test('stage-2 defect fixes: rhythm rounds repeat the bar, rehearsal stays one slow bar, sums read correctly',async()=>{
+ const {BEAT_BARS}=await import('../src/domain/expeditionRules');const {expeditionRehearsal}=await import('../src/domain/expeditionRevamps');
+ for(const game of b.filter(g=>g.family==='rhythm'))for(const step of createExpeditionRound(game,0,game.players).steps.filter(s=>s.beats)){assert.equal(step.bars,BEAT_BARS,game.spec);assert(step.seconds>=20,game.spec+' rhythm step must last long enough to move to');}
+ const rhythm=createExpeditionRound(b.find(g=>g.spec==='S12')!,0,1),practice=expeditionRehearsal(rhythm).steps[0];assert.equal(practice.bars,1);assert.equal(practice.seconds,8);
+ for(let i=0;i<40;i++)assert(!/\d가 되도록/.test(createExpeditionRound(b.find(g=>g.spec==='S06')!,0,1).question!.prompt));
+});

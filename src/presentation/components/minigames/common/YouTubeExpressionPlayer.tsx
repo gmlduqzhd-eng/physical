@@ -12,6 +12,8 @@ declare global {
 
 interface YouTubeExpressionPlayerProps {
   initialVideoId?: string;
+  /** Typing another video address. Off inside a classroom so a student device cannot open unrelated videos. */
+  allowChange?: boolean;
   videoTitle?: string;
   defaultBpm?: number;
   enableMirror?: boolean;
@@ -61,6 +63,7 @@ export const YouTubeExpressionPlayer = ({
   defaultBpm = 100,
   paused = false,
   onPlaybackChange,
+  allowChange = true,
 }: YouTubeExpressionPlayerProps) => {
   const [customUrl, setCustomUrl] = useState('');
   const [activeVideoId, setActiveVideoId] = useState(initialVideoId);
@@ -329,14 +332,14 @@ export const YouTubeExpressionPlayer = ({
           </button>
 
           {/* 링크 직접 입력 토글 */}
-          <button
+          {allowChange && <button
             type="button"
             onClick={() => setShowUrlInput(prev => !prev)}
             className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors flex items-center gap-1"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span>영상 변경</span>
-          </button>
+          </button>}
 
           {/* 유튜브 새 탭에서 열기 */}
           <a
@@ -353,7 +356,7 @@ export const YouTubeExpressionPlayer = ({
       </div>
 
       {/* 커스텀 URL 입력 폼 (토글 시 노출) */}
-      {showUrlInput && (
+      {allowChange && showUrlInput && (
         <form onSubmit={handleApplyUrl} className="p-3 bg-purple-950/40 border-b border-purple-500/20 flex gap-2 animate-in fade-in duration-150">
           <input
             type="text"
