@@ -5,19 +5,21 @@ export type PublicLessonTransfer=z.infer<typeof publicLessonSchema>;
 export function lessonTransferLink(origin:string,input:PublicLessonTransfer){const data=publicLessonSchema.parse(input);return `${origin}/teacher/setup#lesson=${encodeURIComponent(JSON.stringify(data))}`;}
 export function parseLessonTransfer(hash:string){try{if(!hash.startsWith('#lesson=')||hash.length>2500)return null;const parsed=publicLessonSchema.safeParse(JSON.parse(decodeURIComponent(hash.slice(8))));return parsed.success?parsed.data:null;}catch{return null;}}
 const returnKey='physical_teacher_public_setup_v1';
-const returnSchema=z.object({expiresAt:z.number().finite(),lesson:publicLessonSchema.nullable(),packageMinutes:z.union([z.literal(10),z.literal(20),z.literal(40)]).nullable(),game:z.string().regex(/^[a-z0-9-]{1,80}$/).nullable()}).strict();
+// Fixed teacher screens only, so a login can return to where the teacher was. Never an arbitrary URL.
+const teacherPath=/^\/teacher\/(setup|manage|members|room\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
+const returnSchema=z.object({expiresAt:z.number().finite(),lesson:publicLessonSchema.nullable(),packageMinutes:z.union([z.literal(10),z.literal(20),z.literal(40)]).nullable(),game:z.string().regex(/^[a-z0-9-]{1,80}$/).nullable(),path:z.string().regex(teacherPath).nullable().optional()}).strict();
 // Preserve public setup only across an explicit Google login, for ten minutes.
 // Auth tokens and arbitrary return URLs are never accepted in this record.
 export function savePublicSetupReturn(){
- try{sessionStorage.removeItem(returnKey);if(location.pathname!=='/teacher/setup')return;
+ try{sessionStorage.removeItem(returnKey);if(!teacherPath.test(location.pathname))return;const setup=location.pathname==='/teacher/setup';
   const params=new URLSearchParams(location.search),n=Number(params.get('package')),game=params.get('game');
-  const data=returnSchema.parse({expiresAt:Date.now()+600000,lesson:parseLessonTransfer(location.hash),packageMinutes:[10,20,40].includes(n)?n:null,game:game&&/^[a-z0-9-]{1,80}$/.test(game)?game:null});
-  if(data.lesson||data.packageMinutes||data.game)sessionStorage.setItem(returnKey,JSON.stringify(data));
+  const data=returnSchema.parse({expiresAt:Date.now()+600000,lesson:setup?parseLessonTransfer(location.hash):null,packageMinutes:setup&&[10,20,40].includes(n)?n:null,game:setup&&game&&/^[a-z0-9-]{1,80}$/.test(game)?game:null,path:location.pathname});
+  sessionStorage.setItem(returnKey,JSON.stringify(data));
  }catch{/* No public condition persistence when browser storage is unavailable. */}
 }
 export function takePublicSetupReturn(){
  try{const raw=sessionStorage.getItem(returnKey);sessionStorage.removeItem(returnKey);if(!raw||raw.length>4000)return null;const r=returnSchema.safeParse(JSON.parse(raw));if(!r.success||r.data.expiresAt<Date.now()||r.data.expiresAt>Date.now()+600000)return null;
-  const {lesson,packageMinutes,game}=r.data;if(lesson)return lessonTransferLink(location.origin,lesson).replace(location.origin,'');
-  const params=new URLSearchParams();if(packageMinutes)params.set('package',String(packageMinutes));if(game)params.set('game',game);return params.size?'/teacher/setup?'+params.toString():null;
+  const {lesson,packageMinutes,game,path}=r.data;if(lesson)return lessonTransferLink(location.origin,lesson).replace(location.origin,'');
+  const params=new URLSearchParams();if(packageMinutes)params.set('package',String(packageMinutes));if(game)params.set('game',game);return params.size?'/teacher/setup?'+params.toString():path??null;
  }catch{return null;}
 }

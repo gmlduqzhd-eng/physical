@@ -96,6 +96,12 @@ test('safety review uses another context and does not add fake learning points o
 });
 test('actual classroom status hook handles pause, disconnection, recovery, ended rooms and cleanup',async()=>{
  const w=world(),hook=w.load('src/application/useClassroomActivityStatus.ts').useClassroomActivityStatus,a=w.actor(()=>hook('synthetic-room'));
- assert(a.root.paused);await w.flush();assert(!a.root.paused);w.env.status='paused';w.advance(1500);await w.flush();assert(a.root.paused);w.env.fail=true;w.advance(1500);await w.flush();assert.equal(a.root.status,'unavailable');w.env.fail=false;w.env.status='playing';w.advance(1500);await w.flush();assert(!a.root.paused);w.env.online=false;w.emit('offline');a.flush();assert(a.root.paused);w.env.online=true;w.env.status='finished';w.emit('online');await w.flush();assert.equal(a.root.status,'finished');a.dispose();assert.equal(w.env.removed,1);assert.equal(w.env.timers.size,0);
+ assert(a.root.paused);await w.flush();assert(!a.root.paused);w.env.status='paused';w.advance(5000);await w.flush();assert(a.root.paused);
+ // A missed check after a teacher pause never resumes the activity by itself.
+ w.env.fail=true;w.advance(5000);await w.flush();assert.equal(a.root.status,'unavailable');w.env.fail=false;w.env.status='playing';w.advance(5000);await w.flush();assert(!a.root.paused);
+ // While playing, short connection loss keeps the activity going; a long one stops it.
+ w.env.fail=true;for(let i=0;i<5;i++){w.advance(5000);await w.flush();assert.equal(a.root.status,'playing');}w.advance(5000);await w.flush();assert.equal(a.root.status,'unavailable');
+ w.env.fail=false;w.advance(5000);await w.flush();assert(!a.root.paused);
+ w.env.online=false;w.emit('offline');a.flush();assert(!a.root.paused);w.advance(25000);a.flush();assert(a.root.paused);w.env.online=true;w.env.status='finished';w.emit('online');await w.flush();assert.equal(a.root.status,'finished');a.dispose();assert.equal(w.env.removed,1);assert.equal(w.env.timers.size,0);
 });
 
