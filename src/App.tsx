@@ -36,6 +36,8 @@ const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then
 const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
 const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage').then(m=>({default:m.PlayExperiencePage})));
 const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
+const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
+const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
 function RouteScrollReset() {
@@ -69,6 +71,8 @@ function App() {
         <Route path="/try/:kind" element={<PlayExperiencePage/>} />
         <Route path="/together" element={<SharedScreenLesson/>} />
         <Route path="/lessons" element={<LessonRecipes/>} />
+        <Route path="/sports" element={<SportsClassroom/>} />
+        <Route path="/sports/:sportId" element={<SportLesson/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />
