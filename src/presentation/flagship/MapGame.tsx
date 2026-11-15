@@ -2,11 +2,13 @@ import {useState} from 'react';
 import {STATIONS,STATION_NAMES,mapOrder,type ExpeditionSnapshot} from '../../domain/flagship';
 import {useReportDevice} from './deviceStatusContext';
 import {StationScanner} from './StationScanner';
+import {CooperativeMapGame} from './CooperativeMapGame';
 export type ExpeditionAction=(kind:string,data?:Record<string,unknown>)=>Promise<boolean>;
 export function MapGame({snapshot:s,send,practice,disabled,onRefresh}:{onRefresh?:()=>Promise<void>;snapshot:ExpeditionSnapshot;send:ExpeditionAction;practice:boolean;disabled:boolean}){
  useReportDevice('touch','manual');
  const [hint,setHint]=useState(0),[token,setToken]=useState(''),[confirmed,setConfirmed]=useState(false),[message,setMessage]=useState('');
  const me=s.groups.find(g=>g.id===s.groupId)??s.groups[0];
+ if(s.mapRules?.version===2)return <CooperativeMapGame snapshot={s} send={send} practice={practice} disabled={disabled}/>;
  return <><div className="expedition-map" aria-label="공유 탐사 지도"><svg viewBox="0 0 600 220" role="img" aria-label={`원정길 ${s.phase} / 3 개방`}><path d="M65 165 Q150 20 250 120 T535 65" fill="none" stroke="var(--forest-line)" strokeWidth="14" strokeDasharray="12 10"/>{STATIONS.map((station,i)=><g key={station} transform={`translate(${100+i*200},${i===1?75:135})`}><circle r="45" fill={me.visited.includes(station)?'#d4edc4':'#eee8da'}/><text textAnchor="middle" y="6" fill="#243d32" fontSize="22">{STATION_NAMES[station]}</text></g>)}</svg><p className="flagship-progress">기지 관문 <strong>{s.phase} / 3</strong></p></div>
  <div className="flagship-note"><strong>우리 모둠의 비밀 단서</strong><p>{s.clue?.replaceAll('forest','숲').replaceAll('river','강').replaceAll('tower','탑')}</p><p>다른 모둠의 단서는 몸짓과 대화로 모아요. 모든 모둠이 같은 다음 길을 선택하면 관문이 열려요.</p></div>
  <section className="flagship-note"><h3>함께 풀어 보는 단계별 힌트</h3><p>{hint===0?'막히면 단서의 연결 방법부터 살펴요.':hint===1?'각 모둠이 받은 단서를 한 사람씩 말이나 몸짓으로 전해요.':'첫 길과 마지막 길을 먼저 놓고, 남은 지점을 가운데에 놓아 비교해요. 방문·투표는 모둠이 직접 확인해요.'}</p><button onClick={()=>setHint(n=>Math.min(2,n+1))} disabled={hint>=2}>다음 힌트 보기</button><button onClick={()=>setHint(0)}>힌트 접기</button></section>
