@@ -30,7 +30,7 @@ export const Manual = () => {
             <h2 className="text-xl sm:text-2xl font-black text-white">
               총 {GAMES.length}종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
             </h2>
-            <p className="text-sm text-slate-400 mt-2 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-relaxed" style={{marginInline:'auto',textWrap:'balance'}}>
               화면 터치형 센서 미니게임부터 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동, 그리고 유튜브 영상 연계 댄스·표현 활동까지!
               학생들의 신체활동 역량과 협동심을 기를 수 있도록 설계된 학교 체육 수업 플랫폼입니다.
             </p>

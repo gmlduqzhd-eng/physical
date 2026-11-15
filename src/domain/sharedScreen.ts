@@ -5,10 +5,12 @@ export const SCREEN_LESSONS=[
 ] as const;
 export type ScreenLessonId=typeof SCREEN_LESSONS[number]['id'];
 export const SCREEN_ROUND_MS=20000;
+/** Which movement a cue names, so the screen can draw it. `rest` is the empty beat. */
+export type ScreenMove='open'|'wings'|'step'|'knees'|'rest';
 export function sharedScreenCue(id:ScreenLessonId,round:number,elapsed:number,seated:boolean){
  const step=Math.floor(Math.max(0,elapsed)/3000),small=seated?'양손 무릎 가볍게 짚기':'제자리 발 번갈아 디디기';
- const moves=['손바닥 펴기','팔 작게 펼치기',small];
- if(id==='rhythm'){const beat=Math.floor(Math.max(0,elapsed)/600)%8,on=(beat+round)%2===0;return {title:on?moves[round%3]:'편하게 쉬는 박자',instruction:on?'불빛과 함께 작은 동작을 해요.':'친구를 보고 다음 박자를 기다려요.',symbol:on?'●':'·',step:beat,active:on};}
- if(id==='relay')return {title:moves[(step+round)%3],instruction:['첫 친구가 신호를 보내요.','짝이 동작을 따라 해요.','다음 친구에게 작은 동작을 이어요.'][(step+round)%3],symbol:['1 → 2','2 → 3','3 → 1'][(step+round)%3],step,active:true};
- const on=(step+round)%3!==1,move=moves[(step+round)%3];return {title:(on?'출동! ':'')+move,instruction:on?'출동 신호예요. 편한 크기로 움직여요.':'출동이라는 말이 없어요. 멈춰서 기다려요.',symbol:on?'→':'Ⅱ',step,active:on};
+ const moves=['손바닥 펴기','팔 작게 펼치기',small],kinds:ScreenMove[]=['open','wings',seated?'knees':'step'];
+ if(id==='rhythm'){const beat=Math.floor(Math.max(0,elapsed)/600)%8,on=(beat+round)%2===0;return {title:on?moves[round%3]:'편하게 쉬는 박자',instruction:on?'불빛과 함께 작은 동작을 해요.':'친구를 보고 다음 박자를 기다려요.',symbol:on?'●':'·',step:beat,active:on,move:on?kinds[round%3]:'rest' as ScreenMove};}
+ if(id==='relay')return {title:moves[(step+round)%3],instruction:['첫 친구가 신호를 보내요.','짝이 동작을 따라 해요.','다음 친구에게 작은 동작을 이어요.'][(step+round)%3],symbol:['1 → 2','2 → 3','3 → 1'][(step+round)%3],step,active:true,move:kinds[(step+round)%3]};
+ const on=(step+round)%3!==1,move=moves[(step+round)%3];return {title:(on?'출동! ':'')+move,instruction:on?'출동 신호예요. 편한 크기로 움직여요.':'출동이라는 말이 없어요. 멈춰서 기다려요.',symbol:on?'→':'Ⅱ',step,active:on,move:kinds[(step+round)%3]};
 }
