@@ -208,7 +208,11 @@ const BASE_GAMES: GameDef[] = [
     achievement: { code: '[4체01-04]', title: '건강 생활 습관 실천', desc: '건강한 생활 습관을 이해하고 규칙적으로 실천한다.' },
     grades: ['1~2학년', '3~4학년군', '5~6학년군'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
-    playMode: '개인'
+    playMode: '개인',
+    activityType: '개인',
+    durationMinutes: 1,
+    equipment: ['팔을 벌려도 닿지 않는 개인 공간'],
+    physicalActivity: true,
   },
   {
     type: 'one_leg',

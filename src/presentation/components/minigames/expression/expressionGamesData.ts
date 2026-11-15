@@ -333,7 +333,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
       { criterion: '조형적 균형미', desc: '좌우 대칭 또는 비대칭의 균형이 아름다운 조각상인가?' },
       { criterion: '모둠 협동 배려', desc: '친구의 동작을 침범하지 않고 조화롭게 연결하였는가?' },
     ],
-    safetyTips: ['친구의 몸 위에 올라타거나 체중을 싣지 않습니다. 손끝 접촉만 허용합니다.'],
+    safetyTips: ['친구의 몸 위에 올라타거나 체중을 싣지 않습니다. 서로 닿지 않고 자기 공간에서 조각을 이어 갑니다.'],
   },
   {
     id: 'rhythm_clapping',
@@ -626,15 +626,15 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     playMode: '협동',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
     steps: [
-      { stepNum: 1, title: '진양조 느린 원무', durationSeconds: 25, guide: '손을 잡고 오른쪽으로 천천히 걸으며 보름달의 장엄함을 신체로 느낍니다.', actionTip: '앞 사람의 발걸음 속도와 보폭을 맞춥니다.' },
+      { stepNum: 1, title: '진양조 느린 원무', durationSeconds: 25, guide: '손을 잡는 대신 팔을 옆으로 벌려 간격을 두고 원을 이루어, 오른쪽으로 천천히 걸으며 보름달의 장엄함을 신체로 느낍니다.', actionTip: '앞 사람의 발걸음 속도와 보폭을 맞춥니다.' },
       { stepNum: 2, title: '중모리 남생아 놀아라', durationSeconds: 25, guide: '가운데의 빈 통로를 확인하고 한두 명이 걸어 나와 익살맞은 남생이 춤을 추고 들어갑니다.', actionTip: '나머지 친구들은 힘찬 박수와 후렴구로 호응합니다.' },
-      { stepNum: 3, title: '자진모리 청어엮기 & 풀기', durationSeconds: 35, guide: '선두를 따라 팔 아래로 통과하며 촘촘히 엮였다가 시원하게 풀어냅니다.', actionTip: '손을 절대 놓치지 않고 끈끈하게 연결합니다.' },
+      { stepNum: 3, title: '자진모리 청어엮기 & 풀기', durationSeconds: 35, guide: '선두를 따라 한 줄로 구불구불 걸으며 엮이는 길을 그렸다가 다시 큰 원으로 풀어냅니다. 팔 아래 통과와 손잡기는 하지 않습니다.', actionTip: '앞 사람과 팔 하나 간격을 지키며 같은 길을 따라갑니다.' },
     ],
     rubric: [
       { criterion: '대형 유지와 협동성', desc: '원형과 나선형 대형이 찌그러지지 않고 규칙적으로 유지되었는가?' },
       { criterion: '공동체 호흡', desc: '친구의 손을 따뜻하게 잡고 함께 호흡을 맞추었는가?' },
     ],
-    safetyTips: ['손을 잡고 빠르게 달릴 때 친구를 세게 끌어당기지 않습니다.'],
+    safetyTips: ['손을 잡지 않고 간격을 둔 원으로 걷습니다. 빠르게 달리거나 친구를 끌어당기지 않습니다.'],
   },
   {
     id: 'world_folk_dance',
@@ -658,7 +658,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     },
     steps: [
       { stepNum: 1, title: '하와이 훌라: 알로하 물결 사위', durationSeconds: 30, guide: '골반을 좌우로 부드럽게 8자 흔들며 양손으로 야자수와 바다 물결을 그립니다.', actionTip: '손끝에 감정을 싣고 시선은 손끝을 따라갑니다.' },
-      { stepNum: 2, title: '이스라엘 마임: 생명의 물 탭', durationSeconds: 30, guide: '손을 잡고 원 안으로 4걸음 모였다가 박수를 치며 뒤로 4걸음 물러납니다.', actionTip: '발바닥 전체로 대지를 힘차게 딛습니다.' },
+      { stepNum: 2, title: '이스라엘 마임: 생명의 물 탭', durationSeconds: 30, guide: '간격을 둔 원에서 안으로 4걸음 모였다가 박수를 치며 뒤로 4걸음 물러납니다. 손은 잡지 않습니다.', actionTip: '발바닥 전체로 대지를 힘차게 딛습니다.' },
       { stepNum: 3, title: '체코 폴카: 경쾌한 힐앤토 홉스텝', durationSeconds: 30, guide: '발뒤꿈치-발끝 찍고 홉! 파트너와 닿지 않고 자기 자리에서 세 박자의 발 디딤이나 앉은 팔 동작을 주고받습니다.', actionTip: '편한 자세와 자기 속도로 표현하며, 점프나 접촉은 요구하지 않습니다.' },
     ],
     rubric: [
@@ -747,7 +747,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     steps: [
       { stepNum: 1, title: '기본 모션 콤보 (High V -> T -> Low V)', durationSeconds: 30, guide: '팔꿈치를 굽히지 않고 주먹을 꽉 쥔 채 칼로 자르듯 절도 있게 모션을 끊어칩니다.', actionTip: '어깨에 힘을 주고 주먹의 엄지 방향을 정확히 맞춥니다.' },
       { stepNum: 2, title: '토치 포즈 & 클래핑 구호', durationSeconds: 25, guide: '“빅토리! 땀방울!” 구호를 외치며 박수를 치고 자기 자리에서 편한 발 디딤이나 앉은 팔 동작으로 구호의 박자를 표현합니다.', actionTip: '편안한 목소리나 손짓을 골라 구호의 박자를 전달합니다.' },
-      { stepNum: 3, title: '모둠 인간 피라미드 포즈 (노 스턴트)', durationSeconds: 25, guide: '앞줄은 한쪽 무릎을 꿇고 뒷줄은 하이-V를 취하며 입체적인 2단 전광판 포즈를 만듭니다.', actionTip: '탑을 쌓지 않고 앞뒤 높낮이 배치만으로 웅장함을 연출합니다.' },
+      { stepNum: 3, title: '모둠 높낮이 포즈 (쌓지 않기)', durationSeconds: 25, guide: '앞줄은 한쪽 무릎을 꿇고 뒷줄은 하이-V를 취하며 입체적인 2단 전광판 포즈를 만듭니다.', actionTip: '탑을 쌓지 않고 앞뒤 높낮이 배치만으로 웅장함을 연출합니다.' },
     ],
     rubric: [
       { criterion: '모션의 절도와 각도', desc: '팔이 흔들리지 않고 날카로운 각도로 멈추는가?' },
@@ -790,7 +790,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     id: 'taebo_fitness',
     name: '태보 & 복싱 에어로빅',
     emoji: '🥊',
-    desc: '강렬한 135 BPM 댄스 음악에 잽, 스트레이트, 어퍼컷, 프론트 킥을 결합한 파워 피트니스',
+    desc: '130 BPM 박자에 잽, 스트레이트, 어퍼컷, 프론트 킥을 결합한 파워 피트니스',
     domain: '표현',
     subCategory: '스포츠 표현 (격투기 융합 에어로빅)',
     achievement: {
@@ -801,11 +801,6 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     grades: ['5~6학년군'],
     playMode: '개인',
     devices: ['스마트폰', '태블릿 PC', '데스크톱 PC'],
-    videoInfo: {
-      videoId: 'cb9WHmjR0B0',
-      title: '신나는 태보 & 복싱 에어로빅 다이어트 댄스 피트니스',
-      defaultBpm: 130,
-    },
     steps: [
       { stepNum: 1, title: '원-투 복싱 잽 & 가드 바운스', durationSeconds: 30, guide: '턱밑에 가드를 올리고 왼손 잽, 오른손 스트레이트를 비트에 맞춰 연속으로 뻗습니다.', actionTip: '몸통을 강하게 비틀지 않고 사람을 향하지 않는 작은 팔 동작으로 표현합니다.' },
       { stepNum: 2, title: '위빙 회피 & 어퍼컷 콤보', durationSeconds: 30, guide: '상체의 U자 회피(위빙) 후 밑에서 위로 턱을 치는 강력한 어퍼컷 연결!', actionTip: '무릎을 굽혀 체중을 아래에서 위로 밀어 올립니다.' },

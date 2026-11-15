@@ -3,7 +3,7 @@ import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {paceExpeditionSteps} from '../../../../domain/fourthGameRules';
 import {ActivityDemo} from '../common/ActivityDemo';
 import {ActivityProgress} from '../common/ActivityProgress';
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import type {ExpeditionSpec} from '../../../../domain/expeditionGames';
 import {createExpeditionRound,checkExpeditionAnswer,expeditionScore,expeditionBingo,validateExpeditionRecord,type ExpeditionRecord,type ExpeditionRound} from '../../../../domain/expeditionRules';
 import {isRevampedExpedition,paceExpedition,expeditionRehearsal} from '../../../../domain/expeditionRevamps';
@@ -25,11 +25,16 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const [resumeAvailable,setResumeAvailable]=useState(false),[resetRequested,setResetRequested]=useState(false);
   const [gentle,setGentle]=useState(false),[alternative,setAlternative]=useState(false),[practicing,setPracticing]=useState(false);
   const [practicePlan,setPracticePlan]=useState<ExpeditionRound>();
+  const [detailOpen,setDetailOpen]=useState(false),[seed,setSeed]=useState(0);
   const [phase,setPhase]=useState<Phase>('ready');
   const [classroomPlayers,setPlayers]=useState(game.players);
   const players=solo?game.players:classroomPlayers;
   const [plans,setPlans]=useState<ExpeditionRound[]>([]);
   const [round,setRound]=useState(0),[step,setStep]=useState(0);
+  // E6: draft the rounds once per start so the ready-screen demo shows the route that is really played.
+  // A memory round keeps its own demo so the secret order is not revealed in advance.
+  const drafted=useMemo(()=>{void seed;return Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players));},[game,players,seed]);
+  const demo=useMemo(()=>{const real=drafted[Math.min(round,drafted.length-1)];return real.secret?createExpeditionRound(game,round,players):real;},[drafted,round,game,players]);
   const [seconds,setSeconds]=useState(0),[beat,setBeat]=useState(0),[paused,setPaused]=useState(false),[sound,setSound]=useState(true);
   const [records,setRecords]=useState<ExpeditionRecord[]>([]);
   const [participants,setParticipants]=useState<number[]>([]),[checks,setChecks]=useState<string[]>([]),[counts,setCounts]=useState<string[]>([]),[answer,setAnswer]=useState<string[]>([]);
@@ -40,11 +45,11 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const {speak,stop}=useVoiceCoach();const {playBeep}=useAudio();
   useEffect(()=>{window.scrollTo(0,0);},[phase,round]);
   const plan=(practicing?practicePlan:plans[round])!,current=plan?.steps[step];
-  const resetRecord=useCallback((next:ExpeditionRound)=>{setParticipants([]);setChecks([]);setCounts(next.targets.map(()=>''));setAnswer(next.allocation?next.allocation.labels.map(()=>''):[]);setArrivals(Array(players).fill(null));setRevealed(false);setError('');},[players]);
+  const resetRecord=useCallback((next:ExpeditionRound)=>{setParticipants([]);setChecks([]);setCounts(next.targets.map(()=>''));setAnswer(next.allocation?next.allocation.labels.map(()=>''):[]);setArrivals(Array(players).fill(null));setRevealed(false);setError('');setDetailOpen(false);},[players]);
   const beginRound=useCallback((index:number,all:ExpeditionRound[])=>{
     elapsed.current=0;remaining.current=all[index].secret?5:3;setSeconds(remaining.current);setRound(index);setStep(0);setBeat(0);setPaused(false);resetRecord(all[index]);setPhase(all[index].secret?'preview':'countdown');
   },[resetRecord]);
-  const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpeditionSteps(paceExpedition(Array.from({length:game.rounds},(_,i)=>createExpeditionRound(game,i,players)),revamped&&gentle),pace);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
+  const start=()=>{setResumeAvailable(false);setResetRequested(false);completed.current=false;const all=paceExpeditionSteps(paceExpedition(drafted,revamped&&gentle),pace);setSeed(n=>n+1);setPlans(all);setRecords([]);if(revamped){setPracticePlan(expeditionRehearsal(all[0]));setPracticing(true);setPhase('tutorial');}else beginRound(0,all);};
   const stopActivity=()=>{if(phase!=='active'||paused)return;elapsed.current+=Math.max(0,performance.now()-last.current);last.current=performance.now();stop();setPhase('record');};
 
   useEffect(()=>{
@@ -57,7 +62,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       if(phase==='active'){
         elapsed.current+=delta;
         const duration=current.seconds;
-        setBeat(Math.floor((duration-remaining.current)/(60/((game.bpm||80)/(revamped&&gentle?1.3:1))))%8);
+        setBeat(Math.floor((duration-remaining.current)/(duration/((current.bars??1)*8)))%8);
       }
       if(remaining.current>0)return;
       if(phase==='preview'||phase==='countdown'){
@@ -72,7 +77,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
     const onVisibility=()=>{if(document.hidden&&phase!=='ready'&&phase!=='record'){setPaused(true);stop();}};
     document.addEventListener('visibilitychange',onVisibility);return()=>document.removeEventListener('visibilitychange',onVisibility);
   },[phase,stop]);
-  useEffect(()=>{if(!sound||paused||classroomPaused)return;if(phase==='active'&&current)speak(alternative?game.alternative:current.instruction,true);else if(phase==='record')speak('라운드가 끝났어요. 직접 확인한 기록을 입력해 주세요.',true);},[phase,current,paused,sound,speak,alternative,game.alternative,classroomPaused]);
+  useEffect(()=>{if(!sound||paused||classroomPaused)return;if(phase==='active'&&current)speak(alternative?`${current.instruction} ${game.alternative}`:current.instruction,true);else if(phase==='record')speak('라운드가 끝났어요. 직접 확인한 기록을 입력해 주세요.',true);},[phase,current,paused,sound,speak,alternative,game.alternative,classroomPaused]);
   useEffect(()=>{if(sound&&!paused&&!classroomPaused&&phase==='active'&&current?.beats)playBeep();},[beat,phase,current,sound,paused,playBeep,classroomPaused]);
   useEffect(()=>{if(sound&&!paused&&!classroomPaused&&phase==='active'&&current&&!current.beats)playBeep();},[phase,current,sound,paused,playBeep,classroomPaused]);
   useEffect(()=>()=>stop(),[stop]);
@@ -82,8 +87,8 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
     const quiet=allConfirmed==='rest'||allConfirmed==='observe',full=allConfirmed===true;
     if(completed.current||saving.current||!plan||practicing)return;
     if(!quiet&&allConfirmed!=='partial'&&plan.secret&&!revealed){setError('기억해서 수행한 순서를 먼저 기록하고 정답을 확인해 주세요.');return;}
-    const record:ExpeditionRecord={round:round+1,kind:plan.kind,source,participants:quiet?[]:full?Array.from({length:players},(_,i)=>i+1):[...participants].sort((a,b)=>a-b),counts:quiet?plan.targets.map(()=>0):full?plan.targets.map(t=>t.goal):counts.map(v=>v.trim()===''?NaN:Number(v)),checks:quiet?[]:full?[...plan.checks]:checks,answer:quiet?[]:[...answer],correct:!quiet&&checkExpeditionAnswer(game,plan,answer,players),outcome:quiet?allConfirmed as 'rest'|'observe':allConfirmed==='partial'?'partial':full||participants.length===players&&plan.checks.every(c=>checks.includes(c))?'complete':'partial',alternative,gentle,elapsedMs:Math.round(elapsed.current),...(plan.timing==='arrival'?{arrivals:arrivals.map(t=>t??-1)}:{})};
-    const problem=validateExpeditionRecord(plan,record,players);if(problem){setError(problem);return;}
+    const record:ExpeditionRecord={round:round+1,kind:plan.kind,source,participants:quiet?[]:full?Array.from({length:players},(_,i)=>i+1):[...participants].sort((a,b)=>a-b),counts:quiet?plan.targets.map(()=>0):full?plan.targets.map(t=>t.goal):counts.map(v=>v.trim()===''?NaN:Number(v)),checks:quiet?[]:full?[...plan.checks]:checks,answer:quiet?[]:[...answer],correct:!quiet&&checkExpeditionAnswer(game,plan,answer,players),outcome:quiet?allConfirmed as 'rest'|'observe':allConfirmed==='partial'?'partial':(full||participants.length===players&&plan.checks.every(c=>checks.includes(c)))&&(!plan.question||checkExpeditionAnswer(game,plan,answer,players))?'complete':'partial',alternative,gentle,elapsedMs:Math.round(elapsed.current),...(plan.timing==='arrival'?{arrivals:arrivals.map(t=>t??-1)}:{})};
+    const problem=validateExpeditionRecord(plan,record,players);if(problem){setDetailOpen(true);setError(allConfirmed==='partial'?`아래 세부 기록을 먼저 입력해 주세요. ${problem}`:problem);return;}
     if(!quiet&&plan.timing==='arrival'&&arrivals.some(t=>t===null)){setError('도착하지 않은 번호가 있어요. 다음 라운드에서 다시 시도할 수 있도록 미도착을 직접 확인해 주세요.');return;}
     saving.current=true;const next=[...records.filter(r=>r.round!==record.round),record];setRecords(next);setError('');queueMicrotask(()=>{saving.current=false;});
     if(round+1<plans.length){beginRound(round+1,plans);return;}
@@ -108,7 +113,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   return <section className="expedition-activity" aria-label={game.name} data-expedition={game.spec} data-phase={phase} data-revamped={revamped} data-practice={practicing}>
     <div className="expedition-heading"><span>🧭 {game.name}</span><small>{phase==='ready'?'준비':`${round+1}/${game.rounds} 라운드`}</small></div>
     <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={phase!=='ready'}/><ActivityProgress steps={plans.length?plans.map(p=>p.title):Array.from({length:game.rounds},(_,i)=>`${i+1}번째 원정`)} current={round} results={records.map((r,i)=>r.outcome==='rest'?'rest':r.outcome==='observe'?'observe':r.outcome==='partial'?'partial':r.correct&&r.counts.every((n,j)=>n>=(plans[i]?.targets[j]?.goal??0))&&plans[i]?.checks.every(c=>r.checks.includes(c))?'complete':'partial')}/>
-    {phase==='ready'?<>{!compact&&<ActivityDemo steps={createExpeditionRound(game,round,players).steps.map(s=>s.instruction)} equipment={game.equipment} roles={createExpeditionRound(game,round,players).roles} board={createExpeditionRound(game,round,players).board}/>}
+    {phase==='ready'?<>{!compact&&<ActivityDemo steps={demo.steps.map(s=>s.instruction)} equipment={game.equipment} roles={demo.roles} board={demo.board}/>}
       <p className="expedition-lead">{game.desc}</p>
       {!solo&&<label>참여 인원<select disabled={resumeAvailable} aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
       {solo&&players>1&&<p className="expedition-note">혼자 해보기에서는 여러 역할의 진행을 체험해요. 번호 확인은 실제 모둠원이 참여했다는 자동 인증이 아니에요.</p>}
@@ -116,7 +121,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       <details><summary>준비물·안전·대체 동작</summary><p>{game.equipment.join(' · ')} · {game.space}</p><p>{game.safety}</p><p>{game.alternative}</p></details>
       {revamped&&<fieldset><legend>우리에게 맞는 방법</legend><button aria-pressed={gentle} onClick={()=>setGentle(!gentle)}>여유 있는 안내 {gentle?'켜짐':'꺼짐'}</button><button aria-pressed={alternative} onClick={()=>setAlternative(!alternative)}>대체 동작 {alternative?'켜짐':'꺼짐'}</button><p>{alternative?game.alternative:'원래 규칙과 역할을 유지하고, 먼저 짧게 연습해요.'}</p></fieldset>}
       <section className="activity-brief"><h3>공간과 도구를 먼저 놓아요</h3><div className="activity-role-cards">{game.equipment.map((tool,i)=><p key={i}><strong>준비 {i+1}</strong>{tool}</p>)}</div><p>활동 장소: {game.space}</p><p>교사가 출발·활동·돌아올 위치를 정해요. 기기는 이동 통로 밖에 놓고 도구 확인→몸 활동→기록 순서로 진행해요.</p></section>
-      {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 보존하고 현재 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpedition([createExpeditionRound(game,i,players)],gentle)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 현재 라운드 이어가기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작하겠습니다.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}>원정 시작</button>}
+      {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 보존하고 현재 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpeditionSteps(paceExpedition([createExpeditionRound(game,i,players)],revamped&&gentle),pace)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 현재 라운드 이어가기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작하겠습니다.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}>원정 시작</button>}
     </>:phase==='tutorial'?<div className="expedition-signal">
       <h2>먼저 8초만 연습해요</h2><ol><li>기기를 거치하고 준비물을 놓아요.</li><li>{plans[0].steps[0].instruction}</li><li>신호가 끝나면 돌아와 직접 기록해요. 실수해도 다시 참여해요.</li></ol>
       <p>이번 목표: {plans[0].targets.map(t=>`${t.label} ${t.goal}`).join(' · ')||'표시된 시간과 역할을 비교하기'}</p><p>{game.safety}</p>
@@ -132,8 +137,8 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         {plan.bingoCells&&<div><p>직접 확인한 빙고: {expeditionBingo(records,plans).lines}줄</p><div className="expedition-bingo">{Array.from({length:9},(_,i)=><span key={i} data-active={plan.bingoCells!.includes(i)}>{i+1} {expeditionBingo(records,plans).cells.includes(i)?'✓':''}</span>)}</div></div>}
         {plan.board&&<div className="expedition-board" role="img" aria-label="실제 바닥 코스를 위한 안내 지도">{Array.from({length:16},(_,i)=><span key={i} data-blocked={plan.board!.blocked.includes(i)}>{i===plan.board!.start?'출발':i===plan.board!.destination?'도착':plan.board!.blocked.includes(i)?'금지 ×':`${Math.floor(i/4)+1}-${i%4+1}`}</span>)}</div>}
         <div className="expedition-signal" role="status" aria-live="polite">
-          <span>{step+1}/{plan.steps.length} 구간</span><h3>{current.title}</h3><p>{alternative?game.alternative:current.instruction}</p>{alternative&&<small>같은 순서·표식을 대체 동작으로 연결해요.</small>}
-          {current.beats&&<><strong className="expedition-beat">{beat+1}박 · {alternative?'양팔 번갈아 움직이기':current.beats[beat]}</strong><div className="expedition-beats" aria-hidden="true">{Array.from({length:8},(_,i)=><span key={i} className={i===beat?'selected':''}>{i+1}</span>)}</div></>}
+          <span>{step+1}/{plan.steps.length} 구간</span><h3>{current.title}</h3><p>{current.instruction}</p>{alternative&&<small>대체 동작: {game.alternative}</small>}
+          {current.beats&&<><strong className="expedition-beat">{beat+1}박 · {current.beats[beat]}{alternative&&' (대체: 양팔 번갈아 움직이기)'}</strong><div className="expedition-beats" aria-hidden="true">{Array.from({length:8},(_,i)=><span key={i} className={i===beat?'selected':''}>{i+1}</span>)}</div></>}
           {plan.timing==='estimate'?<p>시간 표시는 가려져 있어요. 느낌으로 걸어 보세요.</p>:<strong className="expedition-timer">{plan.timing?Math.floor(elapsed.current/1000):seconds}<small>초</small></strong>}
         </div>
         {plan.timing==='arrival'?<div className="expedition-participants">{arrivals.map((t,i)=><button key={i} disabled={paused||t!==null} onClick={()=>arrival(i)}>관찰자: {i+1}번 {t===null?'도착 확인':`${Math.round(t/100)/10}초 도착`}</button>)}</div>:plan.timing&&<button className="expedition-primary" disabled={paused} onClick={stopActivity}>{plan.timing==='estimate'?'지금 끝내기':'왕복 도착 기록'}</button>}
@@ -150,7 +155,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         {plan.timing&&<p>앱에 기록한 시간: {Math.round(elapsed.current/100)/10}초{plan.timing==='estimate'&&` · 목표 ${plan.targetSeconds}초 · 차이 ${Math.round(Math.abs(elapsed.current/1000-plan.targetSeconds!)*10)/10}초`}. 실제 거리·속도·운동량은 측정하지 않았어요.</p>}
         {plan.timing==='arrival'&&arrivals.some(t=>t===null)&&<button onClick={()=>setArrivals(previous=>previous.map(t=>t===null?-1:t))}>미도착 번호를 확인하고 다음에 다시 시도</button>}
         {revamped&&<div className="expedition-note"><strong>직접 확인할 목표</strong><ul>{plan.targets.map(t=><li key={t.label}>{t.label}: {t.goal}회</li>)}{plan.checks.map(c=><li key={c}>{c}</li>)}</ul><p>{solo?'혼자 체험한 모든 역할':'실제 전원 참여'}과 위 목표를 모두 확인했다면 한 번에 신고할 수 있어요. 일부만 성공했으면 세부 기록을 입력해요. 화면 문제 답과 도착 기록은 별도로 확인해요.</p><button className="expedition-primary" onClick={()=>save(true)}>모든 목표와 역할을 직접 확인했어요</button></div>}
-        <details open={!revamped}><summary>세부 기록 직접 입력 · 일부 성공도 기록</summary>
+        <details open={!revamped||detailOpen} onToggle={e=>setDetailOpen(e.currentTarget.open)}><summary>세부 기록 직접 입력 · 일부 성공도 기록</summary>
         {plan.targets.map((target,i)=><label key={target.label}>{target.label} (0~{target.goal})<input aria-label={target.label} type="number" inputMode="numeric" min={0} max={target.goal} value={counts[i]||''} onChange={e=>setCounts(previous=>previous.map((v,j)=>i===j?e.target.value:v))}/></label>)}
         <fieldset><legend>{solo&&players>1?'체험에서 진행한 역할 번호':'실제로 참여한 번호'}</legend><div className="expedition-participants">{Array.from({length:players},(_,i)=>i+1).map(n=><button key={n} aria-pressed={participants.includes(n)} onClick={()=>toggleNumber(n)}>{n}번 {participants.includes(n)?'확인 ✓':'확인 전'}</button>)}</div></fieldset>
         {plan.checks.map(check=><label className="expedition-check" key={check}><input type="checkbox" checked={checks.includes(check)} onChange={e=>setChecks(previous=>e.target.checked?[...previous,check]:previous.filter(c=>c!==check))}/>{check}</label>)}
