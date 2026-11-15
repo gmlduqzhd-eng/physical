@@ -10,6 +10,8 @@ import {ActivityProgress} from './ActivityProgress';
 import {phoneTeamMotion,phoneRoles,phoneRoundCues,phoneStrategies,phoneNextHint,type PhoneStrategy} from '../../../../domain/phonePlayProgression';
 import {phoneFillOptions,phoneMemoryTask,phoneRoundCheck,phoneObservation,phoneScenario,phoneBundle} from '../../../../domain/phoneTaskRules';
 import {PhonePlayIcon} from '../../PhonePlayIcon';
+import {PhonePlayClass} from './PhonePlayClass';
+import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds} from '../../../../domain/phoneClassMode';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
 export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
@@ -24,6 +26,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
  const [strategy,setStrategy]=useState<PhoneStrategy>('core'),[created,setCreated]=useState<string[]>([]),[before,setBefore]=useState(''),[after,setAfter]=useState(''),[quick,setQuick]=useState(false),[nextHint,setNextHint]=useState('');
  const [comparison,setComparison]=useState(''),[fill,setFill]=useState(''),[rawCount,setRawCount]=useState(''),[carry,setCarry]=useState(0),[goals,setGoals]=useState<string[]>([]),[individual,setIndividual]=useState<string[]>([]);
  const submitted=useRef(false),transition=useRef(false);
+ const [classRun,setClassRun]=useState(false),[taskSeconds,setTaskSeconds]=useState<number>(CLASS_DEFAULT_SECONDS);
  const memory=phoneMemoryTask(p,round,level==='쉬운 방법',level==='추가 도전',fill),observation=phoneObservation(p),roundCheck=phoneRoundCheck(p,round);
  const sequence=p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:Math.max(p.seconds*1000,phoneRoundCues(p,round,level,created,strategy).length*6000*pace);
  const activeCues=phoneRoundCues(p,round,level,created,strategy);
@@ -80,11 +83,15 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   }
   queueMicrotask(()=>{transition.current=false;});
  };
+ if(classRun)return <PhonePlayClass play={p} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction}/>;
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 몸 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
   <ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/><ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/>
   {phase==='intro'&&<>
    <p className="pp-lead">{p.goal}</p><div className="pp-badges"><span>약 {p.minutes}분</span><span>{p.intensity} 강도</span><span>{p.players} · {range.min===range.max?range.min:`${range.min}~${range.max}`}명</span><span>스마트폰 1대</span></div>
+   {!solo&&<section className="pp-panel pc-entry"><h2>반 전체가 함께 하기</h2><p>이 화면을 TV나 프로젝터에 띄우면 학생은 기기 없이 참여해요. 한 번 누르면 세 과제가 이어지고, 끝난 뒤 한 번만 기록해요.</p>
+    <label>과제마다 움직이는 시간<select aria-label="과제마다 움직이는 시간" value={taskSeconds} onChange={e=>setTaskSeconds(Number(e.target.value))}>{CLASS_TASK_SECONDS.map(n=><option key={n} value={n}>{n}초 · 모두 {Math.round(classMovementSeconds(n)/6)/10}분 움직임</option>)}</select></label>
+    <button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>반 전체로 바로 시작</button><p>신호를 소리 내어 읽어 주고, 과제의 시작과 끝을 호루라기 소리로 알려요.</p></section>}
    <section className="pp-panel"><h2>이렇게 준비해요</h2><p>{phoneSetup(p)}</p><ol>{p.rules.map(rule=><li key={rule}>{rule}</li>)}</ol><p><strong>완료 기준</strong> · {p.check}</p><p>화면 점수는 직접 확인한 참여 기록이에요. 기기가 동작이나 체력을 판정하지 않아요.</p></section>
    <section className="pp-panel"><h2>내게 맞게 골라요</h2>
     {!solo&&range.max>1&&<label>함께할 인원<select aria-label="함께할 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:range.max-range.min+1},(_,i)=>range.min+i).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
@@ -93,7 +100,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
     <label>도전 방법<select aria-label="도전 방법" value={level} onChange={e=>setLevel(e.target.value)}><option>쉬운 방법</option><option>기본 방법</option><option>추가 도전</option></select></label><p>{level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules[1]}</p>
     <label><input type="checkbox" checked={sound} onChange={e=>setSound(e.target.checked)}/>시작·전환 소리</label><label><input type="checkbox" checked={voice} disabled={!('speechSynthesis' in window)} onChange={e=>setVoice(e.target.checked)}/>신호 읽어 주기 (선택)</label><p>소리 없이도 시작 전에 순서를 익히거나 고정된 큰 화면으로 진행할 수 있어요. 짝은 신호를 읽은 뒤 역할을 바꿔요.</p>
    </section><details className="pp-panel"><summary>안전과 역할</summary><ul>{phoneSafety.map(s=><li key={s}>{s}</li>)}</ul><p>모둠에서는 1번부터 돌아가며 이끌고, 나머지 친구도 자기 공간에서 동작을 따라 해요. 탈락이나 오래 기다리기는 없어요.</p></details>
-   <button className="pp-primary" onClick={()=>setPhase('plan')}>놀이 방법 익히기</button>
+   {!solo&&<p>짝이나 모둠이 기기 한 대로 과제마다 기록하며 하려면 아래를 눌러요.</p>}<button className={solo?'pp-primary':''} onClick={()=>setPhase('plan')}>놀이 방법 익히기</button>
   </>}
   {phase==='plan'&&<>
    <h2>{p.rounds[round]}</h2>{nextHint&&<p className="pp-notice">앞 과제에서 이어가기 · {nextHint}</p>}{!compact&&<p>{seated?p.seated:level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules.join(' ')}</p>}
