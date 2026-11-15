@@ -4,7 +4,7 @@ import { LessonShell } from './LessonShell';
 
 export function TeacherHome() {
   return <LessonShell audience="teacher">
-    <section className="lesson-intro"><p className="lesson-eyebrow">선생님을 위한 수업 공간</p><h1>오늘의 수업을,<br/>차근차근 준비해요.</h1><p>활동을 고르고 모둠을 정하면,<br/>학생에게 보여 줄 참여 QR이 준비됩니다.</p></section>
+    <section className="lesson-intro"><p className="lesson-eyebrow">선생님을 위한 수업 공간</p><h1>오늘의 수업을,<br/>차근차근 준비해요</h1><p>활동을 고르고 모둠을 정하면,<br/>학생에게 보여 줄 참여 QR이 준비됩니다.</p></section>
     <div className="teacher-workspace"><section className="lesson-new"><div className="lesson-card-top"><span className="lesson-icon"><Plus aria-hidden="true"/></span><h2>새 수업 준비</h2></div><ol className="lesson-steps"><li><b>1</b>활동 선택</li><li><b>2</b>모둠·시간</li><li><b>3</b>QR로 참여</li></ol><Link className="lesson-action lesson-primary" to="/teacher/setup">수업 준비 시작 <ArrowRight aria-hidden="true"/></Link><Link className="lesson-action lesson-secondary" style={{marginTop:10}} to="/teacher/setup?reuse=1">지난 설정으로 빠르게 준비 <ArrowRight aria-hidden="true"/></Link></section>
       <section className="lesson-resume"><span className="lesson-icon"><RotateCcw aria-hidden="true"/></span><h2>준비하던 수업 이어가기</h2><p>교사 인증 후 이 기기에서 만든<br/>수업을 확인하세요.</p><Link className="lesson-action lesson-secondary" to="/teacher/setup?resume=1">내 수업 찾기 <ArrowRight aria-hidden="true"/></Link></section></div>
     <section className="lesson-new"><h2>공간·기기만 맞춰 바로 준비</h2><p>교실·모둠 한 대·두 기기 조종에 맞춘 20분 수업과 공용 화면 입문을 한 장으로 확인해요.</p><Link className="lesson-action lesson-primary" to="/lessons">완성형 수업 꾸러미 보기 →</Link></section>
