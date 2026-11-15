@@ -1,6 +1,6 @@
 import type { ExpeditionSpec } from './expeditionGames.js';
 
-export interface ExpeditionStep { title:string; instruction:string; seconds:number; beats?:string[]; }
+export interface ExpeditionStep { title:string; instruction:string; seconds:number; beats?:string[]; bars?:number; }
 export interface ExpeditionBoard { size:number; start:number; destination:number; blocked:number[]; path:number[]; }
 export interface ExpeditionRound {
   title:string; steps:ExpeditionStep[]; checks:string[]; roles:string[]; kind:string;
@@ -43,7 +43,8 @@ export function makeBoard(round:number,random:()=>number=Math.random):Expedition
 }
 const tasks=(entries:string[],seconds=8):ExpeditionStep[]=>entries.map((instruction,i)=>({title:`구간 ${i+1}`,instruction,seconds}));
 const rotate=(list:string[],offset:number)=>list.map((_,i)=>list[(i+offset)%list.length]);
-const beats=(patterns:string[],instruction:string,bpm=80):ExpeditionStep=>({title:'8박자 연결',instruction,seconds:8*60/bpm,beats:patterns});
+export const BEAT_BARS=4;
+const beats=(patterns:string[],instruction:string,bpm=80):ExpeditionStep=>({title:'8박자 연결',instruction:`${instruction} 같은 8박자를 ${BEAT_BARS}번 이어서 해요.`,seconds:BEAT_BARS*8*60/bpm,beats:patterns,bars:BEAT_BARS});
 
 export function createExpeditionRound(game:ExpeditionSpec,round:number,players:number,random:()=>number=Math.random):ExpeditionRound{
   if(game.kind!=='B')throw new Error('Expression activities use their own stage data');
@@ -58,7 +59,7 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'S03': {const directions=noRepeatPath(4,['왼쪽','오른쪽'],random);plan.steps=directions.map((d,i)=>({title:i%2?'반전 규칙':'정상 규칙',instruction:`${i%2?'반전! 반대쪽':'정상! 부른 쪽'}으로 옆걸음. 지령: ${d} · 이동: ${i%2?(d==='왼쪽'?'오른쪽':'왼쪽'):d}`,seconds:8}));break;}
     case 'S04': plan.board=makeBoard(round,random);sequence(plan.board.path.map(i=>`${Math.floor(i/4)+1}행 ${i%4+1}열`),'금지 칸을 피해 정한 길로 걸어요');plan.checks=['금지 칸을 지나지 않았어요.'];break;
     case 'S05': memory(noRepeatPath(3+round,colors,random),'기억해서 방문한 순서');break;
-    case 'S06': {const nums=shuffled([1,2,3,4,5,6],random),a=nums[0],b=nums[1];plan.steps=tasks([`목표 합 ${a+b}. 바닥 숫자 1~6에서 합을 만드는 두 곳을 방문하고 돌아와요.`],20);plan.question={prompt:`합이 ${a+b}가 되도록 방문한 두 숫자`,options:['1','2','3','4','5','6'],answer:[String(a),String(b)],ordered:false};plan.kind='sum';break;}
+    case 'S06': {const nums=shuffled([1,2,3,4,5,6],random),a=nums[0],b=nums[1];plan.steps=tasks([`목표 합 ${a+b}. 바닥 숫자 1~6에서 합을 만드는 두 곳을 방문하고 돌아와요.`],20);plan.question={prompt:`방문한 두 숫자 (합 ${a+b})`,options:['1','2','3','4','5','6'],answer:[String(a),String(b)],ordered:false};plan.kind='sum';break;}
     case 'S07': sequence(rotate(colors,round).map((c,i)=>`${c} 콘 ${i%2?'눕히기':'세우기'}`),'걸어서 콘 상태를 바꿔요');plan.checks=rotate(colors,round).map((c,i)=>`${c} 콘을 ${i%2?'눕힌':'세운'} 상태와 비교했어요.`);break;
     case 'S08': plan.steps=tasks(['긴 걷기 통로를 끝까지 다녀와요.','짧은 통로를 옆걸음으로 다녀와요.'],15);plan.targets=[{label:'긴 걷기 코스',goal:1},{label:'짧은 옆걸음 코스',goal:1}];plan.checks=['서로 다른 두 경로를 모두 시도했어요.'];break;
     case 'S09': {const pattern=noRepeatPath(4,colors,random);sequence(pattern.map(c=>`${c} 조각을 출발점으로 가져오기`),'지점에서 조각을 가져와 목표 무늬를 만들어요');plan.question={prompt:'완성한 조각 순서',options:colors,answer:pattern,ordered:true};break;}

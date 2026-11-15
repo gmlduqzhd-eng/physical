@@ -68,5 +68,10 @@ test('Google return preserves only public setup, consumes it once and rejects ex
   savePublicSetupReturn();assert.equal(data.size,1);const raw=[...data.values()][0];assert(!raw.includes('accessToken'));assert(takePublicSetupReturn()?.startsWith('/teacher/setup#lesson='));assert.equal(data.size,0);assert.equal(takePublicSetupReturn(),null);
   data.set('physical_teacher_public_setup_v1',JSON.stringify({expiresAt:Date.now()-1000,lesson:publicLesson,packageMinutes:null,game:null}));assert.equal(takePublicSetupReturn(),null);assert.equal(data.size,0);
   data.set('physical_teacher_public_setup_v1',JSON.stringify({expiresAt:Date.now()+10000,lesson:null,packageMinutes:null,game:null,returnTo:'https://evil.invalid'}));assert.equal(takePublicSetupReturn(),null);
+  // A login from a fixed teacher screen returns there; anything else is never stored or followed.
+  const room='/teacher/room/11111111-2222-3333-4444-555555555555';
+  Object.assign(globalThis.location,{pathname:room,search:'',hash:''});savePublicSetupReturn();assert.equal(takePublicSetupReturn(),room);assert.equal(data.size,0);
+  Object.assign(globalThis.location,{pathname:'/admin'});savePublicSetupReturn();assert.equal(data.size,0);
+  data.set('physical_teacher_public_setup_v1',JSON.stringify({expiresAt:Date.now()+10000,lesson:null,packageMinutes:null,game:null,path:'//evil.invalid/teacher/manage'}));assert.equal(takePublicSetupReturn(),null);
  }finally{if(oldLocation)Object.defineProperty(globalThis,'location',oldLocation);else Reflect.deleteProperty(globalThis,'location');if(oldStore)Object.defineProperty(globalThis,'sessionStorage',oldStore);else Reflect.deleteProperty(globalThis,'sessionStorage');}
 });

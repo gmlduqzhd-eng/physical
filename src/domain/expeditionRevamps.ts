@@ -11,5 +11,5 @@ export function paceExpedition(plans: ExpeditionRound[], gentle: boolean): Exped
 }
 
 export function expeditionRehearsal(plan: ExpeditionRound): ExpeditionRound {
-  return {...plan, title: '점수 없는 연습 · '+plan.title, timing: undefined, steps: [{...plan.steps[0], seconds: 8}]};
+  return {...plan, title: '점수 없는 연습 · '+plan.title, timing: undefined, steps: [{...plan.steps[0], seconds: 8, ...(plan.steps[0].beats ? {bars: 1, instruction: plan.steps[0].instruction.replace(/ 같은 8박자를 \d+번 이어서 해요\.$/, ' 연습에서는 8박자를 한 번만 천천히 해요.')} : {})}]};
 }

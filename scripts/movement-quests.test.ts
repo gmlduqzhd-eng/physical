@@ -130,3 +130,14 @@ test('reflection is optional, bounded and never awards health or breathing perfo
   }
  }
 });
+test('memory quest order comes from the seed, never repeats a marker back to back and is not one fixed cycle', () => {
+  const orders = new Set<string>();
+  for (let seed = 0; seed < 40; seed++) for (const round of [0, 1, 2]) {
+    const settings = { seed } as QuestSettings, plan = makeQuestRound('memory', round, settings), order = plan.question!.answer;
+    assert.equal(order.length, round + 2);
+    assert.deepEqual(makeQuestRound('memory', round, settings).question!.answer, order, 'same seed gives the same order');
+    order.forEach((symbol, i) => assert(i === 0 || symbol !== order[i - 1]));
+    if (round === 2) orders.add(order.join('>'));
+  }
+  assert(orders.size > 8, 'four-marker orders must vary beyond the four rotations of one cycle');
+});

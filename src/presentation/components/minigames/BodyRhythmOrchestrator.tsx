@@ -54,9 +54,12 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
       return;
     }
 
+    // One 마디 is four beats (about 2.7 seconds). It used to change on every beat, too fast to move to.
+    let beatInBar = 0;
     beatTimerRef.current = setInterval(() => {
-      setCurrentBeat(b => phase==='practice'?rhythmWindow(b,practiceStart,practiceCount):(b%4)+1);
       sfxClick();
+      beatInBar = (beatInBar + 1) % 4;
+      if (beatInBar === 0) setCurrentBeat(b => phase==='practice'?rhythmWindow(b,practiceStart,practiceCount):(b%4)+1);
     }, 60000 / 90);
 
     return () => {
