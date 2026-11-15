@@ -696,7 +696,7 @@ const GamePlaySession = () => {
         <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
-              <span>{gameInfo.code}</span><span className="text-slate-500">|</span><span className="text-slate-300">{gameInfo.target}</span>
+              {gameInfo.code!=='연계 확인 필요'&&<><span>{gameInfo.code}</span><span className="text-slate-500">|</span></>}<span className="text-slate-300">{gameInfo.target}</span>
             </div>
             <span className="text-6xl mb-3">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>

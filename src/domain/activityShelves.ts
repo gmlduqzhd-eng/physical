@@ -1,0 +1,53 @@
+import {AVAILABLE_GAMES,type GameDef} from './gamesData.js';
+
+// Catalog shelves from the 2026-11-15 lesson audit (docs/catalog-shelves-stage5-2026-11-15.md).
+// Nothing is removed or merged: every activity keeps its id, link, records and room missions.
+// The shelves only decide what a teacher sees first.
+const phone=(numbers:number[])=>numbers.map(n=>`phone-play-${String(n).padStart(3,'0')}`);
+
+/** Shown first: activities judged usable in a lesson as they are. */
+export const CORE_ACTIVITY_IDS:readonly string[]=[
+ // 반 전체·준비물 없음
+ ...phone([1,2,6,11,14,16,18,20,26,29,31,34,35,36,42,43,44,53,54,56,65,66,67,69,93,99]),
+ 'red_green','shuttle-run-beep','one_leg','fitness','exp-phone-10','exp-tablet-02','exp-tablet-13','exp-phone-41','exp-phone-43',
+ // 모둠 정거장·공과 콩주머니
+ 'target','pass-gate-rescue','relay-mission-runner','sound-goalball','exp-phone-36','exp-phone-37','exp-phone-35','dribble-rhythm','rolling-curling',
+ // 협동·표현
+ 'exp-tablet-31','exp-tablet-42','exp-tablet-12','exp-phone-50',
+ 'seed_sprout','weather_dance','magic_scarf','shadow_puppeteer','space_traveler','element_forces','ribbon_gymnast','story_drama_relay',
+ // 대표 원정 가운데 기기 부담이 가장 작은 둘
+ 'expedition-loop','expedition-map',
+];
+
+/** Near-duplicates: hidden from the default list and pointed at the activity that represents them. */
+const SIMILAR_GROUPS:Record<string,string[]>={
+ 'phone-play-053':phone([9,38,55,57,60,63,85]),'phone-play-034':phone([68,71,82]),'phone-play-074':phone([13,64,89]),
+ 'phone-play-042':phone([23,47,51,86]),'phone-play-079':phone([46,50]),'phone-play-014':phone([15,19,58]),'phone-play-044':phone([49]),
+ 'phone-play-091':phone([92,96]),'phone-play-018':phone([27]),'phone-play-010':phone([12,73]),'phone-play-099':phone([72]),
+ 'phone-play-001':phone([5]),'phone-play-029':phone([32]),'phone-play-037':phone([40,95]),'phone-play-084':phone([90]),
+ 'phone-play-065':phone([70]),'phone-play-020':phone([22,25]),
+ target:['exp-phone-31','slingshot-archery','basketball-free-throw'],'shuttle-run-beep':['run','exp-phone-30'],memory:['exp-phone-05'],
+ 'pass-gate-rescue':['exp-tablet-21','open-space-tactician'],squat:['exp-phone-24'],'sound-goalball':['exp-phone-33'],
+ 'exp-phone-36':['exp-tablet-26'],'exp-phone-07':['exp-tablet-35'],'space-occupier':['exp-tablet-03'],red_green:['exp-tablet-06'],
+ 'campfire-breath':['breath-pacer-478'],'exp-phone-45':['exp-phone-42','exp-phone-48'],'exp-tablet-13':['exp-tablet-15'],'exp-phone-41':['exp-tablet-16'],
+ 'body-rhythm-orchestrator':['rhythm_clapping'],art_gallery_critic:['expressive_critique'],musical_freeze:['musical_scene_maker'],
+ 'cpr-compression-110':['aed-defibrillator-pad'],
+};
+export const SIMILAR_TO:ReadonlyMap<string,string>=new Map(Object.entries(SIMILAR_GROUPS).flatMap(([representative,ids])=>ids.map(id=>[id,representative] as const)));
+
+/** Talking, observing, judging or reading: useful in a lesson, but not movement time. */
+export const UNDERSTANDING_IDS:readonly string[]=[
+ ...phone([21,45,48,52,62,75,78,80,81,83]),
+ 'stopwatch','pulse-detective','posture-guardian','campfire-breath','base-running-decide','tabletennis-spin-read',
+ 'cpr-compression-110','aed-defibrillator-pad','water-rescue-throw','heatwave-pm25-shield','rice-treatment-firstaid',
+];
+const CORE=new Set(CORE_ACTIVITY_IDS),UNDERSTANDING=new Set(UNDERSTANDING_IDS);
+
+export type ActivityShelf='core'|'more'|'similar'|'understanding';
+export function activityShelf(id:string):ActivityShelf{return UNDERSTANDING.has(id)?'understanding':SIMILAR_TO.has(id)?'similar':CORE.has(id)?'core':'more';}
+export const isUnderstandingActivity=(id:string)=>UNDERSTANDING.has(id);
+/** Counts as movement time for a lesson: flagged physical and not on the understanding shelf. */
+export const isMovementActivity=(game:Pick<GameDef,'type'|'physicalActivity'>)=>game.physicalActivity===true&&!UNDERSTANDING.has(game.type);
+export function similarRepresentative(id:string):GameDef|undefined{const target=SIMILAR_TO.get(id);return target?AVAILABLE_GAMES.find(game=>game.type===target):undefined;}
+export const CORE_ACTIVITIES:GameDef[]=CORE_ACTIVITY_IDS.map(id=>{const game=AVAILABLE_GAMES.find(item=>item.type===id);if(!game)throw new Error(`핵심 활동이 목록에 없습니다: ${id}`);return game;});
+export const shelfLabel=(id:string)=>{const shelf=activityShelf(id);return shelf==='understanding'?'이해·정리 활동 · 움직이는 시간은 짧아요':shelf==='similar'?`비슷한 활동: ${similarRepresentative(id)?.name??''}`:'';};
