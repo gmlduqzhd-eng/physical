@@ -51,7 +51,8 @@ function readGameInventory() {
   for (const viewport of viewports) {
     const mobile = process.env.MOBILE_ONLY === '1' || viewport.width < 768;
     const device = mobile ? devices[engine === 'webkit' ? 'iPhone 13' : 'Pixel 7'] : {};
-    const context = await browser.newContext({ ...device, viewport, isMobile: mobile, hasTouch: mobile });
+    // The offline cache has its own tests; without the service worker a slow first load cannot be mistaken for a broken game.
+    const context = await browser.newContext({ ...device, viewport, isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block' });
     const page = await context.newPage();
     const activate = (locator, timeout = 8000) => mobile ? locator.tap({ timeout }) : locator.click({ timeout });
     const touchGameControl = async locator => {
@@ -81,7 +82,15 @@ function readGameInventory() {
         const normal = page.getByRole('button', { name: '활동 시작', exact: true });
         const content = page.locator('.gameplay-content');
         const retired = page.locator('[data-retired]');
-        await normal.or(content).or(retired).first().waitFor({ state: 'visible', timeout: 15000 });
+        const opened = () => normal.or(content).or(retired).first().waitFor({ state: 'visible', timeout: 15000 });
+        try { await opened(); } catch (error) {
+          // One activity in a few hundred sometimes stays on the loading screen on a busy CI machine.
+          // Record what was on screen and load it once more; a broken activity fails both times.
+          active.firstLoad = { text: (await page.locator('body').innerText().catch(() => '')).replace(/\s+/g, ' ').slice(0, 200), consoleErrors: active.consoleErrors.slice(-3) };
+          console.log('RETRY ' + viewport.width + ' ' + game.type + ' ' + JSON.stringify(active.firstLoad));
+          await page.goto(base + playPrefix + encodeURIComponent(game.type), { waitUntil: 'load' });
+          await opened();
+        }
         if (await retired.count()) {
           // A retired game shows a notice with a link to its replacement and never starts.
           active.retired = true;
@@ -180,9 +189,10 @@ function readGameInventory() {
   report.finished = new Date().toISOString();
   report.passed = report.cases.filter(test => test.status === 'pass').length;
   report.failed = report.cases.filter(test => test.status === 'fail').length;
+  report.retried = report.cases.filter(test => test.firstLoad).map(test => test.game);
   report.pageErrors = report.cases.reduce((total, test) => total + test.pageErrors.length, 0);
   report.consoleErrors = report.cases.reduce((total, test) => total + test.consoleErrors.length, 0);
   fs.writeFileSync(path.join(work, 'game-catalog-smoke-report.json'), JSON.stringify(report, null, 2));
-  console.log(JSON.stringify({ total: report.cases.length, passed: report.passed, failed: report.failed }));
+  console.log(JSON.stringify({ total: report.cases.length, passed: report.passed, failed: report.failed, retried: report.retried }));
   process.exitCode = report.failed ? 1 : 0;
 })().catch(async error => { console.error(error); await activeBrowser?.close(); process.exitCode = 1; });
