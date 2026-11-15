@@ -1,7 +1,9 @@
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import type { IncomingMessage } from 'node:http';
 
-const lifetime = 2 * 60 * 60;
+// The classroom teacher cookie covers a school day so a lesson never loses control mid-class.
+// The separate AI studio keeps the short lifetime.
+const lifetimeFor = (scope: string) => (scope === 'physical_teacher' ? 10 : 2) * 60 * 60;
 export function authConfigured() {
   return /^[a-f0-9]{32}:[a-f0-9]{128}$/.test(process.env.TEACHER_ACCESS_HASH ?? '') && (process.env.TEACHER_SESSION_SECRET?.length ?? 0) >= 32;
 }
@@ -13,7 +15,7 @@ export function verifyCode(code: string) {
   return equal(scryptSync(code, salt, 64).toString('hex'), hash);
 }
 export function newSession(scope = 'physical_teacher', accountNonce?: string) {
-  const payload = Buffer.from(JSON.stringify({ expires: Date.now() + lifetime * 1000, nonce: accountNonce ?? randomBytes(18).toString('hex') })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ expires: Date.now() + lifetimeFor(scope) * 1000, nonce: accountNonce ?? randomBytes(18).toString('hex') })).toString('base64url');
   return `${payload}.${mac(payload, scope)}`;
 }
 export function session(req: IncomingMessage, scope = 'physical_teacher'): string | null {
@@ -24,12 +26,12 @@ export function session(req: IncomingMessage, scope = 'physical_teacher'): strin
   if (!payload || !signature || !equal(mac(payload, scope), signature)) return null;
   try {
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString());
-    if (typeof parsed.expires !== 'number' || parsed.expires < Date.now() || parsed.expires > Date.now() + lifetime * 1000) return null;
+    if (typeof parsed.expires !== 'number' || parsed.expires < Date.now() || parsed.expires > Date.now() + lifetimeFor(scope) * 1000) return null;
     return parsed.nonce;
   } catch { return null; }
 }
 export function cookie(token: string, logout = false, scope = 'physical_teacher') {
-  return `${scope}=${token}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${logout ? 0 : lifetime}${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
+  return `${scope}=${token}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${logout ? 0 : lifetimeFor(scope)}${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
 }
 
 // Additional abuse control only. Production needs a shared WAF/rate limit across instances.

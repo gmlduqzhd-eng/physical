@@ -16,7 +16,7 @@ export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
   useEffect(() => { let active = true; teacherStatus().then(s => { if (active) {setSetup(!s.configured && s.localSetup);setSharedLogin(s.legacyLoginEnabled===true);} }).catch(() => {}); return () => { active = false; }; }, []);
   return <section className="teacher-login rounded-2xl border border-slate-300 bg-white p-5 text-slate-900 max-w-xl mx-auto">
     <h2 className="text-xl font-bold">{setup ? '교사 접근 코드 처음 설정' : '교사 인증'}</h2>
-    <p className="text-sm my-3">{setup ? '선생님만 알 수 있는 12자 이상의 접근 코드를 정해 주세요. API 키와는 다른 비밀번호입니다.' : sharedLogin ? 'Google 계정으로 로그인하세요. 전환 기간에는 기존 공유 코드도 사용할 수 있습니다.' : 'Google 계정으로 로그인하세요. 신규 공유 코드 로그인은 종료되었습니다. 기존 수업은 Google 로그인 후 수업 복구키로 가져올 수 있습니다.'} 인증은 최대 2시간 유지됩니다.</p>
+    <p className="text-sm my-3">{setup ? '선생님만 알 수 있는 12자 이상의 접근 코드를 정해 주세요. API 키와는 다른 비밀번호입니다.' : sharedLogin ? 'Google 계정으로 로그인하세요. 전환 기간에는 기존 공유 코드도 사용할 수 있습니다.' : 'Google 계정으로 로그인하세요. 신규 공유 코드 로그인은 종료되었습니다. 기존 수업은 Google 로그인 후 수업 복구키로 가져올 수 있습니다.'} 인증은 최대 10시간 유지되며, 수업 화면을 열어 둔 동안 자동으로 연장됩니다.</p>
     {!setup&&<TeacherAccountForm endpoint="teacher"/>}
     {(setup||sharedLogin)&&<details open={setup}><summary>기존 공유 접근 코드로 인증</summary><form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try {
       const res = await fetch(`/api/teacher?action=${setup ? 'setup' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
@@ -28,12 +28,25 @@ export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
     </form></details>}{error && <p role="alert" className="text-red-700 mt-3">{error}</p>}
   </section>;
 }
+const RENEW_MS = 20 * 60 * 1000;
 export function TeacherAuthGuard({ children }: { children: ReactNode }) {
   const [authenticated, setAuthenticated] = useState(false); const [error, setError] = useState('');
   const [checking,setChecking]=useState(true);
   useEffect(() => { removeStorage('teacher_master_pin'); removeStorage('teacher_session_auth', 'session'); let active = true;
     teacherStatus().then(async s => { if (s.authenticated) await ensureClassroomTeacher(); if (active) setAuthenticated(s.authenticated); }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '교사 인증 서버와 접근 코드를 설정해 주세요.'); }).finally(()=>{if(active)setChecking(false);}); return () => { active = false; };
   }, []);
+  // The server grant is short-lived. Renew it while a teacher screen stays open so a
+  // lesson is never cut off, and ask for a plain re-login only when the login itself ended.
+  useEffect(() => { if (!authenticated) return; let active = true, last = Date.now(), busy = false;
+    const renew = async () => { if (busy || !navigator.onLine) return; busy = true;
+      try { await ensureClassroomTeacher(); last = Date.now(); }
+      catch { try { const s = await teacherStatus(); if (active && !s.authenticated) { setError('교사 로그인이 만료됐어요. 다시 로그인하면 이 화면으로 돌아옵니다.'); setAuthenticated(false); } } catch { /* A network blip keeps the current screen; the next tick retries. */ } }
+      finally { busy = false; } };
+    const timer = window.setInterval(() => void renew(), RENEW_MS);
+    const wake = () => { if (!document.hidden && Date.now() - last > RENEW_MS) void renew(); };
+    document.addEventListener('visibilitychange', wake); window.addEventListener('online', wake);
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', wake); window.removeEventListener('online', wake); };
+  }, [authenticated]);
   if(checking)return <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면"><p role="status">교사 인증을 확인하고 있어요…</p></FlowShell>;
   return authenticated ? <>{children}</> : <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면">{error && <p role="status">{error}</p>}<TeacherLogin onLogin={() => { void ensureClassroomTeacher().then(()=>setAuthenticated(true)).catch(cause=>setError(cause instanceof Error?cause.message:'수업방 인증 실패')); }} /><p className="teacher-auth-note">교사 인증 후에도 DB에서 방 소유권과 권한 만료를 확인합니다. 기존에 소유자 없이 만들어진 방은 자동으로 가져오지 않습니다.</p></FlowShell>;
 }
