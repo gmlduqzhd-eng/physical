@@ -64,7 +64,9 @@ export const ExpressionActivityLayout = ({
 
   // 활동 타이머
   useEffect(() => {
-    if (phase !== 'active' || !isTimerRunning || classroomPaused|| (followVideo&&useVideo&&!videoPlaying)) return;
+    // With a video in use the last step waits for the teacher, so the video is not cut off when the step timers end.
+    const videoHold=!!game.videoInfo&&useVideo&&currentStepIdx===game.steps.length-1;
+    if (phase !== 'active' || !isTimerRunning || classroomPaused|| (followVideo&&useVideo&&!videoPlaying) || (videoHold&&timeLeft<=0)) return;
     const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
       if (timeLeft > 1) {
@@ -73,13 +75,15 @@ export const ExpressionActivityLayout = ({
         const nextIdx = currentStepIdx + 1;
         setCurrentStepIdx(nextIdx);
         setTimeLeft(Math.ceil((game.steps[nextIdx]?.durationSeconds||30)*pace));
+      } else if (videoHold) {
+        setTimeLeft(0);
       } else {
         setPhase('rubric');
         setTimeLeft(0);
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo,classroomPaused,pace]);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo,classroomPaused,pace,game.videoInfo]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
@@ -219,6 +223,7 @@ export const ExpressionActivityLayout = ({
               defaultBpm={game.videoInfo.defaultBpm || 100}
               paused={!isTimerRunning||classroomPaused}
               onPlaybackChange={playbackChange}
+              allowChange={!new URLSearchParams(window.location.search).get('room')}
             />
           )}
           {game.videoInfo&&<div className="activity-brief"><p>영상 사용을 선택하면 YouTube 외부 플레이어와 연결됩니다. 영상·카메라 없이 글 안내로도 참여할 수 있어요.</p><button onClick={()=>{setUseVideo(v=>!v);setVideoPlaying(false);}}>{useVideo?'영상 연결 끄고 글 안내로':'영상 사용하기 · YouTube 연결'}</button><label><input type="checkbox" checked={followVideo} onChange={e=>setFollowVideo(e.target.checked)}/>영상의 재생·멈춤에 활동 시간을 맞추기</label>{followVideo&&useVideo&&!videoPlaying&&<p role="status">영상 재생을 기다려요. 영상이 막히면 위 선택을 끄고 글 안내로 진행할 수 있어요.</p>}</div>}
