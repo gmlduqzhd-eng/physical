@@ -34,7 +34,7 @@ export function ActivityPicker({ onSelect, solo = false }: { onSelect?: (game: G
   const games = hideSimilar ? matched.filter(g => !SIMILAR_TO.has(g.type)) : matched;
   const hiddenSimilar = matched.length - games.length;
   const displayed = games.slice(0, solo || !(all || isFiltered) ? Math.max(12,limit) : limit);
-  return <><section className="phone-collection" aria-label="스마트폰만으로 하는 놀이"><div><span className="pill">별도 준비물 없음 · {PHONE_PLAYS.length}가지</span><h2>스마트폰만 있으면, 몸 놀이 시작!</h2><p>폰은 내려놓고 움직여요. 혼자·짝·모둠, 필요한 공간에 맞춰 골라요.</p></div><button className={phoneOnly?'secondary':'primary'} aria-pressed={phoneOnly} onClick={togglePhone}>{phoneOnly?'전체 활동으로':'스마트폰만으로 하는 놀이 보기'}</button></section>
+  return <><section className="phone-collection" aria-label="스마트폰만으로 하는 놀이"><div><span className="pill">별도 준비물 없음 · {PHONE_PLAYS.length}가지</span><h2>스마트폰만 있으면, 신체 놀이 시작!</h2><p>폰은 내려놓고 움직여요. 혼자·짝·모둠, 필요한 공간에 맞춰 골라요.</p></div><button className={phoneOnly?'secondary':'primary'} aria-pressed={phoneOnly} onClick={togglePhone}>{phoneOnly?'전체 활동으로':'스마트폰만으로 하는 놀이 보기'}</button></section>
     {phoneOnly&&<fieldset className="phone-filter-grid"><legend>준비물 없는 놀이 고르기</legend>{([
       ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['people','참여 인원',people,['전체','혼자','짝','모둠']],['time','소요 시간',time,['전체','5분 이하','6분 이상']],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체','제자리','두 걸음','넓은 공간']],
     ] as const).map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}<p>모든 놀이는 스마트폰 1대 공유로 가능해요. 짝 2명 · 모둠 3~6명이 기본이에요.</p></fieldset>}
