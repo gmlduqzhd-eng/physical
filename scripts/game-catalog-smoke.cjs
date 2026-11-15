@@ -138,6 +138,15 @@ function readGameInventory() {
           active.status = 'fail';
           await page.screenshot({ path: path.join(work, `catalog-fail-${engine}-${viewport.width}-${game.type}.png`), fullPage: true });
         }
+        // The touched control may have opened an information dialog (for example the curriculum note of an
+        // expression activity). Close it the way a person would before leaving the game.
+        const infoDialog = page.locator('[role="dialog"][aria-modal="true"]:not([aria-labelledby="activity-check-title"])').last();
+        if (await infoDialog.count() && await infoDialog.isVisible()) {
+          const close = infoDialog.getByRole('button', { name: /닫기|확인|돌아가기/ }).first();
+          if (await close.count()) await activate(close); else await page.keyboard.press('Escape');
+          await infoDialog.waitFor({ state: 'hidden', timeout: 3000 });
+          active.closedDialog = true;
+        }
         const activityDialog = page.locator('[role="dialog"][aria-labelledby="activity-check-title"]');
         if (await activityDialog.count()) await activate(activityDialog.getByRole('button', { name: '활동 목록으로' }));
         else {
