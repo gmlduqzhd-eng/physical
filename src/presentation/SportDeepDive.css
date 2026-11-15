@@ -1,0 +1,5 @@
+.deep-cards{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}.deep-cards li{display:flex;gap:12px;padding:14px;border:1px solid var(--forest-line);border-radius:16px}.deep-cards p{margin:6px 0 0;line-height:1.6}.deep-cards strong{font-size:18px}
+.deep-symbol{display:inline-grid;place-items:center;min-width:44px;height:44px;padding:0 8px;border-radius:12px;background:var(--forest-tint);font-weight:800;font-size:18px;flex:none;vertical-align:middle}
+.deep-terms{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:8px 0 18px}.deep-terms div{padding:12px 14px;border-radius:14px;background:var(--forest-tint)}.deep-terms dt{font-weight:800;font-size:18px}.deep-terms dd{margin:4px 0 0;line-height:1.6}.deep-terms small{display:block;color:var(--forest-muted);margin-top:4px}
+.deep-sub{display:block;font-size:.6em;font-weight:500;color:var(--forest-muted);margin-top:4px}
+.deep-choices{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}

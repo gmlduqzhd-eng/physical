@@ -15,3 +15,5 @@
 .sports-medals{width:100%;border-collapse:collapse;margin:8px 0 14px;font-size:18px}.sports-medals caption{text-align:left;font-weight:750;padding-bottom:8px}.sports-medals th,.sports-medals td{padding:10px;border-bottom:1px solid var(--forest-line);text-align:center}.sports-medals tbody th{text-align:left}
 .sports-nav{display:flex;justify-content:space-between;gap:12px;margin-top:8px}.sports-confirm{padding:14px;border-radius:14px;background:var(--forest-tint);margin:12px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sports-confirm p{width:100%;margin:0}
 @media print{.sports-nav,.sports-stages,.sports-timer .flagship-row{display:none}}
+.play-experiences a.sports-deep-link{display:inline-flex;padding:10px 16px;border:1px solid var(--forest-accent);border-radius:100px;background:var(--forest-tint);font-weight:700;text-decoration:none}
+.more-apps .sports-card em{font-style:normal;font-size:13px;color:var(--forest-muted)}.more-apps .more-inapp{margin:-6px 0 0 4px;font-size:14px}.more-apps li{list-style:none}.more-apps ul.sports-grid{padding:0}

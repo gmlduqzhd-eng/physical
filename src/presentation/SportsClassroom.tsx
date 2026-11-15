@@ -5,6 +5,7 @@ import {FlowShell} from './FlowShell';
 import {readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxWhistle,sfxCountdown,unlockAudio} from '../application/soundEffects';
 import {LESSON_STAGES,MEDAL_LABEL,SPORT_BY_ID,SPORT_FILTERS,SPORT_GROUPS,TEAM_COLORS,TEAM_NAMES,addMedals,filterSports,formatResult,medalStandings,parseMedalTally,rankTeams,type MedalTally,type SportEvent,type SportFilter,type SportGrade} from '../domain/sportsClassroom';
+import {hasDeepDive} from '../domain/sportDeepDive';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 
@@ -89,6 +90,7 @@ export function SportLesson(){
  const award=()=>{if(awarded||!ranking.length)return;const next=addMedals(readTally(),ranking);writeStorage(MEDAL_KEY,JSON.stringify(next));setTally(next);setAwarded(true);sfxWhistle();};
  return <FlowShell utilities back="/sports" backLabel="종목 고르기"><section className="play-experiences sports-lesson" aria-label={`${event.name} 수업`} data-sport={event.id} data-stage={id}>
   <p className="eyebrow">종목 교실 · {SPORT_GROUPS[event.group]}</p><h1><span aria-hidden="true">{event.icon}</span> {event.name} <small>{event.sub}</small></h1>
+  {hasDeepDive(event.id)&&<p><Link className="sports-deep-link" to={`/sports/${event.id}/deep`}>📖 {event.name} 깊이 보기 · 용어·기술·포지션·퀴즈 →</Link></p>}
   <ol className="sports-stages" aria-label="수업 단계">{LESSON_STAGES.map((s,i)=><li key={s.id}><button aria-current={i===stage?'step':undefined} onClick={()=>setStage(i)}>{i+1}. {s.label}</button></li>)}</ol>
   <section className="recipe-card sports-stage">
    {id==='warmup'&&<><h2>몸을 깨우는 준비운동</h2><p>다치지 않게, 천천히 따라 해요.</p><ul className="sports-picture-list">{event.warmup.map(([icon,text])=><li key={text}><span aria-hidden="true">{icon}</span>{text}</li>)}</ul><p className="sports-guide">{event.guide}</p></>}

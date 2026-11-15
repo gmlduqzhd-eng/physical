@@ -41,6 +41,9 @@ const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({defa
 const SafetyClassroom = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.SafetyClassroom})));
 const CrowdSafetyLesson = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.CrowdSafetyLesson})));
 const ClassJourney = lazy(() => import('./presentation/ClassJourney').then(m=>({default:m.ClassJourney})));
+const SportDeepDive = lazy(() => import('./presentation/SportDeepDive').then(m=>({default:m.SportDeepDive})));
+const AngleLab = lazy(() => import('./presentation/AngleLab').then(m=>({default:m.AngleLab})));
+const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:m.MoreApps})));
 const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
@@ -77,6 +80,9 @@ function App() {
         <Route path="/lessons" element={<LessonRecipes/>} />
         <Route path="/sports" element={<SportsClassroom/>} />
         <Route path="/sports/:sportId" element={<SportLesson/>} />
+        <Route path="/sports/:sportId/deep" element={<SportDeepDive/>} />
+        <Route path="/lab/angle" element={<AngleLab/>} />
+        <Route path="/more" element={<MoreApps/>} />
         <Route path="/tools" element={<ClassTools/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
