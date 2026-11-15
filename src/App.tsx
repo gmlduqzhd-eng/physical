@@ -38,6 +38,8 @@ const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage'
 const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
 const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
 const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({default:m.ClassTools})));
+const SafetyClassroom = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.SafetyClassroom})));
+const CrowdSafetyLesson = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.CrowdSafetyLesson})));
 const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
 
@@ -75,6 +77,8 @@ function App() {
         <Route path="/sports" element={<SportsClassroom/>} />
         <Route path="/sports/:sportId" element={<SportLesson/>} />
         <Route path="/tools" element={<ClassTools/>} />
+        <Route path="/safety" element={<SafetyClassroom/>} />
+        <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
         <Route path="/hub/tools" element={<GameHub />} />
         <Route path="/about" element={<IntroLandingPage />} />
