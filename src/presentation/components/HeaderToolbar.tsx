@@ -2,10 +2,11 @@ import type { ReactNode } from 'react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '../../application/ThemeContext';
 import { HeaderUtilities } from './HeaderUtilities';
+import { AppInstallButton } from './AppInstallButton';
 import { closeHeaderPopovers } from './HeaderPopover';
 import './HeaderToolbar.css';
 
-/** Four shared controls, followed by up to two page-specific icon actions. */
+/** Shared controls, up to two page-specific icon actions, then the app install button at the far right. */
 export function HeaderToolbar({ children, className = '', label = '이용 설정' }: {
   children: ReactNode; className?: string; label?: string;
 }) {
@@ -19,5 +20,7 @@ export function HeaderToolbar({ children, className = '', label = '이용 설정
       {isDark ? <Sun aria-hidden="true"/> : <Moon aria-hidden="true"/>}<span>{themeLabel}</span>
     </button>
     {children}
+    {/* The install button closes the row, after the page's own actions. */}
+    <AppInstallButton/>
   </nav>;
 }

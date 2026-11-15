@@ -3,7 +3,6 @@ import { useId, useRef, useState } from 'react';
 import { HeaderPopover } from './HeaderPopover';
 import { BackgroundMusicButton } from './BackgroundMusicButton';
 import { LinkShareButton } from './LinkShareButton';
-import { AppInstallButton } from './AppInstallButton';
 import './HeaderUtilities.css';
 
 export function HeaderUtilities() {
@@ -16,6 +15,5 @@ export function HeaderUtilities() {
       <HeaderPopover open={musicOpen} onClose={() => setMusicOpen(false)} anchor={musicTrigger} id={musicId} label="음악 설정" className="header-music-popover"><BackgroundMusicButton/></HeaderPopover>
     </div>
     <LinkShareButton/>
-    <AppInstallButton/>
   </div>;
 }
