@@ -8,7 +8,7 @@ export function TeacherStudioEntry() {
     <header><strong>교사 수업 준비실</strong><HeaderToolbar><Link className="icon-toolbar-action" to="/hub" title="활동 탐색으로 돌아가기"><ArrowLeft aria-hidden="true"/><span>활동 탐색으로 돌아가기</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar></header>
     <section className="ai-intro">
       <p className="ai-eyebrow">땀방울 원정대 · GEMINI TEACHER STUDIO</p>
-      <h1>교사 전용 AI 도구에서<br/>수업 준비를 이어가세요.</h1>
+      <h1>교사 전용 AI 도구에서<br/>수업 준비를 이어가세요</h1>
       <p>활동 추천·난이도 조절·지도안과 성찰 질문은 별도 교사 도구에서 생성합니다.</p>
     </section>
     <section className="ai-form" aria-labelledby="studio-entry-title">
