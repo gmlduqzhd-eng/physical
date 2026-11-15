@@ -146,6 +146,6 @@ export function questResult(id: QuestId, settings: QuestSettings, records: reado
     '작전 선택': records.map((r, i) => `${i + 1}: ${build(i,settings).choices.find(c => c.id === r.choice)?.label}`).join(' / '),
     '다시 시도': `${records.reduce((s, r) => s + r.retries, 0)}회 · 감점 없음`,
     '시간 범위': '작전별 최종 시도 안내 시간 · 연습·재도전·휴식 제외',
-    '기록 버전': '몸 미션 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요',
+    '기록 버전': '신체 놀이 v1 · 이전 화면 게임 점수와 직접 비교하지 않아요',
   } } };
 }

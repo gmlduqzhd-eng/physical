@@ -31,7 +31,8 @@ export const LESSON_STAGES=[
 export type LessonStage=typeof LESSON_STAGES[number]['id'];
 
 export const TEAM_NAMES=['청팀','홍팀','황팀','녹팀'] as const;
-export const TEAM_COLORS=['#2563eb','#dc2626','#ca8a04','#15803d'] as const;
+/** 팀 색은 CSS 변수로 둔다. 밝은·어두운 테마마다 글자 대비를 맞춘 값이 SportsClassroom.css에 있다. */
+export const TEAM_COLORS=['var(--sports-team-0)','var(--sports-team-1)','var(--sports-team-2)','var(--sports-team-3)'] as const;
 export type Medal='gold'|'silver'|'bronze';
 export const MEDAL_LABEL:Record<Medal,string>={gold:'금',silver:'은',bronze:'동'};
 /** 점수 경기는 점수, 시간 경기는 걸린 초(벌칙 포함). 아직 기록이 없는 팀은 null. */
@@ -45,6 +46,20 @@ export function rankTeams(event:Pick<SportEvent,'mode'|'lowerWins'>,results:read
  const lower=event.mode==='time'||event.lowerWins===true;
  const done=results.filter((r):r is {team:number;value:number}=>r.value!==null&&Number.isFinite(r.value)).sort((a,b)=>lower?a.value-b.value:b.value-a.value);
  return done.map((r,i)=>{const rank=done.findIndex(o=>o.value===r.value)+1;void i;return {...r,rank,medal:rank===1?'gold':rank===2?'silver':rank===3?'bronze':null};});
+}
+/** 시상은 모든 팀에 기록이 있을 때만 한다. 아무도 경기하지 않았는데 메달이 나가지 않게 한다. */
+export const awardReady=(values:readonly (number|null)[])=>values.length>0&&values.every(v=>v!==null&&Number.isFinite(v));
+/** 점수 경기를 시작하면 기록이 없는 팀을 0점으로 둔다. 낮은 점수가 이기는 종목은 그 팀이 직접 기록해야 하므로 그대로 둔다. */
+export const startScores=(event:Pick<SportEvent,'mode'|'lowerWins'>,values:readonly (number|null)[])=>event.mode==='score'&&!event.lowerWins?values.map(v=>v??0):[...values];
+export const blankResults=()=>Array<number|null>(4).fill(null);
+
+/** 새로고침해도 이어지도록 이 탭에 남기는 수업 진행 상태. */
+export interface LessonProgress {sport:string;stage:number;teams:number;level:'easy'|'basic'|'hard';scores:(number|null)[];awarded:boolean}
+export function parseLessonProgress(raw:unknown,sport:string):LessonProgress|null{
+ if(!raw||typeof raw!=='object')return null;const r=raw as Record<string,unknown>;
+ if(r.sport!==sport||!Number.isInteger(r.stage)||Number(r.stage)<0||Number(r.stage)>=LESSON_STAGES.length||![2,3,4].includes(Number(r.teams))||!['easy','basic','hard'].includes(String(r.level))||!Array.isArray(r.scores)||r.scores.length!==4)return null;
+ if(!r.scores.every(v=>v===null||(typeof v==='number'&&Number.isFinite(v)&&v>=0&&v<100000)))return null;
+ return {sport,stage:Number(r.stage),teams:Number(r.teams),level:r.level as LessonProgress['level'],scores:r.scores as (number|null)[],awarded:r.awarded===true};
 }
 export function formatResult(event:Pick<SportEvent,'mode'|'unit'>,value:number):string{
  if(event.mode!=='time')return `${value}${event.unit??'점'}`;

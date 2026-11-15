@@ -229,12 +229,12 @@ export const AdminControlPanel = () => {
   // #8 모둠 대전 미니게임 발동
   const triggerTeamBattle = async () => {
     if (!currentRoom) return;
-    const battleDuration = 600; // 몸 미션 준비·연습을 위한 여유 시간
+    const battleDuration = 600; // 신체 놀이 준비·연습을 위한 여유 시간
     const endTime = Date.now() + battleDuration * 1000;
     if (!await updateRoom({
       active_minigame: { type: 'fitness', end_time: endTime, duration: battleDuration, expires_at: endTime + 4000 }
     })) return;
-    alert(`🧭 모둠 몸 미션이 시작되었습니다!\n기기를 거치하고 연습부터 진행하세요. 최대 10분 동안 열어 둡니다.`);
+    alert(`🧭 모둠 신체 놀이가 시작되었습니다!\n기기를 거치하고 연습부터 진행하세요. 최대 10분 동안 열어 둡니다.`);
   };
 
   const handleCleanupRooms = async () => {
@@ -437,7 +437,7 @@ export const AdminControlPanel = () => {
                 📋 리포트 텍스트 다운로드
               </button>
               <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                🧭 모둠 몸 미션 열기
+                🧭 모둠 신체 놀이 열기
               </button>
             </div>
 
@@ -486,7 +486,7 @@ export const AdminControlPanel = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-emerald-700 mb-4">준비·연습부터 진행하는 몸 미션을 열어요. 기기는 거치하고, 종료는 직접 확인해요.</p>
+              <p className="text-sm text-emerald-700 mb-4">준비·연습부터 진행하는 신체 놀이를 열어요. 기기는 거치하고, 종료는 직접 확인해요.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
@@ -529,7 +529,7 @@ export const AdminControlPanel = () => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-cyan-700 mb-4">기억·시간 감각과 실제 이동을 연결하는 몸 미션이에요. 준비와 연습을 마친 뒤 진행해요.</p>
+              <p className="text-sm text-cyan-700 mb-4">기억·시간 감각과 실제 이동을 연결하는 신체 놀이예요. 준비와 연습을 마친 뒤 진행해요.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'fitness', expires_at: Date.now() + 600000 } })}
@@ -590,7 +590,7 @@ export const AdminControlPanel = () => {
                   onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Target className="w-5 h-5" /> 신호 표식 몸 미션
+                  <LucideIcons.Target className="w-5 h-5" /> 신호 표식 신체 놀이
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'campfire-breath', expires_at: Date.now() + 600000 } })}

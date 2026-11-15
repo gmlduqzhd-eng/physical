@@ -33,14 +33,22 @@ export function roundRobin(teams:number):LeagueRound[]{
  }
  return rounds;
 }
+/** 점수는 경기마다 [번호가 작은 팀, 번호가 큰 팀] 순서로 한 번만 저장한다. 대진표의 홈·원정 순서와 상관없다. */
 export type MatchScore=readonly [number,number]|null;
 export const matchKey=(m:{home:number;away:number})=>`${Math.min(m.home,m.away)}-${Math.max(m.home,m.away)}`;
+/** 저장된 점수를 [홈 팀 점수, 원정 팀 점수]로 돌려준다. */
+export const homeAwayScore=(m:{home:number;away:number},s:MatchScore):[number,number]|null=>s?(m.home<m.away?[s[0],s[1]]:[s[1],s[0]]):null;
+/** [홈, 원정] 중 한쪽 점수를 바꾼 뒤 저장 순서로 돌려준다. */
+export function bumpScore(m:{home:number;away:number},s:MatchScore,side:0|1,amount:number):[number,number]{
+ const cur=homeAwayScore(m,s)??[0,0];cur[side]=Math.max(0,cur[side]+amount);
+ return m.home<m.away?[cur[0],cur[1]]:[cur[1],cur[0]];
+}
 export interface LeagueRow {team:number;played:number;win:number;draw:number;loss:number;scored:number;conceded:number;points:number;rank:number}
 /** 승 3점·무 1점. 승점 → 득실차 → 득점 순서이고, 셋이 모두 같으면 같은 순위다. */
 export function leagueTable(teams:number,rounds:LeagueRound[],scores:Record<string,MatchScore|undefined>):LeagueRow[]{
  const rows:LeagueRow[]=Array.from({length:teams},(_,team)=>({team,played:0,win:0,draw:0,loss:0,scored:0,conceded:0,points:0,rank:0}));
  for(const round of rounds)for(const m of round.matches){
-  const s=scores[matchKey(m)];if(!s)continue;
+  const s=homeAwayScore(m,scores[matchKey(m)]??null);if(!s)continue;
   const [h,a]=s,home=rows[m.home],away=rows[m.away];
   home.played++;away.played++;home.scored+=h;home.conceded+=a;away.scored+=a;away.conceded+=h;
   if(h>a){home.win++;away.loss++;home.points+=3;}else if(h<a){away.win++;home.loss++;away.points+=3;}else{home.draw++;away.draw++;home.points++;away.points++;}
@@ -88,6 +96,8 @@ export function splitGroups(total:number,groups:number,rng:Rng=Math.random):numb
  shuffled(Array.from({length:total},(_,i)=>i+1),rng).forEach((n,i)=>out[i%count].push(n));
  return out.map(g=>g.sort((a,b)=>a-b));
 }
+/** 숫자 뒤에 붙는 이/가. 한국어로 읽은 끝소리를 따른다(2이→2가, 3가→3이). */
+export function numberSubject(n:number){const last=Math.abs(n)%10,tail=last===0?(n===0?'영':'십'):'일이삼사오육칠팔구'[last-1];return `${n}${'일삼육칠팔십영'.includes(tail)?'이':'가'}`;}
 export const rollDice=(count:number,rng:Rng=Math.random)=>Array.from({length:count},()=>1+Math.floor(rng()*6));
 /** 쉼표나 줄바꿈으로 나눈 결과 이름. 모자라면 '통과'로 채우고 넘치면 자른다. */
 export function ladderLabels(text:string,columns:number):string[]{

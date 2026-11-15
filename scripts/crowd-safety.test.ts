@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CROWD_DRILLS,CROWD_GOALS,CROWD_GRADES,CROWD_PROMISES,CROWD_SOURCE,CROWD_STEPS,CROWD_THEMES,CROWD_WHY,crowdCheckResult,crowdChecks,crowdDecisions,crowdTheme,isCrowdGrade} from '../src/domain/crowdSafety';
+import {safeFirstPattern,CROWD_DRILLS,CROWD_GOALS,CROWD_GRADES,CROWD_PROMISES,CROWD_SOURCE,CROWD_STEPS,CROWD_THEMES,CROWD_WHY,crowdCheckResult,crowdChecks,crowdDecisions,crowdTheme,isCrowdGrade} from '../src/domain/crowdSafety';
 
 test('six crowd-safety goals each have a check for every grade band, a drill, a reason and a promise',()=>{
  assert.equal(CROWD_GOALS.length,6);assert.equal(CROWD_DRILLS.length,6);assert.equal(CROWD_PROMISES.length,6);assert.equal(CROWD_STEPS.length,4);
@@ -27,4 +27,19 @@ test('the check counts right answers and names the goals to look at again',()=>{
   const wrong=[...right];wrong[2]=1-wrong[2];wrong[5]=null as never;
   assert.deepEqual(crowdCheckResult(grade.id,wrong),{total:6,correct:4,missed:['warning','fallen']});
  }
+});
+test('the safe choice is never always in one place nor simply alternating',()=>{
+ const alternating=(bits:boolean[])=>bits.every((b,i)=>i===0||b!==bits[i-1]);
+ for(const n of [3,6])for(let k=0;k<40;k++){const bits=safeFirstPattern(n,'seed'+k);assert.equal(new Set(bits).size,2);assert(!alternating(bits),`${n}:${k}`);}
+ for(const theme of CROWD_THEMES)for(const grade of CROWD_GRADES){const bits=crowdDecisions(theme.id,grade.id).map(c=>c.choices[0].safe);assert(!alternating(bits)&&new Set(bits).size===2,`${theme.id} ${grade.id}`);}
+ for(const grade of CROWD_GRADES){const bits=crowdChecks(grade.id).map(c=>c.answer===0);assert(!alternating(bits)&&new Set(bits).size===2,grade.id);}
+});
+test('younger grades get their own wording for every theme, and the first check fits any theme',()=>{
+ for(const theme of CROWD_THEMES.filter(t=>t.situations.length)){
+  const young=crowdDecisions(theme.id,'1-2'),middle=crowdDecisions(theme.id,'3-4'),old=crowdDecisions(theme.id,'5-6');
+  young.forEach((c,i)=>{assert.notEqual(c.situation,old[i].situation,theme.id);assert.match(c.situation,/요\.$/,`${theme.id} 1-2 uses polite speech`);assert.equal(c.goal,old[i].goal);});
+  middle.forEach((c,i)=>{assert.match(c.situation,/요\.$/,`${theme.id} 3-4 uses polite speech`);assert.equal(c.goal,old[i].goal);assert(c.choices.every(x=>/요$/.test(x.text)),`${theme.id} 3-4 choices`);});
+ }
+ const first=crowdChecks('1-2').find(c=>c.goal==='route')!;
+ assert.doesNotMatch(first.question+first.options.join(),/축제|사탕|할로윈/);
 });
