@@ -107,7 +107,7 @@ export function SportLesson(){
    {id==='award'&&<><h2>시상식</h2>{ranking.length?<ol className="sports-podium">{ranking.map(r=><li key={r.team} data-medal={r.medal??'none'}><span aria-hidden="true">{r.medal?MEDAL_ICON[r.medal]:'👏'}</span><strong style={{color:TEAM_COLORS[r.team]}}>{TEAM_NAMES[r.team]}</strong><span>{r.rank}위 · {formatResult(event,r.value)}{r.medal?` · ${MEDAL_LABEL[r.medal]}메달`:''}</span></li>)}</ol>:<p>아직 기록이 없어요. 경기 단계에서 기록을 남겨 주세요.</p>}
     <button className="primary" disabled={awarded||!ranking.length} onClick={award}>{awarded?'우리 반 메달에 더했어요':'시상하고 우리 반 메달에 더하기'}</button>
     <p className="sports-muted">모두가 끝까지 참여한 것에 박수를 보내요. 순위는 오늘 경기의 결과일 뿐이에요.</p><MedalTable tally={tally}/></>}
-   {id==='reflect'&&<><h2>돌아보기</h2><p className="sports-guide">{event.reflect}</p><p><strong>오늘의 배움</strong> · {event.goal}</p><p>짝이나 모둠과 30초씩 이야기해요. 화면에 적지 않아도 괜찮아요.</p><div className="flagship-row"><Link className="primary" to="/sports">다른 종목 고르기</Link><Link to="/hub">신체 놀이 찾기</Link></div></>}
+   {id==='reflect'&&<><h2>돌아보기</h2><p className="sports-guide">{event.reflect}</p><p><strong>오늘의 배움</strong> · {event.goal}</p><p>짝이나 모둠과 30초씩 이야기해요. 화면에 적지 않아도 괜찮아요.</p><div className="flagship-row"><Link className="primary" to="/journey?suggest=sports">원정 지도에 도장 찍기</Link><Link to="/sports">다른 종목 고르기</Link><Link to="/hub">신체 놀이 찾기</Link></div></>}
   </section>
   <nav className="sports-nav" aria-label="단계 이동"><button disabled={stage===0} onClick={()=>setStage(stage-1)}>← 이전 단계</button><button className="primary" disabled={stage===LESSON_STAGES.length-1} onClick={()=>setStage(stage+1)}>다음 단계 →</button></nav>
  </section></FlowShell>;

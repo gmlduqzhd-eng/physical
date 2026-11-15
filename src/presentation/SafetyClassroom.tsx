@@ -54,7 +54,7 @@ export function CrowdSafetyLesson(){
     <div className="safety-choices" role="group" aria-label="약속 고르기">{CROWD_PROMISES.map((p,i)=><button key={p} aria-pressed={promise===i} onClick={()=>setPromise(i)}>{p}</button>)}</div>
     {promise!==null&&<p className="safety-promise" role="status">“{CROWD_PROMISES[promise]}”</p>}
     <p className="sports-muted">자료: <a href={CROWD_SOURCE.url} target="_blank" rel="noreferrer">{CROWD_SOURCE.label}</a> ({CROWD_SOURCE.checked} 확인). 실제 위급한 상황에서는 주변 어른에게 알리고 119에 신고해요.</p>
-    <div className="flagship-row"><Link className="primary" to="/safety">다른 주제 고르기</Link><Link to="/sports">종목 교실</Link></div></>}
+    <div className="flagship-row"><Link className="primary" to="/journey?suggest=safety">원정 지도에 도장 찍기</Link><Link to="/safety">다른 주제 고르기</Link></div></>}
   </section>
  </section></FlowShell>;
 }
