@@ -5,8 +5,10 @@ const clients:Partial<Record<Endpoint,()=>Promise<SupabaseClient>>>={};
 const callbacks:Partial<Record<Endpoint,Promise<void>>>={};
 export function setMainTeacherGoogleClient(client:SupabaseClient){clients.teacher=async()=>client;}
 export function setStudioTeacherGoogleClient(factory:()=>Promise<SupabaseClient>){clients.studio=factory;}
+/** 교사용 클라이언트는 교사 인증 화면이 먼저 열리지 않았어도(예: Google에서 돌아온 콜백 화면) 직접 불러온다. */
+const mainTeacherClient=async()=>(await import('../data/supabase')).supabase;
 export async function teacherGoogleClient(endpoint:Endpoint){
- const factory=clients[endpoint];if(!factory)throw Error('교사 로그인 화면을 다시 열어 주세요.');return factory();
+ const factory=clients[endpoint]??(endpoint==='teacher'?mainTeacherClient:undefined);if(!factory)throw Error('교사 로그인 화면을 다시 열어 주세요.');return factory();
 }
 export async function beginTeacherGoogle(endpoint:Endpoint){
  const r=await fetch(`/api/${endpoint}?action=oauth-config`,{cache:'no-store'});const config=await r.json();

@@ -72,3 +72,9 @@ test('plan generator choices announce their pressed state',()=>{
  assert.equal((source.match(/aria-pressed=\{/g)??[]).length>=6,true);
  assert.doesNotMatch(source,/⑩/);
 });
+
+test('the Google callback finds the teacher sign-in client even when the teacher screen was never opened first',()=>{
+ const source=read('src/application/teacherGoogle.ts');
+ assert.match(source,/clients\[endpoint\]\?\?\(endpoint==='teacher'\?mainTeacherClient/);
+ assert.match(source,/import\('\.\.\/data\/supabase'\)/);
+});
