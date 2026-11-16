@@ -2,10 +2,16 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
 import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
+import { CORE_ACTIVITIES } from '../domain/activityShelves';
+import { FLAGSHIP_SAFETY } from '../domain/flagship';
 import { LessonPlanGeneratorV2 } from './components/LessonPlanGeneratorV2';
 import { FlowShell } from './FlowShell';
 import './ActivityLibrary.css';
 import './Manual.css';
+
+/** 영역별 대표 활동은 지금 쓰는 핵심 활동 목록에서 가져온다. 활동이 바뀌어도 설명서가 따라간다. */
+const representatives = (domain: string, count = 4) => CORE_ACTIVITIES.filter(game => game.domain === domain).slice(0, count);
+const GRADE_BANDS = [['1~2학년', '1~2학년군'], ['3~4학년군', '3~4학년군'], ['5~6학년군', '5~6학년군']] as const;
 
 export const Manual = () => {
   const navigate = useNavigate();
@@ -31,7 +37,7 @@ export const Manual = () => {
               총 {GAMES.length}종 스마트 체육 활동 &amp; 교실 수업 완전 정복 가이드
             </h2>
             <p className="text-sm text-slate-400 mt-2 max-w-2xl leading-relaxed" style={{marginInline:'auto',textWrap:'balance'}}>
-              화면 터치형 센서 미니게임부터 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동, 그리고 유튜브 영상 연계 댄스·표현 활동까지!
+              화면 안내를 보고 교실·강당에서 실제 공과 도구로 온몸을 움직이는 활동, 준비물 없는 신체 놀이, 그리고 유튜브 영상 연계 댄스·표현 활동까지!
               학생들의 신체활동 역량과 협동심을 기를 수 있도록 설계된 학교 체육 수업 플랫폼입니다.
             </p>
           </div>
@@ -56,7 +62,7 @@ export const Manual = () => {
                   자신의 체력 수준을 이해하고 건강 체력(근력, 유연성, 심폐지구력) 및 운동 체력(순발력, 민첩성, 평형성)을 기르는 활동
                 </p>
                 <div className="mt-2 text-[11px] text-slate-400">
-                  대표: 심박 탐정단, 자세 수호 로봇, 스쿼트 챌린지, 제자리 달리기, 버피 점프 등
+                  대표: {representatives('운동').map(game => game.name).join(', ')} 등
                 </div>
               </div>
 
@@ -69,7 +75,7 @@ export const Manual = () => {
                   기술형(표적·기록·투기), 전략형(영역·필드·네트), 생태형(민속·놀이) 스포츠 기능과 공간 전술, 규칙과 협동심 실천
                 </p>
                 <div className="mt-2 text-[11px] text-slate-400">
-                  대표: 공 굴림 컬링, 패스 게이트 구조대, 드리블 박자 공장, 빈 공간 설계자 등
+                  대표: {representatives('스포츠').map(game => game.name).join(', ')} 등
                 </div>
               </div>
 
@@ -82,7 +88,7 @@ export const Manual = () => {
                   신체 움직임을 통해 생각과 정서를 창의적으로 나타내고, 유튜브 영상 연계 댄스·탈춤·치어리딩 및 심미적 가치를 감상하는 활동
                 </p>
                 <div className="mt-2 text-[11px] text-slate-400">
-                  대표: 전통 탈춤, K-POP 안무 챌린지, 바디 퍼커션, 치어리딩, 음악 줄넘기, 태보 등
+                  대표: {representatives('표현').map(game => game.name).join(', ')} 등
                 </div>
               </div>
             </div>
@@ -134,11 +140,11 @@ export const Manual = () => {
             </div>
           </section>
 
-          {/* 3. 게임 준비 시간 3초 단축 및 PC 클릭 폴백 */}
+          {/* 3. 3초 카운트다운과 기기 상관없는 진행 */}
           <section className="space-y-4">
             <h3 className="text-lg sm:text-xl font-black text-cyan-300 flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">3</span>
-              수업 최적화: 3초 카운트다운 &amp; PC 클릭 대체 조작
+              수업 최적화: 3초 카운트다운 &amp; 기기 상관없이 같은 방법
             </h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -153,113 +159,46 @@ export const Manual = () => {
 
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-2">
                 <div className="font-bold text-sm text-teal-400 flex items-center gap-2">
-                  <Monitor className="w-4 h-4" /> PC 환경 마우스 클릭 폴백
+                  <Monitor className="w-4 h-4" /> 센서 없이도 같은 활동
                 </div>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  점프왕, 제자리 달리기, 스쿼트 등 모바일 센서 전용 게임을 데스크톱 PC나 센서 미지원 기기에서 시연할 때도 화면 클릭/스페이스바로 카운트를 증가시킬 수 있습니다.
+                  지금 활동은 기기 센서로 움직임을 재지 않아요. 화면 안내를 보고 몸으로 움직인 뒤, 완료는 학생이나 선생님이 버튼으로 확인해요. 그래서 스마트폰·태블릿·PC 어디서나 같은 방법으로 쓸 수 있어요.
                 </p>
               </div>
             </div>
           </section>
 
-          {/* 4. 신규 실제 신체활동 8종 상세 가이드 */}
+          {/* 4. 영역별 대표 활동 — 지금 쓰는 핵심 활동에서 자동으로 만든다 */}
           <section className="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-5">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">4</span>
-              <h3 className="text-lg sm:text-xl font-black text-white">
-                🏃 온몸으로 뛰는 신규 신체활동 8종 수업 팁
-              </h3>
+              <h3 className="text-lg sm:text-xl font-black text-white">🏃 영역별 대표 활동 수업 팁</h3>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              화면만을 보는 정적인 수업에서 벗어나 교실 및 체육관 바닥, 실제 공·도구, 짝과의 신체 표현을 종합적으로 활용합니다.
+              수업에 바로 쓰기 좋은 핵심 활동 {CORE_ACTIVITIES.length}개 가운데 영역마다 몇 가지를 골라 보여 줘요. 전체 목록과 준비물·안전 안내는 활동 둘러보기에서 확인해요.
             </p>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-emerald-500/20 space-y-1">
-                <div className="font-black text-emerald-400 flex items-center gap-1.5">
-                  <span>🔍</span> 심박 탐정단 (운동)
+              {(['운동', '스포츠', '표현'] as const).flatMap(domain => representatives(domain, 3)).map(game => (
+                <div key={game.type} className="p-3.5 bg-slate-900 rounded-xl border border-emerald-500/20 space-y-1">
+                  <div className="font-black text-emerald-400 flex items-center gap-1.5"><span aria-hidden="true">{game.emoji}</span> {game.name} ({game.domain})</div>
+                  <p className="text-slate-300 leading-relaxed">{game.desc}</p>
                 </div>
-                <p className="text-slate-300 leading-relaxed">
-                  안정 시, 30초 점핑잭 직후, 1분 휴식 후의 15초 맥박수를 측정하여 신체 회복 탄력성과 운동 생리를 체득합니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-emerald-500/20 space-y-1">
-                <div className="font-black text-emerald-400 flex items-center gap-1.5">
-                  <span>🤖</span> 자세 수호 로봇 (운동)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  바르게 앉기, 물건 들기, 서 있기 등 5대 척추 건강 자세를 10초간 바르게 유지하며 몸의 균형 감각을 익힙니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-blue-500/20 space-y-1">
-                <div className="font-black text-blue-400 flex items-center gap-1.5">
-                  <span>🥌</span> 공 굴림 컬링 원정 (스포츠 기술형)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  실제 배구공이나 짐볼을 바닥 동심원 표적으로 조심스럽게 굴려 표적에 멈추도록 하는 섬세한 힘 조절 활동입니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-blue-500/20 space-y-1">
-                <div className="font-black text-blue-400 flex items-center gap-1.5">
-                  <span>🥅</span> 패스 게이트 구조대 (스포츠 전략형)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  장애물 콘 게이트 사이로 모둠원 전원이 원터치 패스를 성공시켜 점수를 획득하는 모둠 협동 패스 활동입니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-blue-500/20 space-y-1">
-                <div className="font-black text-blue-400 flex items-center gap-1.5">
-                  <span>🥁</span> 드리블 박자 공장 (스포츠 전략형)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  60/90/120 BPM 메트로놈 비트 박자에 맞춰 손 또는 발로 실제 공을 일정하게 튀기며 공 통제 리듬을 체득합니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-blue-500/20 space-y-1">
-                <div className="font-black text-blue-400 flex items-center gap-1.5">
-                  <span>🗺️</span> 빈 공간 설계자 (스포츠 전략형)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  미니 전술판 드래그로 공간 침투 경로를 작전회의한 뒤, 실제 코트에서 1분간 팀원이 역할을 수행하며 전술을 완성합니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-purple-500/20 space-y-1">
-                <div className="font-black text-purple-400 flex items-center gap-1.5">
-                  <span>🌡️</span> 감정 온도계 (표현)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  기쁨, 긴장, 분노 등 5대 감정을 1단계(미세)부터 5단계(폭발)까지 온몸의 표정과 자세로 나타내고 짝과 교감합니다.
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-slate-900 rounded-xl border border-purple-500/20 space-y-1">
-                <div className="font-black text-purple-400 flex items-center gap-1.5">
-                  <span>🤖</span> 파트너 로봇 연구소 (표현)
-                </div>
-                <p className="text-slate-300 leading-relaxed">
-                  팔·다리·몸통 움직임 카드를 모둠원과 조합하여 기계음 구령에 맞춰 짝과 로봇 시연을 번갈아 진행합니다.
-                </p>
-              </div>
+              ))}
             </div>
+            <button type="button" className="text-xs font-bold text-cyan-300 underline" onClick={() => navigate('/hub')}>활동 전체 둘러보기 →</button>
           </section>
 
-          {/* 5. 🎭 신규 표현 활동 30종 & 유튜브 영상 연계 수업 가이드 */}
+          {/* 5. 표현 활동과 유튜브 영상 연계 수업 */}
           <section className="bg-slate-950 p-6 rounded-3xl border border-purple-500/40 space-y-6 shadow-2xl">
             <div className="flex items-center gap-2">
               <span className="w-7 h-7 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center text-sm font-bold border border-purple-500/30">5</span>
               <h3 className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
-                <span>🎭</span> 신규 표현 활동 30종 &amp; 유튜브 영상 연계 수업
+                <span>🎭</span> 표현 활동 {GAMES.filter(game => game.domain === '표현').length}종 &amp; 유튜브 영상 연계 수업
               </h3>
             </div>
 
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              2022 개정 체육과 교육과정에 맞추어 <strong className="text-purple-300">1~2학년(8종)</strong>, <strong className="text-purple-300">3~4학년(12종)</strong>, <strong className="text-purple-300">5~6학년(10종)</strong> 총 30종의 독창적인 표현 활동이 추가되었습니다. 특히 K-POP 안무, 전통 탈춤, 세계 민속 춤, 치어리딩, 음악 줄넘기, 태보 등은 <strong>유튜브 시연 영상을 직접 보며</strong> 따라 할 수 있습니다.
+              표현 영역 활동은 학년군마다 고를 수 있어요. 특히 K-POP 안무, 전통 탈춤, 세계 민속 춤, 치어리딩, 음악 줄넘기, 태보 등은 <strong>유튜브 시연 영상을 직접 보며</strong> 따라 할 수 있습니다.
             </p>
 
             {/* 유튜브 플레이어 기능 안내 카드 */}
@@ -289,92 +228,32 @@ export const Manual = () => {
               </div>
             </div>
 
-            {/* 학년군별 30종 게임 목록 요약 */}
-            <div className="space-y-3 text-xs">
-              <h4 className="text-sm font-black text-slate-200">
-                📚 학년군별 표현 게임 30종 라인업
-              </h4>
-
-              {/* 1~2학년군 8종 */}
-              <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <div className="font-bold text-cyan-400 flex items-center justify-between">
-                  <span>🌱 1~2학년군 (8종) - 기본 움직임 &amp; 자연·사물 모방</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">[2체03-01~03]</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
-                  <div>• 🌱 씨앗의 성장</div>
-                  <div>• 🌦️ 날씨 탐험대</div>
-                  <div>• 🧣 마법 스카프 요정</div>
-                  <div>• 🍿 팝콘 팡팡</div>
-                  <div>• 👥 그림자 인형사</div>
-                  <div>• 🎨 소리 그리기</div>
-                  <div>• 🚦 교통 신호등 요원</div>
-                  <div>• 🎈 풍선 여행기</div>
-                </div>
-              </div>
-
-              {/* 3~4학년군 12종 */}
-              <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <div className="font-bold text-emerald-400 flex items-center justify-between">
-                  <span>🚀 3~4학년군 (12종) - 공간·시간·힘 원리 &amp; 리듬·스토리</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800">[4체03-01~05]</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
-                  <div>• 🚀 우주 유영가</div>
-                  <div>• 🔥 4원소 소환사</div>
-                  <div>• 🏛️ 신체 조각 미술관</div>
-                  <div>• 🥁 바디 퍼커션</div>
-                  <div>• 🌟 K-POP 기초 (영상)</div>
-                  <div>• 🎭 뮤지컬 스톱 모션</div>
-                  <div>• 🎀 리듬 리본 체조</div>
-                  <div>• 🦎 템포 카멜레온</div>
-                  <div>• 📖 릴레이 극장</div>
-                  <div>• 🪞 싱크로 미러 듀오</div>
-                  <div>• 🪂 중력 탈출 러너</div>
-                  <div>• 🖼️ 갤러리 감상단</div>
-                </div>
-              </div>
-
-              {/* 5~6학년군 10종 */}
-              <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-2">
-                <div className="font-bold text-purple-400 flex items-center justify-between">
-                  <span>👺 5~6학년군 (10종) - 민속·현대·스포츠 표현 &amp; 창작</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">[6체03-01~04]</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-300 text-[11px]">
-                  <div>• 👺 전통 탈춤 (영상)</div>
-                  <div>• 🌕 달맞이 강강술래</div>
-                  <div>• 🗺️ 세계 민속 춤 (영상)</div>
-                  <div>• 💃 K-POP 커버 (영상)</div>
-                  <div>• 🎬 뮤지컬 연출가</div>
-                  <div>• 📣 파워 치어리딩 (영상)</div>
-                  <div>• 🪢 음악 줄넘기 (영상)</div>
-                  <div>• 🥊 태보 에어로빅 (영상)</div>
-                  <div>• 👥 모둠 플래시몹</div>
-                  <div>• 🏆 표현 페스티벌</div>
-                </div>
-              </div>
+            {/* 학년군별 표현 활동 — 지금 쓰는 활동에서 자동으로 만든다 */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-black text-slate-200">📚 학년군별 표현 활동</h4>
+              {GRADE_BANDS.map(([grade, label]) => {
+                const list = GAMES.filter(game => game.domain === '표현' && game.grades.includes(grade));
+                return (
+                  <div key={grade} className="p-3.5 bg-slate-900 rounded-xl border border-purple-500/20 text-xs space-y-1">
+                    <div className="font-black text-purple-300">{label} · {list.length}종</div>
+                    <p className="text-slate-300 leading-relaxed">{list.slice(0, 10).map(game => `${game.emoji} ${game.name}`).join(' · ')}{list.length > 10 ? ' 외' : ''}</p>
+                    <button type="button" className="font-bold text-cyan-300 underline" onClick={() => navigate(`/hub?domain=${encodeURIComponent('표현')}&grade=${encodeURIComponent(grade)}`)}>{label} 표현 활동 모두 보기 →</button>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
           {/* 6. 안전 및 수업 운영 수칙 */}
           <section className="bg-amber-950/30 p-5 sm:p-6 rounded-2xl border border-amber-500/30 space-y-3">
-            <h4 className="text-amber-400 font-black flex items-center gap-2 text-sm sm:text-base">
+            <h3 className="text-amber-400 font-black flex items-center gap-2 text-sm sm:text-base">
               <ShieldCheck className="w-5 h-5 text-amber-400" /> 교사 및 학생 필수 안전 수칙
-            </h4>
+            </h3>
             <ul className="space-y-2 text-xs text-slate-300 leading-relaxed list-disc list-inside">
-              <li>
-                <strong className="text-white">주변 안전거리 확보:</strong> 공을 굴리거나 신체 표현을 할 때 다른 모둠이나 벽, 책상과 최소 2m 이상 거리를 둡니다.
-              </li>
-              <li>
-                <strong className="text-white">무리한 신체 접촉 금지:</strong> 협동 및 짝 활동 시 친구의 몸을 강제로 잡아당기지 않고 신호와 구령으로 협력합니다.
-              </li>
-              <li>
-                <strong className="text-white">심박수 교육용 관찰:</strong> 심박 탐정단의 맥박 측정은 신체 반응을 탐구하는 교육 활동이며, 진단이나 타인과의 승패 비교용이 아닙니다.
-              </li>
-              <li>
-                <strong className="text-white">스마트 기기 낙하 주의:</strong> 센서 게임 시 스트랩을 착용하거나 양손으로 안전하게 파지하도록 지도합니다.
-              </li>
+              {FLAGSHIP_SAFETY.map(rule => <li key={rule}>{rule}</li>)}
+              <li><strong className="text-amber-300">무리한 신체 접촉 금지:</strong> 짝·모둠 활동에서 친구의 몸을 강제로 잡아당기지 않고 신호와 구령으로 협력해요.</li>
+              <li><strong className="text-amber-300">몸의 변화 관찰:</strong> 맥박은 손목에서 가볍게 느끼고 목은 누르지 않아요. 숫자를 재거나 친구와 비교하지 않아요. 숨은 참지 않아요.</li>
+              <li><strong className="text-amber-300">공간:</strong> 거리는 한 가지 숫자로 정하지 않고, 교실 크기와 활동에 맞춰 팔을 뻗어도 닿지 않는 개인 공간을 먼저 확인해요.</li>
             </ul>
           </section>
 
@@ -445,7 +324,7 @@ export const Manual = () => {
         {activeTab === 'lesson' && (
         <div className="bg-slate-900/90 p-4 sm:p-6 rounded-3xl border border-slate-800 shadow-2xl space-y-6">
           <div className="text-center pb-4 border-b border-slate-800">
-            <h2 className="text-xl sm:text-2xl font-black text-white">🤖 수업 지도안 생성기</h2>
+            <h2 className="text-xl sm:text-2xl font-black text-white">📝 수업 지도안 생성기</h2>
             <p className="text-sm text-slate-400 mt-2">2022 개정 교육과정 연계 · 땀방울 원정대 게임 활용 · 실전형 수업 설계</p>
             <p className="text-xs text-slate-500 mt-1">학년군·영역·조건을 입력하면 교육과정 연계 수업 지도안을 자동으로 생성합니다.</p>
           </div>

@@ -88,11 +88,12 @@ export const LessonPlanGeneratorV2 = () => {
     if (!plan) return;
     const d = plan.overview.duration;
     // 현재 추천된 게임을 제외하고 다시 추천
+    // 점수 순서대로 다음 활동을 고른다. 누를 때마다 같은 두 활동만 번갈아 나오지 않게 한다(상위 8개 안에서 돌아감).
     const currentId = plan.recommendedGame?.game.id;
-    const candidates = LESSON_GAME_CATALOG.filter(g => g.id !== currentId);
-    const scored = candidates.map(g => ({ game: g, score: calcGameScore(g, grade, domain, actMode, space, device, focuses) })).sort((a, b) => b.score - a.score);
-    if (scored[0]) {
-      const newPlan = generateLessonPlan(grade, d, domain, unit, actMode, studentCount, space, device, focuses, scored[0].game, 'manual', groupSize);
+    const scored = LESSON_GAME_CATALOG.map(g => ({ game: g, score: calcGameScore(g, grade, domain, actMode, space, device, focuses) })).sort((a, b) => b.score - a.score).slice(0, 8);
+    const next = scored[(scored.findIndex(item => item.game.id === currentId) + 1) % scored.length];
+    if (next) {
+      const newPlan = generateLessonPlan(grade, d, domain, unit, actMode, studentCount, space, device, focuses, next.game, 'manual', groupSize);
       setPlan(newPlan);
     }
   };
@@ -371,10 +372,10 @@ export const LessonPlanGeneratorV2 = () => {
 
             {/* 학년군 */}
             <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">① 학년군</label>
-              <div className="grid grid-cols-3 gap-2">
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-1">① 학년군</p>
+              <div role="group" aria-labelledby="lesson-plan-group-1" className="grid grid-cols-3 gap-2">
                 {(['1~2학년 · 즐거운 생활 연계', '3~4학년군', '5~6학년군'] as GradeGroup[]).map(g => (
-                  <button key={g} onClick={() => { setGrade(g); setDomain('자동'); setSelectedGame(null); }}
+                  <button key={g} aria-pressed={grade === g} onClick={() => { setGrade(g); setDomain('자동'); setSelectedGame(null); }}
                     className={`py-2.5 rounded-xl text-xs font-bold transition-all border ${grade === g ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {g}
                   </button>
@@ -398,10 +399,10 @@ export const LessonPlanGeneratorV2 = () => {
 
             {/* 교육과정 영역 */}
             <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">③ 교육과정 영역</label>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-3">③ 교육과정 영역</p>
+              <div role="group" aria-labelledby="lesson-plan-group-3" className="flex flex-wrap gap-2">
                 {domainOptions.map(d => (
-                  <button key={d} onClick={() => { setDomain(d); setSelectedGame(null); }}
+                  <button key={d} aria-pressed={domain === d} onClick={() => { setDomain(d); setSelectedGame(null); }}
                     className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${domain === d ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {d}
                   </button>
@@ -417,10 +418,10 @@ export const LessonPlanGeneratorV2 = () => {
 
             {/* 활동 형태 */}
             <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑤ 활동 형태</label>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-5">⑤ 활동 형태</p>
+              <div role="group" aria-labelledby="lesson-plan-group-5" className="flex flex-wrap gap-2">
                 {(['자동 추천', '개인', '짝', '모둠', '팀 대항', '학급 전체'] as ActivityMode[]).map(m => (
-                  <button key={m} onClick={() => setActMode(m)}
+                  <button key={m} aria-pressed={actMode === m} onClick={() => setActMode(m)}
                     className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${actMode === m ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>
                     {m}
                   </button>
@@ -447,30 +448,30 @@ export const LessonPlanGeneratorV2 = () => {
                 <div><label htmlFor={`${formId}-group-size`} className="text-xs font-bold block mb-2">모둠별 최대 인원</label><input id={`${formId}-group-size`} type="number" min={2} max={20} step={1} value={groupSizeInput} onChange={e=>setGroupSizeInput(e.target.value)} aria-describedby={`${formId}-group-help`}/><p id={`${formId}-group-help`} className="text-xs text-slate-500">2~20명. 인원을 고르게 나누며, 짝 활동은 2명 기준으로 계산합니다.</p></div>
                 {/* 장소 */}
                 <div>
-                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑦ 수업 장소</label>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-7">⑦ 수업 장소</p>
+                  <div role="group" aria-labelledby="lesson-plan-group-7" className="flex flex-wrap gap-2">
                     {(['자동', '교실', '체육관', '운동장', '다목적실', '좁은 실내 공간'] as SpaceOption[]).map(s => (
-                      <button key={s} onClick={() => setSpace(s)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${space === s ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{s}</button>
+                      <button key={s} aria-pressed={space === s} onClick={() => setSpace(s)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${space === s ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{s}</button>
                     ))}
                   </div>
                 </div>
 
                 {/* 기기 */}
                 <div>
-                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑧ 디지털 기기</label>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-8">⑧ 디지털 기기</p>
+                  <div role="group" aria-labelledby="lesson-plan-group-8" className="flex flex-wrap gap-2">
                     {(['없음', '교사용 1대', '모둠별 1대', '학생 1인 1기기'] as DeviceOption[]).map(d => (
-                      <button key={d} onClick={() => setDevice(d)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${device === d ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{d}</button>
+                      <button key={d} aria-pressed={device === d} onClick={() => setDevice(d)} className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border ${device === d ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{d}</button>
                     ))}
                   </div>
                 </div>
 
                 {/* 수업 중점 */}
                 <div>
-                  <label className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2">⑩ 수업 중점 (복수 선택)</label>
-                  <div className="flex flex-wrap gap-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-bold block mb-2" id="lesson-plan-group-9">⑨ 수업 중점 (복수 선택)</p>
+                  <div role="group" aria-labelledby="lesson-plan-group-9" className="flex flex-wrap gap-2">
                     {(['신체활동량', '움직임 기능', '체력', '전략적 사고', '협력', '의사소통', '창의적 표현', '건강 관리', '안전', '즐거움'] as FocusArea[]).map(f => (
-                      <button key={f} onClick={() => toggleFocus(f)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${focuses.includes(f) ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{f}</button>
+                      <button key={f} aria-pressed={focuses.includes(f)} onClick={() => toggleFocus(f)} className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border ${focuses.includes(f) ? 'bg-purple-600 text-white border-purple-500' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>{f}</button>
                     ))}
                   </div>
                 </div>
@@ -482,7 +483,7 @@ export const LessonPlanGeneratorV2 = () => {
           <div className="bg-white dark:bg-slate-800/50 rounded-2xl p-5 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none space-y-4 transition-colors">
             <h3 className="text-base font-black text-slate-900 dark:text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" /> 땀방울 원정대 게임</h3>
             <div className="flex gap-2">
-              <button onClick={() => { setGameSelectMode('auto'); setSelectedGame(null); setShowGamePicker(false); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'auto' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>🤖 자동 추천</button>
+              <button onClick={() => { setGameSelectMode('auto'); setSelectedGame(null); setShowGamePicker(false); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'auto' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>✨ 자동 추천</button>
               <button onClick={() => { setGameSelectMode('manual'); setShowGamePicker(true); }} className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all border ${gameSelectMode === 'manual' ? 'bg-purple-600 text-white border-purple-500 shadow-lg' : 'bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'}`}>🎯 직접 선택</button>
             </div>
 

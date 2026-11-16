@@ -1,4 +1,6 @@
 import { withParticle } from './koreanParticle';
+import { AVAILABLE_GAMES } from './gamesData';
+import { FLAGSHIPS } from './flagship';
 import { LESSON_GAME_CATALOG, type LessonGameMeta } from '../data/lessonGameCatalog';
 import { findStandards, LOW_GRADE_THEMES, CORE_COMPETENCIES, type CurriculumStandard } from '../data/curriculumStandards';
 
@@ -98,6 +100,30 @@ export function calcGameScore(game: LessonGameMeta, grade: GradeGroup, domain: D
   return Math.min(100, score);
 }
 
+/** 활동과 가장 잘 맞는 성취기준 두 개. 활동에 적힌 성취기준 → 스포츠 유형 → 활동 설명에 나오는 낱말 순서로 고른다. */
+const GENERIC_WORDS = new Set(['표현', '이해', '기본', '스포츠', '기능', '요소', '움직임', '의미']);
+/** 성취기준 영역 낱말과 함께 찾을 활동 낱말. */
+const STANDARD_SYNONYMS: Record<string, string[]> = {
+  기술형: ['표적', '기록', '던지', '차기', '슛', '굴리', '조준'], 전략형: ['전략', '수비', '공격', '작전', '패스', '영역', '빈 공간', '빈자리'], 생태형: ['민속', '자연', '전래', '오래달리기'],
+  현대: ['리듬', '박자', '댄스', '춤', 'K-POP', '음악', '루프'], 전통: ['탈춤', '강강술래', '민속', '전통'], 창작: ['창작', '만들', '연출', '무성 영화', '이야기'],
+  리듬: ['리듬', '박자', '음악', '루프', '퍼커션'], 모방: ['흉내', '모방', '따라', '동물', '로봇'], 도구: ['도구', '리본', '스카프', '줄넘기'], 느낌과: ['감정', '느낌', '기분'],
+  체력: ['체력', '근력', '지구력', '유연성', '버티', '스쿼트'], 건강: ['호흡', '쉼', '건강', '자세'], 안전한: ['안전'],
+};
+export function pickStandards(pool: CurriculumStandard[], game?: LessonGameMeta | null): CurriculumStandard[] {
+  if (!game) return pool.slice(0, 2);
+  const text = [game.title, game.description, game.subCategory, ...game.learningKeywords, ...game.movementSkills].join(' ');
+  const score = (standard: CurriculumStandard) => {
+    let value = standard.code === game.achievementCode ? 100 : 0;
+    if (game.sportType && standard.subArea.includes(game.sportType)) value += 20;
+    for (const word of standard.subArea.split(/\s+/)) {
+      if (GENERIC_WORDS.has(word) || word.length < 2) continue;
+      if ([word, ...(STANDARD_SYNONYMS[word] ?? [])].some(key => text.includes(key))) value += 5;
+    }
+    return value;
+  };
+  return pool.map((standard, index) => ({ standard, index, value: score(standard) })).sort((a, b) => b.value - a.value || a.index - b.index).slice(0, 2).map(item => item.standard);
+}
+
 // ─── 수업 지도안 생성 엔진 ───
 export function generateLessonPlan(
   grade: GradeGroup, duration: number, domain: DomainOption, unit: string,
@@ -113,12 +139,10 @@ export function generateLessonPlan(
   // Step 1: 교육과정 연계
   let standards: CurriculumStandard[] = [];
   let lowGradeTheme = '';
-  if (!isLowGrade) {
-    standards = findStandards(grade as '3~4학년군' | '5~6학년군', effectiveDomain as any);
-    if (standards.length > 2) standards = standards.slice(0, 2);
-  } else {
+  if (isLowGrade) {
     const themes = LOW_GRADE_THEMES;
-    if (domain === '표현' || domain === '기본 움직임') lowGradeTheme = themes.find(t => t.theme.includes('표현'))?.theme || themes[0].theme;
+    if (domain === '표현') lowGradeTheme = themes.find(t => t.theme.includes('표현'))?.theme || themes[0].theme;
+    else if (domain === '기본 움직임') lowGradeTheme = themes.find(t => t.theme === '기본 움직임 탐색')?.theme || themes[0].theme;
     else if (domain === '놀이') lowGradeTheme = themes[0].theme;
     else lowGradeTheme = themes.find(t => t.keywords.some(k => unit.includes(k)))?.theme || themes[0].theme;
   }
@@ -134,6 +158,12 @@ export function generateLessonPlan(
     if (best) {
       recommendedGame = { game: best.game, reason: generateGameReason(best.game, effectiveDomain, gradeKey), role: generateGameRole(best.game, effectiveDomain), usageTime: Math.round(duration * 0.3), score: best.score };
     }
+  }
+
+  // 성취기준은 추천(선택)된 활동에 맞춰 고른다. 영역을 '자동'으로 두면 활동의 영역을 따른다.
+  if (!isLowGrade) {
+    const standardDomain = domain === '자동' && recommendedGame ? recommendedGame.game.domain : effectiveDomain as '운동' | '스포츠' | '표현';
+    standards = pickStandards(findStandards(grade as '3~4학년군' | '5~6학년군', standardDomain), recommendedGame?.game);
   }
 
   const gameName = recommendedGame?.game.title || '';
@@ -209,6 +239,25 @@ export function generateLessonPlan(
 }
 
 // ─── 보조 생성 함수들 ───
+/** 활동의 원래 시간과 준비물. 대표 원정은 소개 페이지 값, 나머지는 활동 자료 값을 쓴다. */
+function activityInfo(game?: LessonGameMeta | null): { minutes: number | null; equipment: string[] } {
+  if (!game) return { minutes: null, equipment: [] };
+  const flagship = FLAGSHIPS.find(item => item.id === game.id);
+  if (flagship) return { minutes: flagship.minutes, equipment: [flagship.device] };
+  const source = AVAILABLE_GAMES.find(item => item.type === game.id);
+  return { minutes: source?.durationMinutes ?? null, equipment: source?.equipment ?? [] };
+}
+/** 1~2학년 테마별 학습 목표. 문장을 잘라 붙이지 않고 완성된 문장으로 둔다. */
+const LOW_GRADE_GOALS: Record<string, string> = {
+  '놀이 중심 신체활동': '다양한 놀이를 하며 몸을 움직이는 즐거움을 느낄 수 있다.',
+  '기본 움직임 탐색': '걷기, 달리기, 뛰기 같은 기본 움직임을 여러 방법으로 해 볼 수 있다.',
+  '신체 인식과 조절': '내 몸의 부위를 알고 움직임의 크기와 빠르기를 조절할 수 있다.',
+  '친구와 함께하기': '친구와 함께 움직이며 어울리는 즐거움을 느낄 수 있다.',
+  '안전하게 움직이기': '안전 약속을 지키며 즐겁게 활동할 수 있다.',
+  '느낌과 생각을 몸으로 표현하기': '느낌과 생각을 몸으로 자유롭게 표현할 수 있다.',
+  '리듬에 맞추어 움직이기': '음악과 리듬에 맞추어 신나게 몸을 움직일 수 있다.',
+  '자연 속 신체놀이': '자연 속에서 여러 가지 신체놀이를 즐길 수 있다.',
+};
 function generateGameReason(game: LessonGameMeta, domain: string, _grade: string): string {
   const skills = game.movementSkills.slice(0, 2).join('과 ');
   if (game.domain === domain) return `${withParticle(`「${game.title}」`,'은는')} ${withParticle(skills,'이가')} 반복되어 ${domain} 영역의 학습 내용을 경험하기에 적합합니다.`;
@@ -221,7 +270,7 @@ function generateGameRole(game: LessonGameMeta, _domain: string): string {
 
 function generateGoals(domain: string, unit: string, gameName: string, isLow: boolean, theme: string, _focuses: FocusArea[]): string[] {
   if (isLow) {
-    return [`다양한 놀이를 통해 ${theme.replace('하기','는 즐거움을 느낄 수 있다.')}`, `친구와 함께 안전 약속을 지키며 신나게 몸을 움직일 수 있다.`];
+    return [LOW_GRADE_GOALS[theme] ?? '다양한 놀이를 통해 몸을 움직이는 즐거움을 느낄 수 있다.', `친구와 함께 안전 약속을 지키며 신나게 몸을 움직일 수 있다.`];
   }
   const goals: string[] = [];
   if (domain === '운동') {
@@ -261,10 +310,14 @@ function generateLessonFlow(intro: number, mainTime: number, wrapUp: number, gam
     evaluation: '-',
   });
 
-  // 전개 - 활동 분배
-  const act1Time = Math.max(1, Math.round(mainTime * 0.35));
-  const act2Time = Math.max(1, Math.min(mainTime - act1Time - 1, Math.round(mainTime * 0.4)));
+  // 전개 - 활동 분배. 활동 원래 시간이 더 길면 전개 ②를 늘린다(전개 ①·③은 최소 1분씩 남긴다).
+  const info = activityInfo(game);
+  const baseAct2 = Math.round(mainTime * 0.4);
+  const act2Time = Math.max(1, Math.min(mainTime - 2, info.minutes ? Math.max(baseAct2, info.minutes) : baseAct2));
+  const act1Time = Math.max(1, Math.round((mainTime - act2Time) * 0.55));
   const act3Time = mainTime - act1Time - act2Time;
+  const shortNote = info.minutes && info.minutes > act2Time ? `\n(보통 ${info.minutes}분 걸리는 활동이에요. 단계를 줄여 짧게 운영해요.)` : '';
+  const gameMaterials = info.equipment.length ? info.equipment.join(', ') : `${game?.movementSkills?.[0] || ''} 관련 준비물`;
 
   flow.push({
     stage: '전개 ①', time: act1Time,
@@ -280,11 +333,11 @@ function generateLessonFlow(intro: number, mainTime: number, wrapUp: number, gam
   if (gameName && device !== '없음') {
     flow.push({
       stage: '전개 ②', time: act2Time,
-      activity: `${gameEmoji} 「${gameName}」 활용 활동\n게임을 통한 핵심 움직임 적용 및 체험`,
+      activity: `${gameEmoji} 「${gameName}」 활용 활동\n게임을 통한 핵심 움직임 적용 및 체험${shortNote}`,
       teacherActivity: `게임 실행 방법을 안내하고\n순회하며 개별 피드백을 제공한다.${device === '교사용 1대' ? '\nTV/스크린에 화면을 공유한다.' : ''}`,
       studentActivity: `${actMode === '모둠' || actMode === '팀 대항' ? '모둠별로 역할을 분담하여' : ''} 게임에 참여하며\n핵심 움직임을 반복 연습한다.\n게임 후 실제 신체활동을 수행한다.`,
       gameUsage: `${gameEmoji} ${gameName} 실행\n${device === '교사용 1대' ? '교사 기기 → TV 연결, 전체 학급 동시 활동' : device === '모둠별 1대' ? `${groupSummary(lessonGroupSizes(students, actMode === '짝' ? 2 : groupSize))} · 모둠별 기기 배분` : '학생 개인 기기 사용'}`,
-      materials: `${device === '교사용 1대' ? 'TV/프로젝터, ' : ''}디지털 기기, ${game?.movementSkills?.[0] || ''} 관련 준비물`,
+      materials: `${device === '교사용 1대' ? 'TV/프로젝터, ' : ''}디지털 기기, ${gameMaterials}`,
       safety: game?.safetyNotes?.[0] || '게임 화면 확인 후 이동할 때에는 기기를 내려놓고 이동한다.',
       evaluation: '움직임 수행 및 참여도 관찰',
     });
@@ -376,7 +429,7 @@ function generateEvaluation(domain: string, _gameName: string, isLow: boolean, _
 function generateLevelAdjust(game: LessonGameMeta | undefined, _domain: string): GeneratedPlan['levelAdjust'] {
   return {
     needHelp: [
-      game ? `「${game.title}」을 '기본 연습' 배율로 시작하고, 교사가 활동 속도를 낮추거나 수행 기준을 완화한다.` : '활동 범위를 절반으로 줄이고 성공 기준을 완화한다.',
+      game ? `${withParticle(`「${game.title}」`,'을를')} 쉬운 규칙과 작은 범위로 시작하고, 교사가 활동 속도를 낮추거나 수행 기준을 완화한다.` : '활동 범위를 절반으로 줄이고 성공 기준을 완화한다.',
       '교사 또는 또래 도우미가 옆에서 함께 활동한다.',
     ],
     general: [
@@ -384,7 +437,7 @@ function generateLevelAdjust(game: LessonGameMeta | undefined, _domain: string):
       '짝 또는 모둠에서 자신의 역할을 수행한다.',
     ],
     challenge: [
-      game ? `「${game.title}」을 '도전 기록' 배율로 시작하고, 교사가 비우세 손/발 사용 등 추가 수행 조건을 안내한다.` : '활동 범위를 확대하고 추가 전략 조건을 부여한다.',
+      game ? `${withParticle(`「${game.title}」`,'을를')} 익숙해지면 범위를 넓히고, 교사가 비우세 손/발 사용 등 추가 수행 조건을 안내한다.` : '활동 범위를 확대하고 추가 전략 조건을 부여한다.',
       '모둠 리더 역할을 맡아 친구들을 이끈다.',
     ],
   };

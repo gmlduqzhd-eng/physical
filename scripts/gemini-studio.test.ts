@@ -54,7 +54,7 @@ test('Gemini SDK uses Google directly and never sends teacher identity, keys in 
     ];
     for (const task of ['difficulty', 'plan'] as const) {
       const headings = task === 'plan' ? ['도입', '준비운동', '본활동', '정리', '안전 지도'] : ['기초', '보통', '도전'];
-      fixture = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: [], sections: headings.map((heading, index) => ({ heading, minutes: task === 'plan' ? [5, 5, 23, 5, 2][index] : null, content: task === 'difficulty' ? difficultyContent[index] : heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '역할을 교대하는 수업 방식 제안입니다.', citations: [{ activityId: selected.id, field: 'description', quote: selected.description }] })), safety: safetyFor([selected]), teacherChecks: ['현장 조건을 확인했나요?'] };
+      fixture = { title: '테스트 자료: 실제 AI 생성 아님', recommendations: [], sections: headings.map((heading, index) => ({ heading, minutes: task === 'plan' ? [5, 5, 25, 5, 0][index] : null, content: task === 'difficulty' ? difficultyContent[index] : heading === '안전 지도' ? '아래 원문 안전 항목과 현장 조건을 교사가 확인합니다.' : '역할을 교대하는 수업 방식 제안입니다.', citations: [{ activityId: selected.id, field: 'description', quote: selected.description }] })), safety: safetyFor([selected]), teacherChecks: ['현장 조건을 확인했나요?'] };
       const result = await generateStudioAdvice({ ...base, task, activityId: selected.id }); assert.equal(result.result.sections.length, headings.length);
       if (task === 'plan') assert.equal(result.result.sections.reduce((n, s) => n + (s.minutes ?? 0), 0), 40);
     }
