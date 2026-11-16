@@ -4,6 +4,7 @@ import { AVAILABLE_GAMES as GAMES } from '../src/domain/gamesData.js';
 import { LESSON_GAME_CATALOG } from '../src/data/lessonGameCatalog.js';
 import { inputSchema, outputSchema, type TeacherInput, type TeacherOutput } from '../src/domain/teacherAi.js';
 import { createHash } from 'node:crypto';
+import { AI_EXCLUDED_SAFETY_IDS } from '../src/domain/activityShelves.js';
 import type { ZodType } from 'zod';
 
 export const catalog = GAMES.map(game => {
@@ -16,7 +17,7 @@ export type CatalogItem = typeof catalog[number];
 export const sourceVersion = createHash('sha256').update(JSON.stringify(catalog)).digest('hex').slice(0, 12);
 export function isAiEligible(game: CatalogItem) {
   // Existing games remain accessible. Unreviewed clinical/emergency content is not AI source material.
-  return !/CPR|AED|RICE|응급처치|자율신경|목표 심박수/i.test(game.name);
+  return !AI_EXCLUDED_SAFETY_IDS.includes(game.id) && !/CPR|AED|RICE|응급처치|심폐소생|자율신경|목표 심박수/i.test(game.name);
 }
 export function candidates(input: TeacherInput) {
   return catalog.filter(game => isAiEligible(game) && game.grades.includes(input.grade) && game.devices.includes(input.device)

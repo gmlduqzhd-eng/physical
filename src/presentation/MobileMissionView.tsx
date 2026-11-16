@@ -1,3 +1,4 @@
+import {withParticle} from '../domain/koreanParticle';
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, CircleHelp, MonitorSmartphone, Sun } from 'lucide-react';
 import { HeaderToolbar } from './components/HeaderToolbar';
@@ -408,7 +409,7 @@ export const MobileMissionView = () => {
     if (item.id === 'double') {
       if (currentScore < actualCost) return alert('점수가 부족합니다!');
       if (hasBuff) return alert('이미 버프가 적용 중입니다!');
-      if(window.confirm(`${actualCost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) {
+      if(window.confirm(`${actualCost}점을 소모하여 [${item.name}]${withParticle(item.name,'을를').slice(item.name.length)} 구매하시겠습니까?`)) {
         const { data, error } = await supabase.rpc('purchase_classroom_buff', { row_id: groupId });
         if (error || !data) return alert('물약 구매에 실패했습니다. 잔액이나 적용 중인 물약을 확인해주세요.');
         playBeep();
@@ -418,7 +419,7 @@ export const MobileMissionView = () => {
     }
 
     if (currentScore < actualCost) return alert('점수가 부족합니다!');
-    if (!window.confirm(`${actualCost}점을 소모하여 [${item.name}]을(를) 구매하시겠습니까?`)) return;
+    if (!window.confirm(`${actualCost}점을 소모하여 [${item.name}]${withParticle(item.name,'을를').slice(item.name.length)} 구매하시겠습니까?`)) return;
 
     if (['donate','steal','time','blind'].includes(item.id)) {
       const target=item.id==='time'?null:scores.filter(g=>g.id!==groupId).sort((a,b)=>item.id==='donate'?a.score-b.score:b.score-a.score)[0]?.id;

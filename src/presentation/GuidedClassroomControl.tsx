@@ -1,3 +1,4 @@
+import {withParticle} from '../domain/koreanParticle';
 import {isFlagship} from '../domain/flagship';
 import {FlagshipControl} from './flagship/FlagshipControl';
 import { ClassroomScoreReview } from './components/ClassroomScoreReview';
@@ -54,7 +55,7 @@ export function GuidedClassroom() {
     try {
       const result = await supabase.from('mission_templates').update({ buttons: next.buttons }).eq('id', template.id).select('id');
       if (result.error || !result.data?.length) throw Error('활동을 바꾸지 못했습니다. 인증과 연결을 확인하세요.');
-      setNextGame(null); setPicking(false); setMessage(`${nextGame.name}(으)로 바꿨어요. 학생 화면은 15초 안에 바뀌어요.`); refresh();
+      setNextGame(null); setPicking(false); setMessage(`${withParticle(nextGame.name,'으로')} 바꿨어요. 학생 화면은 15초 안에 바뀌어요.`); refresh();
     } catch (cause) { setMessage(classroomError(cause, '활동 변경 실패')); }
     finally { setBusy(false); }
   };
@@ -106,8 +107,8 @@ export function GuidedClassroom() {
         <h2>다음 활동으로 바꾸기</h2>
         {activities.length > 1 && <ol className="guided-activity-trail">{activities.map(entry => <li key={entry.mission.id} aria-current={entry === current ? 'step' : undefined}>{GAMES.find(item => item.type === entry.gameType)?.name || entry.mission.title}{entry === current ? ' · 지금' : ''}</li>)}</ol>}
         {activities.length >= MAX_LESSON_ACTIVITIES ? <p className="muted">한 수업방에서는 활동을 {MAX_LESSON_ACTIVITIES}개까지 이어갈 수 있어요.</p>
-        : nextGame ? <div className="notice"><p><strong>{nextGame.name}</strong>(으)로 바꿉니다. 수업방과 모둠, 점수는 그대로이고 학생은 다시 입장하지 않아요. 학생 화면은 15초 안에 바뀌고, 하던 게임은 끝까지 할 수 있어요.</p>{isFlagship(nextGame.type) && <p>대표 원정은 수업방을 새로 만들 때만 준비돼요. 다른 활동을 골라 주세요.</p>}<div className="row"><button onClick={() => setNextGame(null)}>다시 고르기</button><button className="primary" disabled={busy || isFlagship(nextGame.type)} onClick={() => void changeActivity()}>이 활동으로 바꾸기</button></div></div>
-        : picking ? <><div className="row"><button onClick={() => setPicking(false)}>닫기</button></div><ActivityPicker onSelect={selected => { setNextGame(selected); window.requestAnimationFrame(() => document.getElementById('guided-next-activity')?.scrollIntoView({ block: 'start' })); }}/></>
+        : nextGame ? <div className="notice"><p><strong>{nextGame.name}</strong>{withParticle(nextGame.name,'으로').slice(nextGame.name.length)} 바꿉니다. 수업방과 모둠, 점수는 그대로이고 학생은 다시 입장하지 않아요. 학생 화면은 15초 안에 바뀌고, 하던 게임은 끝까지 할 수 있어요.</p>{isFlagship(nextGame.type) && <p>대표 원정은 수업방을 새로 만들 때만 준비돼요. 다른 활동을 골라 주세요.</p>}<div className="row"><button onClick={() => setNextGame(null)}>다시 고르기</button><button className="primary" disabled={busy || isFlagship(nextGame.type)} onClick={() => void changeActivity()}>이 활동으로 바꾸기</button></div></div>
+        : picking ? <><div className="row"><button onClick={() => setPicking(false)}>닫기</button></div><ActivityPicker exclude={game => isFlagship(game.type)} onSelect={selected => { setNextGame(selected); window.requestAnimationFrame(() => document.getElementById('guided-next-activity')?.scrollIntoView({ block: 'start' })); }}/></>
         : <><p>수업방을 새로 만들지 않고, 학생이 다시 입장하지 않아도 다음 활동으로 넘어갈 수 있어요.</p><button disabled={busy} onClick={() => setPicking(true)}>다음 활동 고르기</button></>}
       </section>}
 

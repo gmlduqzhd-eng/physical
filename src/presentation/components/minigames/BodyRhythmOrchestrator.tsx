@@ -1,3 +1,4 @@
+import {withParticle} from '../../../domain/koreanParticle';
 import {rhythmWindow} from '../../../domain/fourthGameRules';
 import {useActivityPause} from '../../../application/ActivityPauseContext';
 import { useState, useEffect, useRef } from 'react';
@@ -81,7 +82,7 @@ export const BodyRhythmOrchestrator = ({ groupId = 'group-1', enqueueAction, onE
         const relationship = relationships[Math.floor(Math.random() * relationships.length)];
         const alternatives = spaces.filter(space => space !== c.space);
         const space = alternatives[Math.floor(Math.random() * alternatives.length)];
-        return { ...c, bodyPart, space, effort, relationship, desc: `${bodyPart}을(를) 활용해 ${effort} 표현` };
+        return { ...c, bodyPart, space, effort, relationship, desc: `${withParticle(bodyPart,'을를')} 활용해 ${effort} 표현` };
       })
     );
   };

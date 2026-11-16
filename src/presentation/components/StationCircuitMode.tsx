@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, Printer, Trophy, Play } from 'lucide-react';
 import { readJsonStorage, writeStorage, localDateKey } from '../../application/browserStorage';
+import { useModalDialog } from '../../application/useModalDialog';
 
 interface StationCircuitModeProps {
   isOpen: boolean;
@@ -18,40 +19,41 @@ interface Station {
   color: string;
 }
 
+// 구역마다 서로 다른 활동을 연다. 미션은 앱이 재는 기록이 아니라 친구·선생님이 보고 확인할 수 있는 약속이다.
 const STATIONS: Station[] = [
   {
     id: 'A',
-    name: '스테이션 A : 민첩성 구역',
-    targetGame: 'reaction',
-    desc: '번개 같은 반사신경으로 초록 신호에 즉시 반응하기!',
-    mission: '반응속도 350ms 이하 달성하기',
-    emoji: '⚡',
+    name: '스테이션 A : 신호 반응 구역',
+    targetGame: 'red_green',
+    desc: '신호등 구조 산책: 초록은 걷기, 노랑은 작은 걸음, 빨강은 멈춤!',
+    mission: '신호를 잘못 본 걸음 없이 한 판 끝내기',
+    emoji: '🚦',
     color: 'from-amber-500 to-orange-600'
   },
   {
     id: 'B',
-    name: '스테이션 B : 코어 파워 구역',
+    name: '스테이션 B : 버티는 힘 구역',
     targetGame: 'plank',
-    desc: '흔들리지 않는 바른 자세로 버티기!',
-    mission: '플랭크 30초 이상 유지하기',
+    desc: '벽 짚고 버티기: 벽이나 의자를 짚고 바른 자세로 짧게 힘주기!',
+    mission: '힘주기와 쉬기를 번갈아 끝까지 해내기',
     emoji: '🧱',
     color: 'from-blue-600 to-indigo-700'
   },
   {
     id: 'C',
-    name: '스테이션 C : 스피드 연타 구역',
-    targetGame: 'direction',
-    desc: '화살표 방향을 빠르게 캐치하여 스와이프!',
-    mission: '연속 10회 정확히 넘기기',
-    emoji: '🏃',
+    name: '스테이션 C : 전신 연결 구역',
+    targetGame: 'phone-play-053',
+    desc: '짝수 완성 움직임 공장: 제자리걸음 두 번과 양팔 벌리기를 한 묶음으로!',
+    mission: '빠뜨린 동작 없이 완성한 묶음만 세기',
+    emoji: '🏭',
     color: 'from-emerald-500 to-teal-700'
   },
   {
     id: 'D',
-    name: '스테이션 D : 밸런스 균형 구역',
-    targetGame: 'tilt_balance',
-    desc: '한 발로 서서 스마트폰의 수평을 유지하기!',
-    mission: '20초 동안 균형 게이지 지키기',
+    name: '스테이션 D : 균형 구역',
+    targetGame: 'one_leg',
+    desc: '균형 등대 지키기: 발끝을 대거나 한 발을 살짝 들고 팔 방향 바꾸기!',
+    mission: '흔들리면 발끝을 대고 다시 시작하며 끝까지 지키기',
     emoji: '🦩',
     color: 'from-purple-500 to-pink-600'
   }
@@ -64,6 +66,7 @@ export const StationCircuitMode: React.FC<StationCircuitModeProps> = ({ isOpen, 
     return Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string' && STATIONS.some(station => station.id === id)) : [];
   });
   const [printMode, setPrintMode] = useState(false);
+  const dialogRef = useModalDialog(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -76,10 +79,12 @@ export const StationCircuitMode: React.FC<StationCircuitModeProps> = ({ isOpen, 
   const isAllDone = STATIONS.every(s => completedStations.includes(s.id));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="체육관 서킷 트레이닝 스테이션" tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-emerald-500/40 rounded-3xl max-w-lg w-full p-6 text-white shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button
+          type="button"
           onClick={onClose}
+          aria-label="닫기"
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
         >
           <X className="w-5 h-5" />
