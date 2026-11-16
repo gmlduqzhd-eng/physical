@@ -16,7 +16,7 @@ function useServerClock(s:ExpeditionSnapshot){
 }
 
 export function ExpeditionWorld({snapshot:s}:{snapshot:ExpeditionSnapshot}){
- const now=useServerClock(s),active=s.game==='expedition-boss'?BOSS_ROUTES[settingsOf(s).route][Math.min(2,s.phase)]:s.game,beat=s.status==='playing'?((Math.floor((now-s.startedAt)/600)%8)+8)%8:-1;
+ const now=useServerClock(s),active=s.game==='expedition-boss'?BOSS_ROUTES[settingsOf(s).route][Math.min(BOSS_ROUTES[settingsOf(s).route].length-1,s.phase)]:s.game,beat=s.status==='playing'?((Math.floor((now-s.startedAt)/600)%8)+8)%8:-1;
  const done=s.groups.filter(g=>g.done).length;
  const gates=s.game==='expedition-map'||s.game==='expedition-boss'?s.phase:Math.floor(done/Math.max(1,s.groups.length)*3);
  return <section className="expedition-world" aria-label="학급 공동 원정 전광판"><div className="world-heading"><div><p className="flagship-kicker">모두의 기여가 모이는 곳</p><h3>우리 반 원정 세계</h3></div><strong>{gates} / 3 관문</strong></div>
@@ -35,7 +35,7 @@ export function RoleRotation({snapshot:s,group:g,send,disabled}:{snapshot:Expedi
 }
 
 export function ReadinessBoard({snapshot:s}:{snapshot:ExpeditionSnapshot}){
- const now=useServerClock(s),active=s.game==='expedition-boss'?BOSS_ROUTES[settingsOf(s).route][Math.min(2,s.phase)]:s.game;
+ const now=useServerClock(s),active=s.game==='expedition-boss'?BOSS_ROUTES[settingsOf(s).route][Math.min(BOSS_ROUTES[settingsOf(s).route].length-1,s.phase)]:s.game;
  return <section><h3>모둠 기기 준비 상태</h3><p>기기가 보고한 최근 상태입니다. 권한 허용과 실제 신호 수신을 구분합니다. 같은 종류의 보고는 마지막 상태로 갱신하며 모든 기기를 검사한 결과는 아닙니다. 영상·좌표·기기 식별자는 보내지 않아요.</p><div className="flagship-team-grid">{s.groups.map(g=>{const w=groupWorkshop(g,s);return <article key={g.id}><strong>{g.name}</strong>{active==='expedition-ship'&&<p>현재 조종 축 {g.axes.filter(a=>a.claimed&&now-a.at<10000).length}/2</p>}{w.devices.length?w.devices.map((r,i)=><p key={i}>{r.kind==='camera'?'카메라':r.kind==='tilt'?'기울기':'터치'}: {readinessLabel(r,now)}</p>):<p>아직 수신된 준비 신호 없음</p>}</article>;})}</div></section>;
 }
 
@@ -75,5 +75,5 @@ export function ExpeditionTutorial({game}:{game:string}){
 
 export function BossContribution({snapshot:s}:{snapshot:ExpeditionSnapshot}){
  const route=BOSS_ROUTES[settingsOf(s).route];
- return <section className="flagship-note"><p>선택한 경로 {ROUTE_NAMES[settingsOf(s).route]} · 현재 {Math.min(3,s.phase+1)}/{route.length}관문</p><div className="activity-role-cards">{s.groups.map(group=>{const w=groupWorkshop(group,s);return <article key={group.id}><h4>{group.name}</h4><ol>{route.map((game,i)=>{const contribution=w.contributions?.find(c=>c.game===game);return <li key={i}>{i+1}관문 · {contribution?contribution.done?'참여 확인':'진행 중':i<s.phase?'공동 관문 개방':'개별 기록 확인 대기'}</li>;})}</ol><p>다음 역할: {roleSeats(w.members,w.roleRound).map(r=>`${r.seat}번 ${r.role}`).join(' · ')}</p><p>{group.done?'기기를 놓고 작은 동작으로 정리해요.':'조작·탐사·신호·확인 역할을 나누어 아래 관문에 참여해요.'}</p></article>;})}</div><p>표시는 모둠의 입력 기록이며 실제 수행은 교사가 확인해요.</p></section>;
+ return <section className="flagship-note"><p>선택한 경로 {ROUTE_NAMES[settingsOf(s).route]} · 현재 {Math.min(route.length,s.phase+1)}/{route.length}관문</p><div className="activity-role-cards">{s.groups.map(group=>{const w=groupWorkshop(group,s);return <article key={group.id}><h4>{group.name}</h4><ol>{route.map((game,i)=>{const contribution=w.contributions?.find(c=>c.game===game);return <li key={i}>{i+1}관문 · {contribution?contribution.done?'참여 확인':'진행 중':i<s.phase?'공동 관문 개방':'개별 기록 확인 대기'}</li>;})}</ol><p>다음 역할: {roleSeats(w.members,w.roleRound).map(r=>`${r.seat}번 ${r.role}`).join(' · ')}</p><p>{group.done?'기기를 놓고 작은 동작으로 정리해요.':'조작·탐사·신호·확인 역할을 나누어 아래 관문에 참여해요.'}</p></article>;})}</div><p>표시는 모둠의 입력 기록이며 실제 수행은 교사가 확인해요.</p></section>;
 }

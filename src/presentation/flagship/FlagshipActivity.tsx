@@ -2,7 +2,7 @@ import {useCallback,useEffect,useState} from 'react';
 import {useActivityPause} from '../../application/ActivityPauseContext';
 import {bossReflectionChoices} from '../../domain/fourthGameRules';
 import {FLAGSHIPS,FLAGSHIP_SAFETY,type FlagshipId} from '../../domain/flagship';
-import {BOSS_ROUTES,DEFAULT_WORKSHOP,groupWorkshop,LEVEL_NAMES,settingsOf,type WorkshopSettings} from '../../domain/expeditionWorkshop';
+import {GATE_NAMES,bossRoute,DEFAULT_WORKSHOP,groupWorkshop,LEVEL_NAMES,settingsOf,type WorkshopSettings} from '../../domain/expeditionWorkshop';
 import {RoleRotation,ExpeditionTutorial,WorkshopEditor,LessonSchedule,BossContribution} from './WorkshopPanels';
 import {DeviceReporting} from './DeviceReporting';
 import {useExpedition} from '../../application/useExpedition';
@@ -25,13 +25,14 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  const [contribution,setContribution]=useState(''),[nextTry,setNextTry]=useState('');
  const [ready,setReady]=useState(embedded),[safety,setSafety]=useState(false),[solved,setSolved]=useState(false),[mode,setMode]=useState('assisted'),[confirmed,setConfirmed]=useState(false),[submitted,setSubmitted]=useState(false),[practicePhase,setPracticePhase]=useState(0);
  useEffect(()=>{if(practice&&practiceSettings)void action('settings',{settings:practiceSettings});},[practice,practiceSettings,action]);
- const resetSolved=useCallback(()=>setSolved(false),[]),markSolved=useCallback(()=>setSolved(true),[]),nextPractice=useCallback(()=>setPracticePhase(n=>Math.min(3,n+1)),[]);
+ const resetSolved=useCallback(()=>setSolved(false),[]),markSolved=useCallback(()=>setSolved(true),[]),nextPractice=useCallback(()=>setPracticePhase(n=>n+1),[]);
  const meta=FLAGSHIPS.find(g=>g.id===game)!,me=s?.groups.find(g=>g.id===s.groupId)??s?.groups[0];
  const classroomPaused=useActivityPause();
  const suspended=classroomPaused||stale||s?.status!=='playing',disabled=suspended;
  const bossPhase=practice?practicePhase:s?.phase??0;
- const complete=game==='expedition-boss'?bossPhase>=3:['expedition-rescue','expedition-shadow'].includes(game)?solved:!!me?.done;
  const level=me&&s?groupWorkshop(me,s).level:'normal',config=s?settingsOf(s):DEFAULT_WORKSHOP;
+ const gates=bossRoute(config.route);
+ const complete=game==='expedition-boss'?bossPhase>=gates.length:['expedition-rescue','expedition-shadow'].includes(game)?solved:!!me?.done;
  const progressKey=s?.runId+':'+level+':'+config.route;
  const guidance=s?expeditionNextStep(s,game):null;
  useEffect(()=>{setSolved(false);setConfirmed(false);setSubmitted(false);setPracticePhase(0);},[progressKey]);
@@ -49,8 +50,8 @@ export function FlagshipActivity({game,room=null,group=null,onFinish,embedded=fa
  {game==='expedition-loop'&&<LoopGame key={s.runId+level} snapshot={s} send={action} disabled={disabled} pending={busy}/>}
  {game==='expedition-rescue'&&<RescueGame key={s.runId+level} level={level} disabled={disabled} onSolved={markSolved} onReset={resetSolved} onMode={setMode}/>}
  {game==='expedition-shadow'&&<ShadowGame key={s.runId+level} level={level} disabled={disabled} onReset={resetSolved} onSolved={markSolved} onMode={setMode}/>}
- {game==='expedition-boss'&&<><div className="flagship-boss"><span aria-hidden="true">🏰</span><h3>{bossPhase>=3?'원정대의 힘으로 기지 복원!':`${bossPhase+1}관문 · ${(config.route==='rescue'?['비밀길 연결','구조 작전','리듬 발전']:config.route==='shadow'?['비밀길 연결','공동 운반','그림자 복원']:['비밀길 연결','공동 운반','리듬 발전'])[bossPhase]}`}</h3><progress value={bossPhase} max={3} aria-label="공동 관문 개방"/><BossContribution snapshot={s}/></div>{bossPhase<3&&<FlagshipActivity key={`${s.runId}:${bossPhase}`} embedded game={BOSS_ROUTES[config.route][bossPhase]} practiceSettings={practice?config:undefined} room={room} group={group} onFinish={practice?nextPractice:()=>void refresh()}/>}</>}
- {game!=='expedition-boss'&&<GroupSupport snapshot={s} send={action} disabled={disabled||busy}/>} {complete&&!submitted&&<ExpeditionEnding snapshot={s} practice={practice} onRetry={()=>void action('restart')}/>} {complete&&game==='expedition-boss'&&!submitted&&<section className="flagship-note"><h3>세 관문을 돌아봐요 · 선택 성찰</h3><label>우리 모둠이 연결한 도움<select value={contribution} onChange={e=>setContribution(e.target.value)}><option value="">응답 생략</option>{bossReflectionChoices(BOSS_ROUTES[config.route]).map(v=><option key={v}>{v}</option>)}</select></label><label>다음 원정에서 바꿀 한 가지<select value={nextTry} onChange={e=>setNextTry(e.target.value)}><option value="">응답 생략</option>{['시작 신호를 먼저 맞추기','어려울 때 멈추고 단서 나누기','모든 자리의 차례를 기다리기'].map(v=><option key={v}>{v}</option>)}</select></label><p>현재 관문별 기여표와 함께 비교해요. 사람의 능력이나 순위를 판정하지 않아요.</p></section>}{complete&&!submitted&&<div className="flagship-finish"><h3>원정을 마쳤어요!</h3><label className="flagship-check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>모두 역할을 바꾸어 참여했고, 수행과 결과를 함께 확인했어요.</span></label><button className="flagship-primary" disabled={!confirmed||disabled} onClick={()=>void finish()}>{embedded?'관문 참여 확인':'활동 마치고 결과 제출'}</button><p>자동 측정으로 확인할 수 없는 동작은 교사가 최종 확인해요.</p></div>}{submitted&&<p role="status">참여 결과를 전달했어요.{game==='expedition-boss'?'':' 다른 모둠이 끝날 때까지 작은 동작으로 정리하며 기다려요.'}</p>}
+ {game==='expedition-boss'&&<><div className="flagship-boss"><span aria-hidden="true">🏰</span><h3>{bossPhase>=gates.length?'원정대의 힘으로 기지 복원!':`${bossPhase+1}관문 · ${GATE_NAMES[gates[bossPhase]]}`}</h3><progress value={Math.min(bossPhase,gates.length)} max={gates.length} aria-label="공동 관문 개방"/><BossContribution snapshot={s}/></div>{bossPhase<gates.length&&<FlagshipActivity key={`${s.runId}:${bossPhase}`} embedded game={gates[bossPhase]} practiceSettings={practice?config:undefined} room={room} group={group} onFinish={practice?nextPractice:()=>void refresh()}/>}</>}
+ {game!=='expedition-boss'&&<GroupSupport snapshot={s} send={action} disabled={disabled||busy}/>} {complete&&!submitted&&<ExpeditionEnding snapshot={s} practice={practice} onRetry={()=>void action('restart')}/>} {complete&&game==='expedition-boss'&&!submitted&&<section className="flagship-note"><h3>{gates.length===2?'두':'세'} 관문을 돌아봐요 · 선택 성찰</h3><label>우리 모둠이 연결한 도움<select value={contribution} onChange={e=>setContribution(e.target.value)}><option value="">응답 생략</option>{bossReflectionChoices(gates).map(v=><option key={v}>{v}</option>)}</select></label><label>다음 원정에서 바꿀 한 가지<select value={nextTry} onChange={e=>setNextTry(e.target.value)}><option value="">응답 생략</option>{['시작 신호를 먼저 맞추기','어려울 때 멈추고 단서 나누기','모든 자리의 차례를 기다리기'].map(v=><option key={v}>{v}</option>)}</select></label><p>현재 관문별 기여표와 함께 비교해요. 사람의 능력이나 순위를 판정하지 않아요.</p></section>}{complete&&!submitted&&<div className="flagship-finish"><h3>원정을 마쳤어요!</h3><label className="flagship-check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>모두 역할을 바꾸어 참여했고, 수행과 결과를 함께 확인했어요.</span></label><button className="flagship-primary" disabled={!confirmed||disabled} onClick={()=>void finish()}>{embedded?'관문 참여 확인':'활동 마치고 결과 제출'}</button><p>자동 측정으로 확인할 수 없는 동작은 교사가 최종 확인해요.</p></div>}{submitted&&<p role="status">참여 결과를 전달했어요.{game==='expedition-boss'?'':' 다른 모둠이 끝날 때까지 작은 동작으로 정리하며 기다려요.'}</p>}
  </>}
  </>}
  </section></DeviceReporting>;

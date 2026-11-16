@@ -6,7 +6,7 @@ import './ClassroomSetup.css';
 import {AVAILABLE_GAMES,type GameDef} from '../domain/gamesData';
 import {parsePlayRecipe} from '../domain/playRecipes';
 import {parseLessonTransfer} from '../domain/publicLessonTransfer';
-import {DEFAULT_WORKSHOP,LESSON_PACKAGES,LESSON_STEPS,type WorkshopSettings} from '../domain/expeditionWorkshop';
+import {legacyRouteData,DEFAULT_WORKSHOP,LESSON_PACKAGES,LESSON_STEPS,type WorkshopSettings} from '../domain/expeditionWorkshop';
 import {isFlagship} from '../domain/flagship';
 import { lessonPresets, type LessonPreset } from '../domain/lessonPresets';
 import { supabase, ensureClassroomTeacher } from '../data/supabase';
@@ -80,7 +80,9 @@ export function ClassroomSetup() {
         if(policy.error)policyNotice='수업방은 만들었지만 점수 바로 반영 설정을 저장하지 못했습니다. 수업 화면의 ‘게임 점수 확인’에서 교사 확인을 꺼 주세요.';
       }
       if(isFlagship(game.type)){
-        const initialized=await supabase.rpc('expedition_action',{p_room:room.id,p_game:game.type,p_action:'start',p_data:{mapVersion:2,settings:{...(sharedSettings??DEFAULT_WORKSHOP),packageMinutes}}});
+        const startData={mapVersion:2,settings:{...(sharedSettings??DEFAULT_WORKSHOP),packageMinutes}},legacy=legacyRouteData(startData);
+        let initialized=await supabase.rpc('expedition_action',{p_room:room.id,p_game:game.type,p_action:'start',p_data:startData});
+        if(initialized.error&&legacy)initialized=await supabase.rpc('expedition_action',{p_room:room.id,p_game:game.type,p_action:'start',p_data:legacy});
         if(initialized.error||!initialized.data?.workshop){
           navigate('/teacher/room/'+room.id,{state:{setupNotice:'수업방은 만들었지만 꾸러미 설정을 저장하지 못했습니다. 대표 원정 편집기에서 설정을 확인해 주세요.'}});
           return;

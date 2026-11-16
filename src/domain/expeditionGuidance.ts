@@ -1,3 +1,4 @@
+import {bossRoute,settingsOf} from './expeditionWorkshop.js';
 import type {ExpeditionSnapshot,FlagshipId} from './flagship.js';
 export function expeditionNextStep(s:ExpeditionSnapshot,game:FlagshipId){
  const me=s.groups.find(g=>g.id===s.groupId)??s.groups[0];
@@ -14,7 +15,8 @@ export function expeditionNextStep(s:ExpeditionSnapshot,game:FlagshipId){
  if(game==='expedition-loop')return {title:me.done?'우리 모둠의 리듬이 연결됐어요':'불빛을 익힌 뒤 한 번 기록해요',instruction:me.done?'조작 역할을 교대하고 다른 모둠의 리듬을 함께 표현해요.':'●는 동작과 입력, ·는 쉼이에요. 입력 담당과 몸동작 담당은 다음 시도에 바꿔요.'};
  if(game==='expedition-rescue')return {title:'바람 보기 → 한 값 조절 → 도착 비교',instruction:'짝은 바람을 몸짓으로 안내해요. 각도와 추진력을 한꺼번에 바꾸지 말고 한 항목씩 비교해요.'};
  if(game==='expedition-shadow')return {title:'기록 → 먼저 보기 → 따라 하기',instruction:'초록 점과 금색 위치를 구분해요. 동작이 보이지 않으면 판정을 멈추고 다시 맞춰요.'};
- return {title:s.phase>=3?'함께 세 관문을 열었어요':`${s.phase+1}번째 관문에 힘을 모아요`,instruction:s.phase>=3?'모두의 역할 교대와 수행을 확인한 뒤 결과를 제출해요.':'아래 관문에서 우리 모둠의 참여를 마치고 확인해요. 공동 진행은 다른 모둠과 함께 바뀌어요.'};
+ const gates=bossRoute(s.workshop?settingsOf(s).route:'balanced').length,finished=s.phase>=gates;
+ return {title:finished?`함께 ${gates===2?'두':'세'} 관문을 열었어요`:`${s.phase+1}번째 관문에 힘을 모아요`,instruction:finished?'모두의 역할 교대와 수행을 확인한 뒤 결과를 제출해요.':'아래 관문에서 우리 모둠의 참여를 마치고 확인해요. 공동 진행은 다른 모둠과 함께 바뀌어요.'};
 }
 export function rhythmTimingHint(taps:number[],pattern:number[]){
  const valid=taps.filter(t=>Number.isFinite(t)&&t>=0&&t<4800);

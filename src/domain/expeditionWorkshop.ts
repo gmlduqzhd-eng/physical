@@ -11,11 +11,23 @@ export const LEVEL_RULES={
  challenge:{radius:6,drag:.5,gain:36,speed:10,tolerance:120,quality:70,rescueRadius:6,shadowRadius:.12,shadowHits:7,shadowMs:550},
 } as const;
 export const BOSS_ROUTES={
+ simple:['expedition-map','expedition-loop'],
  balanced:['expedition-map','expedition-ship','expedition-loop'],
  rescue:['expedition-map','expedition-rescue','expedition-loop'],
  shadow:['expedition-map','expedition-ship','expedition-shadow'],
 } as const satisfies Record<string,readonly FlagshipId[]>;
-export const ROUTE_NAMES={balanced:'탐사 → 공동 운반 → 리듬 발전',rescue:'탐사 → 구조 작전 → 리듬 발전',shadow:'탐사 → 공동 운반 → 그림자 복원'};
+export const ROUTE_NAMES={simple:'탐사 → 리듬 발전 (두 관문)',balanced:'탐사 → 공동 운반 → 리듬 발전',rescue:'탐사 → 구조 작전 → 리듬 발전',shadow:'탐사 → 공동 운반 → 그림자 복원'};
+/** 관문 이름. 보스 원정 화면과 돌아보기에 쓴다. */
+export const GATE_NAMES:Record<string,string>={'expedition-map':'비밀길 연결','expedition-ship':'공동 운반','expedition-loop':'리듬 발전','expedition-rescue':'구조 작전','expedition-shadow':'그림자 복원'};
+export const bossRoute=(route:string|undefined)=>BOSS_ROUTES[(route&&route in BOSS_ROUTES?route:'balanced') as keyof typeof BOSS_ROUTES];
+/**
+ * 두 관문 경로(simple)는 2026-11-16 DB 마이그레이션 뒤에만 서버가 받는다. 아직 적용되지 않은 서버가 거절하면
+ * 같은 설정을 세 관문(balanced)으로 한 번 더 보낸다.
+ */
+export function legacyRouteData<T extends {settings?:unknown}>(data:T):T|null{
+ const settings=data.settings as {route?:string}|undefined;
+ return settings?.route==='simple'?{...data,settings:{...settings,route:'balanced'}}:null;
+}
 export const MOVES=['손뼉','발 디딤','작은 팔 펼치기','앉아서 손 올리기'] as const;
 export const SHIP_COURSES={orbit:[{x:25,y:25},{x:75,y:65},{x:50,y:30}],zigzag:[{x:25,y:65},{x:75,y:45},{x:30,y:25}]} as const;
 export function groupRhythm(pattern:number[],index:number){const shift=index%8;return pattern.map((_,i)=>pattern[(i+shift)%8]);}
@@ -25,13 +37,13 @@ const binary=z.number().int().min(0).max(1);
 export const workshopSchema=z.object({
  level:z.enum(LEVELS),members:z.number().int().min(2).max(6),roleEvery:z.number().int().min(1).max(5),
  packageMinutes:z.union([z.literal(10),z.literal(20),z.literal(40)]).nullable(),
- route:z.enum(['balanced','rescue','shadow']),shipCourse:z.enum(['orbit','zigzag']),
+ route:z.enum(['simple','balanced','rescue','shadow']),shipCourse:z.enum(['orbit','zigzag']),
  stationOrder:z.enum(['auto','river-tower-forest','tower-forest-river']),
  rhythm:z.array(binary).length(8).refine(a=>a.filter(Boolean).length>=2&&a.filter(Boolean).length<=6),
  move:z.enum(MOVES),
 }).strict();
 export type WorkshopSettings=z.infer<typeof workshopSchema>;
-export const DEFAULT_WORKSHOP:WorkshopSettings={level:'normal',members:4,roleEvery:2,packageMinutes:null,route:'balanced',shipCourse:'orbit',stationOrder:'auto',rhythm:[1,0,1,0,1,0,1,0],move:'손뼉'};
+export const DEFAULT_WORKSHOP:WorkshopSettings={level:'normal',members:4,roleEvery:2,packageMinutes:null,route:'simple',shipCourse:'orbit',stationOrder:'auto',rhythm:[1,0,1,0,1,0,1,0],move:'손뼉'};
 export type ReadinessState='ready'|'lost'|'manual'|'off'|'error';
 export type DeviceReport={kind:'camera'|'tilt'|'touch';state:ReadinessState;at:number};
 export type GroupWorkshop={level:ExpeditionLevel;members:number;roleRound:number;roleSwaps:number;roleAt:number;devices:DeviceReport[];contributions?:{game:FlagshipId;done:boolean;checkpoint:number;quality:number;swaps:number}[]};
