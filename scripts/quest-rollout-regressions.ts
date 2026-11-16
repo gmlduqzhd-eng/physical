@@ -44,6 +44,7 @@ try{
     const response=await page.goto(base+(teamMode?'/play/':'/solo/play/')+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
     await button('활동 시작').click();if(await button('기본 활동 시작').count())await button('기본 활동 시작').click();await phase('intro');
     assert.equal(await page.locator('.mq-heading h1').innerText(),QUEST_META[id].name);
+    if(teamMode&&QUEST_META[id].team&&await page.locator('.mq-setup-options:not([open]) summary').count())await page.locator('.mq-setup-options summary').click();
     if(teamMode&&QUEST_META[id].team)await page.getByLabel('함께할 인원').selectOption(String(QUEST_META[id].maxPlayers??4));
     if(width===1024)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
     await button('작전 살펴보기').click();

@@ -9,8 +9,8 @@ import {PRIMARY_EXPERIENCES,STARTER_RECIPES} from '../src/domain/playRecipes';
 import {withParticle} from '../src/domain/koreanParticle';
 
 const cleaned=REMOVED_GAMES.filter(g=>g.target);
-test('the 2026-11 cleanup retires 62 activities and each one leads to an activity that is still offered',()=>{
- assert.equal(cleaned.length,62);assert.equal(new Set(cleaned.map(g=>g.id)).size,62);
+test('the 2026-11 cleanup retires 62 activities and 8 courses attached to them, each leading to an activity that is still offered',()=>{
+ assert.equal(cleaned.length,70);assert.equal(new Set(cleaned.map(g=>g.id)).size,70);
  for(const g of cleaned){
   assert(GAMES.some(x=>x.type===g.id),`${g.id} still has its old definition for records`);
   assert(!isAvailableGame(g.id)&&isCleanedGame(g.id),g.id);
@@ -31,7 +31,7 @@ test('retired activities disappear from every list a teacher picks from',()=>{
  for(const id of [...CORE_ACTIVITY_IDS,...UNDERSTANDING_IDS,...SIMILAR_TO.keys(),...SIMILAR_TO.values()])assert(!gone.has(id),id);
  for(const r of [...PRIMARY_EXPERIENCES,...STARTER_RECIPES])assert(isAvailableGame(r.game),r.game);
 });
-test('courses that were merged into a now-retired activity were moved to its replacement',()=>{
+test('no remaining course hangs off a retired activity',()=>{
  for(const m of MERGED_GAMES)assert(isAvailableGame(m.target)||!!getMergedGame(m.target),`${m.id} → ${m.target}`);
  for(const m of MERGED_GAMES)assert(!cleaned.some(c=>c.id===m.target),`${m.id} still points at retired ${m.target}`);
 });

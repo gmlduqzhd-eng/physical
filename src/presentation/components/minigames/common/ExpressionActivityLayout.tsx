@@ -6,6 +6,7 @@ import { ChevronRight, ChevronLeft, Star, Trophy, RotateCcw, Info, Sparkles, Awa
 import { YouTubeExpressionPlayer } from './YouTubeExpressionPlayer';
 import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
+import { ExpressionSoundPlayer } from '../expression/ExpressionSoundPlayer';
 import {expressionAssessment,type GameResultDetails} from '../../../../domain/gameResultDetails';
 import './ExpressionActivity.css';
 import {ActivityProgress} from './ActivityProgress';
@@ -228,6 +229,7 @@ export const ExpressionActivityLayout = ({
           )}
           {game.videoInfo&&<div className="activity-brief"><p>영상 사용을 선택하면 YouTube 외부 플레이어와 연결됩니다. 영상·카메라 없이 글 안내로도 참여할 수 있어요.</p><button onClick={()=>{setUseVideo(v=>!v);setVideoPlaying(false);}}>{useVideo?'영상 연결 끄고 글 안내로':'영상 사용하기 · YouTube 연결'}</button><label><input type="checkbox" checked={followVideo} onChange={e=>setFollowVideo(e.target.checked)}/>영상의 재생·멈춤에 활동 시간을 맞추기</label>{followVideo&&useVideo&&!videoPlaying&&<p role="status">영상 재생을 기다려요. 영상이 막히면 위 선택을 끄고 글 안내로 진행할 수 있어요.</p>}</div>}
 
+          {game.sound&&!(game.videoInfo&&useVideo)&&<ExpressionSoundPlayer sound={game.sound} step={currentStepIdx} running={isTimerRunning&&!classroomPaused}/>}
           {/* 단계별 네비게이션 & 타이머 카드 */}
           <div className="bg-slate-900/90 border border-purple-500/30 rounded-3xl p-6 shadow-2xl space-y-4">
             {/* 진행 단계 헤더 & 남은 시간 */}

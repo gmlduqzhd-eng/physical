@@ -1,3 +1,4 @@
+import {LayoutDiagram} from '../../LayoutDiagram';
 import {ActivityCueControls} from '../common/ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {paceExpeditionSteps} from '../../../../domain/fourthGameRules';
@@ -120,7 +121,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       <p>기기는 거치하고 신체 놀이를 해요. 라운드가 끝난 뒤 수행한 기록을 직접 입력해요.</p>
       <details><summary>준비물·안전·대체 동작</summary><p>{game.equipment.join(' · ')} · {game.space}</p><p>{game.safety}</p><p>{game.alternative}</p></details>
       {revamped&&<fieldset><legend>우리에게 맞는 방법</legend><button aria-pressed={gentle} onClick={()=>setGentle(!gentle)}>여유 있는 안내 {gentle?'켜짐':'꺼짐'}</button><button aria-pressed={alternative} onClick={()=>setAlternative(!alternative)}>대체 동작 {alternative?'켜짐':'꺼짐'}</button><p>{alternative?game.alternative:'원래 규칙과 역할을 유지하고, 먼저 짧게 연습해요.'}</p></fieldset>}
-      <section className="activity-brief"><h3>공간과 도구를 먼저 놓아요</h3><div className="activity-role-cards">{game.equipment.map((tool,i)=><p key={i}><strong>준비 {i+1}</strong>{tool}</p>)}</div><p>활동 장소: {game.space}</p><p>교사가 출발·활동·돌아올 위치를 정해요. 기기는 이동 통로 밖에 놓고 도구 확인→신체 놀이→기록 순서로 진행해요.</p></section>
+      <section className="activity-brief"><h3>공간과 도구를 먼저 놓아요</h3><div className="activity-role-cards">{game.equipment.map((tool,i)=><p key={i}><strong>준비 {i+1}</strong>{tool}</p>)}</div><p>활동 장소: {game.space}</p><LayoutDiagram activity={game.id}/><p>교사가 출발·활동·돌아올 위치를 정해요. 기기는 이동 통로 밖에 놓고 도구 확인→신체 놀이→기록 순서로 진행해요.</p></section>
       {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 보존하고 현재 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpeditionSteps(paceExpedition([createExpeditionRound(game,i,players)],revamped&&gentle),pace)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 현재 라운드 이어가기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작하겠습니다.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}>원정 시작</button>}
     </>:phase==='tutorial'?<div className="expedition-signal">
       <h2>먼저 8초만 연습해요</h2><ol><li>기기를 거치하고 준비물을 놓아요.</li><li>{plans[0].steps[0].instruction}</li><li>신호가 끝나면 돌아와 직접 기록해요. 실수해도 다시 참여해요.</li></ol>

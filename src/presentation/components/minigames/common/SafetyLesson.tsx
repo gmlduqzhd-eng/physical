@@ -1,3 +1,4 @@
+import {LayoutDiagram} from '../../LayoutDiagram';
 import {useEffect,useRef,useState} from 'react';
 import {SAFETY_LESSONS,safetyScenarios,safetyLessonResult,type SafetyLessonId,type SafetyLearningRecord} from '../../../../domain/safetyLessons';
 import {safetyChoiceOrder} from '../../../../domain/fourthGameRules';
@@ -44,7 +45,7 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
   <ActivityProgress steps={spec.scenarios.map(s=>s.title)} current={index} results={records.map(()=>'complete')}/>
   {phase==='intro'&&<>
    <label className="mq-panel">상황 카드 묶음<select value={scenarioSet} onChange={e=>setScenarioSet(e.target.value as 'core'|'alternate')}><option value="core">기본 상황</option><option value="alternate">다른 상황에서 같은 이유 확인</option></select></label><p>선택지 위치보다 이유를 기억해요. 세 상황 뒤에 다른 상황으로 다시 확인할 수 있어요. 새로운 처치 방법을 제시하지 않아요.</p><p className="mq-lead">{spec.description}</p><ol className="mq-rules"><li>가상 상황을 읽고 안전한 선택을 골라요.</li><li>이유를 확인한 뒤 교실에서 말·손짓으로 표현해요.</li><li>몸짓이 불편하면 읽고 설명을 확인해도 학습을 마칠 수 있어요.</li></ol>
-   <div className="mq-panel"><h2>수업 준비</h2><p>{spec.equipment.join(' · ')}</p><p>{spec.boundary}</p></div><details className="mq-panel"><summary>교사용 지도 메모·자료 검토 이력</summary><p>콘텐츠가 확인한 공식 자료 기준일: 2026-10-22. 이 날짜는 오늘 현장에서 검토했다는 뜻이 아니에요.</p><ol><li>공식 자료 링크와 학교의 최신 안내를 수업 전에 다시 확인해요.</li><li>장비·교실 역할 표현과 실제 위급 상황을 구분해요. 학생에게 실제 처치를 시키지 않아요.</li><li>선택 이유를 말해 보게 하고, 읽기·손짓 등 참여 방법을 허용해요.</li></ol><a href="/teacher/manage" target="_blank" rel="noreferrer">관리자 자료 점검 기록 확인·관리</a></details>{sourceLinks}<ActivityReviewRecord game={AVAILABLE_GAMES.find(g=>g.type===gameId)!}/>
+   <div className="mq-panel"><h2>수업 준비</h2><p>{spec.equipment.join(' · ')}</p><LayoutDiagram activity={gameId}/><p>{spec.boundary}</p></div><details className="mq-panel"><summary>교사용 지도 메모·자료 검토 이력</summary><p>콘텐츠가 확인한 공식 자료 기준일: 2026-10-22. 이 날짜는 오늘 현장에서 검토했다는 뜻이 아니에요.</p><ol><li>공식 자료 링크와 학교의 최신 안내를 수업 전에 다시 확인해요.</li><li>장비·교실 역할 표현과 실제 위급 상황을 구분해요. 학생에게 실제 처치를 시키지 않아요.</li><li>선택 이유를 말해 보게 하고, 읽기·손짓 등 참여 방법을 허용해요.</li></ol><a href="/teacher/manage" target="_blank" rel="noreferrer">관리자 자료 점검 기록 확인·관리</a></details>{sourceLinks}<ActivityReviewRecord game={AVAILABLE_GAMES.find(g=>g.type===gameId)!}/>
    <button className="mq-primary" onClick={()=>{started.current=performance.now();setPhase('scenario');}}>안전 상황 살펴보기</button>
   </>}
   {(phase==='scenario'||phase==='explain'||phase==='rehearsal')&&<><p className="mq-kicker">{reviewing?'다른 상황에서 이유 확인':`상황 ${index+1}`} · {current.title}</p><h2>{current.situation}</h2>

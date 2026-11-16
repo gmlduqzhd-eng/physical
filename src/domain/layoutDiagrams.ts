@@ -1,0 +1,46 @@
+// 위에서 본 배치 그림의 틀과 활동별 설정. 준비물 목록만으로는 알기 어려운 자리·거리를 그림으로 보여 준다.
+export type LayoutKind='row'|'grid'|'cross'|'star'|'targets'|'wall'|'lanes'|'pair'|'zones'|'carry';
+export interface LayoutSpec {kind:LayoutKind;labels:string[];caption:string;distance?:string;note?:string;cols?:number}
+const L=(kind:LayoutKind,labels:string[],caption:string,extra:Partial<LayoutSpec>={}):LayoutSpec=>({kind,labels,caption,...extra});
+const SHAPES=['●','▲','■','◆'],NUM=(n:number)=>Array.from({length:n},(_,i)=>String(i+1));
+export const LAYOUTS:Record<string,LayoutSpec>={
+ 'exp-phone-03':L('row',['왼','가','오'],'표식 3개를 한 줄로, 가운데에서 출발해요',{distance:'1~2m',note:'모둠이 차례로'}),
+ 'exp-phone-05':L('star',SHAPES,'색·모양 표식 4개를 둥글게, 가운데에서 출발해요',{note:'출발'}),
+ 'exp-phone-06':L('grid',NUM(6),'숫자 카드 1~6을 2줄로 놓아요',{distance:'1~2m'}),
+ 'exp-phone-07':L('star',['빨','파','노','초'],'색 콘 4개를 둥글게 놓아요',{note:'출발'}),
+ 'exp-phone-10':L('row',['평지','좁은','풀숲'],'구간 시작 표식 3개를 한 줄로',{distance:'2~3m'}),
+ 'exp-phone-12':L('cross',[],'발 한 걸음 크기의 십자 4칸을 테이프로 그려요'),
+ 'exp-phone-19':L('row',['1','2'],'정거장 표식 2개',{distance:'2~3m'}),
+ 'exp-phone-30':L('carry',['걸어서 왕복 세 번'],'출발·도착 표식 2개',{distance:'5~8m'}),
+ 'exp-phone-31':L('targets',['가','중','멀'],'던지는 선 앞에 색 표적을 놓아요'),
+ 'exp-phone-32':L('wall',['1','2','3'],'벽 앞에 표식 3개를 놓아요',{distance:'3m'}),
+ 'exp-phone-33':L('pair',['왼문','오문'],'짝은 마주 보고, 수비 쪽에 문 2개',{distance:'3~4m'}),
+ 'exp-phone-35':L('row',['1','2','3'],'정거장 표식 3개를 한 줄로',{distance:'2m'}),
+ 'exp-phone-36':L('row',['빨','파','노'],'색 콘 3개를 3m씩 띄워요. 한 명씩 출발',{distance:'3m'}),
+ 'exp-phone-37':L('pair',['왼','가','오'],'받는 쪽에 표식 3개를 한 줄로',{distance:'2~3m'}),
+ 'exp-phone-38':L('row',['1','2','3'],'정거장 표식 3개를 한 줄로',{distance:'2m'}),
+ 'exp-tablet-01':L('grid',['●','▲','■','◆','★','♥'],'색·모양 표식 6개를 2줄 × 3칸으로',{distance:'1.5m'}),
+ 'exp-tablet-02':L('star',['1','2','3','4'],'꼭짓점 자리 4개 · 모둠이 4m × 4m 안에서',{note:'모양'}),
+ 'exp-tablet-06':L('star',SHAPES,'색 표식 4개를 둥글게, 한 번에 한 명씩',{note:'출발'}),
+ 'exp-tablet-07':L('row',NUM(8),'숫자 카드 1~8을 한 줄로',{distance:'1m'}),
+ 'exp-tablet-21':L('star',NUM(5),'표식 5개를 별 모양으로, 4명이 서고 하나는 비워요',{note:'빈자리'}),
+ 'exp-tablet-26':L('star',['빨','파','노'],'색 출구 3개를 둥글게, 한 방향으로 돌아요',{note:'출발'}),
+ 'exp-tablet-31':L('carry',['천을 함께 잡고 운반'],'출발·도착 표식 2개',{distance:'5m'}),
+ 'exp-tablet-34':L('lanes',['도','도','도','도'],'사람마다 따로 떨어진 길, 발판 2개씩',{distance:'4~5m'}),
+ 'exp-tablet-35':L('row',['1','2','3','4'],'번호 자리 1~4, 콘은 3m 뒤에 모아 둬요',{distance:'1m'}),
+ 'exp-tablet-37':L('zones',['빨강 바구니','파랑 바구니'],'바구니 2개, 물건은 3m 떨어진 곳에 모아 둬요'),
+ 'exp-tablet-42':L('zones',['공 굴리기','옆걸음 운반'],'구역 2곳을 3m 떨어뜨려요'),
+ zigzag:L('grid',NUM(9),'번호 표식 1~9를 3줄 × 3칸으로 · 7번에서 출발',{distance:'1m'}),
+ memory:L('star',SHAPES,'● ▲ ■ ◆ 표식을 둥글게, 가운데에서 출발',{note:'출발'}),
+ 'space-occupier':L('grid',NUM(6),'번호 표식 1~6을 2줄로, 걷는 길이 겹치지 않게',{distance:'1.5m'}),
+ 'pass-gate-rescue':L('star',NUM(5),'4명이면 표식 5개를 둥글게, 하나는 비워요',{note:'빈자리'}),
+ target:L('targets',['가','중','멀'],'던지는 선 앞에 표적 3개를 거리별로'),
+ 'relay-mission-runner':L('lanes',['반','반','반','반'],'통로마다 출발·반환 표식',{distance:'5m'}),
+ 'shuttle-run-beep':L('carry',['신호에 맞춰 걸어서 왕복'],'출발·반환 표식 2개',{distance:'편한 거리'}),
+ jump:L('row',['1','2','3'],'미끄럽지 않은 섬 표식 3개',{distance:'한 걸음'}),
+ 'sound-goalball':L('pair',['좌','가','우'],'짝이 마주 보고, 받는 쪽에 표식 3개',{distance:'3m'}),
+ 'base-running-decide':L('carry',['선생님이 공을 들고 수비'],'출발·다음 베이스 표식 2개',{distance:'4~5m'}),
+ 'badminton-drop-clear':L('targets',['앞','뒤'],'앞·뒤 표적을 놓아요'),
+ squat:L('row',['바닥','의자','벽'],'높이가 다른 자리 3곳',{distance:'가까이'}),
+};
+export const layoutFor=(activity:string)=>LAYOUTS[activity];

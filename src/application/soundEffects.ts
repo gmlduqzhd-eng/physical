@@ -261,3 +261,20 @@ export function stopBgm() {
 export function isBgmPlaying() {
   return bgmInterval !== null;
 }
+
+/** 박자 소리 한 번. 마디 첫 박은 조금 높게 낸다. 표현 활동의 박자 맞추기에 쓴다. */
+export function sfxBeat(accent = false) {
+  playTone(accent ? 1046 : 784, 0.07, 'triangle', accent ? 0.2 : 0.14);
+}
+
+/** 표현 활동의 소리 색깔. 물방울·북·바람·비·천둥·햇살을 서로 다르게 들리게 한다. */
+export function sfxSoundColor(kind: 'drop' | 'drum' | 'wind' | 'rain' | 'thunder' | 'sun') {
+  switch (kind) {
+    case 'drop': playTone(1568, 0.08, 'sine', 0.16); playTone(2093, 0.06, 'sine', 0.1, 0.09); break;
+    case 'drum': playTone(98, 0.35, 'sine', 0.35); playTone(65, 0.4, 'triangle', 0.25, 0.02); break;
+    case 'wind': for (let i = 0; i < 6; i++) playTone(520 + i * 60, 0.35, 'sine', 0.05, i * 0.12); break;
+    case 'rain': for (let i = 0; i < 5; i++) playTone(1200 + (i % 2) * 300, 0.04, 'sine', 0.08, i * 0.11); break;
+    case 'thunder': playTone(55, 0.9, 'sawtooth', 0.22); playTone(82, 0.6, 'square', 0.12, 0.05); break;
+    case 'sun': playTone(523, 0.6, 'sine', 0.09); playTone(659, 0.6, 'sine', 0.08, 0.05); playTone(784, 0.7, 'sine', 0.07, 0.1); break;
+  }
+}

@@ -12,8 +12,8 @@ import {FLAGSHIP_IDS,type ExpeditionSnapshot} from '../src/domain/flagship';
 import {expeditionNextStep,rhythmTimingHint} from '../src/domain/expeditionGuidance';
 import {readStorage,writeStorage,isPrivateDeviceKey,deviceStorageGeneration,clearDeviceInformation} from '../src/application/browserStorage';
 
-test('all 152 current activities and 111 retained course addresses remain distinct and routable',()=>{
- assert.equal(AVAILABLE_GAMES.length,152);assert.equal(GAMES.length,331);assert.equal(new Set(GAMES.map(g=>g.type)).size,331);assert.equal(MERGED_GAMES.length,111);
+test('all 152 current activities and 103 retained course addresses remain distinct and routable',()=>{
+ assert.equal(AVAILABLE_GAMES.length,152);assert.equal(GAMES.length,331);assert.equal(new Set(GAMES.map(g=>g.type)).size,331);assert.equal(MERGED_GAMES.length,103);
  for(const game of MERGED_GAMES){assert(AVAILABLE_GAMES.some(g=>g.type===game.target));assert(mergedGameUrl('/play/'+game.id,game.id,'?room=retained','')?.includes('variant='+game.id));}
  assert(getRemovedGame('coin_flip'));assert(AVAILABLE_GAMES.every(g=>!hasAntiCheatSensor(g.type)));
 });

@@ -184,13 +184,6 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "reason": "공 조작과 박자·손 교대를 연결하는 목표가 대표 개편과 같음."
   },
   {
-    "id": "exp-tablet-27",
-    "name": "굴림 표적 빙고",
-    "target": "exp-phone-31",
-    "stage": 1,
-    "reason": "실제 공 굴림과 회수로 빙고를 채우는 같은 목표의 모둠 변형임."
-  },
-  {
     "id": "exp-tablet-28",
     "name": "콩주머니 세 구역 배송",
     "target": "exp-phone-31",
@@ -210,20 +203,6 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "target": "exp-phone-38",
     "stage": 1,
     "reason": "라켓으로 가벼운 물체를 다루며 자리 이동하는 활동군임."
-  },
-  {
-    "id": "exp-tablet-33",
-    "name": "사각형 보급 루프",
-    "target": "exp-tablet-35",
-    "stage": 1,
-    "reason": "역할별 통로로 물품을 옮겨 공동 조건을 맞추는 운반 활동군임."
-  },
-  {
-    "id": "exp-tablet-38",
-    "name": "지원 요청 구조망",
-    "target": "exp-tablet-35",
-    "stage": 1,
-    "reason": "역할별 통로로 물품을 옮겨 공동 조건을 맞추는 운반 활동군임."
   },
   {
     "id": "exp-tablet-40",
@@ -429,13 +408,6 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "reason": "센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임."
   },
   {
-    "id": "compass-azimuth",
-    "name": "나침반 방위각 마스터",
-    "target": "exp-tablet-01",
-    "stage": 2,
-    "reason": "나침반 다이얼 맞추기와 기준 방향 이동 학습을 한 활동에서 연결할 수 있음."
-  },
-  {
     "id": "kayak-paddle",
     "name": "급류 탈출 카약",
     "target": "rhythm_clapping",
@@ -478,25 +450,11 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임."
   },
   {
-    "id": "spike-block-wall",
-    "name": "스파이크 블로킹 월",
-    "target": "zigzag",
-    "stage": 2,
-    "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임."
-  },
-  {
     "id": "badminton-smash-rhythm",
     "name": "셔틀콕 스매시 리듬",
     "target": "dribble-rhythm",
     "stage": 2,
     "reason": "종목 이름은 다르지만 화면 타이밍 입력이 성공을 만드는 리듬 구조가 반복됨."
-  },
-  {
-    "id": "tactical-grid-slide",
-    "name": "수비 포메이션 슬라이더",
-    "target": "zigzag",
-    "stage": 2,
-    "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임."
   },
   {
     "id": "juggling-bounce-paddle",
@@ -716,20 +674,6 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "reason": "누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임."
   },
   {
-    "id": "offside-breaker-pass",
-    "name": "3:2 오프사이드 트랩 브레이커",
-    "target": "zigzag",
-    "stage": 2,
-    "reason": "화면 전술판·위치 선택은 있지만 실제 이동·공간 만들기와 별도 구현임."
-  },
-  {
-    "id": "curling-weight-control",
-    "name": "컬링 하우스 힘 조절 스톤",
-    "target": "target",
-    "stage": 2,
-    "reason": "버튼 누름 시간을 힘으로 환산하는 가상 컬링과 실제 공 굴림 컬링이 중복됨."
-  },
-  {
     "id": "taekwondo-counter-kick",
     "name": "태권도 반격 발차기 패링",
     "target": "rhythm_clapping",
@@ -873,7 +817,15 @@ export const REMOVED_GAMES:{id:string;name:string;reason:string;target?:string}[
   {"id": "tabletennis-spin-read", "name": "탁구 회전 관찰소", "target": "badminton-drop-clear", "reason": "회전 개념이 어렵고 몸을 쓰는 시간이 거의 없어 정리했어요."},
   {"id": "expedition-ship", "name": "모둠 중력 우주선", "target": "expedition-map", "reason": "모둠마다 센서 기기 2대와 기울기 보정이 필요한데 몸 활동이 적어 정리했어요."},
   {"id": "expedition-rescue", "name": "몸으로 조준하는 바람 구조대", "target": "target", "reason": "카메라 인식 대신 실제로 던지는 표적 놀이로 옮겼어요."},
-  {"id": "expedition-shadow", "name": "시간차 그림자 연구소", "target": "shadow_puppeteer", "reason": "카메라 없이 짝과 하는 그림자 놀이로 옮겼어요."}
+  {"id": "expedition-shadow", "name": "시간차 그림자 연구소", "target": "shadow_puppeteer", "reason": "카메라 없이 짝과 하는 그림자 놀이로 옮겼어요."},
+  {"id": "exp-tablet-27", "name": "굴림 표적 빙고", "target": "exp-phone-31", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "exp-tablet-33", "name": "사각형 보급 루프", "target": "exp-tablet-35", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "exp-tablet-38", "name": "지원 요청 구조망", "target": "exp-tablet-35", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "compass-azimuth", "name": "나침반 방위각 마스터", "target": "exp-tablet-01", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "spike-block-wall", "name": "스파이크 블로킹 월", "target": "zigzag", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "tactical-grid-slide", "name": "수비 포메이션 슬라이더", "target": "zigzag", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "offside-breaker-pass", "name": "3:2 오프사이드 트랩 브레이커", "target": "zigzag", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},
+  {"id": "curling-weight-control", "name": "컬링 하우스 힘 조절 스톤", "target": "target", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."}
 ];
 export const getMergedGame=(id:string)=>MERGED_GAMES.find(g=>g.id===id&&g.stage<=LIFECYCLE_STAGE);
 export const getRemovedGame=(id:string)=>LIFECYCLE_STAGE>=3?REMOVED_GAMES.find(g=>g.id===id):undefined;

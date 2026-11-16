@@ -12,3 +12,10 @@ html[data-design=forest] body :is(.expression-activity,.expression-player) .expr
 /* Curriculum and reflection decorations use the same palette as their popup. */
 html[data-design=forest] body .expression-activity [class*="border-purple-"] { border-color:var(--forest-line)!important; }
 html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.expression-selected) { background:var(--forest-tint)!important; }
+.expression-sound{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;border-radius:18px;border:1px solid var(--forest-line,#c9d3c6);background:var(--forest-paper,#fffefa);color:var(--forest-ink,#1f2a22)}
+.expression-sound strong{font-size:clamp(18px,2.4vw,26px)}.expression-sound small{width:100%;color:var(--forest-muted,#5d6b62)}
+.expression-sound button{min-height:44px;padding:8px 16px;border-radius:100px;border:1px solid var(--forest-control-line,#9aa79c);background:var(--forest-paper,#fffefa);color:inherit;font-weight:700;margin-left:auto}
+.expression-sound-dot{width:22px;height:22px;border-radius:50%;background:var(--forest-accent,#566d4d);animation:expression-pulse .35s ease-out}
+.expression-sound[data-frozen=yes]{border-color:var(--forest-accent,#566d4d);background:var(--forest-tint,#e8efe3)}.expression-sound[data-frozen=yes] .expression-sound-dot{background:transparent;border:3px solid var(--forest-accent,#566d4d)}
+@keyframes expression-pulse{from{transform:scale(1.5);opacity:.4}to{transform:scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.expression-sound-dot{animation:none}}
