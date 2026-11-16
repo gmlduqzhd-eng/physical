@@ -125,7 +125,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
       <audio
         ref={audioRef}
         data-background-music="expedition"
-        preload="auto"
+        preload="none"
         loop
         hidden
       />

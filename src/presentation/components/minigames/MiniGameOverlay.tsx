@@ -12,12 +12,6 @@ import { isQuestId } from '../../../domain/movementQuests';
 import { MovementQuest } from './common/MovementQuest';
 import '../../GameTheme.css';
 import type { GameRoom } from '../../../domain/types';
-import { TelepathyGame } from './TelepathyGame';
-import { ShakeGame } from './ShakeGame';
-import { MemoryGame } from './MemoryGame';
-import { StopwatchGame } from './StopwatchGame';
-import { NumberGridGame } from './NumberGridGame';
-import { WhackAMoleGame } from './WhackAMoleGame';
 import { LegacyBombGame } from './LegacyBombGame';
 import { LegacyQuizGame } from './LegacyQuizGame';
 
@@ -56,19 +50,8 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
     const merged=getMergedGame(eventType);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={complete}>{null}</ConsolidatedActivity>;
     if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
     if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
+    // 합쳐진 활동·신체 놀이는 위에서 먼저 처리된다. 여기에는 예전 수업 방식(폭탄·퀴즈)과 정리 안내만 남는다.
     switch (minigame.type) {
-      case 'telepathy':
-        return <TelepathyGame key={sessionKey} gameRoom={gameRoom} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'shake':
-        return <ShakeGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'memory':
-        return <MemoryGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'stopwatch':
-        return <StopwatchGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'number_grid':
-        return <NumberGridGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
-      case 'whack_a_mole':
-        return <WhackAMoleGame key={sessionKey} groupId={groupId} enqueueAction={enqueueAction} />;
       case 'bomb':
         return <LegacyBombGame key={sessionKey} bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
       case 'quiz':

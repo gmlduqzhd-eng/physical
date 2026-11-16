@@ -35,77 +35,12 @@ import { useWakeLock } from '../application/useWakeLock';
 import { useMotionPermission } from '../application/useMotionPermission';
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 import { Heart } from 'lucide-react';
-import { WhackAMoleGame } from './components/minigames/WhackAMoleGame';
-import { StopwatchGame } from './components/minigames/StopwatchGame';
-import { MemoryGame } from './components/minigames/MemoryGame';
-import { NumberGridGame } from './components/minigames/NumberGridGame';
-import { ShakeGame } from './components/minigames/ShakeGame';
-import { TugOfWarGame } from './components/minigames/TugOfWarGame';
-import { ReactionTest } from './components/minigames/ReactionTest';
-import { DirectionSwipe } from './components/minigames/DirectionSwipe';
-import { ColorWord } from './components/minigames/ColorWord';
-import { CardMatch } from './components/minigames/CardMatch';
-import { MathSprint } from './components/minigames/MathSprint';
-import { TargetShoot } from './components/minigames/TargetShoot';
-import { RedGreenLight } from './components/minigames/RedGreenLight';
-import { LeftRight } from './components/minigames/LeftRight';
-import { JumpDetector } from './components/minigames/JumpDetector';
-import { SquatCounter } from './components/minigames/SquatCounter';
-import { RunInPlace } from './components/minigames/RunInPlace';
-import { TiltBalance } from './components/minigames/TiltBalance';
-import { ZoneTouch } from './components/minigames/ZoneTouch';
-import { ArmRaise } from './components/minigames/ArmRaise';
-import { DancePose } from './components/minigames/DancePose';
-import { CircleDraw } from './components/minigames/CircleDraw';
-import { TraceShape } from './components/minigames/TraceShape';
-import { PunchCounter } from './components/minigames/PunchCounter';
-import { PlankHold } from './components/minigames/PlankHold';
-import { AnimalMove } from './components/minigames/AnimalMove';
-import { TiltRace } from './components/minigames/TiltRace';
-import { FreezeGame } from './components/minigames/FreezeGame';
-import { WaveCounter } from './components/minigames/WaveCounter';
-import { SpeedCircle } from './components/minigames/SpeedCircle';
-import { ZigZagTouch } from './components/minigames/ZigZagTouch';
 import { StretchTimer } from './components/minigames/StretchTimer';
-import { OneLegBalance } from './components/minigames/OneLegBalance';
-import { FitnessRoulette } from './components/minigames/FitnessRoulette';
-import { BodyTwist } from './components/minigames/BodyTwist';
-import { PulseDetective } from './components/minigames/PulseDetective';
-import { PostureGuardian } from './components/minigames/PostureGuardian';
-import { RollingCurling } from './components/minigames/RollingCurling';
-import { PassGateRescue } from './components/minigames/PassGateRescue';
-import { DribbleRhythm } from './components/minigames/DribbleRhythm';
-import { OpenSpaceTactician } from './components/minigames/OpenSpaceTactician';
 import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
-import { CompassAzimuth } from './components/minigames/novel/CompassAzimuth';
-import { KayakPaddle } from './components/minigames/novel/KayakPaddle';
-import { WindSurfBalance } from './components/minigames/novel/WindSurfBalance';
-import { TentPegHammer } from './components/minigames/novel/TentPegHammer';
-import { TrailMazeRun } from './components/minigames/novel/TrailMazeRun';
-import { AlpineGlider } from './components/minigames/novel/AlpineGlider';
-import { CampfireBreath } from './components/minigames/novel/CampfireBreath';
-import { CrevasseJump } from './components/minigames/novel/CrevasseJump';
-import { SlingshotArchery } from './components/minigames/novel/SlingshotArchery';
-import { SpikeBlockWall } from './components/minigames/novel/SpikeBlockWall';
-import { BaseRunningDecide } from './components/minigames/novel/BaseRunningDecide';
-import { BadmintonSmashRhythm } from './components/minigames/novel/BadmintonSmashRhythm';
-import { TacticalGridSlide } from './components/minigames/novel/TacticalGridSlide';
-import { SoundGoalball } from './components/minigames/novel/SoundGoalball';
-import { JugglingBouncePaddle } from './components/minigames/novel/JugglingBouncePaddle';
-import { HeadShouldersKnees } from './components/minigames/novel/HeadShouldersKnees';
-import { AnimalHopStep } from './components/minigames/novel/AnimalHopStep';
-import { BicyclePedalCrank } from './components/minigames/novel/BicyclePedalCrank';
-import { DoubleUnderRope } from './components/minigames/novel/DoubleUnderRope';
-import { MirrorMotionInvert } from './components/minigames/novel/MirrorMotionInvert';
-import { SeesawBalanceTap } from './components/minigames/novel/SeesawBalanceTap';
-import { SpaceOccupier } from './components/minigames/SpaceOccupier';
-import { RelayMissionRunner } from './components/minigames/RelayMissionRunner';
-import { BodyRhythmOrchestrator } from './components/minigames/BodyRhythmOrchestrator';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
-import { CurriculumGameRouter } from './components/minigames/curriculum/CurriculumGameRouter';
 import { ArrowLeft, Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxTap } from '../application/soundEffects';
 import { usePlayerProfile } from '../application/usePlayerProfile';
@@ -457,153 +392,15 @@ const GamePlaySession = () => {
 
     const expedition=EXPEDITION_BY_ID.get(gameType||'');
     if(expedition?.kind==='B')return <ExpeditionActivity key={key} game={expedition} groupId={dummyGroupId} solo={soloMode} enqueueAction={localEnqueueAction}/>;
+    // 지금은 이 세 활동만 이 화면 전용 컴포넌트로 열린다. 나머지는 위의 신체 놀이·원정·안전·폰 놀이 화면이나 정리 안내로 먼저 처리된다.
     switch (gameType) {
-      case 'whack_a_mole':
-        return <WhackAMoleGame key={key} {...commonProps} />;
-      case 'stopwatch':
-        return <StopwatchGame key={key} {...commonProps} />;
-      case 'memory':
-        return <MemoryGame key={key} {...commonProps} />;
-      case 'number_grid':
-        return <NumberGridGame key={key} {...commonProps} />;
-      case 'shake':
-        return <ShakeGame key={key} {...commonProps} />;
-      case 'tug_of_war':
-        return <TugOfWarGame key={key} {...commonProps} />;
-      case 'reaction':
-        return <ReactionTest key={key} {...commonProps} />;
-      case 'direction':
-        return <DirectionSwipe key={key} {...commonProps} />;
-      case 'color_word':
-        return <ColorWord key={key} {...commonProps} />;
-      case 'card_match':
-        return <CardMatch key={key} {...commonProps} />;
-      case 'math':
-        return <MathSprint key={key} {...commonProps} />;
-      case 'target':
-        return <TargetShoot key={key} {...commonProps} />;
-      case 'red_green':
-        return <RedGreenLight key={key} {...commonProps} />;
-      case 'left_right':
-        return <LeftRight key={key} {...commonProps} />;
-      case 'jump':
-        return <JumpDetector key={key} {...commonProps} />;
-      case 'squat':
-        return <SquatCounter key={key} {...commonProps} />;
-      case 'run':
-        return <RunInPlace key={key} {...commonProps} />;
-      case 'tilt_balance':
-        return <TiltBalance key={key} {...commonProps} />;
-      case 'zone_touch':
-        return <ZoneTouch key={key} {...commonProps} />;
-      case 'arm_raise':
-        return <ArmRaise key={key} {...commonProps} />;
-      case 'dance_pose':
-        return <DancePose key={key} {...commonProps} />;
-      case 'circle_draw':
-        return <CircleDraw key={key} {...commonProps} />;
-      case 'trace_shape':
-        return <TraceShape key={key} {...commonProps} />;
-      case 'punch':
-        return <PunchCounter key={key} {...commonProps} />;
-      case 'plank':
-        return <PlankHold key={key} {...commonProps} />;
-      case 'animal':
-        return <AnimalMove key={key} {...commonProps} />;
-      case 'tilt_race':
-        return <TiltRace key={key} {...commonProps} />;
-      case 'freeze':
-        return <FreezeGame key={key} {...commonProps} />;
-      case 'wave':
-        return <WaveCounter key={key} {...commonProps} />;
-      case 'speed_circle':
-        return <SpeedCircle key={key} {...commonProps} />;
-      case 'zigzag':
-        return <ZigZagTouch key={key} {...commonProps} solo={soloMode} />;
       case 'stretch':
         return <StretchTimer key={key} {...commonProps} />;
-      case 'one_leg':
-        return <OneLegBalance key={key} {...commonProps} />;
-      case 'fitness':
-        return <FitnessRoulette key={key} {...commonProps} />;
-      case 'body_twist':
-        return <BodyTwist key={key} {...commonProps} />;
-      case 'pulse-detective':
-        return <PulseDetective key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'posture-guardian':
-        return <PostureGuardian key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'rolling-curling':
-        return <RollingCurling key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'pass-gate-rescue':
-        return <PassGateRescue key={key} {...commonProps} solo={soloMode} onExit={handleReturnToCatalog} />;
-      case 'dribble-rhythm':
-        return <DribbleRhythm key={key} {...commonProps} solo={soloMode} onExit={handleReturnToCatalog} />;
-      case 'open-space-tactician':
-        return <OpenSpaceTactician key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'emotion-thermometer':
         return <EmotionThermometer key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       case 'partner-robot-lab':
         return <PartnerRobotLab key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'compass-azimuth':
-        return <CompassAzimuth key={key} {...commonProps} />;
-      case 'kayak-paddle':
-        return <KayakPaddle key={key} {...commonProps} />;
-      case 'wind-surf-balance':
-        return <WindSurfBalance key={key} {...commonProps} />;
-      case 'tent-peg-hammer':
-        return <TentPegHammer key={key} {...commonProps} />;
-      case 'trail-maze-run':
-        return <TrailMazeRun key={key} {...commonProps} />;
-      case 'alpine-glider':
-        return <AlpineGlider key={key} {...commonProps} />;
-      case 'campfire-breath':
-        return <CampfireBreath key={key} {...commonProps} />;
-      case 'crevasse-jump':
-        return <CrevasseJump key={key} {...commonProps} />;
-      case 'slingshot-archery':
-        return <SlingshotArchery key={key} {...commonProps} />;
-      case 'spike-block-wall':
-        return <SpikeBlockWall key={key} {...commonProps} />;
-      case 'base-running-decide':
-        return <BaseRunningDecide key={key} {...commonProps} />;
-      case 'badminton-smash-rhythm':
-        return <BadmintonSmashRhythm key={key} {...commonProps} />;
-      case 'tactical-grid-slide':
-        return <TacticalGridSlide key={key} {...commonProps} />;
-      case 'sound-goalball':
-        return <SoundGoalball key={key} {...commonProps} />;
-      case 'juggling-bounce-paddle':
-        return <JugglingBouncePaddle key={key} {...commonProps} />;
-      case 'head-shoulders-knees':
-        return <HeadShouldersKnees key={key} {...commonProps} />;
-      case 'animal-hop-step':
-        return <AnimalHopStep key={key} {...commonProps} />;
-      case 'bicycle-pedal-crank':
-        return <BicyclePedalCrank key={key} {...commonProps} />;
-      case 'double-under-rope':
-        return <DoubleUnderRope key={key} {...commonProps} />;
-      case 'mirror-motion-invert':
-        return <MirrorMotionInvert key={key} {...commonProps} />;
-      case 'seesaw-balance-tap':
-        return <SeesawBalanceTap key={key} {...commonProps} />;
-      case 'space-occupier':
-        return <SpaceOccupier key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'relay-mission-runner':
-        return <RelayMissionRunner key={key} {...commonProps} onExit={handleReturnToCatalog} />;
-      case 'body-rhythm-orchestrator':
-        return <BodyRhythmOrchestrator key={key} {...commonProps} onExit={handleReturnToCatalog} />;
       default: {
-        if (gameType && CURRICULUM_GAMES_META[gameType]) {
-          return (
-            <CurriculumGameRouter
-              key={key}
-              gameType={gameType}
-              groupId={dummyGroupId}
-              enqueueAction={localEnqueueAction}
-              onExit={handleReturnToCatalog}
-            />
-          );
-        }
         const isExpressionGame = EXPRESSION_GAMES.some(eg => eg.id === gameType);
         if (isExpressionGame && gameType) {
           return (

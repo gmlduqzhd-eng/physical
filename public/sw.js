@@ -1,6 +1,9 @@
 const CACHE_PREFIX = 'physical-';
 const CACHE_NAME = 'physical-v3';
 const SHELL_URL = '/';
+// The list of hashed files this deployment precached. Files from older deployments are removed on activate,
+// so the cache does not grow with every release.
+const MANIFEST_URL = '/__sw-precache.json';
 
 const assetDependencies = (source, parentUrl) => {
   const references = [
@@ -36,14 +39,28 @@ self.addEventListener('install', (event) => {
       }
     };
     await Promise.all(assets.map(cacheAsset));
+    await cache.put(MANIFEST_URL, new Response(JSON.stringify([...visited]), { headers: { 'Content-Type': 'application/json' } }));
     await self.skipWaiting();
   })());
 });
+
+async function pruneOldAssets() {
+  const cache = await caches.open(CACHE_NAME);
+  const manifest = await cache.match(MANIFEST_URL);
+  if (!manifest || typeof cache.keys !== 'function') return;
+  const current = new Set(await manifest.json());
+  const requests = await cache.keys();
+  await Promise.all(requests.map(request => {
+    const url = new URL(request.url, self.location.origin);
+    return url.pathname.startsWith('/assets/') && !current.has(url.href) ? cache.delete(request) : null;
+  }));
+}
 
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const names = await caches.keys();
     await Promise.all(names.filter(name => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME).map(name => caches.delete(name)));
+    await pruneOldAssets().catch(() => {});
     await self.clients.claim();
   })());
 });
