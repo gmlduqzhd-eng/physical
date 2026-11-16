@@ -125,6 +125,7 @@ export const YouTubeExpressionPlayer = ({
       mount.className = 'w-full h-full';
       containerRef.current.replaceChildren(mount);
       playerRef.current = new window.YT.Player(mount, {
+        host: 'https://www.youtube-nocookie.com',
         videoId: activeVideoId,
         playerVars: {
           autoplay: 0,

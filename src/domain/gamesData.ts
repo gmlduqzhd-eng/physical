@@ -1262,7 +1262,7 @@ const BASE_GAMES: GameDef[] = [
     difficulty: 1,
     domain: '운동',
     subCategory: '기본 신체 인지 (머리 어깨 무릎 발)',
-    achievement: { code: '[2체01-01]', title: '신체 부위와 움직임 인식', desc: '자신의 신체 부위를 바르게 알고 리듬에 맞춰 신체 각 부분을 조절한다.' },
+    achievement: { code: '연계 확인 필요', title: '신체 부위와 움직임 인식', desc: '자신의 신체 부위를 바르게 알고 리듬에 맞춰 신체 각 부분을 조절한다.' },
     grades: ['1~2학년'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'
@@ -1278,7 +1278,7 @@ const BASE_GAMES: GameDef[] = [
     difficulty: 1,
     domain: '운동',
     subCategory: '이동 움직임 발달 (동물 발자국 홉)',
-    achievement: { code: '[2체01-02]', title: '다양한 이동 움직임 탐색', desc: '동물의 움직임을 흉내 내며 홉, 점프 등 기초 이동 기술을 익힌다.' },
+    achievement: { code: '연계 확인 필요', title: '다양한 이동 움직임 탐색', desc: '동물의 움직임을 흉내 내며 홉, 점프 등 기초 이동 기술을 익힌다.' },
     grades: ['1~2학년'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'
@@ -1294,7 +1294,7 @@ const BASE_GAMES: GameDef[] = [
     difficulty: 1,
     domain: '운동',
     subCategory: '가동성 및 순발력 (원형 크랭크 페달)',
-    achievement: { code: '[2체01-03]', title: '신체 조작과 회전 운동', desc: '지속적인 원형 회전 운동을 통해 근지구력과 협응력을 기른다.' },
+    achievement: { code: '연계 확인 필요', title: '신체 조작과 회전 운동', desc: '지속적인 원형 회전 운동을 통해 근지구력과 협응력을 기른다.' },
     grades: ['1~2학년', '3~4학년군'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'
@@ -1326,7 +1326,7 @@ const BASE_GAMES: GameDef[] = [
     difficulty: 1,
     domain: '운동',
     subCategory: '신경 협응 및 공간 지각 (거울 모드 반전)',
-    achievement: { code: '[2체01-04]', title: '신체 좌우 방향 지각과 협응', desc: '거울 대칭 형태를 관찰하고 자신의 좌우 신체를 반전 인지하여 움직인다.' },
+    achievement: { code: '연계 확인 필요', title: '신체 좌우 방향 지각과 협응', desc: '거울 대칭 형태를 관찰하고 자신의 좌우 신체를 반전 인지하여 움직인다.' },
     grades: ['1~2학년', '3~4학년군'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'
@@ -1342,7 +1342,7 @@ const BASE_GAMES: GameDef[] = [
     difficulty: 1,
     domain: '운동',
     subCategory: '비이동 평형성 (시소 중심 유지)',
-    achievement: { code: '[2체01-02]', title: '비이동 균형 감각 조절', desc: '기울어지는 물체의 중심을 파악하고 좌우 신체 조절력으로 평형을 유지한다.' },
+    achievement: { code: '연계 확인 필요', title: '비이동 균형 감각 조절', desc: '기울어지는 물체의 중심을 파악하고 좌우 신체 조절력으로 평형을 유지한다.' },
     grades: ['1~2학년', '3~4학년군'],
     devices: ['스마트폰','태블릿 PC','데스크톱 PC'],
     playMode: '개인'

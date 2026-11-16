@@ -20,7 +20,7 @@ function fixture(input: TeacherInput): TeacherOutput {
   const material = sources(input); const first = material[0];
   const cite = (game = first) => ({ activityId: game.id, field: 'description' as const, quote: game.description });
   return { title: '테스트 전용 교사 검토 초안', recommendations: ['recommend', 'alternative'].includes(input.task) ? material.slice(0, 3).map(game => ({ activityId: game.id, reason: '협동 목표를 위한 역할 분담 제안입니다.', citations: [cite(game)] })) : [],
-    sections: (headings[input.task] ?? []).map((heading, i) => ({ heading, minutes: input.task === 'plan' ? [5, 5, 23, 5, 2][i] : null, content: input.task === 'difficulty' ? [
+    sections: (headings[input.task] ?? []).map((heading, i) => ({ heading, minutes: input.task === 'plan' ? [5, 5, 25, 5, 0][i] : null, content: input.task === 'difficulty' ? [
       '진행: 교사가 안내한 역할에 따라 서로 다른 섬을 맡도록 제안합니다.\n역할: 수행자와 관찰자가 자신의 차례를 확인합니다.\n관찰: 학생이 맡은 섬과 역할을 설명하는지 살펴봅니다.',
       '진행: 모둠이 협의하여 서로 다른 섬을 맡도록 제안합니다.\n역할: 학생들이 수행자와 관찰자를 교대합니다.\n관찰: 학생들이 동료의 의견을 듣고 차례를 바꾸는지 살펴봅니다.',
       '진행: 모둠이 배치 방법을 선택하고 실행 뒤 함께 조정하도록 제안합니다.\n역할: 학생들이 역할 교대 방법도 함께 정합니다.\n관찰: 학생들이 서로의 의견을 반영하여 방법을 수정하는지 살펴봅니다.',

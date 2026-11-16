@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {createLocalPoseSession,type PoseState} from './localPoseSession';
+import {blockVisionTelemetry} from './blockVisionTelemetry';
 import {compatiblePoseDetector,poseCameraConstraints,type PoseMode} from './poseRuntime';
 
 export function useLocalPose(){
@@ -12,7 +13,7 @@ export function useLocalPose(){
    camera:()=>{if(!window.isSecureContext)return Promise.reject({name:'SecurityError'});if(!navigator.mediaDevices?.getUserMedia)return Promise.reject({name:'NotFoundError'});return navigator.mediaDevices.getUserMedia(poseCameraConstraints(requestedMode.current,requestedFacing.current));},
    requestedFacing:()=>requestedFacing.current,
    interval:()=>requestedMode.current==='compatibility'?167:84,
-   detector:async(engine)=>{const {FilesetResolver,PoseLandmarker}=await import('@mediapipe/tasks-vision');const vision=await FilesetResolver.forVisionTasks('/vision');return compatiblePoseDetector(delegate=>PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'/vision/pose_landmarker_lite.task',delegate},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.65,minTrackingConfidence:.65}),engine==='CPU'||requestedMode.current==='compatibility');},
+   detector:async(engine)=>{blockVisionTelemetry();const {FilesetResolver,PoseLandmarker}=await import('@mediapipe/tasks-vision');const vision=await FilesetResolver.forVisionTasks('/vision');return compatiblePoseDetector(delegate=>PoseLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'/vision/pose_landmarker_lite.task',delegate},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.65,minTrackingConfidence:.65}),engine==='CPU'||requestedMode.current==='compatibility');},
    video:()=>video.current,now:()=>performance.now(),frame:callback=>requestAnimationFrame(callback),cancelFrame:id=>cancelAnimationFrame(id),timer:(callback,ms)=>setTimeout(callback,ms),cancelTimer:id=>clearTimeout(id),emit:setState,
   });
   session.current=current;

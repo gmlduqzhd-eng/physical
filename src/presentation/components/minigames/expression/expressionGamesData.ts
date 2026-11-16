@@ -55,7 +55,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '자연 모방 표현 (성장 과정)',
     achievement: {
-      code: '[2체03-02]',
+      code: '연계 확인 필요',
       title: '자연이나 주변 사물의 특징 신체 모방',
       desc: '자연이나 주변 사물의 형태와 움직임 특징을 탐색하여 신체 움직임으로 모방 표현한다.',
     },
@@ -81,7 +81,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '자연 현상 신체 모방',
     achievement: {
-      code: '[2체03-02]',
+      code: '연계 확인 필요',
       title: '자연 사물 모방 표현',
       desc: '날씨의 변화와 사물의 움직임을 상상하여 다채로운 신체 움직임으로 나타낸다.',
     },
@@ -108,7 +108,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '도구 활용 기본 움직임',
     achievement: {
-      code: '[2체03-01]',
+      code: '연계 확인 필요',
       title: '움직임 요소 활용 기본 움직임 표현',
       desc: '신체, 공간, 힘 등의 움직임 요소를 활용하여 기본 움직임을 다양하게 표현한다.',
     },
@@ -134,7 +134,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '탄력 및 순발적 움직임 표현',
     achievement: {
-      code: '[2체03-01]',
+      code: '연계 확인 필요',
       title: '움직임 요소 표현 (힘과 시간)',
       desc: '느리고 조용한 움직임과 빠르고 강한 움직임의 대비를 탐색하여 신체로 표현한다.',
     },
@@ -160,7 +160,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '짝 협동 모방 표현',
     achievement: {
-      code: '[2체03-02]',
+      code: '연계 확인 필요',
       title: '신체 상호 모방 및 교감',
       desc: '친구의 신체 움직임을 주의 깊게 관찰하고 호흡을 맞추어 표현한다.',
     },
@@ -186,7 +186,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '청각 자극 신체 형상화',
     achievement: {
-      code: '[2체03-03]',
+      code: '연계 확인 필요',
       title: '소리나 리듬에 맞춘 신체 자유 표현',
       desc: '다양한 소리의 높낮이, 크기, 리듬을 듣고 느낌을 신체 움직임으로 자유롭게 표현한다.',
     },
@@ -212,7 +212,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '신호 통제 움직임 표현',
     achievement: {
-      code: '[2체03-01]',
+      code: '연계 확인 필요',
       title: '기본 움직임 및 신체 조절 표현',
       desc: '시각 신호에 반응하여 이동 움직임과 정지 움직임을 절도 있게 조절한다.',
     },
@@ -238,7 +238,7 @@ const EXPRESSION_SOURCE: ExpressionGameData[] = [
     domain: '표현',
     subCategory: '무게감과 팽창·수축 표현',
     achievement: {
-      code: '[2체03-02]',
+      code: '연계 확인 필요',
       title: '사물 특징 신체 모방',
       desc: '풍선의 팽창과 수축, 공기 중 유영하는 모습을 관찰하고 신체로 묘사한다.',
     },
