@@ -1,14 +1,15 @@
 import {FlowShell} from './presentation/FlowShell';
-import {GoogleTeacherCallback} from './presentation/components/GoogleTeacherCallback';
 import { cleanClassroomStorage } from './application/storageRetention';
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
-import { TeacherAuthGuard } from './presentation/components/TeacherAuthGuard';
 import { BackgroundMusicProvider } from './application/BackgroundMusicContext';
 
+// 교사 인증·구글 로그인 화면은 필요할 때만 받는다(Supabase·zod가 첫 화면 묶음에 들어가지 않게).
+const TeacherAuthGuard = lazy(() => import('./presentation/components/TeacherAuthGuard').then(m => ({ default: m.TeacherAuthGuard })));
+const GoogleTeacherCallback = lazy(() => import('./presentation/components/GoogleTeacherCallback').then(m => ({ default: m.GoogleTeacherCallback })));
 const ScoreBoard = lazy(() => import('./presentation/ScoreBoard').then(m => ({ default: m.ScoreBoard })));
 const MobileMissionView = lazy(() => import('./presentation/MobileMissionView').then(m => ({ default: m.MobileMissionView })));
 const AdminControlPanel = lazy(() => import('./presentation/AdminControlPanel').then(m => ({ default: m.AdminControlPanel })));

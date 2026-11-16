@@ -233,12 +233,15 @@ async function main() {
     async open(name) {
       if (!cachesByName.has(name)) cachesByName.set(name, new Map());
       const values = cachesByName.get(name);
-      return { async put(key, value) { values.set(cacheKey(key), value.clone()); }, async match(key) { return values.get(cacheKey(key))?.clone(); } };
+      return { async put(key, value) { values.set(cacheKey(key), value.clone()); }, async match(key) { return values.get(cacheKey(key))?.clone(); },
+        async keys() { return [...values.keys()].map(url => ({ url })); }, async delete(key) { return values.delete(cacheKey(key)); } };
     },
     async keys() { return [...cachesByName.keys()]; },
     async delete(name) { return cachesByName.delete(name); },
   };
   await cacheApi.open('physical-v2'); await cacheApi.open('another-app-cache');
+  // A hashed file left over from an earlier deployment in the same cache.
+  await (await cacheApi.open('physical-v3')).put(origin + '/assets/index-v0.js', new Response('old build'));
   let offline = false;
   let shellVersion = 1;
   const network = async request => {
@@ -259,6 +262,10 @@ async function main() {
   check('install precaches entry JS/CSS and only removes this app old caches', () => {
     const cache = cachesByName.get('physical-v3'); assert(cache.has(origin + '/assets/index-v1.js')); assert(cache.has(origin + '/assets/index-v1.css'));
     assert(!cachesByName.has('physical-v2')); assert(cachesByName.has('another-app-cache'));
+  });
+  check('activate removes hashed files from earlier deployments but keeps this one', () => {
+    const cache = cachesByName.get('physical-v3');
+    assert(!cache.has(origin + '/assets/index-v0.js')); assert(cache.has(origin + '/assets/index-v1.js')); assert(cache.has(origin + '/fonts/MapleStory.ttf'));
   });
   check('install follows lazy route dependencies and CSS fonts before going offline', () => {
     const cache = cachesByName.get('physical-v3');

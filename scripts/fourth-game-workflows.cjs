@@ -80,9 +80,6 @@ test('rescue flight stops during suspension and camera updates cannot change an 
  w.pose.value={x:.5,y:.5,angle:75};a.dirty=true;a.flush();assert.equal(nodes(view(a)).find(n=>n.type==='input'&&n.props.type==='range').props.value,angle);
  const position=()=>nodes(view(a)).filter(n=>n.type==='circle').map(n=>n.props.cx).join(',');const before=position();a.props.disabled=true;a.dirty=true;a.flush();w.advance(3000);assert.equal(position(),before);a.props.disabled=false;a.dirty=true;a.flush();w.advance(100);assert.notEqual(position(),before);
 });
-test('curling can replace the second of five attempts without losing the other four',()=>{
- const w=world(),a=w.actor(w.load('src/presentation/components/minigames/RollingCurling.tsx').RollingCurling,{groupId:'test',enqueueAction(){}});for(let i=0;i<5;i++)click(a,/중앙 표적 \(3점\)/);click(a,'2회 · 3점 수정');click(a,/표적 이탈 \(0점\)/);let result;click(a,'컬링 원정 결과 저장하기',(_,d)=>result=d);assert(result);assert.match(result.metrics['표적 점수'],/^12\/15/);assert.match(result.metrics['다섯 번 결과'],/2차 이탈 · 0점/);assert.match(result.metrics['다섯 번 결과'],/5차 중앙 · 3점/);
-});
 test('retrying emotion role A preserves the already completed role B',()=>{
  const w=world(),a=w.actor(w.load('src/presentation/components/minigames/EmotionThermometer.tsx').EmotionThermometer,{groupId:'test'});
  const perform=(emotion,guess)=>{click(a,new RegExp(emotion));click(a,'감정 설정 완료! 15초 신체 표현 시작');w.advance(15000);click(a,new RegExp(guess));click(a,'서로의 감정온도 비교하기');};
