@@ -16,7 +16,7 @@
 .sports-nav{display:flex;justify-content:space-between;gap:12px;margin-top:8px}.sports-confirm{padding:14px;border-radius:14px;background:var(--forest-tint);margin:12px 0;display:flex;flex-wrap:wrap;gap:10px;align-items:center}.sports-confirm p{width:100%;margin:0}
 @media print{.sports-nav,.sports-stages,.sports-timer .flagship-row{display:none}}
 .play-experiences a.sports-deep-link{display:inline-flex;padding:10px 16px;border:1px solid var(--forest-accent);border-radius:100px;background:var(--forest-tint);font-weight:700;text-decoration:none}
-.more-apps .sports-card em{font-style:normal;font-size:13px;color:var(--forest-muted)}.more-apps .more-inapp{margin:-6px 0 0 4px;font-size:14px}.more-apps li{list-style:none}.more-apps ul.sports-grid{padding:0}
+.more-apps .sports-card em{font-style:normal;font-size:13px;color:var(--forest-muted)}.more-apps .more-inapp{margin:14px 0 10px 8px;font-size:15px;line-height:1.6;color:var(--forest-muted)}.more-apps .more-inapp a{font-weight:700}.more-apps ul.sports-grid{row-gap:22px}.more-apps li{list-style:none}.more-apps ul.sports-grid{padding:0}
 /* 팀 색: 글자로 써도 배경과 4.5:1 이상 대비가 나도록 테마마다 따로 둔다. */
 :root{--sports-team-0:#1d4ed8;--sports-team-1:#b91c1c;--sports-team-2:#a16207;--sports-team-3:#15803d}
 .dark-theme{--sports-team-0:#7cb3ff;--sports-team-1:#ff8a8a;--sports-team-2:#f2c94c;--sports-team-3:#5fd38d}
