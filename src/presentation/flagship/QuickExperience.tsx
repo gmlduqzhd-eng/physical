@@ -1,12 +1,12 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {MAP_GESTURES,mapBrief,mapAgreement,type MapGesture} from '../../domain/cooperativeMap';
-import {initialShip,shipStep,STATIONS,STATION_NAMES,rhythmScore,type Station} from '../../domain/flagship';
+import {STATIONS,STATION_NAMES,rhythmScore,type Station} from '../../domain/flagship';
 import {type ExperienceId} from '../../domain/playRecipes';
 import '../PlayExperiences.css';
 
 export function QuickExperience({kind}:{kind:ExperienceId}){
  return <section className="quick-experience" aria-label="점수 없는 원리 체험"><p className="simulation-label">시뮬레이션 · 실제 수업·학생 기록·센서와 연결되지 않아요.</p>
-  {kind==='map'?<MapExperience/>:kind==='ship'?<ShipExperience/>:<LoopExperience/>}
+  {kind==='map'?<MapExperience/>:<LoopExperience/>}
  </section>;
 }
 function MapExperience(){
@@ -17,19 +17,6 @@ function MapExperience(){
   <fieldset><legend>첫 관문의 운반 약속</legend><div className="flagship-row">{MAP_GESTURES.map(g=><button key={g.id} aria-pressed={gesture===g.id} disabled={won} onClick={()=>setGesture(g.id)}><span aria-hidden="true">{g.icon}</span>{g.label}</button>)}</div></fieldset>
   <button className="primary" disabled={!station||!gesture||won} onClick={()=>{const ok=mapAgreement(station!,gesture!,0,seed);setWon(ok);setResult(ok?'길과 운반 약속이 연결됐어요. 첫 관문 개방!':'아직 단서가 맞지 않아요. 첫 길과 첫 관문 약속을 다시 물어봐요.');}}>두 정보를 합쳐 관문 열기</button>
   <div className="experience-gate" data-open={won} aria-label={won?'첫 관문 열림':'첫 관문 닫힘'}>{won?'◇ → ✦':'◇ · ◇'}</div><p role="status">{result}</p>{won&&<button onClick={()=>{setSeed(s=>s+1);setStation(null);setGesture(null);setWon(false);setResult('다른 길로 바뀌었어요. 세 단서를 다시 연결해요.');}}>다른 길로 한 번 더</button>}
- </>;
-}
-const TRIAL_TARGET={x:67,y:60};
-function ShipExperience(){
- const [ship,setShip]=useState(initialShip),[x,setX]=useState(0),[y,setY]=useState(0),[running,setRunning]=useState(false),[touched,setTouched]=useState([false,false]);
- const inputs=useRef({x,y});inputs.current={x,y};const won=ship.checkpoint===1;
- useEffect(()=>{if(!running||won)return;let last=performance.now();const timer=setInterval(()=>{const now=performance.now(),dt=now-last;last=now;if(!document.hidden)setShip(s=>shipStep(s,inputs.current.x,inputs.current.y,dt,{radius:10,drag:.22,gain:26,speed:18},[TRIAL_TARGET]));},40);const hide=()=>{if(document.hidden){setRunning(false);setX(0);setY(0);}};document.addEventListener('visibilitychange',hide);return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',hide);};},[running,won]);
- return <><h3>서로 다른 두 방향을 합쳐 정거장에 멈춰요</h3><p>한 방향만 움직이면 정거장에 닿기 어려워요. 체험에서는 한 사람이 두 가상 조종자를 바꾸어 맡아요.</p>
-  <svg className="experience-ship" viewBox="0 0 100 100" role="img" aria-label={won?'정거장 도착':'두 축 신호로 움직이는 체험 우주선'}><circle cx="67" cy="60" r="10" fill="var(--forest-tint)" stroke="var(--forest-accent)"/><text x="67" y="62" textAnchor="middle" fill="var(--forest-ink)" fontSize="6">기지</text><path d={`M${ship.x} ${ship.y-4} l-4 7 h8 Z`} fill="var(--forest-accent)"/></svg>
-  <label>가상 조종자 A · 좌우<input aria-label="가상 조종자 A 좌우" type="range" min="-1" max="1" step=".1" value={x} disabled={won} onChange={e=>{setX(Number(e.target.value));setTouched(t=>[true,t[1]]);}}/></label>
-  <label>가상 조종자 B · 위아래<input aria-label="가상 조종자 B 위아래" type="range" min="-1" max="1" step=".1" value={y} disabled={won} onChange={e=>{setY(Number(e.target.value));setTouched(t=>[t[0],true]);}}/></label>
-  <div className="flagship-row"><button className="primary" disabled={won} onClick={()=>setRunning(v=>!v)}>{running?'잠깐 멈추기':'두 신호로 조종 시작'}</button><button disabled={won} onClick={()=>{setX(0);setY(0);}}>두 신호 중립으로</button></div>
-  <p role="status">{won?'기지에 멈췄어요! 서로의 입력이 하나의 움직임을 만들었어요.':touched.every(Boolean)?'정거장 근처에서는 두 신호를 0으로 줄여요.':'A와 B의 신호를 모두 바꾸어 보세요.'}</p><button onClick={()=>{setShip(initialShip());setX(0);setY(0);setRunning(false);setTouched([false,false]);}}>다시 조종해 보기</button>
  </>;
 }
 function LoopExperience(){

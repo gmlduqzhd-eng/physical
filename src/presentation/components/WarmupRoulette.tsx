@@ -39,7 +39,7 @@ const ORIGINAL_SECTIONS: RouletteSection[] = [
     games: [
       { type: 'jump', name: '점프왕', emoji: '🦘' },
       { type: 'squat', name: '스쿼트 챌린지', emoji: '🏋️' },
-      { type: 'run', name: '제자리 달리기', emoji: '🏃' },
+      { type: 'shuttle-run-beep', name: '내 페이스 왕복 우편', emoji: '🏃' },
       { type: 'zigzag', name: '지그재그 런', emoji: '⚡' },
     ],
   },

@@ -3,6 +3,7 @@ import {isSafetyLessonId} from './safetyLessons.js';
 import {REFLECTION_QUEST_IDS,REFLECTION_QUEST_META,makeReflectionQuest,type ReflectionQuestId} from './reflectionMovementQuests.js';
 import {SPORTS_QUEST_IDS,SPORTS_QUEST_META,makeSportsQuest,type SportsQuestId} from './sportsMovementQuests.js';
 import type { GameResultDetails } from './gameResultDetails.js';
+import {QUEST_CLARITY} from './questClarity.js';
 import { EXTENDED_QUEST_IDS, EXTENDED_QUEST_META, makeExtendedQuest } from './extendedMovementQuests.js';
 import type { ExtendedQuestId, QuestMetadata } from './extendedMovementQuests.js';
 
@@ -21,7 +22,7 @@ export interface QuestRound {
   decision?: {answer:string;explanation:string};
   timing?: { targetSeconds: number; toleranceSeconds: number };
 }
-export const QUEST_META: Record<QuestId, QuestMetadata> = {
+const BASE_QUEST_META: Record<QuestId, QuestMetadata> = {
   ...EXTENDED_QUEST_META, ...SPORTS_QUEST_META, ...REFLECTION_QUEST_META,
   zigzag: {
     equipment: ['바닥 표식 9개', '콩주머니 1개'],
@@ -48,6 +49,8 @@ export const QUEST_META: Record<QuestId, QuestMetadata> = {
     alternative: '앉은 자리의 원형 책상 표식에서 공을 굴리고, 보낸 뒤 손을 빈 표식으로 옮겨요.',
   },
 };
+/** 점검 뒤 고친 이름·설명·준비물을 덮어쓴다. 준비물이 바뀌면 준비 안내(setup)도 같이 바뀐다. */
+export const QUEST_META: Record<QuestId, QuestMetadata> = Object.fromEntries(Object.entries(BASE_QUEST_META).map(([id,meta])=>{const c=QUEST_CLARITY[id];if(!c)return [id,meta];const equipment=c.equipment??meta.equipment;return [id,{...meta,name:c.name??meta.name,description:c.description??meta.description,equipment,setup:c.equipment?`${c.equipment.join(' · ')} · 기기 거치`:meta.setup}];})) as Record<QuestId, QuestMetadata>;
 
 export function isQuestId(id: string): id is QuestId { return (QUEST_IDS as readonly string[]).includes(id); }
 export function gameBestStorageKey(id: string,variant?:string): string {

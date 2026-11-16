@@ -4,7 +4,6 @@ import {DEFAULT_WORKSHOP,workshopSchema,type WorkshopSettings} from './expeditio
 
 export const PRIMARY_EXPERIENCES=[
  {id:'map',game:'expedition-map',name:'단서를 합쳐 길 열기',title:'움직이는 비밀지도',description:'모둠마다 다른 길·운반 약속을 연결해야 관문이 열려요.',equipment:'모둠별 1대 · 탐사 QR 3장',minutes:20},
- {id:'ship',game:'expedition-ship',name:'두 사람의 신호로 공동 조종',title:'모둠 중력 우주선',description:'내 방향과 친구의 방향을 합쳐 우주선을 정거장에 보내요.',equipment:'모둠별 기울기 기기 2대',minutes:20},
  {id:'loop',game:'expedition-loop',name:'우리 박자를 반 전체 합주로',title:'바디루프 발전소',description:'손뼉·발 디딤을 맞추고 모둠의 입력 박자를 함께 들어요.',equipment:'모둠별 1대 · 스피커 선택',minutes:20},
 ] as const;
 export type ExperienceId=typeof PRIMARY_EXPERIENCES[number]['id'];
@@ -27,7 +26,6 @@ export function makePlayRecipe(game:FlagshipId,groups=6,minutes=20,settings?:Wor
 export const STARTER_RECIPES=[
  {id:'map-team',title:'체육관 · 모둠별 한 대',game:'expedition-map',devices:'모둠별 1대',equipment:'지점 QR 3장 · 안전한 걷기 동선',steps:['공간·기기 확인 2분','단서와 운반 약속 연습 4분','모둠 탐사·역할 교대 11분','선택한 길 돌아보기 3분']},
  {id:'loop-class',title:'교실 · 작은 동작 합주',game:'expedition-loop',devices:'모둠별 1대 · 공용 스피커 선택',equipment:'의자 사이 개인 공간 · 제자리 작은 동작',steps:['간격·참여 방법 확인 2분','손뼉·작은 동작 연습 4분','역할 교대하며 박자 연결 11분','우리 반 합주·돌아보기 3분']},
- {id:'ship-duo',title:'다목적실 · 두 기기 공동 조종',game:'expedition-ship',devices:'모둠별 센서 기기 2대',equipment:'기기를 놓을 안전한 자리 · 방향 신호 공간',steps:['기울기 신호·공간 확인 2분','두 축 조종 연습 4분','공동 도킹·역할 교대 11분','조종 방법 비교 3분']},
 ] as const;
 export const STUDENT_ACTIONS:Record<FlagshipId,{icon:string;title:string;text:string}>={
  'expedition-map':{icon:'🗺️',title:'묻고, 걷고, 함께 골라요',text:'첫 길·마지막 길·운반 약속을 모아 길을 고르세요. 스캔할 때는 멈춰요.'},

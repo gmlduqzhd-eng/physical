@@ -47,7 +47,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     recommendedGames: [
       { name: '플랭크 버티기', type: 'plank' },
       { name: '스쿼트 챌린지', type: 'squat' },
-      { name: '제자리 달리기', type: 'run' }
+      { name: '내 페이스 왕복 우편', type: 'shuttle-run-beep' }
     ],
     color: 'from-emerald-500 to-teal-700'
   },
@@ -73,7 +73,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '흔들리지 않는 고도의 집중력과 눈과 손의 협응력이 뛰어납니다! 정교한 조준과 두뇌 회전 종목의 마스터예요.',
     strengths: ['흔들림 없는 집중력', '손-눈 협응력', '침착한 상황 제어'],
     recommendedGames: [
-      { name: '농구 자유투', type: 'basketball-free-throw' },
+      { name: '표적 보급 실험실', type: 'target' },
       { name: '컬러 워드 매치', type: 'color_word' },
       { name: '얼음 땡 게임', type: 'freeze' }
     ],

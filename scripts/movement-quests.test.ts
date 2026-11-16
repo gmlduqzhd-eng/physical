@@ -1,3 +1,4 @@
+import { isAvailableGame } from '../src/domain/gameLifecycle';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -69,7 +70,8 @@ test('rhythm and passing choices change the actual action and rotate all roles',
 test('old IDs, lesson recommendations and preparation text resolve to the same new activity', () => {
   for (const id of QUEST_IDS) {
     assert.equal(GAMES.find(g => g.type === id)?.name, QUEST_META[id].name);
-    assert.equal(LESSON_GAME_CATALOG.find(g => g.id === id)?.title, QUEST_META[id].name);
+    if (isAvailableGame(id)) assert.equal(LESSON_GAME_CATALOG.find(g => g.id === id)?.title, QUEST_META[id].name);
+    else assert.equal(LESSON_GAME_CATALOG.find(g => g.id === id), undefined, `${id} was retired in the 2026-11 cleanup`);
     assert.equal(getPhysicalActivityPlan(id).title, QUEST_META[id].name);
     assert.notEqual(gameBestStorageKey(id), `physical_best_${id}`, 'legacy best scores remain separate');
   }

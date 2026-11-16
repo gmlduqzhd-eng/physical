@@ -10,3 +10,4 @@
 .safety-lesson .mq-signal strong{font-size:clamp(21px,4vw,28px);line-height:1.65}.safety-lesson .mq-signal{min-height:200px}
 
 .movement-quest a.mq-primary,.movement-quest a.mq-secondary{border-radius:14px;text-decoration:none;text-align:center}
+.mq-setup-options{margin-top:10px}.mq-setup-options summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:700}.mq-setup-options[open] summary{margin-bottom:8px}

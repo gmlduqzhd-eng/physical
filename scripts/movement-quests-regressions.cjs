@@ -64,7 +64,7 @@ async function checkLayout(page) {
       for (const id of ['zigzag','dribble-rhythm','pass-gate-rescue']) {
         await launch(page,id); await checkLayout(page);
         if(id==='zigzag') await page.evaluate(()=>localStorage.setItem('physical_best_zigzag','999'));
-        if (id === 'dribble-rhythm') await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
+        if (id === 'dribble-rhythm') { await page.locator('.mq-setup-options summary').click(); await page.getByLabel('앉아서 팔 동작으로 참여하기').check(); }
         await button(page,'작전 살펴보기').click(); await phase(page,'plan');
         if (id === 'zigzag') {
           await page.getByRole('button',{ name:/^가운데 길/ }).click();
@@ -130,6 +130,7 @@ async function checkLayout(page) {
     await guardRemote(teamContext);
     const page=await teamContext.newPage(); await page.clock.install();
     await launch(page,'pass-gate-rescue',false);
+    if (await page.locator('.mq-setup-options:not([open]) summary').count()) await page.locator('.mq-setup-options summary').click();
     await page.getByLabel('함께할 인원').selectOption('6'); await checkLayout(page);
     await button(page,'작전 살펴보기').click(); await choose(page,'pass-gate-rescue',0);
     assert.match(await page.locator('.mq-panel').innerText(),/6번 친구/);

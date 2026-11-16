@@ -11,3 +11,5 @@
 .phone-play.phone-class{position:fixed;inset:0;z-index:20000;width:auto;max-width:none;margin:0;border-radius:0;overflow:auto;display:flex;flex-direction:column;gap:clamp(8px,1.6vh,18px);padding:clamp(12px,2.4vw,36px)}
 .phone-class .pc-signal{flex:1;min-height:240px}.phone-class .pc-controls button,.phone-class .pp-exit{margin:0}.phone-class .pc-record{max-width:760px;width:100%;margin:auto}
 .phone-class .pc-signal{overflow:hidden}.phone-class .pc-cue[data-length=medium]{font-size:clamp(28px,5vw,76px)}.phone-class .pc-cue[data-length=long]{font-size:clamp(22px,3.5vw,52px);line-height:1.4}
+.phone-class .pc-choices{list-style:none;padding:0;margin:0 0 clamp(10px,2vh,24px);display:grid;gap:10px;counter-reset:pc}.phone-class .pc-choices li{counter-increment:pc;font-size:clamp(18px,2.6vw,32px);font-weight:700;padding:10px 16px;border-radius:14px;background:var(--forest-tint,#e8efe3)}.phone-class .pc-choices li::before{content:counter(pc) ". "}
+.pc-space-note{padding:10px 14px;border-radius:12px;border:1px dashed var(--forest-control-line,#9aa79c);font-weight:650}

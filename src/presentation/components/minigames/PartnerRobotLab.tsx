@@ -10,15 +10,15 @@ const ARM_CARDS = [
 ];
 
 const LEG_CARDS = [
-  { id: 'stamp', name: '강철 스탬프 걷기', emoji: '🥾', desc: '제자리에서 발을 번갈아 가볍게 들거나 앉아서 발끝 움직이기' },
+  { id: 'stamp', name: '로봇 제자리걸음', emoji: '🥾', desc: '제자리에서 발을 번갈아 가볍게 들거나 앉아서 발끝 움직이기' },
   { id: 'spring', name: '용수철 바운스', emoji: '🦿', desc: '발을 바닥에 둔 채 무릎을 편안한 범위에서 작게 굽혔다 펴기' },
-  { id: 'slide', name: '호버크래프트 미끄러짐', emoji: '🛹', desc: '미끄러지지 않고 제자리에서 좌우 발끝을 번갈아 짚기' },
+  { id: 'slide', name: '발끝 좌우 짚기', emoji: '🛹', desc: '미끄러지지 않고 제자리에서 좌우 발끝을 번갈아 짚기' },
 ];
 
 const BODY_CARDS = [
-  { id: 'twist', name: '지그재그 트위스트', emoji: '🔄', desc: '몸통을 비틀지 않고 어깨와 팔로 작은 지그재그 표현하기' },
+  { id: 'twist', name: '어깨로 지그재그', emoji: '🔄', desc: '몸통을 비틀지 않고 어깨와 팔로 작은 지그재그 표현하기' },
   { id: 'charge', name: '배터리 충전 숨쉬기', emoji: '🔋', desc: '몸을 웅크렸다가 가슴을 활짝 펴며 에너지 채우기' },
-  { id: 'balance', name: '자이로 센서 균형', emoji: '⚖️', desc: '두 발을 바닥에 두거나 앉아서 팔로 작은 좌우 균형 표현하기' },
+  { id: 'balance', name: '팔로 좌우 균형', emoji: '⚖️', desc: '두 발을 바닥에 두거나 앉아서 팔로 작은 좌우 균형 표현하기' },
 ];
 
 interface Props {

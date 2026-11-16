@@ -1,3 +1,4 @@
+import {LayoutDiagram} from '../../LayoutDiagram';
 import {ActivityCueControls} from './ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {mergedMovementMeta,makeMergedMovementRound} from '../../../../domain/mergedMovementVariants';
@@ -127,7 +128,8 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
       <ol className="mq-rules">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
-      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><p>개인 공간을 확보하고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
+      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={gameId}/><p>개인 공간을 확보하고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
+        <details className="mq-setup-options"><summary>참여 방법 바꾸기 · 앉아서·속도{meta.team?'·인원':''} (기본값 그대로 시작해도 돼요)</summary>
         <label><input type="checkbox" checked={settings.seated} onChange={e => setSettings({ ...settings, seated: e.target.checked })}/>앉아서 팔 동작으로 참여하기</label>
         <label>진행 속도<select value={settings.gentle ? 'gentle' : 'standard'} onChange={e => setSettings({ ...settings, gentle: e.target.value === 'gentle' })}><option value="gentle">천천히 익히기</option><option value="standard">기본 속도 도전</option></select></label>
         {settings.seated && <p>{meta.alternative} 점수 기준은 같아요.</p>}
@@ -135,6 +137,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
           {solo ? <p>혼자 해보기: 도구와 역할의 규칙을 연습해요. 실제 모둠 참여 기록으로 표시하지 않아요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => setSettings({ ...settings, practice: e.target.value === 'practice' })}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
           {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{Array.from({length:(meta.maxPlayers??4)-1},(_,i)=>i+2).map(n => <option key={n} value={n}>{n}명{gameId==='pass-gate-rescue'?` · 표식 ${n+1}개`:''}</option>)}</select></label>}
         </>}
+        </details>
       </div>
       {meta.sources&&<details className="mq-panel"><summary>확인한 공식 안내</summary>{meta.sources.map(source=><p key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></p>)}</details>}
       <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>

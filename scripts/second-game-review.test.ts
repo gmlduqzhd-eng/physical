@@ -10,8 +10,8 @@ import {EXPEDITION_GAMES} from '../src/domain/expeditionGames';
 import {createExpeditionRound,validateExpeditionRecord,expeditionScore,type ExpeditionRecord} from '../src/domain/expeditionRules';
 import {earnsParticipationReward,normalizeGameResultDetails} from '../src/domain/gameResultDetails';
 
-test('all 37 active expression materials agree with the list and AI source',()=>{
- const active=new Set(AVAILABLE_GAMES.map(g=>g.type));const rows=EXPRESSION_GAMES.filter(g=>active.has(g.id));assert.equal(rows.length,37);
+test('all 35 active expression materials agree with the list and AI source',()=>{
+ const active=new Set(AVAILABLE_GAMES.map(g=>g.type));const rows=EXPRESSION_GAMES.filter(g=>active.has(g.id));assert.equal(rows.length,35);
  for(const row of rows){const game=AVAILABLE_GAMES.find(g=>g.type===row.id)!,source=catalog.find(g=>g.id===row.id)!;
   assert.deepEqual(game.equipment,row.equipment,row.id);assert.deepEqual(game.safetyTips,row.safetyTips);assert.deepEqual(game.spaces,row.spaces);
   assert.equal(game.desc,row.desc);assert(source.equipment.length&&source.safety.length&&source.space.length,row.id);
@@ -22,8 +22,8 @@ test('observation and rest never earn participation rewards, even with an old po
  for(const participation of ['observed','rested'] as const){const d=normalizeGameResultDetails({participation,ratings:[0,0]})!;assert.equal(d.participation,participation);assert.equal(d.ratings,undefined);assert.equal(earnsParticipationReward(300,d),false);}
  assert(earnsParticipationReward(0,{participation:'performed'}));assert(!earnsParticipationReward(0));assert(earnsParticipationReward(10));
 });
-test('all 100 phone activities allow truthful rest or observation without fabricated movement',()=>{
- assert.equal(PHONE_PLAYS.length,100);
+test('all 59 phone activities allow truthful rest or observation without fabricated movement',()=>{
+ assert.equal(PHONE_PLAYS.length,59);
  for(const p of PHONE_PLAYS)for(const outcome of ['rest','observe'] as const){const record:PhoneRecord={round:0,outcome,elapsedMs:0,count:0,answer:[],participants:[]};assert(phoneRecordValid(p,record,3),p.id);assert(!phoneRecordValid(p,{...record,count:1},3));assert(!phoneRecordValid(p,{...record,participants:[1]},3));}
 });
 test('missing, reverse and fill memory games require their own actual answers',()=>{
@@ -40,7 +40,7 @@ test('movie confirmation concerns this scene, and edited creation roles retain t
  assert.notDeepEqual(phoneRoles(p,2,0,chosen),phoneRoles(p,2,1,chosen));
 });
 test('team games show concrete shared motions and rotate the signal reader',()=>{
- const rows=PHONE_PLAYS.filter(p=>p.kind==='team');assert.equal(rows.length,19);
+ const rows=PHONE_PLAYS.filter(p=>p.kind==='team');assert.equal(rows.length,9);
  for(const p of rows){const a=phoneRoles(p,3,0),b=phoneRoles(p,3,1);assert.notDeepEqual(a,b,p.id);if(p.id!=='phone-play-008')assert(a.every(role=>role.role.includes(phoneTeamMotion(p,0))),p.id);}
 });
 test('paired counting carries one remainder and personal counts must add to the recorded total',()=>{
@@ -52,8 +52,8 @@ test('observation measures are game-specific and decision circumstances change e
  assert.notEqual(phoneObservation(PHONE_PLAY_BY_ID.get('phone-play-017')!).label,phoneObservation(PHONE_PLAY_BY_ID.get('phone-play-091')!).label);
  for(const p of PHONE_PLAYS.filter(p=>p.kind==='decision'))assert.equal(new Set([0,1,2].map(i=>phoneScenario(p,i))).size,3);
 });
-test('all 34 active expedition games accept zero-score quiet records and preserve alternatives',()=>{
- const active=new Set(AVAILABLE_GAMES.map(g=>g.type)),rows=EXPEDITION_GAMES.filter(g=>g.kind==='B'&&active.has(g.id));assert.equal(rows.length,34);
+test('all 26 active expedition games accept zero-score quiet records and preserve alternatives',()=>{
+ const active=new Set(AVAILABLE_GAMES.map(g=>g.type)),rows=EXPEDITION_GAMES.filter(g=>g.kind==='B'&&active.has(g.id));assert.equal(rows.length,26);
  for(const g of rows){const plan=createExpeditionRound(g,0,g.players,()=>.42);for(const outcome of ['rest','observe'] as const){const r:ExpeditionRecord={round:1,kind:plan.kind,source:'self-report',participants:[],counts:plan.targets.map(()=>0),checks:[],answer:[],correct:false,elapsedMs:0,outcome,alternative:true,gentle:true};assert.equal(validateExpeditionRecord(plan,r,g.players),null,g.id);assert.equal(expeditionScore([r],[plan]),0);const d=normalizeGameResultDetails({participation:'rested',activity:{gameId:g.id,specId:g.spec,soloPreview:true,rounds:[r]}})!;assert.equal(d.activity!.rounds[0].outcome,outcome);assert.equal(d.activity!.rounds[0].alternative,true);assert.equal(d.activity!.rounds[0].gentle,true);}}
 });
 test('partial expedition participation is allowed and capped, without passing full participation checks',()=>{

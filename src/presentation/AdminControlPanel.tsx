@@ -572,7 +572,7 @@ export const AdminControlPanel = () => {
                 <h2 className="text-lg font-bold text-purple-900 flex items-center gap-2">
                   <LucideIcons.Sparkles className="w-5 h-5" /> 텐션 & 운빨 미니게임 (Phase 3)
                 </h2>
-                {currentRoom.active_minigame && ['fate_card','whack_a_mole','scream','target','red_green','campfire-breath'].includes(currentRoom.active_minigame.type) && (
+                {currentRoom.active_minigame && ['fate_card','whack_a_mole','scream','target','red_green','campfire-breath','breath-pacer-478'].includes(currentRoom.active_minigame.type) && (
                   <span className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
@@ -593,7 +593,7 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Target className="w-5 h-5" /> 신호 표식 신체 놀이
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'campfire-breath', expires_at: Date.now() + 600000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'breath-pacer-478', expires_at: Date.now() + 600000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Mic2 className="w-5 h-5" /> 숲 소리 정리 쉼터

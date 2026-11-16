@@ -1,0 +1,8 @@
+.print-cards{max-width:1000px;margin:0 auto}.print-head{margin-bottom:18px}.print-head button{min-height:48px;padding:10px 22px;border-radius:100px;font-weight:750}.print-muted{color:var(--forest-muted);font-size:14px}
+.print-list{display:grid;gap:8px;padding-left:20px;font-size:18px}
+.print-sheet{display:grid;gap:0;border:1px dashed #888;background:#fff;color:#111}
+.print-sheet[data-size=big]{grid-template-columns:repeat(2,1fr)}.print-sheet[data-size=card]{grid-template-columns:repeat(2,1fr)}
+.print-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:220px;padding:14px;border:1px dashed #888;text-align:center;break-inside:avoid;color:#111}
+.print-sheet[data-size=big] .print-card strong{font-size:150px;line-height:1}.print-sheet[data-size=card] .print-card strong{font-size:64px;line-height:1}
+.print-card span{font-size:24px;font-weight:800}.print-card p{white-space:pre-line;font-size:16px;line-height:1.55;text-align:left;margin:4px 0 0}
+@media print{body *{visibility:hidden}.print-sheet,.print-sheet *{visibility:visible}.print-sheet{position:absolute;inset:0;border:0}.print-sheet[data-size=big] .print-card{min-height:31vh}.print-sheet[data-size=card] .print-card{min-height:24vh}}

@@ -44,15 +44,16 @@ test('random math, no-repeat routes, non-overlapping assignments and mazes stay 
 test('memory sequences, 8-beat patterns, rule reversal and original-state modifications are explicit',()=>{
  for(const spec of ['S05','T05','T46']){const game=b.find(g=>g.spec===spec)!;const plan=createExpeditionRound(game,0,game.players);assert(plan.secret!.length>=3);assert(plan.steps.every(s=>!s.instruction.includes(plan.secret!.join(' → '))));}
  for(const game of b.filter(g=>g.family==='rhythm'))assert(createExpeditionRound(game,0,game.players).steps.every(s=>s.beats?.length===8),game.spec);
- assert(createExpeditionRound(b.find(g=>g.spec==='S03')!,0,1).steps.some(s=>s.title==='반전 규칙'));
+ const reverse=createExpeditionRound(b.find(g=>g.spec==='S03')!,0,1).steps;assert(reverse.some(s=>s.title==='거꾸로')&&reverse.some(s=>s.title==='그대로'));
+ for(const s of reverse.filter(s=>s.title==='거꾸로')){const called=s.instruction.includes('왼쪽')?'왼쪽':'오른쪽',answer=called==='왼쪽'?'오른쪽':'왼쪽';assert(!s.instruction.includes(answer),'the cue never says the answer: '+s.instruction);}
  const repair=EXPRESSION_GAMES.find(g=>g.id==='exp-phone-48')!;assert(repair.steps.slice(1).every(s=>/원본/.test(s.guide)));
 });
-test('four-room escape and four-station rotation really include all four activities',()=>{
+test('four-room escape includes all four activities and every station rotation reaches every station',()=>{
  const game=b.find(g=>g.spec==='T50')!;assert.equal(game.rounds,4);assert(createExpeditionRound(game,3,4).steps[0].instruction.includes('천으로 공 운반'));
  assert.equal(createExpeditionRound(game,2,4).steps[0].beats!.length,8);
  assert.equal(createExpeditionRound(b.find(g=>g.spec==='T41')!,1,4).steps[0].beats!.length,8);
  assert.deepEqual(createExpeditionRound(b.find(g=>g.spec==='S01')!,0,1).targets,[{label:'중앙으로 돌아온 왕복 수',goal:3}]);
- for(const spec of ['T42','T44']){const game=b.find(g=>g.spec===spec)!;for(let person=0;person<4;person++)assert.equal(new Set(Array.from({length:4},(_,round)=>createExpeditionRound(game,round,4).roles[person].split(': ')[1])).size,4);}
+ for(const [spec,zones] of [['T42',2],['T44',4]] as const){const game=b.find(g=>g.spec===spec)!;for(let person=0;person<4;person++)assert.equal(new Set(Array.from({length:4},(_,round)=>createExpeditionRound(game,round,4).roles[person].split(': ')[1])).size,zones);}
 });
 test('unique receiving spots reject reuse, island counts reject wrong allocations, bingo tracks actual reported hits',()=>{
  const game=b.find(g=>g.spec==='T40')!,p=createExpeditionRound(game,0,4);

@@ -1,6 +1,7 @@
 /** Approved 92 activities from the S/T specification. Eight sensor/camera activities are intentionally absent. */
-export interface ExpeditionSpec { id:string; spec:string; kind:'A'|'B'; name:string; desc:string; recommendedDevice:'스마트폰'|'태블릿 PC'; family:'expression'|'route'|'rhythm'|'timing'|'equipment'|'cooperation'; players:number; equipment:string[]; space:string; safety:string; alternative:string; rounds:number; bpm?:number; expressionSteps?:{title:string;guide:string;seconds:number}[]; }
-export const EXPEDITION_GAMES: ExpeditionSpec[] = [
+import {EXPEDITION_CLARITY} from './expeditionClarity.js';
+export interface ExpeditionSpec { id:string; spec:string; kind:'A'|'B'; name:string; desc:string; recommendedDevice:'스마트폰'|'태블릿 PC'; family:'expression'|'route'|'rhythm'|'timing'|'equipment'|'cooperation'; players:number; equipment:string[]; space:string; safety:string; alternative:string; rounds:number; bpm?:number; grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[]; minSeconds?:number; expressionSteps?:{title:string;guide:string;seconds:number}[]; }
+const RAW_EXPEDITION_GAMES: ExpeditionSpec[] = [
   {
     "id": "exp-phone-01",
     "spec": "S01",
@@ -1465,17 +1466,17 @@ export const EXPEDITION_GAMES: ExpeditionSpec[] = [
       {
         "title": "세 동작 교환",
         "guide": "짝끼리 세 동작을 보여 주고 서로 배워요.",
-        "seconds": 30
+        "seconds": 60
       },
       {
         "title": "짝 바꿔 교환",
         "guide": "짝을 바꾸어 다시 세 동작을 보여 주고 서로 배워요.",
-        "seconds": 30
+        "seconds": 60
       },
       {
         "title": "여섯 동작 연결",
         "guide": "서로에게 배운 두 묶음의 세 동작을 여섯 동작으로 연결해요.",
-        "seconds": 30
+        "seconds": 60
       }
     ]
   },
@@ -1986,5 +1987,7 @@ export const EXPEDITION_GAMES: ExpeditionSpec[] = [
     "rounds": 4
   }
 ];
+/** 수업용 안내(준비물 수량·선생님 말투 설명·학년·구간 시간)를 덮어쓴 목록. */
+export const EXPEDITION_GAMES: ExpeditionSpec[] = RAW_EXPEDITION_GAMES.map(game=>{const c=EXPEDITION_CLARITY[game.id];return c?{...game,...c,name:c.name??game.name}:game;});
 export const EXPEDITION_BY_ID = new Map(EXPEDITION_GAMES.map(game=>[game.id,game]));
 export const HELD_EXPEDITION_SPECS = ["S21","S22","S23","S25","S26","T47","T48","T49"];

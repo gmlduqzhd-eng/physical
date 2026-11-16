@@ -89,7 +89,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   <ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/><ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/>
   {phase==='intro'&&<>
    <p className="pp-lead">{p.goal}</p><div className="pp-badges"><span>약 {p.minutes}분</span><span>{p.intensity} 강도</span><span>{p.players} · {range.min===range.max?range.min:`${range.min}~${range.max}`}명</span><span>스마트폰 1대</span></div>
-   {!solo&&<section className="pp-panel pc-entry"><h2>반 전체가 함께 하기</h2><p>이 화면을 TV나 프로젝터에 띄우면 학생은 기기 없이 참여해요. 한 번 누르면 세 과제가 이어지고, 끝난 뒤 한 번만 기록해요.</p>
+   {!solo&&<section className="pp-panel pc-entry"><h2>반 전체가 함께 하기</h2><p>이 화면을 TV나 프로젝터에 띄우면 학생은 기기 없이 참여해요. 한 번 누르면 세 과제가 이어지고, 끝난 뒤 한 번만 기록해요.</p>{p.space!=='제자리'&&<p className="pc-space-note" role="note">{p.space==='두 걸음'?'교실이라면 책상을 밀어 저마다 두 걸음 통로를 만든 뒤 시작해요. 어렵다면 “앉아서 참여하기”를 켜요.':'강당이나 넓은 교실에서 해요. 교실이 좁으면 “앉아서 참여하기”를 켜요.'}</p>}
     <label>과제마다 움직이는 시간<select aria-label="과제마다 움직이는 시간" value={taskSeconds} onChange={e=>setTaskSeconds(Number(e.target.value))}>{CLASS_TASK_SECONDS.map(n=><option key={n} value={n}>{n}초 · 모두 {Math.round(classMovementSeconds(n)/6)/10}분 움직임</option>)}</select></label>
     <button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>반 전체로 바로 시작</button><p>신호를 소리 내어 읽어 주고, 과제의 시작과 끝을 호루라기 소리로 알려요.</p></section>}
    <section className="pp-panel"><h2>이렇게 준비해요</h2><p>{phoneSetup(p)}</p><ol>{p.rules.map(rule=><li key={rule}>{rule}</li>)}</ol><p><strong>완료 기준</strong> · {p.check}</p><p>화면 점수는 직접 확인한 참여 기록이에요. 기기가 동작이나 체력을 판정하지 않아요.</p></section>
