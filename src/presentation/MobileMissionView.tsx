@@ -480,21 +480,21 @@ export const MobileMissionView = () => {
     return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} helpControl={guidedEntry && gameRoom.status === 'paused' ? <><button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup.help_requested_at)} onClick={() => void toggleHelp(!myGroup.help_requested_at)} className="w-full py-3 rounded-xl border border-amber-400 bg-amber-50 text-amber-900 font-bold">{myGroup.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>{helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}</> : undefined} />;
   }
 
-  // 🌊 해일 경보 — 학생 스마트폰 전체 조작 잠금 및 대피 안내
+  // 모두 멈춤 — 선생님이 학생 기기 조작을 잠시 잠근다. 재난 경보처럼 보이지 않게 차분하게 안내한다.
   if (gameRoom?.status === 'tsunami') {
     return (
       <div className="min-h-[100dvh] bg-blue-950 text-white flex flex-col items-center justify-center p-6 text-center select-none relative overflow-hidden animate-in fade-in duration-200">
         <div className="absolute inset-0 bg-blue-600/30 animate-pulse pointer-events-none"></div>
-        <LucideIcons.Waves className="w-28 h-28 text-blue-400 mb-6 animate-bounce relative z-10 drop-shadow-[0_0_20px_rgba(96,165,250,0.5)]" />
+        <LucideIcons.Grab className="w-28 h-28 text-blue-300 mb-6 relative z-10" aria-hidden="true" />
         <span className="px-4 py-1.5 rounded-full bg-blue-500/30 text-cyan-300 font-black text-sm uppercase tracking-widest mb-3 border border-blue-400/50 relative z-10 shadow-lg">
-          🌊 긴급 상황 경보
+          ✋ 잠깐 멈춤
         </span>
         <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight text-white relative z-10 tracking-tight">
-          해일 경보 발령!
+          모두 멈춤!
         </h1>
         <p className="text-lg text-blue-200 max-w-sm font-bold relative z-10 leading-relaxed">
-          스마트폰 조작이 일시 잠금되었습니다.<br />
-          즉시 매트 위(안전구역)로 대피하십시오!
+          선생님이 화면을 잠시 잠갔어요.<br />
+          제자리에 서서 선생님을 봐요.
         </p>
       </div>
     );

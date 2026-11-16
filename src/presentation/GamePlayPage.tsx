@@ -326,7 +326,7 @@ const GamePlaySession = () => {
 
     // 배지 조건 체크
     const newBadges: string[] = [];
-    if (plays >= 1 && !badges['first_play']) { badges['first_play'] = true; newBadges.push('🌱 첫 발자국'); }
+    if (plays >= 1 && !badges['first_play']) { badges['first_play'] = true; newBadges.push('👟 첫 발걸음'); }
     if (score >= 500 && !badges['high_scorer']) { badges['high_scorer'] = true; newBadges.push('🏅 하이스코어러'); }
     if (plays >= 10 && !badges['veteran']) { badges['veteran'] = true; newBadges.push('🎖️ 베테랑 (10회 플레이)'); }
     if (plays >= 50 && !badges['master']) { badges['master'] = true; newBadges.push('👑 마스터 (50회 플레이)'); }
@@ -775,7 +775,7 @@ const GamePlaySession = () => {
               className="game-result-cooldown w-full mb-4 py-3 border font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
             >
               <Heart className="w-4 h-4" />
-              <span>🫀 운동 후 쿨다운 & 심박수 회복 루틴</span>
+              <span>🫀 운동 후 쿨다운 루틴</span>
             </button>}
 
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}

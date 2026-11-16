@@ -6,6 +6,8 @@ import { StudentIdentityFields } from './StudentIdentityFields';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
+import { useModalDialog } from '../../application/useModalDialog';
+import { withParticle } from '../../domain/koreanParticle';
 
 interface QuickPinClassroomProps {
   isOpen: boolean;
@@ -119,7 +121,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   const handleCreateRoom = async () => {
     if (busyRef.current) return;
     const auth = await fetch('/api/teacher?action=status').then(r => r.json()).catch(() => null);
-    if (!auth?.authenticated) { setErrorMsg('교사 인증이 필요합니다. 선생님 도구의 AI 수업 준비실에서 인증한 뒤 다시 시도하세요.'); return; }
+    if (!auth?.authenticated) { setErrorMsg('교사 인증이 필요합니다. 홈의 ‘교사로 시작하기’에서 인증한 뒤 다시 시도하세요.'); return; }
     busyRef.current = true; setBusy(true); setErrorMsg(null);
     try {
       const room = await createClassroom('청백 학급 배틀', null, ['청팀', '백팀']);
@@ -177,9 +179,10 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     const pin = teacherInvites.find(item=>item.group_name===(selectedTeam==='blue'?'청팀':'백팀'))?.short_pin;
     if (!pin) { setErrorMsg('팀 PIN을 불러오는 중입니다.'); return; }
     try { await navigator.clipboard.writeText(pin); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-    catch { setErrorMsg('PIN ' + pin + '을 직접 복사해주세요.'); }
+    catch { setErrorMsg(`PIN ${withParticle(pin,'을를')} 직접 복사해주세요.`); }
   };
 
+  const dialogRef = useModalDialog(isOpen, onClose);
   if (!isOpen) return null;
 
   const isHost = currentRoom?.hostId === clientId;
@@ -191,10 +194,12 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   const memberCount = currentRoom?.members.length ?? 0;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="PIN 모둠 코드 학급대항전" tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-blue-500/40 rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
+          type="button"
           onClick={onClose}
+          aria-label="닫기"
           className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white rounded-full bg-slate-800/60"
         >
           <X className="w-5 h-5" />
@@ -360,13 +365,13 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                   onClick={() => handleStartGame('reaction')} disabled={busy}
                   className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 · 반응 코스 (점수 반영)
+                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 구조 산책 · 반응 코스
                 </button>
                 <button
                   onClick={() => handleStartGame('direction')} disabled={busy}
                   className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 · 방향 코스 (점수 반영)
+                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 구조 산책 · 방향 코스
                 </button>
               </div>
             </div>

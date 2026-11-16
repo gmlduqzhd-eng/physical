@@ -51,12 +51,12 @@ const MODES: ThemeMode[] = [
   { id: 'streak', group: 'solo', emoji: '🔥', title: '3분 땀방울 챌린지', desc: '매일 루틴 & 불꽃 스탬프' },
   { id: 'tamagotchi', group: 'solo', emoji: '💧', title: '내 땀방이 키우기', desc: '캐릭터 육성 & 아이템 룸' },
   { id: 'mbti', group: 'solo', emoji: '🦁', title: '나의 체육 MBTI', desc: '1분 동물 페르소나 찾기' },
-  { id: 'cooldown', group: 'solo', emoji: '🫀', title: '쿨다운 & 심박수 루틴', desc: '호흡 이완 & 맥박 체크' },
+  { id: 'cooldown', group: 'solo', emoji: '🫀', title: '쿨다운 루틴', desc: '편한 호흡 · 맥박 느끼기 · 정리 스트레칭' },
 
-  { id: 'splitBattle', group: 'versus', emoji: '🤼', title: '2인 배틀 대결', desc: '화면 분할 줄다리기·연타' },
+  { id: 'splitBattle', group: 'versus', emoji: '🤼', title: '2인 배틀 대결', desc: '동작 줄다리기 · 깃발 먼저 잡기' },
   { id: 'quickPin', group: 'versus', emoji: '🔢', title: 'PIN 모둠 코드 학급대항전', desc: '청팀 vs 백팀 즉시 대결' },
   { id: 'stationCircuit', group: 'versus', emoji: '🏟️', title: 'QR 스테이션 서킷', desc: '4구역 순환 미션 스탬프' },
-  { id: 'motionCam', group: 'versus', emoji: '📷', title: '모션 감지 캠 챌린지', desc: '카메라 앞 핸즈프리 점프' },
+  { id: 'motionCam', group: 'solo', emoji: '📷', title: '모션 감지 캠 챌린지', desc: '작은 팔 동작으로 화면 움직임 세기' },
 
   { id: 'classPlaylist', group: 'teacher', emoji: '⏱️', title: '40분 수업 플레이어', desc: '도입-전개-정리 원스톱' },
   { id: 'remote', group: 'teacher', emoji: '📱', title: '교사 스마트 리모컨', desc: '호루라기 휘슬 & 타이머 통제' },

@@ -1,5 +1,5 @@
 import {AVAILABLE_GAMES,type GameDef} from './gamesData.js';
-import {liveActivityId} from './gameLifecycle.js';
+import {getRemovedGame,liveActivityId} from './gameLifecycle.js';
 
 // Catalog shelves from the 2026-11-15 lesson audit (docs/catalog-shelves-stage5-2026-11-15.md).
 // The shelves decide what a teacher sees first. Activities retired in the 2026-11 cleanup are in gameLifecycle.ts
@@ -58,4 +58,10 @@ export function liveRecommendations(list:readonly {name:string;type:string}[]):{
  const out=new Map<string,{name:string;type:string}>();
  for(const item of list){const type=liveActivityId(item.type),game=AVAILABLE_GAMES.find(g=>g.type===type);if(game&&!out.has(type))out.set(type,{name:game.name,type});}
  return [...out.values()];
+}
+
+/** 정리되어 다른 활동으로 이어지는 활동이면 지금 활동 이름. 기록 화면에서 옛 이름 옆에 함께 보여 준다. */
+export function continuationName(id:string):string|null{
+ const live=liveActivityId(id);if(live===id||!getRemovedGame(id))return null;
+ return AVAILABLE_GAMES.find(g=>g.type===live)?.name??null;
 }

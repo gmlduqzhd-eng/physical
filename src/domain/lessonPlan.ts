@@ -1,3 +1,4 @@
+import { withParticle } from './koreanParticle';
 import { LESSON_GAME_CATALOG, type LessonGameMeta } from '../data/lessonGameCatalog';
 import { findStandards, LOW_GRADE_THEMES, CORE_COMPETENCIES, type CurriculumStandard } from '../data/curriculumStandards';
 
@@ -210,8 +211,8 @@ export function generateLessonPlan(
 // ─── 보조 생성 함수들 ───
 function generateGameReason(game: LessonGameMeta, domain: string, _grade: string): string {
   const skills = game.movementSkills.slice(0, 2).join('과 ');
-  if (game.domain === domain) return `「${game.title}」은(는) ${skills}이(가) 반복되어 ${domain} 영역의 학습 내용을 경험하기에 적합합니다.`;
-  return `「${game.title}」은(는) ${skills} 활동을 포함하고 있어 현재 수업 조건에 가장 부합하는 게임입니다.`;
+  if (game.domain === domain) return `${withParticle(`「${game.title}」`,'은는')} ${withParticle(skills,'이가')} 반복되어 ${domain} 영역의 학습 내용을 경험하기에 적합합니다.`;
+  return `${withParticle(`「${game.title}」`,'은는')} ${skills} 활동을 포함하고 있어 현재 수업 조건에 가장 부합하는 게임입니다.`;
 }
 
 function generateGameRole(game: LessonGameMeta, _domain: string): string {
@@ -228,7 +229,7 @@ function generateGoals(domain: string, unit: string, gameName: string, isLow: bo
     if (gameName) goals.push(`「${gameName}」 활동을 통해 자신의 신체 변화를 관찰하고 말할 수 있다.`);
   } else if (domain === '스포츠') {
     goals.push(`${unit || '스포츠 활동'}에서 상황에 맞는 움직임을 선택하여 수행할 수 있다.`);
-    if (gameName) goals.push(`「${gameName}」을(를) 활용하여 전략을 세우고 실행할 수 있다.`);
+    if (gameName) goals.push(`${withParticle(`「${gameName}」`,'을를')} 활용하여 전략을 세우고 실행할 수 있다.`);
   } else {
     goals.push(`${unit || '표현 활동'}에서 느낌과 생각을 움직임으로 창의적으로 표현할 수 있다.`);
     if (gameName) goals.push(`「${gameName}」 활동을 통해 다양한 움직임 표현을 탐색하고 감상할 수 있다.`);
@@ -419,7 +420,7 @@ function generateAlternatives(game: LessonGameMeta | undefined, _device: DeviceO
 
 function generateGameVariations(game: LessonGameMeta): GeneratedPlan['gameVariations'] {
   return [
-    { level: '기본', description: `「${game.title}」을(를) 원래 방식 그대로 진행한다. ${game.description}` },
+    { level: '기본', description: `${withParticle(`「${game.title}」`,'을를')} 원래 방식 그대로 진행한다. ${game.description}` },
     { level: '쉬움', description: `제한 시간을 1.5배로 늘리고, 성공 기준을 절반으로 낮춘다. 이동 거리를 축소하여 부담을 줄인다.` },
     { level: '도전', description: `비우세 손/발을 사용하거나, 활동 범위를 확대한다. 팀 전략 요소(예: 작전 시간 30초 후 실행)를 추가한다.` },
   ];

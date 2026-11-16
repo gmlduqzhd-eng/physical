@@ -12,8 +12,9 @@ interface CooldownTimerModalProps {
 export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, onClose }) => {
   const [mode, setMode] = useState<'breath' | 'pulse' | 'stretch'>('breath');
 
-  // 1. 호흡 사이클 상태 (4초 들이마심 -> 7초 멈춤 -> 8초 내쉼)
-  const [breathing, setBreathing] = useState<{ phase: 'inhale' | 'hold' | 'exhale'; counter: number }>({ phase: 'inhale', counter: 4 });
+  // 1. 호흡 안내: 4초 들이쉬고 6초 내쉰다. 숨을 참는 단계는 없고, 학생이 시작·멈춤을 정한다.
+  const [breathing, setBreathing] = useState<{ phase: 'inhale' | 'exhale'; counter: number }>({ phase: 'inhale', counter: 4 });
+  const [breathRunning, setBreathRunning] = useState(false);
   const { phase: breathPhase, counter: breathCounter } = breathing;
 
   // 2. 맥박 측정 상태
@@ -23,7 +24,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
   const [calculatedBpm, setCalculatedBpm] = useState<number | null>(null);
   const [pulseError, setPulseError] = useState('');
   const pulseDeadline = useRef<number | null>(null);
-  const handleClose = () => { setIsPulseTiming(false); pulseDeadline.current = null; onClose(); };
+  const handleClose = () => { setIsPulseTiming(false); setBreathRunning(false); pulseDeadline.current = null; onClose(); };
   const dialogRef = useModalDialog(isOpen, handleClose);
 
   // 3. 스트레칭 체크
@@ -36,21 +37,17 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
 
   // 호흡 타이머
   useEffect(() => {
-    if (!isOpen || mode !== 'breath') return;
+    if (!isOpen || mode !== 'breath' || !breathRunning) return;
 
     const timer = setInterval(() => {
       setBreathing(prev => {
-        if (prev.counter <= 1) {
-          if (prev.phase === 'inhale') return { phase: 'hold', counter: 7 };
-          if (prev.phase === 'hold') return { phase: 'exhale', counter: 8 };
-          return { phase: 'inhale', counter: 4 };
-        }
+        if (prev.counter <= 1) return prev.phase === 'inhale' ? { phase: 'exhale', counter: 6 } : { phase: 'inhale', counter: 4 };
         return { ...prev, counter: prev.counter - 1 };
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, mode]);
+  }, [isOpen, mode, breathRunning]);
 
   // 맥박 15초 타이머
   useEffect(() => {
@@ -90,13 +87,13 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
       setCalculatedBpm(bpm);
       sfxSuccess();
       setPulseError('');
-    } else { setPulseError('15초 동안 센 횟수를 1~100 사이의 정수로 입력해 주세요.'); setCalculatedBpm(null); }
+    } else { setPulseError('숫자는 적지 않아도 돼요. 적고 싶다면 15초 동안 센 횟수를 1~100 사이로 적어요.'); setCalculatedBpm(null); }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="쿨다운과 심박수 회복 루틴" tabIndex={-1} className="cooldown-modal fixed inset-0 z-[10010] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="쿨다운 루틴" tabIndex={-1} className="cooldown-modal fixed inset-0 z-[10010] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
       <div className="cooldown-panel bg-slate-900 border border-emerald-500/30 w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-3xl p-4 sm:p-6 shadow-2xl relative text-white">
         <button
           onClick={handleClose}
@@ -111,8 +108,8 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
             <Heart className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-black text-white">쿨다운 & 심박수 회복 루틴</h3>
-            <p className="text-xs text-slate-400">운동 후 체온과 심박수를 정상화하여 부상을 방지합니다</p>
+            <h3 className="text-xl font-black text-white">쿨다운 루틴</h3>
+            <p className="text-xs text-slate-400">운동 뒤 숨과 몸을 천천히 가라앉혀요. 불편하면 언제든 멈춰요.</p>
           </div>
         </div>
 
@@ -125,7 +122,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
               mode === 'breath' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'text-slate-400'
             }`}
           >
-            <Wind className="w-4 h-4" /> 4-7-8 호흡
+            <Wind className="w-4 h-4" /> 편한 호흡
           </button>
           <button
             onClick={() => setMode('pulse')}
@@ -134,7 +131,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
               mode === 'pulse' ? 'bg-emerald-500 text-slate-950 font-black shadow-md' : 'text-slate-400'
             }`}
           >
-            <Activity className="w-4 h-4" /> 맥박 체크
+            <Activity className="w-4 h-4" /> 맥박 느끼기
           </button>
           <button
             onClick={() => setMode('stretch')}
@@ -155,22 +152,26 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                 className={`absolute inset-0 rounded-full transition-all duration-1000 ${
                   breathPhase === 'inhale'
                     ? 'scale-110 bg-emerald-500/20 border-2 border-emerald-400 animate-pulse'
-                    : breathPhase === 'hold'
-                    ? 'scale-100 bg-amber-500/20 border-2 border-amber-400'
                     : 'scale-90 bg-cyan-500/10 border-2 border-cyan-400'
                 }`}
               />
               <div className="flex flex-col items-center z-10">
                 <span className="text-3xl font-black font-mono">{breathCounter}</span>
                 <span className="text-sm font-bold text-slate-300 mt-1">
-                  {breathPhase === 'inhale' && '숨 들이쉬기'}
-                  {breathPhase === 'hold' && '숨 멈추기'}
-                  {breathPhase === 'exhale' && '천천히 내쉬기'}
+                  {!breathRunning ? '준비되면 시작' : breathPhase === 'inhale' ? '코로 편하게 들이쉬기' : '입으로 천천히 내쉬기'}
                 </span>
               </div>
             </div>
+            <button
+              type="button"
+              aria-pressed={breathRunning}
+              onClick={() => { sfxTap(); if (!breathRunning) setBreathing({ phase: 'inhale', counter: 4 }); setBreathRunning(!breathRunning); }}
+              className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-sm mb-3"
+            >
+              {breathRunning ? '멈추기' : '호흡 안내 시작'}
+            </button>
             <p className="text-xs text-slate-400 max-w-xs">
-              부교감 신경을 활성화하여 심장 박동을 안정시키고 근육의 긴장을 풀어줍니다.
+              숨은 참지 않아요. 숫자가 빠르거나 느리게 느껴지면 내 속도로 쉬어도 괜찮아요. 어지러우면 바로 멈추고 선생님께 알려요.
             </p>
           </div>
         )}
@@ -179,7 +180,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
         {mode === 'pulse' && (
           <div className="space-y-4 py-2">
             <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 text-xs text-slate-300 leading-relaxed">
-              👉 검지와 중지를 목 옆(경동맥)이나 손목 안쪽에 가볍게 대고 15초간 뛰는 횟수를 셉니다.
+              👉 검지와 중지를 손목 안쪽(엄지 쪽)에 가볍게 대요. 목은 누르지 않아요. 잘 느껴지지 않으면 가슴에 손을 얹고 느껴도 돼요. 숫자를 세거나 적는 것은 하고 싶을 때만 해요.
             </div>
 
             <div className="flex flex-col items-center">
@@ -188,7 +189,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                   <div className="text-5xl font-mono font-black text-emerald-400 animate-pulse">
                     {pulseSecondsLeft}초
                   </div>
-                  <p className="text-xs text-slate-400 mt-2">심장 박동을 조용히 세어보세요...</p>
+                  <p className="text-xs text-slate-400 mt-2">뛰는 느낌에 조용히 집중해 보세요.</p>
                 </div>
               ) : (
                 <button
@@ -205,12 +206,11 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                 type="number"
                 value={pulseCountInput}
                 onChange={e => setPulseCountInput(e.target.value)}
-                placeholder="15초간 잰 맥박수 입력"
-                aria-label="15초 동안 센 맥박 횟수"
+                placeholder="센 횟수 (적지 않아도 돼요)"
+                aria-label="15초 동안 센 맥박 횟수 (선택)"
                 min={1}
                 max={100}
                 step={1}
-                required
                 className="flex-1 min-w-0 px-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-sm text-center text-white"
               />
               <button
@@ -227,7 +227,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
                 <span className="text-xs text-slate-400">1분당 추정 심박수</span>
                 <div className="text-3xl font-black text-emerald-400 mt-0.5">{calculatedBpm} BPM</div>
                 <p className="text-xs text-slate-300 mt-1">
-                  15초 동안 센 횟수를 4배로 환산한 값입니다. 편안히 쉬면서 활동 전후의 변화를 확인해 보세요.
+                  15초 동안 센 횟수를 4배로 바꾼 어림값이에요. 사람마다 달라서 좋고 나쁨을 나누지 않아요. 활동 전과 비교만 해 보세요.
                 </p>
               </div>
             )}
@@ -240,7 +240,7 @@ export const CooldownTimerModal: React.FC<CooldownTimerModalProps> = ({ isOpen, 
             {[
               { key: 'neck', name: '목 좌우 늘려주기 (15초)', desc: '고개를 좌우로 부드럽게 지그시 당겨 목 근육 이완' },
               { key: 'shoulder', name: '팔 교차 어깨 늘리기 (15초)', desc: '한쪽 팔을 가슴 앞으로 당겨 삼각근 스트레칭' },
-              { key: 'quads', name: '발목 잡고 허벅지 앞쪽 늘리기', desc: '한 발로 서서 발목을 엉덩이 쪽으로 당겨 대퇴사두근 이완' },
+              { key: 'quads', name: '벽 짚고 허벅지 앞쪽 늘리기', desc: '벽이나 의자를 짚고, 한쪽 발목을 엉덩이 쪽으로 살짝 당겨요. 아프지 않을 만큼만' },
               { key: 'calf', name: '벽 밀며 종아리 늘리기', desc: '한쪽 다리를 뒤로 뻗고 뒤꿈치를 바닥에 밀착' },
             ].map(item => (
               <button

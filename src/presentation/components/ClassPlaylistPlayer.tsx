@@ -1,3 +1,4 @@
+import { withParticle } from '../../domain/koreanParticle';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X, Play, Pause, SkipForward, Clock, CheckCircle, RotateCcw } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
@@ -93,7 +94,7 @@ export const ClassPlaylistPlayer: React.FC<ClassPlaylistPlayerProps> = ({ isOpen
       setCurrentStepIdx(nextIdx);
       setTimeLeft(DEFAULT_LESSON_STEPS[nextIdx].durationSec);
       deadlineRef.current = isRunning ? Date.now() + DEFAULT_LESSON_STEPS[nextIdx].durationSec * 1000 : null;
-      speak(`${DEFAULT_LESSON_STEPS[nextIdx].phase}, ${DEFAULT_LESSON_STEPS[nextIdx].title}을 시작합니다.`, true);
+      speak(`${DEFAULT_LESSON_STEPS[nextIdx].phase}, ${withParticle(DEFAULT_LESSON_STEPS[nextIdx].title,'을를')} 시작합니다.`, true);
     } else {
       setIsRunning(false);
       setTimeLeft(0);

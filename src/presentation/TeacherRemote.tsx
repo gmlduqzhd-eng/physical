@@ -115,7 +115,7 @@ export const TeacherRemote: React.FC = () => {
     if (type === 'tsunami') {
       const nextStatus = currentRoom.status === 'tsunami' ? 'playing' : 'tsunami';
       if (!await updateRoom({ status: nextStatus })) return;
-      showFeedback(nextStatus === 'tsunami' ? '🌊 지진·해일 경보 발동!' : '🌊 해일 상황 종료');
+      showFeedback(nextStatus === 'tsunami' ? '✋ 모두 멈춤: 학생 화면을 잠갔어요' : '▶ 모두 멈춤 해제');
     } else if (type === 'boss_raid') {
       const nextStatus = currentRoom.status === 'boss_raid' ? 'playing' : 'boss_raid';
       if (!await updateRoom({
@@ -356,7 +356,7 @@ export const TeacherRemote: React.FC = () => {
               className="py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
               <Waves className="w-4 h-4" />
-              <span>해일 경보 발동</span>
+              <span>{currentRoom?.status === 'tsunami' ? '모두 멈춤 해제' : '모두 멈춤 (화면 잠금)'}</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('boss_raid')}
