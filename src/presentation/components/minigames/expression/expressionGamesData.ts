@@ -1,5 +1,6 @@
 import {EXPEDITION_BY_ID} from '../../../../domain/expeditionGames.js';
 import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData.js';
+import {EXPRESSION_CLARITY,type ExpressionSound} from './expressionClarity.js';
 export interface ExpressionStep {
   stepNum: number;
   title: string;
@@ -38,6 +39,8 @@ export interface ExpressionGameData {
   safetyTips: string[];
   equipment?: string[];
   spaces?: string[];
+  /** 앱이 내는 박자·신호 소리. */
+  sound?: ExpressionSound;
 }
 
 const EXPRESSION_SOURCE: ExpressionGameData[] = [
@@ -873,11 +876,19 @@ const descriptions:Record<string,string>={
  cheerleading_team:'닿지 않는 개인 공간에서 편한 팔 모양·손짓·구호로 함께 박자를 표현해요. 쌓기나 스턴트는 하지 않아요.',
  world_folk_dance:'훌라의 손짓과 민속춤의 세 박자 발 디딤을 비접촉·제자리 또는 앉은 팔 동작으로 표현해요.',
 };
+/** 점검 뒤 고친 이름·설명·단계·평가 기준·준비물·소리를 덮어쓴다. */
+function clarify(game:ExpressionGameData):ExpressionGameData{
+ const c=EXPRESSION_CLARITY[game.id];if(!c)return game;
+ return {...game,name:c.name??game.name,desc:c.desc??game.desc,equipment:c.equipment??game.equipment,sound:c.sound,
+  steps:game.steps.map(step=>({...step,...c.steps?.[step.stepNum]})),
+  rubric:game.rubric.map(item=>{const patch=c.rubric?.[item.criterion];return patch?{criterion:patch.criterion??item.criterion,desc:patch.desc}:item;}),
+  safetyTips:c.dropSafety?game.safetyTips.filter(tip=>!c.dropSafety!.test(tip)):game.safetyTips};
+}
 export const EXPRESSION_GAMES:ExpressionGameData[]=EXPRESSION_SOURCE.map(game=>{
  const expedition=EXPEDITION_BY_ID.get(game.id);
- const equipment=expedition?.equipment??(game.id==='magic_scarf'?['스카프 · 손에 잡고 사용']:game.id==='ribbon_gymnast'?['리본 또는 긴 끈 · 손잡이를 놓지 않음']:['거치한 기기 1대 · 별도 도구 없이 표현']);
- return {...game,desc:descriptions[game.id]??game.desc,subCategory:game.subCategory.replace('스턴트 치어리딩','비접촉 치어리딩'),equipment,spaces:['교실','체육관','다목적실'],
+ const equipment=EXPRESSION_CLARITY[game.id]?.equipment??expedition?.equipment??(game.id==='magic_scarf'?['스카프 · 손에 잡고 사용']:game.id==='ribbon_gymnast'?['리본 또는 긴 끈 · 손잡이를 놓지 않음']:['거치한 기기 1대 · 별도 도구 없이 표현']);
+ return clarify({...game,desc:descriptions[game.id]??game.desc,subCategory:game.subCategory.replace('스턴트 치어리딩','비접촉 치어리딩'),equipment,spaces:['교실','체육관','다목적실'],
   safetyTips:[...new Set(['기기는 거치하고, 서로 닿지 않는 개인 공간을 교사가 확인합니다.','앉거나 작은 팔·손 동작을 골라도 되며, 불편하면 멈추고 쉽니다.',...(expedition?[expedition.safety]:game.safetyTips.filter(t=>!/팔짱|돌풍 회전|점프 동작 후/.test(t)))])],
   rubric:game.rubric.map(item=>item.criterion==='신체 선의 아름다움'?{criterion:'선택한 모양 표현',desc:'내게 편한 범위에서 원·물결 등 선택한 모양을 구별해 표현했나요?'}:item.criterion==='체력과 지구력'?{criterion:'내 속도와 휴식 선택',desc:'편한 동작·속도·휴식을 선택하고 박자의 차이를 살펴보았나요?'}:item.criterion==='모션의 절도와 각도'?{criterion:'편안한 방향 표현',desc:'내게 편한 팔 범위로 방향이나 모양을 구별해 표현했나요?'}:item),
- };
+ });
 });
