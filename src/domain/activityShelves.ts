@@ -37,6 +37,8 @@ export const UNDERSTANDING_IDS:readonly string[]=[
  'stopwatch','pulse-detective','posture-guardian','base-running-decide',
  'cpr-compression-110','aed-defibrillator-pad','water-rescue-throw','heatwave-pm25-shield','rice-treatment-firstaid',
 ];
+/** 응급·의학 내용이 들어 있어 AI 수업 초안 자료로 쓰지 않는 안전 학습 활동. 이름이 바뀌어도 번호로 거른다. */
+export const AI_EXCLUDED_SAFETY_IDS:readonly string[]=['cpr-compression-110','aed-defibrillator-pad','water-rescue-throw','heatwave-pm25-shield','rice-treatment-firstaid'];
 const CORE=new Set(CORE_ACTIVITY_IDS),UNDERSTANDING=new Set(UNDERSTANDING_IDS);
 
 export type ActivityShelf='core'|'more'|'similar'|'understanding';

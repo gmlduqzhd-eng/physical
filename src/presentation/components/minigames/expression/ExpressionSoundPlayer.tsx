@@ -14,6 +14,8 @@ export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSoun
  useEffect(()=>{const sync=()=>setHidden(document.hidden);document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
  const playing=on&&running&&!hidden;
  const lastStep=useRef(step);
+ // 정해진 단계의 5초 얼음은 그 단계에서 한 번만 한다. 멈췄다 다시 시작하거나 탭을 다녀와도 되풀이하지 않는다.
+ const held=useRef<{step:number;until:number}|null>(null);
  useEffect(()=>{if(step!==lastStep.current){lastStep.current=step;if(playing)sfxWhistle();}},[step,playing]);
  useEffect(()=>{
   if(!playing){setFrozen(false);return;}
@@ -25,8 +27,11 @@ export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSoun
   }
   const bpm=sound.kind==='beat'?sound.bpm[Math.min(step,sound.bpm.length-1)]:sound.bpm,gap=60000/bpm;
   // 얼음 놀이: 6~10초 박자를 낸 뒤 3초 쉬고, 다시 이어 간다.
-  const hold=sound.kind==='freeze'&&sound.holdStep===step;
-  let until=sound.kind==='freeze'?performance.now()+6000+Math.random()*4000:Infinity,silentUntil=hold?performance.now()+5000:0;
+  const start=performance.now();
+  if(sound.kind==='freeze'&&sound.holdStep===step&&held.current?.step!==step)held.current={step,until:start+5000};
+  // 얼음 중에 멈췄다 다시 시작하면 남은 시간만 이어 간다.
+  const hold=sound.kind==='freeze'&&held.current?.step===step&&held.current.until>start;
+  let until=sound.kind==='freeze'?start+6000+Math.random()*4000:Infinity,silentUntil=hold?held.current!.until:0;
   if(hold)setFrozen(true);
   const tick=()=>{
    const now=performance.now();

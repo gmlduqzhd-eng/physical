@@ -1,3 +1,4 @@
+import {withParticle} from '../../../../domain/koreanParticle';
 import {ActivityCueControls} from './ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import { useGameTimeouts } from './useGameTimeouts';
@@ -405,7 +406,7 @@ export const ExpressionActivityLayout = ({
           <div>
             <h3 className="text-2xl font-black text-white">표현 활동 기록 확인</h3>
             <p className="text-sm text-slate-400 mt-1">
-              {game.name}을(를) 참여한 단계를 확인하고 감상을 남겼습니다.
+              {withParticle(game.name,'을를')} 참여한 단계를 확인하고 감상을 남겼습니다.
             </p>
           </div>
 

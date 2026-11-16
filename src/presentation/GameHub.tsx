@@ -645,7 +645,7 @@ export const GameHub = () => {
                 { key: '교실', label: '교실(좁은공간)', emoji: '🏫' },
                 { key: '강당', label: '강당(넓은공간)', emoji: '🏟️' },
                 { key: '운동장', label: '운동장(야외)', emoji: '🏃' },
-              ] as const).map(p => {
+              ] as const).filter(p => p.key === '전체' || GAMES.some(g => getGamePlace(g.type, g.domain) === p.key)).map(p => {
                 const count = p.key === '전체'
                   ? GAMES.length
                   : GAMES.filter(g => getGamePlace(g.type, g.domain) === p.key).length;
@@ -675,7 +675,7 @@ export const GameHub = () => {
           {/* 센서별 스마트 필터 */}
           <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
             <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>📱</span> 측정 센서 분류 (터치 · 자이로 · 마이크)
+              <span>📱</span> 측정 센서 분류
             </h2>
             <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
               {([
@@ -684,7 +684,7 @@ export const GameHub = () => {
 
                 { key: '자이로', label: '자이로·가속도', emoji: '🧭' },
                 { key: '음성', label: '마이크 음성', emoji: '🎤' },
-              ] as const).map(s => {
+              ] as const).filter(s => s.key === '전체' || GAMES.some(g => getGameSensor(g.type) === s.key)).map(s => {
                 const count = s.key === '전체'
                   ? GAMES.length
                   : GAMES.filter(g => getGameSensor(g.type) === s.key).length;

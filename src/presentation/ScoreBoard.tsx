@@ -1,3 +1,4 @@
+import {withParticle} from '../domain/koreanParticle';
 import {isFlagship} from '../domain/flagship';
 import {FlagshipControl} from './flagship/FlagshipControl';
 import {LocalQRCode} from './components/LocalQRCode';
@@ -54,7 +55,7 @@ const ScoreBoardContent = () => {
       const prevFirst = prev.find(p => p.rank === 1);
       const currFirst = currentRanks.find(c => c.rank === 1);
       if (prevFirst && currFirst && prevFirst.id !== currFirst.id) {
-        setToast(`🔥 ${currFirst.name}이(가) 1등을 탈환!`);
+        setToast(`🔥 ${withParticle(currFirst.name,'이가')} 1등을 탈환!`);
         setTimeout(() => setToast(null), 3500);
       }
     }

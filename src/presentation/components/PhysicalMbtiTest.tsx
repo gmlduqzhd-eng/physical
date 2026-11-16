@@ -32,9 +32,9 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '눈 깜짝할 사이에 반응하고 움직이는 천부적인 순발력을 가지고 있어요! 속도감 넘치는 민첩성 게임에 최강입니다.',
     strengths: ['초고속 반사신경', '폭발적인 순간 스피드', '순간 판단력'],
     recommendedGames: [
-      { name: '반응속도 테스트', type: 'reaction' },
-      { name: '방향 스와이프', type: 'direction' },
-      { name: '타깃 슈팅', type: 'target' }
+      { name: '신호등 구조 산책', type: 'red_green' },
+      { name: '우주 관제사의 예외 신호', type: 'phone-play-001' },
+      { name: '갈림길 보급 작전', type: 'zigzag' }
     ],
     color: 'from-amber-500 to-orange-600'
   },

@@ -1,4 +1,5 @@
 import {LayoutDiagram} from '../../LayoutDiagram';
+import {layoutFor} from '../../../../domain/layoutDiagrams';
 import {ActivityCueControls} from './ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {mergedMovementMeta,makeMergedMovementRound} from '../../../../domain/mergedMovementVariants';
@@ -128,7 +129,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
       <ol className="mq-rules">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
-      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId??gameId}/><p>개인 공간을 확보하고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
+      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId&&layoutFor(variantId)?variantId:gameId}/><p>개인 공간을 확보하고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
         <details className="mq-setup-options"><summary>참여 방법 바꾸기 · 앉아서·속도{meta.team?'·인원':''} (기본값 그대로 시작해도 돼요)</summary>
         <label><input type="checkbox" checked={settings.seated} onChange={e => setSettings({ ...settings, seated: e.target.checked })}/>앉아서 팔 동작으로 참여하기</label>
         <label>진행 속도<select value={settings.gentle ? 'gentle' : 'standard'} onChange={e => setSettings({ ...settings, gentle: e.target.value === 'gentle' })}><option value="gentle">천천히 익히기</option><option value="standard">기본 속도 도전</option></select></label>

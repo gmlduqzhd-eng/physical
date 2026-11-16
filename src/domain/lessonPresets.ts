@@ -1,5 +1,5 @@
-import {getRemovedGame} from './gameLifecycle';
-import { GAMES, type GameDef } from './gamesData';
+import {liveActivityId} from './gameLifecycle';
+import { AVAILABLE_GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
 import type { GameRoom, MissionTemplate } from './types';
 
@@ -14,7 +14,9 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     const template = byTemplate.get(room.template_id || '');
     if (!template || !Array.isArray(template.buttons) || template.buttons.length !== 1) return [];
     const gameType = resolveGuidedGameType(room.name, template.name, template.buttons, template.buttons[0].id);
-    const game = getRemovedGame(gameType||'')?undefined:GAMES.find(item=>item.type===gameType);
+    // 합쳐지거나 정리된 활동으로 만든 지난 수업은 지금 쓰는 활동으로 바꿔 보여 준다.
+    const liveType = gameType ? liveActivityId(gameType) : '';
+    const game = AVAILABLE_GAMES.find(item=>item.type===liveType);
     const groupCount = counts.get(room.id) || 0;
     if (!game || groupCount < 1 || groupCount > 8) return [];
     // Older rooms did not store the original duration. Their remaining-time

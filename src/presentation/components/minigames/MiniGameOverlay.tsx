@@ -49,7 +49,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
 
   const renderContent = () => {
     const eventType=minigame.type==='team_battle'?(minigame.subType||'volcano'):minigame.type;
-    if(getRemovedGame(eventType))return <RetiredGameNotice id={eventType} roomId={gameRoom.id} groupId={groupId}/>;
+    if(getRemovedGame(eventType))return <RetiredGameNotice id={eventType} roomId={gameRoom.id} groupId={groupId} onBack={()=>setDismissedRunId(runId)}/>;
     const complete=(action:{payload:{id:string;amount:number;details?:import('../../../domain/gameResultDetails').GameResultDetails}})=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()});
     if(isFlagship(eventType))return <FlagshipActivity key={sessionKey} game={eventType} room={gameRoom.id} group={groupId} onFinish={details=>complete({payload:{id:groupId,amount:100,details}})}/>;
     const native=EXPEDITION_BY_ID.get(eventType);if(native?.kind==='B'&&!getMergedGame(eventType))return <ExpeditionActivity game={native} groupId={groupId} solo={false} enqueueAction={complete}/>;
@@ -74,7 +74,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
       case 'quiz':
         return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
       case 'team_battle':
-        return <RetiredGameNotice id="volcano" roomId={gameRoom.id} groupId={groupId}/>;
+        return <RetiredGameNotice id="volcano" roomId={gameRoom.id} groupId={groupId} onBack={()=>setDismissedRunId(runId)}/>;
       default:
         // Fallback for quiz if type is undefined (legacy compatibility)
         if (minigame.question) {

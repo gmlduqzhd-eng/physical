@@ -18,7 +18,7 @@ function normalizeRoutine(value:unknown):{date:string;step:number;gameStartedAt?
  let step=Math.max(0,Math.min(3,Math.floor(value.step)));
  if(step===1&&typeof value.gameStartedAt==='number'){
   const profile=readJsonStorage('physical_player_profile');
-  if(isRecord(profile)&&Array.isArray(profile.recentGames)&&profile.recentGames.some(record=>isRecord(record)&&record.gameType==='reaction'&&typeof record.playedAt==='number'&&record.playedAt>=(value.gameStartedAt as number)))step=2;
+  if(isRecord(profile)&&Array.isArray(profile.recentGames)&&profile.recentGames.some(record=>isRecord(record)&&(record.gameType==='red_green'||record.gameType==='reaction')&&typeof record.playedAt==='number'&&record.playedAt>=(value.gameStartedAt as number)))step=2;
  }
  return {date:today,step,...(typeof value.gameStartedAt==='number'?{gameStartedAt:value.gameStartedAt}:{})};
 }
@@ -49,7 +49,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
 
   const routines = [
     { title: '1분 목 & 어깨 워밍업', desc: '고개를 좌우로 천천히 돌리고 어깨를 으쓱으쓱!', emoji: '🧘', type: 'stretch' },
-    { title: '1분 스피드 터치 챌린지', desc: '오늘의 추천 게임으로 순발력 깨우기!', emoji: '⚡', type: 'reaction' },
+    { title: '1분 신호등 반응 챌린지', desc: '신호를 보고 멈췄다 움직이며 순발력 깨우기!', emoji: '🚦', type: 'red_green' },
     { title: '1분 심호흡 & 쿨다운', desc: '코로 숨을 깊게 들이마시고 입으로 후~', emoji: '🌬️', type: 'breathe' }
   ];
 
@@ -148,7 +148,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
                         if (idx === 1) {
                           // Restore the routine after the game only when a result exists.
                           updateRoutine(()=>({date:localDateKey(),step:1,gameStartedAt:Date.now()}));
-                          onLaunchGame('reaction');
+                          onLaunchGame('red_green');
                           onClose();
                         } else {
                           setActiveStep(s => s + 1);
