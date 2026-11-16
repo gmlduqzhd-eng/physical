@@ -1,5 +1,6 @@
 import {phoneMemoryTask,phoneFillOptions} from './phoneTaskRules.js';
 import {isAvailableGame} from './gameLifecycle.js';
+import {PHONE_PLAY_CLARITY} from './phonePlayClarity.js';
 import type {GameDef} from './gamesData.js';
 import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
 import {PHONE_PLAY_VISUALS,type PhonePlayVisual} from './phonePlayVisuals.js';
@@ -12,6 +13,8 @@ export interface PhonePlay extends PhonePlayVisual {
  space:'제자리'|'두 걸음'|'넓은 공간';intensity:'낮음'|'보통';minutes:4|6;seconds:number;
  goal:string;rules:string[];rounds:string[];cues:string[];check:string;easy:string;hard:string;seated:string;
  options?:string[];related?:string;
+ /** 과제마다 다른 신호(있을 때만). */ roundCues?:[string[],string[],string[]];
+ grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[];
 }
 // Each row specifies a different task/rule/interaction, not a renamed timer.
 // Delimiters are only an authoring shorthand; the runtime receives named fields.
@@ -29,31 +32,42 @@ const rows:PhonePlayRow[]=[
 ];
 
 /** 지금까지 만든 놀이 전부. 옛 기록과 옛 주소를 읽을 때 쓴다. */
-export const ALL_PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options])=>({
+export const ALL_PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options]):PhonePlay=>({
  ...PHONE_PLAY_VISUALS[`phone-play-${String(n).padStart(3,'0')}`],
  id:`phone-play-${String(n).padStart(3,'0')}`,name,category:PHONE_CATEGORIES[c],kind,players,space,
  intensity:c===7||c===1?'낮음':'보통',minutes:players==='모둠'?6:4,seconds:players==='모둠'?36:24,
  goal,rules:rules.split('|'),rounds:rounds.split('|'),cues:cues.split('|'),check,easy,hard,seated,related,options:options?.split('|'),
-}));
+})).map(p=>{const c=PHONE_PLAY_CLARITY[p.id];return c?{...p,...c}:p;});
 /** 목록에 보이는 놀이. 2026-11 정리로 모은 놀이는 빠진다. */
 export const PHONE_PLAYS:PhonePlay[]=ALL_PHONE_PLAYS.filter(p=>isAvailableGame(p.id));
 export const PHONE_PLAY_BY_ID=new Map(ALL_PHONE_PLAYS.map(p=>[p.id,p]));
 export const isPhonePlay=(id:string)=>PHONE_PLAY_BY_ID.has(id);
 export const phonePlayerRange=(p:PhonePlay)=>p.players==='혼자'?{min:1,max:1}:p.players==='짝'?{min:2,max:2}:{min:3,max:6};
-export const phoneSetup=(p:PhonePlay)=>`${p.space==='제자리'?'팔다리를 펼쳐도 닿지 않는 제자리 공간':p.space==='두 걸음'?'각자 두 걸음 왕복할 통로':'서로 겹치지 않는 넉넉한 개인 통로'} · 스마트폰 1대는 활동 구역 밖 안전한 곳에 내려놓아요. 표시물·가구·촬영은 필요 없어요.`;
+export const phoneSetup=(p:PhonePlay)=>`${p.space==='제자리'?'팔다리를 펼쳐도 닿지 않는 제자리 공간':p.space==='두 걸음'?'각자 두 걸음 왕복할 통로 · 교실이면 책상을 밀어 통로를 만들어요':'서로 겹치지 않는 넉넉한 개인 통로 · 강당이나 넓은 교실에서 해요'} · 스마트폰 1대는 활동 구역 밖 안전한 곳에 내려놓아요. 표시물·촬영은 필요 없어요.`;
 export const phoneSafety=['기기를 손에 들고 움직이지 않아요. 이동은 걷기로 하고 기기 쪽으로 접근하지 않아요.','서로 닿지 않는 간격을 확인하고 불편하면 멈추거나 작은 동작을 선택해요. 눈을 감거나 접촉을 강요하지 않아요.'];
 export const PHONE_GAME_DEFS:GameDef[]=ALL_PHONE_PLAYS.map(p=>({
  type:p.id,name:p.name,emoji:p.emoji,desc:p.goal,
  color:'from-teal-600 to-cyan-700',border:'border-teal-400/40',glow:'hover:shadow-teal-500/30',difficulty:p.kind==='decision'?3:2,
  domain:p.category==='리듬·표현'?'표현':'운동',subCategory:p.category,
  achievement:{code:'연계 확인 필요',title:'준비물 없는 신체 놀이',desc:'실제 움직임과 선택·협력·자기 확인을 연결하는 놀이입니다. 성취기준 코드를 임의로 부여하지 않습니다.'},
- grades:p.kind==='decision'?['3~4학년군','5~6학년군']:['1~2학년','3~4학년군','5~6학년군'],
+ grades:phoneGrades(p),
  durationMinutes:p.minutes,equipment:['스마트폰 1대 · 별도 준비물 없음'],safetyTips:[...phoneSafety,p.seated],physicalActivity:true,
  recommendedDevice:'스마트폰',devices:['스마트폰','태블릿 PC','데스크톱 PC'],playMode:p.players==='혼자'?'개인':'협동',activityType:p.players==='혼자'?'개인':p.players,
 }));
 
 export interface PhoneRecord {round:number;outcome:'complete'|'partial'|'rest'|'observe';elapsedMs:number;count:number;answer:string[];participants:number[];easy?:boolean;challenge?:boolean;strategy?:'core'|'small'|'seated';created?:string[];before?:string;after?:string;comparison?:'compared'|'uncertain'|'skip';fill?:string;remainder?:number;goals?:number[];individual?:number[]}
-export function phoneSequence(p:PhonePlay,round:number,easy=false,challenge=false):string[]{const cues=p.cues;return Array.from({length:easy?Math.min(2,cues.length):challenge?4:Math.min(4,cues.length)},(_,i)=>cues[(i+round)%cues.length]);}
+/** 학년 표기. 반대로 하기·거울 추론·기억하며 이동·말로 설명하기와 판단 놀이는 3학년 이상. */
+export function phoneGrades(p:PhonePlay):('1~2학년'|'3~4학년군'|'5~6학년군')[]{return p.grades??(p.kind==='decision'?['3~4학년군','5~6학년군']:['1~2학년','3~4학년군','5~6학년군']);}
+/**
+ * 과제의 신호. 과제마다 정해 둔 신호가 있으면 그것을 쓴다. 자극을 고르는 놀이(신호·기억)는 과제마다 시작 위치를 돌리고,
+ * 순서가 곧 내용인 놀이(세기·만들기·관찰·판단·모둠)는 순서를 지킨다.
+ */
+export function phoneSequence(p:PhonePlay,round:number,easy=false,challenge=false):string[]{
+ const own=p.roundCues?.[Math.min(2,Math.max(0,round))];
+ if(own)return easy?own.slice(0,Math.min(2,own.length)):own;
+ const cues=p.cues,shift=p.kind==='signal'||p.kind==='memory'?round:0;
+ return Array.from({length:easy?Math.min(2,cues.length):challenge?4:Math.min(4,cues.length)},(_,i)=>cues[(i+shift)%cues.length]);
+}
 export function phoneTarget(round:number){return [8,10,12][round]??10;}
 export function phoneRecordValid(p:PhonePlay,r:PhoneRecord,players:number):boolean{
  const quiet=r.outcome==='rest'||r.outcome==='observe';
