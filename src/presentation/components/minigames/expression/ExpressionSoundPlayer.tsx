@@ -9,11 +9,14 @@ const TONE_LABEL={drop:'물방울',drum:'북',wind:'바람',rain:'비',thunder:'
  * 단계가 바뀌면 호루라기를 한 번 분다.
  */
 export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSound;step:number;running:boolean}){
- const [on,setOn]=useState(true),[pulse,setPulse]=useState(0),[frozen,setFrozen]=useState(false);
+ const [on,setOn]=useState(true),[pulse,setPulse]=useState(0),[frozen,setFrozen]=useState(false),[hidden,setHidden]=useState(()=>typeof document!=='undefined'&&document.hidden);
+ // 다른 탭이나 화면을 보는 동안에는 소리를 내지 않는다.
+ useEffect(()=>{const sync=()=>setHidden(document.hidden);document.addEventListener('visibilitychange',sync);return()=>document.removeEventListener('visibilitychange',sync);},[]);
+ const playing=on&&running&&!hidden;
  const lastStep=useRef(step);
- useEffect(()=>{if(step!==lastStep.current){lastStep.current=step;if(on&&running)sfxWhistle();}},[step,on,running]);
+ useEffect(()=>{if(step!==lastStep.current){lastStep.current=step;if(playing)sfxWhistle();}},[step,playing]);
  useEffect(()=>{
-  if(!on||!running){setFrozen(false);return;}
+  if(!playing){setFrozen(false);return;}
   let beat=0,timer:ReturnType<typeof setTimeout>;
   if(sound.kind==='tones'){
    const kind=sound.tones[Math.min(step,sound.tones.length-1)];
@@ -22,7 +25,9 @@ export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSoun
   }
   const bpm=sound.kind==='beat'?sound.bpm[Math.min(step,sound.bpm.length-1)]:sound.bpm,gap=60000/bpm;
   // 얼음 놀이: 6~10초 박자를 낸 뒤 3초 쉬고, 다시 이어 간다.
-  let until=sound.kind==='freeze'?performance.now()+6000+Math.random()*4000:Infinity,silentUntil=0;
+  const hold=sound.kind==='freeze'&&sound.holdStep===step;
+  let until=sound.kind==='freeze'?performance.now()+6000+Math.random()*4000:Infinity,silentUntil=hold?performance.now()+5000:0;
+  if(hold)setFrozen(true);
   const tick=()=>{
    const now=performance.now();
    if(sound.kind==='freeze'){
@@ -33,11 +38,12 @@ export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSoun
    timer=setTimeout(tick,gap);
   };
   tick();return()=>{clearTimeout(timer);setFrozen(false);};
- },[on,running,sound,step]);
+ },[playing,sound,step]);
  const label=sound.kind==='tones'?`${TONE_LABEL[sound.tones[Math.min(step,sound.tones.length-1)]]} 소리`:sound.kind==='beat'?`박자 ${sound.bpm[Math.min(step,sound.bpm.length-1)]}`:frozen?'멈춤! 얼음':`박자 ${sound.bpm} · 소리가 멈추면 얼음`;
  return <div className="expression-sound" data-frozen={frozen?'yes':'no'}>
   <span className="expression-sound-dot" key={pulse} aria-hidden="true"/>
-  <strong aria-live={sound.kind==='freeze'?'assertive':'off'}>{label}</strong>
+  <strong>{label}</strong>
+  {sound.kind==='freeze'&&<span className="expression-sound-sr" role="status">{frozen?'멈춤! 얼음':''}</span>}
   <button type="button" aria-pressed={on} onClick={()=>{unlockAudio();setOn(!on);}}>{on?'소리 끄기':'소리 켜기'}</button>
   <small>앱이 내는 {sound.kind==='tones'?'소리':'박자 소리'}예요. 단계가 바뀌면 호루라기가 울려요.</small>
  </div>;

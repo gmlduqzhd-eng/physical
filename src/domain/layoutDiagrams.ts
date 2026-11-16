@@ -28,7 +28,7 @@ export const LAYOUTS:Record<string,LayoutSpec>={
  'exp-tablet-31':L('carry',['천을 함께 잡고 운반'],'출발·도착 표식 2개',{distance:'5m'}),
  'exp-tablet-34':L('lanes',['도','도','도','도'],'사람마다 따로 떨어진 길, 발판 2개씩',{distance:'4~5m'}),
  'exp-tablet-35':L('row',['1','2','3','4'],'번호 자리 1~4, 콘은 3m 뒤에 모아 둬요',{distance:'1m'}),
- 'exp-tablet-37':L('zones',['빨강 바구니','파랑 바구니'],'바구니 2개, 물건은 3m 떨어진 곳에 모아 둬요'),
+ 'exp-tablet-37':L('zones',['빨강(첫째) 바구니','파랑(둘째) 바구니'],'바구니 2개, 물건은 3m 떨어진 곳에 모아 둬요'),
  'exp-tablet-42':L('zones',['공 굴리기','옆걸음 운반'],'구역 2곳을 3m 떨어뜨려요'),
  zigzag:L('grid',NUM(9),'번호 표식 1~9를 3줄 × 3칸으로 · 7번에서 출발',{distance:'1m'}),
  memory:L('star',SHAPES,'● ▲ ■ ◆ 표식을 둥글게, 가운데에서 출발',{note:'출발'}),

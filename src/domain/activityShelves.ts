@@ -1,4 +1,5 @@
 import {AVAILABLE_GAMES,type GameDef} from './gamesData.js';
+import {liveActivityId} from './gameLifecycle.js';
 
 // Catalog shelves from the 2026-11-15 lesson audit (docs/catalog-shelves-stage5-2026-11-15.md).
 // The shelves decide what a teacher sees first. Activities retired in the 2026-11 cleanup are in gameLifecycle.ts
@@ -49,3 +50,10 @@ export const shelfLabel=(id:string)=>{const shelf=activityShelf(id);return shelf
 /** "혼자 해보기" lists only activities one person can really do alone: no partner, group or second device. */
 export const isSoloActivity=(game:Pick<GameDef,'activityType'>)=>game.activityType==='개인';
 export const SOLO_ACTIVITIES:GameDef[]=AVAILABLE_GAMES.filter(isSoloActivity);
+
+/** 추천 목록을 지금 쓰는 활동과 지금 이름으로 바꾸고, 겹치는 것은 하나만 남긴다. */
+export function liveRecommendations(list:readonly {name:string;type:string}[]):{name:string;type:string}[]{
+ const out=new Map<string,{name:string;type:string}>();
+ for(const item of list){const type=liveActivityId(item.type),game=AVAILABLE_GAMES.find(g=>g.type===type);if(game&&!out.has(type))out.set(type,{name:game.name,type});}
+ return [...out.values()];
+}

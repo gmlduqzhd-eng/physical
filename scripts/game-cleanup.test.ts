@@ -17,8 +17,9 @@ test('the 2026-11 cleanup retires 62 activities and 8 courses attached to them, 
   assert(isAvailableGame(g.target!),`${g.id} → ${g.target} must be available`);
   assert.equal(RETIRED_REPLACEMENTS[g.id],g.target);
   assert(g.reason.length>10&&g.name.length>1,g.id);
-  const url=replacementUrl('/play/'+g.id,g.id,'room=r1','')!;
-  assert(url.startsWith('/play/'+g.target+'?')&&url.includes('replacementFor='+g.id)&&url.includes('room=r1'),url);
+  const url=replacementUrl('/play/'+g.id,g.id,'room=r1&group=g1&mission=m1&guided=1&lang=ko','')!;
+  assert(url.startsWith('/play/'+g.target+'?')&&url.includes('replacementFor='+g.id)&&url.includes('lang=ko'),url);
+  assert(!/[?&](room|group|mission|guided)=/.test(url),'the replacement opens as practice, not inside a room that is not running it: '+url);
  }
  assert(replacementUrl('/solo/play/run','run','','')!.startsWith('/solo/play/shuttle-run-beep'));
 });
