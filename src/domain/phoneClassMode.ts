@@ -43,7 +43,9 @@ export function classOutcomeResult(play:PhonePlay,outcome:ClassOutcome,run:{task
  * What the big screen shows for one task: a short brief before it starts and the signals that rotate while the class moves.
  * It follows the same rules as the device flow, so a play means the same thing in both.
  */
-export function classRoundView(play:PhonePlay,round:number,level:string,seated:boolean):{brief:string;cues:string[];memory:boolean;choices:string[]}{
+/** 고를 것이 없는 놀이가 모두 같은 빈 배열을 받게 해, 화면이 다시 그려져도 안내 소리가 되풀이되지 않게 한다. */
+const NO_CHOICES:readonly string[]=Object.freeze([]) as readonly string[];
+export function classRoundView(play:PhonePlay,round:number,level:string,seated:boolean):{brief:string;cues:string[];memory:boolean;choices:readonly string[]}{
  const easy=level==='쉬운 방법',hard=level==='추가 도전',isMemory=play.kind==='memory';
  const memory=phoneMemoryTask(play,round,easy,hard,play.id==='phone-play-033'?phoneFillOptions(round)[0]:'');
  // 큰 글씨 안내는 음성이 읽는 과제 이름과 같게 한다. 기억 놀이는 기억할 순서를 보여 준다.
@@ -53,6 +55,6 @@ export function classRoundView(play:PhonePlay,round:number,level:string,seated:b
   :isMemory?(play.id==='phone-play-006'?memory.shown:play.id==='phone-play-003'?phoneSequence(play,round,easy,hard).map(c=>`새 신호: ${c} · 앞 신호의 동작을 해요`):easy?[`순서: ${memory.base.join(' → ')}`,memory.rule]:[memory.rule])
   :phoneRoundCues(play,round,level);
  // 판단 놀이는 고를 것을 시작 전에 보여 주고, 반 전체가 손을 들어 고른다.
- const choices=play.kind==='decision'&&!seated?play.options??[]:[];
+ const choices=play.kind==='decision'&&!seated&&play.options?play.options:NO_CHOICES;
  return {brief,cues,memory:isMemory,choices};
 }

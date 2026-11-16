@@ -836,6 +836,8 @@ export function mergedGameUrl(pathname:string,id:string,search:string,hash:strin
  const params=new URLSearchParams(search);params.set('variant',entry.id);
  return `${pathname.startsWith('/solo/play/')?'/solo/play/':'/play/'}${entry.target}?${params.toString()}${hash}`;
 }
+/** 합쳐지거나 정리된 활동을 지금 쓰는 활동 id로 바꾼다. 이어지는 활동이 없으면 원래 id. */
+export function liveActivityId(id:string):string{return getMergedGame(id)?.target??RETIRED_REPLACEMENTS[id]??id;}
 export function variantBestKey(id:string,variant:string):string{return `physical_best_${id}_variant_${variant}_v1`;}
 
 export const RETIRED_REPLACEMENTS:Record<string,string>={multi_touch:'rhythm_clapping',volcano:'red_green',scream:'breath-pacer-478',balloon:'exp-phone-35',coin_flip:'target',fate_card:'fitness',...Object.fromEntries(REMOVED_GAMES.filter(g=>g.target).map(g=>[g.id,g.target!]))};
@@ -843,6 +845,9 @@ export const RETIRED_REPLACEMENTS:Record<string,string>={multi_touch:'rhythm_cla
 export const isCleanedGame=(id:string)=>!!REMOVED_GAMES.find(g=>g.id===id)?.target;
 export function replacementUrl(pathname:string,id:string,search:string,hash:string):string|null{
  if(!getRemovedGame(id))return null;const target=RETIRED_REPLACEMENTS[id];
- const params=new URLSearchParams(search);params.set('replacementFor',id);if(variantsFor(target).length)params.set('variant','base');else params.delete('variant');
+ const params=new URLSearchParams(search);params.set('replacementFor',id);
+ // 2026-11 정리로 모은 활동은 수업방이 그 활동을 열어 둔 것이 아니므로, 수업방·모둠·미션 정보를 넘기지 않고 연습으로 연다.
+ if(REMOVED_GAMES.find(g=>g.id===id)?.target)for(const key of ['room','group','guided','mission'])params.delete(key);
+ if(variantsFor(target).length)params.set('variant','base');else params.delete('variant');
  return `${pathname.startsWith('/solo/')?'/solo/play/':'/play/'}${target}?${params.toString()}${hash}`;
 }

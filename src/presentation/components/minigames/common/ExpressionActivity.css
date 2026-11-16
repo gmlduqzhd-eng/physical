@@ -19,3 +19,4 @@ html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.ex
 .expression-sound[data-frozen=yes]{border-color:var(--forest-accent,#566d4d);background:var(--forest-tint,#e8efe3)}.expression-sound[data-frozen=yes] .expression-sound-dot{background:transparent;border:3px solid var(--forest-accent,#566d4d)}
 @keyframes expression-pulse{from{transform:scale(1.5);opacity:.4}to{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.expression-sound-dot{animation:none}}
+.expression-sound-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

@@ -3,7 +3,7 @@
 // 음악·신호가 필요한 게임은 앱이 직접 내는 소리(sound)를 쓴다.
 export type ExpressionSound=
  |{kind:'beat';bpm:number[]}            // 단계마다 박자 소리
- |{kind:'freeze';bpm:number}             // 박자가 멈추면 얼음
+ |{kind:'freeze';bpm:number;holdStep?:number} // 박자가 멈추면 얼음. holdStep 단계는 시작하자마자 5초 멈춘다
  |{kind:'tones';tones:('drop'|'drum'|'wind'|'rain'|'thunder'|'sun')[]}; // 단계마다 다른 소리
 export interface StepPatch {title?:string;guide?:string;actionTip?:string;durationSeconds?:number}
 export interface ExpressionClarity {
@@ -38,7 +38,7 @@ export const EXPRESSION_CLARITY:Record<string,ExpressionClarity>={
  taebo_fitness:{desc:'박자에 맞춰 허공에 잽·스트레이트·어퍼컷과 발끝 짚기를 이어 하는 에어로빅이에요. 사람을 향해 치지 않아요.',
   steps:{2:{guide:'상체를 U자로 숙였다 일어나며(위빙) 아래에서 위로 허공을 올려 치는 어퍼컷을 이어요.'}},sound:{kind:'beat',bpm:[108,108,108]}},
  sound_painter:{steps:{3:{guide:'높고 신비로운 소리에 맞춰 두 팔을 양옆으로 펼쳐 제자리에서 공기를 감싸듯 움직여요.',actionTip:'소리의 결을 들으며 팔을 천천히 움직여요.'}},sound:{kind:'tones',tones:['drop','drum','wind']}},
- musical_freeze:{steps:{1:{guide:'박자 소리가 나는 동안 해적선을 청소하거나 망원경을 보는 익살스러운 연기를 펼쳐요. 소리가 멈추면 그대로 얼음!'},2:{guide:'호루라기 소리와 함께 거대한 파도를 보고 놀란 표정으로 5초간 얼음!'},3:{guide:'다시 박자 소리가 나면 보물 상자를 열고 환호하는 춤을 춘 뒤 마지막 자세를 취해요.'}},sound:{kind:'freeze',bpm:104}},
+ musical_freeze:{steps:{1:{guide:'박자 소리가 나는 동안 해적선을 청소하거나 망원경을 보는 익살스러운 연기를 펼쳐요. 소리가 멈추면 그대로 얼음!'},2:{guide:'호루라기 소리와 함께 거대한 파도를 보고 놀란 표정으로 5초간 얼음!'},3:{guide:'다시 박자 소리가 나면 보물 상자를 열고 환호하는 춤을 춘 뒤 마지막 자세를 취해요.'}},sound:{kind:'freeze',bpm:104,holdStep:1}},
  kpop_easy_challenge:{desc:'가이드 영상을 보며 4박자 반복 포인트 안무를 따라 해요. 학교망에서 영상이 막히면 글 안내와 박자 소리로 해요.',
   steps:{1:{actionTip:'영상이 좌우 반전(거울 모드)이면 화면 속 사람과 같은 쪽 손을 써요.'},2:{guide:'양손으로 가슴 앞 하트를 만들고 손가락을 튕기며 시선은 앞을 봐요.'}},sound:{kind:'beat',bpm:[100,100,100]}},
  space_traveler:{steps:{1:{title:'우주복 입고 우주로 나가기'},2:{title:'여러 높이로 떠다니기'}}},

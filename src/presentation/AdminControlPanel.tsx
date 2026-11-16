@@ -596,7 +596,7 @@ export const AdminControlPanel = () => {
                   onClick={async () => await updateRoom({ active_minigame: { type: 'breath-pacer-478', expires_at: Date.now() + 600000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Mic2 className="w-5 h-5" /> 숲 소리 정리 쉼터
+                  <LucideIcons.Mic2 className="w-5 h-5" /> 내 속도 호흡 쉼터
                 </button>
               </div>
               <div className="flex justify-end mt-2">

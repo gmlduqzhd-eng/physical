@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useModalDialog } from '../../application/useModalDialog';
 import './HubPopupTheme.css';
 import { X, ArrowRight, RotateCcw, Play } from 'lucide-react';
+import { liveRecommendations } from '../../domain/activityShelves';
 
 interface PhysicalMbtiTestProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '단단한 근력과 끈기 있는 지구력을 갖추었어요! 포기하지 않고 묵묵히 완주하는 체력 챔피언입니다.',
     strengths: ['지치지 않는 체력', '강한 근지구력', '안정적인 밸런스'],
     recommendedGames: [
-      { name: '플랭크 버티기', type: 'plank' },
+      { name: '벽 짚고 버티기', type: 'plank' },
       { name: '스쿼트 챌린지', type: 'squat' },
       { name: '내 페이스 왕복 우편', type: 'shuttle-run-beep' }
     ],
@@ -402,7 +403,7 @@ export const PhysicalMbtiTest: React.FC<PhysicalMbtiTestProps> = ({ isOpen, onCl
             <div className="text-left bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60 mb-4">
               <h4 className="text-xs font-bold text-cyan-400 mb-2">🎯 나와 찰떡궁합 추천 게임</h4>
               <div className="space-y-1.5">
-                {persona.recommendedGames.map((g, idx) => (
+                {liveRecommendations(persona.recommendedGames).map((g, idx) => (
                   <button
                     key={idx}
                     onClick={() => {
