@@ -49,7 +49,7 @@ try{
   await run("SET physical.test_database='on'");
   if(!verifyOnly){
   await assertSql("to_regclass('public.game_rooms') IS NULL AND (SELECT count(*)=0 FROM auth.users)",'pristine app/Auth fixture required');
-  assert(patches.length===3&&baseline.length===30&&followups.length===5,'baseline, three original supplements and five follow-up migrations identified');
+  assert(patches.length===3&&baseline.length===30&&followups.length===6,'baseline, three original supplements and six follow-up migrations identified');
   const install=fs.readFileSync(path.join(root,'supabase/install_empty.psql'),'utf8');
   const ordered=[...install.matchAll(/^\\ir migrations\/(.+)$/gm)].map(m=>m[1]);
   assert(JSON.stringify(ordered)===JSON.stringify(migrations),'empty installer includes every migration once in ascending order');
@@ -140,7 +140,7 @@ try{
     phase=suite;await run(flat('supabase/tests/'+suite));pass(suite);
     if(suite==='classroom_results.sql')await rollback();
   }
-  for(const suite of ['classroom_student_roster.sql','classroom_data_api_privileges.sql','classroom_boss_retry.psql','classroom_operations.sql','reviewed_access.sql','studio_shared_limits.sql','flagship_expeditions.sql','expedition_workshop.sql','expedition_review_guards.sql']){
+  for(const suite of ['classroom_student_roster.sql','classroom_data_api_privileges.sql','classroom_boss_retry.psql','classroom_operations.sql','reviewed_access.sql','studio_shared_limits.sql','flagship_expeditions.sql','expedition_workshop.sql','expedition_review_guards.sql','map_stations_and_simple_boss.sql']){
     phase=suite;await run(flat('supabase/tests/'+suite));pass(suite);
   }
   await assertSql("(SELECT count(*)=0 FROM auth.users) AND (SELECT count(*)=0 FROM public.game_rooms) AND (SELECT payload='synthetic unrelated record' FROM fixture_other.keep_row WHERE id=1) AND EXISTS(SELECT 1 FROM pg_publication_tables WHERE pubname='supabase_realtime' AND schemaname='fixture_other' AND tablename='keep_row') AND EXISTS(SELECT 1 FROM pg_publication_tables WHERE pubname='fixture_other_publication' AND schemaname='fixture_other' AND tablename='keep_row')",'all synthetic SQL fixtures rolled back; unrelated rows/publications preserved');

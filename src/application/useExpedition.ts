@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {supabase} from '../data/supabase';
 import {groupClue,initialShip,mapOrder,shipStep,STATIONS,type ExpeditionSnapshot,type FlagshipId,type Station} from '../domain/flagship';
-import {DEFAULT_WORKSHOP,SHIP_COURSES,groupWorkshop,settingsOf,rulesOf,workshopSchema} from '../domain/expeditionWorkshop';
+import {legacyRouteData,DEFAULT_WORKSHOP,SHIP_COURSES,groupWorkshop,settingsOf,rulesOf,workshopSchema} from '../domain/expeditionWorkshop';
 import {mapBrief,mapAgreement,SUPPORT_CHOICES,type MapGesture} from '../domain/cooperativeMap';
 
 export function practiceSnapshot(game:FlagshipId,seed=0):ExpeditionSnapshot{return {runId:crypto.randomUUID(),game,seed,phase:0,status:'playing',revision:0,serverTime:Date.now(),startedAt:Date.now()+5000,event:'calm',owner:false,groupId:'practice',playVersion:1,...(game==='expedition-map'?{mapRules:{version:2 as const,brief:mapBrief(0,1,seed),history:[]}}:{}),clue:groupClue(0,seed),groups:[{id:'practice',name:'연습 모둠',visited:[],vote:null,done:false,ship:initialShip(),axes:[{value:0,at:0,claimed:true,mine:true},{value:0,at:0,claimed:true,mine:true}],loop:[],quality:0,mode:'assisted'}]};}
@@ -26,7 +26,7 @@ export function useExpedition(room:string|null,game:FlagshipId,group:string|null
    }catch{return false;}finally{reportPending.current=false;}
   }
   if(pending.current)return false;
-  if(room){pending.current=true;setBusy(true);readEpoch.current++;try{const s=latest.current;const r=await supabase.rpc('expedition_action',{p_room:room,p_game:game,p_action:kind,p_group:group,p_data:{...data,runId:s?.runId,requestId:crypto.randomUUID()}});if(r.error)throw Error();if(alive.current){setSnapshot(old=>!old||old.runId!==r.data.runId||r.data.revision>=old.revision?r.data:old);lastOk.current=Date.now();setMissing(false);setError('');setStale(false);}return true;}catch{if(alive.current)setError('입력을 반영하지 못했어요. 수업 시작·모둠 권한·연결 상태를 확인하고 다시 시도해요.');return false;}finally{pending.current=false;if(alive.current)setBusy(false);}}
+  if(room){pending.current=true;setBusy(true);readEpoch.current++;try{const s=latest.current;const send=(payload:Record<string,unknown>)=>supabase.rpc('expedition_action',{p_room:room,p_game:game,p_action:kind,p_group:group,p_data:{...payload,runId:s?.runId,requestId:crypto.randomUUID()}});let r=await send(data);const legacy=kind==='start'&&r.error?legacyRouteData(data):null;if(legacy)r=await send(legacy);if(r.error)throw Error();if(alive.current){setSnapshot(old=>!old||old.runId!==r.data.runId||r.data.revision>=old.revision?r.data:old);lastOk.current=Date.now();setMissing(false);setError('');setStale(false);}return true;}catch{if(alive.current)setError('입력을 반영하지 못했어요. 수업 시작·모둠 권한·연결 상태를 확인하고 다시 시도해요.');return false;}finally{pending.current=false;if(alive.current)setBusy(false);}}
   setSnapshot(prev=>{if(!prev)return prev;
    if(kind==='restart'){const fresh=practiceSnapshot(game,(prev.seed+1)%996);fresh.workshop=structuredClone(prev.workshop??{version:1,settings:DEFAULT_WORKSHOP,lessonStep:0,lessonAt:Date.now(),observations:{}});if(fresh.mapRules)fresh.mapRules.brief=mapBrief(0,1,fresh.seed,fresh.workshop.settings.stationOrder);return fresh;}
    const s=structuredClone(prev),g=s.groups[0],w=groupWorkshop(g,s);g.workshop=w;s.revision++;s.serverTime=Date.now();

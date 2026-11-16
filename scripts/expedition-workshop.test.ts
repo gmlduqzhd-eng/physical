@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BOSS_ROUTES,DEFAULT_WORKSHOP,LEVEL_RULES,LEVELS,SHIP_COURSES,LESSON_PACKAGES,workshopSchema,groupRhythm,expeditionRhythm,roleSeats,readinessLabel,expeditionReport} from '../src/domain/expeditionWorkshop';
+import {BOSS_ROUTES,GATE_NAMES,bossRoute,legacyRouteData,DEFAULT_WORKSHOP,LEVEL_RULES,LEVELS,SHIP_COURSES,LESSON_PACKAGES,workshopSchema,groupRhythm,expeditionRhythm,roleSeats,readinessLabel,expeditionReport} from '../src/domain/expeditionWorkshop';
 import {initialShip,shipStep,rhythmScore,rescueHit} from '../src/domain/flagship';
 import type {ExpeditionSnapshot} from '../src/domain/flagship';
 import {lessonTransferLink,parseLessonTransfer,publicLessonSchema,savePublicSetupReturn,takePublicSetupReturn,type PublicLessonTransfer} from '../src/domain/publicLessonTransfer';
@@ -36,9 +36,14 @@ test('all rescue difficulty targets remain reachable, while course values change
   let found=false;for(let a=15;a<=80&&!found;a+=2)for(let p=15;p<90&&!found;p++)found=rescueHit(a,p,round,LEVEL_RULES[level].rescueRadius);assert(found,level+' round '+round);
  }assert(LEVEL_RULES.easy.shadowRadius>LEVEL_RULES.challenge.shadowRadius);assert(LEVEL_RULES.easy.shadowHits<LEVEL_RULES.challenge.shadowHits);
 });
-test('lesson packages total 10/20/40 and every boss path has three unique ordered stages',()=>{
+test('lesson packages total 10/20/40 and every boss path starts at the map with unique ordered stages',()=>{
  for(const [minutes,steps] of Object.entries(LESSON_PACKAGES)){assert.equal(steps.length,4);assert.equal(steps.reduce((a,b)=>a+b,0),Number(minutes));}
- for(const path of Object.values(BOSS_ROUTES)){assert.equal(path[0],'expedition-map');assert.equal(path.length,3);assert.equal(new Set(path).size,3);}
+ for(const [id,path] of Object.entries(BOSS_ROUTES)){assert.equal(path[0],'expedition-map');assert.equal(path.length,id==='simple'?2:3,id);assert.equal(new Set(path).size,path.length);}
+ assert.deepEqual(BOSS_ROUTES.simple,['expedition-map','expedition-loop']);assert.equal(DEFAULT_WORKSHOP.route,'simple','new class bosses use the two-gate route');
+ assert.deepEqual(legacyRouteData({mapVersion:2,settings:{...DEFAULT_WORKSHOP}})?.settings.route,'balanced','a server without the 2026-11-16 migration gets the three-gate route');
+ assert.equal(legacyRouteData({settings:{...DEFAULT_WORKSHOP,route:'rescue'}}),null);
+ assert.deepEqual(bossRoute(undefined),BOSS_ROUTES.balanced);assert.deepEqual(bossRoute('simple'),BOSS_ROUTES.simple);
+ for(const game of new Set(Object.values(BOSS_ROUTES).flat()))assert(GATE_NAMES[game],game);
 });
 test('readiness expires and reports omit names in a multiline fact-only report',()=>{
  assert.equal(readinessLabel({kind:'camera',state:'ready',at:1000},14000),'최근 신호 없음');

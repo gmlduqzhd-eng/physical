@@ -11,7 +11,7 @@ import '../PlayExperiences.css';
 function StationSheet({room,codes}:{room:string;codes:Record<string,string>}){
  const [images,setImages]=useState<Record<string,string>>({});
  useEffect(()=>{let active=true;void Promise.all(STATIONS.map(async id=>[id,await QRCode.toDataURL(`physical-expedition:${room}:${codes[id]}`,{width:320,margin:2})] as const)).then(rows=>{if(active)setImages(Object.fromEntries(rows));});return()=>{active=false;};},[codes,room]);
- return <div className="flagship-station-sheet"><h3>탐사 지점 안내판 · 이 원정에서만 사용</h3><p>세 안내판을 교사가 정한 걷기 동선에 배치해요. 학생은 멈춘 상태에서 스캔해요. 새 원정을 열면 이전 QR은 사용할 수 없어요.</p><div className="flagship-stations">{STATIONS.map(id=><article key={id}><h3>{STATION_NAMES[id]}</h3>{images[id]&&<img src={images[id]} alt={`${STATION_NAMES[id]} 탐사 지점 QR`}/>}<code>{codes[id]}</code><p>걷기 → 멈춰 스캔 → 모둠으로 귀환</p></article>)}</div><button onClick={()=>window.print()}>탐사 안내판 인쇄</button></div>;
+ return <div className="flagship-station-sheet"><h3>탐사 지점 안내판 · 한 번 인쇄해 계속 사용</h3><p>세 안내판을 교사가 정한 걷기 동선에 배치해요. 학생은 멈춘 상태에서 스캔해요. 같은 선생님 계정이면 새 원정을 열거나 다른 수업방에서도 같은 QR을 그대로 써요.</p><div className="flagship-stations">{STATIONS.map(id=><article key={id}><h3>{STATION_NAMES[id]}</h3>{images[id]&&<img src={images[id]} alt={`${STATION_NAMES[id]} 탐사 지점 QR`}/>}<code>{codes[id]}</code><p>걷기 → 멈춰 스캔 → 모둠으로 귀환</p></article>)}</div><button onClick={()=>window.print()}>탐사 안내판 인쇄</button></div>;
 }
 export function FlagshipControl({roomId,game,readOnly=false,lessonMinutes}:{roomId:string;game:FlagshipId;readOnly?:boolean;lessonMinutes?:number}){
  const {snapshot:s,error,busy,missing,refresh,action}=useExpedition(roomId,game,null),meta=FLAGSHIPS.find(g=>g.id===game)!;
