@@ -480,7 +480,7 @@ export const AdminControlPanel = () => {
                 <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 단체 숏폼 미니게임 (Phase 1)
                 </h2>
-                {currentRoom.active_minigame && ['volcano','telepathy','tug_of_war','red_green','fitness','exp-tablet-31'].includes(currentRoom.active_minigame.type) && (
+                {currentRoom.active_minigame && ['red_green','one_leg','exp-tablet-31'].includes(currentRoom.active_minigame.type) && (
                   <span className="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
@@ -495,10 +495,10 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Flame className="w-5 h-5" /> 신호등 구조 산책
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'telepathy', target_time: Date.now() + 5000, expires_at: Date.now() + 10000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'one_leg', expires_at: Date.now() + 600000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
-                  <LucideIcons.Wifi className="w-5 h-5" /> 텔레파시 (동시터치)
+                  <LucideIcons.Footprints className="w-5 h-5" /> 균형 등대 지키기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'exp-tablet-31', expires_at: Date.now() + 600000 } })}
@@ -570,7 +570,7 @@ export const AdminControlPanel = () => {
             <div className="bg-purple-50 shadow-sm p-4 rounded-xl border border-purple-200 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-lg font-bold text-purple-900 flex items-center gap-2">
-                  <LucideIcons.Sparkles className="w-5 h-5" /> 텐션 & 운빨 미니게임 (Phase 3)
+                  <LucideIcons.Sparkles className="w-5 h-5" /> 마무리 신체 놀이 (Phase 3)
                 </h2>
                 {currentRoom.active_minigame && ['fate_card','whack_a_mole','scream','target','red_green','campfire-breath','breath-pacer-478'].includes(currentRoom.active_minigame.type) && (
                   <span className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-bold rounded-full animate-pulse">
@@ -587,16 +587,16 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Dices className="w-5 h-5" /> 표적 보급 미션
                 </button>
                 <button 
-                  onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
+                  onClick={async () => await updateRoom({ active_minigame: { type: 'plank', expires_at: Date.now() + 600000 } })}
                   className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Target className="w-5 h-5" /> 신호 표식 신체 놀이
+                  <LucideIcons.Shield className="w-5 h-5" /> 벽 짚고 버티기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'breath-pacer-478', expires_at: Date.now() + 600000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Mic2 className="w-5 h-5" /> 내 속도 호흡 쉼터
+                  <LucideIcons.Wind className="w-5 h-5" /> 내 속도 호흡 쉼터
                 </button>
               </div>
               <div className="flex justify-end mt-2">
@@ -748,7 +748,7 @@ export const AdminControlPanel = () => {
                     <div className="flex-1 flex flex-col gap-2">
                       <button onClick={triggerTsunami} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'tsunami' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <Waves className="w-6 h-6 mb-1" />
-                        <span className="text-sm">{currentRoom.status === 'tsunami' ? '해일 경보 해제' : '해일 경보 발동'}</span>
+                        <span className="text-sm">{currentRoom.status === 'tsunami' ? '모두 멈춤 해제' : '모두 멈춤'}</span>
                         {currentRoom.status !== 'tsunami' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">학생 기기 조작 잠금<br/>(집중/통제용)</span>}
                       </button>
                       <button onClick={async () => {

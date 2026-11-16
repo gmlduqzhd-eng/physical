@@ -1,3 +1,5 @@
+import {LESSON_GAME_CATALOG} from '../data/lessonGameCatalog';
+import {achievementLabel,PENDING_CURRICULUM_CODE} from '../domain/curriculumCode';
 import {getMergedGame} from '../domain/gameLifecycle';
 import {matchesActivitySearch} from '../domain/activitySearch';
 import {RecentGameRecords} from './components/RecentGameRecords';
@@ -119,7 +121,6 @@ export const GameHub = () => {
 
   // 스마트 체육 현장 맞춤 필터 (장소 · 센서)
   const [placeFilter, setPlaceFilter] = useState<'전체' | '교실' | '강당' | '운동장'>('전체');
-  const [sensorFilter, setSensorFilter] = useState<'전체' | '터치' | '자이로' | '음성'>('전체');
 
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
@@ -156,16 +157,11 @@ export const GameHub = () => {
     });
   }, []);
 
-  const getGameSensor = (type: string): '터치' | '자이로' | '음성' => {
-    if (type === 'scream') return '음성';
-    if (['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap', 'head-shoulders-knees', 'body-rhythm-orchestrator'].includes(type)) return '자이로';
-    return '터치';
-  };
-
-  const getGamePlace = (type: string, domain: string): '교실' | '강당' | '운동장' => {
-    if (['run', 'jump', 'trail-maze-run', 'slingshot-archery', 'crevasse-jump', 'bicycle-pedal-crank'].includes(type)) return '운동장';
-    if (domain === '표현' || ['tug_of_war', 'badminton-smash-rhythm', 'basketball-free-throw', 'taekwondo-counter-kick', 'tabletennis-spin-read', 'spike-block-wall', 'rolling-curling', 'curling-weight-control'].includes(type)) return '강당';
-    return '교실';
+  /** 활동 자료의 공간 정보로 장소를 고른다. 한 활동이 여러 장소에 맞을 수 있다. */
+  const PLACE_SPACES: Record<'교실' | '강당' | '운동장', string[]> = { 교실: ['교실', '좁은 실내 공간'], 강당: ['체육관', '다목적실'], 운동장: ['운동장'] };
+  const fitsPlace = (type: string, place: '교실' | '강당' | '운동장') => {
+    const game = GAMES.find(item => item.type === type), spaces = game?.spaces ?? LESSON_GAME_CATALOG.find(item => item.id === type)?.space ?? [];
+    return spaces.some(space => PLACE_SPACES[place].includes(space));
   };
 
   const filtered = GAMES.filter(g => {
@@ -175,11 +171,10 @@ export const GameHub = () => {
     const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
     const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
     const favMatch = !showFavoritesOnly || [...favorites].some(id=>(getMergedGame(id)?.target||id)===g.type);
-    const placeMatch = placeFilter === '전체' || getGamePlace(g.type, g.domain) === placeFilter;
-    const sensorMatch = sensorFilter === '전체' || getGameSensor(g.type) === sensorFilter;
+    const placeMatch = placeFilter === '전체' || fitsPlace(g.type, placeFilter);
     const searchMatch = matchesActivitySearch(g,searchQuery);
     const physicalMatch = !physicalOnly || isPhysicalActivityGame(g);
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && sensorMatch && searchMatch && physicalMatch;
+    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && searchMatch && physicalMatch;
   });
 
   const handleRandomPick = () => {
@@ -198,7 +193,7 @@ export const GameHub = () => {
     }, 100);
   };
 
-  const pageKey = JSON.stringify([gradeFilter, domainFilter, sportFilter, deviceFilter, playModeFilter, placeFilter, sensorFilter, showFavoritesOnly, physicalOnly, searchQuery, [...favorites]]);
+  const pageKey = JSON.stringify([gradeFilter, domainFilter, sportFilter, deviceFilter, playModeFilter, placeFilter, showFavoritesOnly, physicalOnly, searchQuery, [...favorites]]);
   const pageCount = Math.max(1, Math.ceil(filtered.length / 9));
   const currentPage = pagination.key === pageKey ? Math.min(pagination.page, pageCount) : 1;
   const visibleGames = filtered.slice((currentPage - 1) * 9, currentPage * 9);
@@ -207,7 +202,7 @@ export const GameHub = () => {
     catalogRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   };
 
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || showFavoritesOnly || physicalOnly || !!searchQuery;
+  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || showFavoritesOnly || physicalOnly || !!searchQuery;
   const resetAllFilters = () => {
     setDomainFilter('전체');
     setSportFilter('전체');
@@ -215,7 +210,6 @@ export const GameHub = () => {
     setDeviceFilter('전체');
     setPlayModeFilter('전체');
     setPlaceFilter('전체');
-    setSensorFilter('전체');
     setShowFavoritesOnly(false);
     setPhysicalOnly(false);
     setSearchQuery('');
@@ -236,9 +230,9 @@ export const GameHub = () => {
           >
             <div className="flex items-center gap-2 mb-3">
               <span className="px-3 py-1 bg-cyan-500/20 text-cyan-400 font-mono font-black text-sm rounded-lg border border-cyan-500/30">
-                {activeAchievement.code}
+                {achievementLabel(activeAchievement.code)}
               </span>
-              <span className="text-xs font-bold text-slate-400">2022 개정 초등 체육과 교육과정</span>
+              {activeAchievement.code!==PENDING_CURRICULUM_CODE&&<span className="text-xs font-bold text-slate-400">2022 개정 초등 체육과 교육과정</span>}
             </div>
             <h3 className="text-xl font-black text-white mb-2">{activeAchievement.title}</h3>
             <p className="text-sm text-slate-300 bg-slate-800/80 p-4 rounded-2xl border border-slate-700 leading-relaxed">
@@ -366,7 +360,6 @@ export const GameHub = () => {
           { id: 'high_scorer', emoji: '🏅', name: '하이스코어러', desc: '1회 500점 이상 달성', color: 'from-yellow-500 to-amber-600', border: 'border-yellow-500/50' },
           { id: 'veteran', emoji: '🎖️', name: '베테랑', desc: '10회 이상 플레이', color: 'from-cyan-500 to-blue-600', border: 'border-cyan-500/50' },
           { id: 'master', emoji: '👑', name: '마스터', desc: '50회 이상 플레이', color: 'from-purple-500 to-indigo-600', border: 'border-purple-500/50' },
-          { id: 'brave', emoji: '🦁', name: '용감한 도전자', desc: '도전 기록으로 점수 획득', color: 'from-red-500 to-orange-600', border: 'border-red-500/50' },
           { id: 'explorer', emoji: '🌍', name: '탐험가', desc: '10종 게임 플레이', color: 'from-emerald-500 to-teal-600', border: 'border-emerald-500/50' },
           { id: 'collector', emoji: '💎', name: '수집가', desc: '30종 게임 플레이', color: 'from-pink-500 to-rose-600', border: 'border-pink-500/50' },
         ];
@@ -497,7 +490,7 @@ export const GameHub = () => {
         {PE_DOMAINS.map(domain => <button type="button" key={domain.key} aria-pressed={domainFilter === domain.key} onClick={() => { setDomainFilter(domain.key); if (domain.key !== '스포츠') setSportFilter('전체'); }}>{domain.emoji} {domain.key}</button>)}
         <select aria-label="학년 선택" value={gradeFilter} onChange={event => setGradeFilter(event.target.value as GradeGroup)}>{GRADE_GROUPS.map(grade => <option key={grade.key} value={grade.key}>{grade.label}</option>)}</select>
       </div>
-      <details className="hub-advanced"><summary>상세 조건 · 기기 / 활동 / 장소 / 센서{deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sensorFilter !== '전체' || sportFilter !== '전체' ? ' · 적용 중' : ''}</summary>
+      <details className="hub-advanced"><summary>상세 조건 · 기기 / 활동 / 장소{deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sportFilter !== '전체' ? ' · 적용 중' : ''}</summary>
       {/* 스포츠 영역 선택 시 세부 유형 (기술형 / 전략형 / 생태형) */}
       {domainFilter === '스포츠' && (
         <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 animate-in fade-in duration-200">
@@ -642,13 +635,13 @@ export const GameHub = () => {
             <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
               {([
                 { key: '전체', label: '전체 장소', emoji: '🗺️' },
-                { key: '교실', label: '교실(좁은공간)', emoji: '🏫' },
-                { key: '강당', label: '강당(넓은공간)', emoji: '🏟️' },
+                { key: '교실', label: '교실', emoji: '🏫' },
+                { key: '강당', label: '체육관·다목적실', emoji: '🏟️' },
                 { key: '운동장', label: '운동장(야외)', emoji: '🏃' },
-              ] as const).filter(p => p.key === '전체' || GAMES.some(g => getGamePlace(g.type, g.domain) === p.key)).map(p => {
+              ] as const).map(p => {
                 const count = p.key === '전체'
                   ? GAMES.length
-                  : GAMES.filter(g => getGamePlace(g.type, g.domain) === p.key).length;
+                  : GAMES.filter(g => fitsPlace(g.type, p.key)).length;
                 const isSelected = placeFilter === p.key;
                 return (
                   <button
@@ -672,44 +665,6 @@ export const GameHub = () => {
             </div>
           </div>
 
-          {/* 센서별 스마트 필터 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
-            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>📱</span> 측정 센서 분류
-            </h2>
-            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
-              {([
-                { key: '전체', label: '전체 센서', emoji: '⚡' },
-                { key: '터치', label: '터치·버튼', emoji: '👆' },
-
-                { key: '자이로', label: '자이로·가속도', emoji: '🧭' },
-                { key: '음성', label: '마이크 음성', emoji: '🎤' },
-              ] as const).filter(s => s.key === '전체' || GAMES.some(g => getGameSensor(g.type) === s.key)).map(s => {
-                const count = s.key === '전체'
-                  ? GAMES.length
-                  : GAMES.filter(g => getGameSensor(g.type) === s.key).length;
-                const isSelected = sensorFilter === s.key;
-                return (
-                  <button
-                    key={s.key}
-                    type="button"
-                    onClick={() => setSensorFilter(s.key)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-indigo-600 to-violet-600 border-indigo-400 text-white shadow-md shadow-indigo-900/30'
-                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>{s.emoji}</span>
-                    <span>{s.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -767,7 +722,7 @@ export const GameHub = () => {
                           title="성취기준 상세 보기"
                         >
                           <Info className="w-2.5 h-2.5" />
-                          <span>{game.achievement.code}</span>
+                          <span>{achievementLabel(game.achievement.code)}</span>
                         </button>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${
                           game.playMode === '협동'

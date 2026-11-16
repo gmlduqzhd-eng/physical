@@ -10,6 +10,12 @@ interface SplitBattleGameProps {
 }
 
 type BattleType = 'tug' | 'flag' | 'tap';
+type Player = 'p1' | 'p2';
+/** 화면을 빠르게 누르는 대신, 몸 동작을 하고 내 칸을 한 번 누른다. 누른 뒤 잠시 잠가 연타로는 이길 수 없다. */
+const MOVES = ['스쿼트 1번', '제자리 점프 2번', '팔 벌려 뛰기 1번', '무릎 올리기 4번', '옆으로 한 걸음 갔다 오기', '손뼉 머리 위·무릎 2번'] as const;
+const MOVE_LOCK_MS = 1800;
+const RACE_GOAL = 8;
+const nextMove = (current: number) => (current + 1 + Math.floor(Math.random() * (MOVES.length - 1))) % MOVES.length;
 
 export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClose }) => {
   const dialogRef = useModalDialog(isOpen, onClose);
@@ -30,11 +36,17 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
   const [flagVisible, setFlagVisible] = useState(false);
   const flagTimer = useRef<number | null>(null);
 
-  // 3. 스피드 25회 연타 대결
+  // 3. 동작 8개 먼저 완성
   const [p1Count, setP1Count] = useState(0);
   const [p2Count, setP2Count] = useState(0);
 
-  useEffect(() => () => { if (flagTimer.current) clearTimeout(flagTimer.current); }, []);
+  // 동작 줄다리기·동작 완성 경주: 플레이어마다 지금 할 동작과 잠금 상태
+  const [moves, setMoves] = useState<Record<Player, number>>({ p1: 0, p2: 3 });
+  const [locked, setLocked] = useState<Record<Player, boolean>>({ p1: false, p2: false });
+  const lockTimers = useRef<Record<Player, number | null>>({ p1: null, p2: null });
+  const clearLocks = () => { for (const k of ['p1', 'p2'] as const) { if (lockTimers.current[k]) clearTimeout(lockTimers.current[k]!); lockTimers.current[k] = null; } setLocked({ p1: false, p2: false }); };
+
+  useEffect(() => () => { if (flagTimer.current) clearTimeout(flagTimer.current); for (const k of ['p1', 'p2'] as const) if (lockTimers.current[k]) clearTimeout(lockTimers.current[k]!); }, []);
   if (!isOpen) return null;
   const finish = (player: 'p1' | 'p2') => {
     if (ended.current) return;
@@ -54,6 +66,8 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
     setP1Count(0);
     setP2Count(0);
     setFlagVisible(false);
+    clearLocks();
+    setMoves({ p1: Math.floor(Math.random() * MOVES.length), p2: Math.floor(Math.random() * MOVES.length) });
     setWinner(null);
     setGameState('playing');
 
@@ -68,12 +82,21 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
     speak('배틀 시작! 준비, 출발!', true);
   };
 
-  // 줄다리기 클릭
+  /** 동작을 마치고 누른 한 번만 인정한다. 잠긴 동안 누른 것은 세지 않는다. */
+  const completeMove = (player: Player) => {
+    if (locked[player] || lockTimers.current[player]) return false;
+    setMoves(m => ({ ...m, [player]: nextMove(m[player]) }));
+    setLocked(l => ({ ...l, [player]: true }));
+    lockTimers.current[player] = window.setTimeout(() => { lockTimers.current[player] = null; setLocked(l => ({ ...l, [player]: false })); }, MOVE_LOCK_MS);
+    return true;
+  };
+
+  // 동작 줄다리기
   const handleTug = (player: 'p1' | 'p2') => {
     if (gameState !== 'playing' || battleType !== 'tug') return;
+    if (ended.current || !completeMove(player)) return;
     playBeep();
-    if (ended.current) return;
-    rope.current += player === 'p1' ? -5 : 5;
+    rope.current += player === 'p1' ? -9 : 9;
     setRopePos(rope.current);
     if (rope.current <= -45) finish('p1');
     else if (rope.current >= 45) finish('p2');
@@ -89,14 +112,14 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
     finish(player);
   };
 
-  // 스피드 연타
+  // 동작 완성 경주
   const handleTap = (player: 'p1' | 'p2') => {
     if (gameState !== 'playing' || battleType !== 'tap') return;
+    if (ended.current || !completeMove(player)) return;
     playBeep();
-    if (ended.current) return;
     const next = ++counts.current[player];
     if (player === 'p1') setP1Count(next); else setP2Count(next);
-    if (next >= 25) finish(player);
+    if (next >= RACE_GOAL) finish(player);
   };
 
   const activatePlayer = (player: 'p1' | 'p2') => {
@@ -125,7 +148,7 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
           </div>
           <h2 className="text-3xl font-black mb-2 tracking-tight">2인 화면분할 배틀 모드</h2>
           <p className="text-sm text-slate-400 max-w-xs mb-8 leading-relaxed">
-            폰이나 태블릿 1대를 가운데 두고<br />친구와 마주 보며 신나게 대결하세요!
+            폰이나 태블릿 1대를 가운데 두고 마주 봐요.<br />화면의 동작을 몸으로 하고, 내 칸을 한 번 눌러요.
           </p>
 
           <div className="w-full max-w-sm space-y-3">
@@ -134,8 +157,8 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
               className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-500 font-black text-left flex items-center justify-between shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
             >
               <div>
-                <p className="text-lg font-black">🪢 광속 줄다리기</p>
-                <p className="text-xs text-blue-100">연타로 밧줄을 내 진영으로 당기기</p>
+                <p className="text-lg font-black">🪢 동작 줄다리기</p>
+                <p className="text-xs text-blue-100">동작을 하고 한 번 눌러 밧줄을 내 쪽으로</p>
               </div>
               <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">플레이</span>
             </button>
@@ -156,8 +179,8 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
               className="w-full py-4 px-5 rounded-2xl bg-gradient-to-r from-purple-600 to-rose-500 font-black text-left flex items-center justify-between shadow-lg shadow-purple-500/20 active:scale-95 transition-all"
             >
               <div>
-                <p className="text-lg font-black">⚡ 25회 스피드 폭풍 연타</p>
-                <p className="text-xs text-purple-100">누가 먼저 25번을 누를 것인가!</p>
+                <p className="text-lg font-black">🏃 동작 {RACE_GOAL}개 먼저 완성</p>
+                <p className="text-xs text-purple-100">바뀌는 동작을 먼저 {RACE_GOAL}개 해내기</p>
               </div>
               <span className="text-xs bg-white/20 px-3 py-1.5 rounded-xl font-bold">플레이</span>
             </button>
@@ -177,17 +200,16 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
               <span className="px-3 py-1 bg-blue-500 text-slate-950 text-xs font-black rounded-full">
                 PLAYER 1 (청팀)
               </span>
-              {battleType === 'tug' && (
-                <p className="text-2xl font-black mt-2">연타해서 당겨라!! 🪢</p>
+              {battleType !== 'flag' && (
+                <>
+                  <p className="text-3xl font-black mt-3">{MOVES[moves.p1]}</p>
+                  <p className="text-sm mt-2 opacity-80" aria-live="polite">{locked.p1 ? '동작하는 중… 다 했으면 한 번 눌러요' : '동작을 했으면 내 칸을 한 번 눌러요'}</p>
+                  {battleType === 'tap' && <p className="text-2xl font-mono font-black mt-2 text-cyan-300">{p1Count} / {RACE_GOAL}</p>}
+                </>
               )}
               {battleType === 'flag' && (
                 <p className="text-2xl font-black mt-2">
                   {flagVisible ? '지금 터치!! 🚩' : '준비...'}
-                </p>
-              )}
-              {battleType === 'tap' && (
-                <p className="text-4xl font-mono font-black mt-2 text-cyan-300">
-                  {p1Count} / 25
                 </p>
               )}
             </div>
@@ -236,17 +258,16 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
               <span className="px-3 py-1 bg-rose-500 text-slate-950 text-xs font-black rounded-full">
                 PLAYER 2 (홍팀)
               </span>
-              {battleType === 'tug' && (
-                <p className="text-2xl font-black mt-2">연타해서 당겨라!! 🪢</p>
+              {battleType !== 'flag' && (
+                <>
+                  <p className="text-3xl font-black mt-3">{MOVES[moves.p2]}</p>
+                  <p className="text-sm mt-2 opacity-80" aria-live="polite">{locked.p2 ? '동작하는 중… 다 했으면 한 번 눌러요' : '동작을 했으면 내 칸을 한 번 눌러요'}</p>
+                  {battleType === 'tap' && <p className="text-2xl font-mono font-black mt-2 text-rose-300">{p2Count} / {RACE_GOAL}</p>}
+                </>
               )}
               {battleType === 'flag' && (
                 <p className="text-2xl font-black mt-2">
                   {flagVisible ? '지금 터치!! 🚩' : '준비...'}
-                </p>
-              )}
-              {battleType === 'tap' && (
-                <p className="text-4xl font-mono font-black mt-2 text-rose-300">
-                  {p2Count} / 25
                 </p>
               )}
             </div>
@@ -260,7 +281,7 @@ export const SplitBattleGame: React.FC<SplitBattleGameProps> = ({ isOpen, onClos
                 <h3 className="text-2xl font-black mb-1">
                   {winner === 'p1' ? '🎉 청팀(P1) 승리!' : '🎉 홍팀(P2) 승리!'}
                 </h3>
-                <p className="text-xs text-slate-400 mb-6">엄청난 스피드였습니다!</p>
+                <p className="text-xs text-slate-400 mb-6">{battleType === 'flag' ? '눈과 손이 빨랐어요!' : '동작을 끝까지 해낸 두 사람 모두 멋졌어요!'}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => startBattle(battleType)}

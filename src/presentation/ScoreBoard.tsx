@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
-import { useAudio } from '../application/useAudio';
-import { Shield, Clock, AlertTriangle, Flame, QrCode, FileText, Volume2, ShieldAlert, Sparkles, ArrowLeft, MoreHorizontal } from 'lucide-react';
+import { Shield, Clock, AlertTriangle, QrCode, FileText, Volume2, ShieldAlert, Sparkles, ArrowLeft, MoreHorizontal } from 'lucide-react';
 import { HeaderToolbar } from './components/HeaderToolbar';
 import { HeaderPopover } from './components/HeaderPopover';
 import { GameIcons as LucideIcons } from './icons';
@@ -24,14 +23,12 @@ const ScoreBoardContent = () => {
   // The current activity is the latest guided mission (a room can run several in a row).
   const boardGame = template?.buttons?.findLast?.(button => button.gameType)?.gameType ?? template?.buttons?.[0]?.gameType;
   const { mins, secs, isDanger } = useGameTimer(gameRoom);
-  const { playSiren } = useAudio();
 
   const handleBackToList = () => {
     navigate('/board');
   };
   
   const sirenPlayed = useRef(false);
-  const plankPlayed = useRef(false);
   const whistlePlayed = useRef(false);
   const [showQR, setShowQR] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,7 +39,7 @@ const ScoreBoardContent = () => {
   const [confetti, setConfetti] = useState<{id:number;x:number;color:string;delay:number;spinDuration:number}[]>([]);
 
   useEffect(() => {
-    if (!gameRoom?.status || gameRoom.status === 'waiting') { plankPlayed.current = false; sirenPlayed.current = false; whistlePlayed.current = false; prevScoresRef.current = []; setConfetti([]); }
+    if (!gameRoom?.status || gameRoom.status === 'waiting') { sirenPlayed.current = false; whistlePlayed.current = false; prevScoresRef.current = []; setConfetti([]); }
   }, [roomId, gameRoom?.status]);
 
   // 순위 역전 감지 토스트
@@ -80,20 +77,16 @@ const ScoreBoardContent = () => {
   
   const isTsunami = gameRoom?.status === 'tsunami';
   const isWhistle = gameRoom?.announcement === 'WHISTLE';
-  const isPlankEvent = mins === '01' && secs === '00' && gameRoom?.status === 'playing';
 
   useEffect(() => {
-    if (isPlankEvent && !plankPlayed.current) {
-      playSiren();
-      plankPlayed.current = true;
-    }
+    // '모두 멈춤'은 사이렌 대신 호루라기 한 번으로 알린다. 재난 경보처럼 들리지 않게 한다.
     if (isTsunami && !sirenPlayed.current) {
-      playSiren();
+      sfxWhistle();
       sirenPlayed.current = true;
     } else if (!isTsunami) {
       sirenPlayed.current = false;
     }
-  }, [isPlankEvent, isTsunami, playSiren]);
+  }, [isTsunami]);
 
   useEffect(() => {
     if (isWhistle && !whistlePlayed.current) {
@@ -237,19 +230,12 @@ const ScoreBoardContent = () => {
       
       {isTsunami && (
         <div className="absolute inset-0 z-40 bg-blue-600/30 flex flex-col items-center justify-center animate-pulse backdrop-blur-sm">
-          <AlertTriangle className="w-48 h-48 text-blue-400 mb-8" />
-          <h1 className="text-8xl font-black text-slate-900 text-center drop-shadow-2xl">해일 경보 발령!</h1>
-          <p className="text-4xl text-blue-200 mt-8 font-bold">즉시 매트 위(안전구역)로 대피하십시오!</p>
+          <AlertTriangle className="w-48 h-48 text-blue-700 mb-8" />
+          <h1 className="text-8xl font-black text-slate-900 text-center drop-shadow-2xl">모두 멈춤!</h1>
+          <p className="text-4xl text-slate-900 mt-8 font-bold">제자리에 서서 선생님을 봐요</p>
         </div>
       )}
 
-      {isPlankEvent && !isTsunami && (
-        <div className="absolute inset-0 z-40 bg-red-600/30 flex flex-col items-center justify-center animate-pulse backdrop-blur-sm">
-          <Flame className="w-48 h-48 text-red-500 mb-8" />
-          <h1 className="text-8xl font-black text-slate-900 text-center drop-shadow-2xl">코어 과부하!</h1>
-          <p className="text-4xl text-yellow-300 mt-8 font-bold">전원 30초 플랭크 실시!</p>
-        </div>
-      )}
 
       {boardGame&&isFlagship(boardGame)&&<div className="relative z-10"><FlagshipControl roomId={gameRoom.id} game={boardGame} readOnly/></div>}
       {/* 순위 역전 토스트 알림 */}
@@ -260,7 +246,7 @@ const ScoreBoardContent = () => {
       )}
 
       {/* 최종 1분 전체 화면 펄스 */}
-      {isDanger && !isTsunami && !isPlankEvent && (
+      {isDanger && !isTsunami && (
         <div className="fixed inset-0 z-[1] pointer-events-none border-8 border-red-500/40 animate-pulse" />
       )}
 

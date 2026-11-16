@@ -1,3 +1,4 @@
+import {achievementLabel,PENDING_CURRICULUM_CODE} from '../../../../domain/curriculumCode';
 import {withParticle} from '../../../../domain/koreanParticle';
 import {ActivityCueControls} from './ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
@@ -143,9 +144,9 @@ export const ExpressionActivityLayout = ({
           >
             <div className="flex items-center gap-2 mb-3">
               <span className="px-3 py-1 bg-purple-500/20 text-purple-300 font-mono font-black text-sm rounded-lg border border-purple-500/30">
-                {game.achievement.code}
+                {achievementLabel(game.achievement.code)}
               </span>
-              <span className="text-xs font-bold text-slate-400">2022 개정 초등 체육과 표현 영역</span>
+              {game.achievement.code!==PENDING_CURRICULUM_CODE&&<span className="text-xs font-bold text-slate-400">2022 개정 초등 체육과 표현 영역</span>}
             </div>
             <h3 className="text-xl font-black text-white mb-2">{game.achievement.title}</h3>
             <p className="text-sm text-slate-300 bg-slate-800/80 p-4 rounded-2xl border border-slate-700 leading-relaxed">
@@ -177,7 +178,7 @@ export const ExpressionActivityLayout = ({
                 title="성취기준 상세 보기"
               >
                 <Info className="w-2.5 h-2.5" />
-                <span>{game.achievement.code}</span>
+                <span>{achievementLabel(game.achievement.code)}</span>
               </button>
               <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold border ${
                 game.playMode === '협동'
@@ -427,7 +428,7 @@ export const ExpressionActivityLayout = ({
             <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800">
               <div className="text-xs text-slate-400 font-bold">성취기준</div>
               <div className="text-xs font-mono font-bold text-purple-400 mt-2">
-                {game.achievement.code}
+                {achievementLabel(game.achievement.code)}
               </div>
             </div>
           </div>

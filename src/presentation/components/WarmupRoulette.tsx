@@ -20,16 +20,17 @@ interface RouletteSection {
   games: RouletteGame[];
 }
 
+// 몸 부위마다 지금 쓰는 활동만 넣는다. 이름과 그림은 활동 목록에서 가져온다.
 const ORIGINAL_SECTIONS: RouletteSection[] = [
   {
     label: '상체',
     emoji: '💪',
     color: '#06b6d4',
     games: [
-      { type: 'punch', name: '에어 펀치', emoji: '🥊' },
-      { type: 'arm_raise', name: '하늘 높이', emoji: '🙌' },
-      { type: 'wave', name: '좌우 흔들기', emoji: '👋' },
-      { type: 'multi_touch', name: '양손 터치', emoji: '🖐️' },
+      { type: 'phone-play-019', name: '', emoji: '' },
+      { type: 'phone-play-056', name: '', emoji: '' },
+      { type: 'target', name: '', emoji: '' },
+      { type: 'phone-play-030', name: '', emoji: '' },
     ],
   },
   {
@@ -37,10 +38,10 @@ const ORIGINAL_SECTIONS: RouletteSection[] = [
     emoji: '🦵',
     color: '#8b5cf6',
     games: [
-      { type: 'jump', name: '점프왕', emoji: '🦘' },
-      { type: 'squat', name: '스쿼트 챌린지', emoji: '🏋️' },
-      { type: 'shuttle-run-beep', name: '내 페이스 왕복 우편', emoji: '🏃' },
-      { type: 'zigzag', name: '지그재그 런', emoji: '⚡' },
+      { type: 'jump', name: '', emoji: '' },
+      { type: 'squat', name: '', emoji: '' },
+      { type: 'shuttle-run-beep', name: '', emoji: '' },
+      { type: 'zigzag', name: '', emoji: '' },
     ],
   },
   {
@@ -48,10 +49,10 @@ const ORIGINAL_SECTIONS: RouletteSection[] = [
     emoji: '🏃',
     color: '#f59e0b',
     games: [
-      { type: 'shake', name: '바운스 충전', emoji: '📳' },
-      { type: 'animal', name: '동물 체조', emoji: '🐻' },
-      { type: 'volcano', name: '화산 폭발', emoji: '🌋' },
-      { type: 'freeze', name: '얼음 땡', emoji: '🧊' },
+      { type: 'red_green', name: '', emoji: '' },
+      { type: 'phone-play-053', name: '', emoji: '' },
+      { type: 'phone-play-060', name: '', emoji: '' },
+      { type: 'fitness', name: '', emoji: '' },
     ],
   },
   {
@@ -59,10 +60,10 @@ const ORIGINAL_SECTIONS: RouletteSection[] = [
     emoji: '🧘',
     color: '#10b981',
     games: [
-      { type: 'plank', name: '플랭크 챌린지', emoji: '💪' },
-      { type: 'tilt_balance', name: '균형 잡기', emoji: '⚖️' },
-      { type: 'one_leg', name: '한 발 서기', emoji: '🦩' },
-      { type: 'body_twist', name: '몸 비틀기', emoji: '🌀' },
+      { type: 'plank', name: '', emoji: '' },
+      { type: 'one_leg', name: '', emoji: '' },
+      { type: 'phone-play-027', name: '', emoji: '' },
+      { type: 'phone-play-016', name: '', emoji: '' },
     ],
   },
   {
@@ -70,10 +71,10 @@ const ORIGINAL_SECTIONS: RouletteSection[] = [
     emoji: '🤸',
     color: '#ec4899',
     games: [
-      { type: 'stretch', name: '스트레칭 타이머', emoji: '🧘' },
-      { type: 'speed_circle', name: '빙글빙글', emoji: '🔄' },
-      { type: 'circle_draw', name: '원 그리기 대결', emoji: '⭕' },
-      { type: 'dance_pose', name: '댄스 포즈', emoji: '💃' },
+      { type: 'stretch', name: '', emoji: '' },
+      { type: 'phone-play-093', name: '', emoji: '' },
+      { type: 'phone-play-094', name: '', emoji: '' },
+      { type: 'breath-pacer-478', name: '', emoji: '' },
     ],
   },
 ];

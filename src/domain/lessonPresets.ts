@@ -1,4 +1,4 @@
-import {liveActivityId} from './gameLifecycle';
+import {getRemovedGame,isCleanedGame,liveActivityId} from './gameLifecycle';
 import { AVAILABLE_GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
 import type { GameRoom, MissionTemplate } from './types';
@@ -15,7 +15,8 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     if (!template || !Array.isArray(template.buttons) || template.buttons.length !== 1) return [];
     const gameType = resolveGuidedGameType(room.name, template.name, template.buttons, template.buttons[0].id);
     // 합쳐지거나 정리된 활동으로 만든 지난 수업은 지금 쓰는 활동으로 바꿔 보여 준다.
-    const liveType = gameType ? liveActivityId(gameType) : '';
+    // 운영을 마친 예전 게임(정리로 합친 것이 아닌 것)은 선생님이 쓴 적 없는 대체 활동이 뜨지 않게 뺀다.
+    const liveType = !gameType || (getRemovedGame(gameType) && !isCleanedGame(gameType)) ? '' : liveActivityId(gameType);
     const game = AVAILABLE_GAMES.find(item=>item.type===liveType);
     const groupCount = counts.get(room.id) || 0;
     if (!game || groupCount < 1 || groupCount > 8) return [];

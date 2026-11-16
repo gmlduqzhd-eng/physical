@@ -1,13 +1,15 @@
 import {Link} from 'react-router-dom';
 import type {PlayerProfile} from '../../application/usePlayerProfile';
 import {GameResultDetailsView} from './GameResultDetailsView';
-import {getMergedGame,getRemovedGame,liveActivityId} from '../../domain/gameLifecycle';
+import {getMergedGame,getRemovedGame,isCleanedGame,liveActivityId} from '../../domain/gameLifecycle';
 import {AVAILABLE_GAMES} from '../../domain/gamesData';
 import {withParticle} from '../../domain/koreanParticle';
 /** 기록의 활동이 합쳐지거나 정리됐으면 지금 이어지는 활동을 알려 준다. */
 function recordLink(id:string){
  const live=liveActivityId(id),name=AVAILABLE_GAMES.find(g=>g.type===live)?.name;
- if(getRemovedGame(id)&&live!==id&&name)return {to:`/solo/play/${encodeURIComponent(live)}`,label:'이어지는 활동 열기',note:`지금은 ${withParticle(name,'으로')} 이어져요.`};
+ if(getRemovedGame(id)&&live!==id&&name)return isCleanedGame(id)
+  ?{to:`/solo/play/${encodeURIComponent(live)}`,label:'이어지는 활동 열기',note:`지금은 ${withParticle(name,'으로')} 이어져요.`}
+  :{to:`/solo/play/${encodeURIComponent(live)}`,label:'대체 활동 열기',note:`운영을 마친 활동이에요. 대체 활동: ${name}`};
  if(getMergedGame(id)&&name)return {to:`/solo/play/${encodeURIComponent(id)}`,label:'이 코스 다시 열기',note:`지금은 ‘${name}’ 안의 한 코스예요.`};
  return {to:`/solo/play/${encodeURIComponent(id)}`,label:'이 활동 다시 열기',note:''};
 }
