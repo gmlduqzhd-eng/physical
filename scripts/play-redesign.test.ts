@@ -26,7 +26,7 @@ test('shared recipes round-trip only public configuration, with old five-minute 
   const recipe=makePlayRecipe(game,4,minutes),encoded=playRecipeHash(recipe);assert.deepEqual(parsePlayRecipe(encoded),recipe);assert.equal(new URL(playRecipeLink('https://physical-pi.vercel.app',recipe)).pathname,'/lessons');
  }
  const original=structuredClone(DEFAULT_WORKSHOP);original.packageMinutes=null;assert.equal(makePlayRecipe('expedition-map',4,20,original).settings.packageMinutes,null);
- assert.equal(PRIMARY_EXPERIENCES.length,3);assert.equal(STARTER_RECIPES.length,3);
+ assert.equal(PRIMARY_EXPERIENCES.length,2,'the retired co-steering ship is no longer offered');assert.equal(STARTER_RECIPES.length,2);
 });
 test('tampered share links cannot carry student, room, token or recovery data',()=>{
  const recipe=makePlayRecipe('expedition-map');
