@@ -12,6 +12,7 @@ import {phoneFillOptions,phoneMemoryTask,phoneRoundCheck,phoneObservation,phoneS
 import {PhonePlayIcon} from '../../PhonePlayIcon';
 import {PhonePlayClass} from './PhonePlayClass';
 import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds} from '../../../../domain/phoneClassMode';
+import {fitGroupCues,isClassicPlay} from '../../../../domain/phonePlayClassicsMode';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
 export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
@@ -28,11 +29,13 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
  const submitted=useRef(false),transition=useRef(false);
  const [classRun,setClassRun]=useState(false),[taskSeconds,setTaskSeconds]=useState<number>(CLASS_DEFAULT_SECONDS);
  const memory=phoneMemoryTask(p,round,level==='쉬운 방법',level==='추가 도전',fill),observation=phoneObservation(p),roundCheck=phoneRoundCheck(p,round);
- const sequence=p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:Math.max(p.seconds*1000,phoneRoundCues(p,round,level,created,strategy).length*6000*pace);
- const activeCues=phoneRoundCues(p,round,level,created,strategy);
+ // 숫자 모둠 만들기는 함께하는 인원보다 큰 모둠 신호를 내지 않는다.
+ const sequence=fitGroupCues(p,p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),players),activeCues=fitGroupCues(p,phoneRoundCues(p,round,level,created,strategy),players);
+ const duration=phase==='countdown'?4000:practice?8000:p.kind==='estimate'?60000:Math.max(p.seconds*1000,activeCues.length*6000*pace);
  const cueIndex=Math.floor(elapsed/(6000*pace)),cue=activeCues[cueIndex%activeCues.length];
  const leader=(round+cueIndex)%players+1;
- const displayCue=seated?p.seated:p.kind==='team'?(p.id==='phone-play-008'?phoneRoles(p,players,round).map(r=>`${r.seat}번 ${r.role}`).join(' · '):phoneTeamMotion(p,round)):cue;
+ // 2026-11에 더한 놀이(101~106)는 모둠 놀이여도 과제 신호를 차례로 보여 준다.
+ const displayCue=seated?p.seated:p.kind==='team'&&!isClassicPlay(p.id)?(p.id==='phone-play-008'?phoneRoles(p,players,round).map(r=>`${r.seat}번 ${r.role}`).join(' · '):phoneTeamMotion(p,round)):cue;
  const options=phoneStrategies(p,round);
  const roles=phoneRoles(p,players,round,created,seated);
  const decisionReady=(p.kind!=='decision'||!!choice)&&(p.kind!=='create'||created.length>=2)&&(p.kind!=='observe'||!!before)&&(p.id!=='phone-play-033'||validPhoneFill(fill,phoneFillOptions(round)))&&(p.id!=='phone-play-061'||Array.from({length:players},(_,i)=>goals[i]).every(v=>v!==undefined&&/^\d{1,2}$/.test(v)));
@@ -104,7 +107,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   </>}
   {phase==='plan'&&<>
    <h2>{p.rounds[round]}</h2>{nextHint&&<p className="pp-notice">앞 과제에서 이어가기 · {nextHint}</p>}{!compact&&<p>{seated?p.seated:level==='쉬운 방법'?p.easy:level==='추가 도전'?p.hard:p.rules.join(' ')}</p>}
-   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map((c,i)=><li key={i}>{c}</li>)}</ol><p>{p.kind==='memory'?memory.rule:roundCheck}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이며, {(6*pace).toFixed(1)}초 신호마다 다음 번호가 이어받아요. 마지막 번호 다음에는 1번으로 돌아와요.</p>}</section>
+   <section className="pp-panel"><h3>{p.kind==='memory'?'기억할 동작 순서':'이번에 할 동작'}</h3><ol>{sequence.map((c,i)=><li key={i}>{c}</li>)}</ol><p>{p.kind==='memory'?memory.rule:roundCheck}</p>{p.kind==='estimate'&&<strong>목표: {phoneTarget(round)}초 · 먼저 멈춘 뒤 버튼을 눌러요.</strong>}{players>1&&<p>함께할 {players}명 모두 실제로 움직여요. 먼저 이끄는 사람은 {round%players+1}번이며, {(6*pace).toFixed(1)}초마다 이끄는 사람이 다음 번호로 바뀌어요. 마지막 번호 다음에는 1번으로 돌아와요.</p>}</section>
    {players>1&&<section className="pp-panel"><h3>이번 과제의 자리별 동작·신호</h3><div className="activity-role-cards">{roles.map(r=><p key={r.seat}><strong>{r.seat}번 자리</strong>{r.role}</p>)}</div><p>실명 대신 이 놀이 안의 자리 번호예요. 과제가 바뀌면 담당도 바뀌며 모두 몸으로 참여해요.</p></section>}
    {p.kind==='decision'&&<><p className="pp-notice">가상 상황 카드 · {phoneScenario(p,round)} · 실제 교실과 다르면 교사가 참여 방법을 조정해요.</p><fieldset><legend>‘{p.rounds[round]}’을 어떤 방법으로 실행할까요?</legend>{options.map(option=><button key={option.id} aria-pressed={choice===option.id} onClick={()=>{setChoice(option.id);setStrategy(option.id);}}><strong>{option.label}</strong><p>{option.guide}</p></button>)}<p>상황에 맞는 방법을 직접 고르고 몸으로 비교해요. 선택 결과가 활동 중 안내에 반영돼요.</p>{p.options&&<details><summary>원래 상황의 안전 계획 살펴보기</summary><p>{p.options[0]} · {p.check}</p></details>}</fieldset></>}
    {p.kind==='create'&&<fieldset><legend>우리 동작 문장 만들기 · 두 개 이상 순서대로 선택</legend><p>{created.join(' → ')||'선택한 동작이 활동 중 순서대로 나타나요.'}</p>{p.cues.map(c=><button key={c} disabled={created.includes(c)} onClick={()=>setCreated(old=>[...old,c])}>{c}</button>)}<button onClick={()=>setCreated([])}>동작 문장 다시 만들기</button><p>다음 과제에서는 앞서 만든 문장을 거꾸로 받아 바꾸어 볼 수 있어요.</p></fieldset>}

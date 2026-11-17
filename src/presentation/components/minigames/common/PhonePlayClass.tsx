@@ -5,6 +5,7 @@ import {useWakeLock} from '../../../../application/useWakeLock';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
 import {classOutcomeResult,classPhaseMs,classRoundView,CLASS_CUE_MS,type ClassOutcome} from '../../../../domain/phoneClassMode';
+import {CLASSIC_CLASS_BRIEF} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='countdown'|'brief'|'active'|'record'|'done';
 interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
@@ -18,7 +19,9 @@ export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace
  useWakeLock();
  const [phase,setPhase]=useState<Phase>('countdown'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
  const moved=useRef(0),submitted=useRef(false);
- const view=classRoundView(p,round,level,seated),cueMs=CLASS_CUE_MS*pace,cueIndex=Math.floor(elapsed/cueMs);
+ // 무작위 신호(숫자·구석·여우)는 진행마다 새 순서로 나오되, 화면이 다시 그려져도 바뀌지 않게 한 번 정한 씨앗을 쓴다.
+ const [seed]=useState(()=>Math.floor(Math.random()*1e9));
+ const cueMs=CLASS_CUE_MS*pace,view=classRoundView(p,round,level,seated,seed,cueMs/1000),cueIndex=Math.floor(elapsed/cueMs);
  const duration=classPhaseMs(phase,taskSeconds,view.memory||view.choices.length>0),cue=view.cues[cueIndex%view.cues.length];
  const together=p.players!=='혼자',choiceKey=view.choices.join('|');
  const stopped=paused||classroomPaused;
@@ -53,7 +56,7 @@ export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace
   <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round?'now':'next'}>{i+1}</li>)}</ol></header>
   {['countdown','brief','active'].includes(phase)&&<>
    <div className="pp-signal pc-signal" role="status" aria-live={phase==='active'?'off':'polite'}>
-    <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>
+    <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?CLASSIC_CLASS_BRIEF[p.id]??(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>
     <strong className="pc-cue" data-length={big.length>44?'long':big.length>20?'medium':'short'}>{big}</strong>
     {phase==='brief'&&view.choices.length>0&&<ol className="pc-choices" aria-label="고를 것">{view.choices.map(c=><li key={c}>{c}</li>)}</ol>}
     <p className="pc-left">{phase==='active'?`${left}초 남음`:phase==='brief'?(view.memory?`순서를 기억해요 · ${left}초 뒤 시작`:`${left}초 뒤 시작`):'곧 시작해요'}</p>
