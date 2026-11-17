@@ -130,3 +130,10 @@ test('bingo starts with one button and the settings collapsed',()=>{
  assert.match(src,/문제를 맞히면 칸을 차지해요\. 한 줄을 채우면 빙고!/);
  assert.doesNotMatch(read('src/domain/classTools.ts'),/땅따먹기/);
 });
+
+test('every game renamed in the clarity pass is still found by its previous name',async()=>{
+ const {PREVIOUS_GAME_NAMES}=await import('../src/domain/previousGameNames');
+ const {matchesActivitySearch}=await import('../src/domain/activitySearch');
+ const {GAMES}=await import('../src/domain/gamesData');
+ for(const [id,old] of Object.entries(PREVIOUS_GAME_NAMES)){const g=GAMES.find(x=>x.type===id);assert.ok(g,id);assert.ok(matchesActivitySearch(g!,old),`${id} ${old}`);}
+});

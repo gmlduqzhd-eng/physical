@@ -2,6 +2,7 @@ import type {GameDef} from './gamesData';
 import {ALL_PHONE_PLAYS,PHONE_PLAY_BY_ID} from './phonePlayCatalog';
 import {variantsFor,getRemovedGame,RETIRED_REPLACEMENTS} from './gameLifecycle';
 import {LEGACY_GAME_NAMES} from './legacyGameNames';
+import {PREVIOUS_GAME_NAMES} from './previousGameNames';
 import {mergedMovementMeta} from './mergedMovementVariants';
 import {activityFit,lessonMeta} from './activityFit';
 import {activityGroup} from './activityGroups';
@@ -11,6 +12,7 @@ import {placeLabels} from './glossary';
 const OLD_NAMES=new Map<string,string[]>();
 const addOld=(id:string,name:string)=>{if(name)OLD_NAMES.set(id,[...(OLD_NAMES.get(id)??[]),name]);};
 for(const [id,name] of Object.entries(LEGACY_GAME_NAMES))addOld(id,name);
+for(const [id,name] of Object.entries(PREVIOUS_GAME_NAMES))addOld(id,name);
 for(const [id,target] of Object.entries(RETIRED_REPLACEMENTS))addOld(target,getRemovedGame(id)?.name??LEGACY_GAME_NAMES[id]??'');
 // 이름을 쉽게 바꾼 준비물 없는 놀이는 옛 이름으로도 찾는다.
 for(const p of ALL_PHONE_PLAYS)if(p.oldName)addOld(p.id,p.oldName);
