@@ -19,3 +19,10 @@
 
 .workshop-print{display:none}@media print{.workshop-report:has(textarea) textarea{display:none!important}.workshop-report .workshop-print{display:block;white-space:pre-wrap;font:10pt/1.5 sans-serif;overflow-wrap:anywhere}.workshop-report>label:not(.flagship-check){display:none!important}}
 .flagship.flagship-control .workshop-report textarea{min-height:260px;line-height:1.65}
+
+/* 비밀지도: 처음 보는 사람도 흐름을 알 수 있게 그림 3칸으로 */
+.map-flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0;padding:0;list-style:none;counter-reset:none}
+.map-flow li{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px;border:2px solid var(--forest-line, #c8d5bb);border-radius:16px;background:var(--forest-tint, #f2f5eb);text-align:center}
+.map-flow li>span{font-size:40px;line-height:1.1}.map-flow strong{font-size:17px}.map-flow small{font-size:14px;line-height:1.5}
+.loop-rule{font-size:19px}.loop-rule b{font-size:24px}
+@media(max-width:480px){.map-flow{grid-template-columns:1fr}.map-flow li{flex-direction:row;text-align:left}.map-flow li>span{font-size:30px}}
