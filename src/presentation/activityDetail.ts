@@ -5,6 +5,7 @@ import {EXPEDITION_BY_ID} from '../domain/expeditionGames';
 import {SAFETY_LESSONS,isSafetyLessonId} from '../domain/safetyLessons';
 import {lessonMeta} from '../domain/activityFit';
 import {EXPRESSION_GAMES} from './components/minigames/expression/expressionGamesData';
+import {getSignatureGame} from '../domain/signatureGames';
 
 /**
  * 활동 상세 패널의 고정 순서: 규칙 3줄 / 준비 / 안전 / 쉽게·어렵게·앉아서.
@@ -17,6 +18,8 @@ const sentences=(text:string)=>text.split(/(?<=[.!?요다])\s+/).map(s=>s.trim()
 /** 카드의 '이렇게 하면 끝나요' 한 줄. 활동 자료에 있는 과제·작전·단계·라운드 수로 만든다. */
 export function finishLine(game:GameDef):string{
  const phone=PHONE_PLAY_BY_ID.get(game.type),exp=EXPEDITION_BY_ID.get(game.type),expression=EXPRESSION_BY_ID.get(game.type);
+ const sig=getSignatureGame(game.type);
+ if(sig)return `연습 판 → 본게임 → 마지막 승부를 마치면 결과 발표로 끝나요. 약 ${sig.minutes}분이에요.`;
  if(phone)return `과제 ${phone.rounds.length}개를 차례로 마치면 끝나요. 첫 과제: ${phone.rounds[0]}`;
  if(isQuestId(game.type))return '작전 3개를 차례로 마치면 끝나요.';
  if(game.type==='partner-robot-lab')return '역할을 바꿔 가며 로봇 미션 4개를 해내면 끝나요.';
@@ -32,13 +35,15 @@ export function activityDetail(game:GameDef):ActivityDetail{
  const cached=CACHE.get(game.type);if(cached)return cached;
  const phone=PHONE_PLAY_BY_ID.get(game.type),quest=isQuestId(game.type)?QUEST_META[game.type]:undefined,exp=EXPEDITION_BY_ID.get(game.type),expression=EXPRESSION_BY_ID.get(game.type),lesson=lessonMeta(game.type);
  const safetyLesson=isSafetyLessonId(game.type)?SAFETY_LESSONS[game.type]:undefined;
- const rules=phone?.rules
+ const sig=getSignatureGame(game.type);
+ const rules=sig?.rules
+  ??phone?.rules
   ??quest?.rules
   ??(expression?expression.steps.map(s=>`${s.stepNum}단계 · ${s.title}`):undefined)
   ??(exp?.expressionSteps?.length?exp.expressionSteps.map((s,i)=>`${i+1}단계 · ${s.title}`):undefined)
   ??(safetyLesson?safetyLesson.scenarios.map((s,i)=>`상황 ${i+1} · ${s.title}`):undefined)
   ??sentences(game.desc);
- const seated=phone?.seated??quest?.alternative??exp?.alternative;
+ const seated=sig?.seatedNote??phone?.seated??quest?.alternative??exp?.alternative;
  const adapt:ActivityDetail['adapt']=[
   ...(phone?[{label:'쉽게' as const,text:phone.easy},{label:'어렵게' as const,text:phone.hard}]:[]),
   ...(seated?[{label:'앉아서' as const,text:seated}]:[]),

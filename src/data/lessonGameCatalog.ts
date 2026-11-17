@@ -1,4 +1,5 @@
 import {FLAGSHIP_LESSONS} from '../domain/flagship.js';
+import {READY_SIGNATURE_GAMES,signatureLessonMeta} from '../domain/signatureGames.js';
 import {isAvailableGame} from '../domain/gameLifecycle.js';
 import {isSafetyLessonId,SAFETY_LESSONS} from '../domain/safetyLessons.js';
 import {GAMES} from '../domain/gamesData.js';
@@ -31,6 +32,7 @@ export interface LessonGameMeta {
 }
 
 const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
+  ...READY_SIGNATURE_GAMES.map(signatureLessonMeta),
   ...FLAGSHIP_LESSONS,
   ...PHONE_PLAYS.map(p=>({
     id:p.id,title:p.name,emoji:'🌱',route:'/play/'+p.id,description:p.goal,domain:p.category==='리듬·표현'?'표현' as const:'운동' as const,subCategory:p.category,achievementCode:'연계 확인 필요',

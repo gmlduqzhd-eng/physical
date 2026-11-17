@@ -1,5 +1,6 @@
 import {AVAILABLE_GAMES,type GameDef} from './gamesData.js';
 import {getRemovedGame,liveActivityId} from './gameLifecycle.js';
+import {READY_SIGNATURE_IDS} from './signatureGames.js';
 
 // Catalog shelves from the 2026-11-15 lesson audit (docs/catalog-shelves-stage5-2026-11-15.md).
 // The shelves decide what a teacher sees first. Activities retired in the 2026-11 cleanup are in gameLifecycle.ts
@@ -8,6 +9,8 @@ const phone=(numbers:number[])=>numbers.map(n=>`phone-play-${String(n).padStart(
 
 /** Shown first: activities judged usable in a lesson as they are. */
 export const CORE_ACTIVITY_IDS:readonly string[]=[
+ // 대표 게임(재미 뼈대: 팀 점수·깜짝 이벤트·결과 발표)
+ ...READY_SIGNATURE_IDS,
  // 반 전체·준비물 없음
  ...phone([1,6,11,14,16,18,20,29,31,34,35,36,42,44,53,56,65,66,67,69,93,99]),
  'red_green','shuttle-run-beep','one_leg','fitness','exp-phone-10','exp-tablet-02','exp-tablet-13','exp-phone-41','exp-phone-43',

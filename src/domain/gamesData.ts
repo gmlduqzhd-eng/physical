@@ -1,5 +1,6 @@
 import {FLAGSHIP_GAMES} from './flagship.js';
 import {isAvailableGame} from './gameLifecycle.js';
+import {SIGNATURE_GAME_DEFS} from './signatureGames.js';
 import {PHONE_GAME_DEFS} from './phonePlayCatalog.js';
 import {isSafetyLessonId,SAFETY_LESSONS} from './safetyLessons.js';
 import { EXPEDITION_B_GAME_DEFS } from './expeditionCatalog.js';
@@ -49,6 +50,8 @@ export interface GameDef {
 }
 
 const BASE_GAMES: GameDef[] = [
+  // 대표 게임(sig-*): signatureGames.ts에서 ready:true인 것만 들어온다.
+  ...SIGNATURE_GAME_DEFS,
   ...FLAGSHIP_GAMES,
   ...PHONE_GAME_DEFS,
   ...EXPEDITION_B_GAME_DEFS,

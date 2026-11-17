@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {REMOVED_GAMES,RETIRED_REPLACEMENTS,MERGED_GAMES,isAvailableGame,isCleanedGame,replacementUrl,getMergedGame} from '../src/domain/gameLifecycle';
 import {AVAILABLE_GAMES,GAMES} from '../src/domain/gamesData';
+import {READY_SIGNATURE_IDS} from '../src/domain/signatureGames';
 import {PHONE_PLAYS,ALL_PHONE_PLAYS,PHONE_PLAY_BY_ID} from '../src/domain/phonePlayCatalog';
 import {LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
 import {CORE_ACTIVITY_IDS,SIMILAR_TO,UNDERSTANDING_IDS} from '../src/domain/activityShelves';
@@ -25,7 +26,7 @@ test('the 2026-11 cleanup retires 62 activities and 8 courses attached to them, 
 });
 test('retired activities disappear from every list a teacher picks from',()=>{
  const gone=new Set(cleaned.map(g=>g.id));
- assert.equal(AVAILABLE_GAMES.length,158);assert(!AVAILABLE_GAMES.some(g=>gone.has(g.type)));
+ assert.equal(AVAILABLE_GAMES.length,158+READY_SIGNATURE_IDS.length);assert(!AVAILABLE_GAMES.some(g=>gone.has(g.type)));
  assert(!LESSON_GAME_CATALOG.some(g=>gone.has(g.id)));
  assert.equal(ALL_PHONE_PLAYS.length,106);assert.equal(PHONE_PLAYS.length,65);assert(!PHONE_PLAYS.some(p=>gone.has(p.id)));
  assert(PHONE_PLAY_BY_ID.has('phone-play-002'),'old plays still resolve for records');

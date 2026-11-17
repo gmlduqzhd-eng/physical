@@ -4,6 +4,7 @@ import type {GameDef} from './gamesData';
 import {pickStandards,standardScore} from './lessonPlan';
 import {PHONE_PLAY_BY_ID} from './phonePlayCatalog';
 import {PENDING_CURRICULUM_CODE} from './curriculumCode';
+import {getSignatureGame} from './signatureGames';
 
 /**
  * 활동마다 보여 주는 '선생님 안내': 교육과정 연결, 발문, 활용 팁.
@@ -54,9 +55,10 @@ function buildGuide(game:GameDef):TeacherGuide{
   return {grade,source:'suggested',standards:matched.length?pickStandards(pool,lesson):DEFAULT_CODES[game.domain][grade].map(c=>pool.find(st=>st.code===c)!).filter(Boolean)};
  });
  const phone=PHONE_PLAY_BY_ID.get(game.type);
- const questions=[...new Set([...(OWN_QUESTIONS[game.type]??[]),phone?.check,...QUESTIONS[game.domain],SAFETY_QUESTION].filter((q):q is string=>!!q))].slice(0,3);
+ const sig=getSignatureGame(game.type);
+ const questions=[...new Set([...(OWN_QUESTIONS[game.type]??[]),sig?.reflection,phone?.check,...QUESTIONS[game.domain],SAFETY_QUESTION].filter((q):q is string=>!!q))].slice(0,3);
  // 규칙·쉽게·어렵게는 상세 패널의 '규칙'과 '쉽게·어렵게·앉아서'에 따로 나온다. 활용 팁에는 그 밖의 팁만 둔다.
- const shown=new Set([...(phone?[...phone.rules,phone.easy,phone.hard,phone.seated]:[])]);
+ const shown=new Set([...(phone?[...phone.rules,phone.easy,phone.hard,phone.seated]:[]),...(sig?.rules??[])]);
  const tips=(lesson?.teachingTips??[]).filter(t=>!shown.has(t)).slice(0,3);
  return {standards,lowGradeTheme:game.grades.includes('1~2학년')?lowGradeTheme(game):null,questions,tips};
 }

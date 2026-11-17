@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {AVAILABLE_GAMES,GAMES,hasAntiCheatSensor} from '../src/domain/gamesData';
+import {READY_SIGNATURE_IDS} from '../src/domain/signatureGames';
 import {MERGED_GAMES,getRemovedGame,mergedGameUrl} from '../src/domain/gameLifecycle';
 import {EXPRESSION_GAMES} from '../src/presentation/components/minigames/expression/expressionGamesData';
 import {PHONE_PLAYS,phoneRecordValid} from '../src/domain/phonePlayCatalog';
@@ -12,8 +13,8 @@ import {FLAGSHIP_IDS,type ExpeditionSnapshot} from '../src/domain/flagship';
 import {expeditionNextStep,rhythmTimingHint} from '../src/domain/expeditionGuidance';
 import {readStorage,writeStorage,isPrivateDeviceKey,deviceStorageGeneration,clearDeviceInformation} from '../src/application/browserStorage';
 
-test('all 158 current activities and 103 retained course addresses remain distinct and routable',()=>{
- assert.equal(AVAILABLE_GAMES.length,158);assert.equal(GAMES.length,337);assert.equal(new Set(GAMES.map(g=>g.type)).size,337);assert.equal(MERGED_GAMES.length,103);
+test('all 158 current activities plus the ready signature games and 103 retained course addresses remain distinct and routable',()=>{
+ const sig=READY_SIGNATURE_IDS.length;assert.equal(AVAILABLE_GAMES.length,158+sig);assert.equal(GAMES.length,337+sig);assert.equal(new Set(GAMES.map(g=>g.type)).size,337+sig);assert.equal(MERGED_GAMES.length,103);
  for(const game of MERGED_GAMES){assert(AVAILABLE_GAMES.some(g=>g.type===game.target));assert(mergedGameUrl('/play/'+game.id,game.id,'?room=retained','')?.includes('variant='+game.id));}
  assert(getRemovedGame('coin_flip'));assert(AVAILABLE_GAMES.every(g=>!hasAntiCheatSensor(g.type)));
 });
