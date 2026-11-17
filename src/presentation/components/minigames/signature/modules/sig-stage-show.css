@@ -1,0 +1,23 @@
+/* 표현 무대 판: 장면 카드, 지금 무대, 관객 반응 버튼, 결과 표. 무대 색 변수(--fun-*)를 그대로 쓴다. */
+.sig-stage{display:flex;flex-direction:column;gap:10px}
+.sig-stage-cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.sig-stage-cards li{display:flex;flex-direction:column;gap:4px;padding:10px 14px;border-radius:16px;background:var(--fun-panel);border:3px solid var(--team);color:#fff}
+.sig-stage-cards b{font-size:clamp(16px,1.9vw,24px)}
+.sig-stage-cards small{font-size:clamp(13px,1.4vw,17px);color:var(--fun-muted);font-weight:650}
+.sig-stage-team{font-weight:850;font-size:clamp(14px,1.6vw,20px);color:var(--team,#fde68a)}
+.sig-stage-emoji{font-size:clamp(30px,4.4vw,56px);line-height:1}
+.sig-stage-now{display:flex;align-items:center;gap:14px;justify-content:center;padding:10px 16px;border-radius:18px;background:var(--fun-panel);border:3px solid var(--team,var(--fun-line));color:#fff}
+.sig-stage-now div{display:flex;flex-direction:column}
+.sig-stage-now b{font-size:clamp(18px,2.6vw,34px)}
+.sig-stage-react{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center}
+.fun-arena .sig-stage-react button{display:flex;align-items:center;gap:8px;min-height:56px;padding:6px 18px;border-radius:16px;border:2px solid var(--fun-line);background:#0b1220;color:#fff;font-weight:850;font-size:clamp(17px,2vw,24px)}
+.sig-stage-react button span{font-size:1.5em;line-height:1}
+.sig-stage-react em{font-style:normal;min-width:1.6em;padding:0 6px;border-radius:999px;background:var(--fun-accent);color:var(--fun-accent-ink);font-variant-numeric:tabular-nums}
+.sig-stage-practice{flex-basis:100%;margin:0;text-align:center;font-size:clamp(13px,1.5vw,18px);color:var(--fun-muted);font-weight:650}
+.sig-stage-result{display:flex;flex-direction:column;gap:8px;align-items:center;width:100%;overflow-x:auto}
+.sig-stage-best{margin:0;font-weight:850;font-size:clamp(17px,2.2vw,26px);text-align:center}
+.sig-stage-result table{border-collapse:collapse;font-size:clamp(14px,1.6vw,19px);font-weight:700}
+.sig-stage-result caption{font-weight:800;margin-bottom:4px;color:var(--fun-muted)}
+.sig-stage-result th,.sig-stage-result td{padding:6px 10px;border-bottom:1px solid var(--fun-line);text-align:center}
+.sig-stage-result td:nth-child(2){text-align:left}
+.sig-stage-result tr[data-best]{background:#3f2d05}

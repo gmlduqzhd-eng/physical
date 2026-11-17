@@ -1,0 +1,29 @@
+/* 몸 빙고: 판이 TV(1280×800) 첫 화면 안에 들어오도록 큰 지시 칸을 조금 줄인다. */
+.fun-arena:has(.sig-bingo) .fun-signal{min-height:auto;padding:clamp(8px,1.6vw,18px)}
+.fun-arena:has(.sig-bingo) .fun-cue{font-size:clamp(28px,4.4vw,60px)}
+.sig-bingo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(8px,1.6vw,20px);align-items:start}
+.sig-bingo-board{display:grid;gap:6px}
+.sig-bingo-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.sig-bingo-cell{width:100%;min-height:clamp(58px,10vh,96px);padding:6px;border-radius:14px;border:3px solid var(--fun-line);background:var(--fun-panel);color:var(--fun-ink);font-weight:850;font-size:clamp(13px,1.5vw,19px);line-height:1.25;display:flex;align-items:center;justify-content:center;text-align:center;word-break:keep-all}
+.sig-bingo-cell[data-kind=quiz]{border-style:dashed;border-color:#38bdf8}
+.sig-bingo-cell[aria-pressed=true]{border-color:var(--fun-accent);box-shadow:0 0 0 4px rgba(245,158,11,.35)}
+.sig-bingo-cell[data-owner]{color:#fff;border-color:transparent;opacity:1!important;cursor:default}
+.sig-bingo-cell[data-line]{outline:4px solid #fde68a;outline-offset:-4px}
+.sig-bingo-owner{font-size:clamp(16px,2vw,26px);font-weight:900}
+.sig-bingo-side{display:grid;gap:8px;min-width:0}
+.sig-bingo-turn{margin:0;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:14px;border:3px solid;background:var(--fun-panel);font-size:clamp(17px,2.2vw,28px)}
+.sig-bingo-dot{width:18px;height:18px;border-radius:50%;flex:none}
+.sig-bingo-help{margin:0;color:var(--fun-muted);font-weight:700;font-size:clamp(15px,1.7vw,21px)}
+.sig-bingo-task{display:grid;gap:6px;padding:10px 12px;border-radius:14px;background:var(--fun-panel);border:2px solid var(--fun-accent)}
+.sig-bingo-task strong{font-size:clamp(20px,2.6vw,34px);line-height:1.25;word-break:keep-all}
+.sig-bingo-task[data-kind=quiz] strong{font-size:clamp(16px,1.9vw,24px)}
+.sig-bingo-task span{color:var(--fun-muted);font-weight:700;font-size:clamp(14px,1.5vw,18px)}
+.sig-bingo-task button,.sig-bingo-actions button{min-height:48px;padding:6px 14px;border-radius:12px;border:2px solid var(--fun-line);background:var(--fun-bg);color:var(--fun-ink);font-weight:850;font-size:clamp(15px,1.7vw,20px)}
+.sig-bingo-choices{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.sig-bingo-choices li{padding:4px 8px;border-radius:10px;border:2px solid var(--fun-line);font-weight:750;font-size:clamp(14px,1.6vw,19px)}
+.sig-bingo-choices li[data-answer]{border-color:#22c55e;background:rgba(34,197,94,.2)}
+.sig-bingo-actions{display:flex;gap:8px;flex-wrap:wrap}
+.sig-bingo-actions .sig-bingo-success{flex:1;background:#15803d;border-color:#15803d;color:#fff}
+.sig-bingo-toast{margin:0;min-height:1.5em;font-weight:850;color:#fde68a;font-size:clamp(15px,1.8vw,22px)}
+.sig-bingo-result{margin:0;font-size:clamp(16px,2vw,24px);font-weight:800}
+@media (max-width:640px){.sig-bingo{grid-template-columns:1fr}.sig-bingo-cell{min-height:64px}}

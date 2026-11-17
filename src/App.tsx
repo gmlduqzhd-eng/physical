@@ -39,6 +39,8 @@ const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage'
 const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
 const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
 const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({default:m.ClassTools})));
+const ClassProgressPage = lazy(() => import('./presentation/ClassProgressPage').then(m=>({default:m.ClassProgressPage})));
+const FunRemotePage = lazy(() => import('./presentation/FunRemotePage').then(m=>({default:m.FunRemotePage})));
 const SafetyClassroom = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.SafetyClassroom})));
 const CrowdSafetyLesson = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.CrowdSafetyLesson})));
 const ClassJourney = lazy(() => import('./presentation/ClassJourney').then(m=>({default:m.ClassJourney})));
@@ -86,6 +88,8 @@ function App() {
         <Route path="/lab/angle" element={<AngleLab/>} />
         <Route path="/more" element={<MoreApps/>} />
         <Route path="/tools" element={<ClassTools/>} />
+        <Route path="/class-progress" element={<ClassProgressPage/>} />
+        <Route path="/fun-remote" element={<FunRemotePage/>} />
         <Route path="/print" element={<PrintCards/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />

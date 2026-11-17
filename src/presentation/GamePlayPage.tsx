@@ -38,6 +38,10 @@ import { Heart } from 'lucide-react';
 import { StretchTimer } from './components/minigames/StretchTimer';
 import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
+import {SignaturePlay} from './components/minigames/signature/SignaturePlay';
+import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
+import {recordPlay} from '../application/classProgressStore';
+import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
@@ -162,6 +166,7 @@ FLAGSHIP_GAMES.forEach(g=>{GAME_TITLES[g.type]={name:g.name,emoji:g.emoji,domain
 ALL_PHONE_PLAYS.forEach(p=>{GAME_TITLES[p.id]={name:p.name,emoji:p.emoji,domain:p.category==='리듬·표현'?'표현':'운동',code:'연계 확인 필요',target:p.goal};});
 
 SAFETY_LESSON_IDS.forEach(id=>{GAME_TITLES[id]={...GAME_TITLES[id],name:SAFETY_LESSONS[id].name,emoji:SAFETY_LESSONS[id].emoji,target:'안전 상황 판단과 교실 역할 표현',code:'연계 확인 필요'};});
+READY_SIGNATURE_GAMES.forEach(g=>{GAME_TITLES[g.id]={name:g.name,emoji:g.emoji,domain:g.domain,code:g.achievement.code,target:g.oneLine};});
 
 export const GamePlayPage = () => {
   const { gameType } = useParams<{ gameType: string }>();
@@ -202,7 +207,7 @@ const GamePlaySession = () => {
   const quietResult=resultDetails?.participation==='observed'||resultDetails?.participation==='rested';
   const [showDetailedResult, setShowDetailedResult] = useState(false);
   const [lastEarnedScore, setLastEarnedScore] = useState(0);
-  const ownsPreparation=isFlagship(gameType||'')||isPhonePlay(gameType||'')||isQuestId(gameType||'')||isSafetyLessonId(gameType||'')||EXPEDITION_BY_ID.get(gameType||'')?.kind==='B'||['stretch','rolling-curling','emotion-thermometer','partner-robot-lab','body-rhythm-orchestrator'].includes(gameType||'');
+  const ownsPreparation=isSignatureId(gameType||'')||isFlagship(gameType||'')||isPhonePlay(gameType||'')||isQuestId(gameType||'')||isSafetyLessonId(gameType||'')||EXPEDITION_BY_ID.get(gameType||'')?.kind==='B'||['stretch','rolling-curling','emotion-thermometer','partner-robot-lab','body-rhythm-orchestrator'].includes(gameType||'');
   const [hasStarted, setHasStarted] = useState(!!routeState?.activityPrepared||ownsPreparation);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [, setTotalPlays] = useState(0);
@@ -313,6 +318,7 @@ const GamePlaySession = () => {
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
+    if(gameType)recordPlay(gameType);
     if (guidedMode&&canReportCompletion(details)) {
       enqueueGuidedCompletion();
     }
@@ -384,6 +390,7 @@ const GamePlaySession = () => {
 
   const renderBaseGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
+    if(isSignatureId(gameType))return <SignaturePlay key={key} gameId={gameType} groupId={dummyGroupId} enqueueAction={localEnqueueAction as (a:unknown)=>void} onExit={handleReturnToCatalog}/>;
     if(isFlagship(gameType))return <FlagshipActivity key={key} game={gameType} room={hasBattle?battleRoomId:null} group={hasBattle?battleGroupId:null} onFinish={details=>localEnqueueAction({payload:{amount:100,details}})}/>;
     const phone=PHONE_PLAY_BY_ID.get(gameType);
     if(phone)return <PhonePlay key={key} {...commonProps} play={phone} solo={soloMode} onExit={handleReturnToCatalog}/>;
@@ -581,6 +588,7 @@ const GamePlaySession = () => {
               <span>🫀 운동 후 쿨다운 루틴</span>
             </button>}
 
+            {gameType&&<ClassFeedbackSlot gameId={gameType}/>}
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>

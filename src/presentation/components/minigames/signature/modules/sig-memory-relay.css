@@ -1,0 +1,17 @@
+/* 기억 릴레이: 큰 모양 타일이 TV 첫 화면 안에 들어오도록 지시 칸을 조금 줄인다. */
+.fun-arena:has(.sig-mem) .fun-signal{min-height:auto;padding:clamp(8px,1.6vw,18px)}
+.fun-arena:has(.sig-mem) .fun-cue{font-size:clamp(28px,4.4vw,60px)}
+.sig-mem{display:grid;gap:8px}
+.sig-mem-stage{margin:0;text-align:center;font-weight:900;font-size:clamp(18px,2.4vw,32px);color:#fde68a}
+.sig-mem[data-stage=perform] .sig-mem-stage{color:#bae6fd}
+.sig-mem-tiles{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:clamp(6px,1vw,12px);justify-content:center}
+.sig-mem-tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:clamp(72px,11vw,150px);min-height:clamp(84px,17vh,170px);padding:6px;border-radius:18px;background:var(--fun-panel);border:4px solid var(--fun-line);text-align:center;font-weight:850;font-size:clamp(13px,1.6vw,20px);word-break:keep-all}
+.sig-mem-tile[data-hidden]{border-style:dashed;color:var(--fun-muted)}
+.sig-mem-shape{font-size:clamp(40px,7vw,96px);line-height:1}
+.sig-mem-no{position:absolute;top:4px;left:8px;font-size:clamp(12px,1.3vw,16px);color:var(--fun-muted)}
+.sig-mem-foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;font-weight:800;color:var(--fun-muted);font-size:clamp(14px,1.6vw,20px)}
+.sig-mem-foot button{min-height:44px;padding:4px 14px;border-radius:12px;border:2px solid var(--fun-line);background:var(--fun-bg);color:var(--fun-ink);font-weight:850}
+.sig-mem-legend{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;font-weight:750;font-size:clamp(13px,1.4vw,17px);color:var(--fun-muted)}
+.sig-mem-legend span{font-size:1.3em}
+.sig-mem-result{margin:0;font-size:clamp(16px,2vw,24px);font-weight:800}
+.sig-mem .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
