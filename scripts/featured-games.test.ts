@@ -58,3 +58,12 @@ test('the hub wires the view toggle, archive badge and merged link, and home/hub
  assert.match(readFileSync('src/presentation/UnifiedHomePage.tsx','utf8'),/FEATURED_GAMES/);
  assert.match(readFileSync('src/presentation/GameHub.tsx','utf8'),/FEATURED_GAMES/);
 });
+
+test('MERGED_INTO matches the mergedFrom list of every ready signature game',async()=>{
+ const {SIGNATURE_GAMES}=await import('../src/domain/signatureGames');
+ const {MERGED_INTO}=await import('../src/domain/featuredGames');
+ for(const g of SIGNATURE_GAMES.filter(g=>g.ready)){
+  const planned=Object.entries(MERGED_INTO).filter(([,v])=>v===g.id).map(([k])=>k).sort();
+  assert.deepEqual([...(g.mergedFrom??[])].sort(),planned,g.id);
+ }
+});

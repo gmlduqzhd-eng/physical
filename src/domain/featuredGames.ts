@@ -63,7 +63,7 @@ export const FEATURED_GAME_IDS:readonly string[]=[
  */
 export const MERGED_INTO:Readonly<Record<string,string>>={
  'phone-play-001':'sig-signal-captain','phone-play-011':'sig-signal-captain',red_green:'sig-signal-captain','phone-play-101':'sig-signal-captain','exp-tablet-06':'sig-signal-captain',
- 'expedition-boss':'sig-boss-raid',
+ 'expedition-boss':'sig-boss-raid',fitness:'sig-boss-raid',jump:'sig-boss-raid',squat:'sig-boss-raid',
  'phone-play-105':'sig-move-bingo',
  'exp-phone-49':'sig-mirror-pair',shadow_puppeteer:'sig-mirror-pair','phone-play-028':'sig-mirror-pair',
  'phone-play-006':'sig-memory-relay','phone-play-014':'sig-memory-relay','phone-play-015':'sig-memory-relay','phone-play-019':'sig-memory-relay','phone-play-044':'sig-memory-relay',memory:'sig-memory-relay','exp-phone-05':'sig-memory-relay','exp-phone-45':'sig-memory-relay',

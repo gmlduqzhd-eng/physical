@@ -94,7 +94,7 @@ export const signalCaptain=defineSignatureGame({
  ],
  timing:{demo:14,tutorial:30,play:120,climax:40,cueSeconds:4},
  teamsDefault:2,
- mergedFrom:['phone-play-001','phone-play-011','red_green','phone-play-101'],
+ mergedFrom:['phone-play-001','phone-play-011','red_green','phone-play-101','exp-tablet-06'],
  cue:signalCaptainCue,
  domain:'운동',subCategory:'반응·민첩 대표 게임',
  achievement:{code:'[4체01-03]',title:'신호에 반응하는 기본 움직임',desc:'신호에 맞춰 이동·비이동 움직임을 바꾸며 반응한다.'},
