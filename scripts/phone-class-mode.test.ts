@@ -4,8 +4,8 @@ import {PHONE_PLAYS} from '../src/domain/phonePlayCatalog';
 import {classOutcomeResult,classPhaseMs,classRoundView,classTaskSeconds,classMovementSeconds,CLASS_TASK_SECONDS,CLASS_DEFAULT_SECONDS} from '../src/domain/phoneClassMode';
 import {normalizeGameResultDetails,canReportCompletion,classroomResultScore,earnsParticipationReward} from '../src/domain/gameResultDetails';
 
-test('every one of the 59 plays has a brief and readable signals for all three tasks in whole-class mode',()=>{
- assert.equal(PHONE_PLAYS.length,59);
+test('every one of the 65 plays has a brief and readable signals for all three tasks in whole-class mode',()=>{
+ assert.equal(PHONE_PLAYS.length,65);
  for(const play of PHONE_PLAYS)for(const level of ['쉬운 방법','기본 방법','추가 도전'])for(const seated of [false,true])for(const round of [0,1,2]){
   const view=classRoundView(play,round,level,seated);
   assert(view.brief.trim().length>0,`${play.id} brief`);assert(view.cues.length>0,`${play.id} cues`);
