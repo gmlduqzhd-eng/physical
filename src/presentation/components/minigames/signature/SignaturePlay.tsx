@@ -41,7 +41,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
   <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit}
    onReplay={()=>{onRoundReset?.();setResume(null);setSetup(s=>s&&{...s,skipDemo:true,round:s.round+1});}}/>
   {arena(<div className="fun-dock" role="group" aria-label="리모컨·나가기">
-   <RemoteLink bus={bus} initialCode={room} onCode={code=>saveRemoteRoom(game.id,code)}/>
+   <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>saveRemoteRoom(game.id,code)}/>
    {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
    <button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>
   </div>)}
