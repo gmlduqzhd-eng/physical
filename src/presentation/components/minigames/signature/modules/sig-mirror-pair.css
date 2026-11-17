@@ -1,0 +1,19 @@
+/* 거울 짝꿍 판: 마주 보는 두 사람 + 단계 + 빠른 셈. 무대 색 변수(--fun-*)를 그대로 쓴다. */
+.sig-mirror{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:clamp(10px,2vw,28px);padding:10px 14px;border-radius:18px;background:var(--fun-panel);border:2px solid var(--fun-line)}
+.sig-mirror-pair{display:flex;align-items:center;gap:clamp(6px,1.4vw,18px)}
+.sig-mirror-pair figure{margin:0;display:flex;flex-direction:column;align-items:center;color:#fff;font-weight:800;font-size:clamp(14px,1.6vw,20px)}
+.sig-mirror-pair figure[data-role=leader]{color:#fde68a}
+.sig-mirror-pair figcaption b{font-size:1.2em}
+.sig-mirror-flip{display:block;transform:scaleX(-1)}
+.sig-mirror-glass{font-size:clamp(26px,3.6vw,44px)}
+.sig-mirror-side{display:flex;flex-direction:column;gap:8px;min-width:0;flex:1 1 280px;max-width:640px}
+.sig-mirror-steps{list-style:none;margin:0;padding:0;display:flex;gap:6px;flex-wrap:wrap}
+.sig-mirror-steps li{padding:4px 12px;border-radius:999px;border:2px solid var(--fun-line);font-weight:800;font-size:clamp(14px,1.6vw,20px);color:var(--fun-muted)}
+.sig-mirror-steps li[data-now]{border-color:var(--fun-accent);color:#fde68a;background:#0b1220}
+.sig-mirror-round{margin:0;font-weight:750;font-size:clamp(14px,1.6vw,20px);color:var(--fun-muted)}
+.sig-mirror-quick{display:flex;flex-wrap:wrap;gap:8px;padding:6px;border-radius:14px}
+.sig-mirror-quick[data-find]{box-shadow:0 0 0 3px #4ade80 inset}
+.sig-mirror-team{display:flex;align-items:center;gap:6px;font-weight:850;font-size:clamp(14px,1.6vw,19px);color:#fff}
+.sig-mirror-team span::before{content:'';display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--team);margin-right:6px}
+.fun-arena .sig-mirror-team button{min-width:48px;min-height:44px;border-radius:12px;border:2px solid var(--team);background:#0b1220;color:#fff;font-weight:900;font-size:clamp(15px,1.7vw,20px)}
+@media (max-width:640px){.sig-mirror{padding:8px}.sig-mirror-pair figure svg{width:64px;height:auto}}
