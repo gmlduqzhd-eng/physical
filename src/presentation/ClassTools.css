@@ -27,3 +27,4 @@
 @media(max-width:700px){.class-tools .tools-tabs{display:none}.tools-select{display:block}}
 /* 빙고 게임 중에는 제목·설명·탭을 숨겨 판이 첫 화면에 보이게 한다(뒤로 가기는 위쪽 링크). */
 .class-tools[data-tool=quiz-bingo]:has(.qb-turn)>:is(.eyebrow,h1,h1+p,.tools-tabs,.tools-select){display:none}
+.tools-progress-link{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}.tools-progress-link a{font-weight:800}.tools-progress-link span{opacity:.8;font-size:.9rem}
