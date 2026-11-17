@@ -1,0 +1,16 @@
+/* 휴대폰 리모컨 허용·연결 목록(fun.css의 .fun-remote-* 기본 모양 위에 더한다). */
+.fun-remote-btn{position:relative}
+.fun-remote-btn[data-pending]{border-color:#f59e0b;color:#f59e0b;animation:fun-remote-pulse 1.2s ease-in-out infinite}
+.fun-remote-badge{display:inline-grid;place-items:center;min-width:1.5em;height:1.5em;margin-left:6px;border-radius:999px;background:#f59e0b;color:#111827;font-size:.85em;font-weight:900}
+@keyframes fun-remote-pulse{50%{box-shadow:0 0 0 6px rgba(245,158,11,.25)}}
+@media (prefers-reduced-motion:reduce){.fun-remote-btn[data-pending]{animation:none}}
+.fun-remote-requests{width:100%;display:flex;flex-direction:column;gap:8px}
+.fun-remote-request{width:100%;padding:12px;border-radius:14px;border:2px solid #f59e0b;background:rgba(245,158,11,.12);display:flex;flex-direction:column;gap:8px}
+.fun-remote-request p{font-weight:700;line-height:1.4}
+.fun-remote-request p span{font-size:1.6rem;vertical-align:middle;margin-right:4px}
+.fun-remote-request-actions{display:grid;grid-template-columns:2fr 1fr;gap:8px}
+.fun-remote-request-actions button{min-height:52px}
+.fun-remote-devices{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.fun-remote-devices li{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid #16a34a;font-weight:800}
+.fun-remote-devices li span{font-size:1.3rem}
+.fun-remote-panel>.fun-secondary{width:100%}
