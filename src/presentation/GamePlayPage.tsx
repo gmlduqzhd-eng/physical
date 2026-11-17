@@ -432,7 +432,13 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{movementMeta?.description||GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동 결과를 제출해요. 교사 확인이 필요한 수업은 승인 후 점수가 반영돼요.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'신체 놀이'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info">{(()=>{
+            // 표현·안전 활동은 게임마다 다른 3줄 규칙을 보여 준다. 같은 문구('짝과 표현 발표')를 모든 표현 활동에 붙이지 않는다.
+            const id=selectedVariant?.id||gameType||'';
+            const rules3=EXPRESSION_GAMES.find(e=>e.id===id)?.rules3??(isSafetyLessonId(id)?SAFETY_LESSONS[id].rules3:undefined);
+            if(rules3)return <><p>{GAMES.find(game=>game.type===id)?.desc}</p><ol className="game-prepare-rules3" aria-label="놀이 규칙 3줄">{rules3.map((rule,i)=><li key={i}><strong>{['무엇을','어떻게','언제 끝나요'][i]}</strong> {rule}</li>)}</ol><small>{isSafetyLessonId(id)?activityPlan.safety:'기기는 놓고, 서로 닿지 않는 자기 자리에서 해요. 앉거나 작은 동작으로 해도 돼요.'}</small></>;
+            return <><p>{movementMeta?.description||GAMES.find(game=>game.type===id)?.desc}</p><small>{hasBattle ? '활동 결과를 제출해요. 교사 확인이 필요한 수업은 승인 후 점수가 반영돼요.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'신체 놀이'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></>;
+          })()}</div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 신체 놀이</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
           {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (

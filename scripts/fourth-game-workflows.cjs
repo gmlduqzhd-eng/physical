@@ -89,7 +89,7 @@ test('retrying emotion role A preserves the already completed role B',()=>{
 test('safety review uses another context and does not add fake learning points or duplicate results',()=>{
  const w=world(),id='heatwave-pm25-shield',spec=w.load('src/domain/safetyLessons.ts').SAFETY_LESSONS[id],a=w.actor(w.load('src/presentation/components/minigames/common/SafetyLesson.tsx').SafetyLesson,{gameId:id,enqueueAction:x=>w.env.received.push(x)});
  click(a,'안전 상황 살펴보기');
- const answer=(index,first=false)=>{if(first)click(a,spec.scenarios[index].choices.find(c=>c.id!=='safe').label);click(a,spec.scenarios[index].choices.find(c=>c.id==='safe').label);inputLabel(a,'안전한 선택의 이유');click(a,'교실 역할 표현으로');inputLabel(a,'안전한 교실 표현');click(a,index===2||text(view(a)).includes('다른 상황에서 이유 확인')?'읽고 설명을 확인했어요 · 학습 정리':'읽고 설명을 확인했어요 · 다음 상황');};
+ const answer=(index,first=false)=>{if(first)click(a,spec.scenarios[index].choices.find(c=>c.id!=='safe').label);click(a,spec.scenarios[index].choices.find(c=>c.id==='safe').label);click(a,index===2||text(view(a)).includes('다른 상황에서 이유 확인')?'읽고 설명을 확인했어요 · 학습 정리':'읽고 설명을 확인했어요 · 다음 상황');};
  answer(0,true);answer(1);answer(2);assert.equal(w.env.received.length,0);click(a,'다른 상황으로 이유 한 번 더 확인');assert(text(view(a)).includes('뜨거운 운동장'));answer(0);click(a,'세 상황의 학습 결과 기록하기');assert.equal(w.env.received.length,1);const result=w.env.received[0].payload;assert.equal(w.load('src/domain/gameResultDetails.ts').classroomResultScore(result.amount,result.details),0);assert.equal(result.details.learning.confirmed,3);
 });
 test('actual classroom status hook handles pause, disconnection, recovery, ended rooms and cleanup',async()=>{

@@ -1,12 +1,15 @@
 import {EXPEDITION_BY_ID} from '../../../../domain/expeditionGames.js';
 import { EXPEDITION_EXPRESSIONS } from '../expedition/expeditionExpressionData.js';
 import {EXPRESSION_CLARITY,type ExpressionSound} from './expressionClarity.js';
+import {EXPRESSION_KID_TEXT,type PoseSetId} from './expressionKidText.js';
 export interface ExpressionStep {
   stepNum: number;
   title: string;
   durationSeconds: number;
   guide: string;
   actionTip: string;
+  /** 활동 중 화면 맨 위에 크게 보이는 짧은 동작 문장. */
+  cue?: string;
 }
 
 export interface ExpressionRubricItem {
@@ -41,6 +44,12 @@ export interface ExpressionGameData {
   spaces?: string[];
   /** 앱이 내는 박자·신호 소리. */
   sound?: ExpressionSound;
+  /** 3줄 규칙(무엇을 / 어떻게 / 언제 끝나요). */
+  rules3?: [string, string, string];
+  /** 모둠마다 같은 단계를 되풀이하는 활동. */
+  repeatPerGroup?: boolean;
+  poses?: PoseSetId;
+  joinChart?: boolean;
 }
 
 const EXPRESSION_SOURCE: ExpressionGameData[] = [
@@ -876,13 +885,16 @@ const descriptions:Record<string,string>={
  cheerleading_team:'닿지 않는 개인 공간에서 편한 팔 모양·손짓·구호로 함께 박자를 표현해요. 쌓기나 스턴트는 하지 않아요.',
  world_folk_dance:'훌라의 손짓과 민속춤의 세 박자 발 디딤을 비접촉·제자리 또는 앉은 팔 동작으로 표현해요.',
 };
-/** 점검 뒤 고친 이름·설명·단계·평가 기준·준비물·소리를 덮어쓴다. */
+/** 점검 뒤 고친 이름·설명·단계·평가 기준·준비물·소리를 덮어쓴다. 아이용 문구(EXPRESSION_KID_TEXT)가 있으면 그것이 우선한다. */
 function clarify(game:ExpressionGameData):ExpressionGameData{
- const c=EXPRESSION_CLARITY[game.id];if(!c)return game;
- return {...game,name:c.name??game.name,desc:c.desc??game.desc,equipment:c.equipment??game.equipment,sound:c.sound,
-  steps:game.steps.map(step=>({...step,...c.steps?.[step.stepNum]})),
-  rubric:game.rubric.map(item=>{const patch=c.rubric?.[item.criterion];return patch?{criterion:patch.criterion??item.criterion,desc:patch.desc}:item;}),
-  safetyTips:c.dropSafety?game.safetyTips.filter(tip=>!c.dropSafety!.test(tip)):game.safetyTips};
+ const c=EXPRESSION_CLARITY[game.id],k=EXPRESSION_KID_TEXT[game.id];if(!c&&!k)return game;
+ const patched=c?game.steps.map(step=>({...step,...c.steps?.[step.stepNum]})):game.steps;
+ const steps=k?.stepsOverride?k.stepsOverride.map((step,i)=>({durationSeconds:30,...step,stepNum:i+1})):patched.map(step=>({...step,...k?.steps?.[step.stepNum]}));
+ return {...game,name:k?.name??c?.name??game.name,desc:k?.desc??c?.desc??game.desc,equipment:c?.equipment??game.equipment,sound:c?.sound??game.sound,steps,
+  rules3:k?.rules3,repeatPerGroup:k?.repeatPerGroup,poses:k?.poses,joinChart:k?.joinChart,
+  videoInfo:game.videoInfo&&k?.videoTitle?{...game.videoInfo,title:k.videoTitle}:game.videoInfo,
+  rubric:game.rubric.map(item=>{const kid=k?.rubric?.[item.criterion];if(kid)return kid;const patch=c?.rubric?.[item.criterion];return patch?{criterion:patch.criterion??item.criterion,desc:patch.desc}:item;}),
+  safetyTips:c?.dropSafety?game.safetyTips.filter(tip=>!c.dropSafety!.test(tip)):game.safetyTips};
 }
 export const EXPRESSION_GAMES:ExpressionGameData[]=EXPRESSION_SOURCE.map(game=>{
  const expedition=EXPEDITION_BY_ID.get(game.id);
