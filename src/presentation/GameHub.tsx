@@ -1,17 +1,14 @@
-import {LESSON_GAME_CATALOG} from '../data/lessonGameCatalog';
+import {useActivityFavorites} from '../application/useActivityFavorites';
 import {achievementLabel,PENDING_CURRICULUM_CODE} from '../domain/curriculumCode';
-import {getMergedGame} from '../domain/gameLifecycle';
-import {matchesActivitySearch} from '../domain/activitySearch';
 import {RecentGameRecords} from './components/RecentGameRecords';
-import {GAMES as HISTORICAL_GAMES} from '../domain/gamesData';
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
-import { useState, useMemo, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { HeaderToolbar } from './components/HeaderToolbar';
-import { readJsonStorage, writeStorage, isRecord } from '../application/browserStorage';
+import { readJsonStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ChevronRight, Filter, BookOpen, Home, QrCode, Info, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX, Settings, X } from 'lucide-react';
+import { Sparkles, ChevronRight, BookOpen, Home, QrCode, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX, Settings, X } from 'lucide-react';
 import { useTheme } from '../application/ThemeContext';
 import { usePlayerProfile } from '../application/usePlayerProfile';
 import { useVoiceCoach } from '../application/useVoiceCoach';
@@ -30,26 +27,8 @@ import { GameMotionIcon } from './components/GameMotionIcon';
 import './GameHub.css';
 import { ThemeZone, type ThemeModeId } from './components/ThemeZone';
 
-import {
-  AVAILABLE_GAMES as GAMES,
-  GRADE_GROUPS,
-  PE_DOMAINS,
-  SPORT_SUB_TYPES,
-  DEVICE_FILTERS,
-  PLAY_MODE_FILTERS,
-  isPhysicalActivityGame,
-  hasAntiCheatSensor,
-} from '../domain/gamesData';
-import type {
-  GradeGroup,
-  PeDomain2022,
-  SportType,
-  DeviceType,
-  DeviceFilter,
-  PlayModeFilter,
-  AchievementStandard,
-  GameDef,
-} from '../domain/gamesData';
+import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
+import type { AchievementStandard, GameDef } from '../domain/gamesData';
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 
 export const GameHub = () => {
@@ -58,28 +37,15 @@ export const GameHub = () => {
   const [activeTab, setActiveTab] = useState<'games' | 'activities' | 'teacher' | 'records'>(()=>new URLSearchParams(window.location.search).get('tab')==='records'?'records':'games');
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useModalDialog(showMenu, () => setShowMenu(false));
-  const [pagination, setPagination] = useState({ key: '', page: 1 });
   const catalogRef = useRef<HTMLDivElement>(null);
   const { isDark, toggleTheme } = useTheme();
   const { profile, createProfile, updateNickname, hasProfile } = usePlayerProfile();
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
-  const [gradeFilter, setGradeFilter] = useState<GradeGroup>('전체');
-  const [domainFilter, setDomainFilter] = useState<PeDomain2022>('전체');
-  const [sportFilter, setSportFilter] = useState<SportType>('전체');
-  const [deviceFilter, setDeviceFilter] = useState<DeviceFilter>('전체');
-  const [playModeFilter, setPlayModeFilter] = useState<PlayModeFilter>('전체');
   const [activeAchievement, setActiveAchievement] = useState<AchievementStandard | null>(null);
-  const [favorites, setFavorites] = useState<Set<string>>(() => {
-    const saved = readJsonStorage('physical_favorites');
-    return new Set(Array.isArray(saved) ? saved.filter((type): type is string => typeof type === 'string' && HISTORICAL_GAMES.some(game => game.type === type)) : []);
-  });
-  const [searchQuery, setSearchQuery] = useState('');
+  const { isFavorite, toggleFavorite, favoriteTypes } = useActivityFavorites();
   const spinInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-  useEffect(() => { writeStorage('physical_favorites', JSON.stringify([...favorites])); }, [favorites]);
   useEffect(() => () => { if (spinInterval.current) clearInterval(spinInterval.current); }, []);
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [physicalOnly, setPhysicalOnly] = useState(false);
   const [randomPick, setRandomPick] = useState<GameDef | null>(null);
   const [isSpinning, setIsSpinning] = useState(false);
   const achievementDialogRef = useModalDialog(!!activeAchievement, () => setActiveAchievement(null));
@@ -120,7 +86,6 @@ export const GameHub = () => {
   };
 
   // 스마트 체육 현장 맞춤 필터 (장소 · 센서)
-  const [placeFilter, setPlaceFilter] = useState<'전체' | '교실' | '강당' | '운동장'>('전체');
 
   // 오늘의 추천 3선 (날짜 기반 시드로 매일 변경)
   const todayPicks = useMemo(() => {
@@ -149,33 +114,10 @@ export const GameHub = () => {
     return picks;
   }, []);
 
-  const toggleFavorite = useCallback((type: string) => {
-    setFavorites(prev => {
-      const next = new Set(prev);
-      const matches=[...next].filter(id=>(getMergedGame(id)?.target||id)===type);if(matches.length)matches.forEach(id=>next.delete(id));else next.add(type);
-      return next;
-    });
-  }, []);
 
-  /** 활동 자료의 공간 정보로 장소를 고른다. 한 활동이 여러 장소에 맞을 수 있다. */
-  const PLACE_SPACES: Record<'교실' | '강당' | '운동장', string[]> = { 교실: ['교실', '좁은 실내 공간'], 강당: ['체육관', '다목적실'], 운동장: ['운동장'] };
-  const fitsPlace = (type: string, place: '교실' | '강당' | '운동장') => {
-    const game = GAMES.find(item => item.type === type), spaces = game?.spaces ?? LESSON_GAME_CATALOG.find(item => item.id === type)?.space ?? [];
-    return spaces.some(space => PLACE_SPACES[place].includes(space));
-  };
-
-  const filtered = GAMES.filter(g => {
-    const gradeMatch = gradeFilter === '전체' || g.grades.includes(gradeFilter);
-    const domainMatch = domainFilter === '전체' || g.domain === domainFilter;
-    const sportMatch = domainFilter !== '스포츠' || sportFilter === '전체' || g.sportType === sportFilter;
-    const deviceMatch = deviceFilter === '전체' || g.devices.includes(deviceFilter as DeviceType);
-    const playModeMatch = playModeFilter === '전체' || g.playMode === playModeFilter;
-    const favMatch = !showFavoritesOnly || [...favorites].some(id=>(getMergedGame(id)?.target||id)===g.type);
-    const placeMatch = placeFilter === '전체' || fitsPlace(g.type, placeFilter);
-    const searchMatch = matchesActivitySearch(g,searchQuery);
-    const physicalMatch = !physicalOnly || isPhysicalActivityGame(g);
-    return gradeMatch && domainMatch && sportMatch && deviceMatch && playModeMatch && favMatch && placeMatch && searchMatch && physicalMatch;
-  });
+  // 즐겨찾기가 있으면 즐겨찾기에서, 없으면 전체 활동에서 뽑는다. 조건으로 찾기는 활동 목록(/hub) 한 곳에서 한다.
+  const favoriteGames = GAMES.filter(g => favoriteTypes.has(g.type));
+  const filtered = favoriteGames.length ? favoriteGames : GAMES;
 
   const handleRandomPick = () => {
     if (spinInterval.current || filtered.length === 0) return;
@@ -193,27 +135,6 @@ export const GameHub = () => {
     }, 100);
   };
 
-  const pageKey = JSON.stringify([gradeFilter, domainFilter, sportFilter, deviceFilter, playModeFilter, placeFilter, showFavoritesOnly, physicalOnly, searchQuery, [...favorites]]);
-  const pageCount = Math.max(1, Math.ceil(filtered.length / 9));
-  const currentPage = pagination.key === pageKey ? Math.min(pagination.page, pageCount) : 1;
-  const visibleGames = filtered.slice((currentPage - 1) * 9, currentPage * 9);
-  const changePage = (page: number) => {
-    setPagination({ key: pageKey, page: Math.max(1, Math.min(page, pageCount)) });
-    catalogRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  };
-
-  const hasActiveFilter = domainFilter !== '전체' || sportFilter !== '전체' || gradeFilter !== '전체' || deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || showFavoritesOnly || physicalOnly || !!searchQuery;
-  const resetAllFilters = () => {
-    setDomainFilter('전체');
-    setSportFilter('전체');
-    setGradeFilter('전체');
-    setDeviceFilter('전체');
-    setPlayModeFilter('전체');
-    setPlaceFilter('전체');
-    setShowFavoritesOnly(false);
-    setPhysicalOnly(false);
-    setSearchQuery('');
-  };
 
   return (
     <div className="hub-page min-h-[100dvh] bg-slate-950 text-white font-sans overflow-y-auto">
@@ -257,7 +178,7 @@ export const GameHub = () => {
           </div>
           <HeaderToolbar><button type="button" className="icon-toolbar-action" title="메인 화면" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>메인 화면</span></button><button type="button" className="icon-toolbar-action" title="메뉴" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings aria-hidden="true"/><span>메뉴</span></button></HeaderToolbar>
         </div>
-        <p>초등 2022 개정 체육과 3대 영역(<span className="text-emerald-400">운동</span> · <span className="text-blue-400">스포츠</span> · <span className="text-purple-400">표현</span>) · 학년별 {GAMES.length}개 게임</p>
+        <p>기록 · 즐겨찾기 · 특별 활동 · 선생님 도구 · 활동 {GAMES.length}개는 <button type="button" className="underline" onClick={() => navigate('/hub')}>활동 목록</button>에서 찾아요</p>
       </header>
       {showMenu && (
         <div className="fixed inset-0 z-[10000] bg-black/70 flex items-center justify-center p-4" onClick={() => setShowMenu(false)}>
@@ -266,7 +187,8 @@ export const GameHub = () => {
             <div className="hub-menu-items">
               <button type="button" onClick={() => { setShowMenu(false); requestAnimationFrame(() => { void accessQrDialog.current?.open(); }); }}><QrCode className="w-4 h-4"/>접속 QR 크게 보기</button>
               <button type="button" onClick={() => navigate('/manual')}><BookOpen className="w-4 h-4" /> 사용 설명서</button>
-              <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI 수업 준비실</button>
+              <button type="button" onClick={() => navigate('/manual?tab=lesson')}><BookOpen className="w-4 h-4" /> 지도안 생성기 (자동 · 바로 만들기)</button>
+              <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI로 지도안 · AI 수업 준비실</button>
               <button type="button" onClick={toggleTheme}>{isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />} {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}</button>
               <button type="button" onClick={toggleVoice} aria-pressed={voiceEnabled}>{voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} 음성 코칭 {voiceEnabled ? 'ON' : 'OFF'}</button>
             </div>
@@ -280,7 +202,7 @@ export const GameHub = () => {
         <button type="button" onClick={() => setActiveTab('records')} className="hub-record-link">🏆 내 기록 ›</button>
       </div>
       <nav className="hub-tabs" aria-label="게임 허브 메뉴">
-        {([{ id: 'games', label: '🎮 게임 찾기' }, { id: 'activities', label: '⚡ 특별 활동' }, { id: 'teacher', label: '🧑‍🏫 선생님 도구' }, { id: 'records', label: '🏆 내 기록' }] as const).map(tab => (
+        {([{ id: 'games', label: '⭐ 즐겨찾기·뽑기' }, { id: 'activities', label: '⚡ 특별 활동' }, { id: 'teacher', label: '🧑‍🏫 선생님 도구' }, { id: 'records', label: '🏆 내 기록' }] as const).map(tab => (
           <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} aria-controls={`hub-panel-${tab.id}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
         ))}
       </nav>
@@ -442,38 +364,16 @@ export const GameHub = () => {
         </div>
       )}
 
-      <section id="hub-panel-games" aria-label="게임 찾기" hidden={activeTab !== 'games'}>
-      <div ref={catalogRef} className="hub-catalog-heading"><div><h2>🎮 게임 찾기</h2><p>게임을 검색하거나 영역과 학년을 선택하세요.</p></div>          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => setPhysicalOnly(!physicalOnly)}
-              className={`px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition-all border shrink-0 ${
-                physicalOnly
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md shadow-emerald-900/30 ring-2 ring-emerald-400/50'
-                  : 'bg-slate-900 text-emerald-400 border-emerald-800/60 hover:bg-slate-800'
-              }`}
-            >
-              <span>🏃</span>
-              <span>피지컬 활동만</span>
-            </button>
-            <button
-              onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-              className={`px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap transition-all border shrink-0 ${
-                showFavoritesOnly
-                  ? 'bg-yellow-500 text-yellow-900 border-yellow-400'
-                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
-              }`}
-            >
-              <Star className={`w-3.5 h-3.5 shrink-0 ${showFavoritesOnly ? 'fill-yellow-900' : ''}`} />
-              <span>즐겨찾기{favorites.size > 0 ? ` (${favorites.size})` : ''}</span>
-            </button>
+      <section id="hub-panel-games" aria-label="즐겨찾기와 뽑기" hidden={activeTab !== 'games'}>
+      <div ref={catalogRef} className="hub-catalog-heading"><div><h2>⭐ 즐겨찾기와 뽑기</h2><p>조건(어디서 · 몇 명 · 몇 분)으로 찾기는 활동 목록에서 해요. 여기서는 즐겨찾기와 뽑기만 해요.</p></div>          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 sm:gap-2">
+            <button type="button" onClick={() => navigate('/hub')} className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-cyan-600 to-blue-600 text-white border border-cyan-400/30 shrink-0"><span>🔎 조건으로 찾기</span></button>
             <button
               onClick={handleRandomPick}
               disabled={isSpinning || filtered.length === 0}
               className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60 shrink-0"
             >
               <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isSpinning ? 'animate-spin' : ''}`} />
-              <span>랜덤 뽑기</span>
+              <span>{favoriteGames.length ? '즐겨찾기에서 뽑기' : '전체에서 뽑기'}</span>
             </button>
             <button
               onClick={() => setShowWarmupRoulette(true)}
@@ -482,342 +382,36 @@ export const GameHub = () => {
               <span>🎯 워밍업 룰렛</span>
             </button>
           </div></div>
-      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4">
-        <label htmlFor="game-search" className="block mb-2 text-sm font-bold text-slate-300">게임 검색</label>
-        <input id="game-search" type="search" value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="게임 이름, 활동, 성취기준 검색" className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-white focus:outline-none focus:border-cyan-400" />
-      </div>
-      <div className="hub-primary-filters">
-        {PE_DOMAINS.map(domain => <button type="button" key={domain.key} aria-pressed={domainFilter === domain.key} onClick={() => { setDomainFilter(domain.key); if (domain.key !== '스포츠') setSportFilter('전체'); }}>{domain.emoji} {domain.key}</button>)}
-        <select aria-label="학년 선택" value={gradeFilter} onChange={event => setGradeFilter(event.target.value as GradeGroup)}>{GRADE_GROUPS.map(grade => <option key={grade.key} value={grade.key}>{grade.label}</option>)}</select>
-      </div>
-      <details className="hub-advanced"><summary>상세 조건 · 기기 / 활동 / 장소{deviceFilter !== '전체' || playModeFilter !== '전체' || placeFilter !== '전체' || sportFilter !== '전체' ? ' · 적용 중' : ''}</summary>
-      {/* 스포츠 영역 선택 시 세부 유형 (기술형 / 전략형 / 생태형) */}
-      {domainFilter === '스포츠' && (
-        <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 animate-in fade-in duration-200">
-          <div className="p-3 bg-blue-950/40 rounded-2xl border border-blue-500/20">
-            <h3 className="text-xs font-bold text-blue-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>⚽</span> 스포츠 세부 유형 (기술형 · 전략형 · 생태형)
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {SPORT_SUB_TYPES.map(st => (
-                <button
-                  key={st.key}
-                  onClick={() => setSportFilter(st.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                    sportFilter === st.key
-                      ? 'bg-blue-600 border-blue-400 text-white shadow-md shadow-blue-500/30'
-                      : 'bg-slate-900/90 border-slate-700 text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>{st.emoji}</span> {st.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 필터 그룹: 기기 지원 / 활동 형태 / 학년군 */}
-      <div className="px-4 md:px-8 max-w-5xl mx-auto mb-4 space-y-2.5 overflow-hidden">
-        {/* 기기 분류 (스마트폰 · 태블릿 PC · 데스크톱 PC) */}
-        <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xs font-bold text-slate-300 px-1 flex items-center gap-1.5">
-              <span>🖥️</span> 지원 기기 분류
-            </h2>
-            <span className="text-[10px] text-slate-400 hidden sm:inline">
-              스마트폰 · 태블릿 PC · 데스크톱 PC
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
-            {DEVICE_FILTERS.map(d => {
-              const count = d.key === '전체' 
-                ? GAMES.length 
-                : GAMES.filter(g => g.devices.includes(d.key as DeviceType)).length;
-              const isSelected = deviceFilter === d.key;
-              return (
-                <button
-                  key={d.key}
-                  type="button"
-                  onClick={() => setDeviceFilter(d.key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 border-emerald-400 text-white shadow-md shadow-emerald-900/30'
-                      : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-                  }`}
-                >
-                  <span>{d.emoji}</span>
-                  <span>{d.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 활동 형태 (개인/협동) & 학년군 선택 (2열 레이아웃) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 overflow-hidden">
-          {/* 활동 형태 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
-            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>👥</span> 활동 형태 (개인 / 협동)
-            </h2>
-            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
-              {PLAY_MODE_FILTERS.map(pm => {
-                const count = pm.key === '전체'
-                  ? GAMES.length
-                  : GAMES.filter(g => g.playMode === pm.key).length;
-                const isSelected = playModeFilter === pm.key;
-                return (
-                  <button
-                    key={pm.key}
-                    type="button"
-                    onClick={() => setPlayModeFilter(pm.key)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 border-amber-400 text-white shadow-md shadow-amber-900/30'
-                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>{pm.emoji}</span>
-                    <span>{pm.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 학년군 선택 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
-            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-cyan-400" /> 학년군 선택
-            </h2>
-            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
-              {GRADE_GROUPS.map(g => {
-                const count = g.key === '전체'
-                  ? GAMES.length
-                  : GAMES.filter(game => game.grades.includes(g.key as GameDef['grades'][number])).length;
-                const isSelected = gradeFilter === g.key;
-                return (
-                  <button
-                    key={g.key}
-                    type="button"
-                    onClick={() => setGradeFilter(g.key)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-cyan-700 border-cyan-400 text-white shadow-lg shadow-cyan-500/20'
-                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>{g.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-cyan-800 text-cyan-100' : 'bg-slate-800 text-slate-400'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* 현장 맞춤 필터 (수업 장소 & 측정 센서) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 overflow-hidden pt-1">
-          {/* 장소별 스마트 필터 */}
-          <div className="bg-slate-900/70 p-3 rounded-2xl border border-slate-800/90 shadow-sm overflow-hidden">
-            <h2 className="text-xs font-bold text-slate-300 mb-2 px-1 flex items-center gap-1.5">
-              <span>📍</span> 수업 장소 맞춤 (교실 · 강당 · 운동장)
-            </h2>
-            <div className="flex flex-wrap gap-2 overflow-hidden scrollbar-none">
-              {([
-                { key: '전체', label: '전체 장소', emoji: '🗺️' },
-                { key: '교실', label: '교실', emoji: '🏫' },
-                { key: '강당', label: '체육관·다목적실', emoji: '🏟️' },
-                { key: '운동장', label: '운동장(야외)', emoji: '🏃' },
-              ] as const).map(p => {
-                const count = p.key === '전체'
-                  ? GAMES.length
-                  : GAMES.filter(g => fitsPlace(g.type, p.key)).length;
-                const isSelected = placeFilter === p.key;
-                return (
-                  <button
-                    key={p.key}
-                    type="button"
-                    onClick={() => setPlaceFilter(p.key)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border flex items-center gap-1.5 ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-teal-600 to-emerald-600 border-teal-400 text-white shadow-md shadow-teal-900/30'
-                        : 'bg-slate-950/80 border-slate-800 text-slate-400 hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>{p.emoji}</span>
-                    <span>{p.label}</span>
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-400'}`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      </details>
-      {/* 결과 카운트 및 안내 */}
-      <div className="px-5 md:px-9 max-w-5xl mx-auto mb-3 flex items-center justify-between text-xs text-slate-400">
-        <div className="font-bold flex flex-wrap items-center gap-2">
-          <span>검색 결과 <strong className="text-cyan-400 font-black text-sm">{filtered.length}</strong> / {GAMES.length}개 게임</span>
-          {hasActiveFilter && (
-            <button
-              type="button"
-              onClick={resetAllFilters}
-              className="px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-[11px] text-cyan-400 hover:text-cyan-300 border border-slate-700 transition-colors"
-            >
-              필터 초기화 ↺
-            </button>
-          )}
-        </div>
-        <span className="text-[11px] text-slate-400 hidden sm:inline">
-          💡 성취기준 코드를 클릭하면 세부 목표를 볼 수 있습니다
-        </span>
-      </div>
-
-      {/* Game Grid */}
       <div className="px-4 md:px-8 pb-8 max-w-5xl mx-auto">
-        {filtered.length === 0 ? (
-          <div className="text-center py-20 text-slate-600 bg-slate-900/40 rounded-3xl border border-slate-800">
-            <span className="text-5xl block mb-3">🔍</span>
-            <p className="font-bold text-slate-400">해당 조건에 일치하는 게임이 없습니다.</p>
-            <p className="text-xs text-slate-400 mt-1">영역이나 학년군 필터를 변경해 보세요.</p>
+        {favoriteGames.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 bg-slate-900/40 rounded-3xl border border-slate-800">
+            <span className="text-4xl block mb-3">☆</span>
+            <p className="font-bold">아직 즐겨찾기한 활동이 없어요.</p>
+            <p className="text-sm mt-1">활동 목록에서 카드의 ☆를 누르면 여기에 모여요.</p>
+            <button type="button" onClick={() => navigate('/hub')} className="mt-4 px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-sm">활동 목록 열기</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {visibleGames.map(game => {
-              const domainInfo = PE_DOMAINS.find(d => d.key === game.domain)!;
-              return (
-                <div
-                  key={game.type}
-                  data-game-card={game.type}
-                  className={`group relative bg-slate-900/90 backdrop-blur-sm border ${game.border} rounded-2xl p-4 text-left transition-all duration-300 hover:scale-[1.015] hover:shadow-xl ${game.glow} overflow-hidden flex flex-col justify-between`}
-                >
-                  <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${game.color} opacity-60 group-hover:opacity-100 transition-opacity`} />
-
-                  <div>
-                    {/* 상단 성취기준 태그 & 활동 형태 & 영역 태그 */}
-                    <div className="flex items-center justify-between gap-1.5 mb-2.5">
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveAchievement(game.achievement);
-                          }}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-800/90 hover:bg-cyan-950/80 border border-slate-700 hover:border-cyan-500/50 text-[10px] font-mono font-bold text-cyan-300 transition-colors"
-                          title="성취기준 상세 보기"
-                        >
-                          <Info className="w-2.5 h-2.5" />
-                          <span>{achievementLabel(game.achievement.code)}</span>
-                        </button>
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border ${
-                          game.playMode === '협동'
-                            ? 'bg-amber-950/80 text-amber-300 border-amber-800/60'
-                            : 'bg-slate-800/80 text-slate-300 border-slate-700/60'
-                        }`}>
-                          {game.playMode === '협동' ? '🤝 협동' : '👤 개인'}
-                        </span>
-                        {isPhysicalActivityGame(game) && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-950/90 text-emerald-300 border border-emerald-500/60">
-                            🏃 피지컬
-                          </span>
-                        )}
-                        {hasAntiCheatSensor(game.type) && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-950/90 text-cyan-300 border border-cyan-500/60" title="생체역학 안티치팅 센서 탑재">
-                            🛡️ 안티치팅
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold ${
-                          game.domain === '운동' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800/50' :
-                          game.domain === '스포츠' ? 'bg-blue-950 text-blue-300 border border-blue-800/50' :
-                          'bg-purple-950 text-purple-300 border border-purple-800/50'
-                        }`}>
-                          {domainInfo.emoji} {game.domain}
-                          {game.sportType && ` · ${game.sportType}`}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 아이콘 및 게임명 */}
-                    <div className="flex items-start gap-3.5 mb-2.5">
-                      <GameMotionIcon gameType={game.type} domain={game.domain} size="md" showBadge={true} />
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <h3 className="font-black text-base text-white group-hover:text-cyan-300 transition-colors">
-                          {game.name}
-                        </h3>
-                        <p className="text-slate-400 text-xs font-medium mt-1">
-                          {game.desc}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* 세부 활동 카테고리 & 성취기준 요지 */}
-                    <div className="bg-slate-950/60 rounded-xl p-2.5 border border-slate-800/80 mb-3">
-                      <div className="text-[11px] font-bold text-slate-300">
-                        🎯 {game.subCategory}
-                      </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">
-                        {game.achievement.title}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 하단 학년군, 기기 아이콘 & 시작 버튼 */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <div className="flex items-center gap-1">
-                        {game.grades.map(gr => (
-                          <span key={gr} className="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 font-bold border border-slate-700/60">
-                            {gr}
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-0.5 text-[11px] bg-slate-950/60 px-1.5 py-0.5 rounded border border-slate-800/70" title={`지원 기기: ${game.devices.join(', ')}`}>
-                        {game.devices.includes('스마트폰') && <span title="스마트폰 지원">📱</span>}
-                        {game.devices.includes('태블릿 PC') && <span title="태블릿 PC 지원">📟</span>}
-                        {game.devices.includes('데스크톱 PC') && <span title="데스크톱 PC 지원">🖥️</span>}
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={() => navigate(`/play/${game.type}`)}
-                      className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl text-xs font-black shadow-md flex items-center gap-1 active:scale-95 transition-all shrink-0"
-                    >
-                      시작 <ChevronRight className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); toggleFavorite(game.type); }} className="p-1.5 rounded-lg hover:bg-slate-800 transition-colors" title="즐겨찾기">
-                      <Star className={`w-4 h-4 ${[...favorites].some(id=>(getMergedGame(id)?.target||id)===game.type) ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'}`} />
-                    </button>
+            {favoriteGames.map(game => (
+              <div key={game.type} data-game-card={game.type} className={`relative bg-slate-900/90 border ${game.border} rounded-2xl p-4 text-left flex flex-col justify-between gap-3`}>
+                <div className="flex items-start gap-3.5">
+                  <GameMotionIcon gameType={game.type} domain={game.domain} size="md" showBadge={true} />
+                  <div className="flex-1 min-w-0 pt-0.5">
+                    <h3 className="font-black text-base text-white">{game.name}</h3>
+                    <p className="text-slate-400 text-xs font-medium mt-1">{game.desc}</p>
                   </div>
                 </div>
-              );
-            })}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                  <button onClick={() => navigate(`/play/${game.type}`)} className="px-3.5 py-1.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-xl text-xs font-black flex items-center gap-1 shrink-0">시작 <ChevronRight className="w-3.5 h-3.5" /></button>
+                  <button type="button" onClick={() => toggleFavorite(game.type)} aria-pressed={isFavorite(game.type)} className="p-1.5 rounded-lg hover:bg-slate-800" title="즐겨찾기 빼기" aria-label={`${game.name} 즐겨찾기 빼기`}>
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-
-      {filtered.length > 0 && <nav className="hub-pagination" aria-label="게임 목록 페이지">
-        <button type="button" disabled={currentPage === 1} onClick={() => changePage(currentPage - 1)} aria-label="이전 페이지">‹</button>
-        {Array.from({ length: pageCount }, (_, index) => index + 1).map(page => <button key={page} type="button" aria-current={page === currentPage ? 'page' : undefined} onClick={() => changePage(page)}>{page}</button>)}
-        <button type="button" disabled={currentPage === pageCount} onClick={() => changePage(currentPage + 1)} aria-label="다음 페이지">›</button>
-      </nav>}
       <details className="hub-recommendations"><summary>🌟 오늘의 추천 게임 보기</summary>
       {/* 🌟 오늘의 추천 3선 + 즐겨찾기/랜덤 버튼 (모바일 줄바꿈 방지) */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">

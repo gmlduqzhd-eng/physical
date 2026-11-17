@@ -47,7 +47,7 @@ try{
     if(teamMode&&QUEST_META[id].team&&await page.locator('.mq-setup-options:not([open]) summary').count())await page.locator('.mq-setup-options summary').click();
     if(teamMode&&QUEST_META[id].team)await page.getByLabel('함께할 인원').selectOption(String(QUEST_META[id].maxPlayers??4));
     if(width===1024)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
-    await button('작전 살펴보기').click();
+    await button('시작').click();
     const choose=async(round:number)=>{
      const plan=makeQuestRound(id,round,{gentle:true,seated:width===1024,practice:true,players:3});
      const c=plan.choices.find(c=>(!plan.decision||c.id===plan.decision.answer)&&(!c.path||safeRoute(c.path,plan.blocked!)))!;
@@ -58,11 +58,11 @@ try{
      }
      await page.getByRole('button',{name:new RegExp('^'+c.label)}).click();
     };
-    await choose(0);await button('동작 연습하기').click();await finish(true);
+    await choose(0);await button('짧게 연습하기 (점수 없음 · 고르고 싶을 때만)').click();await finish(true);
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('physical_player_profile')),null);
-    await button('연습 마치고 첫 작전으로').click();
+    await button('연습 마치고 작전으로').click();
     for(let round=0;round<3;round++){
-     await phase('plan');await choose(round);await button('기기 놓고 작전 시작').click();
+     await phase('plan');await choose(round);await button('작전 시작 · 기기 내려놓기').click();
      const answer=await finish(false);
      assert.equal(await page.evaluate(()=>sessionStorage.getItem('physical_player_profile')),null,'no auto award');
      for(const value of answer)await button(value).click();

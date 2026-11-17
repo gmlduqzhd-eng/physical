@@ -8,7 +8,7 @@ export const CLASS_TOOLS=[
  {id:'draw',label:'번호 뽑기',icon:'🎟️',summary:'발표자·시범 보일 번호를 겹치지 않게 뽑기'},
  {id:'groups',label:'모둠 나누기',icon:'👥',summary:'번호를 섞어 모둠으로 나누기'},
  {id:'dice',label:'주사위',icon:'🎲',summary:'주사위 한 개 또는 두 개 굴리기'},
- {id:'quiz-bingo',label:'체육 지식 빙고',icon:'🟩',summary:'팀별로 체육 규칙·안전 문제를 맞히고 움직임 칸도 함께하는 5×5 땅따먹기'},
+ {id:'quiz-bingo',label:'체육 지식 빙고',icon:'🟩',summary:'문제를 맞히면 칸을 차지하고, 한 줄을 채우면 빙고! 움직임 칸은 반 전체가 함께 해요'},
 ] as const;
 export type ClassToolId=typeof CLASS_TOOLS[number]['id'];
 

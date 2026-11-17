@@ -164,7 +164,7 @@ export const LessonPlanGeneratorV2 = () => {
                 ['교육과정 영역', plan.overview.domain], ['활동 형태', plan.overview.activityMode],
                 ['단원/주제', plan.overview.unit], ['학생 수', `${plan.overview.studentCount}명`],
                 ['장소', plan.overview.space], ['단원', plan.overview.topic],
-              ].map(([label, value]) => (
+              ].filter(([, value]) => value !== '').map(([label, value]) => (
                 <div key={label as string} className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 border border-slate-200 dark:border-slate-700/50">
                   <div className="text-[10px] text-slate-500 font-bold mb-1">{label}</div>
                   <div className="text-sm text-slate-900 dark:text-white font-bold">{value}</div>

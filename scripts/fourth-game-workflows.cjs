@@ -58,10 +58,11 @@ test('stretch clock freezes during classroom pause and one performed pose remain
  for(const last of [false,true]){click(a,'내 속도로 스트레칭 시작');click(a,'안내를 멈추고 수행 확인');click(a,last?'쉬었어요 · 마치기':'쉬었어요 · 다음 동작');}
  assert.equal(w.env.received.length,1);assert.equal(w.env.received[0].payload.details.completion,'partial');
 });
-test('phone fourth-beat selector is cleared between rounds and requires a valid new choice',()=>{
+// 빈 박자를 고르지 않으면 그 과제의 첫 동작(기본값)을 쓰므로, 고르지 않아도 시작할 수 있다(2026-11 직관성).
+test('phone fourth-beat selector is cleared between rounds and falls back to the default choice',()=>{
  const w=world(),play=w.load('src/domain/phonePlayCatalog.ts').PHONE_PLAY_BY_ID.get('phone-play-033');
  const a=w.actor(w.load('src/presentation/components/minigames/common/PhonePlay.tsx').PhonePlay,{play,solo:true,groupId:'test',onExit(){},enqueueAction(){}});
- click(a,'놀이 방법 익히기');let select=nodes(view(a)).find(n=>n.type==='select');select.props.onChange({target:{value:'멈춤'}});a.flush();assert(!button(a,'짧게 연습하기').props.disabled);click(a,'이번 과제 관찰 참여 · 0점 기록');assert(button(a,'짧게 연습하기').props.disabled);assert.equal(nodes(view(a)).find(n=>n.type==='select').props.value,'');
+ click(a,'놀이 방법 익히기');let select=nodes(view(a)).find(n=>n.type==='select');select.props.onChange({target:{value:'멈춤'}});a.flush();assert(!button(a,'짧게 연습하기').props.disabled);click(a,'이번 과제 관찰 참여 · 0점 기록');assert(!button(a,'짧게 연습하기').props.disabled);select=nodes(view(a)).find(n=>n.type==='select');assert.equal(select.props.value,'');assert.match(JSON.stringify(select.props.children),/기본/);
 });
 test('pending network actions preserve a rhythm take, while real suspension cancels it',async()=>{
  const w=world(),s=w.load('src/application/useExpedition.ts').practiceSnapshot('expedition-loop'),a=w.actor(w.load('src/presentation/flagship/LoopGame.tsx').LoopGame,{snapshot:s,send(){},disabled:false,pending:false});
@@ -88,7 +89,7 @@ test('retrying emotion role A preserves the already completed role B',()=>{
 test('safety review uses another context and does not add fake learning points or duplicate results',()=>{
  const w=world(),id='heatwave-pm25-shield',spec=w.load('src/domain/safetyLessons.ts').SAFETY_LESSONS[id],a=w.actor(w.load('src/presentation/components/minigames/common/SafetyLesson.tsx').SafetyLesson,{gameId:id,enqueueAction:x=>w.env.received.push(x)});
  click(a,'안전 상황 살펴보기');
- const answer=(index,first=false)=>{if(first)click(a,spec.scenarios[index].choices.find(c=>c.id!=='safe').label);click(a,spec.scenarios[index].choices.find(c=>c.id==='safe').label);inputLabel(a,'안전한 선택의 이유');click(a,'교실 역할 표현으로');inputLabel(a,'안전한 교실 표현');click(a,index===2||text(view(a)).includes('다른 상황에서 이유 확인')?'읽고 설명을 확인했어요 · 학습 정리':'읽고 설명을 확인했어요 · 다음 상황');};
+ const answer=(index,first=false)=>{if(first)click(a,spec.scenarios[index].choices.find(c=>c.id!=='safe').label);click(a,spec.scenarios[index].choices.find(c=>c.id==='safe').label);click(a,index===2||text(view(a)).includes('다른 상황에서 이유 확인')?'읽고 설명을 확인했어요 · 학습 정리':'읽고 설명을 확인했어요 · 다음 상황');};
  answer(0,true);answer(1);answer(2);assert.equal(w.env.received.length,0);click(a,'다른 상황으로 이유 한 번 더 확인');assert(text(view(a)).includes('뜨거운 운동장'));answer(0);click(a,'세 상황의 학습 결과 기록하기');assert.equal(w.env.received.length,1);const result=w.env.received[0].payload;assert.equal(w.load('src/domain/gameResultDetails.ts').classroomResultScore(result.amount,result.details),0);assert.equal(result.details.learning.confirmed,3);
 });
 test('actual classroom status hook handles pause, disconnection, recovery, ended rooms and cleanup',async()=>{

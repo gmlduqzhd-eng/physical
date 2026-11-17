@@ -25,5 +25,5 @@ export const EXPEDITION_LESSON_CATALOG: LessonGameMeta[] = EXPEDITION_GAMES.map(
     space:['체육관','운동장','다목적실'],deviceMode:[game.players>1?'모둠별 1대':'학생 1인 1기기'],
     recommendedPlayers:{min:game.players,max:game.players>2?4:game.players},intensity:'보통',
     movementSkills:[game.desc],learningKeywords:[game.family==='rhythm'?'리듬':'이동',game.players>1?'협동':'자기 조절'],
-    safetyNotes:[game.safety],teachingTips:[game.space,'기기를 거치하고 라운드가 끝난 뒤 기록합니다.'],noDeviceAlternative:game.alternative };
+    safetyNotes:[game.safety],teachingTips:[game.space,'기기를 세워 두고 라운드가 끝난 뒤 기록합니다.'],noDeviceAlternative:game.alternative };
 });

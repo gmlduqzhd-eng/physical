@@ -54,6 +54,20 @@ export interface GeneratedPlan {
   noDeviceActivity: string;
 }
 
+const GROUP_MODES = ['짝', '모둠', '팀 대항', '학급 전체'] as const;
+/** 짝·모둠·반 전체로 할 수 있는 활동인지(혼자만 하는 활동을 모둠 수업에 넣지 않게). */
+export const supportsGroups = (game: Pick<LessonGameMeta, 'activityModes'>) => game.activityModes.some(m => (GROUP_MODES as readonly string[]).includes(m));
+/** 고른 활동 형태·기기가 활동과 맞지 않으면 교사에게 보여 줄 한 줄. 맞으면 null. */
+export function lessonFitWarning(game: Pick<LessonGameMeta, 'title' | 'activityModes' | 'recommendedPlayers'>, actMode: ActivityMode, device: DeviceOption): string | null {
+  const modes = game.activityModes.join('·');
+  const name = `「${game.title}」${withParticle(game.title, '은는').slice(game.title.length)}`;
+  if (actMode !== '자동 추천' && !game.activityModes.includes(actMode as never)) return `${name} ${modes} 활동이에요. ‘${actMode}’ 수업이면 활동을 바꾸거나 형태를 ${withParticle(game.activityModes[0], '으로')} 바꿔 주세요.`;
+  if (device === '모둠별 1대' && !supportsGroups(game)) return `${name} 혼자 하는 활동이에요. 모둠별 기기로 하려면 한 모둠 안에서 한 명씩 차례로 해요.`;
+  return null;
+}
+/** 장소를 고르지 않았을 때 보여 줄 말: 활동 자료의 추천 장소(없으면 빈 값 → 화면에서 줄을 뺀다). */
+export const lessonPlaceLabel = (space: SpaceOption, game?: Pick<LessonGameMeta, 'space'> | null) => space !== '자동' ? space : game?.space.length ? `${[...new Set(game.space.map(v => v === '다목적실' ? '체육관' : v === '좁은 실내 공간' ? '교실' : v))].join('·')} (추천)` : '';
+
 // ─── 게임 적합도 계산 ───
 export function calcGameScore(game: LessonGameMeta, grade: GradeGroup, domain: DomainOption, actMode: ActivityMode, space: SpaceOption, device: DeviceOption, focuses: FocusArea[]): number {
   let score = 0;
@@ -70,7 +84,7 @@ export function calcGameScore(game: LessonGameMeta, grade: GradeGroup, domain: D
   else score += 3;
 
   // 활동 형태 적합성 (15)
-  if (actMode === '자동 추천') { score += 10; }
+  if (actMode === '자동 추천') { score += device === '모둠별 1대' && !supportsGroups(game) ? 0 : 10; }
   else if (game.activityModes.includes(actMode as any)) { score += 15; }
   else { score += 3; }
 
@@ -188,7 +202,8 @@ export function generateLessonPlan(
   const intro = duration < 15 ? Math.max(1, Math.floor(duration * 0.15)) : Math.max(3, Math.round(duration * 0.125));
   const mainTime = duration - intro * 2;
   const wrapUp = duration - intro - mainTime;
-  const resolvedMode = actMode === '자동 추천' ? (device === '모둠별 1대' ? '모둠' : recommendedGame?.game.activityModes[0] || '개인') : actMode;
+  const autoGroup = recommendedGame ? recommendedGame.game.activityModes.find(m => m === '모둠' || m === '팀 대항') ?? recommendedGame.game.activityModes.find(m => m === '짝' || m === '학급 전체') : '모둠';
+  const resolvedMode = actMode === '자동 추천' ? (device === '모둠별 1대' && autoGroup ? autoGroup : recommendedGame?.game.activityModes[0] || '개인') : actMode;
   const lessonFlow = generateLessonFlow(intro, mainTime, wrapUp, gameName, gameEmoji, effectiveDomain, unit, isLowGrade, device, resolvedMode, space, studentCount, focuses, recommendedGame?.game, groupSize);
   if (recommendedGame) recommendedGame.usageTime = lessonFlow.find(phase => phase.stage === '전개 ②')!.time;
 
@@ -211,7 +226,8 @@ export function generateLessonPlan(
   const inclusion = generateInclusion(recommendedGame?.game);
 
   // Step 11: 교사 팁
-  const teacherTips = generateTeacherTips(device, studentCount, recommendedGame?.game);
+  const fitWarning = recommendedGame ? lessonFitWarning(recommendedGame.game, actMode, device) : null;
+  const teacherTips = [...(fitWarning ? [{ problem: '활동과 수업 형태가 맞지 않아요', solution: fitWarning }] : []), ...generateTeacherTips(device, studentCount, recommendedGame?.game)];
 
   // Step 12: 대체안
   const alternatives = generateAlternatives(recommendedGame?.game, device, space);
@@ -231,7 +247,7 @@ export function generateLessonPlan(
 
   const std0 = standards[0];
   return {
-    overview: { gradeGroup: grade, duration, unit: unit || `${effectiveDomain} 활동`, topic: unit || `${effectiveDomain} 영역 신체활동`, domain: isLowGrade ? '즐거운 생활 연계' : effectiveDomain, activityMode: resolvedMode, studentCount, space: space === '자동' ? '교사가 확인한 활동 장소' : space },
+    overview: { gradeGroup: grade, duration, unit: unit || `${effectiveDomain} 활동`, topic: unit || `${effectiveDomain} 영역 신체활동`, domain: isLowGrade ? '즐거운 생활 연계' : effectiveDomain, activityMode: resolvedMode, studentCount, space: lessonPlaceLabel(space, recommendedGame?.game) },
     curriculum: { domain: isLowGrade ? '통합교과(즐거운 생활) 연계 신체활동' : effectiveDomain, standards, competencies, knowledge: isLowGrade ? '신체활동의 즐거움과 기본 움직임' : (std0?.knowledge || '움직임 원리 이해'), process: isLowGrade ? '다양한 놀이를 통한 신체 탐색' : (std0?.process || '움직임 수행'), attitude: isLowGrade ? '친구와 함께하는 즐거움' : (std0?.attitude || '적극적 참여'), isLowGrade, lowGradeTheme },
     learningGoals: { goals, successCriteria },
     recommendedGame,
@@ -394,11 +410,11 @@ function generateLessonFlow(intro: number, mainTime: number, wrapUp: number, gam
 function generateGameDetail(game: LessonGameMeta, actMode: ActivityMode, device: DeviceOption, students: number, space: SpaceOption, groupSize: number): GeneratedPlan['gameDetail'] {
   const sizes = lessonGroupSizes(students, actMode === '짝' ? 2 : groupSize);
   const grouped = device === '모둠별 1대' || actMode === '모둠' || actMode === '팀 대항' || actMode === '짝';
-  const place = space === '자동' ? '교사가 확인한 활동 장소' : space;
+  const place = space === '자동' ? '' : space;
   const isTeacherDevice = device === '교사용 1대';
   return {
     preparation: device === '없음' ? `기기를 사용하지 않고 진행한다. ${game.noDeviceAlternative}` : isTeacherDevice ? `교사 기기로 「${game.title}」 안내를 공유한다. 기기 1대로 가능한 참여 방식인지 교사가 확인한다.` : `${device === '모둠별 1대' ? `${sizes.length}개 모둠(${groupSummary(sizes)})을 편성하고 모둠별 기기 1대를 배분한다.` : '학생 개인 기기에서 게임을 실행하도록 안내한다.'} 게임 URL 또는 QR 코드를 안내한다.`,
-    arrangement: `${place}에서 ${grouped ? `${sizes.length}개 모둠의 활동 구역과` : '개인 활동 구역과'} 이동 동선을 교사가 확인한다. ${space === '좁은 실내 공간' ? '현재 공간에서 어려운 이동은 제자리 대체 동작을 확인하거나 활동을 바꾼다.' : '활동 자료의 준비물·안전 안내를 먼저 확인한다.'} 거리를 일률적인 수치로 정하지 않고 현장 조건에 맞춰 조정한다.`,
+    arrangement: `${place ? `${place}에서 ` : ''}${grouped ? `${sizes.length}개 모둠의 활동 구역과` : '개인 활동 구역과'} 이동 동선을 교사가 확인한다. ${space === '좁은 실내 공간' ? '현재 공간에서 어려운 이동은 제자리 대체 동작을 확인하거나 활동을 바꾼다.' : '활동 자료의 준비물·안전 안내를 먼저 확인한다.'} 거리를 일률적인 수치로 정하지 않고 현장 조건에 맞춰 조정한다.`,
     procedure: [
       '본활동에 배정한 시간 안에서 규칙과 안전 약속을 확인한다.',
       device === '없음' ? '기기 없는 대체 활동의 핵심 움직임을 안내한다.' : '기기를 멈춰 둔 상태에서 실행 방법과 핵심 움직임을 안내한다.',

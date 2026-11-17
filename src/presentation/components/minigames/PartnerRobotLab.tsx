@@ -68,6 +68,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
       achievementTitle="움직임을 블록으로 짜서 짝과 순서대로 표현하기"
       activityType="짝"
       expectedMinutes={8}
+      countdown={false}
       safetyItems={[
         { id: 'no_grab', text: '친구의 몸을 잡아 움직이지 않고, 화면과 말로만 명령하나요?' },
         { id: 'space', text: '앞으로 세 걸음, 옆으로 한 걸음을 가도 부딪히지 않는 공간이 있나요?' },
@@ -76,10 +77,9 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
         { id: 'ready', text: '불편하면 언제든 “멈춰!”라고 말하고 쉴 수 있나요?' },
       ]}
       instructions={[
-        '두 사람이 [프로그래머]와 [로봇] 역할을 나눠요. 미션마다 역할을 바꿔요.',
-        '프로그래머는 동작 블록을 눌러 프로그램을 짜요. 반복 블록과 선택(만약~이면) 블록도 쓸 수 있어요.',
-        '미션 확인을 누른 뒤, 한 단계씩 실행하며 로봇 친구가 몸으로 움직여요. 손으로 친구를 움직이지 않아요.',
-        '로봇이 끝까지 해내면 짝이 확인하고 다음 미션으로 가요.',
+        '한 명은 프로그래머, 한 명은 로봇이 돼요. 미션마다 역할을 바꿔요.',
+        '프로그래머가 동작 블록을 눌러 순서를 짜고, 로봇 친구가 그 순서대로 몸으로 움직여요.',
+        '로봇이 끝까지 해내면 다음 미션으로 가요.',
       ]}
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
@@ -136,7 +136,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
                 {!!program.length && <button type="button" onClick={reset} className="text-xs font-bold text-slate-400 underline">🗑 모두 지우기</button>}
               </div>
             </div>
-            {!program.length && <p className="text-xs text-slate-400">위에서 블록을 눌러 프로그램을 만들어요.</p>}
+            {!program.length && <p className="text-xs text-slate-400">위에서 블록을 눌러 프로그램을 만들어요. <button type="button" className="underline font-bold" onClick={() => edited([{ kind: 'move', move: 'clap' }, { kind: 'move', move: 'arms' }])}>예시 블록 넣어 보기</button></p>}
             <ol className="space-y-2">
               {program.map((b, i) => (
                 <li key={i} className={`rounded-xl border p-2 text-xs ${activeStep?.block === i ? 'border-purple-400 bg-purple-950 text-white' : 'border-slate-800 bg-slate-900 text-slate-200'}`}>

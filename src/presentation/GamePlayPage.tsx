@@ -59,8 +59,8 @@ interface GameMeta {
 const GAME_TITLES: Record<string, GameMeta> = {
   volcano: { name: '화산 폭발', emoji: '🌋', domain: '운동', code: '[6체01-01]', target: '순발력 운동 체력' },
   whack_a_mole: { name: '두더지 잡기', emoji: '🐹', domain: '스포츠', code: '[6체02-02]', target: '기술형 표적 활동' },
-  stopwatch: { name: '스탑워치 눈치', emoji: '⏱️', domain: '스포츠', code: '[6체02-02]', target: '기술형 기록 활동' },
-  memory: { name: '컬러 패턴 기억', emoji: '🧠', domain: '스포츠', code: '[6체02-06]', target: '전략형 인지 게임' },
+  stopwatch: { name: QUEST_META['stopwatch'].name, emoji: '⏱️', domain: '스포츠', code: '[6체02-02]', target: '기술형 기록 활동' },
+  memory: { name: QUEST_META['memory'].name, emoji: '🧠', domain: '스포츠', code: '[6체02-06]', target: '전략형 인지 게임' },
   number_grid: { name: '순차적 암호 해제', emoji: '🔢', domain: '스포츠', code: '[4체02-06]', target: '전략형 공간 탐색' },
   scream: { name: '소리질러!', emoji: '🎤', domain: '운동', code: '[4체01-04]', target: '건강 정서 관리' },
   shake: { name: '바운스 충전', emoji: '🔋', domain: '운동', code: '[4체01-02]', target: '기본 체력운동' },
@@ -72,13 +72,13 @@ const GAME_TITLES: Record<string, GameMeta> = {
   color_word: { name: '색깔 읽기 챌린지', emoji: '🎨', domain: '운동', code: '[6체01-01]', target: '신경 협응 인지' },
   card_match: { name: '짝 맞추기', emoji: '🃏', domain: '스포츠', code: '[4체02-06]', target: '전략형 시각 탐색' },
   math: { name: '계산왕 스프린트', emoji: '🔢', domain: '운동', code: '[4체01-01]', target: '두뇌 건강 이해' },
-  target: { name: '타겟 조준', emoji: '🎯', domain: '스포츠', code: '[4체02-05]', target: '기술형 표적 활동' },
-  red_green: { name: '무궁화꽃이 피었습니다', emoji: '🚦', domain: '스포츠', code: '[4체02-07]', target: '생태형 민속놀이' },
+  target: { name: QUEST_META['target'].name, emoji: '🎯', domain: '스포츠', code: '[4체02-05]', target: '기술형 표적 활동' },
+  red_green: { name: QUEST_META['red_green'].name, emoji: '🚦', domain: '스포츠', code: '[4체02-07]', target: '생태형 민속놀이' },
   left_right: { name: '좌우 반사신경', emoji: '👈👉', domain: '스포츠', code: '[4체02-03]', target: '반사 움직임 기술' },
   coin_flip: { name: '동전 뒤집기', emoji: '🪙', domain: '스포츠', code: '[4체02-09]', target: '전통 놀이 규칙' },
-  jump: { name: '점프왕!', emoji: '🦘', domain: '운동', code: '[4체01-02]', target: '순발력 체력운동' },
-  squat: { name: '스쿼트 챌린지', emoji: '🏋️', domain: '운동', code: '[6체01-02]', target: '근력·근지구력 운동' },
-  run: { name: '제자리 달리기', emoji: '🏃', domain: '운동', code: '[4체01-02]', target: '심폐지구력 달리기' },
+  jump: { name: QUEST_META['jump'].name, emoji: '🦘', domain: '운동', code: '[4체01-02]', target: '순발력 체력운동' },
+  squat: { name: QUEST_META['squat'].name, emoji: '🏋️', domain: '운동', code: '[6체01-02]', target: '근력·근지구력 운동' },
+  run: { name: QUEST_META['run'].name, emoji: '🏃', domain: '운동', code: '[4체01-02]', target: '심폐지구력 달리기' },
   tilt_balance: { name: '균형 잡기', emoji: '⚖️', domain: '운동', code: '[4체01-02]', target: '평형성 조절 운동' },
   zone_touch: { name: '구역 터치 달리기', emoji: '🏃‍♂️', domain: '스포츠', code: '[4체02-03]', target: '방향전환 달리기' },
   arm_raise: { name: '하늘 높이!', emoji: '🙌', domain: '운동', code: '[4체01-05]', target: '기본 움직임 뻗기' },
@@ -86,24 +86,24 @@ const GAME_TITLES: Record<string, GameMeta> = {
   circle_draw: { name: '원 그리기 대결', emoji: '⭕', domain: '표현', code: '[4체03-02]', target: '움직임 궤적 표현' },
   trace_shape: { name: '도형 따라 그리기', emoji: '✏️', domain: '표현', code: '[4체03-06]', target: '도구 및 형태 표현' },
   punch: { name: '에어 펀치!', emoji: '🥊', domain: '스포츠', code: '[6체02-02]', target: '투기형 타격 기술' },
-  plank: { name: '플랭크 챌린지', emoji: '💪', domain: '운동', code: '[6체01-05]', target: '코어 근력 버티기' },
+  plank: { name: QUEST_META['plank'].name, emoji: '💪', domain: '운동', code: '[6체01-05]', target: '코어 근력 버티기' },
   animal: { name: '동물 체조', emoji: '🐾', domain: '표현', code: '[4체03-03]', target: '사물·자연 모방 표현' },
   tilt_race: { name: '기울기 레이스', emoji: '📱', domain: '스포츠', code: '[4체02-05]', target: '기술형 조작 제어' },
   freeze: { name: '얼음 땡!', emoji: '🧊', domain: '스포츠', code: '[6체02-08]', target: '생태형 신체 정지' },
   wave: { name: '좌우 흔들기', emoji: '👋', domain: '운동', code: '[4체01-04]', target: '맨손체조 생활 습관' },
   speed_circle: { name: '빙글빙글!', emoji: '🌀', domain: '운동', code: '[4체01-02]', target: '가동성 체력운동' },
-  zigzag: { name: '지그재그 런!', emoji: '⚡', domain: '스포츠', code: '[4체02-04]', target: '복합 이동 움직임' },
+  zigzag: { name: QUEST_META['zigzag'].name, emoji: '⚡', domain: '스포츠', code: '[4체02-04]', target: '복합 이동 움직임' },
   multi_touch: { name: '양손 터치', emoji: '🖐️', domain: '운동', code: '[6체01-02]', target: '양손 협응성 발달' },
   stretch: { name: '스트레칭 타이머', emoji: '🙆', domain: '운동', code: '[4체01-04]', target: '유연성 생활 습관' },
-  one_leg: { name: '한 발 서기', emoji: '🦩', domain: '운동', code: '[6체01-02]', target: '평형성 체력 측정' },
-  fitness: { name: '체력 룰렛', emoji: '🎰', domain: '운동', code: '[4체01-06]', target: '체력 운동 실천' },
+  one_leg: { name: QUEST_META['one_leg'].name, emoji: '🦩', domain: '운동', code: '[6체01-02]', target: '평형성 체력 측정' },
+  fitness: { name: QUEST_META['fitness'].name, emoji: '🎰', domain: '운동', code: '[4체01-06]', target: '체력 운동 실천' },
   body_twist: { name: '몸 비틀기!', emoji: '🔄', domain: '표현', code: '[4체03-05]', target: '리듬 신체 표현' },
-  'pulse-detective': { name: '심박 탐정단', emoji: '🔍', domain: '운동', code: '[6체01-01]', target: '신체 변화 관찰' },
-  'posture-guardian': { name: '자세 수호 로봇', emoji: '🤖', domain: '운동', code: '[4체01-04]', target: '바른 자세 실천' },
+  'pulse-detective': { name: QUEST_META['pulse-detective'].name, emoji: '🔍', domain: '운동', code: '[6체01-01]', target: '신체 변화 관찰' },
+  'posture-guardian': { name: QUEST_META['posture-guardian'].name, emoji: '🤖', domain: '운동', code: '[4체01-04]', target: '바른 자세 실천' },
   'rolling-curling': { name: '공 굴림 컬링 원정', emoji: '🥌', domain: '스포츠', code: '[4체02-05]', target: '표적 힘 조절' },
-  'pass-gate-rescue': { name: '패스 게이트 구조대', emoji: '🥅', domain: '스포츠', code: '[4체02-06]', target: '협력 패스 전술' },
-  'dribble-rhythm': { name: '드리블 박자 공장', emoji: '🥁', domain: '스포츠', code: '[4체02-03]', target: '리듬 조작 움직임' },
-  'open-space-tactician': { name: '빈 공간 설계자', emoji: '🗺️', domain: '스포츠', code: '[6체02-05]', target: '공간 침투 전술' },
+  'pass-gate-rescue': { name: QUEST_META['pass-gate-rescue'].name, emoji: '🥅', domain: '스포츠', code: '[4체02-06]', target: '협력 패스 전술' },
+  'dribble-rhythm': { name: QUEST_META['dribble-rhythm'].name, emoji: '🥁', domain: '스포츠', code: '[4체02-03]', target: '리듬 조작 움직임' },
+  'open-space-tactician': { name: QUEST_META['open-space-tactician'].name, emoji: '🗺️', domain: '스포츠', code: '[6체02-05]', target: '공간 침투 전술' },
   'emotion-thermometer': { name: '감정 온도계', emoji: '🌡️', domain: '표현', code: '[4체03-04]', target: '감정 신체 표현' },
   'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '몸으로 하는 코딩 · 순차·반복·선택' },
   // 신규 21종 차별화 미니게임 메타 등록
@@ -113,14 +113,14 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'tent-peg-hammer': { name: '텐트 팩 해머링', emoji: '⛺', domain: '스포츠', code: '[4체02-08]', target: '생태형 캠핑 야외' },
   'trail-maze-run': { name: '모험 트레일 러닝', emoji: '🏃‍♂️', domain: '스포츠', code: '[4체02-07]', target: '생태형 코스 탈출' },
   'alpine-glider': { name: '알프스 활강 글라이더', emoji: '🪂', domain: '스포츠', code: '[6체02-09]', target: '생태형 체공 활강' },
-  'campfire-breath': { name: '생태 모닥불 호흡 릴랙스', emoji: '🔥', domain: '스포츠', code: '[4체02-10]', target: '생태형 여가 이완' },
+  'campfire-breath': { name: QUEST_META['campfire-breath'].name, emoji: '🔥', domain: '스포츠', code: '[4체02-10]', target: '생태형 여가 이완' },
   'crevasse-jump': { name: '빙판 크레바스 점프', emoji: '🧗', domain: '스포츠', code: '[6체02-08]', target: '생태형 도약 모험' },
-  'slingshot-archery': { name: '슬링샷 양궁 퍼펙트 텐', emoji: '🎯', domain: '스포츠', code: '[6체02-04]', target: '전략형 투사체 표적' },
+  'slingshot-archery': { name: QUEST_META['slingshot-archery'].name, emoji: '🎯', domain: '스포츠', code: '[6체02-04]', target: '전략형 투사체 표적' },
   'spike-block-wall': { name: '스파이크 블로킹 월', emoji: '🏐', domain: '스포츠', code: '[6체02-05]', target: '전략형 네트 블로킹' },
-  'base-running-decide': { name: '야구/티볼 주루 판단', emoji: '⚾', domain: '스포츠', code: '[6체02-06]', target: '전략형 필드 주루' },
+  'base-running-decide': { name: QUEST_META['base-running-decide'].name, emoji: '⚾', domain: '스포츠', code: '[6체02-06]', target: '전략형 필드 주루' },
   'badminton-smash-rhythm': { name: '셔틀콕 스매시 리듬', emoji: '🏸', domain: '스포츠', code: '[4체02-06]', target: '전략형 네트 리듬' },
   'tactical-grid-slide': { name: '수비 포메이션 슬라이더', emoji: '🛡️', domain: '스포츠', code: '[6체02-05]', target: '전략형 수비 차단' },
-  'sound-goalball': { name: '골볼 소리 탐지 캐치', emoji: '🔔', domain: '스포츠', code: '[4체02-06]', target: '전략형 청각 스포츠' },
+  'sound-goalball': { name: QUEST_META['sound-goalball'].name, emoji: '🔔', domain: '스포츠', code: '[4체02-06]', target: '전략형 청각 스포츠' },
   'juggling-bounce-paddle': { name: '저글링 바운스 컨트롤러', emoji: '🎾', domain: '스포츠', code: '[4체02-03]', target: '전략형 다구 조작' },
   'head-shoulders-knees': { name: '머리 어깨 무릎 발 바디 비트', emoji: '🧢', domain: '운동', code: '[2체01-01]', target: '기본 움직임 신체 지각' },
   'animal-hop-step': { name: '동물 발자국 깡충 스텝', emoji: '🐾', domain: '운동', code: '[2체01-02]', target: '이동 움직임 징검다리' },
@@ -128,8 +128,8 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'double-under-rope': { name: '이단 줄넘기 더블 탭', emoji: '🪢', domain: '운동', code: '[4체01-02]', target: '체력 도약 2단 쌩쌩이' },
   'mirror-motion-invert': { name: '거울 모드 동작 반전', emoji: '🪞', domain: '운동', code: '[2체01-04]', target: '신경 협응 거울 공간' },
   'seesaw-balance-tap': { name: '균형 시소 버티기', emoji: '⚖️', domain: '운동', code: '[2체01-02]', target: '비이동 평형성 시소' },
-  'space-occupier': { name: '스마트 코트: 빈 공간 점령 작전', emoji: '🗺️', domain: '스포츠', code: '[4체02-06]', target: '전략형 스포츠 공간 분산 침투' },
-  'relay-mission-runner': { name: '모둠 스마트 바통 릴레이', emoji: '🏃', domain: '운동', code: '[4체01-02]', target: '순발력 및 심폐지구력 릴레이' },
+  'space-occupier': { name: QUEST_META['space-occupier'].name, emoji: '🗺️', domain: '스포츠', code: '[4체02-06]', target: '전략형 스포츠 공간 분산 침투' },
+  'relay-mission-runner': { name: QUEST_META['relay-mission-runner'].name, emoji: '🏃', domain: '운동', code: '[4체01-02]', target: '순발력 및 심폐지구력 릴레이' },
   'body-rhythm-orchestrator': { name: '바디 모션 심포니', emoji: '🎶', domain: '표현', code: '[4체03-02]', target: '움직임 4요소와 리듬 표현' },
 };
 
@@ -432,7 +432,13 @@ const GamePlaySession = () => {
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
           <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
-          <div className="game-prepare-info"><p>{movementMeta?.description||GAMES.find(game=>game.type===(selectedVariant?.id||gameType))?.desc}</p><small>{hasBattle ? '활동 결과를 제출해요. 교사 확인이 필요한 수업은 승인 후 점수가 반영돼요.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'신체 놀이'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></div>
+          <div className="game-prepare-info">{(()=>{
+            // 표현·안전 활동은 게임마다 다른 3줄 규칙을 보여 준다. 같은 문구('짝과 표현 발표')를 모든 표현 활동에 붙이지 않는다.
+            const id=selectedVariant?.id||gameType||'';
+            const rules3=EXPRESSION_GAMES.find(e=>e.id===id)?.rules3??(isSafetyLessonId(id)?SAFETY_LESSONS[id].rules3:undefined);
+            if(rules3)return <><p>{GAMES.find(game=>game.type===id)?.desc}</p><ol className="game-prepare-rules3" aria-label="놀이 규칙 3줄">{rules3.map((rule,i)=><li key={i}><strong>{['무엇을','어떻게','언제 끝나요'][i]}</strong> {rule}</li>)}</ol><small>{isSafetyLessonId(id)?activityPlan.safety:'기기는 놓고, 서로 닿지 않는 자기 자리에서 해요. 앉거나 작은 동작으로 해도 돼요.'}</small></>;
+            return <><p>{movementMeta?.description||GAMES.find(game=>game.type===id)?.desc}</p><small>{hasBattle ? '활동 결과를 제출해요. 교사 확인이 필요한 수업은 승인 후 점수가 반영돼요.' : '목표 기록을 확인하고 신체 활동을 안전하게 진행해 보세요.'}</small><p className="mt-2 text-sm font-bold">{isSafetyLessonId(gameType)?'안전 학습':'신체 놀이'}: {activityPlan.title}</p><small>{activityPlan.setup} · {activityPlan.safety}</small></>;
+          })()}</div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 신체 놀이</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
           {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (

@@ -6,11 +6,11 @@ export interface PrintSet {id:string;title:string;note:string;cards:PrintCard[];
 const COLOR={빨강:'#c62828',파랑:'#1565c0',노랑:'#b8860b',초록:'#2e7d32',보라:'#6a1b9a',주황:'#d84315'} as const;
 const numbers=(n:number):PrintCard[]=>Array.from({length:n},(_,i)=>({big:String(i+1)}));
 const BASE_SETS:PrintSet[]=[
- {id:'numbers9',title:'번호 표식 1~9',note:'3줄 × 3칸으로 놓아요. 갈림길 보급 작전에 써요.',cards:numbers(9),size:'big'},
+ {id:'numbers9',title:'번호 표식 1~9',note:'3줄 × 3칸으로 놓아요. 막힌 길 피해 가기에 써요.',cards:numbers(9),size:'big'},
  {id:'numbers8',title:'숫자 카드 1~8',note:'바닥에 한 줄로 1m씩 띄워 놓아요. 모둠 숫자 사다리에 써요.',cards:numbers(8),size:'big'},
  {id:'numbers6',title:'번호 표식 1~6',note:'숫자 암호 우편·빈 섬 탐사대에 써요.',cards:numbers(6),size:'big'},
  {id:'numbers4',title:'번호 자리 1~4',note:'콘 순서 맞추기의 번호 자리에 써요.',cards:numbers(4),size:'big'},
- {id:'shapes4',title:'색·모양 표식 4개',note:'기억의 발자국·기억의 보급 발자국·색과 글자 갈림길에 써요.',cards:[{big:'●',label:'빨강',color:COLOR.빨강},{big:'▲',label:'파랑',color:COLOR.파랑},{big:'■',label:'노랑',color:COLOR.노랑},{big:'◆',label:'초록',color:COLOR.초록}],size:'big'},
+ {id:'shapes4',title:'색·모양 표식 4개',note:'기억의 발자국·모양 순서 기억해 걷기·색과 글자 갈림길에 써요.',cards:[{big:'●',label:'빨강',color:COLOR.빨강},{big:'▲',label:'파랑',color:COLOR.파랑},{big:'■',label:'노랑',color:COLOR.노랑},{big:'◆',label:'초록',color:COLOR.초록}],size:'big'},
  {id:'spots6',title:'우리 자리 찾기 표식 6개',note:'2줄 × 3칸, 1.5m씩 띄워 놓아요.',cards:[{big:'●',label:'빨강',color:COLOR.빨강},{big:'▲',label:'파랑',color:COLOR.파랑},{big:'■',label:'노랑',color:COLOR.노랑},{big:'◆',label:'초록',color:COLOR.초록},{big:'★',label:'보라',color:COLOR.보라},{big:'♥',label:'주황',color:COLOR.주황}],size:'big'},
 ];
 const PICTURES:Record<string,PrintCard[]>={

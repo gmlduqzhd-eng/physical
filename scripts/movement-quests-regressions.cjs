@@ -33,7 +33,7 @@ async function choose(page, id, round) {
   await page.getByRole('button', { name: new RegExp('^' + options[round]) }).click();
 }
 async function run(page, practice = false) {
-  await button(page, practice ? '동작 연습하기' : '기기 놓고 작전 시작').click();
+  await button(page, practice ? '짧게 연습하기 (점수 없음 · 고르고 싶을 때만)' : '작전 시작 · 기기 내려놓기').click();
   await phase(page,'countdown'); await page.clock.fastForward(3100); await phase(page,'active');
   await finishActive(page);
 }
@@ -65,11 +65,9 @@ async function checkLayout(page) {
         await launch(page,id); await checkLayout(page);
         if(id==='zigzag') await page.evaluate(()=>localStorage.setItem('physical_best_zigzag','999'));
         if (id === 'dribble-rhythm') { await page.locator('.mq-setup-options summary').click(); await page.getByLabel('앉아서 팔 동작으로 참여하기').check(); }
-        await button(page,'작전 살펴보기').click(); await phase(page,'plan');
+        await button(page,'시작').click(); await phase(page,'plan');
         if (id === 'zigzag') {
-          await page.getByRole('button',{ name:/^가운데 길/ }).click();
-          assert(await button(page,'동작 연습하기').isDisabled(), 'blocked path cannot start');
-          assert(await page.getByRole('alert').isVisible());
+          assert(await page.getByRole('button',{ name:/^가운데 길/ }).isDisabled(), 'blocked path cannot be chosen');
         }
         await choose(page,id,0);
         await page.evaluate(()=>window.scrollTo(0,0));
@@ -77,10 +75,10 @@ async function checkLayout(page) {
         const before = await profile(page);
         await run(page,true);
         assert.equal((await profile(page))?.totalPlays, before?.totalPlays, 'rehearsal cannot save a result');
-        await button(page,'연습 마치고 첫 작전으로').click();
+        await button(page,'연습 마치고 작전으로').click();
         for (let round=0;round<3;round++) {
           await phase(page,'plan'); await choose(page,id,round);
-          await button(page,'기기 놓고 작전 시작').click();
+          await button(page,'작전 시작 · 기기 내려놓기').click();
           await page.clock.fastForward(3100); await phase(page,'active');
           if (round===0) {
             const previous = await page.locator('.mq-signal').innerText();
@@ -132,9 +130,9 @@ async function checkLayout(page) {
     await launch(page,'pass-gate-rescue',false);
     if (await page.locator('.mq-setup-options:not([open]) summary').count()) await page.locator('.mq-setup-options summary').click();
     await page.getByLabel('함께할 인원').selectOption('6'); await checkLayout(page);
-    await button(page,'작전 살펴보기').click(); await choose(page,'pass-gate-rescue',0);
+    await button(page,'시작').click(); await choose(page,'pass-gate-rescue',0);
     assert.match(await page.locator('.mq-panel').innerText(),/6번 친구/);
-    await run(page,true); await button(page,'연습 마치고 첫 작전으로').click();
+    await run(page,true); await button(page,'연습 마치고 작전으로').click();
     for(let round=0;round<3;round++){
       await choose(page,'pass-gate-rescue',round);
       assert.match(await page.locator('.mq-panel').innerText(),new RegExp(`시계 방향 1번째 표식: ${round+1}번 친구`));

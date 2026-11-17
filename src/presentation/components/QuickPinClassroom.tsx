@@ -365,13 +365,13 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                   onClick={() => handleStartGame('reaction')} disabled={busy}
                   className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 구조 산책 · 반응 코스
+                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 반응 코스
                 </button>
                 <button
                   onClick={() => handleStartGame('direction')} disabled={busy}
                   className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 구조 산책 · 방향 코스
+                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 방향 코스
                 </button>
               </div>
             </div>

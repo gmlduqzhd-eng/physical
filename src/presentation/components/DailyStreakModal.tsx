@@ -4,6 +4,7 @@ import {usePrivateSessionState} from '../../application/usePrivateSessionState';
 import { useDailyStreak } from '../../application/useDailyStreak';
 import { isRecord, localDateKey, readJsonStorage } from '../../application/browserStorage';
 import { useModalDialog } from '../../application/useModalDialog';
+import { QUEST_META } from '../../domain/movementQuests';
 import './HubPopupTheme.css';
 
 interface DailyStreakModalProps {
@@ -49,7 +50,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
 
   const routines = [
     { title: '1분 목 & 어깨 워밍업', desc: '고개를 좌우로 천천히 돌리고 어깨를 으쓱으쓱!', emoji: '🧘', type: 'stretch' },
-    { title: '1분 신호등 반응 챌린지', desc: '신호를 보고 멈췄다 움직이며 순발력 깨우기!', emoji: '🚦', type: 'red_green' },
+    { title: `1분 ${QUEST_META.red_green.name}`, desc: '신호를 보고 멈췄다 움직이며 순발력 깨우기!', emoji: '🚦', type: 'red_green' },
     { title: '1분 심호흡 & 쿨다운', desc: '코로 숨을 깊게 들이마시고 입으로 후~', emoji: '🌬️', type: 'breathe' }
   ];
 

@@ -492,13 +492,13 @@ export const AdminControlPanel = () => {
                   onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
                   className="bg-orange-600 hover:bg-orange-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
-                  <LucideIcons.Flame className="w-5 h-5" /> 신호등 구조 산책
+                  <LucideIcons.Flame className="w-5 h-5" /> 신호등 걷고 멈추기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'one_leg', expires_at: Date.now() + 600000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
-                  <LucideIcons.Footprints className="w-5 h-5" /> 균형 등대 지키기
+                  <LucideIcons.Footprints className="w-5 h-5" /> 한 발 등대 서기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'exp-tablet-31', expires_at: Date.now() + 600000 } })}
@@ -535,25 +535,25 @@ export const AdminControlPanel = () => {
                   onClick={async () => await updateRoom({ active_minigame: { type: 'fitness', expires_at: Date.now() + 600000 } })}
                   className="bg-yellow-600 hover:bg-yellow-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.BatteryCharging className="w-5 h-5" /> 내가 고르는 운동 원정
+                  <LucideIcons.BatteryCharging className="w-5 h-5" /> 세 동작 골라 코스 만들기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'zigzag', expires_at: Date.now() + 600000 } })}
                   className="bg-red-600 hover:bg-red-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.ShieldAlert className="w-5 h-5" /> 갈림길 보급 작전
+                  <LucideIcons.ShieldAlert className="w-5 h-5" /> 막힌 길 피해 가기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'memory', expires_at: Date.now() + 600000 } })}
                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Brain className="w-5 h-5" /> 기억의 보급 발자국
+                  <LucideIcons.Brain className="w-5 h-5" /> 모양 순서 기억해 걷기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch', expires_at: Date.now() + 600000 } })}
                   className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Timer className="w-5 h-5" /> 몸으로 느끼는 시간길
+                  <LucideIcons.Timer className="w-5 h-5" /> 시간 느끼며 걷기
                 </button>
               </div>
               <div className="flex justify-end mt-2">
@@ -596,7 +596,7 @@ export const AdminControlPanel = () => {
                   onClick={async () => await updateRoom({ active_minigame: { type: 'breath-pacer-478', expires_at: Date.now() + 600000 } })}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
-                  <LucideIcons.Wind className="w-5 h-5" /> 내 속도 호흡 쉼터
+                  <LucideIcons.Wind className="w-5 h-5" /> 편한 숨 쉼터
                 </button>
               </div>
               <div className="flex justify-end mt-2">

@@ -15,7 +15,8 @@ export const BOSS_ROUTES={
  rescue:['expedition-map','expedition-rescue','expedition-loop'],
  shadow:['expedition-map','expedition-ship','expedition-shadow'],
 } as const satisfies Record<string,readonly FlagshipId[]>;
-export const ROUTE_NAMES={balanced:'탐사 → 공동 운반 → 리듬 발전',rescue:'탐사 → 구조 작전 → 리듬 발전',shadow:'탐사 → 공동 운반 → 그림자 복원'};
+// 기본 경로는 센서 없이 할 수 있는 rescue(구조 작전은 화면 터치로도 해요). 공동 운반(우주선)은 모둠마다 기울기 센서 기기 2대가 필요해요.
+export const ROUTE_NAMES={balanced:'탐사 → 공동 운반(센서 기기 2대) → 리듬 발전',rescue:'탐사 → 구조 작전 → 리듬 발전 · 센서 없이',shadow:'탐사 → 공동 운반(센서 기기 2대) → 그림자 복원'};
 export const MOVES=['손뼉','발 디딤','작은 팔 펼치기','앉아서 손 올리기'] as const;
 export const SHIP_COURSES={orbit:[{x:25,y:25},{x:75,y:65},{x:50,y:30}],zigzag:[{x:25,y:65},{x:75,y:45},{x:30,y:25}]} as const;
 export function groupRhythm(pattern:number[],index:number){const shift=index%8;return pattern.map((_,i)=>pattern[(i+shift)%8]);}
@@ -31,7 +32,7 @@ export const workshopSchema=z.object({
  move:z.enum(MOVES),
 }).strict();
 export type WorkshopSettings=z.infer<typeof workshopSchema>;
-export const DEFAULT_WORKSHOP:WorkshopSettings={level:'normal',members:4,roleEvery:2,packageMinutes:null,route:'balanced',shipCourse:'orbit',stationOrder:'auto',rhythm:[1,0,1,0,1,0,1,0],move:'손뼉'};
+export const DEFAULT_WORKSHOP:WorkshopSettings={level:'normal',members:4,roleEvery:2,packageMinutes:null,route:'rescue',shipCourse:'orbit',stationOrder:'auto',rhythm:[1,0,1,0,1,0,1,0],move:'손뼉'};
 export type ReadinessState='ready'|'lost'|'manual'|'off'|'error';
 export type DeviceReport={kind:'camera'|'tilt'|'touch';state:ReadinessState;at:number};
 export type GroupWorkshop={level:ExpeditionLevel;members:number;roleRound:number;roleSwaps:number;roleAt:number;devices:DeviceReport[];contributions?:{game:FlagshipId;done:boolean;checkpoint:number;quality:number;swaps:number}[]};

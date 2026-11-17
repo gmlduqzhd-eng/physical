@@ -5,7 +5,7 @@ export function expeditionNextStep(s:ExpeditionSnapshot,game:FlagshipId){
  if(!me)return {title:'모둠 연결을 확인해요',instruction:'우리 모둠으로 다시 들어온 뒤 시작해요.'};
  if(game==='expedition-map'){
   if(s.phase>=3)return {title:'세 길을 연결했어요',instruction:'돌아와 모두의 참여를 확인하고 결과를 제출해요.'};
-  if(!me.visited.length)return {title:'단서를 모으고 지점을 정해요',instruction:'기기를 거치해 단서를 함께 읽고, 정해진 통로를 걸어요. 지점에 멈춘 뒤 QR을 확인해요.'};
+  if(!me.visited.length)return {title:'단서를 모으고 지점을 정해요',instruction:'기기를 세워 두고 단서를 함께 읽고, 정해진 통로를 걸어요. 지점에 멈춘 뒤 QR을 확인해요.'};
   if(!me.vote)return {title:'방문한 길 중 다음 길에 투표해요',instruction:'도착·귀환을 함께 확인했으면 우리 모둠의 다음 길을 선택해요.'};
   const waiting=s.groups.filter(g=>!g.vote).length;
   return {title:waiting?`${waiting}모둠의 길 선택을 기다려요`:'함께 같은 길을 다시 의논해요',instruction:waiting?'다른 모둠과 단서를 몸짓으로 전달해요. 기다리는 동안 기기는 놓아요.':'각 모둠의 단서를 다시 연결하고, 우리 모둠의 투표를 바꾸어 볼 수 있어요.'};
@@ -25,3 +25,14 @@ export function rhythmTimingHint(taps:number[],pattern:number[]){
  const mean=offsets.reduce((a,b)=>a+b,0)/offsets.length;
  return Math.abs(mean)<80?'입력과 불빛의 차이가 작아요. 빠뜨린 ●와 쉼을 확인해요.':mean<0?'불빛보다 입력이 빨랐어요. 다음에는 불빛을 기다려 비교해요.':'불빛보다 입력이 늦었어요. 준비 네 박자를 먼저 익혀 비교해요.';
 }
+
+/**
+ * 박자 정확도를 별 0~3개로 바꾼다. 별 2개는 다음 관문이 열리는 기준(난이도별 quality %)이다.
+ * 아이에게 백분율 대신 별로 보여 주려고 쓴다. 판정 기준 자체는 바꾸지 않는다.
+ */
+export function rhythmStars(accuracy:number,quality:number):0|1|2|3{
+ if(accuracy>=Math.max(90,quality))return 3;
+ if(accuracy>=quality)return 2;
+ return accuracy>=quality/2?1:0;
+}
+export const starText=(n:number)=>n?'⭐'.repeat(n):'☆';

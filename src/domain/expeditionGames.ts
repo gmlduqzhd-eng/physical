@@ -1,6 +1,6 @@
 /** Approved 92 activities from the S/T specification. Eight sensor/camera activities are intentionally absent. */
-import {EXPEDITION_CLARITY} from './expeditionClarity.js';
-export interface ExpeditionSpec { id:string; spec:string; kind:'A'|'B'; name:string; desc:string; recommendedDevice:'스마트폰'|'태블릿 PC'; family:'expression'|'route'|'rhythm'|'timing'|'equipment'|'cooperation'; players:number; equipment:string[]; space:string; safety:string; alternative:string; rounds:number; bpm?:number; grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[]; minSeconds?:number; expressionSteps?:{title:string;guide:string;seconds:number}[]; }
+import {EXPEDITION_CLARITY,EXPEDITION_EXPRESSION_CLARITY} from './expeditionClarity.js';
+export interface ExpeditionSpec { id:string; spec:string; kind:'A'|'B'; name:string; desc:string; recommendedDevice:'스마트폰'|'태블릿 PC'; family:'expression'|'route'|'rhythm'|'timing'|'equipment'|'cooperation'; players:number; equipment:string[]; space:string; safety:string; alternative:string; rounds:number; bpm?:number; grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[]; minSeconds?:number; expressionSteps?:{title:string;guide:string;seconds:number;tip?:string}[]; }
 const RAW_EXPEDITION_GAMES: ExpeditionSpec[] = [
   {
     "id": "exp-phone-01",
@@ -1988,6 +1988,13 @@ const RAW_EXPEDITION_GAMES: ExpeditionSpec[] = [
   }
 ];
 /** 수업용 안내(준비물 수량·선생님 말투 설명·학년·구간 시간)를 덮어쓴 목록. */
-export const EXPEDITION_GAMES: ExpeditionSpec[] = RAW_EXPEDITION_GAMES.map(game=>{const c=EXPEDITION_CLARITY[game.id];return c?{...game,...c,name:c.name??game.name}:game;});
+export const EXPEDITION_GAMES: ExpeditionSpec[] = RAW_EXPEDITION_GAMES.map(game=>{
+  const c=EXPEDITION_CLARITY[game.id],a=EXPEDITION_EXPRESSION_CLARITY[game.id];
+  let next=c?{...game,...c,name:c.name??game.name}:game;
+  // 표현(A형) 원정: 학생이 읽는 설명·단계·단계별 꿀팁을 "~해요" 말투로 덮어쓴다.
+  if(a)next={...next,name:a.name??next.name,desc:a.desc,players:a.players??next.players,...(a.grades?{grades:a.grades}:{}),expressionSteps:a.steps??next.expressionSteps!.map((step,i)=>({...step,tip:a.tips?.[i]??step.tip}))};
+  // 어려운 말 '거치'를 쉬운 말로(공간 안내는 준비 화면에 그대로 보여요).
+  return next.space.includes('거치')?{...next,space:next.space.replaceAll('기기 거치 공간','기기를 세워 둘 자리').replaceAll('거치','세워 두기')}:next;
+});
 export const EXPEDITION_BY_ID = new Map(EXPEDITION_GAMES.map(game=>[game.id,game]));
 export const HELD_EXPEDITION_SPECS = ["S21","S22","S23","S25","S26","T47","T48","T49"];

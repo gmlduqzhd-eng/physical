@@ -46,7 +46,8 @@ test('placeholder curriculum codes are shown as a learning goal, real codes stay
 
 test('the flagship pages agree on time and equipment',()=>{
  for(const e of PRIMARY_EXPERIENCES){const f=FLAGSHIPS.find(x=>x.id===e.game)!;assert.equal(e.minutes,f.minutes);assert.equal(e.equipment,f.device);}
- assert.match(FLAGSHIPS.find(f=>f.id==='expedition-boss')!.device,/2대/);
+ // 기본 경로(지도 → 구조 → 리듬)는 센서 없이 할 수 있고, 그 사실을 준비물에 적는다.
+ assert.match(FLAGSHIPS.find(f=>f.id==='expedition-boss')!.device,/1대 · 센서 없이/);
 });
 
 test('records and past lessons tell cleaned activities apart from long-retired games',()=>{

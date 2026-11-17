@@ -12,3 +12,27 @@
 .expedition-bingo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-width:330px;margin:14px auto}.expedition-bingo>span{min-height:48px;display:grid;place-items:center;background:var(--forest-paper, #fffefa);border:1px solid var(--forest-line, #cbd2c0);border-radius:10px}.expedition-bingo>span[data-active=true]{border:2px solid var(--forest-accent, #536b41);background:var(--forest-tint, #eef3e6)}
 @media(max-width:480px){.expedition-heading{font-size:17px}.expedition-signal{padding:20px 12px}.expedition-signal>p{font-size:20px}.expedition-activity{padding:18px 12px 36px}.expedition-record fieldset{padding:10px}.expedition-choices>button{flex:1 1 95px}}
 @media(max-height:500px) and (orientation:landscape){.expedition-signal{min-height:120px;padding:14px}.expedition-timer{font-size:44px}}
+/* 준비 화면: 3줄 규칙과 시작 버튼을 첫 화면에 */
+.expedition-rules{display:grid;gap:8px;margin:18px 0 4px;padding:16px;border:2px solid var(--forest-line, #c8d5bb);border-radius:18px;background:var(--forest-paper, #fffefa)}
+.expedition-rules p{display:grid;grid-template-columns:5.5em 1fr;gap:10px;margin:0;font-size:18px;line-height:1.6}
+.expedition-rules b{color:var(--forest-accent, #536b41)}
+.expedition-demo{margin:18px 0;padding:14px 16px;border:1px solid var(--forest-line, #dfe2d5);border-radius:16px;background:var(--forest-tint, #f2f5eb)}
+.expedition-demo h3{margin:0 0 6px}.expedition-demo ol{display:grid;gap:6px;margin:0 0 10px;padding:0;list-style:none}
+.expedition-demo li{display:flex;gap:10px;align-items:baseline;padding:6px 10px;border-radius:10px;font-size:17px}
+.expedition-demo li>span{flex:none;width:1.6em;text-align:center;font-weight:700}
+.expedition-demo li[aria-current=step]{background:var(--forest-accent, #536b41);color:var(--forest-on, white)}
+.expedition-demo-roles{font-size:14px;margin:0 0 8px}
+/* 하는 중: 지금 할 지시를 맨 위에 크게(교실 TV 첫 화면 안) */
+.expedition-activity[data-phase=active] .expedition-heading,.expedition-activity[data-phase=countdown] .expedition-heading,.expedition-activity[data-phase=preview] .expedition-heading{padding-bottom:8px;font-size:16px}
+.expedition-now{margin:10px 0;min-height:0;padding:18px 16px}
+.expedition-activity .expedition-now h3,.expedition-big{display:block;margin:0;font-size:clamp(40px,7vw,104px);line-height:1.2;font-weight:800;overflow-wrap:anywhere;word-break:keep-all}
+.expedition-now>p{font-size:clamp(18px,2.4vw,26px);margin:10px 0}
+.expedition-now-meta{display:flex;justify-content:center;align-items:baseline;gap:18px;font-size:18px!important;opacity:.85}
+.expedition-now .expedition-timer{display:inline;font-size:32px;line-height:1}
+.expedition-now .expedition-timer small{font-size:16px}
+.expedition-word{padding:12px 16px}.expedition-word .game-word-cue{display:block;font-size:clamp(56px,10vw,120px);line-height:1.15;font-weight:800}
+.expedition-word-rule{font-size:clamp(20px,2.6vw,28px)!important;margin:0!important}
+.expedition-activity .expedition-arrive{min-height:96px;font-size:28px}
+@media(max-width:480px){.expedition-rules p{grid-template-columns:4.5em 1fr;font-size:16px}.expedition-now{padding:14px 10px}}
+.expedition-activity .expedition-now h3.expedition-now-label{font-size:clamp(20px,2.6vw,28px);font-weight:700}
+.expedition-now .expedition-pattern{font-size:clamp(28px,4.4vw,56px);font-weight:800;justify-content:center;text-align:left}

@@ -20,3 +20,60 @@ html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.ex
 @keyframes expression-pulse{from{transform:scale(1.5);opacity:.4}to{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.expression-sound-dot{animation:none}}
 .expression-sound-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* 2026-11 직관성 개선: 활동 중에는 지금 할 동작을 맨 위에 크게 보여 준다. */
+.min-h-\[100dvh\]:has(> .expression-activity){justify-content:flex-start;padding-top:8px}
+[data-consolidated]:has(.expression-activity){display:flex;flex-direction:column}
+[data-consolidated]:has(.expression-activity) > .movement-quest:first-child{order:2;margin-top:12px}
+.expression-now-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.expression-now-head h3{flex:1 1 auto;min-width:0}
+.expression-now-timer{font-family:ui-monospace,monospace;font-weight:900;font-size:clamp(18px,2.2vw,26px);color:#67e8f9;padding:2px 12px;border-radius:12px;border:1px solid rgba(168,85,247,.35);background:rgba(2,6,23,.6)}
+.expression-now-pause{min-height:40px;padding:6px 12px;border-radius:10px;font-weight:700;font-size:14px;background:#1e293b;color:#cbd5e1}
+.expression-now-body{margin-top:14px;display:grid;gap:14px;align-items:center}
+@media(min-width:760px){.expression-now-body.has-visual{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
+.expression-cue{margin:0;font-weight:900;line-height:1.22;letter-spacing:-.01em;font-size:clamp(26px,3.6vw,46px);color:#fff;word-break:keep-all;overflow-wrap:anywhere}
+.expression-now-paused{margin-top:10px;font-weight:700;color:#fde68a}
+.expression-now-detail{margin-top:12px;font-size:15px;line-height:1.6;color:#cbd5e1}
+.expression-now-detail summary{cursor:pointer;font-weight:700;color:#d8b4fe;min-height:36px;display:flex;align-items:center}
+.expression-now-detail p{margin:.35em 0}
+.expression-settings{border-radius:18px;border:1px solid rgba(148,163,184,.35);background:rgba(15,23,42,.6);padding:10px 14px;color:#cbd5e1}
+.expression-settings>summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:center}
+.expression-settings[open]>*+*{margin-top:10px}
+.expression-rules3{list-style:none;margin:0;padding:0;display:grid;gap:8px;text-align:left;width:100%;max-width:640px}
+.expression-rules3 li{display:grid;grid-template-columns:5.6em 1fr;gap:10px;align-items:baseline;padding:8px 12px;border-radius:12px;background:rgba(2,6,23,.55);border:1px solid rgba(148,163,184,.3);font-size:clamp(15px,1.8vw,19px);color:#e2e8f0}
+.expression-rules3 strong{color:#d8b4fe;font-weight:900}
+.expression-countdown{padding:24px}
+.expression-countdown-number{line-height:1}
+/* 동작 그림 카드 */
+.expression-pose-cards{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.expression-pose-cards li{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:16px;background:#fffefa;border:1px solid #c9d3c6;color:#1f2a22;min-width:84px}
+.expression-pose-cards span{font-weight:800;font-size:15px;text-align:center}
+.expression-pose-svg{width:clamp(70px,7vw,92px);height:auto;fill:none;stroke:#1f2a22;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.expression-pose-head{fill:#fffefa}
+.expression-pose-floor{stroke:#c9d3c6;stroke-width:2}
+.expression-pose-mark{fill:#e11d48;stroke:none;font-size:18px;font-weight:900}
+.expression-pose-mark-small{fill:#566d4d;stroke:none;font-size:11px;font-weight:800}
+.expression-pose-mark-dot{fill:#566d4d;stroke:none}
+.expression-pose-motion{stroke:#566d4d;stroke-width:3;stroke-dasharray:5 4}
+.expression-pose-arrowhead{fill:#566d4d;stroke:none}
+.expression-pose-path{stroke:#c9d3c6;stroke-width:4}
+.expression-pose-person{fill:#566d4d;stroke:none}
+.expression-pose-lead{fill:#e11d48}
+.expression-join-chart{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.expression-join-chart li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;border-radius:14px;border:1px solid #c9d3c6;background:#fffefa;color:#1f2a22;min-width:72px;opacity:.55}
+.expression-join-chart li[data-active=yes]{opacity:1;border-color:#566d4d;box-shadow:0 0 0 2px #566d4d inset}
+.expression-join-chart span{font-size:20px;line-height:1.1}
+.expression-join-chart strong{font-size:14px}
+/* 얼음 놀이: 소리가 멈추면 화면 전체에 크게 알린다. 누르는 데는 방해하지 않는다. */
+.expression-freeze-overlay{position:fixed;inset:0;z-index:10030;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(14,116,144,.55);color:#fff;font-weight:900;font-size:clamp(72px,18vw,220px);letter-spacing:.04em;text-shadow:0 6px 24px rgba(0,0,0,.35)}
+@media(prefers-reduced-motion:no-preference){.expression-freeze-overlay{animation:expression-freeze-in .18s ease-out}}
+@keyframes expression-freeze-in{from{opacity:0;transform:scale(1.08)}to{opacity:1;transform:none}}
+html[data-design=forest] body .expression-activity .expression-cue{color:var(--forest-ink,#1f2a22)!important}
+html[data-design=forest] body .expression-activity .expression-rules3 li{background:var(--forest-paper,#fffefa);border-color:var(--forest-line,#c9d3c6);color:var(--forest-ink,#1f2a22)}
+html[data-design=forest] body .expression-activity .expression-rules3 strong{color:var(--forest-accent,#566d4d)}
+html[data-design=forest] body .expression-activity .expression-now-timer{color:var(--forest-ink,#1f2a22);background:var(--forest-paper,#fffefa);border-color:var(--forest-line,#c9d3c6)}
+html[data-design=forest] body .expression-activity .expression-now-detail,html[data-design=forest] body .expression-activity .expression-settings{color:var(--forest-ink,#1f2a22)}
+html[data-design=forest] body .expression-activity .expression-settings{background:var(--forest-paper,#fffefa);border-color:var(--forest-line,#c9d3c6)}
+html[data-design=forest] body .expression-activity .expression-now-detail summary{color:var(--forest-accent,#566d4d)}
+html[data-design=forest] body .expression-activity .expression-now-paused{color:var(--forest-ink,#1f2a22)}
+html[data-design=forest] body .expression-activity .expression-now-pause{background:var(--forest-paper,#fffefa);color:var(--forest-ink,#1f2a22);border:1px solid var(--forest-control-line,#9aa79c)}

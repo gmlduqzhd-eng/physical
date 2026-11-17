@@ -11,7 +11,7 @@ export function FlagshipDeviceCheck(){
  return <section className="flagship" data-game-color="true" aria-label="카메라·기울기 실제 신호 확인">
   <h2>카메라·기울기 실제 신호 확인</h2>
   <p>휴대폰·태블릿에서 이 화면을 직접 열어 시험해요. API 지원이나 권한 허용만으로 성공이라고 표시하지 않아요. 결과는 이 화면에만 있고 학생 정보·영상·기기 식별자를 보내거나 저장하지 않아요.</p>
-  <h3>1. 기기를 거치하고 카메라 확인</h3>
+  <h3>1. 기기를 세워 두고 카메라 확인</h3>
   <PoseControls pose={pose} assisted={assisted} setAssisted={setAssisted} disabled={false}/>
   {pose.status==='tracking'&&pose.value&&<p role="status">실제 영상에서 오른팔·손목 추정값 수신 중 · 가상 발사 각도 {Math.round(pose.value.angle)}°</p>}
   <p>팔을 화면 밖으로 옮기면 ‘찾지 못했어요’로 바뀌고 판정이 멈추는지 확인해요. 미리 보기는 원할 때만 켤 수 있고, 이 기기 화면에만 표시돼요.</p>

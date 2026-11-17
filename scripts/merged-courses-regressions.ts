@@ -22,13 +22,13 @@ try{for(let n=0;n<games.length;n++){
   if(movement){
    const settings={gentle:true,seated,practice:true,players:2};
    await page.locator(`[data-movement-variant="${g.id}"][data-phase="intro"]`).waitFor();if(seated)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
-   await button('작전 살펴보기').click();
+   await button('시작').click();
    const choose=async()=>page.getByRole('button',{name:/^가까운 범위/}).click();
    const phase=(p:string)=>page.locator(`[data-movement-variant][data-phase="${p}"]`).waitFor();
    const finish=async()=>{if(await page.locator('[data-phase="preview"]').count()){await advance(7500);await phase('countdown');}await advance(3500);await phase('active');await advance(100000);await phase('record');};
-   await choose();await button('동작 연습하기').click();await finish();assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),2);await button('연습 마치고 첫 작전으로').click();
+   await choose();await button('짧게 연습하기 (점수 없음 · 고르고 싶을 때만)').click();await finish();assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),2);await button('연습 마치고 작전으로').click();
    for(let round=0;round<3;round++){
-    await choose();await button('기기 놓고 작전 시작').click();await finish();
+    await choose();await button('작전 시작 · 기기 내려놓기').click();await finish();
     const p=makeMergedMovementRound(g.id,round,settings,'close');
     if(p.question){await button(`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`).click();await page.getByRole('alert').waitFor();for(const answer of p.question.answer)await button(answer).click();}
     await button(`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`).click();

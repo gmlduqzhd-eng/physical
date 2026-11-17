@@ -1419,16 +1419,18 @@ const BASE_GAMES: GameDef[] = [
   }),
 ];
 
-export const GAMES: GameDef[] = BASE_GAMES.map(game => isQuestId(game.type) ? {
+/** 카드의 인원 표기를 준비물·활동 자료와 맞춘다: 준비물이 '모둠당'인 협동 활동은 모둠, 짝과 하는 끝동작 이어붙이기는 짝. */
+const PLAYER_FIXES:Record<string,NonNullable<GameDef['activityType']>>={'space-occupier':'모둠','relay-mission-runner':'모둠','pass-gate-rescue':'모둠','exp-phone-50':'짝','exp-phone-49':'짝'};
+export const GAMES: GameDef[] = BASE_GAMES.map((game): GameDef => isQuestId(game.type) ? {
   ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
   desc: QUEST_META[game.type].description, achievement:{...game.achievement,title:QUEST_META[game.type].name,desc:QUEST_META[game.type].description}, physicalActivity: true, durationMinutes: 4, playMode: QUEST_META[game.type].team?'협동':'개인', activityType:QUEST_META[game.type].team?'짝':'개인',
   equipment: QUEST_META[game.type].equipment ?? game.equipment,
-  safetyTips: ['기기는 거치하고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
+  safetyTips: ['기기는 내려놓고 이동은 걷기로 해요.', QUEST_META[game.type].alternative],
 } : isSafetyLessonId(game.type)?{
   ...game,name:SAFETY_LESSONS[game.type].name,emoji:SAFETY_LESSONS[game.type].emoji,desc:SAFETY_LESSONS[game.type].description,
   subCategory:'안전 상황 학습',achievement:{code:'연계 확인 필요',title:'상황 판단과 도움 요청',desc:SAFETY_LESSONS[game.type].description},
   physicalActivity:false,durationMinutes:5,playMode:'개인',activityType:'개인',equipment:SAFETY_LESSONS[game.type].equipment,safetyTips:[SAFETY_LESSONS[game.type].boundary],
-} : EXPRESSION_GAMES.some(e=>e.id===game.type)?(()=>{const e=EXPRESSION_GAMES.find(e=>e.id===game.type)!;return {...game,name:e.name,desc:e.desc,subCategory:e.subCategory,equipment:e.equipment,safetyTips:e.safetyTips,spaces:e.spaces};})() : game);
+} : EXPRESSION_GAMES.some(e=>e.id===game.type)?(()=>{const e=EXPRESSION_GAMES.find(e=>e.id===game.type)!;return {...game,name:e.name,desc:e.desc,subCategory:e.subCategory,equipment:e.equipment,safetyTips:e.safetyTips,spaces:e.spaces};})() : game).map(game=>PLAYER_FIXES[game.type]?{...game,activityType:PLAYER_FIXES[game.type]}:game);
 
 export const AVAILABLE_GAMES=GAMES.filter(game=>isAvailableGame(game.type));
 

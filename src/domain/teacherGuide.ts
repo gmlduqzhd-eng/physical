@@ -55,6 +55,8 @@ function buildGuide(game:GameDef):TeacherGuide{
  });
  const phone=PHONE_PLAY_BY_ID.get(game.type);
  const questions=[...new Set([...(OWN_QUESTIONS[game.type]??[]),phone?.check,...QUESTIONS[game.domain],SAFETY_QUESTION].filter((q):q is string=>!!q))].slice(0,3);
- const tips=[...(lesson?.teachingTips??[]),...(phone?[`쉽게: ${phone.easy}`,`도전: ${phone.hard}`]:[])].slice(0,3);
+ // 규칙·쉽게·어렵게는 상세 패널의 '규칙'과 '쉽게·어렵게·앉아서'에 따로 나온다. 활용 팁에는 그 밖의 팁만 둔다.
+ const shown=new Set([...(phone?[...phone.rules,phone.easy,phone.hard,phone.seated]:[])]);
+ const tips=(lesson?.teachingTips??[]).filter(t=>!shown.has(t)).slice(0,3);
  return {standards,lowGradeTheme:game.grades.includes('1~2학년')?lowGradeTheme(game):null,questions,tips};
 }
