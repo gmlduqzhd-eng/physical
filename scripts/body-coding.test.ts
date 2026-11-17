@@ -28,7 +28,7 @@ test('the robot must come back home and never walk far, whichever branch runs',(
  assert(!returnsHome([{kind:'move',move:'forward'}]));
  assert(!returnsHome([{kind:'if',then:'forward',else:'clap'}]),'one branch would leave the robot away from home');
  assert.equal(farthestForward([{kind:'repeat',times:4,body:['forward']},{kind:'repeat',times:4,body:['back']}]),4);
- assert.match(checkMission(MISSIONS[3],[{kind:'repeat',times:4,body:['forward']},{kind:'if',then:'stop',else:'arms'},{kind:'repeat',times:4,body:['back']}]).reasons.join(),/3걸음까지/);
+ assert.match(checkMission(MISSIONS[3],[{kind:'repeat',times:4,body:['forward']},{kind:'if',then:'stop',else:'arms'},{kind:'repeat',times:4,body:['back']}]).reasons.join(),/3걸음 넘게 떨어지지/);
 });
 
 test('each mission has a solution and explains what is missing',()=>{
@@ -53,4 +53,23 @@ test('roles swap every mission and the screen keeps the app safety rules',()=>{
  const screen=readFileSync(new URL('../src/presentation/components/minigames/PartnerRobotLab.tsx',import.meta.url),'utf8');
  assert.match(screen,/몸으로 하는 코딩/);assert.match(screen,/6실05-01/);assert.match(screen,/aria-live/);
  assert.doesNotMatch(screen,/달려|뛰어|전력/);
+});
+
+test('a half turn flips which way forward and back go, so programs cannot sneak past the step limit',()=>{
+ const sneaky:Program=[{kind:'repeat',times:3,body:['forward']},{kind:'move',move:'turn'},{kind:'repeat',times:3,body:['back']},{kind:'if',then:'clap',else:'arms'},{kind:'move',move:'turn'}];
+ assert.equal(returnsHome(sneaky),false);assert.equal(farthestForward(sneaky),6);assert.equal(checkMission(MISSIONS[3],sneaky).ok,false);
+ const loop:Program=[{kind:'repeat',times:4,body:['forward','turn','back']},{kind:'if',then:'clap',else:'arms'}];
+ // 앞으로 → 돌기 → 뒤로(= 원래 앞쪽으로 한 걸음 더)를 두 번 하면 처음 자리로 돌아온다: 가장 멀리 2걸음.
+ assert.equal(farthestForward(loop),2);assert(returnsHome(loop));
+ const away:Program=[{kind:'move',move:'turn'},{kind:'repeat',times:4,body:['back']},{kind:'move',move:'turn'},{kind:'repeat',times:4,body:['back']},{kind:'if',then:'clap',else:'arms'}];
+ assert.equal(farthestForward(away),4,'walking backwards after a turn still counts as distance');assert.equal(checkMission(MISSIONS[3],away).ok,false);
+ const outAndBack:Program=[{kind:'repeat',times:2,body:['forward']},{kind:'move',move:'turn'},{kind:'repeat',times:2,body:['forward']},{kind:'move',move:'turn'},{kind:'if',then:'clap',else:'arms'}];
+ assert(returnsHome(outAndBack));assert.equal(farthestForward(outAndBack),2);assert.equal(checkMission(MISSIONS[3],outAndBack).ok,true);
+ assert(!returnsHome([{kind:'if',then:'turn',else:'clap'},{kind:'move',move:'forward'},{kind:'move',move:'back'},{kind:'if',then:'forward',else:'clap'}]),'every signal combination must end at home');
+});
+
+test('mission messages: the repeat mission accepts the interleaved answer, the order is shown, and particles are right',()=>{
+ assert.equal(checkMission(MISSIONS[1],[{kind:'repeat',times:3,body:['clap','arms']}]).ok,true);
+ assert.match(checkMission(MISSIONS[0],[{kind:'move',move:'clap'}]).reasons.join(' '),/미션 순서: 앞으로 한 걸음 → 손뼉 한 번/);
+ assert.match(checkMission(MISSIONS[2],[{kind:'if',then:'arms',else:'stop'}]).reasons.join(' '),/‘팔 펴기’로 정해요/);
 });

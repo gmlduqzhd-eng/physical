@@ -105,7 +105,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               <h3 className="text-base font-black text-white">{current.stage}단계 · {current.title}</h3>
             </div>
             <p className="text-sm text-slate-300">{current.goal}</p>
-            <p className="text-xs font-bold text-amber-300">🧑‍💻 프로그래머: {programmerFor(mission)} · 🤖 로봇: {robotFor(mission)}</p>
+            <p className="text-sm font-bold text-slate-200">🧑‍💻 프로그래머: {programmerFor(mission)} · 🤖 로봇: {robotFor(mission)}</p>
             <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={seated} onChange={e => setSeated(e.target.checked)} />앉아서 하는 로봇(작은 손·발 동작)</label>
           </section>
 
@@ -145,13 +145,13 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
                     <button type="button" aria-label={`${i + 1}번 블록 지우기`} onClick={() => removeBlock(i)} className="px-2 text-slate-400">✕</button>
                   </div>
                   {b.kind === 'repeat' && <div className="mt-1 flex flex-wrap items-center gap-1 pl-3">
-                    {b.body.map((m, j) => <button key={j} type="button" aria-label={`${MOVES[m].label} 빼기`} onClick={() => updateBlock(i, { ...b, body: b.body.filter((_, k) => k !== j) })} className="rounded-lg border border-amber-800 px-2 py-1">{MOVES[m].emoji} {MOVES[m].label} ✕</button>)}
-                    {!b.body.length && <span className="text-amber-300">비어 있어요</span>}
+                    {b.body.map((m, j) => <button key={j} type="button" aria-label={`${MOVES[m].label} 빼기`} onClick={() => updateBlock(i, { ...b, body: b.body.filter((_, k) => k !== j) })} className="rounded-lg border border-amber-800 px-2 py-1">{MOVES[m].emoji} {seated ? MOVES[m].seated : MOVES[m].label} ✕</button>)}
+                    {!b.body.length && <span className="font-bold text-slate-200">비어 있어요</span>}
                     {filling !== i && <button type="button" onClick={() => setFilling(i)} className="rounded-lg border border-slate-700 px-2 py-1 text-slate-300">+ 여기에 넣기</button>}
                   </div>}
                   {b.kind === 'if' && <div className="mt-1 grid gap-1 pl-3 sm:grid-cols-2">
-                    <label>그러면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.then} onChange={e => updateBlock(i, { ...b, then: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{MOVES[id].label}</option>)}</select></label>
-                    <label>아니면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.else} onChange={e => updateBlock(i, { ...b, else: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{MOVES[id].label}</option>)}</select></label>
+                    <label>그러면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.then} onChange={e => updateBlock(i, { ...b, then: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{seated ? MOVES[id].seated : MOVES[id].label}</option>)}</select></label>
+                    <label>아니면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.else} onChange={e => updateBlock(i, { ...b, else: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{seated ? MOVES[id].seated : MOVES[id].label}</option>)}</select></label>
                   </div>}
                 </li>
               ))}
