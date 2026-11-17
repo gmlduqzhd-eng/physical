@@ -14,6 +14,8 @@ export interface BingoGame {
  status:CellStatus[];owner:(number|null)[];bonus:number[];turn:number;round:number;finished:boolean;log:string[];
  /** 칸마다 틀린 횟수. 다시 열 때 보기 순서를 바꾸는 데 쓴다(예전 저장값에는 없을 수 있다). */
  attempts?:number[];
+ /** 다시 쓰지 않을 문제 번호. '칸 그대로'에서 틀려 바뀐 문제와 정답을 공개한 문제를 모은다(예전 저장값에는 없을 수 있다). */
+ retired?:number[];
 }
 export const CELL_POINTS=10,BINGO_POINTS=30,COOP_POINTS=5,BOARD_SIZE=25,TEAM_NAME_MAX=8;
 export const TEAM_MARKS=['🦊','🐳','🐸','🦄'] as const;
@@ -34,8 +36,9 @@ const HEADER_FIRST=/^(문제|질문|번호|no\.?|#)$/i;
 /**
  * 한 줄에 문제 하나. `문제 | 정답 | 오답1 | 오답2 | 오답3`이면 객관식, `문제 | 정답`이면 주관식.
  * AI가 흔히 내는 모양도 읽는다: 번호(1. 1) Q1:), 굵은 표시(**), 전각 세로 막대(｜), 표 머리글과 구분선,
- * 표의 양끝 세로 막대, 번호만 든 첫 칸(| 1 | 문제 | 정답 |). 숫자로 시작하는 문제(1.5m …)는 그대로 둔다.
- * 빈 칸이 끼어 있는 줄은 다른 모양으로 바꾸지 않고 '형식이 맞지 않는 줄'로 센다.
+ * 표의 양끝 세로 막대, 번호만 든 첫 칸(| 1 | 문제 | 정답 |), 띄어 쓰지 않은 번호(1.배구, 1)배구).
+ * 숫자로 시작하는 문제(1.5m …)는 그대로 둔다. 끝에 남은 빈 칸과 비어 있는 오답 칸은 뺀다.
+ * 문제나 정답 칸이 비어 있는 줄은 다른 모양으로 바꾸지 않고 '형식이 맞지 않는 줄'로 센다.
  */
 export function parseQuestions(text:string):{questions:QuizQuestion[];skipped:number}{
  const questions:QuizQuestion[]=[];let skipped=0;
@@ -43,13 +46,14 @@ export function parseQuestions(text:string):{questions:QuizQuestion[];skipped:nu
   let line=raw.replace(/｜/g,'|').replace(/\*\*/g,'').trim();if(!line)continue;
   if(/^\|?\s*:?-{2,}/.test(line))continue;
   line=line.replace(/^\|/,'').replace(/\|$/,'').trim();
-  line=line.replace(/^(?:Q\s*\d+\s*[.:)]\s*|\d+\s*[.)](?=\s)\s*|[-*•]\s+)/i,'');
+  line=line.replace(/^(?:Q\s*\d+\s*[.:)]\s*|\d+\s*[.)](?!\d)\s*|[-*•]\s+)/i,'');
   const cells=line.split('|').map(s=>s.trim());
+  while(cells.length>2&&!cells.at(-1))cells.pop();
   if(cells.length>2&&/^\d+[.)]?$/.test(cells[0]))cells.shift();
   if(cells.length>1&&(HEADER_FIRST.test(cells[0])||cells.includes('문제')&&cells.includes('정답')))continue;
-  if(cells.length<2||cells.some(c=>!c)){skipped++;continue;}
+  if(cells.length<2||!cells[0]||!cells[1]){skipped++;continue;}
   const [prompt,answer,...wrong]=cells;
-  const distinctWrong=[...new Set(wrong.filter(w=>w!==answer))].slice(0,3);
+  const distinctWrong=[...new Set(wrong.filter(w=>w&&w!==answer))].slice(0,3);
   questions.push(distinctWrong.length?{kind:'choice',prompt,answer,wrong:distinctWrong}:{kind:'short',prompt,answer,wrong:[]});
  }
  return {questions,skipped};
@@ -87,7 +91,7 @@ export function choiceOptions(q:QuizQuestion,cellIndex:number,attempt=0):string[
 export function newGame(settings:BingoSettings,teamNames:readonly string[],questions:readonly QuizQuestion[],seed:number):BingoGame{
  const names=Array.from({length:settings.teams},(_,i)=>cleanTeamName(teamNames[i]??'',i));
  return {settings,teamNames:names,questions:[...questions],board:buildBoard(questions.length,settings.moveCells,seed),
-  status:Array(BOARD_SIZE).fill('open'),owner:Array(BOARD_SIZE).fill(null),bonus:Array(settings.teams).fill(0),turn:0,round:1,finished:false,log:['게임 시작'],attempts:Array(BOARD_SIZE).fill(0)};
+  status:Array(BOARD_SIZE).fill('open'),owner:Array(BOARD_SIZE).fill(null),bonus:Array(settings.teams).fill(0),turn:0,round:1,finished:false,log:['게임 시작'],attempts:Array(BOARD_SIZE).fill(0),retired:[]};
 }
 export const cleanTeamName=(name:string,i:number)=>name.trim().slice(0,TEAM_NAME_MAX)||`${i+1}팀`;
 
@@ -113,7 +117,7 @@ export type Resolution='correct'|'wrong'|'moved'|'pass';
 export function resolveCell(g:BingoGame,cellIndex:number,result:Resolution,coop=false):BingoGame{
  if(g.finished||cellIndex<0||cellIndex>=BOARD_SIZE||g.status[cellIndex]!=='open')return g;
  const team=g.turn,name=g.teamNames[team],status=[...g.status],owner=[...g.owner],bonus=[...g.bonus],log=[...g.log];
- const attempts=g.attempts?[...g.attempts]:Array(BOARD_SIZE).fill(0);let board=g.board;
+ const attempts=g.attempts?[...g.attempts]:Array(BOARD_SIZE).fill(0);let board=g.board,retired=g.retired??[];
  const cell=`${cellIndex+1}번 칸`;
  if(result==='correct'||result==='moved'){
   status[cellIndex]='owned';owner[cellIndex]=team;
@@ -123,17 +127,24 @@ export function resolveCell(g:BingoGame,cellIndex:number,result:Resolution,coop=
  }else if(result==='wrong'){
   if(g.settings.onWrong==='void')status[cellIndex]='void';
   else{
-   // 칸을 남길 때는 정답을 알려 주지 않고, 남은 문제가 있으면 다른 문제로 바꾼다. 없으면 보기 순서만 바꾼다.
+   // 칸을 남길 때는 정답을 알려 주지 않는다. 지금 문제는 다시 쓰지 않고, 판에 없고 쓰지 않은 문제가 있으면 그 문제로 바꾼다.
+   // 남은 문제가 없으면 객관식은 같은 문제를 보기 순서만 바꿔 내고, 정답을 본 주관식은 움직임 칸으로 바꾼다.
    attempts[cellIndex]++;
-   const used=new Set(g.board.filter(c=>c.type==='question').map(c=>c.question)),spare=g.questions.findIndex((_,i)=>!used.has(i));
-   if(g.board[cellIndex].type==='question'&&spare>=0)board=g.board.map(c=>c.index===cellIndex?{...c,question:spare}:c);
+   const current=g.board[cellIndex];
+   if(current.type==='question'){
+    const q=current.question!;if(!retired.includes(q))retired=[...retired,q];
+    const used=new Set([...g.board.filter(c=>c.type==='question').map(c=>c.question),...retired]),spare=g.questions.findIndex((_,i)=>!used.has(i));
+    if(spare>=0)board=g.board.map(c=>c.index===cellIndex?{...c,question:spare}:c);
+    else if(g.questions[q].kind==='short')board=g.board.map(c=>c.index===cellIndex?{index:c.index,type:'move',move:MOVE_TASKS[cellIndex%MOVE_TASKS.length]}:c);
+   }
   }
-  log.push(`${g.round}라운드 · ${name}: ${cell} 아쉬워요${g.settings.onWrong==='void'?' · 빈 칸이 됐어요':' · 다른 팀이 다시 도전할 수 있어요'}`);
+  const toMove=board[cellIndex].type==='move'&&g.board[cellIndex].type==='question';
+  log.push(`${g.round}라운드 · ${name}: ${cell} 아쉬워요${g.settings.onWrong==='void'?' · 빈 칸이 됐어요':toMove?' · 남은 문제가 없어 움직임 칸이 됐어요':' · 다른 팀이 다시 도전할 수 있어요'}`);
  }else log.push(`${g.round}라운드 · ${name}: 차례를 넘겼어요`);
  const turn=(team+1)%g.settings.teams,round=turn===0?g.round+1:g.round;
  const noOpen=!status.includes('open'),overRounds=g.settings.rounds>0&&round>g.settings.rounds;
  const finished=noOpen||overRounds;if(finished)log.push(noOpen?'모든 칸을 열어 게임이 끝났어요':`${g.settings.rounds}라운드를 마쳐 게임이 끝났어요`);
- return {...g,board,status,owner,bonus,log,turn,round,finished,attempts};
+ return {...g,board,status,owner,bonus,log,turn,round,finished,attempts,retired};
 }
 export const finishGame=(g:BingoGame):BingoGame=>g.finished?g:{...g,finished:true,log:[...g.log,'선생님이 게임을 끝냈어요']};
 
@@ -149,7 +160,8 @@ export function validGame(raw:unknown):BingoGame|null{
   &&Array.isArray(g.owner)&&g.owner.length===BOARD_SIZE&&g.owner.every((o,i)=>(o===null)===(g.status[i]!=='owned')&&(o===null||Number.isInteger(o)&&o>=0&&o<s.teams))
   &&Array.isArray(g.bonus)&&g.bonus.length===s.teams&&g.bonus.every(n=>Number.isInteger(n)&&n>=0)
   &&Number.isInteger(g.turn)&&g.turn>=0&&g.turn<s.teams&&Number.isInteger(g.round)&&g.round>=1&&typeof g.finished==='boolean'&&Array.isArray(g.log)&&g.log.every(l=>typeof l==='string')
-  &&(g.attempts===undefined||Array.isArray(g.attempts)&&g.attempts.length===BOARD_SIZE&&g.attempts.every(n=>Number.isInteger(n)&&n>=0));
+  &&(g.attempts===undefined||Array.isArray(g.attempts)&&g.attempts.length===BOARD_SIZE&&g.attempts.every(n=>Number.isInteger(n)&&n>=0))
+  &&(g.retired===undefined||Array.isArray(g.retired)&&g.retired.every(n=>Number.isInteger(n)&&n>=0&&n<g.questions.length));
  return ok?g:null;
 }
 
