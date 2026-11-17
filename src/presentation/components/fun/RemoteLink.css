@@ -14,3 +14,7 @@
 .fun-remote-devices li{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px solid #16a34a;font-weight:800}
 .fun-remote-devices li span{font-size:1.3rem}
 .fun-remote-panel>.fun-secondary{width:100%}
+/* 확인 번호: 휴대폰 화면의 번호와 맞춰 본다. */
+.fun-remote-pin{display:inline-block;padding:0 .3em;border-radius:8px;background:#111827;color:#fbbf24;font-size:1.5em;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+.fun-remote-tvcode{font-weight:700}
+.fun-remote-tvcode b{font-size:1.25em;letter-spacing:.12em;font-variant-numeric:tabular-nums}

@@ -1,17 +1,21 @@
 import {useEffect,useRef,useState} from 'react';
 import type {FunCommandBus} from '../../../application/funCommandBus';
-import {createTvTransport,generateRoomCode,isValidRoomCode,MAX_REMOTES,normalizeRoomCode,openRemoteChannel,remoteConfigured,remoteUrl,type RemoteDevice,type RemoteStatus,type TvRemoteControls} from '../../../application/funRemote';
+import {createTvTransport,forgetTvKeys,generateRoomCode,isValidRoomCode,loadTvKeys,MAX_REMOTES,normalizeRoomCode,openRemoteChannel,remoteConfigured,remoteUrl,type RemoteDevice,type RemoteStatus,type TvRemoteControls} from '../../../application/funRemote';
 import {LocalQRCode} from '../LocalQRCode';
 import './RemoteLink.css';
 
 const STATUS_TEXT:Record<RemoteStatus,string>={idle:'연결 전',connecting:'연결하는 중…',connected:'휴대폰을 기다려요',unavailable:'이 기기에서는 리모컨을 쓸 수 없어요',error:'연결이 끊겼어요 · TV 버튼으로 계속할 수 있어요'};
+/** 새 요청이 와도 패널을 다시 여는 것은 이 간격에 한 번까지(요청이 쏟아져도 게임 화면을 계속 가리지 않게). */
+const AUTO_OPEN_GAP_MS=5_000;
+/** 선생님이 패널을 닫으면 이 시간 동안은 저절로 열지 않는다(배지로만 알린다). */
+const DISMISS_QUIET_MS=20_000;
 
-/** 허용한 휴대폰 id를 방 코드와 함께 이 탭에 기억한다(새로고침해도 같은 코드면 다시 묻지 않게). */
+/** 허용한 휴대폰(공개키 지문)을 방 코드와 함께 이 탭에 기억한다(새로고침해도 같은 코드면 다시 묻지 않게). */
 const approvedKey=(code:string)=>`fun-remote:approved:${code}`;
 const readApproved=(code:string):string[]=>{
  try{
   const v=JSON.parse(sessionStorage.getItem(approvedKey(code))??'[]') as unknown;
-  return Array.isArray(v)?v.filter((x):x is string=>typeof x==='string'&&/^[A-Z0-9]{6,24}$/.test(x)).slice(0,MAX_REMOTES):[];
+  return Array.isArray(v)?v.filter((x):x is string=>typeof x==='string'&&/^[A-F0-9]{16}$/.test(x)).slice(0,MAX_REMOTES):[];
  }catch{return [];}
 };
 const writeApproved=(code:string,ids:string[])=>{
@@ -19,9 +23,10 @@ const writeApproved=(code:string,ids:string[])=>{
 };
 
 /**
- * TV 화면의 '📱 휴대폰 리모컨' 버튼. 처음 열 때 방 코드를 만들고 명령 버스에 원격 전송을 붙인다.
- * 방 코드는 화면에 크게 보이므로, 휴대폰이 연결을 요청하면 선생님이 '허용'을 한 번 눌러야 조작할 수 있다(최대 2대).
- * '모두 끊기'는 연결된 휴대폰을 모두 내보내고 새 방 코드를 만든다.
+ * TV 화면의 '📱 휴대폰 리모컨' 버튼. 처음 열 때 방 코드와 TV 키를 만들고 명령 버스에 원격 전송을 붙인다.
+ * 방 코드는 화면에 크게 보이므로, 휴대폰이 연결을 요청하면 선생님이 확인 번호를 맞춰 보고 '허용'을 한 번 눌러야 조작할 수 있다(최대 2대).
+ * 휴대폰·TV가 주고받는 메시지는 모두 서명된다(방 코드를 알아도 허용된 휴대폰을 흉내 낼 수 없다).
+ * '모두 끊기'는 연결된 휴대폰을 모두 내보내고 새 방 코드(새 TV 키)를 만든다.
  * 연결이 안 되거나 끊겨도 TV 버튼·키보드는 그대로 쓴다.
  *
  * initialCode: 게임 화면이 기억해 둔 방 코드(새로고침 뒤 같은 코드로 다시 열기). 있으면 화면이 뜨자마자 다시 연결하고,
@@ -31,46 +36,67 @@ const writeApproved=(code:string,ids:string[])=>{
 export function RemoteLink({bus,initialCode,onCodeChange}:{bus:FunCommandBus;initialCode?:string;onCodeChange?:(code:string)=>void}){
  const [open,setOpen]=useState(false);
  const [code,setCode]=useState('');
+ const [tvCode,setTvCode]=useState('');
  const [status,setStatus]=useState<RemoteStatus>('idle');
  const [devices,setDevices]=useState<RemoteDevice[]>([]);
  const detach=useRef<(()=>void)|null>(null);
  const controls=useRef<TvRemoteControls|null>(null);
  const seenPending=useRef(new Set<string>());
  const codeRef=useRef('');
+ const autoOpenedAt=useRef(-Infinity);
+ const dismissedAt=useRef(-Infinity);
+ const attempt=useRef(0);
  const connect=(reuse?:string)=>{
   const keep=reuse?normalizeRoomCode(reuse):'';
   let room:string;
   if(isValidRoomCode(keep))room=keep;
   else{try{room=generateRoomCode();}catch{setStatus('unavailable');return;}}
   const channel=openRemoteChannel(room);
-  codeRef.current=room;setCode(room);setDevices([]);seenPending.current.clear();
+  const mine=++attempt.current;
+  codeRef.current=room;setCode(room);setDevices([]);setTvCode('');seenPending.current.clear();
   if(room!==keep)onCodeChange?.(room);
   if(!channel){setStatus('unavailable');return;}
-  const transport=createTvTransport(channel,{
-   onStatus:setStatus,
-   preapproved:room===keep?readApproved(room):[],
-   onDevices:list=>{
-    setDevices(list);
-    writeApproved(room,list.filter(d=>d.state==='approved').map(d=>d.device));
-    // 새 연결 요청이 오면 패널을 열어 '허용'을 바로 누를 수 있게 한다.
-    if(list.some(d=>d.state==='pending'&&!seenPending.current.has(d.device)))setOpen(true);
-    for(const d of list)seenPending.current.add(d.device);
-   },
-  });
-  controls.current=transport;
-  detach.current=bus.attach(transport);
+  setStatus('connecting');
+  // TV 키(방 코드마다 하나, 이 탭에 기억)를 준비한 뒤에 붙는다. 그 사이 새 코드로 바뀌었으면 버린다.
+  void loadTvKeys(room).then(keys=>{
+   if(mine!==attempt.current)return;
+   const transport=createTvTransport(channel,{
+    room,keys,
+    onStatus:setStatus,
+    preapproved:room===keep?readApproved(room):[],
+    onDevices:list=>{
+     setDevices(list);
+     writeApproved(room,list.filter(d=>d.state==='approved').map(d=>d.device));
+     // 새 연결 요청이 오면 패널을 열어 '허용'을 바로 누를 수 있게 한다(너무 자주 열지 않고, 닫은 직후에는 열지 않는다).
+     const fresh=list.some(d=>d.state==='pending'&&!seenPending.current.has(d.device));
+     const t=Date.now();
+     if(fresh&&t-autoOpenedAt.current>AUTO_OPEN_GAP_MS&&t-dismissedAt.current>DISMISS_QUIET_MS){autoOpenedAt.current=t;setOpen(true);}
+     for(const d of list)seenPending.current.add(d.device);
+    },
+   });
+   controls.current=transport;setTvCode(transport.code);
+   detach.current=bus.attach(transport);
+  }).catch(()=>{if(mine===attempt.current)setStatus('unavailable');});
  };
  const connectRef=useRef(connect);
  connectRef.current=connect;
- useEffect(()=>()=>{detach.current?.();detach.current=null;controls.current=null;},[]);
+ useEffect(()=>()=>{attempt.current++;detach.current?.();detach.current=null;controls.current=null;},[]);
  // 새로고침 뒤 같은 방 코드로 돌아오면, 패널을 열지 않아도 바로 다시 연결해 휴대폰이 이어지게 한다(처음 한 번만).
  const initialRef=useRef(initialCode);
  useEffect(()=>{const first=initialRef.current;if(first&&isValidRoomCode(normalizeRoomCode(first))&&!detach.current)connectRef.current(first);},[]);
- // 페이지를 닫거나 새로고침할 때 휴대폰에 '잠시 끊김'을 알린다.
- useEffect(()=>{const bye=()=>controls.current?.notifyReload();window.addEventListener('pagehide',bye);return ()=>window.removeEventListener('pagehide',bye);},[]);
- const start=()=>{setOpen(true);if(!detach.current)connect(initialCode);};
+ // 페이지를 닫거나 새로고침할 때 휴대폰에 '잠시 끊김'을 알리고, 뒤로 가기 캐시로 돌아오면 되살린다.
+ // TV 탭이 가려지면(다른 창) 휴대폰에 알리고, 다시 보이면 바로 살아 있음 신호를 보낸다.
+ useEffect(()=>{
+  const bye=()=>controls.current?.notifyReload();
+  const back=(e:PageTransitionEvent)=>{if(e.persisted)controls.current?.resumeAfterReload();};
+  const vis=()=>controls.current?.setHidden(document.visibilityState==='hidden');
+  window.addEventListener('pagehide',bye);window.addEventListener('pageshow',back);document.addEventListener('visibilitychange',vis);
+  return ()=>{window.removeEventListener('pagehide',bye);window.removeEventListener('pageshow',back);document.removeEventListener('visibilitychange',vis);};
+ },[]);
+ const start=()=>{setOpen(true);if(!detach.current&&!codeRef.current)connect(initialCode);};
+ const close=()=>{setOpen(false);if(devices.some(d=>d.state==='pending'))dismissedAt.current=Date.now();};
  const rotate=()=>{
-  if(codeRef.current)writeApproved(codeRef.current,[]);
+  if(codeRef.current){writeApproved(codeRef.current,[]);forgetTvKeys(codeRef.current);}
   controls.current?.disconnectAll('rotated');
   detach.current?.();detach.current=null;controls.current=null;
   connect();
@@ -81,34 +107,36 @@ export function RemoteLink({bus,initialCode,onCodeChange}:{bus:FunCommandBus;ini
  const url=code?remoteUrl(window.location.origin,code):'';
  const label=approved.length?`📱 리모컨 ${approved.length}대 연결됨`:'📱 휴대폰 리모컨';
  return <>
-  <button type="button" className="fun-remote-btn" aria-expanded={open} data-linked={approved.length>0||undefined} data-pending={pending.length>0||undefined} onClick={()=>open?setOpen(false):start()}>
+  <button type="button" className="fun-remote-btn" aria-expanded={open} data-linked={approved.length>0||undefined} data-pending={pending.length>0||undefined} onClick={()=>open?close():start()}>
    {label}{pending.length>0&&<span className="fun-remote-badge" aria-label={`허용 기다리는 휴대폰 ${pending.length}대`}>{pending.length}</span>}
   </button>
   {open&&<div className="fun-remote-panel" role="dialog" aria-label="휴대폰 리모컨 연결">
    <h2>📱 휴대폰으로 진행하기</h2>
    {pending.length>0&&<section className="fun-remote-requests" aria-label="연결 요청">
     {pending.map(d=><div key={d.device} className="fun-remote-request">
-     <p><span aria-hidden="true">{d.name}</span> 휴대폰이 연결하려고 해요. 선생님 휴대폰에도 같은 <b>{d.name}</b>가 보이나요?</p>
+     <p>휴대폰이 연결하려고 해요. 휴대폰 화면의 확인 번호가 <b className="fun-remote-pin">{d.name}</b> 인가요?</p>
      <div className="fun-remote-request-actions">
-      <button type="button" className="fun-primary" disabled={full} onClick={()=>controls.current?.approve(d.device)}>✅ 이 휴대폰 허용</button>
+      <button type="button" className="fun-primary" disabled={full} onClick={()=>controls.current?.approve(d.device)}>✅ {d.name} 휴대폰 허용</button>
       <button type="button" className="fun-secondary" onClick={()=>controls.current?.reject(d.device)}>거절</button>
      </div>
     </div>)}
     {full&&<p className="fun-note">휴대폰은 {MAX_REMOTES}대까지 연결할 수 있어요. 한 대를 끊고 허용해요.</p>}
+    <p className="fun-note">번호가 다르면 거절해요. 선생님 휴대폰만 허용해요.</p>
    </section>}
    {code?<>
-    <p>휴대폰 카메라로 QR을 찍거나 주소를 열어요. 연결 요청이 오면 TV에서 ‘허용’을 눌러요.</p>
+    <p>휴대폰 카메라로 QR을 찍거나 주소를 열어요. 연결 요청이 오면 휴대폰의 확인 번호를 보고 ‘허용’을 눌러요.</p>
     <div className="fun-remote-qr">{url&&<LocalQRCode value={url} alt={`리모컨 주소 QR, 방 코드 ${code}`} size={180}/>}</div>
     <p className="fun-remote-code" aria-label={`방 코드 ${code.split('').join(' ')}`}>{code}</p>
     <p className="fun-remote-url">{url}</p>
+    {tvCode&&<p className="fun-remote-tvcode">TV 확인 번호 <b>{tvCode}</b> · 휴대폰에도 같은 번호가 떠요</p>}
    </>:null}
    <p role="status" className="fun-remote-status" data-status={status}>{approved.length?`✅ 연결된 휴대폰 ${approved.length}/${MAX_REMOTES}대`:STATUS_TEXT[status]}</p>
    {approved.length>0&&<ul className="fun-remote-devices" aria-label="연결된 휴대폰">
-    {approved.map(d=><li key={d.device}><span aria-hidden="true">{d.name}</span> 연결됨 <button type="button" className="fun-link" onClick={()=>controls.current?.reject(d.device)}>끊기</button></li>)}
+    {approved.map(d=><li key={d.device}><span aria-hidden="true">📱</span>{d.name} 연결됨 <button type="button" className="fun-link" onClick={()=>controls.current?.reject(d.device)}>끊기</button></li>)}
    </ul>}
    {!remoteConfigured()&&<p className="fun-note">이 사이트는 실시간 연결이 설정되지 않아, 같은 기기의 다른 창에서만 리모컨이 동작해요.</p>}
    {code&&<button type="button" className="fun-secondary" onClick={rotate}>모두 끊기 · 새 코드 만들기</button>}
-   <button type="button" className="fun-secondary" onClick={()=>setOpen(false)}>닫기 · 게임으로</button>
+   <button type="button" className="fun-secondary" onClick={close}>닫기 · 게임으로</button>
   </div>}
  </>;
 }
