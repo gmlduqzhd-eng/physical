@@ -13,8 +13,11 @@ export interface ExportTable {
  fileBase:string;
 }
 
-const xmlEsc=(s:string|number)=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
-const COLS='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+// XML 1.0에서 쓸 수 없는 제어 문자는 지운다.
+// eslint-disable-next-line no-control-regex
+const xmlEsc=(s:string|number)=>String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
+/** 0 → A, 25 → Z, 26 → AA (엑셀 열 이름). */
+export function columnName(index:number):string{let n=index+1,out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26);}return out;}
 
 export function exportText(t:ExportTable):string{
  const lines=[t.title,...t.meta.map(([k,v])=>`${k}: ${v}`),'',t.headers.join('\t'),...t.rows.map(r=>r.join('\t'))];
@@ -50,11 +53,11 @@ export function zipBytes(files:{name:string;data:string|Uint8Array}[],now=new Da
 export async function exportXlsx(t:ExportTable):Promise<Uint8Array>{
  const {XLSX_CONTENT_TYPES}=await import('./hwpxTemplate');
  const width=Math.max(2,t.headers.length);
- const cell=(ref:string,v:string|number,s=0)=>typeof v==='number'?`<c r="${ref}" s="${s}"><v>${v}</v></c>`:`<c r="${ref}" t="inlineStr" s="${s}"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
- const rows:string[]=[];const add=(cells:[string|number,number][])=>{const r=rows.length+1;rows.push(`<row r="${r}">${cells.map(([v,s],i)=>cell(COLS[i]+r,v,s)).join('')}</row>`);};
+ const cell=(ref:string,v:string|number,s=0)=>typeof v==='number'&&Number.isFinite(v)?`<c r="${ref}" s="${s}"><v>${v}</v></c>`:`<c r="${ref}" t="inlineStr" s="${s}"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+ const rows:string[]=[];const add=(cells:[string|number,number][])=>{const r=rows.length+1;rows.push(`<row r="${r}">${cells.map(([v,s],i)=>cell(columnName(i)+r,v,s)).join('')}</row>`);};
  add([[t.title,1]]);for(const [k,v] of t.meta)add([[k,0],[v,0]]);add([]);
  const headRow=rows.length+1;add(t.headers.map(h=>[h,2]));for(const r of t.rows)add(r.map(v=>[v,0]));
- const last=COLS[width-1],cols=Array.from({length:width},(_,i)=>`<col min="${i+1}" max="${i+1}" width="${i===0?12:14}" customWidth="1"/>`).join('');
+ const last=columnName(width-1),cols=Array.from({length:width},(_,i)=>`<col min="${i+1}" max="${i+1}" width="${i===0?12:14}" customWidth="1"/>`).join('');
  const sheet=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols>${cols}</cols><sheetData>${rows.join('')}</sheetData><autoFilter ref="A${headRow}:${last}${headRow+t.rows.length}"/></worksheet>`;
  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="3"><font><sz val="11"/><name val="맑은 고딕"/></font><font><b/><sz val="16"/><name val="맑은 고딕"/></font><font><b/><sz val="11"/><name val="맑은 고딕"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE3EEDC"/></patternFill></fill></fills><borders count="2"><border/><border><left style="thin"><color rgb="FFBBBBBB"/></left><right style="thin"><color rgb="FFBBBBBB"/></right><top style="thin"><color rgb="FFBBBBBB"/></top><bottom style="thin"><color rgb="FFBBBBBB"/></bottom></border></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="3"><xf/><xf fontId="1" applyFont="1"/><xf fontId="2" fillId="2" borderId="1" applyFont="1" applyFill="1" applyBorder="1"><alignment horizontal="center"/></xf></cellXfs></styleSheet>`;
  return zipBytes([
@@ -95,7 +98,8 @@ export async function exportHwpx(t:ExportTable,now=new Date()):Promise<Uint8Arra
 /* ── 브라우저 동작 ── */
 export function exportFileName(t:ExportTable,ext:string,now=new Date()){
  const p=(n:number)=>String(n).padStart(2,'0');
- return `${t.fileBase}_${now.getFullYear()}${p(now.getMonth()+1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}.${ext}`;
+ const base=t.fileBase.replace(/[\\/:*?"<>|]/g,'_').trim()||'기록';
+ return `${base}_${now.getFullYear()}${p(now.getMonth()+1)}${p(now.getDate())}_${p(now.getHours())}${p(now.getMinutes())}.${ext}`;
 }
 export function downloadBytes(bytes:Uint8Array,name:string,type:string){
  const url=URL.createObjectURL(new Blob([bytes as BlobPart],{type}));
