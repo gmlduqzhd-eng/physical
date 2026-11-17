@@ -1,7 +1,7 @@
 import {ActivityCueControls} from './ActivityCueControls';
 import {validPhoneFill} from '../../../../domain/fourthGameRules';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useMemo,useRef,useState} from 'react';
 import {phonePlayerRange,phoneRecordValid,phoneSafety,phoneSequence,phoneSetup,phoneTarget,type PhonePlay as Play,type PhoneRecord} from '../../../../domain/phonePlayCatalog';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import {sfxTap,unlockAudio} from '../../../../application/soundEffects';
@@ -12,15 +12,17 @@ import {phoneFillOptions,phoneMemoryTask,phoneRoundCheck,phoneObservation,phoneS
 import {PhonePlayIcon} from '../../PhonePlayIcon';
 import {PhonePlayClass} from './PhonePlayClass';
 import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds} from '../../../../domain/phoneClassMode';
-import {fitGroupCues,isClassicPlay} from '../../../../domain/phonePlayClassicsMode';
+import {adaptClassicPlay,fitGroupCues,isClassicPlay} from '../../../../domain/phonePlayClassicsMode';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
-export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
+export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
  const classroomPaused=useActivityPause();
  const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
- const range=phonePlayerRange(p);
+ const range=phonePlayerRange(play);
  const [phase,setPhase]=useState<Phase>('intro'),[round,setRound]=useState(0),[practice,setPractice]=useState(true),[rehearsed,setRehearsed]=useState(false);
  const [players,setPlayers]=useState(solo?1:range.min),[seated,setSeated]=useState(false),[level,setLevel]=useState('기본 방법'),[voice,setVoice]=useState(false),[sound,setSound]=useState(true);
+ // 숫자 모둠 만들기는 쉬운 방법·함께하는 인원에 맞춰 과제 제목·자리별 동작·신호가 같은 모둠 크기를 말한다.
+ const p=useMemo(()=>adaptClassicPlay(play,level==='쉬운 방법',players),[play,level,players]);
  const [elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false),[moved,setMoved]=useState(false),[checked,setChecked]=useState(false);
  const [participants,setParticipants]=useState<number[]>([]),[count,setCount]=useState(''),[answer,setAnswer]=useState<string[]>([]),[choice,setChoice]=useState(''),[feeling,setFeeling]=useState('');
  const [records,setRecords]=useState<PhoneRecord[]>([]);
@@ -86,7 +88,7 @@ export function PhonePlay({play:p,solo,onExit,enqueueAction}:Props){
   }
   queueMicrotask(()=>{transition.current=false;});
  };
- if(classRun)return <PhonePlayClass play={p} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction}/>;
+ if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction}/>;
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 신체 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div><p>{phase==='intro'?'연습하고 세 가지 과제를 해요.':`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p></header>
   <ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/><ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/>

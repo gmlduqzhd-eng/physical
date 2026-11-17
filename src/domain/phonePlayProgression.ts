@@ -28,7 +28,7 @@ const teamMotions:Record<string,string[]>={
  '104':['알·병아리 자세로 걷고 가위바위보','닭 자세까지 올라가기','하늘 새가 되면 가장자리에서 응원'],
  '105':['첫째 줄: 제자리 걸음 → 별 모양 → 무릎 손뼉','둘째 줄: 한 발 서기 → 제자리 걸음 → 별 모양','셋째 줄: 무릎 손뼉 → 한 발 서기 → 제자리 걸음'],
 };
-export function phoneTeamMotion(play:PhonePlay,round:number){return teamMotions[play.id.slice(-3)]?.[round]??play.rounds[round];}
+export function phoneTeamMotion(play:PhonePlay,round:number){return play.teamMotions?.[round]??teamMotions[play.id.slice(-3)]?.[round]??play.rounds[round];}
 export function phoneRoles(play:PhonePlay,players:number,round:number,created:string[]=[],seated=false){
  const leader=round%players;
  return Array.from({length:players},(_,i)=>({seat:i+1,role:play.id==='phone-play-008'?['자기 자리에서 걷기 또는 앉은 발 디딤','작게 팔 펴기','가슴 앞에서 손 모으기'][(i+round)%3]:play.kind==='team'?`${i===leader?'처음 신호 보내기':'신호 보고 함께 참여'} · ${seated?play.seated:phoneTeamMotion(play,round)}`:play.kind==='create'?`${(i+round)%2===0?'표현':'관찰 후 역할 교대'} · ${(created.length?created:play.cues).join(' → ')}`:`${i===leader?'처음 신호 읽기':'몸으로 참여·짝 확인'} · ${seated?play.seated:play.rounds[round]}`}));
