@@ -71,3 +71,10 @@
 .activity-detail h4{margin:10px 0 4px;font-size:14px;color:var(--forest-accent,#447565)}
 .activity-detail ol{list-style:decimal;padding-left:22px;margin:0}.activity-detail ul{list-style:disc;padding-left:22px;margin:0}
 .activity-adapt{margin:0}.activity-adapt div{display:grid;grid-template-columns:4.5em 1fr;gap:6px;font-size:14px;line-height:1.7}.activity-adapt dt{font-weight:800}.activity-adapt dd{margin:0}
+/* 대표 게임 · 보관함 표시 */
+.flow.activity-tools-scope .catalog-card .pill.activity-archive{background:var(--forest-line, #ece7db);color:var(--forest-muted, #5f6155)}
+.flow.activity-tools-scope .catalog-card .pill.activity-featured{background:#fff1c7;color:#6b4b00}
+html.dark-theme .flow.activity-tools-scope .catalog-card .pill.activity-featured{background:#4a3a10;color:#ffe7a3}
+.activity-merged{margin:0 0 12px;padding:10px 12px;border-radius:12px;background:var(--forest-tint, #eef2e5);font-weight:700}
+.activity-merged a{text-decoration:underline}
+.activity-view-toggle{min-height:48px}

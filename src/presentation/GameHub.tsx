@@ -1,4 +1,5 @@
 import {useActivityFavorites} from '../application/useActivityFavorites';
+import {FEATURED_GAMES} from '../domain/featuredGames';
 import {achievementLabel,PENDING_CURRICULUM_CODE} from '../domain/curriculumCode';
 import {RecentGameRecords} from './components/RecentGameRecords';
 import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQrDialog";
@@ -101,7 +102,8 @@ export const GameHub = () => {
       return h >>> 0; // unsigned
     };
 
-    const shuffled = [...GAMES].sort((a, b) => {
+    // 오늘의 추천은 대표 게임에서 고른다(대표 게임이 비어 있으면 전체에서).
+    const shuffled = [...(FEATURED_GAMES.length ? FEATURED_GAMES : GAMES)].sort((a, b) => {
       return hashStr(a.type, seed) - hashStr(b.type, seed);
     });
 
@@ -115,9 +117,9 @@ export const GameHub = () => {
   }, []);
 
 
-  // 즐겨찾기가 있으면 즐겨찾기에서, 없으면 전체 활동에서 뽑는다. 조건으로 찾기는 활동 목록(/hub) 한 곳에서 한다.
+  // 즐겨찾기가 있으면 즐겨찾기에서, 없으면 대표 게임에서 뽑는다. 조건으로 찾기는 활동 목록(/hub) 한 곳에서 한다.
   const favoriteGames = GAMES.filter(g => favoriteTypes.has(g.type));
-  const filtered = favoriteGames.length ? favoriteGames : GAMES;
+  const filtered = favoriteGames.length ? favoriteGames : FEATURED_GAMES.length ? FEATURED_GAMES : GAMES;
 
   const handleRandomPick = () => {
     if (spinInterval.current || filtered.length === 0) return;
@@ -373,7 +375,7 @@ export const GameHub = () => {
               className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60 shrink-0"
             >
               <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isSpinning ? 'animate-spin' : ''}`} />
-              <span>{favoriteGames.length ? '즐겨찾기에서 뽑기' : '전체에서 뽑기'}</span>
+              <span>{favoriteGames.length ? '즐겨찾기에서 뽑기' : '대표 게임에서 뽑기'}</span>
             </button>
             <button
               onClick={() => setShowWarmupRoulette(true)}
