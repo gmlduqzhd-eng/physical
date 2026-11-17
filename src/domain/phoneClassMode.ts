@@ -2,6 +2,7 @@ import type {GameResultDetails} from './gameResultDetails.js';
 import {phoneSequence,type PhonePlay} from './phonePlayCatalog.js';
 import {phoneRoles,phoneRoundCues,phoneTeamMotion} from './phonePlayProgression.js';
 import {phoneFillOptions,phoneMemoryTask} from './phoneTaskRules.js';
+import {classicClassCues,isClassicPlay} from './phonePlayClassicsMode.js';
 
 // Whole-class mode for the 100 no-equipment plays: one teacher screen, no student devices.
 export const CLASS_TASK_SECONDS=[30,45,60,90] as const;
@@ -45,8 +46,14 @@ export function classOutcomeResult(play:PhonePlay,outcome:ClassOutcome,run:{task
  */
 /** 고를 것이 없는 놀이가 모두 같은 빈 배열을 받게 해, 화면이 다시 그려져도 안내 소리가 되풀이되지 않게 한다. */
 const NO_CHOICES:readonly string[]=Object.freeze([]) as readonly string[];
-export function classRoundView(play:PhonePlay,round:number,level:string,seated:boolean):{brief:string;cues:string[];memory:boolean;choices:readonly string[]}{
+export function classRoundView(play:PhonePlay,round:number,level:string,seated:boolean,seed=0,cueSeconds=CLASS_CUE_MS/1000):{brief:string;cues:string[];memory:boolean;choices:readonly string[]}{
  const easy=level==='쉬운 방법',hard=level==='추가 도전',isMemory=play.kind==='memory';
+ // 2026-11에 더한 놀이(101~106)는 과제 동안 신호가 바뀐다. 숫자·구석은 무작위, 여우는 출발선 신호를 넣는다.
+ if(isClassicPlay(play.id)){
+  const brief=seated?play.seated:play.rounds[Math.min(round,play.rounds.length-1)];
+  const cues=seated?[play.seated]:classicClassCues(play,round,level,phoneSequence(play,round,easy),seed,16,cueSeconds);
+  return {brief,cues,memory:false,choices:NO_CHOICES};
+ }
  const memory=phoneMemoryTask(play,round,easy,hard,play.id==='phone-play-033'?phoneFillOptions(round)[0]:'');
  // 큰 글씨 안내는 음성이 읽는 과제 이름과 같게 한다. 기억 놀이는 기억할 순서를 보여 준다.
  const brief=isMemory?memory.base.join(' → '):seated?play.seated:play.rounds[Math.min(round,play.rounds.length-1)];

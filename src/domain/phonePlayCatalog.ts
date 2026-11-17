@@ -4,6 +4,7 @@ import {PHONE_PLAY_CLARITY} from './phonePlayClarity.js';
 import type {GameDef} from './gamesData.js';
 import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
 import {PHONE_PLAY_CLASSICS} from './phonePlayClassics.js';
+import {CLASSIC_EASY_CUES} from './phonePlayClassicsMode.js';
 import {PHONE_PLAY_VISUALS,type PhonePlayVisual} from './phonePlayVisuals.js';
 
 export const PHONE_CATEGORIES=['반응·민첩성','균형·협응','리듬·표현','이동·공간','전신 활동','협력·소통','판단·전략','정리·이완'] as const;
@@ -65,7 +66,9 @@ export function phoneGrades(p:PhonePlay):('1~2학년'|'3~4학년군'|'5~6학년�
  * 순서가 곧 내용인 놀이(세기·만들기·관찰·판단·모둠)는 순서를 지킨다.
  */
 export function phoneSequence(p:PhonePlay,round:number,easy=false,challenge=false):string[]{
- const own=p.roundCues?.[Math.min(2,Math.max(0,round))];
+ const r=Math.min(2,Math.max(0,round)),own=p.roundCues?.[r],easyOwn=CLASSIC_EASY_CUES[p.id]?.[r];
+ // 쉬운 방법 신호를 따로 정해 둔 놀이는 그것을 쓴다. 나머지는 앞 신호 두 개로 줄인다.
+ if(easy&&easyOwn)return easyOwn;
  if(own)return easy?own.slice(0,Math.min(2,own.length)):own;
  const cues=p.cues,shift=p.kind==='signal'||p.kind==='memory'?round:0;
  return Array.from({length:easy?Math.min(2,cues.length):challenge?4:Math.min(4,cues.length)},(_,i)=>cues[(i+shift)%cues.length]);
