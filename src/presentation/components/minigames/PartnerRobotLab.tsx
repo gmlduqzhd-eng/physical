@@ -2,24 +2,7 @@ import { useState } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { CheckCircle2 } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
-
-const ARM_CARDS = [
-  { id: 'gear', name: '톱니바퀴 회전', emoji: '⚙️', desc: '양팔을 90도로 꺾고 째깍째깍 톱니바퀴처럼 돌리기' },
-  { id: 'laser', name: '하늘 레이저 빔', emoji: '⚡', desc: '편안한 높이에서 팔을 번갈아 천천히 뻗기' },
-  { id: 'wave', name: '안테나 파동', emoji: '📡', desc: '손가락 끝부터 어깨까지 부드러운 물결 파동 보내기' },
-];
-
-const LEG_CARDS = [
-  { id: 'stamp', name: '로봇 제자리걸음', emoji: '🥾', desc: '제자리에서 발을 번갈아 가볍게 들거나 앉아서 발끝 움직이기' },
-  { id: 'spring', name: '용수철 바운스', emoji: '🦿', desc: '발을 바닥에 둔 채 무릎을 편안한 범위에서 작게 굽혔다 펴기' },
-  { id: 'slide', name: '발끝 좌우 짚기', emoji: '🛹', desc: '미끄러지지 않고 제자리에서 좌우 발끝을 번갈아 짚기' },
-];
-
-const BODY_CARDS = [
-  { id: 'twist', name: '어깨로 지그재그', emoji: '🔄', desc: '몸통을 비틀지 않고 어깨와 팔로 작은 지그재그 표현하기' },
-  { id: 'charge', name: '배터리 충전 숨쉬기', emoji: '🔋', desc: '몸을 웅크렸다가 가슴을 활짝 펴며 에너지 채우기' },
-  { id: 'balance', name: '팔로 좌우 균형', emoji: '⚖️', desc: '두 발을 바닥에 두거나 앉아서 팔로 작은 좌우 균형 표현하기' },
-];
+import { MISSIONS, MOVES, MOVE_IDS, blockCount, checkMission, describeStep, programmerFor, pseudoCode, robotFor, runProgram, type Block, type MoveId, type Program, type Step } from '../../../domain/bodyCoding';
 
 interface Props {
   groupId?: string;
@@ -27,379 +10,177 @@ interface Props {
   onExit?: () => void;
 }
 
+const KIND_COLOR: Record<string, string> = { 순차: 'bg-emerald-950 text-emerald-300 border-emerald-700', 반복: 'bg-amber-950 text-amber-300 border-amber-700', 선택: 'bg-cyan-950 text-cyan-300 border-cyan-700', 종합: 'bg-purple-950 text-purple-300 border-purple-700' };
+
+/**
+ * 파트너 로봇 연구소 · 몸으로 하는 코딩.
+ * 프로그래머가 블록(순차·반복·선택)으로 짧은 프로그램을 짜면, 로봇 역할 친구가 몸으로 실행한다. 미션마다 역할을 바꾼다.
+ * 손으로 친구를 움직이지 않고, 화면과 말로만 명령한다. 성공은 짝이 직접 확인한다(카메라 없음).
+ */
 export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
-  // 1: 1라운드 설계, 2: 1라운드 로봇 표현, 3: 역할 교대 안내, 4: 2라운드 설계, 5: 2라운드 표현, 6: 최종 창의 칭찬
-  const [challenge,setChallenge]=useState(false),[showDesign,setShowDesign]=useState(false);
-  const [seated,setSeated]=useState(false),[difference,setDifference]=useState<string[]>([]),[compared,setCompared]=useState(false),[comparison,setComparison]=useState('');
-  const [labStep, setLabStep] = useState<number>(1);
+  const [mission, setMission] = useState(0);
+  const [done, setDone] = useState<boolean[]>(() => MISSIONS.map(() => false));
+  const [program, setProgram] = useState<Program>([]);
+  const [filling, setFilling] = useState<number | null>(null);
+  const [repeatTimes, setRepeatTimes] = useState<2 | 3 | 4>(3);
+  const [result, setResult] = useState<{ ok: boolean; reasons: string[] } | null>(null);
+  const [steps, setSteps] = useState<Step[] | null>(null);
+  const [stepMode, setStepMode] = useState<'all' | 'step'>('all');
+  const [stepIndex, setStepIndex] = useState(0);
+  const [showText, setShowText] = useState(false);
+  const [seated, setSeated] = useState(false);
+  const [log, setLog] = useState<string[]>([]);
 
-  // 1라운드 (학생 A 설계, 학생 B 로봇)
-  const [arm1, setArm1] = useState(ARM_CARDS[0]);
-  const [leg1, setLeg1] = useState(LEG_CARDS[0]);
-  const [body1, setBody1] = useState(BODY_CARDS[0]);
+  const current = MISSIONS[mission];
+  const edited = (next: Program) => { setProgram(next); setResult(null); setSteps(null); };
+  const reset = () => { setProgram([]); setFilling(null); setResult(null); setSteps(null); setStepIndex(0); setShowText(false); };
 
-  // 2라운드 (학생 B 설계, 학생 A 로봇)
-  const [arm2, setArm2] = useState(ARM_CARDS[1]);
-  const [leg2, setLeg2] = useState(LEG_CARDS[1]);
-  const [body2, setBody2] = useState(BODY_CARDS[1]);
+  const addMove = (move: MoveId) => {
+    sfxCoin();
+    if (filling !== null && program[filling]?.kind === 'repeat') {
+      edited(program.map((b, i) => i === filling && b.kind === 'repeat' ? { ...b, body: [...b.body, move] } : b));
+    } else edited([...program, { kind: 'move', move }]);
+  };
+  const addRepeat = () => { edited([...program, { kind: 'repeat', times: repeatTimes, body: [] }]); setFilling(program.length); };
+  const addIf = () => { edited([...program, { kind: 'if', then: 'stop', else: 'arms' }]); setFilling(null); };
+  const removeBlock = (index: number) => { edited(program.filter((_, i) => i !== index)); setFilling(f => f === null ? null : f === index ? null : f > index ? f - 1 : f); };
+  const updateBlock = (index: number, block: Block) => edited(program.map((b, i) => i === index ? block : b));
 
-  const changed=[arm1.id!==arm2.id?'팔':'',leg1.id!==leg2.id?'다리':'',body1.id!==body2.id?'몸통':''].filter(Boolean);
-  const [praise1, setPraise1] = useState<string>('');
-  const [praise2, setPraise2] = useState<string>('');
+  const runAll = (mode: 'all' | 'step') => { const run = runProgram(program); setSteps(run.steps); setStepMode(mode); setStepIndex(0); };
+  const activeStep = steps && stepMode === 'step' ? steps[stepIndex] : undefined;
+  const finishedRun = !!steps && (stepMode === 'all' || stepIndex >= steps.length - 1);
+
+  const missionDone = () => {
+    sfxSuccess();
+    setDone(d => d.map((v, i) => i === mission || v));
+    setLog(l => [...l, `${current.stage}단계 ${current.kind} · ${programmerFor(mission)} 프로그래머 · 블록 ${blockCount(program)}개`]);
+    if (mission < MISSIONS.length - 1) setMission(mission + 1);
+    reset();
+  };
+  const doneCount = done.filter(Boolean).length;
 
   return (
     <PhysicalActivityLayout
-      title="파트너 로봇 연구소"
+      title="파트너 로봇 연구소 · 몸으로 하는 코딩"
       emoji="🤖"
       domain="표현"
       achievementCode="[4체03-02]"
-      achievementTitle="신체 각 부위의 움직임 요소를 탐색하고 짝과 협력하여 창의적 로봇 동작 구성"
+      achievementTitle="움직임을 블록으로 짜서 짝과 순서대로 표현하기"
       activityType="짝"
-      expectedMinutes={4}
+      expectedMinutes={8}
       safetyItems={[
-        { id: 'no_grab', text: '친구의 팔이나 다리를 강제로 잡아당기지 않고, 오직 말과 시범으로만 안내하나요?' },
-        { id: 'no_overbend', text: '관절을 무리하게 꺾거나 위험한 동작은 제외하고 안전하게 움직이나요?' },
-        { id: 'space', text: '두 사람이 팔다리를 뻗어도 주변 벽이나 다른 모둠과 부딪히지 않는 공간이 있나요?' },
-        { id: 'respect', text: '친구의 신체 조건과 표현 방식을 존중하며 즐겁게 참여할 준비가 되었나요?' },
-        { id: 'ready', text: '몸에 불편함이 생기면 언제든 즉시멈추고 신호를 보낼 수 있나요?' },
+        { id: 'no_grab', text: '친구의 몸을 잡아 움직이지 않고, 화면과 말로만 명령하나요?' },
+        { id: 'space', text: '앞으로 세 걸음, 옆으로 한 걸음을 가도 부딪히지 않는 공간이 있나요?' },
+        { id: 'walk', text: '걸음은 천천히 걷고, 반 바퀴 돌기는 어지러우면 고개만 돌려도 되나요?' },
+        { id: 'device', text: '기기는 책상이나 바닥에 두고, 로봇은 기기를 들지 않나요?' },
+        { id: 'ready', text: '불편하면 언제든 “멈춰!”라고 말하고 쉴 수 있나요?' },
       ]}
       instructions={[
-        '두 친구가 [연구원(설계자)]과 [로봇] 역할을 나눕니다.',
-        '연구원은 팔, 다리, 몸통 카드를 골라 3단 로봇 콤보 동작을 프로그래밍합니다.',
-        '연구원이 말과 시범을 보이면 로봇 친구가 신체로 멋지게 재현합니다 (직접 접촉 금지!).',
-        '자동으로 역할을 바꾸어 2라운드를 진행하고 서로의 창의성을 칭찬합니다.',
+        '두 사람이 [프로그래머]와 [로봇] 역할을 나눠요. 미션마다 역할을 바꿔요.',
+        '프로그래머는 동작 블록을 눌러 프로그램을 짜요. 반복 블록과 선택(만약~이면) 블록도 쓸 수 있어요.',
+        '미션 확인을 누른 뒤, 한 단계씩 실행하며 로봇 친구가 몸으로 움직여요. 손으로 친구를 움직이지 않아요.',
+        '로봇이 끝까지 해내면 짝이 확인하고 다음 미션으로 가요.',
       ]}
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}
       onExit={onExit}
-      onRestart={() => { setSeated(false);setDifference([]);setCompared(false);setComparison('');setLabStep(1); setArm1(ARM_CARDS[0]); setLeg1(LEG_CARDS[0]); setBody1(BODY_CARDS[0]); setArm2(ARM_CARDS[1]); setLeg2(LEG_CARDS[1]); setBody2(BODY_CARDS[1]); setPraise1(''); setPraise2(''); }}
+      onRestart={() => { setMission(0); setDone(MISSIONS.map(() => false)); setLog([]); setSeated(false); reset(); }}
     >
       {({ onComplete }) => (
-        <div className="w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-6 shadow-xl"><label className="activity-brief"><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉은 작은 팔·손·발끝 동작으로 재현하기</label>{seated&&<p>서거나 크게 움직일 필요 없이 같은 카드의 방향·순서를 작은 손짓으로 표현해요.</p>}
-          {/* Step 1: 1라운드 설계 */}
-          {labStep===1&&<label className="activity-brief"><input type="checkbox" checked={challenge} onChange={e=>setChallenge(e.target.checked)}/>도전: 두 번째 설계에서 한 부위만 바꾸고 기억해서 찾아요.</label>}{labStep === 1 && (
-            <div className="py-2">
-              <div className="flex justify-between items-center mb-3">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-950 text-purple-300 border border-purple-800">
-                  1라운드: 친구 A 설계 → 친구 B 표현
-                </span>
-                <span className="text-xs text-slate-400 font-bold">1단계: 동작 선택</span>
-              </div>
-              <h3 className="text-lg font-black text-white text-center mb-1">로봇 동작 3종 카드 선택</h3>
-              <p className="text-xs text-slate-400 text-center mb-4">
-                연구원 친구가 3개 부위의 움직임 카드를 각각 하나씩 선택하세요.
-              </p>
+        <div className="body-coding w-full bg-slate-900/90 rounded-3xl border border-slate-800 p-4 sm:p-6 shadow-xl space-y-4">
+          <p className="text-xs text-slate-400">몸으로 하는 코딩 · 함께 쓸 수 있는 교과: 체육 표현(움직임 요소) · 실과 [6실05-01] 알고리즘 표현, [6실05-02] 명령하는 방법 체험</p>
 
-              {/* 팔 동작 */}
-              <div className="mb-3">
-                <span className="text-[11px] font-bold text-cyan-400 block mb-1.5">🦾 1. 팔 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {ARM_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setArm1(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        arm1.id === card.id ? 'bg-cyan-950 border-cyan-500 text-cyan-200' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 다리 동작 */}
-              <div className="mb-3">
-                <span className="text-[11px] font-bold text-cyan-300 block mb-1.5">🦿 2. 다리 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {LEG_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setLeg1(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        leg1.id === card.id ? 'bg-emerald-950 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 몸통 동작 */}
-              <div className="mb-5">
-                <span className="text-[11px] font-bold text-purple-400 block mb-1.5">🔄 3. 몸통 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {BODY_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setBody1(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        body1.id === card.id ? 'bg-purple-950 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={() => setLabStep(2)}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg"
-              >
-                동작 시퀀스 완성! 로봇 친구에게 지시하기
+          <nav aria-label="미션 단계" className="grid grid-cols-4 gap-2">
+            {MISSIONS.map((m, i) => (
+              <button key={m.stage} type="button" aria-pressed={i === mission} onClick={() => { setMission(i); reset(); }}
+                className={`rounded-xl border px-2 py-2 text-xs font-bold ${i === mission ? 'bg-purple-950 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
+                {done[i] ? '✅' : `${m.stage}단계`}<span className="block">{m.kind}</span>
               </button>
+            ))}
+          </nav>
+
+          <section className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black ${KIND_COLOR[current.kind]}`}>{current.kind}</span>
+              <h3 className="text-base font-black text-white">{current.stage}단계 · {current.title}</h3>
             </div>
-          )}
+            <p className="text-sm text-slate-300">{current.goal}</p>
+            <p className="text-xs font-bold text-amber-300">🧑‍💻 프로그래머: {programmerFor(mission)} · 🤖 로봇: {robotFor(mission)}</p>
+            <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={seated} onChange={e => setSeated(e.target.checked)} />앉아서 하는 로봇(작은 손·발 동작)</label>
+          </section>
 
-          {/* Step 2: 1라운드 시연 및 로봇 표현 */}
-          {labStep === 2 && (
-            <div className="py-2 animate-in fade-in duration-200">
-              <div className="text-center mb-4">
-                <span className="text-5xl block mb-2">🤖📢</span>
-                <h3 className="text-xl font-black text-white">로봇 작동 시퀀스 가동!</h3>
-                <p className="text-xs text-amber-300 font-bold mt-1">
-                  ⚠️ 손을 대지 말고, 말과 시범으로만 전달하세요!
-                </p>
-              </div>
-
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6 space-y-3">
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{arm1.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-cyan-400 block mb-0.5">1단계 팔: {arm1.name}</strong>
-                    <span className="text-slate-300">{arm1.desc}</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{leg1.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-cyan-300 block mb-0.5">2단계 다리: {leg1.name}</strong>
-                    <span className="text-slate-300">{leg1.desc}</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{body1.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-purple-400 block mb-0.5">3단계 몸통: {body1.name}</strong>
-                    <span className="text-slate-300">{body1.desc}</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                onClick={() => { setLabStep(3); sfxSuccess(); }}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="w-4 h-4" /> 1라운드 표현 완료! 역할 교대하기
-              </button>
+          <section aria-label="블록 고르기" className="space-y-2">
+            <h4 className="text-xs font-black text-slate-300">{filling !== null ? `🔁 ${filling + 1}번 반복 블록 안에 넣는 중` : '동작 블록 넣기'}</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {MOVE_IDS.map(id => (
+                <button key={id} type="button" onClick={() => addMove(id)} className="rounded-xl border border-slate-800 bg-slate-950 px-2 py-2 text-left text-xs font-bold text-slate-200">
+                  <span aria-hidden="true">{MOVES[id].emoji}</span> {seated ? MOVES[id].seated : MOVES[id].label}
+                </button>
+              ))}
             </div>
-          )}
-
-          {/* Step 3: 역할 교대 전환 화면 */}
-          {labStep === 3 && (
-            <div className="py-8 text-center animate-in zoom-in-95 duration-200">
-              <span className="text-6xl block mb-3 animate-spin">🔄</span>
-              <h3 className="text-2xl font-black text-white mb-2">역할 교대!</h3>
-              <p className="text-sm text-cyan-300 font-bold mb-6">
-                이제 친구 B가 [연구원(설계자)]이 되고, 친구 A가 [로봇]이 됩니다!
-              </p>
-              <button
-                onClick={() => setLabStep(4)}
-                className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-black text-sm shadow-lg"
-              >
-                2라운드 프로그래밍 시작
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="text-xs text-slate-300">반복 횟수
+                <select className="ml-1 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-200" value={repeatTimes} onChange={e => setRepeatTimes(Number(e.target.value) as 2 | 3 | 4)}>{[2, 3, 4].map(n => <option key={n} value={n}>{n}번</option>)}</select>
+              </label>
+              <button type="button" onClick={addRepeat} className="rounded-xl border border-amber-700 bg-amber-950 px-3 py-2 text-xs font-black text-amber-200">🔁 반복 블록 넣기</button>
+              <button type="button" onClick={addIf} className="rounded-xl border border-cyan-700 bg-cyan-950 px-3 py-2 text-xs font-black text-cyan-200">❓ 선택 블록 넣기</button>
+              {filling !== null && <button type="button" onClick={() => setFilling(null)} className="rounded-xl border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300">반복 블록 닫기</button>}
             </div>
-          )}
+          </section>
 
-          {/* Step 4: 2라운드 설계 */}
-          {labStep === 4 && (
-            <div className="py-2">
-              <div className="flex justify-between items-center mb-3">
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-cyan-950 text-cyan-300 border border-cyan-800">
-                  2라운드: 친구 B 설계 → 친구 A 표현
-                </span>
-                <span className="text-xs text-slate-400 font-bold">2단계: 새 동작 선택</span>
+          <section aria-label="내 프로그램" className="rounded-2xl border border-slate-800 bg-slate-950 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h4 className="text-xs font-black text-slate-300">내 프로그램 · 블록 {blockCount(program)}개{current.maxBlocks ? ` / 최대 ${current.maxBlocks}개` : ''}</h4>
+              <div className="flex gap-2">
+                <button type="button" aria-pressed={showText} onClick={() => setShowText(v => !v)} className="text-xs font-bold text-cyan-300 underline">📝 글로 보기</button>
+                {!!program.length && <button type="button" onClick={reset} className="text-xs font-bold text-slate-400 underline">🗑 모두 지우기</button>}
               </div>
-              <h3 className="text-lg font-black text-white text-center mb-1">새로운 로봇 동작 조합</h3><section className="activity-brief"><p role="status">현재 바뀐 부위 {changed.length}개{changed.length?` · ${changed.join(' · ')}`:''}</p><button onClick={()=>{setArm2(arm1);setLeg2(leg1);setBody2(body1);setCompared(false);setDifference([]);setShowDesign(false);}}>A 설계 복사하고 한 부위 고르기</button><p>복사 뒤 팔·다리·몸통 중 한 부위의 카드만 바꿔 보세요.</p></section>
-              <p className="text-xs text-slate-400 text-center mb-4">
-                {challenge?'한 부위만 바꿔야 다음 시범으로 갈 수 있어요.':'친구 B가 새로운 조합을 만들어보세요!'}
-              </p>
-
-              {/* 팔 동작 */}
-              <div className="mb-3">
-                <span className="text-[11px] font-bold text-cyan-400 block mb-1.5">🦾 1. 팔 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {ARM_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setArm2(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        arm2.id === card.id ? 'bg-cyan-950 border-cyan-500 text-cyan-200' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 다리 동작 */}
-              <div className="mb-3">
-                <span className="text-[11px] font-bold text-cyan-300 block mb-1.5">🦿 2. 다리 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {LEG_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setLeg2(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        leg2.id === card.id ? 'bg-emerald-950 border-emerald-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* 몸통 동작 */}
-              <div className="mb-5">
-                <span className="text-[11px] font-bold text-purple-400 block mb-1.5">🔄 3. 몸통 동작</span>
-                <div className="grid grid-cols-3 gap-2">
-                  {BODY_CARDS.map(card => (
-                    <button
-                      key={card.id}
-                      onClick={() => { setBody2(card); sfxCoin(); }}
-                      className={`p-2.5 rounded-xl border text-left text-xs font-bold transition-all ${
-                        body2.id === card.id ? 'bg-purple-950 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400'
-                      }`}
-                    >
-                      <span className="text-lg block mb-0.5">{card.emoji}</span>
-                      <div className="text-[11px] text-white truncate">{card.name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                disabled={challenge&&changed.length!==1}
-                onClick={() => {setShowDesign(false);setLabStep(5);}}
-                className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 text-white rounded-2xl font-black text-sm shadow-lg"
-              >
-                2라운드 시퀀스 확정! 시연하기
-              </button>
             </div>
-          )}
-
-          {/* Step 5: 2라운드 시연 */}
-          {labStep === 5 && (
-            <div className="py-2 animate-in fade-in duration-200">
-              <div className="text-center mb-4">
-                <span className="text-5xl block mb-2">🤖📢</span>
-                <h3 className="text-xl font-black text-white">2라운드 로봇 작동!</h3>
-                <p className="text-xs text-amber-300 font-bold mt-1">
-                  친구 B가 설명하고 친구 A가 동작을 표현합니다.
-                </p>
-              </div>
-
-              <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-6 space-y-3">
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{arm2.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-cyan-400 block mb-0.5">1단계 팔: {arm2.name}</strong>
-                    <span className="text-slate-300">{arm2.desc}</span>
+            {!program.length && <p className="text-xs text-slate-400">위에서 블록을 눌러 프로그램을 만들어요.</p>}
+            <ol className="space-y-2">
+              {program.map((b, i) => (
+                <li key={i} className={`rounded-xl border p-2 text-xs ${activeStep?.block === i ? 'border-purple-400 bg-purple-950 text-white' : 'border-slate-800 bg-slate-900 text-slate-200'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold">{i + 1}. {b.kind === 'move' ? `${MOVES[b.move].emoji} ${seated ? MOVES[b.move].seated : MOVES[b.move].label}` : b.kind === 'repeat' ? `🔁 ${b.times}번 반복` : '❓ 만약 신호가 빨강이면'}{activeStep?.block === i && activeStep.repeat ? ` · ${activeStep.repeat.round}/${activeStep.repeat.times}번째` : ''}</span>
+                    <button type="button" aria-label={`${i + 1}번 블록 지우기`} onClick={() => removeBlock(i)} className="px-2 text-slate-400">✕</button>
                   </div>
-                </div>
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{leg2.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-cyan-300 block mb-0.5">2단계 다리: {leg2.name}</strong>
-                    <span className="text-slate-300">{leg2.desc}</span>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-2 bg-slate-900 rounded-xl">
-                  <span className="text-2xl">{body2.emoji}</span>
-                  <div className="text-xs">
-                    <strong className="text-purple-400 block mb-0.5">3단계 몸통: {body2.name}</strong>
-                    <span className="text-slate-300">{body2.desc}</span>
-                  </div>
-                </div>
-              </div>
+                  {b.kind === 'repeat' && <div className="mt-1 flex flex-wrap items-center gap-1 pl-3">
+                    {b.body.map((m, j) => <button key={j} type="button" aria-label={`${MOVES[m].label} 빼기`} onClick={() => updateBlock(i, { ...b, body: b.body.filter((_, k) => k !== j) })} className="rounded-lg border border-amber-800 px-2 py-1">{MOVES[m].emoji} {MOVES[m].label} ✕</button>)}
+                    {!b.body.length && <span className="text-amber-300">비어 있어요</span>}
+                    {filling !== i && <button type="button" onClick={() => setFilling(i)} className="rounded-lg border border-slate-700 px-2 py-1 text-slate-300">+ 여기에 넣기</button>}
+                  </div>}
+                  {b.kind === 'if' && <div className="mt-1 grid gap-1 pl-3 sm:grid-cols-2">
+                    <label>그러면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.then} onChange={e => updateBlock(i, { ...b, then: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{MOVES[id].label}</option>)}</select></label>
+                    <label>아니면 <select className="rounded-lg border border-slate-700 bg-slate-950 px-1 py-0.5" value={b.else} onChange={e => updateBlock(i, { ...b, else: e.target.value as MoveId })}>{MOVE_IDS.map(id => <option key={id} value={id}>{MOVES[id].label}</option>)}</select></label>
+                  </div>}
+                </li>
+              ))}
+            </ol>
+            {showText && <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">{pseudoCode(program).join('\n')}</pre>}
+          </section>
 
-              <button
-                onClick={() => { setLabStep(6); sfxSuccess(); }}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="w-4 h-4" /> 2라운드 표현 완료! 칭찬 나누기
-              </button>
+          <button type="button" onClick={() => setResult(checkMission(current, program))} className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3 text-sm font-black text-white">✅ 미션 확인</button>
+          {result && (result.ok
+            ? <p role="status" className="rounded-xl border border-emerald-700 bg-emerald-950 p-3 text-sm font-bold text-emerald-200">좋아요! 이제 로봇 친구에게 실행해 봐요.</p>
+            : <ul role="status" className="list-disc space-y-1 rounded-xl border border-amber-700 bg-amber-950 p-3 pl-6 text-sm text-amber-200">{result.reasons.map(r => <li key={r}>{r}</li>)}</ul>)}
+
+          {result?.ok && <section aria-label="로봇 실행" className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950 p-3">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => runAll('all')} className="rounded-xl border border-slate-700 py-2 text-sm font-bold text-slate-200">▶ 한 번에 보기</button>
+              <button type="button" onClick={() => runAll('step')} className="rounded-xl border border-purple-600 bg-purple-950 py-2 text-sm font-bold text-purple-200">👣 한 단계씩</button>
             </div>
-          )}
+            {steps && stepMode === 'step' && <div className="text-center">
+              <p className="text-xs text-slate-400">{stepIndex + 1} / {steps.length} 단계</p>
+              <p aria-live="assertive" className="my-2 text-2xl font-black text-white">{steps[stepIndex] ? describeStep(steps[stepIndex], seated) : ''}</p>
+              <button type="button" disabled={stepIndex >= steps.length - 1} onClick={() => setStepIndex(i => i + 1)} className="rounded-xl bg-purple-600 px-6 py-2 text-sm font-black text-white disabled:opacity-40">다음 단계 ▶</button>
+            </div>}
+            {steps && stepMode === 'all' && <ol aria-live="polite" className="list-decimal space-y-1 pl-6 text-sm text-slate-200">{steps.map((s, i) => <li key={i}>{describeStep(s, seated)}</li>)}</ol>}
+            {finishedRun && <button type="button" onClick={missionDone} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-sm font-black text-white"><CheckCircle2 className="h-4 w-4" />🤖 로봇이 해냈어요 (짝 확인) · 역할 바꾸기</button>}
+          </section>}
 
-          {/* Step 6: 상호 칭찬 및 리포트 */}
-          {labStep===6&&<section className="activity-brief"><h3>두 설계 비교 · 친구가 바꾼 부위 찾기</h3><p>A 설계: {arm1.name} → {leg1.name} → {body1.name}</p>{(!challenge||showDesign||compared)?<p>B 설계: {arm2.name} → {leg2.name} → {body2.name}</p>:<p>B 설계는 잠시 가렸어요. 시범에서 달라진 한 부위를 떠올려요.</p>}{challenge&&<button onClick={()=>setShowDesign(v=>!v)}>{showDesign?'설계 다시 가리기':'B 설계 다시 보기'}</button>}{['팔','다리','몸통','같음'].map(part=><button key={part} aria-pressed={difference.includes(part)} onClick={()=>{setCompared(false);setDifference(old=>old.includes(part)?old.filter(v=>v!==part):[...old,part]);}}>{part}</button>)}<button onClick={()=>{const expected=changed.length?changed:['같음'];const right=expected.length===difference.length&&expected.every(v=>difference.includes(v));setCompared(right);setComparison(right?'고른 두 설계의 바뀐 부위를 확인했어요.':'두 카드의 이름을 비교하고 다시 골라요.');}}>두 설계의 차이 확인</button><p role="status">{comparison}</p></section>}{labStep === 6 && (
-            <div className="py-2 animate-in fade-in duration-300 text-center">
-              <span className="text-5xl block mb-2">⭐🤝</span>
-              <h3 className="text-xl font-black text-white mb-1">두 설계를 확인하고 칭찬해요!</h3>
-              <p className="text-xs text-slate-400 mb-5">
-                서로의 창의적인 움직임을 칭찬하는 한마디를 선물하세요.
-              </p>
-
-              <div className="space-y-3 mb-6">
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left">
-                  <span className="text-xs font-bold text-cyan-300 block mb-2">
-                    친구 A가 친구 B에게 보내는 칭찬:
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {['로봇처럼 절도 있는 표현!', '설명을 찰떡같이 알아들음', '부드러운 관절 파동 최고'].map(opt => (
-                      <button
-                        key={opt}
-                        onClick={() => setPraise1(opt)}
-                        className={`p-2 rounded-xl border text-left font-bold ${
-                          praise1 === opt ? 'bg-cyan-950 border-cyan-500 text-cyan-300' : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        ✓ {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-left">
-                  <span className="text-xs font-bold text-purple-300 block mb-2">
-                    친구 B가 친구 A에게 보내는 칭찬:
-                  </span>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {['창의적인 동작 프로그래밍!', '시범을 친절하게 보여줌', '재치 넘치는 깜짝 애드리브'].map(opt => (
-                      <button
-                        key={opt}
-                        onClick={() => setPraise2(opt)}
-                        className={`p-2 rounded-xl border text-left font-bold ${
-                          praise2 === opt ? 'bg-purple-950 border-purple-500 text-purple-300' : 'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}
-                      >
-                        ✓ {opt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <button
-                disabled={!compared}
-                onClick={() => onComplete(`서로 설계자와 표현자 역할을 바꾸어 참여했어요.`,{participation:'performed',metrics:{'재현 방법':seated?'앉은 작은 동작':'편한 기본 동작','도전 방법':challenge?'한 부위 바꾸고 기억하기':'두 설계 보며 비교','설계 차이':difference.join(' · '),'첫 설계':[arm1.name,leg1.name,body1.name].join(' · '),'교대 후 설계':[arm2.name,leg2.name,body2.name].join(' · ')},selfReflection:[praise1,praise2].filter(Boolean).join(' / ')||'칭찬 선택 없음'})}
-                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 text-white rounded-2xl font-black text-sm shadow-lg flex items-center justify-center gap-2"
-              >
-                <CheckCircle2 className="w-4 h-4" /> 로봇 연구소 활동 완료
-              </button>
-            </div>
-          )}
+          <p className="text-xs text-slate-400">완료한 미션 {doneCount} / {MISSIONS.length}</p>
+          <button type="button" disabled={!doneCount} onClick={() => onComplete(`몸으로 하는 코딩 미션 ${doneCount}개를 역할을 바꿔 가며 해냈어요.`, { participation: 'performed', completion: doneCount === MISSIONS.length ? 'complete' : 'partial', metrics: { '완료한 미션': `${doneCount}/${MISSIONS.length}`, '실행 방법': seated ? '앉아서 작은 동작' : '서서 걷기·팔 동작', '미션 기록': log.join(' / ') } })}
+            className="w-full rounded-2xl border border-slate-700 py-3 text-sm font-black text-slate-200 disabled:opacity-40">활동 마치기</button>
         </div>
       )}
     </PhysicalActivityLayout>

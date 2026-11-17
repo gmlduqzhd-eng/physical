@@ -1317,7 +1317,7 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
   },
   {
     id: 'partner-robot-lab', title: '파트너 로봇 연구소', emoji: '🤖', route: '/play/partner-robot-lab',
-    description: '팔·다리·몸통 카드를 조합해 시퀀스를 만들고 짝과 로봇 표현',
+    description: '몸으로 하는 코딩: 순차·반복·선택 블록으로 짠 프로그램을 짝이 로봇이 되어 몸으로 실행',
     domain: '표현', subCategory: '신체 부위별 창의 표현 (짝)',
     achievementCode: '[4체03-02]',
     grades: ['3~4학년군', '5~6학년군'],
@@ -1330,7 +1330,7 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
     learningKeywords: ['창의 표현', '시퀀스', '움직임 요소'],
     safetyNotes: ['로봇 동작 시 관절을 갑자기 꺾지 않도록 한다.'],
     teachingTips: ['모둠 발표 시간을 주어 다양한 표현을 감상하게 한다.'],
-    noDeviceAlternative: '종이 카드에 동작을 그려 뽑은 후 짝과 함께 로봇 동작 시퀀스를 표현한다.',
+    noDeviceAlternative: '종이 블록 카드(동작·반복·만약)를 순서대로 놓고, 짝이 로봇이 되어 카드대로 움직인다.',
   },
 ];
 
