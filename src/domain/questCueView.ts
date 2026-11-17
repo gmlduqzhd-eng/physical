@@ -13,10 +13,11 @@ export const SIGNAL_COLORS={green:'#1f8a4c',yellow:'#f2c230',red:'#c8372d'} as c
 const MEMORY_ICONS:Record<string,string>={'동그라미':'●','세모':'▲','네모':'■','마름모':'◆'};
 
 export function questCueView(gameId:string,text:string):QuestCueView{
+ // 신호등: 신호 글(초록 ● · 걷기)에 이미 동작이 있으니 색과 그림만 더한다(같은 말을 두 줄로 쓰지 않음).
  if(gameId==='red_green'){
-  if(text.startsWith('초록'))return {text,color:SIGNAL_COLORS.green,tone:'dark',icon:'🟢',badge:'걷기'};
-  if(text.startsWith('노랑'))return {text,color:SIGNAL_COLORS.yellow,tone:'light',icon:'🟡',badge:'작은 걸음'};
-  if(text.startsWith('빨강'))return {text,color:SIGNAL_COLORS.red,tone:'dark',icon:'🔴',badge:'멈춰요'};
+  if(text.startsWith('초록'))return {text,color:SIGNAL_COLORS.green,tone:'dark',icon:'🟢'};
+  if(text.startsWith('노랑'))return {text,color:SIGNAL_COLORS.yellow,tone:'light',icon:'🟡'};
+  if(text.startsWith('빨강'))return {text,color:SIGNAL_COLORS.red,tone:'dark',icon:'🔴'};
  }
  if(gameId==='jump'){const n=/(\d)번 (섬|표식)/.exec(text)?.[1];if(n)return {text,icon:'🏝️',badge:`${n}번 섬`};}
  if(gameId==='squat'){

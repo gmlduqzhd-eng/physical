@@ -14,6 +14,8 @@ import './ExpressionActivity.css';
 import {ActivityProgress} from './ActivityProgress';
 import {ExpressionPoseCards,JoinOrderChart} from '../expression/ExpressionPoseCards';
 import {RULE_LABELS,stepCue} from '../expression/expressionKidText';
+/** 이보다 짧게 머문 단계는 참여 확인을 꺼 둔다('다음'만 눌러 넘긴 단계가 '참여·완료'로 기록되지 않게). */
+export const MIN_STEP_SECONDS=5;
 
 interface ExpressionActivityLayoutProps {
   game: ExpressionGameData;
@@ -40,12 +42,22 @@ export const ExpressionActivityLayout = ({
   const [showAchievementModal, setShowAchievementModal] = useState<boolean>(false);
 
   // 평가 점수 상태 (각 평가 기준별 1~5점)
-  const [ratings, setRatings] = useState<number[]>([]);
+  const [ratings, setRatings] = useState<number[]>(()=>expressionAssessment(game.steps,game.rubric,game.steps.map((_,i)=>i)).map(()=>0));
   const [selfReflection, setSelfReflection] = useState<string>('');
   const [totalElapsedTime, setTotalElapsedTime] = useState<number>(0);
   const [smallMovement,setSmallMovement]=useState(false);
-  // 참여 확인은 활동이 끝난 뒤 한 번만 한다. 처음에는 모든 단계에 참여한 것으로 두고, 쉰 단계만 끈다.
+  // 참여 확인은 활동이 끝난 뒤 한 번만 한다. 실제로 머문 단계만 미리 켜 두고(MIN_STEP_SECONDS 이상),
+  // '다음'으로 몇 초 만에 넘긴 단계는 꺼 둔다. 교사가 실제로 했다면 켜면 된다.
   const allSteps=()=>game.steps.map((_,i)=>i);
+  const stepSecondsRef=useRef<number[]>([]);
+  const [skippedQuickly,setSkippedQuickly]=useState(0);
+  const enterRubric=useCallback(()=>{
+   const spent=stepSecondsRef.current;
+   const done=game.steps.map((_,i)=>i).filter(i=>(spent[i]??0)>=MIN_STEP_SECONDS);
+   setPerformed(done);setSkippedQuickly(game.steps.length-done.length);
+   setRatings(expressionAssessment(game.steps,game.rubric,done).map(()=>0));
+   setPhase('rubric');
+  },[game.steps,game.rubric]);
   const [performed,setPerformed]=useState<number[]>(allSteps);
   const [groupRound,setGroupRound]=useState(1);
   const assessment=expressionAssessment(game.steps,game.rubric,performed);
@@ -78,6 +90,7 @@ export const ExpressionActivityLayout = ({
     if (phase !== 'active' || !isTimerRunning || classroomPaused|| (followVideo&&useVideo&&!videoPlaying) || (videoHold&&timeLeft<=0)) return;
     const timer = scheduleTimeout(() => {
       setTotalElapsedTime(t => t + 1);
+      stepSecondsRef.current[currentStepIdx]=(stepSecondsRef.current[currentStepIdx]??0)+1;
       if (timeLeft > 1) {
         setTimeLeft(timeLeft - 1);
       } else if (currentStepIdx < game.steps.length - 1) {
@@ -87,12 +100,12 @@ export const ExpressionActivityLayout = ({
       } else if (videoHold) {
         setTimeLeft(0);
       } else {
-        setPhase('rubric');
+        enterRubric();
         setTimeLeft(0);
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo,classroomPaused,pace,game.videoInfo,game.repeatPerGroup]);
+  }, [phase, isTimerRunning, currentStepIdx, game.steps, timeLeft, scheduleTimeout,followVideo,videoPlaying,useVideo,classroomPaused,pace,game.videoInfo,game.repeatPerGroup,enterRubric]);
 
   const handleNextStep = useCallback(() => {
     if (currentStepIdx < game.steps.length - 1) {
@@ -100,9 +113,9 @@ export const ExpressionActivityLayout = ({
       setCurrentStepIdx(nextIdx);
       setTimeLeft(Math.ceil(game.steps[nextIdx].durationSeconds*pace));
     } else {
-      setPhase('rubric');
+      enterRubric();
     }
-  }, [currentStepIdx, game.steps,pace]);
+  }, [currentStepIdx, game.steps,pace,enterRubric]);
 
   const handlePrevStep = () => {
     if (currentStepIdx > 0) {
@@ -113,8 +126,9 @@ export const ExpressionActivityLayout = ({
   };
 
   // 돌아보기(별점) 제출 및 완료
+  const ratingsReady=performed.length===0||(ratings.length===assessment.length&&ratings.every(rating=>rating>=1));
   const handleFinishRubric = () => {
-    if (completedRef.current || (performed.length>0&&ratings.some(rating => rating < 1))) return;
+    if (completedRef.current || !ratingsReady) return;
     completedRef.current = true;
     sfxSuccess();
     setPhase('result');
@@ -309,7 +323,7 @@ export const ExpressionActivityLayout = ({
             </p>
           </div>
 
-          <fieldset className="activity-brief"><legend>참여한 단계 · 쉰 단계만 끄세요</legend>{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>markPerformed(i,e.target.checked)}/>{step.title} · {performed.includes(i)?'참여했어요':'쉬었음'}</label>)}</fieldset>
+          <fieldset className="activity-brief"><legend>참여한 단계 · 쉰 단계만 끄세요</legend>{skippedQuickly>0&&<p className="text-xs text-amber-200">몇 초 만에 넘긴 {skippedQuickly}개 단계는 '쉬었음'으로 꺼 두었어요. 실제로 했다면 켜 주세요.</p>}{game.steps.map((step,i)=><label key={i}><input type="checkbox" checked={performed.includes(i)} onChange={e=>markPerformed(i,e.target.checked)}/>{step.title} · {performed.includes(i)?'참여했어요':'쉬었음'}</label>)}</fieldset>
           {/* 별점 기준 목록 */}
           <div className="space-y-4">
             {performed.length>0&&assessment.map((item, idx) => (
@@ -368,7 +382,7 @@ export const ExpressionActivityLayout = ({
             <button
               type="button"
               onClick={handleFinishRubric}
-              disabled={performed.length>0&&ratings.some(rating => rating < 1)}
+              disabled={!ratingsReady}
               className="game-stage-primary px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Trophy className="w-4 h-4" />
@@ -427,7 +441,8 @@ export const ExpressionActivityLayout = ({
               onClick={() => {
                 completedRef.current = false;
                 setTotalElapsedTime(0);
-                setRatings([]);setPerformed(allSteps());setGroupRound(1);
+                stepSecondsRef.current=[];setSkippedQuickly(0);
+                setRatings(expressionAssessment(game.steps,game.rubric,allSteps()).map(()=>0));setPerformed(allSteps());setGroupRound(1);
                 setSelfReflection('');
                 setIsTimerRunning(true);
                 setPhase('countdown');

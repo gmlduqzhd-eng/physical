@@ -27,3 +27,7 @@
 .safety-act strong{display:block;margin-bottom:2px;color:var(--forest-accent,#566d4d)}
 .safety-lesson[data-phase=explain] .safety-situation h2{font-size:clamp(20px,2.4vw,28px)}
 .safety-lesson[data-phase=explain] .safety-picture svg{width:clamp(72px,9vw,104px)}
+
+/* 교실 TV에서 멀리서도 읽히게 선택지를 크게(1280px에서 28px). */
+.safety-lesson .mq-choices button{font-size:clamp(20px,2.4vw,28px);min-height:64px;line-height:1.35}
+.safety-lesson .mq-choices legend{font-size:clamp(18px,2vw,24px)}
