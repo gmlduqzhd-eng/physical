@@ -30,3 +30,9 @@
 .frp-ended{border-color:#dc2626}
 .frp-icon{font-size:4rem;line-height:1}
 .frp-done{padding:12px;border-radius:14px;background:#16a34a;color:#fff;font-weight:900;text-align:center}
+.frp-pin{font-size:3.2rem;font-weight:900;letter-spacing:.18em;font-variant-numeric:tabular-nums;line-height:1}
+.frp-tvcode{letter-spacing:.12em;font-variant-numeric:tabular-nums}
+.frp-paused{padding:10px;border-radius:12px;background:#f59e0b;color:#111827;font-weight:900;text-align:center}
+.frp-sent[data-tone=ok]{color:#16a34a;font-weight:800;opacity:1}
+.frp-sent[data-tone=no]{color:#dc2626;font-weight:800;opacity:1}
+.frp-status[data-status=busy],.frp-status[data-status=gone]{color:#dc2626}
