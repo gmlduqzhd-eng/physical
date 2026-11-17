@@ -58,10 +58,11 @@ test('stretch clock freezes during classroom pause and one performed pose remain
  for(const last of [false,true]){click(a,'내 속도로 스트레칭 시작');click(a,'안내를 멈추고 수행 확인');click(a,last?'쉬었어요 · 마치기':'쉬었어요 · 다음 동작');}
  assert.equal(w.env.received.length,1);assert.equal(w.env.received[0].payload.details.completion,'partial');
 });
-test('phone fourth-beat selector is cleared between rounds and requires a valid new choice',()=>{
+// 빈 박자를 고르지 않으면 그 과제의 첫 동작(기본값)을 쓰므로, 고르지 않아도 시작할 수 있다(2026-11 직관성).
+test('phone fourth-beat selector is cleared between rounds and falls back to the default choice',()=>{
  const w=world(),play=w.load('src/domain/phonePlayCatalog.ts').PHONE_PLAY_BY_ID.get('phone-play-033');
  const a=w.actor(w.load('src/presentation/components/minigames/common/PhonePlay.tsx').PhonePlay,{play,solo:true,groupId:'test',onExit(){},enqueueAction(){}});
- click(a,'놀이 방법 익히기');let select=nodes(view(a)).find(n=>n.type==='select');select.props.onChange({target:{value:'멈춤'}});a.flush();assert(!button(a,'짧게 연습하기').props.disabled);click(a,'이번 과제 관찰 참여 · 0점 기록');assert(button(a,'짧게 연습하기').props.disabled);assert.equal(nodes(view(a)).find(n=>n.type==='select').props.value,'');
+ click(a,'놀이 방법 익히기');let select=nodes(view(a)).find(n=>n.type==='select');select.props.onChange({target:{value:'멈춤'}});a.flush();assert(!button(a,'짧게 연습하기').props.disabled);click(a,'이번 과제 관찰 참여 · 0점 기록');assert(!button(a,'짧게 연습하기').props.disabled);select=nodes(view(a)).find(n=>n.type==='select');assert.equal(select.props.value,'');assert.match(JSON.stringify(select.props.children),/기본/);
 });
 test('pending network actions preserve a rhythm take, while real suspension cancels it',async()=>{
  const w=world(),s=w.load('src/application/useExpedition.ts').practiceSnapshot('expedition-loop'),a=w.actor(w.load('src/presentation/flagship/LoopGame.tsx').LoopGame,{snapshot:s,send(){},disabled:false,pending:false});
