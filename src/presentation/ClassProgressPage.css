@@ -29,3 +29,19 @@
 .cp-reset .cp-danger{border-color:#dc2626;color:#dc2626}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media (max-width:480px){.cp-map{grid-template-columns:repeat(6,minmax(0,1fr))}}
+
+/* 저장 실패 안내: 눈에 띄되 작게 */
+.cp-save-warning{margin:8px 0 0;padding:10px 14px;border-radius:12px;border:2px solid #b45309;background:#fff7ed;color:#7c2d12;font-weight:700;}
+:root.dark-theme .cp-save-warning{background:#431407;color:#fed7aa;border-color:#f59e0b;}
+
+/* 표: 제목 칸과 숫자 칸의 정렬을 맞춘다(숫자는 오른쪽, 글자 폭 고정). */
+.cp-table{table-layout:fixed;font-variant-numeric:tabular-nums}
+.cp-table thead th{text-align:right;white-space:nowrap}
+.cp-table thead th:first-child,.cp-table tbody th{text-align:left}
+.cp-table thead th:not(:first-child),.cp-table td{width:5.5em}
+.cp-table thead th:first-child{width:auto}
+.cp-table tbody th{font-weight:700;overflow-wrap:anywhere}
+.cp-rules{padding:10px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.5)}
+.cp-rules summary{cursor:pointer;font-weight:800;min-height:32px}
+.cp-rules ul{margin:6px 0 0;padding-left:1.2em;line-height:1.6}
+@media (max-width:480px){.cp-table thead th:not(:first-child),.cp-table td{width:3.6em;padding:8px 4px}}

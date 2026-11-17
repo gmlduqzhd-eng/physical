@@ -53,17 +53,26 @@ export function reactionRows(p:ClassProgress):ReactionRow[]{
  return [...by.values()].sort((a,b)=>b.plays-a.plays||(b.ratio??-1)-(a.ratio??-1)||a.id.localeCompare(b.id));
 }
 /** 보관함으로 보낼 후보: 대표 게임인데 3판 이상 했고 👍 비율이 40% 미만. */
-export const MIN_PLAYS_FOR_SUGGESTION=3;
+/** 추천에 필요한 최소 판 수와 반응 수. 한두 번의 반응으로 대표 게임을 내리거나 올리지 않게 넉넉히 잡는다. */
+export const MIN_PLAYS_FOR_SUGGESTION=5;
+export const MIN_DOWN_FOR_ARCHIVE=2;
+export const MIN_UP_FOR_FEATURED=3;
+export const ARCHIVE_RATIO=0.4,FEATURED_RATIO=0.8;
+/** 화면에 그대로 보여 줄 규칙(숫자는 위 상수와 같다). */
+export const SUGGESTION_RULES={
+ archive:`대표 게임 가운데 ${MIN_PLAYS_FOR_SUGGESTION}판 이상 했고, 👎가 ${MIN_DOWN_FOR_ARCHIVE}번 이상이며, 👍가 반응의 ${ARCHIVE_RATIO*100}%보다 적은 게임`,
+ featured:`보관함 활동 가운데 ${MIN_PLAYS_FOR_SUGGESTION}판 이상 했고, 👍가 ${MIN_UP_FOR_FEATURED}번 이상이며, 👍가 반응의 ${FEATURED_RATIO*100}% 이상인 활동`,
+ note:'추천일 뿐이에요. 실제로 대표 게임을 바꾸는 것은 선생님이 정해요.',
+} as const;
+/** 보관함으로 보낼 후보: 대표 게임 중 충분히 해 봤고 👎가 분명한 것. */
 export function archiveCandidates(rows:ReactionRow[],isFeatured:(id:string)=>boolean):ReactionRow[]{
- return rows.filter(r=>isFeatured(r.id)&&r.plays>=MIN_PLAYS_FOR_SUGGESTION&&r.ratio!==null&&r.ratio<0.4);
+ return rows.filter(r=>isFeatured(r.id)&&r.plays>=MIN_PLAYS_FOR_SUGGESTION&&r.down>=MIN_DOWN_FOR_ARCHIVE&&r.ratio!==null&&r.ratio<ARCHIVE_RATIO);
 }
-/** 대표로 올릴 후보: 보관함 활동인데 3판 이상 했고 👍 비율이 80% 이상. */
+/** 대표로 올릴 후보: 보관함 활동 중 충분히 해 봤고 👍가 분명한 것. */
 export function featuredCandidates(rows:ReactionRow[],isFeatured:(id:string)=>boolean):ReactionRow[]{
- return rows.filter(r=>!isFeatured(r.id)&&r.plays>=MIN_PLAYS_FOR_SUGGESTION&&r.ratio!==null&&r.ratio>=0.8);
+ return rows.filter(r=>!isFeatured(r.id)&&r.plays>=MIN_PLAYS_FOR_SUGGESTION&&r.up>=MIN_UP_FOR_FEATURED&&r.ratio!==null&&r.ratio>=FEATURED_RATIO);
 }
 
-// ── 반 원정 지도 ─────────────────────────────────────────
-/** 지도 칸: 한 판을 마칠 때마다 한 칸씩 열린다. 30칸을 다 열면 다음 지도(바퀴)로 넘어간다. */
 export const MAP_TILES=30;
 export const MAP_REGIONS=[
  {from:0,name:'출발 마을',icon:'🏡'},{from:5,name:'숲속 길',icon:'🌲'},{from:10,name:'시냇물 다리',icon:'🌉'},
