@@ -11,7 +11,7 @@ import {phoneTeamMotion,phoneRoles,phoneRoundCues,phoneStrategies,phoneNextHint,
 import {phoneFillOptions,phoneMemoryTask,phoneRoundCheck,phoneObservation,phoneScenario,phoneBundle} from '../../../../domain/phoneTaskRules';
 import {PhonePlayIcon} from '../../PhonePlayIcon';
 import {PhonePlayClass} from './PhonePlayClass';
-import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds} from '../../../../domain/phoneClassMode';
+import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds,deviceRuleLine} from '../../../../domain/phoneClassMode';
 import {MovementBingoBoard,PhoneRuleCard} from './PhonePlayClass';
 import {adaptClassicPlay,fitGroupCues,isClassicPlay} from '../../../../domain/phonePlayClassicsMode';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
@@ -49,7 +49,9 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
  const blockReason=decisionReady?'':p.kind==='decision'&&!choice?'먼저 아래에서 방법을 하나 골라요.':p.kind==='create'&&created.length<2?`동작을 두 개 이상 골라요. (지금 ${created.length}개)`:p.id==='phone-play-061'?'자리마다 목표 숫자(0~99)를 적어요.':'고를 것을 다시 확인해요.';
  const accurate=p.kind==='memory'?JSON.stringify(answer)===JSON.stringify(memory.expected):p.kind==='estimate'?Math.abs(elapsed-phoneTarget(round)*1000)<=3500:true;
  const validCount=count===''||/^\d{1,2}$/.test(count);const countsReady=p.id!=='phone-play-061'||Array.from({length:players},(_,i)=>individual[i]).every(v=>v!==undefined&&/^\d{1,2}$/.test(v));
- const completeReady=(p.kind!=='observe'||!!comparison)&&countsReady&&moved&&checked&&participants.length===players&&accurate&&(p.kind!=='count'||(/^\d{1,2}$/.test(count)&&Number(count)>0));
+ // '앞뒤를 비교했어요'는 활동 전·뒤를 모두 골랐을 때만 기록할 수 있다.
+ const compareReady=p.kind!=='observe'||(!!comparison&&(comparison!=='compared'||(!!before&&!!after)));
+ const completeReady=compareReady&&countsReady&&moved&&checked&&participants.length===players&&accurate&&(p.kind!=='count'||(/^\d{1,2}$/.test(count)&&Number(count)>0));
  useEffect(()=>{window.scrollTo(0,0);},[phase,round]);
  useEffect(()=>{
   const hide=()=>{if(document.hidden){setPaused(true);window.speechSynthesis?.cancel();}};
@@ -95,7 +97,7 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
   queueMicrotask(()=>{transition.current=false;});
  };
  if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction}/>;
- return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
+ return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-focus={phase==='countdown'||phase==='active'||undefined} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 신체 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div>{phase!=='intro'&&<p>{`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p>}</header>
   {phase!=='intro'&&<ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/>}
   {phase==='intro'&&<>
@@ -139,7 +141,7 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
     <p>{paused?'잠깐 쉬고 있어요':phase==='countdown'?'기기를 내려놓고 주변을 확인해요':p.rounds[round]}</p>
     <strong>{paused?'일시정지':phase==='countdown'?Math.max(1,Math.ceil((duration-elapsed)/1000)):p.kind==='memory'?(p.id==='phone-play-006'?memory.shown[cueIndex%memory.shown.length]:p.id==='phone-play-003'?'새 신호: '+sequence[cueIndex%sequence.length]+' · 앞 신호의 동작을 해요':memory.rule):p.kind==='estimate'?'걸음으로 시간을 가늠해요':displayCue}</strong>
     <p>{phase==='active'&&p.kind!=='estimate'?`${Math.ceil((duration-elapsed)/1000)}초 남음`:phase==='active'?'시간 표시는 가렸어요.':'4초 뒤 시작해요.'}</p>
-   {phase==='active'&&!seated&&<p className="pp-rule-line">{p.rule3[1]}</p>}
+   {phase==='active'&&!seated&&<p className="pp-rule-line">{deviceRuleLine(p,round,activeCues,cueIndex,level)}</p>}
    </div>{phase==='active'&&p.id==='phone-play-105'&&!seated&&<MovementBingoBoard row={round} done={bingo} onToggle={i=>setBingo(b=>b.map((v,j)=>j===i?!v:v))}/>}{!compact&&<p>{seated?p.seated:p.goal}</p>}
    {phase==='active'&&players>1&&<p data-phone-leader={leader}>지금 이끄는 사람: {leader}번 · 다른 친구도 자기 공간에서 함께 움직여요.</p>}
    {phase==='active'&&p.kind==='estimate'&&!practice&&<button className="pp-primary" disabled={paused||elapsed<1000} onClick={()=>{setPhase('record');window.speechSynthesis?.cancel();}}>멈췄어요 · 시간 확인</button>}
@@ -155,11 +157,11 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
    {p.kind==='memory'&&<fieldset><legend>{memory.prompt}</legend><p aria-live="polite">{answer.length?answer.join(' → '):'동작 순서대로 선택해요.'}</p>{[...p.cues,...(p.id==='phone-play-033'?phoneFillOptions(round):[])].map(c=><button key={c} disabled={answer.length>=memory.expected.length} onClick={()=>setAnswer(a=>[...a,c])}>{c}</button>)}<button onClick={()=>setAnswer([])}>순서 지우기</button>{answer.length===memory.expected.length&&!accurate&&<p role="alert">기억 순서를 다시 확인하거나 도전 기록으로 남겨요.</p>}</fieldset>}
    {p.kind==='estimate'&&<p>실행 시간: {(elapsed/1000).toFixed(1)}초 · 목표: {phoneTarget(round)}초 · 오차: {(Math.abs(elapsed-phoneTarget(round)*1000)/1000).toFixed(1)}초{!accurate?' · 다시 해 보거나 도전 기록으로 남겨요.':''}</p>}
    {!quick&&<label><input type="checkbox" checked={checked} onChange={e=>setChecked(e.target.checked)}/>{roundCheck}</label>}
-   {p.kind==='observe'&&<><label>{observation.label} · 활동 뒤<select value={after} onChange={e=>setAfter(e.target.value)}><option value="">선택하지 않음</option>{observation.options.map(v=><option key={v}>{v}</option>)}</select><p>앞: {before} · 뒤: {after||'선택 없음'} · 좋고 나쁨의 순위를 매기지 않아요.</p></label><label>비교 과정 확인 (느낌 응답은 선택)<select value={comparison} onChange={e=>setComparison(e.target.value)}><option value="">과정을 골라요</option><option value="compared">앞뒤를 비교했어요</option><option value="uncertain">살펴봤지만 차이를 모르겠어요</option><option value="skip">느낌 응답은 생략하고 관찰 방법을 익혔어요</option></select></label></>}
+   {p.kind==='observe'&&<><label>{observation.label} · 활동 뒤<select value={after} onChange={e=>setAfter(e.target.value)}><option value="">선택하지 않음</option>{observation.options.map(v=><option key={v}>{v}</option>)}</select><p>앞: {before||'고르지 않음'} · 뒤: {after||'고르지 않음'} · 좋고 나쁨의 순위를 매기지 않아요.</p></label><label>비교 과정 확인 (느낌 응답은 선택)<select value={comparison} onChange={e=>setComparison(e.target.value)}><option value="">과정을 골라요</option><option value="compared" disabled={!before||!after}>앞뒤를 비교했어요{!before||!after?' (활동 전·뒤를 모두 골라야 해요)':''}</option><option value="uncertain">살펴봤지만 차이를 모르겠어요</option><option value="skip">느낌 응답은 생략하고 관찰 방법을 익혔어요</option></select></label></>}
    {round===2&&<label>오늘의 느낌 (선택)<select value={feeling} onChange={e=>setFeeling(e.target.value)}><option value="">선택하지 않음</option><option>새로운 방법을 해 봤어요</option><option>친구와 맞추는 게 즐거웠어요</option><option>다음에는 더 천천히 해 보고 싶어요</option></select></label>}
    <button className="pp-primary" disabled={!completeReady} onClick={()=>save('complete')}>{round===2?'목표 확인 · 놀이 마치기':'목표 확인 · 다음 과제로'}</button>
    <button disabled={!moved||!participants.length||!validCount||!countsReady} onClick={()=>save('partial')}>{round===2?'도전한 만큼 기록 · 마치기':'도전한 만큼 기록 · 다음 과제로'}</button>
-   <button onClick={()=>{setElapsed(0);resetRecord();setPhase('plan');}}>같은 과제 다시 해보기</button><p>목표 확인 100점, 도전 기록 50점 · 기기가 판정하지 않는 참여 기록이에요.</p>
+   <button onClick={()=>{setElapsed(0);resetRecord();if(p.id==='phone-play-105')setBingo(b=>b.map((v,i)=>Math.floor(i/3)===round?false:v));setPhase('plan');}}>같은 과제 다시 해보기</button><p>목표 확인 100점, 도전 기록 50점 · 기기가 판정하지 않는 참여 기록이에요.</p>
   </>)}
   {phase==='done'&&<p role="status">세 과제의 참여 기록을 저장했어요.</p>}
   {['plan','active','countdown','record'].includes(phase)&&<div className="pp-panel"><button onClick={()=>save('rest')}>이번 과제 쉬기 · 0점 기록</button><button onClick={()=>save('observe')}>이번 과제 관찰 참여 · 0점 기록</button></div>}{phase!=='done'&&<button className="pp-exit" onClick={onExit}>활동 목록으로 돌아가기</button>}

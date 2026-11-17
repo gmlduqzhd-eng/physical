@@ -70,7 +70,8 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
   {phase!=='intro'&&phase!=='explain'&&<ActivityProgress steps={spec.scenarios.map(s=>s.title)} current={index} results={records.map(()=>'complete')}/>}
   {(phase==='scenario'||phase==='explain')&&<><p className="mq-kicker">{reviewing?'다른 상황에서 이유 확인':`상황 ${index+1}`} · {current.title}</p><div className="safety-situation"><h2>{current.situation}</h2>{current.picture&&<SafetyPicture kind={current.picture}/>}</div>
    {phase==='scenario'&&<>
-    <fieldset className="mq-choices"><legend>어떤 선택이 안전할까요?</legend>{safetyChoiceOrder(current.choices,choiceSeed,index,reviewing).map(c=><button key={c.id} aria-pressed={selected===c.id} onClick={()=>{setSelected(c.id);if(c.id===current.answer)setPhase('explain');else if(!reviewing)setMissed(old=>[...new Set([...old,index])]);}}>{c.label}</button>)}</fieldset>
+    {/* 틀린 뒤 다시 풀 때도 선택지 순서를 그대로 둬요(교실 TV에서 순서가 바뀌면 헷갈려요). */}
+    <fieldset className="mq-choices"><legend>어떤 선택이 안전할까요?</legend>{safetyChoiceOrder(current.choices,choiceSeed,index,false).map(c=><button key={c.id} aria-pressed={selected===c.id} onClick={()=>{setSelected(c.id);if(c.id===current.answer)setPhase('explain');else if(!reviewing)setMissed(old=>[...new Set([...old,index])]);}}>{c.label}</button>)}</fieldset>
     {selected&&<p role="alert" className="mq-error">{current.choices.find(c=>c.id===selected)?.feedback}</p>}
    </>}
    {phase==='explain'&&<>

@@ -42,13 +42,22 @@ export function classOutcomeResult(play:PhonePlay,outcome:ClassOutcome,run:{task
 }
 /** 반 전체 진행에서 신호 하나가 화면에 머무는 시간. 걸어서 모이거나 구석으로 가는 놀이는 길게 둔다. */
 export function classCueMs(id:string){return id==='phone-play-101'?12000:id==='phone-play-106'?10000:CLASS_CUE_MS;}
+/**
+ * 신호 하나가 머무는 시간. 순서가 있는 기억 놀이는 신호가 모두 과제 시간 안에 나오도록 줄인다
+ * (예: 거꾸로 따라 하기 6개 신호를 30초에 → 5초씩). 다른 놀이는 정해 둔 간격 그대로 돌아간다.
+ */
+export function classCueIntervalMs(baseMs:number,taskSeconds:number,cueCount:number,ordered:boolean){
+ if(!ordered||cueCount<1)return baseMs;
+ return Math.min(baseMs,Math.floor(classTaskSeconds(taskSeconds)*1000/cueCount));
+}
 /** 시작 화면의 3줄 규칙을 보여 주는 단계. 역할을 정해야 하는 놀이는 교사가 누를 때까지 기다린다. */
 export const CLASS_RULES_MS=10000;
 export interface ClassRoundView {
  brief:string;cues:string[];memory:boolean;
  /** 판단 놀이: 반 전체에는 틀린 고를 것을 띄우지 않으므로 늘 빈 배열이다(옛 화면과 맞추려고 남겨 둔다). */ choices:readonly string[];
  /** 판단 놀이에서 화면에 보여 줄 좋은 방법 한 가지. */ plan?:string;
- /** 기억 놀이: 늘 보이는 순서와, 신호마다 지금 할 차례(순서의 몇 번째인지, 없으면 -1). */ sequence:readonly string[];steps:readonly number[];
+ /** 기억 놀이: 하는 동안 보이는 순서(006은 ?로, 추가 도전은 가린 순서)와, 신호마다 지금 할 차례(순서의 몇 번째인지, 없으면 -1). */ sequence:readonly string[];steps:readonly number[];
+ /** 기억 놀이: 안내·카운트다운 동안 먼저 보여 주는 진짜 순서. 가리는 것은 하는 동안뿐이다. */ reveal:readonly string[];
  /** 신호마다 그 아래에 보일 규칙 한 줄. */ rules:readonly string[];
 }
 /**
@@ -61,40 +70,55 @@ const NO_STEPS:readonly number[]=Object.freeze([]) as readonly number[];
 const swapSide=(text:string)=>text.replaceAll('왼','__SIDE__').replaceAll('오른','왼').replaceAll('__SIDE__','오른');
 /** 과제의 규칙 한 줄(신호 아래). 정해 둔 줄이 없으면 3줄 규칙의 '어떻게'를 쓴다. */
 export function classRuleLine(play:PhonePlay,round:number){const line=play.ruleLine;return typeof line==='string'?line:line?.[Math.min(2,round)]??play.rule3[1];}
+export const EVOLVE_HARD_RULE='이기면 한 단계 위로 · 지면 한 단계 내려가요';
 /** 새와 나무: '바꿔!'가 나올 때마다 두 뜻이 바뀌므로, 신호마다 지금의 뜻을 보여 준다. */
 function swapRules(cues:readonly string[]){
  // 과제마다 처음 뜻에서 시작한다(기기 진행과 같다).
  let swapped=false;
  return cues.map(c=>{if(c==='바꿔!'){swapped=!swapped;return `이제부터 ${swapped?'새=손 모으기 · 나무=팔 펴기':'새=팔 펴기 · 나무=손 모으기'}`;}return `지금: ${swapped?'새=손 모으기 · 나무=팔 펴기':'새=팔 펴기 · 나무=손 모으기'}`;});
 }
-/** 기억 놀이를 반 전체로 할 때: 순서는 늘 보이고, 지금 할 차례를 하나씩 짚어 준다(추가 도전은 순서를 가린다). */
+/**
+ * 기억 놀이를 반 전체로 할 때: 안내 동안 진짜 순서를 먼저 보여 준다(reveal).
+ * 하는 동안에는 순서를 계속 보이며 지금 할 차례를 짚어 준다. 006은 한 칸을 ?로, 추가 도전은 순서를 가린다.
+ */
 function memoryView(play:PhonePlay,round:number,easy:boolean,hard:boolean,rule:string){
  const task=phoneMemoryTask(play,round,easy,hard,play.id==='phone-play-033'?phoneFillOptions(round)[0]:'');
  const base=task.base,hide=(list:string[])=>hard?list.map((_,i)=>`${i+1}번째 ?`):list;
  if(play.id==='phone-play-006'){
   const missing=round%base.length,sequence=base.map((c,i)=>i===missing?'?':c);
-  return {sequence,cues:base.map((c,i)=>i===missing?'? 빠진 동작을 몸으로!':c),steps:base.map((_,i)=>i),rules:base.map((_,i)=>i===missing?'? 자리에 들어갈 동작을 기억해 몸으로 해요':rule)};
+  return {reveal:base,sequence,cues:base.map((c,i)=>i===missing?'? 빠진 동작을 몸으로!':c),steps:base.map((_,i)=>i),rules:base.map((_,i)=>i===missing?'? 자리에 들어갈 동작을 기억해 몸으로 해요':rule)};
  }
  if(play.id==='phone-play-014'){
   const back=[...base].reverse(),steps=[...base.map((_,i)=>i),...base.map((_,i)=>base.length-1-i)];
-  return {sequence:hide(base),cues:[...base.map((c,i)=>hard?`${i+1}번째 동작!`:c),...back.map((c,i)=>hard?`거꾸로 ${base.length-i}번째!`:`거꾸로: ${c}`)],steps,rules:steps.map((_,i)=>i<base.length?'먼저 순서대로 해요':'이제 끝에서부터 거꾸로!')};
+  return {reveal:base,sequence:hide(base),cues:[...base.map((c,i)=>hard?`${i+1}번째 동작!`:c),...back.map((c,i)=>hard?`거꾸로 ${base.length-i}번째!`:`거꾸로: ${c}`)],steps,rules:steps.map((_,i)=>i<base.length?'먼저 순서대로 해요':'이제 끝에서부터 거꾸로!')};
  }
- if(play.id==='phone-play-028')return {sequence:hide(base),cues:base.map((c,i)=>hard?`${i+1}번째 동작!`:c),steps:base.map((_,i)=>i),rules:base.map(c=>swapSide(c)===c?'양손은 그대로 해요':`거울처럼 반대 손: ${swapSide(c)}`)};
- if(play.id==='phone-play-033'){const sequence=[...base,'네 번째: 내가 고른 작은 몸짓'];return {sequence:hide(sequence),cues:sequence.map((c,i)=>hard&&i<3?`${i+1}번째 동작!`:c),steps:sequence.map((_,i)=>i),rules:sequence.map((_,i)=>i===3?'멈춤이나 작은 손짓을 넣어요':rule)};}
- return {sequence:hide(base),cues:base.map((c,i)=>hard?`${i+1}번째 동작!`:c),steps:base.map((_,i)=>i),rules:base.map(c=>play.meanings?.[c]?`뜻: ${play.meanings[c]}`:rule)};
+ if(play.id==='phone-play-028')return {reveal:base,sequence:hide(base),cues:base.map((c,i)=>hard?`${i+1}번째 동작!`:c),steps:base.map((_,i)=>i),rules:base.map(c=>swapSide(c)===c?'양손은 그대로 해요':`거울처럼 반대 손: ${swapSide(c)}`)};
+ if(play.id==='phone-play-033'){const sequence=[...base,'네 번째: 내가 고른 작은 몸짓'];return {reveal:sequence,sequence:hide(sequence),cues:sequence.map((c,i)=>hard&&i<3?`${i+1}번째 동작!`:c),steps:sequence.map((_,i)=>i),rules:sequence.map((_,i)=>i===3?'멈춤이나 작은 손짓을 넣어요':rule)};}
+ return {reveal:base,sequence:hide(base),cues:base.map((c,i)=>hard?`${i+1}번째 동작!`:c),steps:base.map((_,i)=>i),rules:base.map(c=>play.meanings?.[c]?`뜻: ${play.meanings[c]}`:rule)};
+}
+/**
+ * 기기 1대 진행에서 큰 신호 아래에 보일 규칙 한 줄. 반 전체 진행과 같은 줄을 쓴다.
+ * 새와 나무처럼 뜻이 바뀌는 놀이는 지금까지 나온 신호를 따라 지금의 뜻을 보여 준다.
+ */
+export function deviceRuleLine(play:PhonePlay,round:number,cues:readonly string[],cueIndex:number,level='기본 방법'){
+ if(play.id==='phone-play-104'&&level==='추가 도전')return EVOLVE_HARD_RULE;
+ if(!cues.length)return classRuleLine(play,Math.min(round,2));
+ const i=cueIndex%cues.length;
+ return play.id==='phone-play-011'?swapRules(cues)[i]:classRuleLine(play,Math.min(round,2));
 }
 export function classRoundView(source:PhonePlay,round:number,level:string,seated:boolean,seed=0,cueSeconds=classCueMs(source.id)/1000,taskSeconds=CLASS_DEFAULT_SECONDS):ClassRoundView{
  // 반 전체는 인원 제한이 없으므로 큰 모둠 신호도 쓴다. 쉬운 방법이면 과제 제목도 쉬운 신호에 맞춘다.
  const play=adaptClassicPlay(source,level==='쉬운 방법',Infinity);
  const easy=level==='쉬운 방법',hard=level==='추가 도전',isMemory=play.kind==='memory',r=Math.min(round,play.rounds.length-1);
- const rule=classRuleLine(play,r),empty={sequence:NO_CHOICES,steps:NO_STEPS};
+ // 진화 산책의 추가 도전은 지면 한 단계 내려가므로, 신호 아래 규칙 한 줄도 그대로 맞춘다.
+ const rule=play.id==='phone-play-104'&&hard?EVOLVE_HARD_RULE:classRuleLine(play,r),empty={sequence:NO_CHOICES,steps:NO_STEPS,reveal:NO_CHOICES};
  if(seated)return {brief:play.seated,cues:[play.seated],memory:false,choices:NO_CHOICES,...empty,rules:[play.seated]};
  // 2026-11에 더한 놀이(101~106)는 과제 동안 신호가 바뀐다. 숫자·구석은 무작위, 여우는 출발선 신호를 넣는다.
  if(isClassicPlay(play.id)){
   const cues=classicClassCues(play,round,level,phoneSequence(play,round,easy),seed,16,cueSeconds,classTaskSeconds(taskSeconds));
   return {brief:play.rounds[r],cues,memory:false,choices:NO_CHOICES,...empty,rules:cues.map(()=>rule)};
  }
- if(isMemory&&play.id!=='phone-play-003'){const m=memoryView(play,round,easy,hard,rule);return {brief:m.sequence.join(' → '),cues:m.cues,memory:true,choices:NO_CHOICES,sequence:m.sequence,steps:m.steps,rules:m.rules};}
+ if(isMemory&&play.id!=='phone-play-003'){const m=memoryView(play,round,easy,hard,rule);return {brief:m.reveal.join(' → '),cues:m.cues,memory:true,choices:NO_CHOICES,sequence:m.sequence,steps:m.steps,reveal:m.reveal,rules:m.rules};}
  const memory=phoneMemoryTask(play,round,easy,hard,'');
  // 큰 글씨 안내는 음성이 읽는 과제 이름과 같게 한다.
  const brief=isMemory?memory.base.join(' → '):play.rounds[r];

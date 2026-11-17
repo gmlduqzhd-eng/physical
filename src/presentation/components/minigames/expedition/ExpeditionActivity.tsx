@@ -5,7 +5,7 @@ import {paceExpeditionSteps} from '../../../../domain/fourthGameRules';
 import {ActivityProgress} from '../common/ActivityProgress';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import type {ExpeditionSpec} from '../../../../domain/expeditionGames';
-import {createExpeditionRound,expeditionRuleCard,checkExpeditionAnswer,expeditionScore,expeditionBingo,validateExpeditionRecord,type ExpeditionRecord,type ExpeditionRound} from '../../../../domain/expeditionRules';
+import {SOLO_ROLE,createExpeditionRound,expeditionRuleCard,checkExpeditionAnswer,expeditionScore,expeditionBingo,validateExpeditionRecord,type ExpeditionRecord,type ExpeditionRound} from '../../../../domain/expeditionRules';
 import {isRevampedExpedition,paceExpedition,expeditionRehearsal} from '../../../../domain/expeditionRevamps';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import {useVoiceCoach} from '../../../../application/useVoiceCoach';
@@ -13,26 +13,13 @@ import {useAudio} from '../../../../application/useAudio';
 import {ExpeditionDemo} from './ExpeditionDemo';
 import './ExpeditionActivity.css';
 import '../common/GameWordCue.css';
+import {stickyTopBottom} from '../../../stickyTop';
 
 interface Props { game:ExpeditionSpec;groupId:string;solo:boolean;enqueueAction:(action:{payload:{id:string;amount:number;details:GameResultDetails}})=>void; }
 type Phase='ready'|'tutorial'|'countdown'|'preview'|'active'|'record';
 const fourPlayers=new Set(['T01','T02','T07','T21','T22','T24','T33','T35','T36','T38','T40','T42','T44']);
 const expeditionMinimumPlayers=(game:ExpeditionSpec)=>game.spec[0]==='T'?(fourPlayers.has(game.spec)?4:2):game.players;
 
-/**
- * 화면 위에 붙어 있는(sticky·fixed) 머리글의 아래쪽 위치. 지시를 그 아래로 내려 가려지지 않게 한다.
- * 단계가 바뀔 때만 한 번 계산한다. 화면 위쪽에 닿아 있는 고정 요소만 센다(아래쪽 버튼 막대는 제외).
- */
-function stickyTopBottom():number{
-  let bottom=0;
-  for(const el of Array.from(document.body.querySelectorAll('*'))){
-    const position=getComputedStyle(el).position;
-    if(position!=='sticky'&&position!=='fixed')continue;
-    const rect=el.getBoundingClientRect();
-    if(rect.height>0&&rect.top<=bottom+1&&rect.bottom<window.innerHeight/2)bottom=Math.max(bottom,rect.bottom);
-  }
-  return bottom;
-}
 export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
   const classroomPaused=useActivityPause();
   const [pace,setPace]=useState(1),[compact,setCompact]=useState(false);
@@ -158,9 +145,11 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       {phase==='active'&&<>
         {plan.wordCue&&<div className="expedition-signal expedition-now expedition-word"><p className="expedition-word-rule">이번 규칙: <b>{plan.wordCue.rule}</b></p><strong className="game-word-cue" data-game-color="expedition-word" style={{color:plan.wordCue.color}}>{plan.wordCue.text}</strong></div>}
         <div className="expedition-signal expedition-now" role="status" aria-live="polite">
-          {current.beats?<strong className="expedition-beat expedition-big">{current.beats[beat]}{alternative&&' (쉬운 동작: 양팔 번갈아)'}</strong>:<h3 className="expedition-big">{current.title}</h3>}
+          {current.beats?<strong className="expedition-beat expedition-big">{current.beats[beat]}{alternative&&' (쉬운 동작: 양팔 번갈아)'}</strong>:plan.wordCue?null:<h3 className="expedition-big">{current.title}</h3>}
+          {current.reveal&&current.seconds-seconds>=current.reveal.after&&<strong className="expedition-big expedition-reveal">{current.reveal.text}</strong>}
           <p>{current.hint??current.instruction}</p>{alternative&&<small>쉬운 동작: {game.alternative}</small>}
           {current.beats&&<div className="expedition-beats" aria-hidden="true">{Array.from({length:8},(_,i)=><span key={i} className={i===beat?'selected':''}>{i+1}</span>)}</div>}
+          {plan.roles.some(role=>!role.endsWith(SOLO_ROLE))&&<ul className="expedition-now-roles" aria-label="지금 맡은 역할">{plan.roles.map(role=><li key={role}>{role}</li>)}</ul>}
           <p className="expedition-now-meta"><span>{step+1}/{plan.steps.length}</span>{plan.timing==='estimate'?<span>시간은 가려져 있어요. 느낌으로 해 봐요.</span>:<span className="expedition-timer">{plan.timing?Math.floor(elapsed.current/1000):seconds}<small>초</small></span>}</p>
         </div>
         {plan.timing==='arrival'?<div className="expedition-participants">{arrivals.map((t,i)=><button key={i} disabled={paused||t!==null} onClick={()=>arrival(i)}>관찰자: {i+1}번 {t===null?'도착 확인':`${Math.round(t/100)/10}초 도착`}</button>)}</div>:plan.timing&&<button className="expedition-primary expedition-arrive" disabled={paused} onClick={stopActivity}>{plan.timing==='estimate'?'지금 끝내기':'도착!'}</button>}
