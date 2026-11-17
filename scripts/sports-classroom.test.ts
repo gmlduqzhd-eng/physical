@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {awardReady,startScores,parseLessonProgress,blankResults,TEAM_COLORS,SPORT_EVENTS,SPORT_BY_ID,SPORT_GROUPS,RECOMMENDED_SPORTS,SPORT_FILTERS,filterSports,rankTeams,formatResult,addMedals,medalStandings,parseMedalTally,LESSON_STAGES} from '../src/domain/sportsClassroom';
+import {awardReady,scoreChange,startScores,parseLessonProgress,blankResults,TEAM_COLORS,SPORT_EVENTS,SPORT_BY_ID,SPORT_GROUPS,RECOMMENDED_SPORTS,SPORT_FILTERS,filterSports,rankTeams,formatResult,addMedals,medalStandings,parseMedalTally,LESSON_STAGES} from '../src/domain/sportsClassroom';
 
 test('all 28 sports carry what a lesson needs: rules, gear, safety, warm-up, roles, a goal and a reflection',()=>{
  assert.equal(SPORT_EVENTS.length,28);assert.equal(new Set(SPORT_EVENTS.map(e=>e.id)).size,28);assert.equal(LESSON_STAGES.length,6);
@@ -53,4 +53,13 @@ test('lesson progress survives a refresh only for the same sport and only when i
  assert.equal(parseLessonProgress(ok,'golf'),null);
  for(const bad of [{...ok,stage:9},{...ok,teams:5},{...ok,level:'x'},{...ok,scores:[1,2]},{...ok,scores:[1,'a',null,null]},null,'x'])assert.equal(parseLessonProgress(bad,'archery'),null);
  assert.equal(parseLessonProgress({...ok,awarded:'yes'},'archery')!.awarded,false);
+});
+
+test('starting a match records 0:0 without an undo entry, so a 0:0 game can still be awarded',()=>{
+ const blank=blankResults(),started=startScores({mode:'score'},blank);
+ assert.equal(scoreChange(blank,started),'start');
+ assert.equal(awardReady(started.slice(0,2)),true);
+ assert.equal(scoreChange(started,started.slice()),'same');
+ assert.equal(scoreChange(started,started.map((v,i)=>i===0?1:v)),'change');
+ assert.equal(scoreChange([1,null,null,null],[0,null,null,null]),'change');
 });

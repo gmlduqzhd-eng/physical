@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PhysicalActivityLayout } from './common/PhysicalActivityLayout';
 import { CheckCircle2 } from 'lucide-react';
 import { sfxCoin, sfxSuccess } from '../../../application/soundEffects';
-import { MISSIONS, MOVES, MOVE_IDS, blockCount, checkMission, describeStep, programmerFor, pseudoCode, robotFor, runProgram, type Block, type MoveId, type Program, type Step } from '../../../domain/bodyCoding';
+import { MISSIONS, MOVES, MOVE_IDS, blockCount, checkMission, missionGoal, describeStep, programmerFor, pseudoCode, robotFor, runProgram, type Block, type MoveId, type Program, type Step } from '../../../domain/bodyCoding';
 
 interface Props {
   groupId?: string;
@@ -104,9 +104,9 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
               <span className={`rounded-full border px-2 py-0.5 text-[11px] font-black ${KIND_COLOR[current.kind]}`}>{current.kind}</span>
               <h3 className="text-base font-black text-white">{current.stage}단계 · {current.title}</h3>
             </div>
-            <p className="text-sm text-slate-300">{current.goal}</p>
+            <p className="text-sm text-slate-300">{missionGoal(current, seated)}</p>
             <p className="text-sm font-bold text-slate-200">🧑‍💻 프로그래머: {programmerFor(mission)} · 🤖 로봇: {robotFor(mission)}</p>
-            <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={seated} onChange={e => setSeated(e.target.checked)} />앉아서 하는 로봇(작은 손·발 동작)</label>
+            <label className="flex items-center gap-2 text-xs text-slate-300"><input type="checkbox" checked={seated} onChange={e => { setSeated(e.target.checked); setResult(null); }} />앉아서 하는 로봇(작은 손·발 동작)</label>
           </section>
 
           <section aria-label="블록 고르기" className="space-y-2">
@@ -156,10 +156,10 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
                 </li>
               ))}
             </ol>
-            {showText && <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">{pseudoCode(program).join('\n')}</pre>}
+            {showText && <pre className="mt-3 whitespace-pre-wrap rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-200">{pseudoCode(program, seated).join('\n')}</pre>}
           </section>
 
-          <button type="button" onClick={() => setResult(checkMission(current, program))} className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3 text-sm font-black text-white">✅ 미션 확인</button>
+          <button type="button" onClick={() => setResult(checkMission(current, program, seated))} className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3 text-sm font-black text-white">✅ 미션 확인</button>
           {result && (result.ok
             ? <p role="status" className="rounded-xl border border-emerald-700 bg-emerald-950 p-3 text-sm font-bold text-emerald-200">좋아요! 이제 로봇 친구에게 실행해 봐요.</p>
             : <ul role="status" className="list-disc space-y-1 rounded-xl border border-amber-700 bg-amber-950 p-3 pl-6 text-sm text-amber-200">{result.reasons.map(r => <li key={r}>{r}</li>)}</ul>)}

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {MISSIONS,blockCount,checkMission,describeStep,farthestForward,programmerFor,pseudoCode,returnsHome,robotFor,runProgram,type Program} from '../src/domain/bodyCoding';
+import {MISSIONS,blockCount,checkMission,describeStep,farthestForward,missionGoal,pathsOf,programmerFor,pseudoCode,returnsHome,robotFor,runProgram,type Program} from '../src/domain/bodyCoding';
 
 test('a program unrolls repeats and picks a branch from the signal',()=>{
  const program:Program=[{kind:'move',move:'forward'},{kind:'repeat',times:3,body:['clap']},{kind:'if',then:'stop',else:'arms'},{kind:'move',move:'back'}];
@@ -72,4 +72,25 @@ test('mission messages: the repeat mission accepts the interleaved answer, the o
  assert.equal(checkMission(MISSIONS[1],[{kind:'repeat',times:3,body:['clap','arms']}]).ok,true);
  assert.match(checkMission(MISSIONS[0],[{kind:'move',move:'clap'}]).reasons.join(' '),/미션 순서: 앞으로 한 걸음 → 손뼉 한 번/);
  assert.match(checkMission(MISSIONS[2],[{kind:'if',then:'arms',else:'stop'}]).reasons.join(' '),/‘팔 펴기’로 정해요/);
+});
+
+test('every signal combination is checked, even with many choice blocks',()=>{
+ // 11 safe choice blocks, then one more whose 초록 branch walks away: only some combinations fail.
+ const safe=Array.from({length:11},()=>({kind:'if' as const,then:'clap' as const,else:'arms' as const}));
+ const bad:Program=[...safe,{kind:'if',then:'clap',else:'forward'}];
+ assert.equal(returnsHome(bad),false,'the 12th choice block must still be checked');
+ const far:Program=[...safe,...Array.from({length:4},()=>({kind:'if' as const,then:'clap' as const,else:'forward' as const})),{kind:'repeat',times:4,body:['back']}];
+ assert.ok(farthestForward(far)>3);
+ assert.ok(pathsOf(bad).length<=4,'states are merged instead of enumerated');
+});
+
+test('seated mode uses seated names in the text view, goal and order message; turn hint only with a turn block',()=>{
+ assert.match(pseudoCode([{kind:'move',move:'forward'}],true)[0],/한 발을 앞으로 살짝 내밀기/);
+ assert.match(missionGoal(MISSIONS[0],true),/한 발을 앞으로 살짝 내밀기/);
+ assert.doesNotMatch(missionGoal(MISSIONS[0],true),/한 걸음/);
+ assert.match(checkMission(MISSIONS[0],[{kind:'move',move:'clap'}],true).reasons.join(' '),/미션 순서: 한 발을 앞으로 살짝 내밀기/);
+ const noTurn=checkMission(MISSIONS[0],[{kind:'move',move:'clap'},{kind:'move',move:'forward'}]).reasons.join(' ');
+ assert.match(noTurn,/출발한 자리에서 끝나야/);
+ assert.doesNotMatch(noTurn,/반 바퀴/);
+ assert.match(checkMission(MISSIONS[3],[{kind:'move',move:'turn'},{kind:'move',move:'forward'}]).reasons.join(' '),/반 바퀴 돌면/);
 });
