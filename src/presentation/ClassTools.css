@@ -20,3 +20,5 @@
 @media(prefers-reduced-motion:reduce){.tools-trace{animation:none;stroke-dashoffset:0}.tools-big strong{animation:none}}
 @media print{.tools-bar,.tools-tabs,.tools-side button,.tools-draw{display:none}}
 .play-experiences[hidden],.class-tools [hidden]{display:none!important}
+.tools-log{margin:0 0 14px;font-size:15px}.tools-log summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}.tools-log ol{margin:4px 0 0;padding-left:22px;line-height:1.8}
+.tools-sibling{margin-top:14px;line-height:1.7}.tools-sibling a{font-weight:750;color:var(--forest-accent,#447565)}
