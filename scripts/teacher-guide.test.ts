@@ -1,0 +1,34 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {AVAILABLE_GAMES} from '../src/domain/gamesData';
+import {ALL_STANDARDS} from '../src/data/curriculumStandards';
+import {teacherGuide} from '../src/domain/teacherGuide';
+
+const known=new Set(ALL_STANDARDS.map(s=>s.code));
+
+test('every live activity has a teacher guide with real standards, three questions and an honest source label',()=>{
+ for(const g of AVAILABLE_GAMES){
+  const guide=teacherGuide(g);
+  assert.equal(guide.questions.length,3,g.type);
+  for(const s of guide.standards){
+   assert(s.standards.length>=1,g.type);
+   for(const st of s.standards){assert(known.has(st.code),`${g.type} ${st.code}`);assert.equal(st.gradeGroup,s.grade,g.type);assert.equal(st.domain,g.domain,g.type);}
+   if(s.source==='data')assert.equal(s.standards[0].code,g.achievement.code,g.type);
+  }
+  assert.equal(guide.standards.length,(['3~4학년군','5~6학년군'] as const).filter(x=>g.grades.includes(x)).length,g.type);
+  if(g.grades.includes('1~2학년'))assert(guide.lowGradeTheme,g.type);else assert.equal(guide.lowGradeTheme,null,g.type);
+ }
+});
+
+test('codes written in the activity data are kept, and missing ones are marked as suggestions',()=>{
+ const strategy=teacherGuide(AVAILABLE_GAMES.find(g=>g.type==='space-occupier')!);
+ assert.equal(strategy.standards.find(s=>s.grade==='3~4학년군')?.source,'data');
+ assert(strategy.standards.find(s=>s.grade==='5~6학년군')!.standards.every(s=>s.subArea.includes('전략형')));
+ const fox=teacherGuide(AVAILABLE_GAMES.find(g=>g.type==='phone-play-102')!);
+ assert(fox.standards.every(s=>s.source==='suggested'));assert.match(fox.questions[0],/밥 먹을 시간/);
+});
+
+test('the activity library shows the guide to teachers only',()=>{
+ assert.match(readFileSync(new URL('../src/presentation/ActivityLibrary.tsx',import.meta.url),'utf8'),/\{!solo&&<TeacherGuidePanel game=\{g\}\/>\}/);
+});

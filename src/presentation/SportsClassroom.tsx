@@ -1,3 +1,5 @@
+import {ExportMenu} from './components/ExportMenu';
+import type {ExportTable} from '../application/documentExport';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useRunningClock} from '../application/useRunningClock';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
@@ -16,7 +18,7 @@ const readTally=()=>parseMedalTally(readJsonStorage(MEDAL_KEY));
 function MedalTable({tally,onReset}:{tally:MedalTally;onReset?:()=>void}){
  const rows=medalStandings(tally);
  if(!rows.length)return <p className="sports-muted">아직 시상한 메달이 없어요. 경기를 마치고 시상하면 여기에 모여요.</p>;
- return <><table className="sports-medals"><caption>우리 반 종합 메달 순위</caption><thead><tr><th scope="col">팀</th><th scope="col">🥇 금</th><th scope="col">🥈 은</th><th scope="col">🥉 동</th></tr></thead><tbody>{rows.map(r=><tr key={r.team}><th scope="row">{r.team}</th><td>{r.gold}</td><td>{r.silver}</td><td>{r.bronze}</td></tr>)}</tbody></table>{onReset&&<button onClick={onReset}>메달 기록 초기화</button>}</>;
+ return <><table className="sports-medals"><caption>우리 반 종합 메달 순위</caption><thead><tr><th scope="col">팀</th><th scope="col">🥇 금</th><th scope="col">🥈 은</th><th scope="col">🥉 동</th></tr></thead><tbody>{rows.map(r=><tr key={r.team}><th scope="row">{r.team}</th><td>{r.gold}</td><td>{r.silver}</td><td>{r.bronze}</td></tr>)}</tbody></table><ExportMenu table={():ExportTable=>({title:'우리 반 종합 메달',fileBase:'종합메달',meta:[['저장한 때',new Date().toLocaleString('ko-KR')]],headers:['팀','금','은','동'],rows:rows.map(r=>[r.team,r.gold,r.silver,r.bronze])})}/>{onReset&&<button onClick={onReset}>메달 기록 초기화</button>}</>;
 }
 
 /** 종목 고르기 */
@@ -96,7 +98,11 @@ function SportLessonBody({event}:{event:SportEvent}){
  useEffect(()=>{writeStorage(LESSON_KEY,JSON.stringify({sport:event.id,stage,teams,level,scores,awarded}),'session');},[event.id,stage,teams,level,scores,awarded]);
  useEffect(()=>{window.scrollTo(0,0);},[stage]);
  const id=LESSON_STAGES[stage].id,played=scores.slice(0,teams),ranking=rankTeams(event,played.map((value,team)=>({team,value}))),ready=awardReady(played);
- const resetMatch=()=>{setScores(blankResults());setAwarded(false);setRound(r=>r+1);};
+ // 되돌리기: 이번 경기에서 바꾼 점수를 최근 30번까지 기억한다(새로고침하면 점수는 이어지고 되돌리기 목록만 비워져요).
+ const [undoStack,setUndoStack]=useState<Results[]>([]);
+ const recordScores=(next:Results)=>{setUndoStack(u=>[...u.slice(-29),scores]);setScores(next);};
+ const undoScores=()=>{const last=undoStack.at(-1);if(!last)return;setUndoStack(u=>u.slice(0,-1));setScores(last);};
+ const resetMatch=()=>{setScores(blankResults());setAwarded(false);setRound(r=>r+1);setUndoStack([]);};
  const award=()=>{if(awarded||!ready)return;const next=addMedals(readTally(),ranking);writeStorage(MEDAL_KEY,JSON.stringify(next));setTally(next);setAwarded(true);sfxWhistle();};
  return <FlowShell utilities back="/sports" backLabel="종목 고르기"><section className="play-experiences sports-lesson" aria-label={`${event.name} 수업`} data-sport={event.id} data-stage={id}>
   <p className="eyebrow">종목 교실 · {SPORT_GROUPS[event.group]}</p><h1><span aria-hidden="true">{event.icon}</span> {event.name} <small>{event.sub}</small></h1>
@@ -114,11 +120,13 @@ function SportLessonBody({event}:{event:SportEvent}){
     <h3>역할 나누기</h3><ul className="sports-roles">{event.roles.map(([role,count])=><li key={role}><strong>{role}</strong> {count?`팀마다 ${count}명`:'나머지 모두'}</li>)}</ul>
     <label>팀 수<select aria-label="팀 수" value={teams} onChange={e=>{setTeams(Number(e.target.value));resetMatch();}}>{[2,3,4].map(n=><option key={n} value={n}>{n}팀</option>)}</select></label>
     <p className="sports-muted">{event.place.join('·')}에서 해요. 권장 학년군: {event.grades.map(g=>g.replace('-','~')+'학년').join(', ')}{played.some(v=>v!==null)?' · 팀 수를 바꾸면 경기 기록이 처음으로 돌아가요.':''}</p></>}
-   {id==='match'&&<><h2>{event.mode==='time'?'레이스':'경기'} · {teams}팀</h2>{event.mode==='time'?<TimeMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={setScores}/>:<ScoreMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={setScores}/>}
-    <button onClick={resetMatch}>기록 처음으로</button></>}
+   {id==='match'&&<><h2>{event.mode==='time'?'레이스':'경기'} · {teams}팀</h2>{event.mode==='time'?<TimeMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>:<ScoreMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>}
+    <div className="flagship-row"><button onClick={undoScores} disabled={!undoStack.length||awarded}>↶ 되돌리기</button><button onClick={resetMatch}>기록 처음으로</button></div>
+    <p className="sports-muted">점수는 이 탭에 저장돼서 새로고침해도 이어져요. 잘못 누른 점수는 되돌리기로 하나씩 취소해요.</p></>}
    {id==='award'&&<><h2>시상식</h2>{ready?<ol className="sports-podium">{ranking.map(r=><li key={r.team} data-medal={r.medal??'none'}><span aria-hidden="true">{r.medal?MEDAL_ICON[r.medal]:'👏'}</span><strong style={{color:TEAM_COLORS[r.team]}}>{TEAM_NAMES[r.team]}</strong><span>{r.rank}위 · {formatResult(event,r.value)}{r.medal?` · ${MEDAL_LABEL[r.medal]}메달`:''}</span></li>)}</ol>
      :<p className="sports-guide" role="status">{event.mode==='time'?'모든 팀의 도착 기록이 있어야 시상할 수 있어요.':event.lowerWins?'모든 팀이 기록해야 시상할 수 있어요.':'경기를 시작해야 시상할 수 있어요.'} 경기 단계에서 기록을 남겨 주세요.</p>}
     <button className="primary" disabled={awarded||!ready} onClick={award}>{awarded?'우리 반 메달에 더했어요':'시상하고 우리 반 메달에 더하기'}</button>
+    {ready&&<ExportMenu table={():ExportTable=>({title:`${event.name} 경기 결과`,fileBase:`${event.name}_경기결과`,meta:[['종목',`${event.name} · ${event.sub}`],['팀 수',`${teams}팀`],['저장한 때',new Date().toLocaleString('ko-KR')]],headers:['순위','팀','기록','메달'],rows:ranking.map(r=>[r.rank,TEAM_NAMES[r.team],formatResult(event,r.value),r.medal?MEDAL_LABEL[r.medal]:'-'])})}/>}
     <p className="sports-muted">모두가 끝까지 참여한 것에 박수를 보내요. 순위는 오늘 경기의 결과일 뿐이에요.</p><MedalTable tally={tally}/></>}
    {id==='reflect'&&<><h2>돌아보기</h2><p className="sports-guide">{event.reflect}</p><p><strong>오늘의 배움</strong> · {event.goal}</p><p>짝이나 모둠과 30초씩 이야기해요. 화면에 적지 않아도 괜찮아요.</p><div className="flagship-row"><Link className="primary" to="/journey?suggest=sports">원정 지도에 도장 찍기</Link><Link to="/sports">다른 종목 고르기</Link><Link to="/hub">신체 놀이 찾기</Link></div></>}
   </section>
