@@ -2,7 +2,7 @@ import type {GameResultDetails} from './gameResultDetails.js';
 import {phoneSequence,type PhonePlay} from './phonePlayCatalog.js';
 import {phoneRoles,phoneRoundCues,phoneTeamMotion} from './phonePlayProgression.js';
 import {phoneFillOptions,phoneMemoryTask} from './phoneTaskRules.js';
-import {classicClassCues,isClassicPlay} from './phonePlayClassicsMode.js';
+import {adaptClassicPlay,classicClassCues,isClassicPlay} from './phonePlayClassicsMode.js';
 
 // Whole-class mode for the 100 no-equipment plays: one teacher screen, no student devices.
 export const CLASS_TASK_SECONDS=[30,45,60,90] as const;
@@ -46,12 +46,14 @@ export function classOutcomeResult(play:PhonePlay,outcome:ClassOutcome,run:{task
  */
 /** 고를 것이 없는 놀이가 모두 같은 빈 배열을 받게 해, 화면이 다시 그려져도 안내 소리가 되풀이되지 않게 한다. */
 const NO_CHOICES:readonly string[]=Object.freeze([]) as readonly string[];
-export function classRoundView(play:PhonePlay,round:number,level:string,seated:boolean,seed=0,cueSeconds=CLASS_CUE_MS/1000):{brief:string;cues:string[];memory:boolean;choices:readonly string[]}{
+export function classRoundView(source:PhonePlay,round:number,level:string,seated:boolean,seed=0,cueSeconds=CLASS_CUE_MS/1000,taskSeconds=CLASS_DEFAULT_SECONDS):{brief:string;cues:string[];memory:boolean;choices:readonly string[]}{
+ // 반 전체는 인원 제한이 없으므로 큰 모둠 신호도 쓴다. 쉬운 방법이면 과제 제목도 쉬운 신호에 맞춘다.
+ const play=adaptClassicPlay(source,level==='쉬운 방법',Infinity);
  const easy=level==='쉬운 방법',hard=level==='추가 도전',isMemory=play.kind==='memory';
  // 2026-11에 더한 놀이(101~106)는 과제 동안 신호가 바뀐다. 숫자·구석은 무작위, 여우는 출발선 신호를 넣는다.
  if(isClassicPlay(play.id)){
   const brief=seated?play.seated:play.rounds[Math.min(round,play.rounds.length-1)];
-  const cues=seated?[play.seated]:classicClassCues(play,round,level,phoneSequence(play,round,easy),seed,16,cueSeconds);
+  const cues=seated?[play.seated]:classicClassCues(play,round,level,phoneSequence(play,round,easy),seed,16,cueSeconds,classTaskSeconds(taskSeconds));
   return {brief,cues,memory:false,choices:NO_CHOICES};
  }
  const memory=phoneMemoryTask(play,round,easy,hard,play.id==='phone-play-033'?phoneFillOptions(round)[0]:'');

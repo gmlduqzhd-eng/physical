@@ -16,6 +16,7 @@ export interface PhonePlay extends PhonePlayVisual {
  goal:string;rules:string[];rounds:string[];cues:string[];check:string;easy:string;hard:string;seated:string;
  options?:string[];related?:string;
  /** 과제마다 다른 신호(있을 때만). */ roundCues?:[string[],string[],string[]];
+ /** 과제마다 함께하는 동작 문구(있을 때만). 없으면 놀이별 기본 문구를 쓴다. */ teamMotions?:[string,string,string];
  grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[];
 }
 // Each row specifies a different task/rule/interaction, not a renamed timer.

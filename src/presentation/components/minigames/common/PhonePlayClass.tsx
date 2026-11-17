@@ -5,7 +5,7 @@ import {useWakeLock} from '../../../../application/useWakeLock';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
 import {classOutcomeResult,classPhaseMs,classRoundView,CLASS_CUE_MS,type ClassOutcome} from '../../../../domain/phoneClassMode';
-import {CLASSIC_CLASS_BRIEF} from '../../../../domain/phonePlayClassicsMode';
+import {adaptClassicPlay,CLASSIC_CLASS_BRIEF} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='countdown'|'brief'|'active'|'record'|'done';
 interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
@@ -14,17 +14,21 @@ interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:
  * Whole-class mode: one teacher screen (TV or projector), children without devices.
  * One tap starts all three tasks in a row; one tap at the end records how the class took part.
  */
-export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace,onLeave,enqueueAction}:Props){
+export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,onLeave,enqueueAction}:Props){
  const classroomPaused=useActivityPause();
  useWakeLock();
+ // 숫자 모둠 만들기는 쉬운 방법이면 과제 제목도 쉬운 신호(둘 모둠)에 맞춘다.
+ const p=adaptClassicPlay(play,level==='쉬운 방법',Infinity);
  const [phase,setPhase]=useState<Phase>('countdown'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
  const moved=useRef(0),submitted=useRef(false);
  // 무작위 신호(숫자·구석·여우)는 진행마다 새 순서로 나오되, 화면이 다시 그려져도 바뀌지 않게 한 번 정한 씨앗을 쓴다.
  const [seed]=useState(()=>Math.floor(Math.random()*1e9));
- const cueMs=CLASS_CUE_MS*pace,view=classRoundView(p,round,level,seated,seed,cueMs/1000),cueIndex=Math.floor(elapsed/cueMs);
+ const cueMs=CLASS_CUE_MS*pace,view=classRoundView(play,round,level,seated,seed,cueMs/1000,taskSeconds),cueIndex=Math.floor(elapsed/cueMs);
  const duration=classPhaseMs(phase,taskSeconds,view.memory||view.choices.length>0),cue=view.cues[cueIndex%view.cues.length];
  const together=p.players!=='혼자',choiceKey=view.choices.join('|');
  const stopped=paused||classroomPaused;
+ // 놀이 101~106의 준비 안내는 3초 카운트다운에만 두면 금방 사라지므로, 진행하는 동안 작은 글씨로 계속 보여 준다.
+ const setupHint=seated?undefined:CLASSIC_CLASS_BRIEF[p.id];
  const say=useCallback((text:string)=>{if(!voice||!window.speechSynthesis)return;const speech=new SpeechSynthesisUtterance(text);speech.lang='ko-KR';window.speechSynthesis.cancel();window.speechSynthesis.speak(speech);},[voice]);
 
  useEffect(()=>()=>window.speechSynthesis?.cancel(),[]);
@@ -59,6 +63,7 @@ export function PhonePlayClass({play:p,taskSeconds,seated,level,voice,sound,pace
     <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?CLASSIC_CLASS_BRIEF[p.id]??(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>
     <strong className="pc-cue" data-length={big.length>44?'long':big.length>20?'medium':'short'}>{big}</strong>
     {phase==='brief'&&view.choices.length>0&&<ol className="pc-choices" aria-label="고를 것">{view.choices.map(c=><li key={c}>{c}</li>)}</ol>}
+    {setupHint&&phase!=='countdown'&&<p className="pc-hint">준비 · {setupHint}</p>}
     <p className="pc-left">{phase==='active'?`${left}초 남음`:phase==='brief'?(view.memory?`순서를 기억해요 · ${left}초 뒤 시작`:`${left}초 뒤 시작`):'곧 시작해요'}</p>
    </div>
    <div className="pc-controls"><button className="pp-primary" onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>{phase!=='countdown'&&<button onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}</div>
