@@ -1420,7 +1420,7 @@ const BASE_GAMES: GameDef[] = [
 ];
 
 /** 카드의 인원 표기를 준비물·활동 자료와 맞춘다: 준비물이 '모둠당'인 협동 활동은 모둠, 짝과 하는 끝동작 이어붙이기는 짝. */
-const PLAYER_FIXES:Record<string,NonNullable<GameDef['activityType']>>={'space-occupier':'모둠','relay-mission-runner':'모둠','pass-gate-rescue':'모둠','exp-phone-50':'짝'};
+const PLAYER_FIXES:Record<string,NonNullable<GameDef['activityType']>>={'space-occupier':'모둠','relay-mission-runner':'모둠','pass-gate-rescue':'모둠','exp-phone-50':'짝','exp-phone-49':'짝'};
 export const GAMES: GameDef[] = BASE_GAMES.map((game): GameDef => isQuestId(game.type) ? {
   ...game, name: QUEST_META[game.type].name, emoji: QUEST_META[game.type].emoji,
   desc: QUEST_META[game.type].description, achievement:{...game.achievement,title:QUEST_META[game.type].name,desc:QUEST_META[game.type].description}, physicalActivity: true, durationMinutes: 4, playMode: QUEST_META[game.type].team?'협동':'개인', activityType:QUEST_META[game.type].team?'짝':'개인',
