@@ -133,3 +133,51 @@ test('the screen hides the answer in keep mode, reads the timer only near the en
  assert.doesNotMatch(src,/🏃/);assert.match(src,/새로고침하면 되돌리기 목록은 비워지/);
  assert.match(src,/Array\.from\(\{length:4\},\(_,j\)=>j===i\?e\.target\.value:names\[j\]\?\?''\)/,'team names 3 and 4 stay editable');
 });
+
+/* ── 2026-11 재점검 후속 ── */
+test('the parser keeps rows with trailing empty cells, drops empty wrong options and strips numbering without a space',()=>{
+ const {questions,skipped}=parseQuestions([
+  '| 농구 선수는 몇 명? | 5명 | 6명 | | |',
+  '배구공을 넘기는 횟수는? | 3번까지 | | 1번까지',
+  '1.배구에서 서브는 어디서? | 끝줄 뒤 | 그물 앞',
+  '2)깃털 달린 공은? | 셔틀콕',
+  'Q3.축구 선수 수는? | 11명 | 9명',
+  '1.5m 높이 뛰기 전에 할 일은? | 준비운동 | 낮잠',
+  '10.5초 안에 할 일은? | 준비 | 쉬기',
+  '정답이 빈 문제는? | | 오답',
+ ].join('\n'));
+ assert.deepEqual(questions.map(q=>q.prompt),['농구 선수는 몇 명?','배구공을 넘기는 횟수는?','배구에서 서브는 어디서?','깃털 달린 공은?','축구 선수 수는?','1.5m 높이 뛰기 전에 할 일은?','10.5초 안에 할 일은?']);
+ assert.deepEqual(questions[0].wrong,['6명']);assert.deepEqual(questions[1].wrong,['1번까지']);assert.equal(questions[3].kind,'short');
+ assert.equal(skipped,1,'only a row without a question or answer is skipped');
+});
+
+test('keep mode never brings back a replaced question and does not alternate between two questions',()=>{
+ const qs=parseQuestions(Array.from({length:28},(_,i)=>`문제 ${i+1}번은? | 정답${i} | 오답${i}a | 오답${i}b`).join('\n')).questions;
+ let g=newGame({...DEFAULT_SETTINGS,teams:2,moveCells:0,onWrong:'keep'},['가','나'],qs,11);
+ const cell=g.board.findIndex(c=>c.type==='question'),seen=[g.board[cell].question!];
+ for(let i=0;i<6;i++){g=resolveCell(g,cell,'wrong');seen.push(g.board[cell].question!);}
+ // 25칸에 28문제: 3번은 새 문제, 그 뒤로는 같은 문제를 보기 순서만 바꿔 낸다.
+ assert.equal(new Set(seen.slice(0,4)).size,4,'each wrong answer brings an unused question while spares remain');
+ assert(seen.slice(4).every(q=>q===seen[3]),'with no spare the same question stays, never an earlier one');
+ assert.deepEqual(g.retired!.slice(0,3),seen.slice(0,3));
+ const onBoard=g.board.filter(c=>c.type==='question').map(c=>c.question!);assert.equal(new Set(onBoard).size,onBoard.length,'no question appears twice on the board');
+});
+
+test('a revealed short answer is never asked again; with no spare question the cell becomes a movement cell',()=>{
+ const qs=parseQuestions(Array.from({length:25},(_,i)=>`주관식 ${i+1}번은? | 답${i}`).join('\n')).questions;
+ const g=newGame({...DEFAULT_SETTINGS,moveCells:0,onWrong:'keep'},['가','나'],qs,5),cell=g.board.findIndex(c=>c.type==='question');
+ const next=resolveCell(g,cell,'wrong');
+ assert.equal(next.board[cell].type,'move');assert.equal(typeof next.board[cell].move,'string');assert.equal(next.status[cell],'open');
+ assert.match(next.log.at(-1)!,/움직임 칸이 됐어요/);
+ assert(validGame(JSON.parse(JSON.stringify(next))),'the changed board still loads after a refresh');
+ const owned=resolveCell(next,cell,'moved');assert.equal(owned.owner[cell],1);
+ const old=JSON.parse(JSON.stringify(g));delete old.retired;assert(validGame(old),'saves from before the retired field');
+ const bad=JSON.parse(JSON.stringify(g));bad.retired=[99];assert.equal(validGame(bad),null);
+});
+
+test('the bingo screen moves keyboard focus after start, choosing and closing a cell, and reads timer expiry once',()=>{
+ const src=readFileSync(new URL('../src/presentation/components/PeQuizBingo.tsx',import.meta.url),'utf8');
+ assert.match(src,/tabIndex=\{-1\} ref=\{turnRef\}/);assert.equal(src.match(/tabIndex=\{-1\} ref=\{panelHeadingRef\}/g)?.length,2);
+ assert.match(src,/setChosen\(o\);setFocusTo\('action'\)/);assert.match(src,/closeCell\(\);setFocusTo\('turn'\)/);
+ assert.match(src,/left===0&&question\.kind==='short'\?'시간이 끝났어요'/,'choice questions announce expiry only in the result line');
+});
