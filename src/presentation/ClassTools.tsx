@@ -1,6 +1,8 @@
 import {useEffect,useMemo,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
+import {ExportMenu} from './components/ExportMenu';
+import type {ExportTable} from '../application/documentExport';
 import {isRecord,readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxPop,sfxWhistle,unlockAudio} from '../application/soundEffects';
 import {useRunningClock} from '../application/useRunningClock';
@@ -10,6 +12,9 @@ import './SportsClassroom.css';
 import './ClassTools.css';
 
 const LEAGUE_KEY='physical_class_league_v1';
+const today=()=>new Date().toLocaleString('ko-KR');
+/** 엽쌤의 달리기 뽑기 앱. 달리기 경주로 순서를 정할 때 쓴다. */
+const RUNRUN_URL='https://gmlduqzhd123-lab.github.io/RunRun/';
 const range=(from:number,to:number)=>Array.from({length:to-from+1},(_,i)=>from+i);
 function NumberSelect({label,value,min,max,unit,onChange}:{label:string;value:number;min:number;max:number;unit:string;onChange:(n:number)=>void}){
  return <label className="tools-select">{label}<select aria-label={label} value={value} onChange={e=>onChange(Number(e.target.value))}>{range(min,max).map(n=><option key={n} value={n}>{n}{unit}</option>)}</select></label>;
@@ -31,18 +36,22 @@ function readLeague():LeagueState{
 }
 function League(){
  const [state,setState]=useState<LeagueState>(readLeague),[confirm,setConfirm]=useState(false),[pendingTeams,setPendingTeams]=useState<number|null>(null);
+ // 되돌리기: 이 화면을 연 뒤의 점수 변경을 최근 30개까지 기억한다. 기록 목록은 최근 5개만 보여 준다.
+ const [history,setHistory]=useState<{before:LeagueState;label:string}[]>([]);
  const rounds=useMemo(()=>roundRobin(state.teams),[state.teams]),table=leagueTable(state.teams,rounds,state.scores);
- const save=(next:LeagueState)=>{setState(next);writeStorage(LEAGUE_KEY,JSON.stringify(next));};
+ const save=(next:LeagueState,label?:string)=>{if(label)setHistory(h=>[...h.slice(-29),{before:state,label}]);setState(next);writeStorage(LEAGUE_KEY,JSON.stringify(next));};
+ const undo=()=>{const last=history.at(-1);if(!last)return;setHistory(h=>h.slice(0,-1));setState(last.before);writeStorage(LEAGUE_KEY,JSON.stringify(last.before));};
  const played=rounds.flatMap(r=>r.matches).filter(m=>state.scores[matchKey(m)]).length;
- const bump=(m:{home:number;away:number},side:0|1,amount:number)=>{const key=matchKey(m);save({...state,scores:{...state.scores,[key]:bumpScore(m,state.scores[key]??null,side,amount)}});};
+ const bump=(m:{home:number;away:number},side:0|1,amount:number)=>{const key=matchKey(m),team=side?m.away:m.home;save({...state,scores:{...state.scores,[key]:bumpScore(m,state.scores[key]??null,side,amount)}},amount===0?`${m.home+1}팀 대 ${m.away+1}팀 0 : 0 기록`:`${team+1}팀 ${amount>0?'+':''}${amount}점 (${m.home+1}팀 대 ${m.away+1}팀)`);};
  const scoreOf=(m:{home:number;away:number})=>homeAwayScore(m,state.scores[matchKey(m)]??null);
  const changeTeams=(teams:number)=>{if(played)setPendingTeams(teams);else save({teams,scores:{}});};
  const name=(team:number)=>`${team+1}팀`;
  return <>
   <div className="tools-bar"><NumberSelect label="팀 수" value={state.teams} min={3} max={8} unit="팀" onChange={changeTeams}/>
-   <p className="sports-muted" role="status">{leagueMatchCount(state.teams)}경기 가운데 {played}경기 기록</p><button onClick={()=>setConfirm(true)} disabled={!played}>기록 지우기</button></div>
-  {confirm&&<Confirm message="대진표의 경기 기록을 모두 지울까요?" yes="모두 지우기" onNo={()=>setConfirm(false)} onYes={()=>{removeStorage(LEAGUE_KEY);setState({teams:state.teams,scores:{}});setConfirm(false);}}/>}
-  {pendingTeams!==null&&<Confirm message={`팀 수를 ${pendingTeams}팀으로 바꾸면 기록한 ${played}경기가 모두 지워져요. 바꿀까요?`} yes="지우고 바꾸기" onNo={()=>setPendingTeams(null)} onYes={()=>{save({teams:pendingTeams,scores:{}});setPendingTeams(null);}}/>}
+   <p className="sports-muted" role="status">{leagueMatchCount(state.teams)}경기 가운데 {played}경기 기록</p><button onClick={undo} disabled={!history.length} aria-label={history.length?`되돌리기: ${history.at(-1)!.label}`:'되돌릴 기록 없음'}>↶ 되돌리기</button><button onClick={()=>setConfirm(true)} disabled={!played}>기록 지우기</button></div>
+  {history.length>0&&<details className="tools-log"><summary>최근 점수 기록 ({history.length})</summary><ol reversed>{history.slice(-5).reverse().map((h,i)=><li key={history.length-i}>{h.label}</li>)}</ol></details>}
+  {confirm&&<Confirm message="대진표의 경기 기록을 모두 지울까요?" yes="모두 지우기" onNo={()=>setConfirm(false)} onYes={()=>{removeStorage(LEAGUE_KEY);setState({teams:state.teams,scores:{}});setHistory([]);setConfirm(false);}}/>}
+  {pendingTeams!==null&&<Confirm message={`팀 수를 ${pendingTeams}팀으로 바꾸면 기록한 ${played}경기가 모두 지워져요. 바꿀까요?`} yes="지우고 바꾸기" onNo={()=>setPendingTeams(null)} onYes={()=>{save({teams:pendingTeams,scores:{}});setHistory([]);setPendingTeams(null);}}/>}
   <div className="tools-rounds">{rounds.map(round=><section key={round.round} className="tools-round" aria-label={`${round.round}라운드`}><h3>{round.round}라운드{round.rest!==null&&<small> · {name(round.rest)} 쉼(심판·기록)</small>}</h3>
    {round.matches.map(m=>{const s=scoreOf(m);return <div key={matchKey(m)} className="tools-match" data-played={s?'yes':'no'}>
     {([0,1] as const).map(side=>{const team=side?m.away:m.home;return <div key={side} className="tools-side"><strong>{name(team)}</strong>
@@ -51,7 +60,8 @@ function League(){
    </div>;})}</section>)}</div>
   <table className="sports-medals tools-table"><caption>순위표 · 승 3점, 무 1점</caption><thead><tr><th scope="col">순위</th><th scope="col">팀</th><th scope="col">경기</th><th scope="col">승</th><th scope="col">무</th><th scope="col">패</th><th scope="col">득실</th><th scope="col">승점</th></tr></thead>
    <tbody>{table.map(r=><tr key={r.team}><td>{r.played?r.rank:'-'}</td><th scope="row">{name(r.team)}</th><td>{r.played}</td><td>{r.win}</td><td>{r.draw}</td><td>{r.loss}</td><td>{r.scored-r.conceded>0?'+':''}{r.scored-r.conceded}</td><td><strong>{r.points}</strong></td></tr>)}</tbody></table>
-  <p className="sports-muted">기록은 이 기기에만 팀 번호로 저장돼요. 승점이 같으면 득실차, 득점 순으로 가리고 모두 같으면 같은 순위예요.</p>
+  <ExportMenu disabled={!played} table={():ExportTable=>({title:'리그 순위표',fileBase:'리그순위표',meta:[['팀 수',`${state.teams}팀`],['경기 기록',`${leagueMatchCount(state.teams)}경기 중 ${played}경기`],['저장한 때',today()],['순위 규칙','승 3점·무 1점 → 득실차 → 득점']],headers:['순위','팀','경기','승','무','패','득실','승점'],rows:table.map(r=>[r.played?r.rank:'-',name(r.team),r.played,r.win,r.draw,r.loss,`${r.scored-r.conceded>0?'+':''}${r.scored-r.conceded}`,r.points])})}/>
+  <p className="sports-muted">기록은 이 기기에만 팀 번호로 저장돼요. 새로고침해도 이어져요. 승점이 같으면 득실차, 득점 순으로 가리고 모두 같으면 같은 순위예요.</p>
  </>;
 }
 
@@ -76,6 +86,7 @@ function Race(){
    <button className="primary" disabled={!running||active[lane]!==null} onClick={()=>finish(lane)}>도착!</button>
    <button disabled={active[lane]===null} onClick={()=>{setTimes(times.map((t,i)=>i===lane?null:t));setAnnounce(`${lane+1}팀 도착 취소`);}} aria-label={`${lane+1}팀 도착 취소`}>취소</button></div>)}</div>
   <p className="sports-sr" role="status">{announce}</p>
+  <ExportMenu disabled={!order.length} table={():ExportTable=>({title:'레이스 기록',fileBase:'레이스기록',meta:[['팀 수',`${lanes}팀`],['저장한 때',today()]],headers:['순위','팀','기록'],rows:range(0,lanes-1).map(lane=>({lane,r:rank(lane)})).sort((a,b)=>(a.r??99)-(b.r??99)).map(({lane,r})=>[r??'-',`${lane+1}팀`,active[lane]===null?'도착 전':formatClock(active[lane]!)])})}/>
   <p className="sports-muted">출발 신호와 함께 시계가 가요. 팀이 들어올 때마다 그 팀의 도착을 눌러요. 잘못 눌렀으면 취소하고 다시 눌러요.</p>
  </>;
 }
@@ -123,7 +134,9 @@ function Draw(){
   <div className="tools-big" aria-live="polite"><strong key={last}>{last??'?'}</strong><span>{last?`${last}번 친구 차례예요`:'뽑기를 눌러요'}</span></div>
   <div className="flagship-row tools-center"><button className="primary tools-go" disabled={!left} onClick={()=>{unlockAudio();const n=drawNumber(total,drawn);if(n!==null){sfxPop();setDrawn([...drawn,n]);}}}>{left?`번호 뽑기 (${left}명 남음)`:'모두 뽑았어요'}</button></div>
   {drawn.length>0&&<p className="tools-drawn"><span className="sports-muted">뽑힌 순서</span> {drawn.join(' · ')}</p>}
+  <ExportMenu disabled={!drawn.length} table={():ExportTable=>({title:'번호 뽑기 순서',fileBase:'뽑기순서',meta:[['우리 반 인원',`${total}명`],['뽑은 수',`${drawn.length}명`],['저장한 때',today()]],headers:['차례','번호'],rows:drawn.map((n,i)=>[i+1,`${n}번`])})}/>
   <p className="sports-muted">출석 번호만 써요. 한 번 뽑힌 번호는 다시 나오지 않아서 모두에게 차례가 돌아가요.</p>
+  <p className="tools-sibling"><a href={RUNRUN_URL} target="_blank" rel="noopener noreferrer">🏃 달리기 경주로 순서 정하기 · 엽쌤 ‘달리기 뽑기’ 앱 ↗</a><span className="sports-muted"> 화면 속 캐릭터가 달려 먼저 도착한 순서로 정해요. 새 창으로 열려요.</span></p>
  </>;
 }
 
@@ -135,6 +148,7 @@ function Groups(){
    <button className="primary" onClick={()=>{unlockAudio();sfxPop();setGroups(splitGroups(total,count));}}>{groups.length?'다시 섞기':'모둠 나누기'}</button></div>
   {groups.length?<div className="tools-groups" aria-live="polite">{groups.map((g,i)=><section key={i} className="tools-group"><h3>{i+1}모둠 <small>{g.length}명</small></h3><p>{g.join(' · ')}</p></section>)}</div>
    :<p className="sports-muted">출석 번호를 섞어 인원이 고르게 나뉘어요. 모둠끼리 인원 차이는 한 명을 넘지 않아요.</p>}
+  <ExportMenu disabled={!groups.length} table={():ExportTable=>({title:'모둠 명단 (출석 번호)',fileBase:'모둠명단',meta:[['우리 반 인원',`${total}명`],['모둠 수',`${groups.length}모둠`],['저장한 때',today()]],headers:['모둠','인원','출석 번호'],rows:groups.map((g,i)=>[`${i+1}모둠`,`${g.length}명`,g.join(', ')])})}/>
  </>;
 }
 
