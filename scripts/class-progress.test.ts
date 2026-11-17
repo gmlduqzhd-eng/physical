@@ -20,10 +20,16 @@ test('a vote belongs to the latest play: voting again replaces it, a new play st
 
 test('archive and featured candidates need enough plays and a clear ratio',()=>{
  let p=EMPTY_PROGRESS;
- for(let i=0;i<3;i++){p=play(p,'weak',base+i*10);p=setVote(p,'weak',i===0?'up':'down',base+i*10+1);}
- for(let i=0;i<3;i++){p=play(p,'loved',base+100+i*10);p=setVote(p,'loved','up',base+100+i*10+1);}
+ for(let i=0;i<5;i++){p=play(p,'weak',base+i*10);p=setVote(p,'weak',i===0?'up':'down',base+i*10+1);}
+ for(let i=0;i<5;i++){p=play(p,'loved',base+100+i*10);p=setVote(p,'loved','up',base+100+i*10+1);}
  for(let i=0;i<2;i++){p=play(p,'fewplays',base+200+i*10);p=setVote(p,'fewplays','down',base+200+i*10+1);}
- const rows=reactionRows(p),featured=(id:string)=>id==='weak'||id==='fewplays';
+ // 3판에 👎 한 번뿐: 판 수도 👎 수도 모자라 후보가 아니다.
+ for(let i=0;i<3;i++){p=play(p,'onedown',base+300+i*10);}p=setVote(p,'onedown','down',base+321);
+ // 5판에 👎 한 번뿐(👍 0): 비율은 낮아도 👎가 한 번이라 후보가 아니다.
+ for(let i=0;i<5;i++){p=play(p,'onlyone',base+400+i*10);}p=setVote(p,'onlyone','down',base+441);
+ // 5판에 👍 두 번뿐: 비율은 100%지만 👍가 모자라 대표 후보가 아니다.
+ for(let i=0;i<5;i++){p=play(p,'twoup',base+500+i*10);if(i<2)p=setVote(p,'twoup','up',base+500+i*10+1);}
+ const rows=reactionRows(p),featured=(id:string)=>['weak','fewplays','onedown','onlyone'].includes(id);
  assert.deepEqual(archiveCandidates(rows,featured).map(r=>r.id),['weak']);
  assert.deepEqual(featuredCandidates(rows,featured).map(r=>r.id),['loved']);
 });
