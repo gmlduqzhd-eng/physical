@@ -89,6 +89,7 @@ export function IntroLandingPage() {
             <Link to="/admin">교사 수업 관리 ↗</Link>
             <Link to="/manual">이용 안내</Link>
           </nav>
+          <p className="ys-credit">© 2026 엽쌤. All rights reserved. · <a href="https://gmlduqzhd123-lab.github.io/YScode/">엽쌤의 다른 앱 보기 →</a></p>
         </footer>
       </div>
       <AccessQrDialog dialogRef={accessQrDialog} />

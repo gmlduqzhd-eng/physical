@@ -309,6 +309,15 @@
 .intro-landing .footer a:hover {
   text-decoration: underline;
 }
+.intro-landing .footer { flex-wrap: wrap; }
+/* 엽쌤 앱 공통 하단 문구 */
+.intro-landing .footer .ys-credit {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: var(--forest-muted, #526c60);
+}
+.intro-landing .footer .ys-credit a { text-decoration: underline; }
 
 @media (max-width: 700px) {
   .intro-landing .shell {
