@@ -44,8 +44,9 @@ test('random math, no-repeat routes, non-overlapping assignments and mazes stay 
 test('memory sequences, 8-beat patterns, rule reversal and original-state modifications are explicit',()=>{
  for(const spec of ['S05','T05','T46']){const game=b.find(g=>g.spec===spec)!;const plan=createExpeditionRound(game,0,game.players);assert(plan.secret!.length>=3);assert(plan.steps.every(s=>!s.instruction.includes(plan.secret!.join(' → '))));}
  for(const game of b.filter(g=>g.family==='rhythm'))assert(createExpeditionRound(game,0,game.players).steps.every(s=>s.beats?.length===8),game.spec);
- const reverse=createExpeditionRound(b.find(g=>g.spec==='S03')!,0,1).steps;assert(reverse.some(s=>s.title==='거꾸로')&&reverse.some(s=>s.title==='그대로'));
- for(const s of reverse.filter(s=>s.title==='거꾸로')){const called=s.instruction.includes('왼쪽')?'왼쪽':'오른쪽',answer=called==='왼쪽'?'오른쪽':'왼쪽';assert(!s.instruction.includes(answer),'the cue never says the answer: '+s.instruction);}
+ const reverse=createExpeditionRound(b.find(g=>g.spec==='S03')!,0,1).steps;assert(reverse.some(s=>s.title.startsWith('거꾸로!'))&&reverse.some(s=>s.title.startsWith('그대로!')));
+ // 큰 제목에는 부른 방향이 보이지만, 거꾸로일 때 정답 방향은 제목에도 지시에도 쓰지 않는다.
+ for(const s of reverse.filter(s=>s.title.startsWith('거꾸로!'))){const called=s.instruction.includes('왼쪽')?'왼쪽':'오른쪽',answer=called==='왼쪽'?'오른쪽':'왼쪽';assert(s.title.includes(called),s.title);assert(!s.instruction.includes(answer)&&!s.title.includes(answer),'the cue never says the answer: '+s.instruction);}
  const repair=EXPRESSION_GAMES.find(g=>g.id==='exp-phone-48')!;assert(repair.steps.slice(1).every(s=>/원본/.test(s.guide)));
 });
 test('four-room escape includes all four activities and every station rotation reaches every station',()=>{
