@@ -1,0 +1,29 @@
+/* 안전 상황 학습: 시작 버튼과 3줄 규칙을 첫 화면에, 자료는 접어 둔다. */
+.safety-rules3{list-style:none;margin:12px 0;padding:0;display:grid;gap:8px}
+.safety-rules3 li{display:grid;grid-template-columns:5.6em 1fr;gap:10px;align-items:baseline;padding:10px 14px;border-radius:14px;border:1px solid var(--forest-line,#c9d3c6);background:var(--forest-paper,#fffefa);color:var(--forest-ink,#1f2a22);font-size:clamp(16px,1.9vw,20px)}
+.safety-rules3 strong{color:var(--forest-accent,#566d4d);font-weight:900}
+.safety-start{margin:4px 0 14px}
+.safety-prep>summary{cursor:pointer;font-weight:800;min-height:40px;display:flex;align-items:center}
+.safety-prep[open]>*+*{margin-top:10px}
+.safety-situation{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px}
+.safety-situation h2{flex:1 1 280px;min-width:0}
+.safety-picture{margin:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:16px;border:1px solid var(--forest-line,#c9d3c6);background:var(--forest-paper,#fffefa);color:var(--forest-ink,#1f2a22)}
+.safety-picture svg{width:clamp(96px,14vw,150px);height:auto}
+.safety-picture figcaption{font-weight:800;font-size:14px}
+.safety-pic-box{fill:#16a34a;stroke:#14532d;stroke-width:3}
+.safety-pic-heart{fill:#fff}
+.safety-pic-bolt{fill:#facc15;stroke:#854d0e;stroke-width:1.5}
+.safety-pic-towel{fill:#e0f2fe;stroke:#0369a1;stroke-width:3}
+.safety-pic-stripe{stroke:#7dd3fc;stroke-width:3}
+.safety-pic-ice{fill:#bae6fd;stroke:#0284c7;stroke-width:2}
+.safety-pic-text{font-size:22px;fill:#0369a1}
+.safety-pic-ring{fill:#fef2f2;stroke:#dc2626;stroke-width:5}
+.safety-pic-hand{font-size:46px}
+.safety-why h3{margin-top:0}
+.safety-finish{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.safety-finish>button{flex:1 1 240px}
+.safety-boundary{font-size:14px;color:var(--forest-muted,#5d6b62)}
+.safety-act{margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--forest-tint,#e8efe3);font-size:clamp(16px,1.8vw,19px);font-weight:700}
+.safety-act strong{display:block;margin-bottom:2px;color:var(--forest-accent,#566d4d)}
+.safety-lesson[data-phase=explain] .safety-situation h2{font-size:clamp(20px,2.4vw,28px)}
+.safety-lesson[data-phase=explain] .safety-picture svg{width:clamp(72px,9vw,104px)}

@@ -25,14 +25,16 @@ try{
     await page.locator('[data-safety][data-phase="scenario"]').waitFor();
     assert.equal(await page.locator('.game-result-overlay').count(),0);
     await button(scenario.choices.find(c=>c.id===scenario.answer)!.label).click();
-    await button('교실 역할 표현으로').click();
-    const complete=button(`${width===320?'말·손짓으로 표현했어요':'읽고 설명을 확인했어요'} · ${i===2?'학습 마치기':'다음 상황'}`);
-    assert(await complete.isDisabled());
+    // 한 상황은 두 번 누르면 끝난다: 안전한 선택 → 표현했어요/읽고 확인했어요.
+    const complete=button(`${width===320?'말·손짓으로 표현했어요':'읽고 설명을 확인했어요'} · ${i===2?'학습 정리':'다음 상황'}`);
+    assert(await complete.isEnabled());
+    assert.equal(await page.getByRole('checkbox').count(),0,'no confirmation checkboxes');
     assert.equal(await page.evaluate(()=>sessionStorage.getItem('physical_player_profile')),null,'no automatic save');
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no overflow');
     if(i===0)await page.screenshot({path:path.join(out,`${id}-${width}-rehearsal.png`),fullPage:true});
-    await page.getByRole('checkbox').check();await complete.click();
+    await complete.click();
    }
+   await button('세 상황의 학습 결과 기록하기').click();
    await page.locator('.game-result-overlay').waitFor();
    const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));
    assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,id);assert.equal(saved.recentGames[0].score,300);assert.match(saved.recentGames[0].details.metrics['점수 기준'],/역량 평가 아님/);

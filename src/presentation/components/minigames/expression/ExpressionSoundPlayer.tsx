@@ -49,6 +49,7 @@ export function ExpressionSoundPlayer({sound,step,running}:{sound:ExpressionSoun
   <span className="expression-sound-dot" key={pulse} aria-hidden="true"/>
   <strong>{label}</strong>
   {sound.kind==='freeze'&&<span className="expression-sound-sr" role="status">{frozen?'멈춤! 얼음':''}</span>}
+  {sound.kind==='freeze'&&frozen&&<div className="expression-freeze-overlay" data-testid="freeze-overlay" aria-hidden="true">얼음!</div>}
   <button type="button" aria-pressed={on} onClick={()=>{unlockAudio();setOn(!on);}}>{on?'소리 끄기':'소리 켜기'}</button>
   <small>앱이 내는 {sound.kind==='tones'?'소리':'박자 소리'}예요. 단계가 바뀌면 호루라기가 울려요.</small>
  </div>;
