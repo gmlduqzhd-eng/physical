@@ -27,5 +27,5 @@ test('grades agree for expression expeditions, the freeze step holds, diagram la
  for(const g of EXPRESSION_GAMES.filter(e=>e.id.startsWith('exp-'))){const def=AVAILABLE_GAMES.find(x=>x.type===g.id);if(def)assert.deepEqual(g.grades,def.grades,g.id);}
  const freeze=EXPRESSION_GAMES.find(g=>g.id==='musical_freeze')!.sound;assert(freeze?.kind==='freeze'&&freeze.holdStep===1);
  assert(LAYOUTS['exp-tablet-37'].labels.every(l=>/첫째|둘째/.test(l)));
- assert.match(FLAGSHIPS.find(f=>f.id==='expedition-boss')!.desc,/센서 기기 2대/);
+ assert.match(FLAGSHIPS.find(f=>f.id==='expedition-boss')!.desc,/화면 터치만으로/);
 });

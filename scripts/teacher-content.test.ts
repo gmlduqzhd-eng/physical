@@ -50,7 +50,7 @@ test('a long activity gets its real time in the plan and the total still adds up
   const flow=(plan('5~6학년군','자동',minutes,boss) as unknown as {lessonFlow:{stage:string;time:number;materials:string}[]}).lessonFlow;
   assert.equal(flow.reduce((n,p)=>n+p.time,0),minutes);
   assert.equal(flow.find(p=>p.stage==='전개 ②')!.time,24);
-  assert.match(flow.find(p=>p.stage==='전개 ②')!.materials,/2대/);
+  assert.match(flow.find(p=>p.stage==='전개 ②')!.materials,/1대 · 센서 없이/);
  }
 });
 
