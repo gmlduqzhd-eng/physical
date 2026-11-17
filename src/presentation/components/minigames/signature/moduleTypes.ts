@@ -15,10 +15,19 @@ export interface SignatureModuleProps {
  * - controls: 기본 선생님 버튼(다음·일시정지·모두 +1·깜짝 이벤트·끝내기) 뒤에 붙일 버튼.
  * - Result: 결과 화면의 순위 아래에 넣을 칸.
  * - hideFigure: 큰 지시 옆 막대 사람 그림을 숨긴다(판이 넓을 때).
+ * - wide: 판이 커서, 넓은 화면(TV)에서는 큰 지시 옆에 나란히 놓는다(화면 아래로 밀리지 않게).
+ * - dispose: 판(seed)이 끝나 '한 판 더'·목록으로 나갈 때 모듈이 따로 모아 둔 기록을 지운다.
+ * - scoreButtons: false면 점수판에 ± 버튼을 두지 않는다(점수를 판에서만 주는 놀이: 빙고).
+ * - snapshot/restore: 새로고침 이어 하기용. 모듈이 따로 모은 기록을 꺼내 주고(JSON으로 저장됨), 되살린다(모양 검사 필수).
  */
 export interface SignatureModule {
  Panel?:ComponentType<SignatureModuleProps>;
  controls?:(p:SignatureModuleProps)=>TeacherButton[];
  Result?:ComponentType<SignatureModuleProps>;
  hideFigure?:boolean;
+ wide?:boolean;
+ scoreButtons?:boolean;
+ snapshot?(seed:number):unknown;
+ restore?(seed:number,data:unknown):void;
+ dispose?(seed:number):void;
 }

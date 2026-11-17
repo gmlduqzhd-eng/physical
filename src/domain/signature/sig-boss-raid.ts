@@ -1,4 +1,4 @@
-import type {FunState} from '../funLoop.js';
+import {COMBO_MAX,COMBO_PER_POINT,type FunState,type FunTiming} from '../funLoop.js';
 import {defineSignatureGame,pickCue} from './define.js';
 import type {Pose,SignatureCue,SignatureCueContext} from './types.js';
 
@@ -12,8 +12,38 @@ export const BOSSES:readonly Boss[]=[
  {id:'golem',name:'바위 골렘',emoji:'🪨',hp:14,weak:'무릎 굽혔다 펴기 5번',weakSeated:'발 구르기 10번',pose:'squat'},
  {id:'dragon',name:'번개 드래곤',emoji:'🐉',hp:18,weak:'제자리 빠르게 달리기 10초',weakSeated:'앉아서 팔 빠르게 흔들기 10초',pose:'run'},
 ];
+/** 기본(2팀) HP 합. 실제 HP는 팀 수·시간에 맞춰 bossesFor()가 정한다. */
 export const BOSS_TOTAL_HP=BOSSES.reduce((n,b)=>n+b.hp,0);
 export const SPECIAL_DAMAGE=5,CLIMAX_MULTIPLIER=2;
+/** 쉬는 신호를 뺀 신호 비율(세 번째마다 쉼)과, 한 팀이 한 신호에 약점 동작을 해낼 것으로 보는 비율. */
+const SCORABLE_SHARE=2/3,EXPECTED_HIT_RATE=0.7;
+/**
+ * 기대 피해: 팀마다 신호 하나에 EXPECTED_HIT_RATE만큼 공격하고, 콤보가 차면 필살기를 쓴다고 본다.
+ * play = 본게임에서 줄 피해(필살기 포함), total = 마지막 승부(2배)까지 더한 피해.
+ */
+export function expectedDamage(teams:number,timing:FunTiming):{play:number;total:number}{
+ const t=Math.max(1,teams);
+ const cues=(sec:number)=>Math.floor(sec/timing.cueSeconds)*SCORABLE_SHARE;
+ const playHits=t*EXPECTED_HIT_RATE*cues(timing.play);
+ const specials=Math.floor(playHits*COMBO_PER_POINT/COMBO_MAX);
+ const play=playHits+specials*SPECIAL_DAMAGE;
+ const climax=CLIMAX_MULTIPLIER*t*EXPECTED_HIT_RATE*cues(timing.climax);
+ return {play,total:play+climax};
+}
+/**
+ * 팀 수·시간에 맞춘 보스 HP. 본게임에서 기대 피해보다 조금 많게(마지막 승부가 늘 나오게),
+ * 마지막 승부까지 더한 기대 피해보다는 적게(한 팀이어도 이길 수 있게) 잡고, 보스 셋에 10:14:18로 나눈다.
+ */
+export function bossesFor(teams:number,timing:FunTiming):Boss[]{
+ const {play,total}=expectedDamage(teams,timing);
+ const target=Math.max(BOSSES.length*2,Math.min(Math.floor(total*0.95),Math.ceil(play*1.15)));
+ let used=0;
+ return BOSSES.map((b,i)=>{
+  const hp=i===BOSSES.length-1?target-used:Math.max(2,Math.round(target*b.hp/BOSS_TOTAL_HP));
+  used+=hp;return {...b,hp};
+ });
+}
+export const bossTotalHp=(s:Pick<FunState,'teams'|'timing'>)=>bossesFor(s.teams,s.timing).reduce((n,b)=>n+b.hp,0);
 const REST:readonly {text:string;sub:string}[]=[
  {text:'숨 고르기',sub:'코로 들이쉬고 입으로 후— 다음 공격을 준비해요'},
  {text:'방패 자세!',sub:'두 팔을 앞으로 모으고 3초 버텨요'},
@@ -27,13 +57,14 @@ export function bossDamage(s:FunState):number{
 }
 /** 지금 싸우는 보스와 남은 HP. 다 물리쳤으면 boss는 마지막 보스, defeated=3. */
 export function bossStatus(s:FunState):{boss:Boss;index:number;hpLeft:number;defeated:number;done:boolean}{
+ const bosses=bossesFor(s.teams,s.timing);
  let left=bossDamage(s);
- for(let i=0;i<BOSSES.length;i++){
-  if(left<BOSSES[i].hp)return {boss:BOSSES[i],index:i,hpLeft:BOSSES[i].hp-left,defeated:i,done:false};
-  left-=BOSSES[i].hp;
+ for(let i=0;i<bosses.length;i++){
+  if(left<bosses[i].hp)return {boss:bosses[i],index:i,hpLeft:bosses[i].hp-left,defeated:i,done:false};
+  left-=bosses[i].hp;
  }
- const last=BOSSES.length-1;
- return {boss:BOSSES[last],index:last,hpLeft:0,defeated:BOSSES.length,done:true};
+ const last=bosses.length-1;
+ return {boss:bosses[last],index:last,hpLeft:0,defeated:bosses.length,done:true};
 }
 
 export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{

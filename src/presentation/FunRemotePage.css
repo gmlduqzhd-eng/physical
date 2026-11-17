@@ -23,3 +23,10 @@
 .frp-team b{font-size:1.2rem}
 .frp-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .frp-sent{min-height:1.5em;font-size:.9rem;opacity:.85}
+.frp-status[data-status=pending],.frp-status[data-status=asking]{color:#d97706}
+.frp-status[data-status=approved]{color:#16a34a}
+.frp-status[data-status=rejected],.frp-status[data-status=full],.frp-status[data-status=closed],.frp-status[data-status=stale]{color:#dc2626}
+.frp-wait,.frp-ended{padding:16px;border-radius:14px;background:var(--frp-card);border:2px solid #f59e0b;display:flex;flex-direction:column;gap:10px;text-align:center}
+.frp-ended{border-color:#dc2626}
+.frp-icon{font-size:4rem;line-height:1}
+.frp-done{padding:12px;border-radius:14px;background:#16a34a;color:#fff;font-weight:900;text-align:center}

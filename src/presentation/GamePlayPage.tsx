@@ -364,6 +364,16 @@ const GamePlaySession = () => {
     navigate(hubPath);
   };
 
+  // 대표 게임('한 판 더'를 게임 안에서 처리): 다음 판도 기록되도록 '이미 기록함' 상태만 푼다(게임 화면은 그대로).
+  const resetForNextRound = useCallback(() => {
+    completionRef.current = false;
+    setGameFinished(false);
+    setResultDetails(undefined);
+    setShowDetailedResult(false);
+    setLastEarnedScore(0);
+    setRpeSelected(null);
+  }, []);
+
   const handleReplay = () => {
     completionRef.current = false;
     setGameFinished(false);
@@ -384,13 +394,14 @@ const GamePlaySession = () => {
     );
   }
 
+  const signatureGame=isSignatureId(gameType);
   const bestScore = nonnegativeNumber(Number(readStorage(gameBestStorageKey(gameType,selectedVariant?.id))));
 
   const dummyGroupId = 'standalone-player';
 
   const renderBaseGame = () => {
     const commonProps = { groupId: dummyGroupId, enqueueAction: localEnqueueAction };
-    if(isSignatureId(gameType))return <SignaturePlay key={key} gameId={gameType} groupId={dummyGroupId} enqueueAction={localEnqueueAction as (a:unknown)=>void} onExit={handleReturnToCatalog}/>;
+    if(isSignatureId(gameType))return <SignaturePlay key={key} gameId={gameType} groupId={dummyGroupId} enqueueAction={localEnqueueAction as (a:unknown)=>void} onExit={handleReturnToCatalog} onRoundReset={resetForNextRound}/>;
     if(isFlagship(gameType))return <FlagshipActivity key={key} game={gameType} room={hasBattle?battleRoomId:null} group={hasBattle?battleGroupId:null} onFinish={details=>localEnqueueAction({payload:{amount:100,details}})}/>;
     const phone=PHONE_PLAY_BY_ID.get(gameType);
     if(phone)return <PhonePlay key={key} {...commonProps} play={phone} solo={soloMode} onExit={handleReturnToCatalog}/>;
@@ -476,7 +487,8 @@ const GamePlaySession = () => {
 
       {/* 게임 렌더링 */}
       {hasStarted && !isCountingDown && <div className="gameplay-content" hidden={gameFinished && !showDetailedResult} onClickCapture={event => {
-        if (!gameFinished) return;
+        // 대표 게임은 '한 판 더'·'다시 시작'을 게임 안에서 처리한다(일시정지의 '▶ 다시 시작'을 가로채지 않게).
+        if (!gameFinished || signatureGame) return;
         const button = (event.target as HTMLElement).closest('button');
         if (button && /다시|재도전/.test(button.textContent || '')) {
           event.preventDefault();
@@ -502,7 +514,8 @@ const GamePlaySession = () => {
       )}
 
       {/* 게임 종료 결과 오버레이 */}
-      {gameFinished && !showDetailedResult && (
+      {/* 대표 게임은 결과 발표(ResultCeremony)가 결과·반응 칸을 모두 맡으므로 이 결과 카드를 그리지 않는다. */}
+      {gameFinished && !showDetailedResult && !signatureGame && (
         <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">

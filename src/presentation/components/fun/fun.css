@@ -1,5 +1,5 @@
 /* 대표 게임 · 재미 뼈대. TV(교사 화면 1대)에서 반 전체가 멀리서 읽는 무대. 밝은/어두운 테마 모두 같은 어두운 무대를 쓴다. */
-.fun-arena,.fun-intro{--fun-bg:#0f172a;--fun-panel:#1e293b;--fun-line:#334155;--fun-ink:#f8fafc;--fun-muted:#cbd5e1;--fun-accent:#f59e0b;--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
+.fun-arena,.fun-intro,.fun-dock{--fun-bg:#0f172a;--fun-panel:#1e293b;--fun-line:#334155;--fun-ink:#f8fafc;--fun-muted:#cbd5e1;--fun-accent:#f59e0b;--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
 .fun-arena{position:fixed;inset:0;z-index:20000;overflow:auto;background:var(--fun-bg);color:var(--fun-ink);display:flex;flex-direction:column;gap:clamp(8px,1.4vh,16px);padding:clamp(10px,2vw,28px);font-family:inherit;line-height:1.5}
 .fun-arena button,.fun-intro button{font:inherit;touch-action:manipulation;cursor:pointer}
 .fun-arena button:disabled,.fun-intro button:disabled{opacity:.45;cursor:not-allowed}
@@ -12,7 +12,7 @@
 .fun-phase[data-phase=tutorial]{border-color:#38bdf8}.fun-phase[data-phase=climax]{border-color:var(--fun-accent);color:#fde68a}
 .fun-timer{padding:6px 16px;border-radius:999px;background:var(--fun-accent);color:var(--fun-accent-ink);font-weight:900;font-size:clamp(18px,2.6vw,34px);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* 큰 지시 */
-.fun-signal{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,40px);min-height:clamp(180px,38vh,420px);padding:clamp(14px,3vw,40px);border-radius:24px;background:var(--fun-panel);border:3px solid var(--fun-line);text-align:center;transition:background-color .25s}
+.fun-signal{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,40px);min-height:clamp(120px,24vh,320px);padding:clamp(14px,3vw,40px);border-radius:24px;background:var(--fun-panel);border:3px solid var(--fun-line);text-align:center;transition:background-color .25s}
 .fun-signal[data-tone=go]{background:var(--fun-go);border-color:#4ade80}.fun-signal[data-tone=stop]{background:var(--fun-stop);border-color:#fca5a5}.fun-signal[data-tone=warn]{background:var(--fun-warn);border-color:#fde047}
 .fun-signal[data-tone=gold]{background:var(--fun-gold);border-color:#fde68a}.fun-signal[data-tone=calm]{background:var(--fun-calm);border-color:#7dd3fc}.fun-signal[data-tone=rest]{background:var(--fun-rest);border-color:#94a3b8}
 .fun-signal-figure{color:#fff;flex:0 0 auto}
@@ -132,3 +132,60 @@
 .fun-remote-status{font-weight:800}
 .fun-remote-status[data-status=error],.fun-remote-status[data-status=unavailable]{color:#dc2626}
 .fun-result .class-feedback{margin-top:12px}
+
+/* ── 진행 화면 배치(TV 1280×800에서 넘치지 않게) ── */
+/* 리모컨·'← 목록'은 판이 바뀌어도 남는 고정 막대(fun-dock). 머리줄은 그 자리를 비워 둔다. */
+.fun-dock{position:fixed;z-index:20001;top:clamp(10px,2vw,28px);right:clamp(10px,2vw,28px);display:flex;gap:8px;align-items:center;font-family:inherit}
+.fun-dock button{font:inherit;cursor:pointer;touch-action:manipulation}
+.fun-dock .fun-exit{background:var(--fun-bg)}.fun-dock .fun-remote-btn{background:var(--fun-bg)}
+.fun-head{padding-right:290px;min-height:48px}
+.fun-arena[data-phase=result]{padding-top:clamp(64px,9vh,84px)}
+/* 큰 지시와 게임 판: 남는 높이를 나눠 쓴다. 판이 큰 놀이(wide)는 넓은 화면에서 나란히 둔다. */
+.fun-stage{display:flex;flex-direction:column;gap:clamp(8px,1.2vh,14px);flex:1 1 auto;min-height:0}
+.fun-stage .fun-signal{flex:1 1 auto}
+.fun-panel{min-width:0;display:flex;flex-direction:column;justify-content:center}
+.fun-meta{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,1fr);gap:8px 16px;align-items:center}
+.fun-meta .fun-hint{text-align:left}
+/* 선생님 버튼은 늘 화면 아래에 보인다. */
+.fun-controls{position:sticky;bottom:0;z-index:2;margin-top:auto;background:var(--fun-bg);padding-top:6px}
+.fun-scoreboard li[data-readonly]{grid-template-areas:"name score"}
+@media (min-width:961px){
+ .fun-stage[data-wide]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-rows:minmax(0,1fr);align-items:stretch}
+ /* 판은 자기 칸 안에서만(넘치면 칸 안에서 스크롤) — 점수판 위로 겹치지 않게 */
+ .fun-stage[data-wide] .fun-panel{overflow:auto;min-height:0}
+ .fun-stage[data-wide] .fun-signal{min-height:0;flex-direction:column;gap:8px}
+ .fun-stage[data-wide] .fun-cue{font-size:clamp(36px,4.6vw,76px)}
+ .fun-stage[data-wide] .fun-cue[data-length=medium]{font-size:clamp(32px,3.8vw,62px)}
+ .fun-stage[data-wide] .fun-cue[data-length=long]{font-size:clamp(26px,3vw,48px)}
+ .fun-stage[data-wide] .fun-cue-sub{font-size:clamp(16px,1.7vw,24px)}
+ /* 점수판: 이름 · 점수 · 버튼을 한 줄로 */
+ .fun-scoreboard li{grid-template-columns:auto 1fr auto;grid-template-areas:"name score buttons";padding:8px 12px}
+ .fun-scoreboard li[data-readonly]{grid-template-columns:auto 1fr;grid-template-areas:"name score"}
+ .fun-team-score{font-size:clamp(30px,3.6vw,56px);text-align:center}
+ .fun-team-buttons{grid-template-columns:auto auto}
+ .fun-team-buttons button{min-height:44px;padding:0 14px}
+ /* 결과: 왼쪽 순위·게임 결과, 오른쪽 배운 것·반응·버튼 */
+ .fun-result{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;max-width:1240px;text-align:left;align-items:start}
+ .fun-result h2{font-size:clamp(30px,4vw,60px)}
+ .fun-result .fun-podium{justify-content:flex-start}
+ .fun-podium li{padding:6px 14px;font-size:clamp(16px,1.8vw,24px)}
+ .fun-podium li[data-rank="1"]{transform:none;box-shadow:0 0 0 3px #fde68a}
+ .fun-takeaways li{font-size:clamp(16px,1.6vw,22px);padding:9px 14px;grid-template-columns:6.5em 1fr}
+}
+.fun-result-main,.fun-result-side{display:flex;flex-direction:column;gap:12px;min-width:0}
+/* 좁은 화면(휴대폰·세로 태블릿)은 줄이지 않고 아래로 스크롤한다(선생님 버튼은 아래에 붙어 있음). */
+@media (max-width:960px){.fun-stage{flex:0 0 auto}}
+@media (max-width:640px){
+ .fun-head{padding-right:0}
+ .fun-arena{padding-top:64px}
+ .fun-meta{grid-template-columns:1fr}
+ .fun-meta .fun-hint{text-align:center}
+}
+/* 이어 하기 */
+.fun-resume{display:grid;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid var(--fun-accent);background:var(--fun-panel)}
+.fun-resume p{margin:0;font-weight:750}
+/* 몸 빙고 힌트 · 기억 릴레이 변형 */
+.sig-bingo-cell[data-hint=win]{box-shadow:0 0 0 4px #fde68a inset}
+.sig-bingo-cell[data-hint=block]{box-shadow:0 0 0 4px #93c5fd inset}
+.sig-bingo-hint{display:block;font-style:normal;font-size:.8em;font-weight:900;margin-top:2px}
+.sig-mem-variation{margin:0;text-align:center;font-weight:900;color:#fde68a;font-size:clamp(16px,1.8vw,22px)}

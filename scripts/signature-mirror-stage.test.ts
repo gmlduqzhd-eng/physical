@@ -53,9 +53,13 @@ test('mirror pair: the leader swaps every round and play/climax round numbers co
  assert.deepEqual([0,1,2,3].map(mirrorStep),['lead','keep','change','find']);
  assert.equal(mirrorPair.cue(ctx(mirrorPair,'play',2)).text,'하나 바꾸기!');
  assert.equal(mirrorPair.cue(ctx(mirrorPair,'climax',2)).text,'두 군데 바꾸기!');
- // 마지막 승부는 본게임 다음 라운드 번호로 이어진다(리더가 계속 번갈아).
- const playRounds=mirrorPair.timing.play/(mirrorPair.timing.cueSeconds*STEPS_PER_ROUND);
- assert.equal(mirrorRound({phase:'climax',index:0,state:s}),playRounds);
+ // 마지막 승부는 본게임에서 실제로 보여 준 신호 수로 다음 라운드 번호를 이어 센다(리더가 계속 번갈아).
+ const playCues=mirrorPair.timing.play/mirrorPair.timing.cueSeconds;
+ const playRounds=playCues/STEPS_PER_ROUND;
+ assert.equal(mirrorRound({phase:'climax',index:0,state:{...s,phaseCues:{play:playCues}}}),playRounds);
+ // 본게임을 일찍 넘기거나 '빨리빨리'로 신호 수가 달라도 실제 신호 수를 따른다(라운드 도중이면 다음 라운드부터).
+ assert.equal(mirrorRound({phase:'climax',index:0,state:{...s,phaseCues:{play:10}}}),3);
+ assert.equal(mirrorRound({phase:'climax',index:0,state:{...s,phaseCues:{}}}),0,'play skipped');
  // 라운드 안에서는 같은 동작, 마지막 승부는 서로 다른 두 곳을 바꾼다.
  const p0=roundPlan(ctx(mirrorPair,'play',0)),p1=roundPlan(ctx(mirrorPair,'play',3));
  assert.equal(p0.moveName,p1.moveName);

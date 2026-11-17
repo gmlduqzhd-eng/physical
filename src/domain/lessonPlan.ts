@@ -2,6 +2,7 @@ import { withParticle } from './koreanParticle';
 import { AVAILABLE_GAMES } from './gamesData';
 import { FLAGSHIPS } from './flagship';
 import { LESSON_GAME_CATALOG, type LessonGameMeta } from '../data/lessonGameCatalog';
+import { isSignatureId } from './signatureGames';
 import { findStandards, LOW_GRADE_THEMES, CORE_COMPETENCIES, type CurriculumStandard } from '../data/curriculumStandards';
 
 // ─── 타입 ───
@@ -55,13 +56,17 @@ export interface GeneratedPlan {
 }
 
 const GROUP_MODES = ['짝', '모둠', '팀 대항', '학급 전체'] as const;
+/** 대표 게임(sig-*)처럼 교사 화면 1대(TV)로만 진행하는 활동. 학생 기기 수업에는 넣지 않는다. */
+export const teacherScreenOnly = (game: Pick<LessonGameMeta, 'id'>) => isSignatureId(game.id);
+const isStudentDevice = (device: DeviceOption) => device === '모둠별 1대' || device === '학생 1인 1기기';
 /** 짝·모둠·반 전체로 할 수 있는 활동인지(혼자만 하는 활동을 모둠 수업에 넣지 않게). */
 export const supportsGroups = (game: Pick<LessonGameMeta, 'activityModes'>) => game.activityModes.some(m => (GROUP_MODES as readonly string[]).includes(m));
 /** 고른 활동 형태·기기가 활동과 맞지 않으면 교사에게 보여 줄 한 줄. 맞으면 null. */
-export function lessonFitWarning(game: Pick<LessonGameMeta, 'title' | 'activityModes' | 'recommendedPlayers'>, actMode: ActivityMode, device: DeviceOption): string | null {
+export function lessonFitWarning(game: Pick<LessonGameMeta, 'id' | 'title' | 'activityModes' | 'recommendedPlayers'>, actMode: ActivityMode, device: DeviceOption): string | null {
   const modes = game.activityModes.join('·');
   const name = `「${game.title}」${withParticle(game.title, '은는').slice(game.title.length)}`;
   if (actMode !== '자동 추천' && !game.activityModes.includes(actMode as never)) return `${name} ${modes} 활동이에요. ‘${actMode}’ 수업이면 활동을 바꾸거나 형태를 ${withParticle(game.activityModes[0], '으로')} 바꿔 주세요.`;
+  if (isStudentDevice(device) && teacherScreenOnly(game)) return `${name} TV(교사 화면 1대)로 반 전체가 함께 하는 활동이에요. 학생 기기 대신 ‘교사용 1대’로 바꿔 주세요.`;
   if (device === '모둠별 1대' && !supportsGroups(game)) return `${name} 혼자 하는 활동이에요. 모둠별 기기로 하려면 한 모둠 안에서 한 명씩 차례로 해요.`;
   return null;
 }
@@ -178,7 +183,7 @@ export function generateLessonPlan(
     const sc = calcGameScore(selectedGame, grade, domain, actMode, space, device, focuses);
     recommendedGame = { game: selectedGame, reason: generateGameReason(selectedGame, effectiveDomain, gradeKey), role: generateGameRole(selectedGame, effectiveDomain), usageTime: Math.round(duration * 0.3), score: sc };
   } else if (gameMode === 'auto') {
-    const scored = LESSON_GAME_CATALOG.map(g => ({ game: g, score: calcGameScore(g, grade, domain, actMode, space, device, focuses) })).sort((a, b) => b.score - a.score);
+    const scored = LESSON_GAME_CATALOG.filter(g => !(isStudentDevice(device) && teacherScreenOnly(g))).map(g => ({ game: g, score: calcGameScore(g, grade, domain, actMode, space, device, focuses) })).sort((a, b) => b.score - a.score);
     const best = scored[0];
     if (best) {
       recommendedGame = { game: best.game, reason: generateGameReason(best.game, effectiveDomain, gradeKey), role: generateGameRole(best.game, effectiveDomain), usageTime: Math.round(duration * 0.3), score: best.score };

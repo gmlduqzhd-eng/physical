@@ -2,8 +2,8 @@ import {useMemo,useState} from 'react';
 import {Link,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
 import {ExportMenu} from './components/ExportMenu';
-import {clearProgress,useClassProgress} from '../application/classProgressStore';
-import {archiveCandidates,classBadges,featuredCandidates,mapView,reactionRows,weekCompare,MIN_PLAYS_FOR_SUGGESTION,type ReactionRow} from '../domain/classProgress';
+import {clearProgress,progressSaveFailed,useClassProgress} from '../application/classProgressStore';
+import {archiveCandidates,classBadges,featuredCandidates,mapView,reactionRows,weekCompare,SUGGESTION_RULES,type ReactionRow} from '../domain/classProgress';
 import {GAMES} from '../domain/gamesData';
 import {isFeatured} from '../domain/featuredGames';
 import type {ExportTable} from '../application/documentExport';
@@ -29,6 +29,7 @@ export function ClassProgressPage(){
   <section className="class-progress" aria-labelledby="cp-title">
    <h1 id="cp-title">우리 반 반응 · 원정 지도</h1>
    <p className="cp-lead">게임이 끝날 때 남긴 👍/👎와 판 수를 모아 보여 줘요. 기록은 이 기기에만 저장돼요.</p>
+   {progressSaveFailed()&&<p className="cp-save-warning" role="alert" data-save-failed>⚠ 이 기기에 기록을 저장하지 못했어요(저장 공간이 꽉 찼거나 막혀 있어요). 지금 화면을 닫으면 최근 기록이 사라질 수 있으니, ‘내보내기’로 먼저 파일에 저장해 두세요.</p>}
    <nav className="cp-tabs" aria-label="보기 고르기">
     <button type="button" aria-current={tab==='reactions'?'page':undefined} onClick={()=>setParams({},{replace:true})}>👍 우리 반 반응</button>
     <button type="button" aria-current={tab==='map'?'page':undefined} onClick={()=>setParams({tab:'map'},{replace:true})}>🗺 반 원정 지도</button>
@@ -36,11 +37,17 @@ export function ClassProgressPage(){
    {tab==='reactions'?<>
     {!rows.length?<p className="cp-empty">아직 기록이 없어요. 게임을 한 판 마치고 결과 화면에서 👍/👎를 눌러 보세요. <Link to="/hub">활동 찾기 →</Link></p>:<>
      <div className="cp-cards">
-      <article><h2>🗄 보관함으로 보낼 후보</h2><p className="cp-hint">대표 게임 중 {MIN_PLAYS_FOR_SUGGESTION}판 이상 했고 👍가 40% 미만</p>
+      <article><h2>🗄 보관함으로 보낼 후보</h2><p className="cp-hint" data-rule="archive">{SUGGESTION_RULES.archive}</p>
        {archive.length?<ul>{archive.map(r=><li key={r.id}>{nameOf(r.id)} <span>{r.plays}판 · 👍 {pct(r)}</span></li>)}</ul>:<p>아직 없어요.</p>}</article>
-      <article><h2>⭐ 대표로 올릴 후보</h2><p className="cp-hint">보관함 활동 중 {MIN_PLAYS_FOR_SUGGESTION}판 이상 했고 👍가 80% 이상</p>
+      <article><h2>⭐ 대표로 올릴 후보</h2><p className="cp-hint" data-rule="featured">{SUGGESTION_RULES.featured}</p>
        {promote.length?<ul>{promote.map(r=><li key={r.id}>{nameOf(r.id)} <span>{r.plays}판 · 👍 {pct(r)}</span></li>)}</ul>:<p>아직 없어요.</p>}</article>
      </div>
+     <details className="cp-rules" data-rules><summary>후보는 이렇게 골라요</summary><ul>
+      <li>🗄 보관함으로 보낼 후보: {SUGGESTION_RULES.archive}</li>
+      <li>⭐ 대표로 올릴 후보: {SUGGESTION_RULES.featured}</li>
+      <li>👍 비율은 👍와 👎를 누른 판만 세요. 반응을 남기지 않은 판은 판 수에만 들어가요.</li>
+      <li>{SUGGESTION_RULES.note}</li>
+     </ul></details>
      <h2 className="cp-h2">많이 한 활동</h2>
      <div className="cp-table-wrap"><table className="cp-table">
       <thead><tr><th scope="col">활동</th><th scope="col">판 수</th><th scope="col">👍</th><th scope="col">👎</th><th scope="col">👍 비율</th></tr></thead>

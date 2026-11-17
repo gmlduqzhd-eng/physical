@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
-import {BOSSES,BOSS_TOTAL_HP,SPECIAL_DAMAGE,bossDamage,bossStatus} from '../../../../../domain/signature/sig-boss-raid';
+import {BOSSES,SPECIAL_DAMAGE,bossDamage,bossStatus,bossTotalHp} from '../../../../../domain/signature/sig-boss-raid';
 import {comboFull} from '../../../../../domain/funLoop';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 
@@ -19,7 +19,7 @@ function BossPanel({state}:SignatureModuleProps){
 }
 function BossResult({state}:SignatureModuleProps){
  const st=bossStatus(state);
- return <p className="sig-boss-result">총 피해 {Math.min(bossDamage(state),BOSS_TOTAL_HP)}/{BOSS_TOTAL_HP} · 물리친 보스 {st.defeated}/{BOSSES.length}{state.specials?` · 필살기 ${state.specials}번`:''}</p>;
+ return <p className="sig-boss-result">총 피해 {Math.min(bossDamage(state),bossTotalHp(state))}/{bossTotalHp(state)} · 물리친 보스 {st.defeated}/{BOSSES.length}{state.specials?` · 필살기 ${state.specials}번`:''}</p>;
 }
 const bossRaidModule:SignatureModule={
  Panel:BossPanel,Result:BossResult,

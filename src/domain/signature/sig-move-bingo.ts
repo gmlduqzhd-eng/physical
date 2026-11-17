@@ -1,4 +1,4 @@
-import {seededRandom,TEAM_NAMES} from '../funLoop.js';
+import {seededRandom,TEAM_NAMES,type FunCommand,type FunState} from '../funLoop.js';
 import {EXAMPLE_QUESTIONS} from '../peQuizBingo.js';
 import {defineSignatureGame} from './define.js';
 import type {Pose,SignatureCue,SignatureCueContext} from './types.js';
@@ -77,6 +77,24 @@ export function newLinesIfClaimed(owners:Owners,cell:number,team:number):number{
 export const claimPoints=(owners:Owners,cell:number,team:number)=>1+BINGO_BONUS*newLinesIfClaimed(owners,cell,team);
 export const boardFull=(owners:Owners)=>owners.every(v=>v!==null);
 /** 차례: 차지하거나 넘긴 횟수(turns)를 팀 수로 나눈 나머지. */
+/**
+ * 점수는 칸 차지로만: 칸을 차지할 때 화면이 tag:'cell'을 붙여 보낸다. 점수판 ±·'모든 팀 +1'·키보드·리모컨 점수는
+ * 칸과 어긋나므로 받지 않는다(빙고에서는 점수판에 ± 버튼을 두지 않는다).
+ */
+export function moveBingoGate(_s:FunState,cmd:FunCommand):FunCommand|null{
+ if(cmd.type==='scoreAll')return null;
+ if(cmd.type==='score'&&cmd.tag!=='cell')return null;
+ return cmd;
+}
+/** 칸 힌트: 이 칸을 차지하면 우리 팀 빙고(win), 상대 팀이 차지하면 빙고라 막아야 함(block). */
+export function cellHints(owners:Owners,team:number,teams:number):('win'|'block'|null)[]{
+ return owners.map((o,cell)=>{
+  if(o!==null)return null;
+  if(newLinesIfClaimed(owners,cell,team)>0)return 'win';
+  for(let t=0;t<teams;t++)if(t!==team&&newLinesIfClaimed(owners,cell,t)>0)return 'block';
+  return null;
+ });
+}
 export const turnTeam=(turns:number,teams:number)=>((turns%Math.max(1,teams))+Math.max(1,teams))%Math.max(1,teams);
 
 export function moveBingoCue(ctx:SignatureCueContext):SignatureCue{
@@ -111,6 +129,9 @@ export const moveBingo=defineSignatureGame({
  teamsDefault:2,teamsMin:2,
  mergedFrom:['phone-play-105'],
  cue:moveBingoCue,
+ commandGate:moveBingoGate,
+ // 차례로 칸을 고르는 놀이라 신호 속도('빨리빨리')는 의미가 없다.
+ surprises:{play:['golden','reverse','freeze'],climax:['golden','reverse']},
  domain:'운동',subCategory:'민첩·전략 대표 게임',
  achievement:{code:'연계 확인 필요',title:'여러 가지 기본 움직임과 체육 지식',desc:'여러 가지 기본 움직임을 해 보고 체육 활동에 필요한 지식을 익힌다.'},
  spaces:['교실','체육관','다목적실','운동장'],minutes:6,players:{min:4,max:30},intensity:'보통',

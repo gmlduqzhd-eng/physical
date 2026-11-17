@@ -31,7 +31,10 @@ export type Leader='1번'|'2번';
 export function mirrorRound(ctx:Pick<SignatureCueContext,'phase'|'index'|'state'>):number{
  const local=Math.floor(Math.max(0,ctx.index)/STEPS_PER_ROUND);
  if(ctx.phase!=='climax')return local;
- const playRounds=Math.ceil(ctx.state.timing.play/(ctx.state.timing.cueSeconds*STEPS_PER_ROUND));
+ // 본게임에서 실제로 보여 준 신호 수로 센다(일찍 넘기거나 '빨리빨리!'로 신호가 빨라져도 리더 교대가 이어진다).
+ // 본게임을 건너뛰었으면(연습 판에서 바로 넘김) 0라운드부터.
+ const shown=ctx.state.phaseCues.play;
+ const playRounds=shown===undefined?0:Math.ceil(shown/STEPS_PER_ROUND);
  return playRounds+local;
 }
 /** 라운드마다 리더가 바뀐다. 짝수 라운드는 1번, 홀수 라운드는 2번. */
@@ -98,6 +101,8 @@ export const mirrorPair=defineSignatureGame({
  teamsDefault:2,teamsMin:1,
  mergedFrom:['exp-phone-49','shadow_puppeteer','phone-play-028'],
  cue:mirrorPairCue,
+ // '천천히 따라 하기'가 규칙이라 '빨리빨리'는 쓰지 않는다.
+ surprises:{play:['golden','reverse','freeze'],climax:['golden','reverse']},
  domain:'표현',subCategory:'표현 대표 게임',
  achievement:{code:'연계 확인 필요',title:'거울처럼 따라 하며 움직임 표현하기',desc:'짝의 움직임을 관찰하고 거울처럼 따라 하며 몸의 여러 부분으로 움직임을 표현한다.'},
  grades:['1~2학년','3~4학년군','5~6학년군'],

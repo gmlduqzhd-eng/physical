@@ -69,6 +69,18 @@ export function bestGroups(counts:ReactionCounts):number[]{
  const totals=counts.map(row=>row.reduce((a,b)=>a+b,0)),max=Math.max(0,...totals);
  return max>0?totals.map((t,g)=>t===max?g:-1).filter(g=>g>=0):[];
 }
+/**
+ * 결과 표의 한 줄: 반응 종류별 수, 선생님이 팀 버튼으로 더하거나 뺀 점수, 합계(=팀 응원 점수).
+ * 우승 팀·'가장 많은 응원'·표 합계가 모두 팀 점수 하나에서 나오므로 서로 어긋나지 않는다.
+ */
+export function stageTally(counts:ReactionCounts,scores:readonly number[]):{group:number;reactions:number[];teacher:number;total:number}[]{
+ return scores.map((total,g)=>{const reactions=counts[g]??REACTIONS.map(()=>0);const sum=reactions.reduce((a,b)=>a+b,0);return {group:g,reactions,teacher:total-sum,total};});
+}
+/** 응원 점수가 가장 높은 모둠(동점이면 모두). 모두 0이면 빈 배열. */
+export function bestByScore(scores:readonly number[]):number[]{
+ const max=Math.max(0,...scores);
+ return max>0?scores.map((v,g)=>v===max?g:-1).filter(g=>g>=0):[];
+}
 /** 지금 반응 버튼을 누르면 점수를 받을 모둠(없으면 null). */
 export function reactionTarget(ctx:Pick<SignatureCueContext,'phase'|'index'|'teams'>):number|null{
  if(ctx.phase==='play'){const s=stageSlot(ctx.index,ctx.teams);return s.kind==='perform'?s.group:null;}
@@ -97,7 +109,7 @@ export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
  const slot=stageSlot(ctx.index,ctx.teams);
  if(slot.kind==='prep'){
   const sec=slot.cuesLeft*ctx.state.timing.cueSeconds;
-  return {text:ctx.index===0?'🎴 장면 카드 뽑기!':`모둠별 준비 · ${sec}초`,sub:ctx.index===0?'모둠마다 다른 장면 카드를 받아요. 시작 → 가운데 → 끝 3장면을 함께 정해요':'말 대신 몸과 표정으로! 시작 자세와 끝 자세를 꼭 정해요',icon:'🎴',tone:'calm',pose:'armsSide',scorable:false};
+  return {text:ctx.index===0?'장면 카드 뽑기!':`모둠별 준비 · ${sec}초`,sub:ctx.index===0?'모둠마다 다른 장면 카드를 받아요. 시작 → 가운데 → 끝 3장면을 함께 정해요':'말 대신 몸과 표정으로! 시작 자세와 끝 자세를 꼭 정해요',icon:'🎴',tone:'calm',pose:'armsSide',scorable:false};
  }
  if(slot.kind==='done')return {text:'모든 모둠 발표 끝!',sub:'커튼콜로 넘어가요',icon:'🎬',tone:'calm',pose:'armsUp',scorable:false};
  const sc=scenes[slot.group];
@@ -128,6 +140,10 @@ export const stageShow=defineSignatureGame({
  teamsDefault:3,teamsMin:2,
  mergedFrom:['phone-play-029','phone-play-032','story_drama_relay','musical_scene_maker'],
  cue:stageShowCue,
+ // 발표 시간이 신호 간격에 묶여 있어 '빨리빨리'는 모둠 발표를 반으로 줄인다.
+ // 응원 한 번 = 1점이라 '황금 신호'(2배)도 쓰지 않는다(응원 수와 점수가 같게).
+ surprises:{play:['reverse','freeze'],climax:['reverse']},
+ resultHeadline:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return `가장 많은 응원: ${best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ')}`;},
  domain:'표현',subCategory:'표현 대표 게임',
  achievement:{code:'연계 확인 필요',title:'장면을 몸으로 표현하기',desc:'주어진 장면을 모둠이 함께 구성하고 몸과 표정으로 표현하며, 친구의 표현을 감상하고 응원한다.'},
  grades:['1~2학년','3~4학년군','5~6학년군'],
