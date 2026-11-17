@@ -25,9 +25,9 @@ test('the 2026-11 cleanup retires 62 activities and 8 courses attached to them, 
 });
 test('retired activities disappear from every list a teacher picks from',()=>{
  const gone=new Set(cleaned.map(g=>g.id));
- assert.equal(AVAILABLE_GAMES.length,152);assert(!AVAILABLE_GAMES.some(g=>gone.has(g.type)));
+ assert.equal(AVAILABLE_GAMES.length,158);assert(!AVAILABLE_GAMES.some(g=>gone.has(g.type)));
  assert(!LESSON_GAME_CATALOG.some(g=>gone.has(g.id)));
- assert.equal(ALL_PHONE_PLAYS.length,100);assert.equal(PHONE_PLAYS.length,59);assert(!PHONE_PLAYS.some(p=>gone.has(p.id)));
+ assert.equal(ALL_PHONE_PLAYS.length,106);assert.equal(PHONE_PLAYS.length,65);assert(!PHONE_PLAYS.some(p=>gone.has(p.id)));
  assert(PHONE_PLAY_BY_ID.has('phone-play-002'),'old plays still resolve for records');
  for(const id of [...CORE_ACTIVITY_IDS,...UNDERSTANDING_IDS,...SIMILAR_TO.keys(),...SIMILAR_TO.values()])assert(!gone.has(id),id);
  for(const r of [...PRIMARY_EXPERIENCES,...STARTER_RECIPES])assert(isAvailableGame(r.game),r.game);

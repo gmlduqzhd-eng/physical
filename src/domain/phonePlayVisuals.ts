@@ -101,6 +101,12 @@ const visuals = [
  [98,'👁️','Eye','쉼의 방향'],
  [99,'🌊⬇️','WavesArrowDown','느린 파동'],
  [100,'🔖','BookmarkCheck','다음 약속'],
+ [101,'👥','UsersRound','숫자 모둠'],
+ [102,'🦊','AlarmClock','몇 시예요'],
+ [103,'🐢','Snail','걷기 술래'],
+ [104,'🐣','Repeat2','진화 산책'],
+ [105,'🎯','ListChecks','움직임 빙고'],
+ [106,'🧭','Grid2X2Plus','네 구석'],
 ] as const;
 
 export type PhonePlayVisual = {emoji:string;icon:typeof visuals[number][2];label:string};

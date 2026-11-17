@@ -23,6 +23,10 @@ const teamMotions:Record<string,string[]>={
  '084':['함께 고른 원래 작은 동작','한 가지 바꾼 팔 방향으로 표현','원래와 바꾼 동작을 번갈아 비교'],
  '088':['떨어진 자리에서 손끝 방향 연결','한 친구의 손 방향만 바꾸어 연결','서로 닿지 않고 손끝 방향 다시 연결'],
  '099':['작은 팔 물결을 다음 번호에 전달','다음 친구가 준비되면 작은 물결 전달','마지막 신호에 함께 손 내리기'],
+ '101':['둘·셋이 모여 다리·세모 모양 만들기','넷이 모여 네모 모양 만들기','남은 친구를 불러 함께 모양 만들기'],
+ '103':['걷기만 하며 거북이 등껍질 5초','술래 두 명 · 얼음이면 하이파이브로 풀기','서로 풀어 주고 모두 멈춰 숨 고르기'],
+ '104':['알·병아리 자세로 걷고 가위바위보','닭 자세까지 올라가기','하늘 새가 되면 가장자리에서 응원'],
+ '105':['첫째 줄: 제자리 걸음 → 별 모양 → 무릎 손뼉','둘째 줄: 한 발 서기 → 제자리 걸음 → 별 모양','셋째 줄: 무릎 손뼉 → 한 발 서기 → 제자리 걸음'],
 };
 export function phoneTeamMotion(play:PhonePlay,round:number){return teamMotions[play.id.slice(-3)]?.[round]??play.rounds[round];}
 export function phoneRoles(play:PhonePlay,players:number,round:number,created:string[]=[],seated=false){

@@ -22,8 +22,8 @@ test('observation and rest never earn participation rewards, even with an old po
  for(const participation of ['observed','rested'] as const){const d=normalizeGameResultDetails({participation,ratings:[0,0]})!;assert.equal(d.participation,participation);assert.equal(d.ratings,undefined);assert.equal(earnsParticipationReward(300,d),false);}
  assert(earnsParticipationReward(0,{participation:'performed'}));assert(!earnsParticipationReward(0));assert(earnsParticipationReward(10));
 });
-test('all 59 phone activities allow truthful rest or observation without fabricated movement',()=>{
- assert.equal(PHONE_PLAYS.length,59);
+test('all 65 phone activities allow truthful rest or observation without fabricated movement',()=>{
+ assert.equal(PHONE_PLAYS.length,65);
  for(const p of PHONE_PLAYS)for(const outcome of ['rest','observe'] as const){const record:PhoneRecord={round:0,outcome,elapsedMs:0,count:0,answer:[],participants:[]};assert(phoneRecordValid(p,record,3),p.id);assert(!phoneRecordValid(p,{...record,count:1},3));assert(!phoneRecordValid(p,{...record,participants:[1]},3));}
 });
 test('missing, reverse and fill memory games require their own actual answers',()=>{
@@ -40,7 +40,7 @@ test('movie confirmation concerns this scene, and edited creation roles retain t
  assert.notDeepEqual(phoneRoles(p,2,0,chosen),phoneRoles(p,2,1,chosen));
 });
 test('team games show concrete shared motions and rotate the signal reader',()=>{
- const rows=PHONE_PLAYS.filter(p=>p.kind==='team');assert.equal(rows.length,9);
+ const rows=PHONE_PLAYS.filter(p=>p.kind==='team');assert.equal(rows.length,13);
  for(const p of rows){const a=phoneRoles(p,3,0),b=phoneRoles(p,3,1);assert.notDeepEqual(a,b,p.id);if(p.id!=='phone-play-008')assert(a.every(role=>role.role.includes(phoneTeamMotion(p,0))),p.id);}
 });
 test('paired counting carries one remainder and personal counts must add to the recorded total',()=>{
