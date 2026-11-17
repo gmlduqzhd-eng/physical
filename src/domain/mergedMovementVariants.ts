@@ -66,12 +66,12 @@ const rows:Record<string,[string,string,string,string,string,boolean?]>={
 };
 export const MERGED_MOVEMENT_IDS=Object.keys(rows);
 export function mergedMovementMeta(id:string):QuestMetadata|undefined{
- const r=rows[id];if(!r)return;return {name:r[0],emoji:'🧩',description:`${r[2]} → ${r[3]} → ${r[4]}`,setup:r[1]+' · 기기는 거치하고 개인 통로에서 활동',equipment:r[1].split('·'),rules:[r[2],r[3],r[4]],alternative:'앉아서 닿는 표식을 짚거나 팔로 같은 순서·방향을 표현해요. 불편하면 범위를 줄여요.',team:!!r[5],maxPlayers:2};
+ const r=rows[id];if(!r)return;return {name:r[0],emoji:'🧩',description:`${r[2]} → ${r[3]} → ${r[4]}`,setup:r[1]+' · 기기는 내려놓고 개인 통로에서 활동',equipment:r[1].split('·'),rules:[r[2],r[3],r[4]],alternative:'앉아서 닿는 표식을 짚거나 팔로 같은 순서·방향을 표현해요. 불편하면 범위를 줄여요.',team:!!r[5],maxPlayers:2};
 }
 export function makeMergedMovementRound(id:string,round:number,s:QuestSettings,choice?:string):QuestRound{
  const r=rows[id];if(!r)throw Error('Unknown merged movement variant');
  const actions=[r[2],r[3],r[4]];const selected=choice==='wide';
- const p:QuestRound={title:[r[0]+' 익히기','순서 바꾸기','내 방법으로 연결'][round],goal:r[0]+'의 세 구간을 실제로 연결하기',hint:'기기는 거치해요. 결과는 직접 확인하며 동작·건강·경기 능력을 자동 측정하지 않아요.',choices:[{id:'close',label:'가까운 범위',detail:'표식과 팔 동작 범위를 작게 해요.'},{id:'wide',label:'편한 범위로 넓히기',detail:'무리하지 않고 한 걸음 또는 팔 범위를 조금 넓혀요.'}],cues:Array.from({length:3},(_,i)=>actions[(i+round)%3]).map(c=>`${s.seated?'앉아서 같은 순서·방향을 팔로 표현 · ':''}${c}${selected?' · 내게 편한 범위로 넓혀요':' · 가까운 범위에서 해요'}`),cueMs:s.gentle?6500:5000,repeats:1,confirmation:'선택한 세 구간을 시도하고 방법과 결과를 직접 비교했어요'};
+ const p:QuestRound={title:[r[0]+' 익히기','순서 바꾸기','내 방법으로 연결'][round],goal:r[0]+'의 세 구간을 실제로 연결하기',hint:'기기는 내려놓아요. 결과는 직접 확인하며 동작·건강·경기 능력을 자동 측정하지 않아요.',choices:[{id:'close',label:'가까운 범위',detail:'표식과 팔 동작 범위를 작게 해요.'},{id:'wide',label:'편한 범위로 넓히기',detail:'무리하지 않고 한 걸음 또는 팔 범위를 조금 넓혀요.'}],cues:Array.from({length:3},(_,i)=>actions[(i+round)%3]).map(c=>`${s.seated?'앉아서 같은 순서·방향을 팔로 표현 · ':''}${c}${selected?' · 내게 편한 범위로 넓혀요':' · 가까운 범위에서 해요'}`),cueMs:s.gentle?6500:5000,repeats:1,confirmation:'선택한 세 구간을 시도하고 방법과 결과를 직접 비교했어요'};
  if(r[5])p.roles=s.practice?['혼자 역할을 번갈아 체험해요. 실제 모둠 참여 기록이 아니에요.']:['1번과 2번은 시범·수행 또는 보내기·받기를 매 구간 바꾸어요.'];
  if(id==='math'){const a=round+1,b=selected?3:2;p.goal=`${a} + ${b}의 답 표식 방문하기`;p.question={prompt:'방문한 숫자는?',options:['1','2','3','4','5','6'],answer:[String(a+b)]};p.cues=[`${a} + ${b}의 답을 떠올려요`,s.seated?'답 표식을 팔로 짚어요':'답 표식까지 걸어가요','출발점으로 돌아와 답을 기록해요'];}
  if(id==='color_word'){const names=['빨강','파랑','노랑'],ink=names[(round+1)%3],word=names[round];p.stimulus={text:word,color:['#1e5db8','#926b00','#bf3030'][round],rule:selected?'글자의 색':'글자의 뜻'};p.goal=`${p.stimulus.rule}에 맞는 표식 방문`;p.question={prompt:'방문한 색은?',options:names,answer:[selected?ink:word]};p.cues=[`${p.stimulus.rule}을 보고 답을 정해요`,s.seated?'답 표식을 팔로 짚어요':'답 표식까지 걸어가요','출발점에 돌아와 실제 선택을 기록해요'];}

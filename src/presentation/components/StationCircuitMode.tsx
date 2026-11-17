@@ -25,7 +25,7 @@ const STATIONS: Station[] = [
     id: 'A',
     name: '스테이션 A : 신호 반응 구역',
     targetGame: 'red_green',
-    desc: '신호등 구조 산책: 초록은 걷기, 노랑은 작은 걸음, 빨강은 멈춤!',
+    desc: '신호등 걷고 멈추기: 초록은 걷기, 노랑은 작은 걸음, 빨강은 멈춤!',
     mission: '신호를 잘못 본 걸음 없이 한 판 끝내기',
     emoji: '🚦',
     color: 'from-amber-500 to-orange-600'
@@ -52,7 +52,7 @@ const STATIONS: Station[] = [
     id: 'D',
     name: '스테이션 D : 균형 구역',
     targetGame: 'one_leg',
-    desc: '균형 등대 지키기: 발끝을 대거나 한 발을 살짝 들고 팔 방향 바꾸기!',
+    desc: '한 발 등대 서기: 발끝을 대거나 한 발을 살짝 들고 팔 방향 바꾸기!',
     mission: '흔들리면 발끝을 대고 다시 시작하며 끝까지 지키기',
     emoji: '🦩',
     color: 'from-purple-500 to-pink-600'

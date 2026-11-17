@@ -32,9 +32,9 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '눈 깜짝할 사이에 반응하고 움직이는 천부적인 순발력을 가지고 있어요! 속도감 넘치는 민첩성 게임에 최강입니다.',
     strengths: ['초고속 반사신경', '폭발적인 순간 스피드', '순간 판단력'],
     recommendedGames: [
-      { name: '신호등 구조 산책', type: 'red_green' },
+      { name: '신호등 걷고 멈추기', type: 'red_green' },
       { name: '우주 관제사의 예외 신호', type: 'phone-play-001' },
-      { name: '갈림길 보급 작전', type: 'zigzag' }
+      { name: '막힌 길 피해 가기', type: 'zigzag' }
     ],
     color: 'from-amber-500 to-orange-600'
   },
@@ -47,8 +47,8 @@ const PERSONAS: Record<string, AnimalPersona> = {
     strengths: ['지치지 않는 체력', '강한 근지구력', '안정적인 밸런스'],
     recommendedGames: [
       { name: '벽 짚고 버티기', type: 'plank' },
-      { name: '스쿼트 챌린지', type: 'squat' },
-      { name: '내 페이스 왕복 우편', type: 'shuttle-run-beep' }
+      { name: '높낮이 선반에 물건 놓기', type: 'squat' },
+      { name: '삑 소리 맞춰 왕복 걷기', type: 'shuttle-run-beep' }
     ],
     color: 'from-emerald-500 to-teal-700'
   },
@@ -61,7 +61,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     strengths: ['탁월한 신체 균형', '정확한 템포 감각', '유연한 관절 가동성'],
     recommendedGames: [
       { name: '댄스 포즈 따라하기', type: 'dance_pose' },
-      { name: '외발 서기 균형', type: 'one_leg' },
+      { name: '한 발 등대 서기', type: 'one_leg' },
       { name: '스트레칭 타이머', type: 'stretch' }
     ],
     color: 'from-cyan-500 to-blue-600'
@@ -74,7 +74,7 @@ const PERSONAS: Record<string, AnimalPersona> = {
     description: '흔들리지 않는 고도의 집중력과 눈과 손의 협응력이 뛰어납니다! 정교한 조준과 두뇌 회전 종목의 마스터예요.',
     strengths: ['흔들림 없는 집중력', '손-눈 협응력', '침착한 상황 제어'],
     recommendedGames: [
-      { name: '표적 보급 실험실', type: 'target' },
+      { name: '콩주머니 표적 던지기', type: 'target' },
       { name: '컬러 워드 매치', type: 'color_word' },
       { name: '얼음 땡 게임', type: 'freeze' }
     ],

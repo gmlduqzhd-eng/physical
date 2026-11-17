@@ -3,7 +3,7 @@ import type { QuestMetadata } from './extendedMovementQuests.js';
 
 export const SPORTS_QUEST_IDS = ['target','slingshot-archery','base-running-decide','sound-goalball','badminton-drop-clear','basketball-free-throw','tabletennis-spin-read','shuttle-run-beep'] as const;
 export type SportsQuestId = typeof SPORTS_QUEST_IDS[number];
-const makeMeta=(name:string,emoji:string,description:string,equipment:string[],rules:string[],alternative:string,team=false):QuestMetadata=>({name,emoji,description,equipment,setup:equipment.join(' · ')+' · 기기 거치 · 분리된 개인 통로',rules,alternative,team,maxPlayers:2});
+const makeMeta=(name:string,emoji:string,description:string,equipment:string[],rules:string[],alternative:string,team=false):QuestMetadata=>({name,emoji,description,equipment,setup:equipment.join(' · ')+' · 기기 내려놓기 · 분리된 개인 통로',rules,alternative,team,maxPlayers:2});
 export const SPORTS_QUEST_META:Record<SportsQuestId,QuestMetadata>={
   target:makeMeta('표적 보급 실험실','🎯','거리와 힘을 골라 실제 콩주머니를 보내고 다음 시도에서 조절해요.',['콩주머니 또는 부드러운 공','바닥 표적 3개'],['가까운 표적 또는 조금 먼 표적을 골라요.','세 번 보내고 모두 멈춘 뒤 회수해요.','어느 방향으로 갔는지 보고 힘과 방향을 바꿔요.'],'앉아서 책상 위 표적으로 부드러운 공을 굴려요.'),
   'slingshot-archery':makeMeta('곡선 보물 던지기','🌈','종이 공을 낮은 곡선으로 보내며 가까운 바구니와 먼 바구니를 비교해요.',['구긴 종이 공 3개','낮은 바구니 2개'],['고무줄과 발사 도구 없이 손으로 던져요.','가까운 바구니와 먼 바구니 중 하나를 골라요.','세 번 보내고 바구니 앞·안·뒤 중 어디로 갔는지 비교해요.'],'앉아서 같은 종이 공을 두 바구니로 가볍게 보내요.'),
@@ -18,7 +18,7 @@ export const SPORTS_QUEST_META:Record<SportsQuestId,QuestMetadata>={
 export function makeSportsQuest(id:SportsQuestId,round:number,s:QuestSettings,choice?:string):QuestRound{
   const options=(a:string,b:string)=>[{id:'near',label:a,detail:'첫 방법을 골라 몸으로 시도해요.'},{id:'far',label:b,detail:'다른 방법의 결과를 비교해요.'}];
   const far=choice==='far';
-  const p:QuestRound={title:['첫 시도','방법 조절','비교 도전'][round],goal:'선택한 스포츠 미션을 실행해요',hint:'기기는 거치하고 실제 도구로 시도해요. 성공 횟수와 운동량을 자동 측정하지 않아요.',choices:[],cues:[],cueMs:s.gentle?6000:5000,repeats:1,confirmation:'세 번 시도하고 선택한 방법의 결과를 비교했어요'};
+  const p:QuestRound={title:['첫 시도','방법 조절','비교 도전'][round],goal:'선택한 스포츠 미션을 실행해요',hint:'기기는 내려놓고 실제 도구로 시도해요. 성공 횟수와 운동량을 자동 측정하지 않아요.',choices:[],cues:[],cueMs:s.gentle?6000:5000,repeats:1,confirmation:'세 번 시도하고 선택한 방법의 결과를 비교했어요'};
   const action=(a:string,b:string)=>s.seated?b:a;
   const trials=(a:string)=>Array.from({length:3},(_,i)=>[`${i+1}차 · ${a}`,`${i+1}차 · 공이 간 곳을 보고 모두 멈춰 회수`]).flat();
   switch(id){

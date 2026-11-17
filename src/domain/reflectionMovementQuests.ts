@@ -4,7 +4,7 @@ import type { QuestMetadata } from './extendedMovementQuests.js';
 export const REFLECTION_QUEST_IDS=['pulse-detective','posture-guardian','campfire-breath','breath-pacer-478'] as const;
 export type ReflectionQuestId=typeof REFLECTION_QUEST_IDS[number];
 export const BREATH_SOURCE={label:'NHS · 편안한 호흡 안내 (2026-10-22 확인)',url:'https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/'};
-const base=(name:string,emoji:string,description:string,equipment:string[],rules:string[],alternative:string):QuestMetadata=>({name,emoji,description,equipment,setup:equipment.join(' · ')+' · 기기 거치',rules,alternative});
+const base=(name:string,emoji:string,description:string,equipment:string[],rules:string[],alternative:string):QuestMetadata=>({name,emoji,description,equipment,setup:equipment.join(' · ')+' · 기기 내려놓기',rules,alternative});
 export const REFLECTION_QUEST_META:Record<ReflectionQuestId,QuestMetadata>={
   'pulse-detective':base('몸의 변화 관찰 탐정','🕵️','쉬기·가볍게 움직이기·다시 쉬기를 비교하고 내 느낌을 기록해요.',['안정된 의자','개인 공간'],['쉬면서 손목의 맥박이나 호흡 느낌을 선택해 살펴요. 목은 누르지 않아요.','가볍게 움직인 뒤 내 느낌이 어떻게 달라졌는지 비교해요.','숫자 측정은 요구하지 않아요. 못 찾거나 기록을 건너뛰어도 괜찮아요.'],'앉아서 팔을 번갈아 움직이고 전후 느낌을 살펴요.'),
   'posture-guardian':base('생활 자세 배달 로봇','🤖','앉기·가벼운 물건 옮기기·방향 바꾸기를 시도하며 편한 방법을 찾아요.',['안정된 의자','가벼운 물건 1개','탁자'],['자세를 오래 고정하지 않고 상황마다 편한 방법을 골라요.','가벼운 물건을 가까이 두고 옮긴 뒤 방향을 천천히 바꾸어요.','불편하면 범위를 줄이거나 대체 동작을 골라요.'],'앉은 자리에서 가벼운 물건을 가까운 두 표식 사이로 옮겨요.'),
@@ -20,7 +20,7 @@ export function makeReflectionQuest(id:ReflectionQuestId,round:number,s:QuestSet
     p.title=['쉬는 몸 관찰','가벼운 움직임 후 관찰','다시 쉬며 비교'][round];p.goal=p.title;
     const observe=guided?'손목 안쪽에 두 손가락을 가볍게 대보기 · 목 누르지 않기':'호흡이 어떻게 느껴지는지 살피기';
     p.cues=round===0?['편한 자세로 앉아 쉬기',observe,'느낌을 말로 떠올리기']:round===1?[s.seated?'양팔을 번갈아 가볍게 움직이기':'편하게 제자리걸음하기',s.seated?'팔을 편한 범위로 움직이기':'속도를 올리지 않고 걸음 이어가기','편히 멈추기',observe]:['편하게 앉아 쉬기','팔을 내려놓고 평소 호흡하기',observe,'활동 전후 느낌을 비교하기'];
-    p.reflection={prompt:round===0?'쉬는 몸에서 무엇을 느꼈나요? (선택 사항)':'앞 관찰과 비교한 느낌은? (선택 사항)',options:round===0?['호흡을 느꼈어요','손목 맥박을 찾았어요','잘 모르겠어요','기록 건너뛰기']:['조금 빨라진 느낌','비슷한 느낌','조금 느려진 느낌','잘 모르겠어요','기록 건너뛰기']};
+    p.reflection={prompt:round===0?'쉬는 지금, 숨이나 맥박은 어떤가요? (선택 사항)':'움직인 뒤 숨이나 맥박은 어떤가요? (선택 사항)',options:['🐢 느려요','🙂 보통이에요','🐇 빨라요','잘 모르겠어요','기록 건너뛰기']};
     p.hint='느낌에 정답이나 정상 범위 점수는 없어요. 손목에서 못 찾으면 그냥 건너뛰어요. 불편하면 움직임을 멈춰요.';
   }else if(id==='posture-guardian'){
     p.choices=[{id:'own',label:'가까운 두 자리',detail:'물건을 몸 가까운 두 위치로 옮겨요.'},{id:'guided',label:'방향을 바꾸는 두 자리',detail:'발 또는 몸 전체의 방향을 천천히 바꾸어 옮겨요.'}];

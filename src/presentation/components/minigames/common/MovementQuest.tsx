@@ -12,6 +12,7 @@ import './MovementQuest.css';
 import {ActivityDemo} from './ActivityDemo';
 import {ActivityProgress} from './ActivityProgress';
 import './GameWordCue.css';
+import {memoryTile,questCueView} from '../../../../domain/questCueView';
 
 export interface MovementQuestProps {
   gameId: QuestId; variantId?:string; groupId?: string; solo?: boolean;
@@ -29,13 +30,14 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   const [answer, setAnswer] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>('intro');
   const [round, setRound] = useState(0);
-  const [choice, setChoice] = useState('');
+  // 첫 방법을 미리 골라 둔다. 판단 미션(정답을 고르는 미션)은 학생이 직접 고르게 비워 둔다.
+  const defaultChoice=(r:number,s:QuestSettings=settings)=>{const p=variantId?makeMergedMovementRound(variantId,r,s):makeQuestRound(gameId,r,s);return p.decision?'':p.choices.find(c=>!c.path||safeRoute(c.path,p.blocked!))?.id??'';};
+  const [choice, setChoice] = useState(()=>defaultChoice(0));
   const [activeMs, setActiveMs] = useState(0);
   const [paused, setPaused] = useState(false);
   const [sound, setSound] = useState(true);
   const [voice, setVoice] = useState(false);
   const [rehearsal, setRehearsal] = useState(true);
-  const [rehearsed, setRehearsed] = useState(false);
   const [retries, setRetries] = useState(0);
   const [records, setRecords] = useState<QuestRecord[]>([]);
   const [error, setError] = useState('');
@@ -111,7 +113,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       saved.current = true; setRecords(next); setPhase('done');
       enqueueAction?.({ id: crypto.randomUUID(), type: 'INCREMENT_SCORE', payload: { id: groupId, ...result }, timestamp: Date.now() });
     } else {
-      setRecords(next); setRound(round + 1); setChoice(''); setRetries(0); setActiveMs(0); setPhase('plan');
+      setRecords(next); setRound(round + 1); setChoice(defaultChoice(round + 1)); setRetries(0); setActiveMs(0); setPhase('plan');
     }
     queueMicrotask(() => { transition.current = false; });
   };
@@ -122,55 +124,64 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   };
   const retry = () => { setRetries(retries + 1); setActiveMs(0); setPhase('plan'); };
 
-  return <section className="movement-quest" data-quest={gameId} data-movement-variant={variantId} data-phase={phase} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
-    <header className="mq-heading"><span aria-hidden="true">{meta.emoji}</span><div><p>몸으로 푸는 원정 미션</p><h1>{meta.name}</h1></div><span className="mq-pill">{phase === 'intro' ? '준비' : `${round + 1} / 3 작전`}</span></header>
-    <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact} paceDisabled={!['intro','plan'].includes(phase)}/><div className="mq-progress" aria-label={`${records.length}개 작전 기록 완료`}>{[0, 1, 2].map(i => <span key={i} className={i < records.length ? 'is-complete' : ''}>{i < records.length ? records[i].outcome === 'complete' ? '◆' : '◇' : i + 1}</span>)}</div>
-    <ActivityProgress steps={[0,1,2].map(n=>(variantId?makeMergedMovementRound(variantId,n,settings):makeQuestRound(gameId,n,settings)).title)} current={round} results={records.map(r=>r.outcome)}/>
+  const focus=phase==='preview'||phase==='countdown'||phase==='active';
+  const view=questCueView(gameId,cue);
+  return <section className="movement-quest" data-quest={gameId} data-movement-variant={variantId} data-phase={phase} data-focus={focus||undefined} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
+    {!focus&&<header className="mq-heading"><span aria-hidden="true">{meta.emoji}</span><div><p>몸으로 하는 미션</p><h1>{meta.name}</h1></div></header>}
+    {!focus&&phase!=='intro'&&phase!=='done'&&<ActivityProgress steps={[0,1,2].map(n=>(variantId?makeMergedMovementRound(variantId,n,settings):makeQuestRound(gameId,n,settings)).title)} current={round} results={records.map(r=>r.outcome)}/>}
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
-      <ol className="mq-rules">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
-      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId&&layoutFor(variantId)?variantId:gameId}/><p>개인 공간을 확보하고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
+      <ol className="mq-rules mq-rules-three" aria-label="놀이 방법 세 줄">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
+      <button className="mq-primary" onClick={() => { unlockAudio(); setPhase('plan'); }}>시작</button>
+      <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact}/>
+      <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId&&layoutFor(variantId)?variantId:gameId}/><p>내 자리를 넓게 잡고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
         <details className="mq-setup-options"><summary>참여 방법 바꾸기 · 앉아서·속도{meta.team?'·인원':''} (기본값 그대로 시작해도 돼요)</summary>
-        <label><input type="checkbox" checked={settings.seated} onChange={e => setSettings({ ...settings, seated: e.target.checked })}/>앉아서 팔 동작으로 참여하기</label>
+        <label><input type="checkbox" checked={settings.seated} onChange={e => { const next={ ...settings, seated: e.target.checked };setSettings(next);setChoice(defaultChoice(round,next)); }}/>앉아서 팔 동작으로 참여하기</label>
         <label>진행 속도<select value={settings.gentle ? 'gentle' : 'standard'} onChange={e => setSettings({ ...settings, gentle: e.target.value === 'gentle' })}><option value="gentle">천천히 익히기</option><option value="standard">기본 속도 도전</option></select></label>
         {settings.seated && <p>{meta.alternative} 점수 기준은 같아요.</p>}
         {meta.team && <>
-          {solo ? <p>혼자 해보기: 도구와 역할의 규칙을 연습해요. 실제 모둠 참여 기록으로 표시하지 않아요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => setSettings({ ...settings, practice: e.target.value === 'practice' })}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
+          {solo ? <p>혼자 해보기: 도구와 역할의 규칙을 연습해요. 실제 모둠 참여 기록으로 표시하지 않아요.</p> : <label>참여 방식<select value={settings.practice ? 'practice' : 'team'} onChange={e => { const next={ ...settings, practice: e.target.value === 'practice' };setSettings(next);setChoice(defaultChoice(round,next)); }}><option value="team">친구들과 함께</option><option value="practice">혼자 규칙 연습</option></select></label>}
           {!settings.practice && <label>함께할 인원<select value={settings.players} onChange={e => setSettings({ ...settings, players: Number(e.target.value) })}>{Array.from({length:(meta.maxPlayers??4)-1},(_,i)=>i+2).map(n => <option key={n} value={n}>{n}명{gameId==='pass-gate-rescue'?` · 표식 ${n+1}개`:''}</option>)}</select></label>}
         </>}
         </details>
       </div>
       {meta.sources&&<details className="mq-panel"><summary>확인한 공식 안내</summary>{meta.sources.map(source=><p key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a></p>)}</details>}
-      <button className="mq-primary" onClick={() => setPhase('plan')}>작전 살펴보기</button>
     </>}
-    {phase === 'plan' && <>{!compact&&<ActivityDemo steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>}
+    {phase === 'plan' && <>{!compact&&<ActivityDemo open={round===0&&!records.length} autoplay={round===0&&!records.length} steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>}
       {records.length>0&&<p className="activity-brief">앞 작전: {records.at(-1)!.outcome==='complete'?'참여를 직접 확인했어요. 다음 선택을 비교해요.':'도전한 부분을 남겼어요. 이번에는 쉬운 방법이나 다른 작전을 골라도 돼요.'}</p>}
       <p className="mq-kicker">작전 {round + 1} · {plan.title}</p><h2>{compact?plan.title:plan.goal}</h2>{!compact&&<p>{plan.hint}</p>}
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
       {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
-      <fieldset className="mq-choices"><legend>어떤 작전으로 해 볼까요?</legend>{plan.choices.map(c => <button key={c.id} type="button" aria-pressed={choice === c.id} onClick={() => changeChoice(c.id)}><strong>{c.label}</strong><span>{c.detail}</span></button>)}</fieldset>
+      <fieldset className="mq-choices"><legend>{plan.decision?'어떻게 할까요? 골라 보세요':'어떤 방법으로 할까요? (첫 방법이 골라져 있어요)'}</legend>{plan.choices.map(c => {const blockedPath=!!c.path&&!safeRoute(c.path,plan.blocked!);return <button key={c.id} type="button" aria-pressed={choice === c.id} disabled={blockedPath} aria-label={blockedPath?`${c.label} · 막힌 길이라 고를 수 없어요`:undefined} onClick={() => changeChoice(c.id)}><strong>{c.label}{blockedPath?' · 막힌 길 ×':''}</strong><span>{c.detail}</span></button>;})}</fieldset>
       {selected&&<section className="activity-brief"><h3>고른 작전이 바꾼 것</h3><p>{selected.label} · {selected.detail}</p><p>몸으로 연결할 순서: {plan.cues.join(' → ')}</p>{plan.roles&&<div className="activity-role-cards">{plan.roles.map((role,i)=><p key={i}><strong>{i+1}번 자리</strong>{role}</p>)}</div>}<p>경로·도구·편한 대안을 먼저 확인하고, 기록은 활동 뒤 직접 남겨요.</p></section>}
       {error && <p role="alert" className="mq-error">{error}</p>}{plan.decision&&choice===plan.decision.answer&&<p className="mq-panel">{plan.decision.explanation}</p>}
-      {!rehearsed ? <><p>처음에는 짧게 연습해요. 연습에는 점수가 없어요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(true)}>동작 연습하기</button></> : <><p>몸으로 수행한 뒤 한 번만 기록해요. 잘 안 되면 같은 작전을 다시 해도 돼요.</p><button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>기기 놓고 작전 시작</button></>}
+      {!validChoice&&plan.decision&&<p className="mq-hint-start">위에서 하나를 고르면 시작할 수 있어요.</p>}
+      <button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>작전 시작 · 기기 내려놓기</button>
+      <button className="mq-secondary" disabled={!validChoice} onClick={() => start(true)}>짧게 연습하기 (점수 없음 · 고르고 싶을 때만)</button>
+      <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact}/>
     </>}
-    {(phase === 'preview' || phase === 'countdown' || phase === 'active') && <>
-      <p className="mq-kicker">{rehearsal ? '동작 연습' : plan.title}</p>
-      <div className="mq-signal" role="status" aria-live={gameId === 'dribble-rhythm' ? 'off' : 'polite'}>
-        <p>{paused ? '잠깐 쉬고 있어요' : phase === 'preview' ? '방문할 순서를 기억해요' : phase === 'countdown' ? '기기를 놓고 준비해요' : plan.goal}</p>
-        <strong>{paused ? '일시정지' : phase === 'preview' ? plan.preview?.join(' → ') : phase === 'countdown' ? Math.max(1, Math.ceil((3000 - activeMs) / 1000)) : cue}</strong>
-        <span>{phase === 'active' ? plan.timing && !rehearsal ? '시간 표시는 가려져 있어요' : `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음 · ${settings.seated ? '앉아서' : '서서'} 활동` : '주변을 확인해요'}</span>
+    {focus && <>
+      <div className="mq-signal mq-focus-signal" role="status" aria-live={gameId === 'dribble-rhythm' ? 'off' : 'polite'} data-cue-tone={phase==='active'&&!paused?view.tone:undefined} style={phase==='active'&&!paused&&view.color?{background:view.color}:undefined}>
+        <p className="mq-focus-title">{rehearsal ? '짧게 연습 · 점수 없음' : `작전 ${round + 1}/3 · ${plan.title}`}</p>
+        {phase==='preview'&&!paused?<><p>이 순서를 기억해요!</p><div className="mq-preview-tiles" aria-label={`기억할 순서: ${plan.preview?.join(' → ')}`}>{plan.preview?.map((symbol,i)=>{const tile=memoryTile(symbol);return <span key={i}><b aria-hidden="true">{tile.icon}</b><small>{i+1}. {tile.name}</small></span>;})}</div></>
+        :phase==='countdown'&&!paused?<><p>기기를 내려놓고 준비해요</p><strong className="mq-focus-count">{Math.max(1, Math.ceil((3000 - activeMs) / 1000))}</strong></>
+        :paused?<><p>잠깐 쉬고 있어요</p><strong className="mq-focus-cue">일시정지</strong></>
+        :<>{(view.icon||view.badge)&&<p className="mq-focus-icon" aria-hidden="true">{view.icon}{view.badge&&<b>{view.badge}</b>}</p>}
+          {gameId==='breath-pacer-478'&&<span className="mq-breath-circle" aria-hidden="true" data-breath={/들이/.test(cue)?'in':/내쉬/.test(cue)?'out':'loop'}/>}
+          <strong className="mq-focus-cue">{cue}</strong></>}
+        {plan.stimulus&&phase==='active'&&<p className="mq-focus-stimulus">{plan.stimulus.rule}: <strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color}}>{plan.stimulus.text}</strong></p>}
+        <span className="mq-focus-time">{phase === 'active' ? plan.timing && !rehearsal ? '시간 표시는 가려져 있어요' : `${Math.max(0, Math.ceil((duration - activeMs) / 1000))}초 남음` : '주변을 확인해요'}</span>
       </div>
       {phase === 'active' && gameId === 'dribble-rhythm' && <div className="mq-beats" aria-label={`현재 ${cueIndex % 8 + 1}박`}>{Array.from({ length: 8 }, (_, n) => <span key={n} className={cueIndex % 8 === n ? 'is-current' : ''}>{n + 1}</span>)}</div>}
-      {plan.stimulus&&<div className="mq-panel"><p>{plan.stimulus.rule}을 따라가요.</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
-      <p className="mq-away">{plan.timing?'활동을 마칠 때 종료 버튼을 한 번 눌러요.':'활동 중 화면을 누르지 않아도 돼요.'} 신호는 동작 안내이며 자동 판정이 아니에요.</p>
       {phase==='active'&&plan.timing&&!rehearsal&&<button className="mq-primary" disabled={paused||activeMs<1000} onClick={()=>setPhase('record')}>목표 시간이 된 것 같아요</button>}
-      <button className="mq-secondary" onClick={() => { unlockAudio(); setPaused(!paused); }}>{paused ? '계속하기' : '일시정지'}</button>
-      <button className="mq-secondary" onClick={() => { setPhase('plan'); setActiveMs(0); setPaused(false); }}>작전 다시 고르기</button>
+      <div className="mq-focus-actions"><button className="mq-secondary" onClick={() => { unlockAudio(); setPaused(!paused); }}>{paused ? '계속하기' : '일시정지'}</button>
+      <button className="mq-secondary" onClick={() => { setPhase('plan'); setActiveMs(0); setPaused(false); }}>작전 다시 고르기</button></div>
+      <p className="mq-away">{plan.timing?'활동을 마칠 때 위 버튼을 한 번 눌러요.':'활동 중에는 화면을 누르지 않아도 돼요.'}</p>
     </>}
     {phase === 'record' && (rehearsal ? <>
-      <h2>어떤 동작인지 익혔나요?</h2><p>기록이나 점수 없이 연습했어요. 이제 첫 작전을 시작해요.</p>
-      <button className="mq-primary" onClick={() => { setRehearsed(true); setPhase('plan'); setActiveMs(0); }}>연습 마치고 첫 작전으로</button>
+      <h2>어떤 동작인지 익혔나요?</h2><p>기록이나 점수 없이 연습했어요. 이제 작전을 시작해요.</p>
+      <button className="mq-primary" onClick={() => { setPhase('plan'); setActiveMs(0); }}>연습 마치고 작전으로</button>
       <button className="mq-secondary" onClick={() => start(true)}>연습 한 번 더</button>
     </> : <>
       <h2>직접 해 본 결과는 어땠나요?</h2><p className="mq-confirmation">{plan.confirmation}</p>
@@ -184,7 +195,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       {error && <p role="alert">{error}</p>}
     </>)}
     {phase === 'done' && <div className="mq-panel"><h2>세 작전을 마쳤어요!</h2><p>다음에는 경로나 동작을 바꾸어 다시 도전해 보세요.</p><p>기록은 직접 확인한 결과이며 운동량 측정값이 아니에요.</p>{onExit && <button className="mq-primary" onClick={onExit}>활동 목록으로</button>}</div>}
-    {phase !== 'done' && <div className="mq-options"><label><input type="checkbox" checked={sound} onChange={e => { unlockAudio(); setSound(e.target.checked); }}/>신호음</label>{gameId !== 'dribble-rhythm' && <label><input type="checkbox" checked={voice} onChange={e => setVoice(e.target.checked)}/>동작 읽어 주기</label>}</div>}
-    <p className="mq-footnote">통증이 있으면 멈추고 쉬어요. 직접 입력한 기록으로 참여를 돌아봐요.</p>
+    {phase !== 'done' && !focus && <div className="mq-options"><label><input type="checkbox" checked={sound} onChange={e => { unlockAudio(); setSound(e.target.checked); }}/>신호음</label>{gameId !== 'dribble-rhythm' && <label><input type="checkbox" checked={voice} onChange={e => setVoice(e.target.checked)}/>동작 읽어 주기</label>}</div>}
+    {!focus&&<p className="mq-footnote">아프면 멈추고 쉬어요. 기록은 직접 확인해서 남겨요.</p>}
   </section>;
 }

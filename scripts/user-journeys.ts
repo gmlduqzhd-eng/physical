@@ -8,12 +8,12 @@ const report:{base:string;cases:unknown[];errors:string[]}={base,cases:[],errors
 const browser=await chromium.launch({channel:'chrome',headless:true});
 const click=(p:Page,name:string)=>p.getByRole('button',{name,exact:true}).click();
 async function complete(p:Page){
- await click(p,'활동 시작');if(await p.getByRole('button',{name:'기본 활동 시작',exact:true}).count())await click(p,'기본 활동 시작');await click(p,'작전 살펴보기');
+ await click(p,'활동 시작');if(await p.getByRole('button',{name:'기본 활동 시작',exact:true}).count())await click(p,'기본 활동 시작');await click(p,'시작');
  const phase=(name:string)=>p.locator(`[data-quest][data-phase="${name}"]`).waitFor();
  const select=async(round:number)=>{const plan=makeQuestRound('zigzag',round,{gentle:true,seated:false,practice:true,players:3});const choice=plan.choices.find(c=>!c.path||safeRoute(c.path,plan.blocked!))!;await p.getByRole('button',{name:new RegExp('^'+choice.label)}).click();};
  const run=async()=>{await p.clock.runFor(250);await p.clock.fastForward(3100);await phase('active');await p.clock.runFor(250);await p.clock.fastForward(300000);await phase('record');};
- await select(0);await click(p,'동작 연습하기');await run();await click(p,'연습 마치고 첫 작전으로');
- for(let round=0;round<3;round++){await phase('plan');await select(round);await click(p,'기기 놓고 작전 시작');await run();await click(p,`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`);}
+ await select(0);await click(p,'짧게 연습하기 (점수 없음 · 고르고 싶을 때만)');await run();await click(p,'연습 마치고 작전으로');
+ for(let round=0;round<3;round++){await phase('plan');await select(round);await click(p,'작전 시작 · 기기 내려놓기');await run();await click(p,`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`);}
  await p.locator('.game-result-overlay').waitFor();
 }
 try{for(const width of [360,390,1440]){

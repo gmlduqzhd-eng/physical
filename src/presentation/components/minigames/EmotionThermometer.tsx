@@ -73,14 +73,14 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
       emoji="🌡️"
       domain="표현"
       achievementCode="[4체03-04]"
-      achievementTitle="느낌과 생각을 움직임으로 창의적으로 표현하고 서로의 심미성 감상"
+      achievementTitle="느낌을 몸으로 표현하고 서로 감상하기"
+      countdown={false}
       activityType="짝"
       expectedMinutes={4}
       instructions={[
-        '실제 기분 대신 가상 등장인물의 감정과 표현 강도를 고릅니다.',
-        '15초 동안 카메라나 사진 없이 온몸의 움직임으로 그 감정을 펼쳐보입니다.',
-        '짝꿍은 친구의 몸짓을 바라보며 어떤 감정과 온도가 느껴졌는지 선택합니다.',
-        '서로의 생각이 같거나 달라도 좋습니다! 느낌의 다양성을 나누어 보세요.',
+        '표현하는 친구가 이야기 속 인물의 감정과 온도(세기)를 몰래 골라요.',
+        '15초 동안 몸으로만 그 감정을 보여 줘요.',
+        '짝은 어떤 감정, 몇 도였는지 맞혀요. 달라도 괜찮아요!',
       ]}
       colorTheme="purple"
       onFinish={enqueueAction ? (score, details) => enqueueAction({ id: Math.random().toString(), type: 'INCREMENT_SCORE', payload: { id: groupId, amount: score, details }, timestamp: Date.now() }) : undefined}

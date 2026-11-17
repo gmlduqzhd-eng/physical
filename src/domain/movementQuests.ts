@@ -28,7 +28,7 @@ const BASE_QUEST_META: Record<QuestId, QuestMetadata> = {
     equipment: ['바닥 표식 9개', '콩주머니 1개'],
     name: '갈림길 보급 작전', emoji: '🧭',
     description: '막힌 길을 피해 경로를 고르고, 실제 바닥 표식을 걸어 보급품을 가져와요.',
-    setup: '3×3 바닥 표식 9개(1~9번) · 콩주머니 1개 · 개인 통로 · 기기 거치',
+    setup: '3×3 바닥 표식 9개(1~9번) · 콩주머니 1개 · 개인 통로 · 기기 내려놓기',
     rules: ['아래 왼쪽 7번에서 출발해 위 오른쪽 3번의 보급품을 가져와요.', '막힌 칸을 피해 길을 고르고, 같은 길로 걸어 돌아와요.', '한 번 연습한 뒤 막힌 길이 달라지는 세 작전에 도전해요.'],
     alternative: '앉아서 책상 위 3×3 표식을 순서대로 짚고 가벼운 물건을 옮겨요.',
   },
@@ -36,7 +36,7 @@ const BASE_QUEST_META: Record<QuestId, QuestMetadata> = {
     equipment: ['개인 공 1개'],
     name: '리듬 배송 공장', emoji: '🥁',
     description: '공을 다루는 박자를 익히고 손 바꾸기와 옆걸음을 연결해 세 배송을 완성해요.',
-    setup: '개인 공 1개 · 미끄럽지 않은 개인 공간 · 기기 거치',
+    setup: '개인 공 1개 · 미끄럽지 않은 개인 공간 · 기기 내려놓기',
     rules: ['화면의 큰 신호와 소리에 맞춰 공을 한 번씩 튀겨요.', '편한 손 또는 손 바꾸기를 고르고 8박자를 이어요.', '실수해도 공을 잡고 다음 박자부터 다시 참여해요.'],
     alternative: '앉아서 공을 무릎에서 손으로 옮기거나 손바닥으로 허벅지를 가볍게 두드려요.',
   },
@@ -44,13 +44,13 @@ const BASE_QUEST_META: Record<QuestId, QuestMetadata> = {
     team: true, maxPlayers: 6, equipment: ['부드러운 공 1개', '인원보다 1개 많은 표식'],
     name: '빈자리 패스 구조대', emoji: '🥅',
     description: '공을 굴려 보내고 빈 표식으로 이동해, 모두가 보내기와 받기에 참여해요.',
-    setup: '부드러운 공 1개 · 인원보다 1개 많은 원형 바닥 표식 · 기기 거치',
+    setup: '부드러운 공 1개 · 인원보다 1개 많은 원형 바닥 표식 · 기기 내려놓기',
     rules: ['원을 따라 다음 친구에게 공을 굴려 보내요.', '보낸 사람은 비어 있는 옆 표식으로 이동해요. 공이 멈춘 뒤 다음 패스를 해요.', '모두 보내기와 받기를 해 보고, 작전마다 시작하는 사람을 바꿔요.'],
     alternative: '앉은 자리의 원형 책상 표식에서 공을 굴리고, 보낸 뒤 손을 빈 표식으로 옮겨요.',
   },
 };
 /** 점검 뒤 고친 이름·설명·준비물을 덮어쓴다. 준비물이 바뀌면 준비 안내(setup)도 같이 바뀐다. */
-export const QUEST_META: Record<QuestId, QuestMetadata> = Object.fromEntries(Object.entries(BASE_QUEST_META).map(([id,meta])=>{const c=QUEST_CLARITY[id];if(!c)return [id,meta];const equipment=c.equipment??meta.equipment;return [id,{...meta,name:c.name??meta.name,description:c.description??meta.description,equipment,setup:c.equipment?`${c.equipment.join(' · ')} · 기기 거치`:meta.setup}];})) as Record<QuestId, QuestMetadata>;
+export const QUEST_META: Record<QuestId, QuestMetadata> = Object.fromEntries(Object.entries(BASE_QUEST_META).map(([id,meta])=>{const c=QUEST_CLARITY[id];if(!c)return [id,meta];const equipment=c.equipment??meta.equipment;return [id,{...meta,name:c.name??meta.name,description:c.description??meta.description,rules:c.rules??meta.rules,equipment,setup:c.equipment?`${c.equipment.join(' · ')} · 기기 내려놓기`:meta.setup}];})) as Record<QuestId, QuestMetadata>;
 
 export function isQuestId(id: string): id is QuestId { return (QUEST_IDS as readonly string[]).includes(id); }
 export function gameBestStorageKey(id: string,variant?:string): string {
@@ -64,6 +64,10 @@ export function safeRoute(path: readonly number[], blocked: number): boolean {
 }
 
 export function makeQuestRound(id: QuestId, round: number, settings: QuestSettings, choiceId?: string): QuestRound {
+  const plan=buildQuestRound(id,round,settings,choiceId),title=QUEST_CLARITY[id]?.rounds?.[round];
+  return title?{...plan,title}:plan;
+}
+function buildQuestRound(id: QuestId, round: number, settings: QuestSettings, choiceId?: string): QuestRound {
   if (!Number.isInteger(round) || round < 0 || round > 2) throw new Error('Invalid quest round');
   if ((EXTENDED_QUEST_IDS as readonly string[]).includes(id)) return makeExtendedQuest(id as ExtendedQuestId, round, settings, choiceId);
   if ((SPORTS_QUEST_IDS as readonly string[]).includes(id)) return makeSportsQuest(id as SportsQuestId,round,settings,choiceId);
