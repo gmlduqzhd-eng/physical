@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useMemo,useReducer,useRef} from 'react';
-import {createFunState,cueIntervalMs,isFinalCountdown,reduce,secondsLeft,comboFull,type FunCommand,type FunState,type FunTiming} from '../../../domain/funLoop';
+import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
@@ -8,17 +8,27 @@ export interface FunEngineOptions {
  /** true면 키보드 단축키를 받는다(진행 화면에서만). */ keyboard:boolean;
  /** 목표를 이루면 true(엔진이 2.5초 승리 연출 뒤 결과로 넘긴다). */ isComplete?:(s:FunState)=>boolean;
  sound?:boolean;
+ /** 게임 화면 바깥(대표 게임 화면)이 가진 버스를 쓰면, 판이 바뀌어도 리모컨 연결이 이어진다. */
  bus?:FunCommandBus;
+ /** 점수·이벤트 명령 문지기(게임 규칙). 버튼·키보드·리모컨 모두 같은 규칙을 지난다. */
+ gate?:FunCommandGate;
+ /** 이 게임에서 쓰는 깜짝 이벤트. */ surprises?:SurpriseAllowance;
+ /** 새로고침 이어 하기: 저장해 둔 상태에서 시작한다(restoreFunState로 검사한 값). */ initialState?:FunState;
 }
 type Action={kind:'cmd';cmd:FunCommand}|{kind:'reset';state:FunState};
-const reducer=(s:FunState,a:Action)=>a.kind==='reset'?a.state:reduce(s,a.cmd);
+/** 움직임 줄이기 설정이면 시범을 저절로 넘기지 않는다. */
+export const prefersReducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * 대표 게임 엔진 훅: 시간(tick), 명령 버스, 키보드, 소리, 승리 판정을 맡는다.
  * 화면은 state를 그리고 dispatch로 명령을 보낸다. 리모컨도 같은 버스로 들어온다.
  */
 export function useFunEngine(opts:FunEngineOptions){
- const initial=useMemo(()=>createFunState({teams:opts.teams,timing:opts.timing,seed:opts.seed}),[opts.teams,opts.timing,opts.seed]);
+ const restored=useRef(opts.initialState);
+ const initial=useMemo(()=>restored.current??createFunState({teams:opts.teams,timing:opts.timing,seed:opts.seed,holdDemo:prefersReducedMotion(),surprises:opts.surprises}),[opts.teams,opts.timing,opts.seed,opts.surprises]);
+ const gateRef=useRef(opts.gate);gateRef.current=opts.gate;
+ // 문지기는 reducer 안에서 지난다: 같은 순간에 들어온 명령도 늘 최신 상태로 판정한다.
+ const reducer=useCallback((s:FunState,a:Action)=>a.kind==='reset'?a.state:reduceGated(s,a.cmd,gateRef.current),[]);
  const [state,send]=useReducer(reducer,initial);
  const bus=useMemo(()=>opts.bus??createFunCommandBus(),[opts.bus]);
  const stateRef=useRef(state);stateRef.current=state;

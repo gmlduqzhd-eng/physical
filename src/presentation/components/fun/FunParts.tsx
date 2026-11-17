@@ -4,17 +4,21 @@ import type {ExternalFunCommand} from '../../../application/funCommandBus';
 import type {DemoFrame} from '../../../domain/signature/types';
 import {StickFigure} from './StickFigure';
 
-/** 팀 점수판: TV에서 멀리서도 보이게 크게. 점수 버튼(+1·−1)이 팀 칸 안에 있다. */
-export function TeamScoreboard({state,label,dispatch,disabled}:{state:FunState;label:string;dispatch:(c:ExternalFunCommand)=>void;disabled?:boolean}){
+/**
+ * 팀 점수판: TV에서 멀리서도 보이게 크게. 점수 버튼(+1·−1)이 팀 칸 안에 있다.
+ * canScore(team, delta)가 false면 그 버튼을 끈다(게임 규칙·일시정지와 같은 판정).
+ */
+export function TeamScoreboard({state,label,dispatch,disabled,canScore,readOnly}:{state:FunState;label:string;dispatch:(c:ExternalFunCommand)=>void;disabled?:boolean;canScore?:(team:number,delta:number)=>boolean;
+ /** true면 ± 버튼 없이 점수만 보여 준다(점수를 게임 판에서만 주는 놀이). */ readOnly?:boolean}){
  const max=Math.max(...state.scores),lead=state.teams>1&&max>0;
  return <ol className="fun-scoreboard" aria-label={`팀 ${label}`} data-teams={state.teams}>
-  {state.scores.map((score,team)=><li key={team} style={{'--team':TEAM_COLORS[team]} as React.CSSProperties} data-lead={lead&&score===max||undefined}>
+  {state.scores.map((score,team)=><li key={team} style={{'--team':TEAM_COLORS[team]} as React.CSSProperties} data-lead={lead&&score===max||undefined} data-readonly={readOnly||undefined}>
    <span className="fun-team-name">{state.teams===1?'우리 반':TEAM_NAMES[team]}</span>
    <strong className="fun-team-score" aria-live="polite" aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} ${score}`}>{score}</strong>
-   <span className="fun-team-buttons">
-    <button type="button" disabled={disabled} onClick={()=>dispatch({type:'score',team,delta:-1})} aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} 1 빼기`}>−1</button>
-    <button type="button" disabled={disabled} className="fun-plus" onClick={()=>dispatch({type:'score',team,delta:1})} aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} 1 더하기`}>+1</button>
-   </span>
+   {!readOnly&&<span className="fun-team-buttons">
+    <button type="button" disabled={disabled||canScore?.(team,-1)===false} onClick={()=>dispatch({type:'score',team,delta:-1})} aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} 1 빼기`}>−1</button>
+    <button type="button" disabled={disabled||canScore?.(team,1)===false} className="fun-plus" onClick={()=>dispatch({type:'score',team,delta:1})} aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} 1 더하기`}>+1</button>
+   </span>}
   </li>)}
  </ol>;
 }
@@ -51,15 +55,15 @@ export function FinalCountdown({seconds,active}:{seconds:number;active:boolean})
  return <div className="fun-final" aria-hidden="true"><b>{seconds}</b></div>;
 }
 
-/** 시범 애니메이션: 자세 그림과 설명이 2.4초마다 넘어간다. 움직임 줄이기 설정이면 버튼으로 넘긴다. */
-export function DemoLoop({frames,onSkip,skipLabel}:{frames:readonly DemoFrame[];onSkip:()=>void;skipLabel:string}){
+/** 시범 애니메이션: 자세 그림과 설명이 2.4초마다 넘어간다. 움직임 줄이기 설정이면 버튼으로 넘긴다(시범도 저절로 끝나지 않음). */
+export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly DemoFrame[];onSkip:()=>void;skipLabel:string;seated?:boolean}){
  const [i,setI]=useState(0);
  const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  useEffect(()=>{if(reduced||frames.length<2)return;const id=window.setInterval(()=>setI(x=>(x+1)%frames.length),2400);return ()=>window.clearInterval(id);},[frames.length,reduced]);
  const f=frames[i%frames.length];
  return <section className="fun-demo" aria-label="시범">
   <p className="fun-demo-step">시범 {i%frames.length+1}/{frames.length}</p>
-  <div className="fun-demo-figure" key={i}><StickFigure pose={f.pose} size={150}/></div>
+  <div className="fun-demo-figure" key={i}><StickFigure pose={f.pose} size={150} seated={seated}/></div>
   <p className="fun-demo-caption" aria-live="polite">{f.caption}</p>
   <div className="fun-demo-dots" aria-hidden="true">{frames.map((_,k)=><i key={k} data-now={k===i%frames.length||undefined}/>)}</div>
   {reduced&&frames.length>1&&<button type="button" className="fun-secondary" onClick={()=>setI(x=>(x+1)%frames.length)}>다음 시범 보기</button>}

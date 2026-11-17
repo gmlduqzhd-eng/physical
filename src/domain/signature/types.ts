@@ -1,4 +1,4 @@
-import type {FunState,FunTiming} from '../funLoop.js';
+import type {FunCommandGate,FunState,FunTiming,SurpriseAllowance} from '../funLoop.js';
 
 /** 시범 애니메이션(DemoLoop)이 그리는 막대 사람 자세. */
 export type Pose='stand'|'armsUp'|'armsSide'|'armsFront'|'armsDown'|'squat'|'jump'|'stepLeft'|'stepRight'|'oneLeg'|'clap'|'point'|'freeze'|'punch'|'wave'|'sit'|'run';
@@ -46,6 +46,13 @@ export interface SignatureGameDef {
  /** 목표를 이뤄 일찍 끝나는 놀이(보스를 다 물리침 등)는 true를 돌려준다. 엔진이 승리 연출 뒤 결과로 넘긴다. */
  isComplete?(state:FunState):boolean;
  /** 결과 화면 큰 제목을 바꾸고 싶을 때. */ resultHeadline?(state:FunState):string|undefined;
+ /**
+  * 점수·이벤트 명령의 문지기(선택). 버튼에 건 규칙을 키보드·리모컨에도 똑같이 적용한다.
+  * 받지 않을 명령은 null, 바꿀 명령은 바꾼 명령을 돌려준다. 점수판 버튼도 이 규칙으로 켜고 끈다.
+  */
+ commandGate?:FunCommandGate;
+ /** 이 게임에서 쓰는 깜짝 이벤트(없으면 모두). 규칙과 부딪히는 이벤트(예: 차례 놀이의 '빨리빨리')는 뺀다. */
+ surprises?:SurpriseAllowance;
  /** 결과의 MVP 동작 이름. 기본은 그 신호의 move/text. */
  // ── 카탈로그(활동 찾기·지도안)에 쓰는 값 ──
  domain:'운동'|'스포츠'|'표현';subCategory:string;

@@ -9,7 +9,9 @@ const STATUS_TEXT:Record<RemoteStatus,string>={idle:'연결 전',connecting:'연
  * TV 화면의 '📱 휴대폰 리모컨' 버튼. 처음 열 때 방 코드를 만들고 명령 버스에 원격 전송을 붙인다.
  * 연결이 안 되거나 끊겨도 TV 버튼·키보드는 그대로 쓴다.
  */
-export function RemoteLink({bus}:{bus:FunCommandBus}){
+export function RemoteLink({bus,initialCode,onCode}:{bus:FunCommandBus;
+ /** 새로고침 이어 하기: 전에 쓰던 방 코드. 있으면 화면이 열리자마자 그 방으로 다시 연결한다(휴대폰이 그대로 이어짐). */ initialCode?:string;
+ /** 방 코드를 새로 만들었을 때 알린다(새로고침 뒤에도 같은 코드를 쓰도록 저장). */ onCode?:(code:string)=>void}){
  const [open,setOpen]=useState(false);
  const [code,setCode]=useState('');
  const [status,setStatus]=useState<RemoteStatus>('idle');
@@ -18,15 +20,24 @@ export function RemoteLink({bus}:{bus:FunCommandBus}){
  const detach=useRef<(()=>void)|null>(null);
  useEffect(()=>()=>{detach.current?.();detach.current=null;},[]);
  useEffect(()=>{if(!seenAt)return;const id=window.setInterval(()=>setNow(Date.now()),5000);return ()=>window.clearInterval(id);},[seenAt]);
+ const connect=(room:string)=>{
+  const channel=openRemoteChannel(room);
+  setCode(room);
+  if(!channel){setStatus('unavailable');return;}
+  detach.current=bus.attach(createTvTransport(channel,{onStatus:setStatus,onRemoteSeen:()=>{const t=Date.now();setSeenAt(t);setNow(t);}}));
+ };
+ // 전에 쓰던 방 코드가 있으면 바로 다시 연결한다(패널은 열지 않음).
+ const initial=useRef(initialCode);
+ useEffect(()=>{if(initial.current&&!detach.current)connect(initial.current);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 처음 한 번만
+ },[]);
  const start=()=>{
   setOpen(true);
   if(detach.current)return;
   let room:string;
   try{room=generateRoomCode();}catch{setStatus('unavailable');return;}
-  const channel=openRemoteChannel(room);
-  setCode(room);
-  if(!channel){setStatus('unavailable');return;}
-  detach.current=bus.attach(createTvTransport(channel,{onStatus:setStatus,onRemoteSeen:()=>{const t=Date.now();setSeenAt(t);setNow(t);}}));
+  onCode?.(room);
+  connect(room);
  };
  const remoteLive=seenAt>0&&now-seenAt<60_000;
  const url=code?remoteUrl(window.location.origin,code):'';

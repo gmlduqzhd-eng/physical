@@ -96,6 +96,8 @@ export const signalCaptain=defineSignatureGame({
  teamsDefault:2,
  mergedFrom:['phone-play-001','phone-play-011','red_green','phone-play-101','exp-tablet-06'],
  cue:signalCaptainCue,
+ // 마지막 승부는 '거꾸로 카드'라 깜짝 '거꾸로!'는 아무것도 바꾸지 못한다 → 빼고, 본게임에서만 쓴다.
+ surprises:{play:['golden','reverse','freeze','speed'],climax:['golden','speed']},
  domain:'운동',subCategory:'반응·민첩 대표 게임',
  achievement:{code:'[4체01-03]',title:'신호에 반응하는 기본 움직임',desc:'신호에 맞춰 이동·비이동 움직임을 바꾸며 반응한다.'},
  spaces:['교실','체육관','다목적실','운동장'],minutes:5,players:{min:4,max:30},intensity:'보통',

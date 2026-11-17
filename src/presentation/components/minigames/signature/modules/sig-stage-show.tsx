@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useEffect,useState} from 'react';
 import {TEAM_COLORS,TEAM_NAMES} from '../../../../../domain/funLoop';
-import {REACTIONS,addReaction,bestGroups,emptyReactions,reactionTarget,scenesFor,stageSlot,type Reaction,type ReactionCounts} from '../../../../../domain/signature/sig-stage-show';
+import {REACTIONS,addReaction,bestByScore,emptyReactions,reactionTarget,scenesFor,stageSlot,stageTally,type Reaction,type ReactionCounts} from '../../../../../domain/signature/sig-stage-show';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-stage-show.css';
 
@@ -51,15 +51,22 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
  </div>;
 }
 
+/** 결과: 우승(가장 많은 응원)·표 합계 모두 팀 응원 점수 하나에서 나온다(반응 종류 + 선생님 ± = 합계). */
 function StageResult({state}:SignatureModuleProps){
- const counts=countsOf(state.seed,state.teams),scenes=scenesFor(state.seed,state.teams),best=bestGroups(counts);
+ const counts=countsOf(state.seed,state.teams),scenes=scenesFor(state.seed,state.teams),best=bestByScore(state.scores);
+ const rows=stageTally(counts,state.scores),anyTeacher=rows.some(r=>r.teacher!==0);
  return <div className="sig-stage-result">
-  {best.length>0?<p className="sig-stage-best">🏆 가장 많은 응원: {best.map(g=>`${teamName(state.teams,g)} 「${scenes[g].emoji} ${scenes[g].title}」`).join(' · ')}</p>:<p className="sig-stage-best">응원 버튼 기록이 없어요. 다음에는 발표 때 관객 반응을 눌러 주세요.</p>}
-  <table><caption>모둠별 장면과 관객 반응</caption>
-   <thead><tr><th scope="col">모둠</th><th scope="col">장면</th>{REACTIONS.map(r=><th key={r.id} scope="col"><span aria-hidden="true">{r.emoji}</span> {r.label}</th>)}</tr></thead>
-   <tbody>{scenes.map((sc,g)=><tr key={sc.id} data-best={best.includes(g)||undefined}><th scope="row">{teamName(state.teams,g)}</th><td>{sc.emoji} {sc.title}</td>{REACTIONS.map((r,k)=><td key={r.id}>{counts[g]?.[k]??0}</td>)}</tr>)}</tbody>
+  {best.length===0&&<p className="sig-stage-best">응원 기록이 없어요. 다음에는 발표 때 관객 반응을 눌러 주세요.</p>}
+  <table><caption>모둠별 장면과 응원(합계 = 팀 응원 점수)</caption>
+   <thead><tr><th scope="col">모둠</th><th scope="col">장면</th>{REACTIONS.map(r=><th key={r.id} scope="col"><span aria-hidden="true">{r.emoji}</span> {r.label}</th>)}{anyTeacher&&<th scope="col">선생님 ±</th>}<th scope="col">합계</th></tr></thead>
+   <tbody>{rows.map(r=><tr key={scenes[r.group].id} data-best={best.includes(r.group)||undefined}><th scope="row">{teamName(state.teams,r.group)}</th><td>{scenes[r.group].emoji} {scenes[r.group].title}</td>{r.reactions.map((v,k)=><td key={REACTIONS[k].id}>{v}</td>)}{anyTeacher&&<td>{r.teacher>0?`+${r.teacher}`:r.teacher}</td>}<td><b>{r.total}</b></td></tr>)}</tbody>
   </table>
  </div>;
 }
-const stageShowModule:SignatureModule={Panel:StagePanel,Result:StageResult,hideFigure:true};
+const isCounts=(v:unknown):v is ReactionCounts=>Array.isArray(v)&&v.length<=4&&v.every(row=>Array.isArray(row)&&row.length===REACTIONS.length&&row.every(x=>Number.isInteger(x)&&x>=0));
+const stageShowModule:SignatureModule={Panel:StagePanel,Result:StageResult,hideFigure:true,wide:true,
+ dispose:seed=>{store.delete(seed);},
+ snapshot:seed=>store.get(seed)??null,
+ restore:(seed,data)=>{if(isCounts(data))store.set(seed,data);},
+};
 export default stageShowModule;

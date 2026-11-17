@@ -1,4 +1,4 @@
-import {parseFunCommand,type FunCommand,type FunPhase} from '../domain/funLoop';
+import {parseFunCommand,type FunCommand,type FunPhase,type SurpriseKind} from '../domain/funLoop';
 
 /**
  * 대표 게임 명령 버스. TV 버튼·키보드·휴대폰 리모컨이 보내는 명령을 한 곳으로 모아 게임 화면에 전한다.
@@ -14,6 +14,8 @@ export type FunCommandHandler=(cmd:ExternalFunCommand,source:FunCommandSource)=>
 export interface FunRemoteSnapshot {
  gameId:string;gameName:string;phase:FunPhase;paused:boolean;secondsLeft:number;
  teams:number;scores:number[];scoreLabel:string;cue:string;combo:number;comboFull:boolean;
+ /** 단계 이름(TV와 같은 말: '마지막 승부' 등). 리모컨은 이 글자를 그대로 보여 준다. */ phaseLabel?:string;
+ /** 지금 일으킬 수 있는 깜짝 이벤트(게임마다 다름). 리모컨은 여기 없는 이벤트 버튼을 끈다. */ events?:SurpriseKind[];
 }
 export interface FunTransport {
  /** 원격에서 값이 오면 onRaw로 넘긴다. 돌려준 함수로 연결을 끊는다. */
@@ -31,6 +33,8 @@ export interface FunCommandBus {
 export function createFunCommandBus():FunCommandBus{
  const handlers=new Set<FunCommandHandler>();
  const transports=new Set<FunTransport>();
+ // 마지막 TV 상태. 리모컨이 나중에 붙어도 바로 지금 상태를 받는다.
+ let latest:FunRemoteSnapshot|null=null;
  const dispatch=(cmd:ExternalFunCommand,source:FunCommandSource='tv')=>{for(const h of [...handlers])h(cmd,source);};
  return {
   dispatch,
@@ -38,9 +42,10 @@ export function createFunCommandBus():FunCommandBus{
   attach(transport){
    transports.add(transport);
    const disconnect=transport.connect(raw=>{const cmd=parseFunCommand(raw);if(cmd)dispatch(cmd,'remote');});
+   if(latest)transport.publishState?.(latest);
    return ()=>{transports.delete(transport);disconnect();};
   },
-  publishState(snapshot){for(const t of transports)t.publishState?.(snapshot);},
+  publishState(snapshot){latest=snapshot;for(const t of transports)t.publishState?.(snapshot);},
  };
 }
 

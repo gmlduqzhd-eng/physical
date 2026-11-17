@@ -9,7 +9,7 @@ const STEP_LABEL:readonly [MirrorStep,string][]=[['lead','따라 하기'],['keep
 const QUICK=[1,3,5] as const;
 
 /** 거울 짝꿍: 마주 보는 두 사람(리더·따라 하기), 라운드 단계, 찾은 짝 빠른 셈 버튼. */
-function MirrorPanel({state,cue,dispatch}:SignatureModuleProps){
+function MirrorPanel({state,cue,seated,dispatch}:SignatureModuleProps){
  if(state.phase!=='tutorial'&&state.phase!=='play'&&state.phase!=='climax')return null;
  const tutorial=state.phase==='tutorial';
  const round=tutorial?0:mirrorRound({phase:state.phase,index:state.cueIndex,state});
@@ -18,9 +18,9 @@ function MirrorPanel({state,cue,dispatch}:SignatureModuleProps){
  const pose=cue.pose??'stand';
  return <div className="sig-mirror">
   <div className="sig-mirror-pair" aria-label={`리더 ${leader}, 따라 하기 ${follower}`}>
-   <figure data-role="leader"><StickFigure pose={pose} size={96}/><figcaption><b>{leader}</b> 리더</figcaption></figure>
+   <figure data-role="leader"><StickFigure pose={pose} size={96} seated={seated}/><figcaption><b>{leader}</b> 리더</figcaption></figure>
    <span className="sig-mirror-glass" aria-hidden="true">🪞</span>
-   <figure data-role="follower"><span className="sig-mirror-flip"><StickFigure pose={step==='change'?'stand':pose} size={96}/></span><figcaption><b>{follower}</b> 따라 하기</figcaption></figure>
+   <figure data-role="follower"><span className="sig-mirror-flip"><StickFigure pose={step==='change'?'stand':pose} size={96} seated={seated}/></span><figcaption><b>{follower}</b> 따라 하기</figcaption></figure>
   </div>
   <div className="sig-mirror-side">
    <ol className="sig-mirror-steps" aria-label="라운드 단계">{STEP_LABEL.map(([id,label])=><li key={id} data-now={id===step||undefined}>{label}</li>)}</ol>
@@ -34,5 +34,5 @@ function MirrorPanel({state,cue,dispatch}:SignatureModuleProps){
   </div>
  </div>;
 }
-const mirrorPairModule:SignatureModule={Panel:MirrorPanel,hideFigure:true};
+const mirrorPairModule:SignatureModule={Panel:MirrorPanel,hideFigure:true,wide:true};
 export default mirrorPairModule;

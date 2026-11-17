@@ -12,6 +12,10 @@ export type FunPhase='demo'|'tutorial'|'play'|'climax'|'result';
 export type TimedPhase=Exclude<FunPhase,'result'>;
 export type SurpriseKind='golden'|'reverse'|'freeze'|'speed';
 export const SURPRISE_KINDS:readonly SurpriseKind[]=['golden','reverse','freeze','speed'];
+/** 게임마다 쓰는 깜짝 이벤트(본게임·마지막 승부). 빼면 예약도 안 되고 버튼·키보드·리모컨으로도 일으킬 수 없다. */
+export type SurpriseAllowance=Partial<Record<'play'|'climax',readonly SurpriseKind[]>>;
+/** 단계 이름(TV·리모컨이 같은 말을 쓴다). */
+export const FUN_PHASE_LABEL:Readonly<Record<'demo'|'tutorial'|'play'|'climax'|'result',string>>={demo:'시범',tutorial:'연습 판',play:'본게임',climax:'마지막 승부',result:'결과 발표'};
 export const SURPRISE_INFO:Readonly<Record<SurpriseKind,{title:string;text:string;icon:string;ms:number}>>={
  golden:{title:'황금 신호!',text:'지금 얻는 점수는 2배예요',icon:'🌟',ms:8000},
  reverse:{title:'거꾸로!',text:'신호와 반대로 움직여요',icon:'🔄',ms:8000},
@@ -27,7 +31,8 @@ export const SURPRISE_INFO:Readonly<Record<SurpriseKind,{title:string;text:strin
  */
 export type FunCommand=
  |{type:'next'}|{type:'pause'}|{type:'resume'}|{type:'end'}
- |{type:'score';team:number;delta:number}
+ /** tag: 게임 화면 부품이 붙이는 출처 표시(예: 빙고 칸 차지 'cell'). 키보드·리모컨 명령에는 없다. */
+ |{type:'score';team:number;delta:number;tag?:string}
  |{type:'scoreAll';delta:number}
  |{type:'event';event:SurpriseKind}
  |{type:'combo';delta:number}
@@ -43,14 +48,21 @@ export interface FunTiming {
  cueSeconds:number;
 }
 export interface ScheduledSurprise {phase:'play'|'climax';atMs:number;kind:SurpriseKind}
-export interface FunLogEntry {phase:FunPhase;text:string}
+export interface FunLogEntry {phase:FunPhase;text:string;
+ /** 그때의 신호 번호(필살기처럼 신호 시점이 중요한 기록). */ cue?:number}
 export interface FunState {
  teams:number;scores:number[];phase:FunPhase;paused:boolean;
  /** 지금 단계에서 흐른 시간(ms). */ phaseMs:number;
  timing:FunTiming;
  /** 신호 번호. 신호 간격마다 1씩 늘고, 단계가 바뀌면 0으로 돌아간다. */ cueIndex:number;cueMs:number;
  combo:number;specials:number;
- event:{kind:SurpriseKind;leftMs:number}|null;
+ /** 지금 깜짝 이벤트. seq는 이벤트마다 1씩 늘어난다(같은 이벤트를 두 번 알리지 않게). */
+ event:{kind:SurpriseKind;leftMs:number;seq:number}|null;
+ /** 지금까지 일어난 깜짝 이벤트 수(이벤트 번호). */ eventSeq:number;
+ /** 다른 이벤트가 진행 중이라 미뤄 둔 예약 이벤트(끝나면 바로 일어난다). */ deferred:SurpriseKind|null;
+ /** 끝난 단계마다 보여 준 신호 수(마지막 승부가 본게임 라운드를 이어 셀 때 쓴다). */ phaseCues:Partial<Record<FunPhase,number>>;
+ /** true면 시범이 저절로 넘어가지 않는다(움직임 줄이기 설정: 선생님이 직접 넘긴다). */ holdDemo:boolean;
+ /** 이 게임이 쓰는 깜짝 이벤트(연습 판은 본게임 목록을 따른다). */ allowedSurprises:Record<'play'|'climax',SurpriseKind[]>;
  surprises:ScheduledSurprise[];
  /** 신호마다 얻은 점수(MVP 동작 고르기용): 'play:3'처럼 단계:신호 번호 → 점수 */
  cueHits:Record<string,number>;
@@ -72,12 +84,12 @@ export function seededRandom(seed:number):()=>number{
  * 본게임·마지막 승부마다 깜짝 이벤트가 0~2번 일어날 시점을 정한다.
  * 처음 20%와 마지막 3초에는 일어나지 않고, 두 이벤트 사이는 10초 이상 띄운다. '얼음'은 마지막 승부에 넣지 않는다.
  */
-export function scheduleSurprises(seed:number,roundSeconds:number,phase:'play'|'climax'='play'):ScheduledSurprise[]{
+export function scheduleSurprises(seed:number,roundSeconds:number,phase:'play'|'climax'='play',allowed:readonly SurpriseKind[]=SURPRISE_KINDS):ScheduledSurprise[]{
  const rnd=seededRandom(seed*31+(phase==='play'?7:13));
  const lengthMs=roundSeconds*1000,start=lengthMs*0.2,end=lengthMs-3000;
- if(end-start<4000)return [];
+ const kinds=SURPRISE_KINDS.filter(k=>(phase==='play'||k!=='freeze')&&allowed.includes(k));
+ if(end-start<4000||!kinds.length)return [];
  const count=Math.floor(rnd()*3);
- const kinds=SURPRISE_KINDS.filter(k=>phase==='play'||k!=='freeze');
  const out:ScheduledSurprise[]=[];
  for(let i=0;i<count;i++){
   const atMs=Math.round(start+rnd()*(end-start));
@@ -87,13 +99,25 @@ export function scheduleSurprises(seed:number,roundSeconds:number,phase:'play'|'
  return out.sort((a,b)=>a.atMs-b.atMs);
 }
 
-export function createFunState(opts:{teams:number;timing:FunTiming;seed?:number;skipDemo?:boolean}):FunState{
+/** 게임이 정한 목록(없으면 모두). 마지막 승부에는 '얼음'을 넣지 않는다. */
+export function resolveSurprises(allow?:SurpriseAllowance):Record<'play'|'climax',SurpriseKind[]>{
+ const pick=(phase:'play'|'climax')=>SURPRISE_KINDS.filter(k=>(allow?.[phase]??SURPRISE_KINDS).includes(k)&&(phase==='play'||k!=='freeze'));
+ return {play:pick('play'),climax:pick('climax')};
+}
+/** 지금 단계에서 일으킬 수 있는 깜짝 이벤트(시범·결과는 없음, 연습 판은 본게임 목록). */
+export function surprisesNow(s:FunState):SurpriseKind[]{
+ if(s.phase==='climax')return s.allowedSurprises.climax;
+ if(s.phase==='play'||s.phase==='tutorial')return s.allowedSurprises.play;
+ return [];
+}
+export function createFunState(opts:{teams:number;timing:FunTiming;seed?:number;skipDemo?:boolean;holdDemo?:boolean;surprises?:SurpriseAllowance}):FunState{
  const teams=Math.min(4,Math.max(1,Math.round(opts.teams)));
  const seed=opts.seed??1;
+ const allowedSurprises=resolveSurprises(opts.surprises);
  return {
   teams,scores:Array(teams).fill(0),phase:opts.skipDemo?'tutorial':'demo',paused:false,phaseMs:0,timing:opts.timing,
-  cueIndex:0,cueMs:0,combo:0,specials:0,event:null,
-  surprises:[...scheduleSurprises(seed,opts.timing.play,'play'),...scheduleSurprises(seed,opts.timing.climax,'climax')],
+  cueIndex:0,cueMs:0,combo:0,specials:0,event:null,eventSeq:0,deferred:null,phaseCues:{},holdDemo:!!opts.holdDemo,allowedSurprises,
+  surprises:[...scheduleSurprises(seed,opts.timing.play,'play',allowedSurprises.play),...scheduleSurprises(seed,opts.timing.climax,'climax',allowedSurprises.climax)],
   cueHits:{},log:[],seed,endedBy:null,
  };
 }
@@ -116,12 +140,12 @@ export const frozen=(s:FunState)=>s.event?.kind==='freeze';
 export const comboFull=(s:FunState)=>s.combo>=COMBO_MAX;
 
 function enter(s:FunState,phase:FunPhase,text:string):FunState{
- const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,event:null,log:[...s.log,{phase,text}]};
+ const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,event:null,deferred:null,phaseCues:{...s.phaseCues,[s.phase]:s.cueIndex+1},log:[...s.log,{phase,text}]};
  // 연습 판에서 누른 점수는 본게임에 들어가면 0부터 다시 센다.
  if(phase==='play')return {...next,scores:Array(s.teams).fill(0),combo:0,specials:0,cueHits:{}};
  return next;
 }
-const PHASE_TEXT:Record<FunPhase,string>={demo:'시범을 봐요',tutorial:'연습 판 시작',play:'본게임 시작',climax:'마지막 승부!',result:'결과 발표'};
+const PHASE_TEXT:Record<FunPhase,string>={demo:'시범을 봐요',tutorial:'연습 판 시작',play:'본게임 시작',climax:`${FUN_PHASE_LABEL.climax}!`,result:FUN_PHASE_LABEL.result};
 const nextPhase=(p:FunPhase):FunPhase=>ORDER[Math.min(ORDER.length-1,ORDER.indexOf(p)+1)];
 
 function applyScore(s:FunState,team:number,delta:number):FunState{
@@ -130,44 +154,124 @@ function applyScore(s:FunState,team:number,delta:number):FunState{
  const scores=s.scores.map((v,i)=>i===team?v+d:v);
  const combo=d>0?Math.min(COMBO_MAX,s.combo+COMBO_PER_POINT*d):s.combo;
  const key=`${s.phase}:${s.cueIndex}`;
- const cueHits=d>0&&isScoringPhase(s)?{...s.cueHits,[key]:(s.cueHits[key]??0)+d}:s.cueHits;
+ let cueHits=s.cueHits;
+ if(d>0&&isScoringPhase(s))cueHits={...s.cueHits,[key]:(s.cueHits[key]??0)+d};
+ // −1 정정: 가장 최근에 얻은 신호 점수부터 되돌린다(보스 HP·순서 길이도 함께 돌아간다).
+ else if(d<0&&isScoringPhase(s))cueHits=takeBackHits(s.cueHits,-d);
  return {...s,scores,combo,cueHits};
+}
+const PHASE_RANK:Record<string,number>={tutorial:0,play:1,climax:2};
+const hitOrder=(key:string)=>{const [p,i]=key.split(':');return (PHASE_RANK[p]??0)*1e6+Number(i);};
+/** 최근 신호부터 n점을 되돌린다. 0이 된 신호는 지운다. */
+export function takeBackHits(hits:Readonly<Record<string,number>>,n:number):Record<string,number>{
+ const out={...hits};
+ for(const key of Object.keys(out).sort((a,b)=>hitOrder(b)-hitOrder(a))){
+  if(n<=0)break;
+  const take=Math.min(n,out[key]);out[key]-=take;n-=take;
+  if(out[key]<=0)delete out[key];
+ }
+ return out;
+}
+/**
+ * 그 신호가 나오기 바로 전의 상태(그 앞 신호들에서 얻은 점수·필살기만). 결과 화면의 'MVP 동작'처럼
+ * 지난 신호를 다시 그릴 때 쓴다(보스전: 그때 싸우던 보스의 약점).
+ */
+export function stateBeforeCue(s:FunState,at:{phase:'tutorial'|'play'|'climax';index:number}):FunState{
+ const limit=(PHASE_RANK[at.phase]??0)*1e6+at.index;
+ const cueHits=Object.fromEntries(Object.entries(s.cueHits).filter(([k])=>hitOrder(k)<limit));
+ const specials=s.log.filter(e=>e.text===SPECIAL_TEXT&&e.cue!==undefined&&(PHASE_RANK[e.phase]??-1)*1e6+e.cue<limit).length;
+ return {...s,cueHits,specials};
+}
+const SPECIAL_TEXT='필살기!';
+/** 본게임까지 갔는지(연습만 하고 끝났으면 false: 우승 팀을 정하지 않는다). */
+export const reachedPlay=(s:FunState)=>s.log.some(e=>e.phase==='play');
+/** 점수·이벤트를 받는 때인지: 일시정지 중·시범·결과에는 받지 않는다. */
+export const acceptsPlayInput=(s:FunState)=>!s.paused&&(s.phase==='tutorial'||s.phase==='play'||s.phase==='climax');
+
+/**
+ * 게임마다 버튼에 걸어 둔 규칙(예: 기억 릴레이 '성공'은 한 차례에 한 번)을 키보드·리모컨에도 똑같이 적용하는 문지기.
+ * 명령을 그대로/바꿔서 돌려주거나, 받지 않을 명령이면 null을 돌려준다.
+ */
+export type FunCommandGate=(s:FunState,cmd:FunCommand)=>FunCommand|null;
+/** 문지기를 지난 뒤 reduce. tick·next 같은 진행 명령은 문지기를 거치지 않는다. */
+export function reduceGated(s:FunState,cmd:FunCommand,gate?:FunCommandGate):FunState{
+ if(gate&&(cmd.type==='score'||cmd.type==='scoreAll'||cmd.type==='event'||cmd.type==='special'||cmd.type==='combo')){
+  const passed=gate(s,cmd);
+  return passed?reduce(s,passed):s;
+ }
+ return reduce(s,cmd);
 }
 
 export function reduce(s:FunState,cmd:FunCommand):FunState{
  if(s.phase==='result')return s;
  switch(cmd.type){
   case 'next':return enter(s,nextPhase(s.phase),PHASE_TEXT[nextPhase(s.phase)]);
-  case 'end':return {...enter(s,'result',PHASE_TEXT.result),endedBy:'teacher'};
+  case 'end':{
+   const ended={...enter(s,'result',PHASE_TEXT.result),endedBy:'teacher' as const};
+   // 연습 판·시범에서 끝내면 연습 점수는 결과에 넣지 않는다.
+   return isScoringPhase(s)?ended:{...ended,scores:Array(s.teams).fill(0),cueHits:{},combo:0,specials:0};
+  }
   case 'finish':return isScoringPhase(s)?{...enter(s,'result',PHASE_TEXT.result),endedBy:'goal'}:s;
   case 'pause':return s.paused?s:{...s,paused:true};
   case 'resume':return s.paused?{...s,paused:false}:s;
-  case 'score':return applyScore(s,cmd.team,cmd.delta);
-  case 'scoreAll':{let n=s;for(let t=0;t<s.teams;t++)n=applyScore(n,t,cmd.delta);return n;}
-  case 'combo':return Number.isFinite(cmd.delta)?{...s,combo:Math.max(0,Math.min(COMBO_MAX,s.combo+Math.round(cmd.delta)))}:s;
-  case 'special':return comboFull(s)?{...s,combo:0,specials:s.specials+1,log:[...s.log,{phase:s.phase,text:'필살기!'}]}:s;
+  // 일시정지 중·시범에는 점수·이벤트·필살기를 받지 않는다(버튼이 꺼진 것과 같은 규칙).
+  case 'score':return acceptsPlayInput(s)?applyScore(s,cmd.team,cmd.delta):s;
+  case 'scoreAll':{if(!acceptsPlayInput(s))return s;let n=s;for(let t=0;t<s.teams;t++)n=applyScore(n,t,cmd.delta);return n;}
+  case 'combo':return acceptsPlayInput(s)&&Number.isFinite(cmd.delta)?{...s,combo:Math.max(0,Math.min(COMBO_MAX,s.combo+Math.round(cmd.delta)))}:s;
+  case 'special':return acceptsPlayInput(s)&&comboFull(s)?{...s,combo:0,specials:s.specials+1,log:[...s.log,{phase:s.phase,text:SPECIAL_TEXT,cue:s.cueIndex}]}:s;
   case 'event':{
-   if(!SURPRISE_KINDS.includes(cmd.event)||s.phase==='demo')return s;
-   return {...s,event:{kind:cmd.event,leftMs:SURPRISE_INFO[cmd.event].ms},log:[...s.log,{phase:s.phase,text:SURPRISE_INFO[cmd.event].title}]};
+   // 다른 이벤트가 진행 중이면 덮어쓰지 않는다.
+   if(!surprisesNow(s).includes(cmd.event)||!acceptsPlayInput(s)||s.event)return s;
+   return startEvent(s,cmd.event);
   }
   case 'tick':return tick(s,cmd.ms);
  }
 }
 
+function startEvent(s:FunState,kind:SurpriseKind):FunState{
+ const seq=s.eventSeq+1;
+ return {...s,eventSeq:seq,event:{kind,leftMs:SURPRISE_INFO[kind].ms,seq},log:[...s.log,{phase:s.phase,text:SURPRISE_INFO[kind].title}]};
+}
+
 function tick(s:FunState,ms:number):FunState{
  if(s.paused||s.phase==='result'||!Number.isFinite(ms)||ms<=0)return s;
+ // 움직임 줄이기: 시범은 선생님이 넘길 때까지 기다린다.
+ if(s.phase==='demo'&&s.holdDemo)return s;
  const step=Math.min(ms,1000);
  let n:FunState={...s,phaseMs:s.phaseMs+step,cueMs:s.cueMs+step};
  if(n.event){const leftMs=n.event.leftMs-step;n={...n,event:leftMs>0?{...n.event,leftMs}:null};}
- // 예약된 깜짝 이벤트
+ // 예약된 깜짝 이벤트. 다른 이벤트가 진행 중이면 미뤘다가 끝나자마자 일으킨다(마지막 3초에는 일으키지 않음).
  if(isScoringPhase(n)){
   const due=n.surprises.find(x=>x.phase===n.phase&&x.atMs>s.phaseMs&&x.atMs<=n.phaseMs);
-  if(due&&!n.event)n=reduce(n,{type:'event',event:due.kind});
+  if(due){if(n.event)n={...n,deferred:due.kind};else n=startEvent(n,due.kind);}
+  else if(!n.event&&n.deferred){
+   const left=phaseSeconds(n)*1000-n.phaseMs;
+   n=left>3000?startEvent({...n,deferred:null},n.deferred):{...n,deferred:null};
+  }
  }
  // 얼음 동안에는 신호를 넘기지 않는다.
  if(!frozen(n)&&n.cueMs>=cueIntervalMs(n))n={...n,cueIndex:n.cueIndex+1,cueMs:0};
  if(n.phaseMs>=phaseSeconds(n)*1000){const to=nextPhase(n.phase);n=enter(n,to,PHASE_TEXT[to]);if(to==='result')n={...n,endedBy:'time'};}
  return n;
+}
+
+/**
+ * 저장해 둔 진행 상태(새로고침 이어 하기)를 검사해 되살린다. 모양이 틀리거나 게임 시간이 바뀌었으면 null.
+ * 되살린 판은 일시정지로 시작한다(그사이 흐른 시간은 세지 않고, 선생님이 다시 시작을 누른다).
+ */
+export function restoreFunState(raw:unknown,expect:{timing:FunTiming;teams:number}):FunState|null{
+ if(!raw||typeof raw!=='object')return null;
+ const v=raw as Partial<FunState>;
+ const num=(x:unknown)=>typeof x==='number'&&Number.isFinite(x);
+ const phases:FunPhase[]=['demo','tutorial','play','climax','result'];
+ if(v.teams!==expect.teams||!Array.isArray(v.scores)||v.scores.length!==expect.teams||!v.scores.every(num))return null;
+ if(!phases.includes(v.phase as FunPhase)||!num(v.phaseMs)||!num(v.cueIndex)||!num(v.cueMs)||!num(v.combo)||!num(v.specials)||!num(v.seed))return null;
+ if(!v.timing||JSON.stringify(v.timing)!==JSON.stringify(expect.timing))return null;
+ if(!v.cueHits||typeof v.cueHits!=='object'||!Object.values(v.cueHits).every(num))return null;
+ if(!Array.isArray(v.log)||!Array.isArray(v.surprises)||!v.allowedSurprises)return null;
+ const s=v as FunState;
+ return {...s,eventSeq:num(s.eventSeq)?s.eventSeq:0,deferred:null,phaseCues:s.phaseCues&&typeof s.phaseCues==='object'?s.phaseCues:{},
+  event:null,paused:s.phase!=='demo'&&s.phase!=='result',endedBy:s.endedBy??null};
 }
 
 /** 리모컨 등 바깥에서 온 값이 올바른 명령인지 검사한다. 틀리면 null. tick은 바깥에서 받지 않는다. */
@@ -186,7 +290,8 @@ export function parseFunCommand(raw:unknown):Exclude<FunCommand,{type:'tick'}|{t
 }
 
 export interface ResultSummary {
- winners:number[];tie:boolean;ranking:{team:number;score:number;rank:number}[];
+ winners:number[];tie:boolean;
+ /** 연습 판까지만 하고 끝남: 우승 팀·순위를 보여 주지 않는다. */ practiceOnly:boolean;ranking:{team:number;score:number;rank:number}[];
  /** 점수를 가장 많이 얻은 신호(없으면 null). 모듈이 이 신호의 동작 이름을 MVP 동작으로 보여 준다. */
  mvpCue:{phase:'play'|'climax';index:number}|null;
  conceptLine:string;question:string;nextChallenge:string;
@@ -201,9 +306,13 @@ export function resultSummary(s:FunState,game:{concept:string;reflection:string;
  const hits=Object.entries(s.cueHits).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
  const top=hits[0]?.[0].split(':');
  const tie=winners.length>1;
- const headline=s.teams===1?`우리 반 ${s.scores[0]}점!`:tie?(max===0?'모두 함께 끝까지 했어요!':`${winners.map(i=>TEAM_NAMES[i]).join('·')} 공동 우승!`):`${TEAM_NAMES[winners[0]]} 우승!`;
+ const practiceOnly=!reachedPlay(s);
+ const headline=practiceOnly?'연습만 했어요 · 본게임은 다음에 해요'
+  :s.teams===1?`우리 반 ${s.scores[0]}점!`
+  :tie?(max===0?(s.endedBy==='teacher'?'여기까지 함께 했어요!':'모두 함께 끝까지 했어요!'):`${winners.map(i=>TEAM_NAMES[i]).join('·')} 공동 우승!`)
+  :`${TEAM_NAMES[winners[0]]} 우승!`;
  return {
-  winners,tie,ranking,mvpCue:top&&(top[0]==='play'||top[0]==='climax')?{phase:top[0],index:Number(top[1])}:null,headline,
+  winners:practiceOnly?[]:winners,tie:practiceOnly?false:tie,practiceOnly,ranking,mvpCue:top&&(top[0]==='play'||top[0]==='climax')?{phase:top[0],index:Number(top[1])}:null,headline,
   conceptLine:`오늘 우리는 ${withParticle(game.concept,'을를')} 연습했어요.`,
   question:game.reflection,nextChallenge:game.nextChallenge,
  };

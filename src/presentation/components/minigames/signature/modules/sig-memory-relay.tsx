@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useState} from 'react';
 import {cueIntervalMs} from '../../../../../domain/funLoop';
-import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,longestSuccess,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs} from '../../../../../domain/signature/sig-memory-relay';
+import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,VARIATION_TEXT,longestSuccess,memoryRelayGate,memoryResultLine,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs,variationFor} from '../../../../../domain/signature/sig-memory-relay';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-memory-relay.css';
 
@@ -17,10 +17,12 @@ function MemoryPanel({state,seated}:SignatureModuleProps){
  const seq=sequenceFor(state.seed,phase,index,len);
  const stage=memoryStage(state);
  const visible=stage==='show'||peek===turnId;
- const left=Math.max(0,Math.ceil((showMs(len,cueIntervalMs(state))-state.cueMs)/1000));
- const reversed=state.event?.kind==='reverse';
+ const variation=variationFor(state,phase,index);
+ const left=Math.max(0,Math.ceil((showMs(len,cueIntervalMs(state),variation)-state.cueMs)/1000));
+ const reversed=state.event?.kind==='reverse'||variation==='reverse'||variation==='reverse-quick';
  return <div className="sig-mem" data-stage={stage}>
   {/* 초 숫자는 낭독 영역 밖에 둔다(매초 읽지 않게). */}
+  {variation!=='normal'&&<p className="sig-mem-variation">{VARIATION_TEXT[variation]}</p>}
   <p className="sig-mem-stage"><span role="status">{stage==='show'?'👀 외워요!':`🙈 가려졌어요 → ${relayTeamName(index,state.teams)}이 ${reversed?'마지막 모양부터 거꾸로':'차례대로'} 해요`}</span>{stage==='show'&&<span aria-hidden="true"> {left}초 뒤에 가려져요</span>}</p>
   <ol className="sig-mem-tiles" aria-label={`${len}개 순서`} data-count={len}>
    {seq.map((t,i)=><li key={i} className="sig-mem-tile" style={visible?{borderColor:t.color}:undefined} data-hidden={!visible||undefined}>
@@ -37,17 +39,17 @@ function MemoryPanel({state,seated}:SignatureModuleProps){
 }
 
 function MemoryResult({state}:SignatureModuleProps){
- const n=longestSuccess(state);
- return <p className="sig-mem-result">{n?`가장 긴 순서 ${n}개 성공 · 다음에는 ${Math.min(MAX_LENGTH,n+1)}개에 도전해요`:'다음에는 3개 순서부터 성공해 봐요'}</p>;
+ return <p className="sig-mem-result">{memoryResultLine(state)}</p>;
 }
 
 const memoryRelayModule:SignatureModule={
- Panel:MemoryPanel,Result:MemoryResult,hideFigure:true,
+ Panel:MemoryPanel,Result:MemoryResult,hideFigure:true,wide:true,
  controls:({state})=>{
   if(!isTurnPhase(state.phase))return [];
   const team=relayTeam(state.cueIndex,state.teams),points=state.phase==='climax'?CLIMAX_POINTS:1;
-  const scored=(state.cueHits[`${state.phase}:${state.cueIndex}`]??0)>0;
-  return [{label:`✔ ${relayTeamName(state.cueIndex,state.teams)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:scored||memoryStage(state)==='show',hint:String(team+1),tone:'primary'}];
+  // 버튼도 키보드·리모컨과 같은 규칙(memoryRelayGate)으로 켜고 끈다.
+  const allowed=!state.paused&&!!memoryRelayGate(state,{type:'score',team,delta:1});
+  return [{label:`✔ ${relayTeamName(state.cueIndex,state.teams)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:!allowed,hint:String(team+1),tone:'primary'}];
  },
 };
 export default memoryRelayModule;
