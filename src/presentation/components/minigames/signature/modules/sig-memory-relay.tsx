@@ -1,5 +1,53 @@
-import type {SignatureModule} from '../moduleTypes';
+/* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
+import {useState} from 'react';
+import {cueIntervalMs} from '../../../../../domain/funLoop';
+import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,longestSuccess,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs} from '../../../../../domain/signature/sig-memory-relay';
+import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
+import './sig-memory-relay.css';
 
-/** sig-memory-relay 화면 부품(만드는 중). Panel·controls·Result를 채우세요(부품 함수를 만들면 맨 위에 sig-boss-raid.tsx처럼 eslint-disable react-refresh 주석을 붙여요). 필요 없으면 빈 모듈 그대로 둡니다. */
-const module:SignatureModule={};
-export default module;
+type Phase='tutorial'|'play'|'climax';
+const isTurnPhase=(p:string):p is Phase=>p==='tutorial'||p==='play'||p==='climax';
+
+/** 외우기 동안 큰 모양 타일, 가려지면 번호만 남은 ? 타일. 선생님은 ‘한 번 더 보기’로 다시 보여 줄 수 있다(점수는 그대로). */
+function MemoryPanel({state,seated}:SignatureModuleProps){
+ const [peek,setPeek]=useState('');
+ if(!isTurnPhase(state.phase))return null;
+ const phase=state.phase,index=state.cueIndex,turnId=`${phase}:${index}`;
+ const len=sequenceLength(state,phase,index);
+ const seq=sequenceFor(state.seed,phase,index,len);
+ const stage=memoryStage(state);
+ const visible=stage==='show'||peek===turnId;
+ const left=Math.max(0,Math.ceil((showMs(len,cueIntervalMs(state))-state.cueMs)/1000));
+ const reversed=state.event?.kind==='reverse';
+ return <div className="sig-mem" data-stage={stage}>
+  {/* 초 숫자는 낭독 영역 밖에 둔다(매초 읽지 않게). */}
+  <p className="sig-mem-stage"><span role="status">{stage==='show'?'👀 외워요!':`🙈 가려졌어요 → ${relayTeamName(index,state.teams)}이 ${reversed?'마지막 모양부터 거꾸로':'차례대로'} 해요`}</span>{stage==='show'&&<span aria-hidden="true"> {left}초 뒤에 가려져요</span>}</p>
+  <ol className="sig-mem-tiles" aria-label={`${len}개 순서`} data-count={len}>
+   {seq.map((t,i)=><li key={i} className="sig-mem-tile" style={visible?{borderColor:t.color}:undefined} data-hidden={!visible||undefined}>
+    <span className="sig-mem-no">{i+1}</span>
+    {visible?<><span className="sig-mem-shape" style={{color:t.color}} aria-hidden="true">{t.shape}</span><b>{seated?t.seated:t.action}</b><span className="sr-only">{t.name}</span></>:<span className="sig-mem-shape" aria-label="가려진 모양">?</span>}
+   </li>)}
+  </ol>
+  <div className="sig-mem-foot">
+   <span>길이 {len}/{MAX_LENGTH} · 가장 긴 성공 {longestSuccess(state)||'-'}개</span>
+   {stage==='perform'&&<button type="button" onClick={()=>setPeek(peek===turnId?'':turnId)} aria-pressed={peek===turnId}>{peek===turnId?'🙈 다시 가리기':'👀 한 번 더 보기'}</button>}
+  </div>
+  <ul className="sig-mem-legend" aria-label="모양 뜻">{MEMORY_TILES.map(t=><li key={t.id}><span style={{color:t.color}} aria-hidden="true">{t.shape}</span> {seated?t.seated:t.action}</li>)}</ul>
+ </div>;
+}
+
+function MemoryResult({state}:SignatureModuleProps){
+ const n=longestSuccess(state);
+ return <p className="sig-mem-result">{n?`가장 긴 순서 ${n}개 성공 · 다음에는 ${Math.min(MAX_LENGTH,n+1)}개에 도전해요`:'다음에는 3개 순서부터 성공해 봐요'}</p>;
+}
+
+const memoryRelayModule:SignatureModule={
+ Panel:MemoryPanel,Result:MemoryResult,hideFigure:true,
+ controls:({state})=>{
+  if(!isTurnPhase(state.phase))return [];
+  const team=relayTeam(state.cueIndex,state.teams),points=state.phase==='climax'?CLIMAX_POINTS:1;
+  const scored=(state.cueHits[`${state.phase}:${state.cueIndex}`]??0)>0;
+  return [{label:`✔ ${relayTeamName(state.cueIndex,state.teams)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:scored||memoryStage(state)==='show',hint:String(team+1),tone:'primary'}];
+ },
+};
+export default memoryRelayModule;
