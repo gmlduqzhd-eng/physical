@@ -6,6 +6,7 @@ import {PHONE_PLAY_EXPANSION} from './phonePlayExpansion.js';
 import {PHONE_PLAY_CLASSICS} from './phonePlayClassics.js';
 import {CLASSIC_EASY_CUES} from './phonePlayClassicsMode.js';
 import {PHONE_PLAY_VISUALS,type PhonePlayVisual} from './phonePlayVisuals.js';
+import {PHONE_PLAY_KID} from './phonePlayKid.js';
 
 export const PHONE_CATEGORIES=['반응·민첩성','균형·협응','리듬·표현','이동·공간','전신 활동','협력·소통','판단·전략','정리·이완'] as const;
 export type PhoneCategory=typeof PHONE_CATEGORIES[number];
@@ -18,6 +19,12 @@ export interface PhonePlay extends PhonePlayVisual {
  /** 과제마다 다른 신호(있을 때만). */ roundCues?:[string[],string[],string[]];
  /** 과제마다 함께하는 동작 문구(있을 때만). 없으면 놀이별 기본 문구를 쓴다. */ teamMotions?:[string,string,string];
  grades?:('1~2학년'|'3~4학년군'|'5~6학년군')[];
+ /** 시작 화면 맨 위의 3줄 규칙: 무엇을 · 어떻게 · 언제 끝. */ rule3:[string,string,string];
+ /** 반 전체 진행에서 신호 아래에 늘 보이는 규칙 한 줄(과제마다 다를 수 있다). */ ruleLine?:string|[string,string,string];
+ /** 반 전체 진행에서만 쓰는 과제별 신호. */ classCues?:[string[],string[],string[]];
+ /** 반 전체 진행 전에 정할 역할·번호(있으면 교사가 시작을 누를 때까지 기다린다). */ setup?:string;
+ /** 기억 놀이에서 동작의 뜻. */ meanings?:Readonly<Record<string,string>>;
+ /** 이름을 쉽게 바꾼 놀이의 옛 이름(검색용). */ oldName?:string;
 }
 // Each row specifies a different task/rule/interaction, not a renamed timer.
 // Delimiters are only an authoring shorthand; the runtime receives named fields.
@@ -36,12 +43,16 @@ const rows:PhonePlayRow[]=[
 ];
 
 /** 지금까지 만든 놀이 전부. 옛 기록과 옛 주소를 읽을 때 쓴다. */
-export const ALL_PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options]):PhonePlay=>({
+export const ALL_PHONE_PLAYS:PhonePlay[]=[...rows].sort((a,b)=>a[0]-b[0]).map(([n,name,c,kind,players,space,goal,rules,rounds,cues,check,easy,hard,seated,related,options]):Omit<PhonePlay,'rule3'>=>({
  ...PHONE_PLAY_VISUALS[`phone-play-${String(n).padStart(3,'0')}`],
  id:`phone-play-${String(n).padStart(3,'0')}`,name,category:PHONE_CATEGORIES[c],kind,players,space,
  intensity:c===7||c===1?'낮음':'보통',minutes:players==='모둠'?6:4,seconds:players==='모둠'?36:24,
  goal,rules:rules.split('|'),rounds:rounds.split('|'),cues:cues.split('|'),check,easy,hard,seated,related,options:options?.split('|'),
-})).map(p=>{const c=PHONE_PLAY_CLARITY[p.id];return c?{...p,...c}:p;});
+})).map(p=>{const c=PHONE_PLAY_CLARITY[p.id];return c?{...p,...c}:p;}).map((p):PhonePlay=>{
+ // 쉬운 이름·3줄 규칙·동작어 신호(phonePlayKid). 3줄 규칙이 없는 옛 놀이는 목표·첫 규칙으로 만든다.
+ const kid=PHONE_PLAY_KID[p.id],oldName=kid?.name&&kid.name!==p.name?p.name:undefined;
+ return {...p,...kid,rule3:kid?.rule3??[p.goal,p.rules[0]??p.goal,'과제 3개를 하면 끝나요'],...(oldName?{oldName}:{})};
+});
 /** 목록에 보이는 놀이. 2026-11 정리로 모은 놀이는 빠진다. */
 export const PHONE_PLAYS:PhonePlay[]=ALL_PHONE_PLAYS.filter(p=>isAvailableGame(p.id));
 export const PHONE_PLAY_BY_ID=new Map(ALL_PHONE_PLAYS.map(p=>[p.id,p]));
