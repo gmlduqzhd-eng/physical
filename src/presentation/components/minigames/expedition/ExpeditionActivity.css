@@ -36,3 +36,8 @@
 @media(max-width:480px){.expedition-rules p{grid-template-columns:4.5em 1fr;font-size:16px}.expedition-now{padding:14px 10px}}
 .expedition-activity .expedition-now h3.expedition-now-label{font-size:clamp(20px,2.6vw,28px);font-weight:700}
 .expedition-now .expedition-pattern{font-size:clamp(28px,4.4vw,56px);font-weight:800;justify-content:center;text-align:left}
+/* 거꾸로 옆걸음: 생각할 시간 뒤 실제로 움직일 쪽을 확인시켜 준다. */
+.expedition-reveal{margin-top:6px;color:var(--expedition-accent,#1d5f8a);font-size:clamp(36px,6vw,88px)}
+/* 하는 중에도 꼭 필요한 역할은 신호 아래에 보인다. */
+.expedition-now-roles{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;margin:10px 0 0;padding:0;list-style:none}
+.expedition-now-roles li{padding:4px 12px;border-radius:999px;border:1px solid currentColor;font-size:clamp(15px,1.6vw,20px);font-weight:600;opacity:.9}

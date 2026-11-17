@@ -16,6 +16,9 @@ export const BOSS_ROUTES={
  shadow:['expedition-map','expedition-ship','expedition-shadow'],
 } as const satisfies Record<string,readonly FlagshipId[]>;
 // 기본 경로는 센서 없이 할 수 있는 rescue(구조 작전은 화면 터치로도 해요). 공동 운반(우주선)은 모둠마다 기울기 센서 기기 2대가 필요해요.
+/** 보스 원정 관문 이름(경로별 세 관문). */
+export const BOSS_GATE_NAMES={balanced:['비밀길 연결','공동 운반','리듬 발전'],rescue:['비밀길 연결','구조 작전','리듬 발전'],shadow:['비밀길 연결','공동 운반','그림자 복원']} as const;
+export const bossGateNames=(route:keyof typeof BOSS_GATE_NAMES):readonly string[]=>BOSS_GATE_NAMES[route]??BOSS_GATE_NAMES.balanced;
 export const ROUTE_NAMES={balanced:'탐사 → 공동 운반(센서 기기 2대) → 리듬 발전',rescue:'탐사 → 구조 작전 → 리듬 발전 · 센서 없이',shadow:'탐사 → 공동 운반(센서 기기 2대) → 그림자 복원'};
 export const MOVES=['손뼉','발 디딤','작은 팔 펼치기','앉아서 손 올리기'] as const;
 export const SHIP_COURSES={orbit:[{x:25,y:25},{x:75,y:65},{x:50,y:30}],zigzag:[{x:25,y:65},{x:75,y:45},{x:30,y:25}]} as const;
@@ -37,7 +40,18 @@ export type ReadinessState='ready'|'lost'|'manual'|'off'|'error';
 export type DeviceReport={kind:'camera'|'tilt'|'touch';state:ReadinessState;at:number};
 export type GroupWorkshop={level:ExpeditionLevel;members:number;roleRound:number;roleSwaps:number;roleAt:number;devices:DeviceReport[];contributions?:{game:FlagshipId;done:boolean;checkpoint:number;quality:number;swaps:number}[]};
 export type WorkshopSnapshot={version?:0|1;settings:WorkshopSettings;lessonStep:number;lessonAt:number;observations:Record<string,string[]>};
-export function settingsOf(s:ExpeditionSnapshot):WorkshopSettings{return s.workshop?.settings??DEFAULT_WORKSHOP;}
+/**
+ * 서버(physical_internal.expedition_settings / expedition_route)가 설정이 없거나 경로를 모를 때 쓰는 값.
+ * 새 원정을 열 때 앱은 DEFAULT_WORKSHOP(경로 'rescue')을 명시해서 보내지만, 설정 없이 열린 예전 원정은 서버가 'balanced'로 진행한다.
+ * 화면이 서버와 다른 관문을 띄우지 않도록, 서버 스냅숏을 읽을 때는 서버와 같은 기본값을 쓴다.
+ */
+export const SERVER_FALLBACK_ROUTE:WorkshopSettings['route']='balanced';
+export const SERVER_FALLBACK_WORKSHOP:WorkshopSettings={...DEFAULT_WORKSHOP,route:SERVER_FALLBACK_ROUTE};
+export function settingsOf(s:ExpeditionSnapshot):WorkshopSettings{
+ const settings=s.workshop?.settings;
+ if(!settings)return SERVER_FALLBACK_WORKSHOP;
+ return Object.hasOwn(BOSS_ROUTES,settings.route)?settings:{...settings,route:SERVER_FALLBACK_ROUTE};
+}
 export function groupWorkshop(g:GroupProgress,s:ExpeditionSnapshot):GroupWorkshop{return g.workshop??{level:settingsOf(s).level,members:settingsOf(s).members,roleRound:0,roleSwaps:0,roleAt:s.startedAt,devices:[]};}
 export function rulesOf(g:GroupProgress,s:ExpeditionSnapshot){return LEVEL_RULES[groupWorkshop(g,s).level];}
 export const LESSON_PACKAGES={10:[1,2,5,2],20:[2,4,11,3],40:[4,7,24,5]} as const;

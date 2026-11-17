@@ -26,3 +26,13 @@
 .map-flow li>span{font-size:40px;line-height:1.1}.map-flow strong{font-size:17px}.map-flow small{font-size:14px;line-height:1.5}
 .loop-rule{font-size:19px}.loop-rule b{font-size:24px}
 @media(max-width:480px){.map-flow{grid-template-columns:1fr}.map-flow li{flex-direction:row;text-align:left}.map-flow li>span{font-size:30px}}
+/* 처음 화면: 흐름 + 큰 시작 버튼을 맨 위에. */
+.flagship-start{margin:8px 0 18px;padding:16px;border:2px solid var(--forest-line,#c8d5bb);border-radius:18px;background:var(--forest-bg,#f7f5ed)}
+.flagship-start-promise{font-size:17px;margin:8px 0}
+.flagship .flagship-start-button{width:100%;min-height:72px;font-size:clamp(20px,2.4vw,28px)}
+/* 시작한 뒤: 지금 할 일을 맨 위에 크게 한 줄. */
+.flagship-now{margin:8px 0 16px;padding:16px 18px;border-radius:18px;background:var(--forest-tint,#f2f5eb);border:2px solid var(--forest-accent,#536e4d)}
+.flagship-now .flagship-now-label{margin:0;font-size:16px;font-weight:700;opacity:.8}
+.flagship-now h3{margin:4px 0;font-size:clamp(32px,4vw,56px);line-height:1.2;font-weight:800;word-break:keep-all;overflow-wrap:anywhere}
+.flagship-now p{margin:4px 0 0;font-size:clamp(16px,1.6vw,20px)}
+.flagship-embedded .flagship-now h3{font-size:clamp(30px,3.6vw,48px)}

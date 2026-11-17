@@ -1,6 +1,7 @@
 import type { ExpeditionSpec } from './expeditionGames.js';
 
-export interface ExpeditionStep { title:string; instruction:string; seconds:number; beats?:string[]; bars?:number; /** 큰 제목 아래 작은 줄. 없으면 instruction 전체를 쓴다. */ hint?:string; }
+export interface ExpeditionStep { title:string; instruction:string; seconds:number; beats?:string[]; bars?:number; /** 큰 제목 아래 작은 줄. 없으면 instruction 전체를 쓴다. */ hint?:string;
+  /** 생각할 시간(after초)이 지나면 큰 글씨로 보여 줄 정답 확인. 화살표는 실제로 움직일 쪽을 가리킨다. */ reveal?:{after:number;text:string}; }
 export interface ExpeditionBoard { size:number; start:number; destination:number; blocked:number[]; path:number[]; }
 export interface ExpeditionRound {
   title:string; steps:ExpeditionStep[]; checks:string[]; roles:string[]; kind:string;
@@ -94,7 +95,10 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
   switch(game.spec){
     case 'S01': sequence(noRepeatPath(3,colors,random).flatMap(c=>[c,'중앙 출발점']),'표식을 다녀와요');plan.targets=[{label:'중앙으로 돌아온 왕복 수',goal:3}];plan.checks=['매번 중앙으로 돌아왔어요.'];break;
     case 'S02': sequence(noRepeatPath(5,colors,random),'앞 지점에서 바로 다음 색으로 걸어요');plan.checks=['중앙 귀환 없이 색 사이를 이어 갔어요.'];break;
-    case 'S03': {const directions=noRepeatPath(4,['왼쪽','오른쪽'],random),flips=shuffled([false,false,true,true],random);plan.steps=directions.map((d,i)=>({title:`${flips[i]?'거꾸로!':'그대로!'} ${d === '왼쪽' ? '← 왼쪽' : '오른쪽 →'}`,instruction:`${flips[i]?'거꾸로!':'그대로!'} ${d} · ${flips[i]?'부른 쪽의 반대로':'부른 쪽으로'} 옆걸음`,seconds:8}));plan.checks=['“거꾸로!”에는 반대쪽, “그대로!”에는 부른 쪽으로 움직였어요.'];break;}
+    case 'S03': {const directions=noRepeatPath(4,['왼쪽','오른쪽'],random),flips=shuffled([false,false,true,true],random);plan.steps=directions.map((d,i)=>{const move=flips[i]?(d==='왼쪽'?'오른쪽':'왼쪽'):d,arrow=move==='왼쪽'?'← 왼쪽으로':'오른쪽으로 →';return flips[i]
+      // 거꾸로: 먼저 부른 말만 보여 주고(화살표 없음) 3초 생각한 뒤, 실제로 움직일 쪽을 화살표로 확인시켜 준다.
+      ?{title:`거꾸로! “${d}”`,instruction:`거꾸로! ${d} · 부른 쪽의 반대로 옆걸음`,hint:'부른 쪽의 반대로 옆걸음해요',reveal:{after:3,text:arrow},seconds:8}
+      :{title:`그대로! ${arrow}`,instruction:`그대로! ${d} · 부른 쪽으로 옆걸음`,seconds:8};});plan.checks=['“거꾸로!”에는 반대쪽, “그대로!”에는 부른 쪽으로 움직였어요.'];break;}
     case 'S04': plan.board=makeBoard(round,random);sequence(plan.board.path.map(i=>`${Math.floor(i/4)+1}행 ${i%4+1}열`),'금지 칸을 피해 정한 길로 걸어요');plan.checks=['금지 칸을 지나지 않았어요.'];break;
     case 'S05': memory(noRepeatPath(3+round,colors,random),'기억해서 방문한 순서');break;
     case 'S06': {const nums=shuffled([1,2,3,4,5,6],random),a=nums[0],b=nums[1];plan.steps=[{title:`더해서 ${a+b}!`,instruction:`바닥 숫자 1~6 가운데 더한 값이 ${a+b}인 두 곳을 다녀와요.`,seconds:20}];plan.question={prompt:`방문한 두 숫자 (합 ${a+b})`,options:['1','2','3','4','5','6'],answer:[String(a),String(b)],ordered:false};plan.kind='sum';break;}
@@ -132,7 +136,7 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'T03': {const first=1+pick(players-1,random);plan.allocation={labels:['왼쪽 섬','오른쪽 섬'],counts:[first,players-first]};plan.steps=tasks([`왼쪽 섬 ${first}명, 오른쪽 섬 ${players-first}명으로 나누어 이동해요.`],20);plan.targets=[];break;}
     case 'T04': plan.board=makeBoard(round,random);plan.steps=tasks(['개인 통로에서 지도에 남아 있는 길을 정해 보급품을 옮겨요.','출발점으로 돌아와 바뀐 도로를 확인해요.']);plan.checks=['막힌 도로 대신 연결된 다른 길로 이동했어요.'];break;
     case 'T05': memory(shuffled(colors,random).slice(0,players),'번호 순으로 실제 섰던 색 표식');plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${i+1}번째 배치 기억`);break;
-    case 'T06': {const word=turn,color=other;const meaning=round<2;plan.wordCue={text:word,color:['#bf3030','#1e5db8','#926b00','#23733f'][(round+1)%4],rule:meaning?'글자의 뜻':'글자의 색'};plan.steps=[{title:meaning?'글자의 뜻을 따라가요':'글자의 색을 따라가요',instruction:`이번 규칙: ${meaning?'글자의 뜻':'글자의 색'}. 한 사람씩 맞는 색 표식을 다녀와요.`,seconds:18}];plan.question={prompt:'다녀온 길의 표식',options:colors,answer:[meaning?word:color],ordered:true};break;}
+    case 'T06': {const word=turn,color=other;const meaning=round<2;plan.wordCue={text:word,color:['#bf3030','#1e5db8','#926b00','#23733f'][(round+1)%4],rule:meaning?'글자의 뜻':'글자의 색'};plan.steps=[{title:meaning?'글자의 뜻을 따라가요':'글자의 색을 따라가요',instruction:`이번 규칙: ${meaning?'글자의 뜻':'글자의 색'}. 한 사람씩 맞는 색 표식을 다녀와요.`,hint:'한 사람씩 맞는 색 표식을 다녀와요.',seconds:18}];plan.question={prompt:'다녀온 길의 표식',options:colors,answer:[meaning?word:color],ordered:true};break;}
     case 'T07': plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${[['1→2→3→4','2→4→6→8','1→3→5→7','8→6→4→2'][(i+round)%4]]}`);plan.steps=tasks(['숫자줄에서 내 순서대로 카드를 밟고 돌아와요. 한 사람씩 차례로 해요.'],24);plan.checks=['전원이 자신에게 배정된 서로 다른 숫자 규칙을 시도했어요.'];break;
     case 'T08': plan.board=makeBoard(round,random);plan.steps=tasks(['시작과 도착, 금지 칸을 보고 걸을 길을 정해요.','개인별로 분리된 바닥 미로에서 정한 길을 걸어요.'],15);plan.checks=['화면 지도와 실제 바닥 표식의 길을 비교했어요.'];break;
     case 'T09': roleCycle(['앞쪽을 교실 앞','앞쪽을 교실 오른쪽','앞쪽을 교실 뒤','앞쪽을 교실 왼쪽']);sequence(rotate(['앞','오른쪽','뒤','왼쪽'],round),'자기 기준 앞쪽에서 화살표를 해석해 걸어요');plan.checks=['기준 앞쪽이 바뀌어도 자기 경로를 따라갔어요.'];break;
