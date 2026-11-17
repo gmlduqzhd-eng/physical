@@ -35,6 +35,6 @@ export function UnifiedHomePage() {
       <section className="phone-home-link"><div><p className="eyebrow">별도 준비물 없는 {PHONE_PLAYS.length}가지 신체 놀이</p><h2>스마트폰은 내려놓고, 함께 움직여요.</h2><p>혼자·짝·모둠, 필요한 공간과 시간에 맞춰 골라요.</p></div><Link to="/hub?collection=phone">준비물 없는 놀이 찾기 <ArrowRight aria-hidden="true"/></Link></section>
       <section className="library" aria-labelledby="library-title"><div className="library-title"><div className="library-heading"><h2 id="library-title">오늘은 어떤 활동을 해볼까요?</h2><span className="catalog-note"><b>{GAMES.length}</b>개의 활동 자료</span></div><Link to="/hub">전체 보기 →</Link></div><div className="categories">{domains.map(domain => <Link className="category" key={domain.name} to={`/hub?domain=${encodeURIComponent(domain.name)}`}><div><h3>{domain.name}</h3><p>{domain.description}</p></div><strong>{GAMES.filter(game => game.domain === domain.name).length}<small>개</small></strong></Link>)}</div></section>
     </main>
-    <footer><p>작은 움직임이, 함께하는 즐거움으로.</p><nav aria-label="도움말"><Link to="/demo">처음이라면? 예시로 둘러보기 ↗</Link><Link to="/privacy">개인정보 안내</Link></nav></footer>
+    <footer><p>작은 움직임이, 함께하는 즐거움으로.</p><nav aria-label="도움말"><Link to="/demo">처음이라면? 예시로 둘러보기 ↗</Link><Link to="/privacy">개인정보 안내</Link></nav><p className="ys-credit">© 2026 엽쌤. All rights reserved. · <a href="https://gmlduqzhd123-lab.github.io/YScode/">엽쌤의 다른 앱 보기 →</a></p></footer>
   </div><AccessQrDialog dialogRef={qr}/></div>;
 }

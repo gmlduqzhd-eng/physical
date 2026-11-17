@@ -41,3 +41,5 @@ html[data-design=forest].dark-theme .unified-home .welcome.home-hero .forest-her
  html[data-design=forest] .unified-home .welcome.home-hero .forest-hero-actions a:not(:first-child){background:transparent;color:var(--forest-ink)}
  html[data-design=forest].dark-theme .unified-home .welcome.home-hero{background:var(--forest-paper);box-shadow:none;border:1px solid var(--forest-line)}
 }
+/* 엽쌤 앱 공통 하단 문구 */
+.unified-home footer{flex-wrap:wrap}.unified-home footer .ys-credit{flex-basis:100%;font-size:12px}.unified-home footer .ys-credit a{display:inline;min-height:0;text-decoration:underline}
