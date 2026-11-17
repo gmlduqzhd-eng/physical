@@ -52,3 +52,7 @@ html.dark-theme .qb{--qb-t0:#e58a72;--qb-t1:#7fb2e0;--qb-t2:#86c98f;--qb-t3:#c3a
 .qb-prompt{font-size:13px}
 @media(max-width:520px){.qb-options{grid-template-columns:1fr}.qb-panel{padding:14px}}
 @media print{.qb-row,.qb-log,.qb-editor{display:none}}
+/* 설정 전 첫 화면: 한 줄 설명 + 바로 시작 */
+.qb-lead{font-size:16px;line-height:1.7}.qb-lead strong{display:block;font-size:20px;margin-bottom:4px}
+.qb-quick{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin:12px 0}.qb-quick p{margin:0}
+.qb-settings{margin:8px 0 12px}.qb-settings>summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}

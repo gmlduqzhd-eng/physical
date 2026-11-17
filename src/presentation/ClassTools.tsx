@@ -182,6 +182,8 @@ export function ClassTools(){
   <section className="play-experiences sports-lesson class-tools" hidden={!tool} aria-label={tool?.label??'수업 도구'} data-tool={tool?.id}>
    {tool&&<><p className="eyebrow">수업 도구</p><h1><span aria-hidden="true">{tool.icon}</span> {tool.label}</h1><p>{tool.summary}</p></>}
    <nav className="sports-stages tools-tabs" aria-label="다른 도구">{CLASS_TOOLS.map(t=><button key={t.id} aria-current={t.id===tool?.id?'page':undefined} onClick={()=>setParams({tool:t.id},{replace:true})}>{t.icon} {t.label}</button>)}</nav>
+   {/* 휴대폰에서는 도구 탭 일곱 개 대신 고르기 상자 하나로 자리를 아낀다. */}
+   <label className="tools-select">다른 도구<select value={tool?.id??''} onChange={e=>setParams({tool:e.target.value},{replace:true})}>{CLASS_TOOLS.map(t=><option key={t.id} value={t.id}>{t.icon} {t.label}</option>)}</select></label>
    {CLASS_TOOLS.map(t=>{const View=TOOL_VIEW[t.id];return <section key={t.id} className="recipe-card sports-stage" hidden={t.id!==tool?.id} data-tool-panel={t.id}><View/></section>;})}
   </section>
  </FlowShell>;

@@ -655,7 +655,7 @@ export const SPORT_EVENT_DATA: SportEvent[] = [
  },
  {
   "id": "soccer",
-  "group": "net",
+  "group": "target",
   "name": "축구",
   "sub": "페트병 볼링 슈팅",
   "icon": "⚽",
@@ -716,7 +716,7 @@ export const SPORT_EVENT_DATA: SportEvent[] = [
    1
   ],
   "unit": "개",
-  "btnLabel": "스트라이크",
+  "btnLabel": "쓰러진 병",
   "timers": [
    60
   ],
