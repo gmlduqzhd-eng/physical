@@ -1,0 +1,31 @@
+.class-progress{display:flex;flex-direction:column;gap:14px;max-width:960px;margin:0 auto}
+.class-progress h1{margin:0}
+.cp-lead,.cp-hint{opacity:.85}
+.cp-hint{font-size:.85rem;margin:0 0 6px}
+.cp-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.cp-tabs button{min-height:44px;padding:0 16px;border-radius:999px;border:2px solid currentColor;background:transparent;color:inherit;font-weight:800;cursor:pointer}
+.cp-tabs button[aria-current=page]{background:#0891b2;border-color:#0891b2;color:#fff}
+.cp-empty{padding:16px;border-radius:14px;border:1px dashed currentColor}
+.cp-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.cp-cards article{padding:14px;border-radius:16px;border:1px solid rgba(148,163,184,.5)}
+.cp-cards h2{margin:0 0 4px;font-size:1.05rem}
+.cp-cards ul{margin:0;padding-left:1.1em}
+.cp-cards li span{opacity:.8;font-size:.85rem}
+.cp-h2{margin:6px 0 0;font-size:1.1rem}
+.cp-table-wrap{overflow-x:auto;max-width:100%}
+.cp-table{width:100%;border-collapse:collapse;font-size:.95rem}
+.cp-table th,.cp-table td{padding:8px;border-bottom:1px solid rgba(148,163,184,.4);text-align:left}
+.cp-table td{text-align:right;white-space:nowrap}
+.cp-week{font-size:1.2rem;font-weight:900}
+.cp-week span{font-size:.85rem;font-weight:600;opacity:.8}
+.cp-map{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px}
+.cp-map li{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:10px;border:2px dashed rgba(148,163,184,.6);font-size:clamp(14px,3.2vw,28px)}
+.cp-map li[data-open]{border-style:solid;border-color:#0891b2;background:rgba(8,145,178,.15)}
+.cp-badges{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.cp-badges li{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px;border-radius:14px;border:1px solid rgba(148,163,184,.5);text-align:center;opacity:.6}
+.cp-badges li[data-earned]{opacity:1;border-color:#ca8a04}
+.cp-badges li>span{font-size:2rem}
+.cp-reset button{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid currentColor;background:transparent;color:inherit;cursor:pointer}
+.cp-reset .cp-danger{border-color:#dc2626;color:#dc2626}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:480px){.cp-map{grid-template-columns:repeat(6,minmax(0,1fr))}}

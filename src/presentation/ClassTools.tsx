@@ -177,6 +177,7 @@ export function ClassTools(){
   {!tool&&<section className="play-experiences sports-classroom" aria-label="수업 도구">
    <p className="eyebrow">체육수업 대백과 · 수업 도구</p><h1>수업을 돕는 도구</h1><p>대진표, 시계, 뽑기를 교사 화면 한 대로 써요. 학생 이름은 넣지 않고 번호와 팀만 써요.</p>
    <div className="sports-grid">{CLASS_TOOLS.map(t=><Link key={t.id} className="sports-card" to={`/tools?tool=${t.id}`} data-tool={t.id}><span className="sports-icon" aria-hidden="true">{t.icon}</span><strong>{t.label}</strong><span>{t.summary}</span></Link>)}</div>
+   <p className="tools-progress-link"><Link to="/class-progress">👍 우리 반 반응 · 🗺 반 원정 지도 보기 →</Link> <span>게임이 끝날 때 남긴 반응과 판 수를 모아 봐요.</span></p>
    <p className="sports-muted">종목별 점수판과 시상은 <Link to="/sports">종목 교실</Link>에 있어요. 도구를 오가도 이 화면을 떠나기 전까지 기록이 남아 있어요.</p>
   </section>}
   <section className="play-experiences sports-lesson class-tools" hidden={!tool} aria-label={tool?.label??'수업 도구'} data-tool={tool?.id}>

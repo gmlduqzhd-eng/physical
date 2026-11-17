@@ -5,6 +5,8 @@ import {SURPRISE_KINDS,TEAM_NAMES,comboFull,resultSummary,seededRandom,type FunS
 import {GAMES} from '../../../../domain/gamesData';
 import {unlockAudio} from '../../../../application/soundEffects';
 import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,useFunEngine,type TeacherButton} from '../../fun';
+import {RemoteLink} from '../../fun/RemoteLink';
+import {ClassFeedbackSlot} from '../../ClassFeedbackSlot';
 import {SIGNATURE_MODULES} from './modules';
 import {cueOf} from './signatureCue';
 import type {SignatureModuleProps} from './moduleTypes';
@@ -83,7 +85,7 @@ function SignatureArena({game,teams,seated,skipDemo,groupId,enqueueAction,onExit
   };
   return arena(<div className="fun-arena" data-phase="result">
    <ResultCeremony summary={{...summary,headline}} teams={teams} scoreLabel={game.scoreLabel} mvpMove={mvp?.move??mvp?.text} endedBy={state.endedBy}
-    extra={Extra?<Extra {...props}/>:undefined} recorded={recorded} onRecord={record} onReplay={onReplay} onExit={onExit}/>
+    extra={Extra?<Extra {...props}/>:undefined} afterRecord={<ClassFeedbackSlot gameId={game.id}/>} recorded={recorded} onRecord={record} onReplay={onReplay} onExit={onExit}/>
   </div>);
  }
 
@@ -105,6 +107,7 @@ function SignatureArena({game,teams,seated,skipDemo,groupId,enqueueAction,onExit
    <span className="fun-phase" data-phase={state.phase}>{PHASE_LABEL[state.phase]}</span>
    <span className="fun-timer" aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
    {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
+   <RemoteLink bus={engine.bus}/>
    <button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={onExit}>← 목록</button>
   </header>
   {state.phase==='demo'?<DemoLoop frames={game.demo} onSkip={()=>dispatch({type:'next'})} skipLabel="▶ 연습 판 시작"/>:<>

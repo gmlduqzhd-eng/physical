@@ -120,3 +120,15 @@
  .fun-intro{margin-top:64px}
 }
 @media (prefers-reduced-motion:reduce){.fun-surprise,.fun-victory,.fun-final,.fun-demo-figure{animation:none}.fun-signal,.fun-combo-bar i,.sig-hp i{transition:none}}
+/* 휴대폰 리모컨 연결(3단계) */
+.fun-remote-btn{min-height:44px;padding:4px 14px;border-radius:999px;border:2px solid var(--fun-line);background:transparent;color:var(--fun-ink);font-weight:800;font-size:clamp(14px,1.6vw,18px);cursor:pointer}
+.fun-remote-btn[data-linked]{border-color:#16a34a;color:#16a34a}
+.fun-remote-panel{position:fixed;z-index:20003;top:50%;left:50%;transform:translate(-50%,-50%);width:min(440px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;display:flex;flex-direction:column;align-items:center;gap:10px;padding:20px;border-radius:20px;background:var(--fun-bg);color:var(--fun-ink);border:2px solid var(--fun-line);box-shadow:0 20px 60px rgba(0,0,0,.45);text-align:center}
+.fun-remote-panel h2{margin:0;font-size:1.3rem}
+.fun-remote-panel p{margin:0}
+.fun-remote-qr img{width:180px;height:180px;background:#fff;border-radius:12px;padding:6px}
+.fun-remote-code{font-size:2.4rem;font-weight:900;letter-spacing:.25em}
+.fun-remote-url{font-size:.8rem;word-break:break-all;opacity:.75}
+.fun-remote-status{font-weight:800}
+.fun-remote-status[data-status=error],.fun-remote-status[data-status=unavailable]{color:#dc2626}
+.fun-result .class-feedback{margin-top:12px}

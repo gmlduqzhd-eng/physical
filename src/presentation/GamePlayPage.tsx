@@ -40,6 +40,8 @@ import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
 import {SignaturePlay} from './components/minigames/signature/SignaturePlay';
 import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
+import {recordPlay} from '../application/classProgressStore';
+import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
@@ -316,6 +318,7 @@ const GamePlaySession = () => {
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
+    if(gameType)recordPlay(gameType);
     if (guidedMode&&canReportCompletion(details)) {
       enqueueGuidedCompletion();
     }
@@ -585,6 +588,7 @@ const GamePlaySession = () => {
               <span>🫀 운동 후 쿨다운 루틴</span>
             </button>}
 
+            {gameType&&<ClassFeedbackSlot gameId={gameType}/>}
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
