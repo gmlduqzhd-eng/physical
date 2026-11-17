@@ -12,6 +12,8 @@ export interface BingoSettings {teams:2|3|4;timeLimit:0|20|30|60;onWrong:'keep'|
 export interface BingoGame {
  settings:BingoSettings;teamNames:string[];questions:QuizQuestion[];board:BingoCell[];
  status:CellStatus[];owner:(number|null)[];bonus:number[];turn:number;round:number;finished:boolean;log:string[];
+ /** 칸마다 틀린 횟수. 다시 열 때 보기 순서를 바꾸는 데 쓴다(예전 저장값에는 없을 수 있다). */
+ attempts?:number[];
 }
 export const CELL_POINTS=10,BINGO_POINTS=30,COOP_POINTS=5,BOARD_SIZE=25,TEAM_NAME_MAX=8;
 export const TEAM_MARKS=['🦊','🐳','🐸','🦄'] as const;
@@ -28,21 +30,24 @@ export const BINGO_LINES:number[][]=[
 ];
 
 /* ── 문제 세트 읽기·쓰기 ── */
-const HEADER=/^(문제|질문)$/;
+const HEADER_FIRST=/^(문제|질문|번호|no\.?|#)$/i;
 /**
  * 한 줄에 문제 하나. `문제 | 정답 | 오답1 | 오답2 | 오답3`이면 객관식, `문제 | 정답`이면 주관식.
- * 번호(1. 1) Q1:), 빈 줄, 표 머리글과 구분선, 표의 양끝 세로 막대는 알아서 뺀다.
+ * AI가 흔히 내는 모양도 읽는다: 번호(1. 1) Q1:), 굵은 표시(**), 전각 세로 막대(｜), 표 머리글과 구분선,
+ * 표의 양끝 세로 막대, 번호만 든 첫 칸(| 1 | 문제 | 정답 |). 숫자로 시작하는 문제(1.5m …)는 그대로 둔다.
+ * 빈 칸이 끼어 있는 줄은 다른 모양으로 바꾸지 않고 '형식이 맞지 않는 줄'로 센다.
  */
 export function parseQuestions(text:string):{questions:QuizQuestion[];skipped:number}{
  const questions:QuizQuestion[]=[];let skipped=0;
- for(const raw of text.replace(/\r/g,'').split('\n')){
-  let line=raw.trim();if(!line)continue;
+ for(const raw of text.replace(/^\uFEFF/,'').replace(/\r/g,'').split('\n')){
+  let line=raw.replace(/｜/g,'|').replace(/\*\*/g,'').trim();if(!line)continue;
   if(/^\|?\s*:?-{2,}/.test(line))continue;
   line=line.replace(/^\|/,'').replace(/\|$/,'').trim();
-  line=line.replace(/^(?:Q\s*\d+\s*[.:)]|\d+\s*[.)]|[-*•])\s*/i,'');
-  const cells=line.split('|').map(s=>s.trim()).filter(Boolean);
-  if(cells.length&&HEADER.test(cells[0])&&cells.some(c=>c==='정답'))continue;
-  if(cells.length<2){skipped++;continue;}
+  line=line.replace(/^(?:Q\s*\d+\s*[.:)]\s*|\d+\s*[.)](?=\s)\s*|[-*•]\s+)/i,'');
+  const cells=line.split('|').map(s=>s.trim());
+  if(cells.length>2&&/^\d+[.)]?$/.test(cells[0]))cells.shift();
+  if(cells.length>1&&(HEADER_FIRST.test(cells[0])||cells.includes('문제')&&cells.includes('정답')))continue;
+  if(cells.length<2||cells.some(c=>!c)){skipped++;continue;}
   const [prompt,answer,...wrong]=cells;
   const distinctWrong=[...new Set(wrong.filter(w=>w!==answer))].slice(0,3);
   questions.push(distinctWrong.length?{kind:'choice',prompt,answer,wrong:distinctWrong}:{kind:'short',prompt,answer,wrong:[]});
@@ -70,15 +75,19 @@ export function buildBoard(questionCount:number,moveCells:number,seed:number):Bi
  for(const cell of cells)if(cell.type==='move'){cell.move=MOVE_TASKS[m%MOVE_TASKS.length];m++;}
  return cells;
 }
-/** 객관식 보기 순서. 칸마다 정해져 있어 다시 그려도 바뀌지 않는다. */
-export function choiceOptions(q:QuizQuestion,cellIndex:number):string[]{
- return shuffled([q.answer,...q.wrong],seededRng(cellIndex*7919+q.prompt.length));
+/** 객관식 보기 순서. 칸과 틀린 횟수로 정해져 다시 그려도 그대로이고, 틀린 뒤 다시 열면 순서가 바뀐다. */
+export function choiceOptions(q:QuizQuestion,cellIndex:number,attempt=0):string[]{
+ const options=[q.answer,...q.wrong];
+ let out=shuffled(options,seededRng(cellIndex*7919+q.prompt.length+attempt*104729));
+ // 다시 열었을 때는 정답 자리가 전과 겹치지 않게 한 번 더 돌린다.
+ if(attempt>0&&options.length>1){const before=choiceOptions(q,cellIndex,attempt-1).indexOf(q.answer);if(out.indexOf(q.answer)===before)out=[...out.slice(1),out[0]];}
+ return out;
 }
 
 export function newGame(settings:BingoSettings,teamNames:readonly string[],questions:readonly QuizQuestion[],seed:number):BingoGame{
  const names=Array.from({length:settings.teams},(_,i)=>cleanTeamName(teamNames[i]??'',i));
  return {settings,teamNames:names,questions:[...questions],board:buildBoard(questions.length,settings.moveCells,seed),
-  status:Array(BOARD_SIZE).fill('open'),owner:Array(BOARD_SIZE).fill(null),bonus:Array(settings.teams).fill(0),turn:0,round:1,finished:false,log:['게임 시작']};
+  status:Array(BOARD_SIZE).fill('open'),owner:Array(BOARD_SIZE).fill(null),bonus:Array(settings.teams).fill(0),turn:0,round:1,finished:false,log:['게임 시작'],attempts:Array(BOARD_SIZE).fill(0)};
 }
 export const cleanTeamName=(name:string,i:number)=>name.trim().slice(0,TEAM_NAME_MAX)||`${i+1}팀`;
 
@@ -104,6 +113,7 @@ export type Resolution='correct'|'wrong'|'moved'|'pass';
 export function resolveCell(g:BingoGame,cellIndex:number,result:Resolution,coop=false):BingoGame{
  if(g.finished||cellIndex<0||cellIndex>=BOARD_SIZE||g.status[cellIndex]!=='open')return g;
  const team=g.turn,name=g.teamNames[team],status=[...g.status],owner=[...g.owner],bonus=[...g.bonus],log=[...g.log];
+ const attempts=g.attempts?[...g.attempts]:Array(BOARD_SIZE).fill(0);let board=g.board;
  const cell=`${cellIndex+1}번 칸`;
  if(result==='correct'||result==='moved'){
   status[cellIndex]='owned';owner[cellIndex]=team;
@@ -112,12 +122,18 @@ export function resolveCell(g:BingoGame,cellIndex:number,result:Resolution,coop=
   log.push(`${g.round}라운드 · ${name}: ${cell} ${result==='moved'?'움직임 완료':'정답'}${extra?` · 협력 보너스 +${extra}`:''}${after>before?` · 빙고 ${after}줄!`:''}`);
  }else if(result==='wrong'){
   if(g.settings.onWrong==='void')status[cellIndex]='void';
+  else{
+   // 칸을 남길 때는 정답을 알려 주지 않고, 남은 문제가 있으면 다른 문제로 바꾼다. 없으면 보기 순서만 바꾼다.
+   attempts[cellIndex]++;
+   const used=new Set(g.board.filter(c=>c.type==='question').map(c=>c.question)),spare=g.questions.findIndex((_,i)=>!used.has(i));
+   if(g.board[cellIndex].type==='question'&&spare>=0)board=g.board.map(c=>c.index===cellIndex?{...c,question:spare}:c);
+  }
   log.push(`${g.round}라운드 · ${name}: ${cell} 아쉬워요${g.settings.onWrong==='void'?' · 빈 칸이 됐어요':' · 다른 팀이 다시 도전할 수 있어요'}`);
  }else log.push(`${g.round}라운드 · ${name}: 차례를 넘겼어요`);
  const turn=(team+1)%g.settings.teams,round=turn===0?g.round+1:g.round;
  const noOpen=!status.includes('open'),overRounds=g.settings.rounds>0&&round>g.settings.rounds;
  const finished=noOpen||overRounds;if(finished)log.push(noOpen?'모든 칸을 열어 게임이 끝났어요':`${g.settings.rounds}라운드를 마쳐 게임이 끝났어요`);
- return {...g,status,owner,bonus,log,turn,round,finished};
+ return {...g,board,status,owner,bonus,log,turn,round,finished,attempts};
 }
 export const finishGame=(g:BingoGame):BingoGame=>g.finished?g:{...g,finished:true,log:[...g.log,'선생님이 게임을 끝냈어요']};
 
@@ -127,12 +143,13 @@ export function validGame(raw:unknown):BingoGame|null{
  const g=raw as BingoGame,s=g.settings;
  const ok=s&&[2,3,4].includes(s.teams)&&[0,20,30,60].includes(s.timeLimit)&&['keep','void'].includes(s.onWrong)&&[0,4,6,8].includes(s.rounds)&&[0,3,5].includes(s.moveCells)&&typeof s.coopBonus==='boolean'
   &&Array.isArray(g.teamNames)&&g.teamNames.length===s.teams&&g.teamNames.every(n=>typeof n==='string'&&n.length<=TEAM_NAME_MAX)
-  &&Array.isArray(g.questions)&&g.questions.every(q=>q&&typeof q.prompt==='string'&&typeof q.answer==='string'&&Array.isArray(q.wrong)&&(q.kind==='choice'||q.kind==='short'))
-  &&Array.isArray(g.board)&&g.board.length===BOARD_SIZE&&g.board.every((c,i)=>c&&c.index===i&&(c.type==='move'?typeof c.move==='string':Number.isInteger(c.question)&&c.question!>=0&&c.question!<g.questions.length))
+  &&Array.isArray(g.questions)&&g.questions.every(q=>q&&typeof q.prompt==='string'&&typeof q.answer==='string'&&Array.isArray(q.wrong)&&q.wrong.every(w=>typeof w==='string')&&(q.kind==='choice'||q.kind==='short'))
+  &&Array.isArray(g.board)&&g.board.length===BOARD_SIZE&&g.board.every((c,i)=>c&&c.index===i&&(c.type==='move'||c.type==='question')&&(c.type==='move'?typeof c.move==='string':Number.isInteger(c.question)&&c.question!>=0&&c.question!<g.questions.length))
   &&Array.isArray(g.status)&&g.status.length===BOARD_SIZE&&g.status.every(v=>v==='open'||v==='owned'||v==='void')
   &&Array.isArray(g.owner)&&g.owner.length===BOARD_SIZE&&g.owner.every((o,i)=>(o===null)===(g.status[i]!=='owned')&&(o===null||Number.isInteger(o)&&o>=0&&o<s.teams))
   &&Array.isArray(g.bonus)&&g.bonus.length===s.teams&&g.bonus.every(n=>Number.isInteger(n)&&n>=0)
-  &&Number.isInteger(g.turn)&&g.turn>=0&&g.turn<s.teams&&Number.isInteger(g.round)&&g.round>=1&&typeof g.finished==='boolean'&&Array.isArray(g.log)&&g.log.every(l=>typeof l==='string');
+  &&Number.isInteger(g.turn)&&g.turn>=0&&g.turn<s.teams&&Number.isInteger(g.round)&&g.round>=1&&typeof g.finished==='boolean'&&Array.isArray(g.log)&&g.log.every(l=>typeof l==='string')
+  &&(g.attempts===undefined||Array.isArray(g.attempts)&&g.attempts.length===BOARD_SIZE&&g.attempts.every(n=>Number.isInteger(n)&&n>=0));
  return ok?g:null;
 }
 

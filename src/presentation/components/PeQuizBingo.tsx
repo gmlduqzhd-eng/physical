@@ -61,7 +61,8 @@ export function PeQuizBingo(){
  const [game,setGame]=useState<BingoGame|null>(()=>validGame(readJsonStorage(GAME_KEY)));
  const [history,setHistory]=useState<BingoGame[]>([]);
  const [settings,setSettings]=useState<BingoSettings>(()=>game?.settings??DEFAULT_SETTINGS);
- const [names,setNames]=useState<string[]>(()=>game?.teamNames??['','','','']);
+ // 팀 이름은 늘 4칸으로 둔다. 저장된 게임이 2·3팀이어도 설정에서 팀을 늘리면 3·4팀 이름을 쓸 수 있다.
+ const [names,setNames]=useState<string[]>(()=>Array.from({length:4},(_,i)=>game?.teamNames[i]??''));
  const [questionsText,setQuestionsText]=useState(()=>readStorage(SET_KEY)||EXAMPLE_QUESTIONS_TEXT);
  const [editing,setEditing]=useState(false),[picked,setPicked]=useState<number|null>(null),[chosen,setChosen]=useState<string|null>(null);
  const [revealed,setRevealed]=useState(false),[coop,setCoop]=useState(false),[confirmEnd,setConfirmEnd]=useState(false),[left,setLeft]=useState<number|null>(null);
@@ -69,7 +70,7 @@ export function PeQuizBingo(){
 
  useEffect(()=>{if(game)writeStorage(GAME_KEY,JSON.stringify(game));else removeStorage(GAME_KEY);},[game]);
  const cell=game&&picked!==null?game.board[picked]:null,question=cell?.type==='question'?game!.questions[cell.question!]:null;
- const expired=left===0;
+ const expired=left===0,keep=game?.settings.onWrong==='keep',attempt=game&&picked!==null?game.attempts?.[picked]??0:0;
  // 제한 시간: 문제 칸을 열면 잰다. 객관식은 시간이 끝나면 고를 수 없고 정답을 보여 준다.
  useEffect(()=>{
   if(!game||picked===null||!question||!game.settings.timeLimit||chosen!==null||revealed){setLeft(null);return;}
@@ -94,7 +95,7 @@ export function PeQuizBingo(){
   <p>팀별로 체육 규칙·안전·건강 문제를 맞히고 5×5 빙고판을 차지해요. 움직임 칸에서는 반 전체가 함께 몸을 움직여요.</p>
   <section className="qb-setup" aria-label="게임 설정">
    <Choices label="팀 수" value={settings.teams} options={SETTINGS_OPTIONS.teams} format={n=>`${n}팀`} onChange={n=>setSettings({...settings,teams:n})}/>
-   <div className="qb-teams">{Array.from({length:settings.teams},(_,i)=><label key={i} className="tools-text"><span>{TEAM_MARKS[i]} {i+1}팀 이름</span><input value={names[i]} maxLength={TEAM_NAME_MAX} placeholder={`${i+1}팀`} onChange={e=>setNames(names.map((n,j)=>j===i?e.target.value:n))}/></label>)}</div>
+   <div className="qb-teams">{Array.from({length:settings.teams},(_,i)=><label key={i} className="tools-text"><span>{TEAM_MARKS[i]} {i+1}팀 이름</span><input value={names[i]??''} maxLength={TEAM_NAME_MAX} placeholder={`${i+1}팀`} onChange={e=>setNames(Array.from({length:4},(_,j)=>j===i?e.target.value:names[j]??''))}/></label>)}</div>
    <Choices label="제한 시간" value={settings.timeLimit} options={SETTINGS_OPTIONS.timeLimit} format={n=>n?`${n}초`:'없음'} onChange={n=>setSettings({...settings,timeLimit:n})}/>
    <Choices label="라운드" value={settings.rounds} options={SETTINGS_OPTIONS.rounds} format={n=>n?`${n}라운드`:'칸이 다 열릴 때까지'} onChange={n=>setSettings({...settings,rounds:n})}/>
    <Choices label="움직임 칸" value={settings.moveCells} options={SETTINGS_OPTIONS.moveCells} format={n=>n?`${n}칸`:'없음'} onChange={n=>setSettings({...settings,moveCells:n})}/>
@@ -113,7 +114,7 @@ export function PeQuizBingo(){
   <div className="qb-top">
    <p className="qb-turn" role="status" aria-live="polite">{game.finished?'🏁 게임이 끝났어요':<>{game.settings.rounds?`${game.round}/${game.settings.rounds}라운드`:`${game.round}라운드`} · <strong>{TEAM_MARKS[game.turn]} {game.teamNames[game.turn]}</strong> 차례 · 칸을 골라요</>}</p>
    <div className="qb-row">
-    <button type="button" onClick={undo} disabled={!history.length}>↶ 되돌리기</button>
+    <button type="button" onClick={undo} disabled={!history.length} title="새로고침하면 되돌리기 목록은 비워지고, 점수와 판은 그대로 이어져요">↶ 되돌리기</button>
     {!game.finished&&<button type="button" onClick={()=>setConfirmEnd(true)}>🏁 끝내기</button>}
    </div>
   </div>
@@ -121,38 +122,40 @@ export function PeQuizBingo(){
   <div className="qb-teams-score">{game.teamNames.map((name,t)=><section key={t} className="qb-team" data-team={t} aria-current={!game.finished&&game.turn===t?'true':undefined}>
    <strong>{TEAM_MARKS[t]} {name}</strong><output aria-label={`${name} 점수`}>{teamScore(game,t)}점</output><small>칸 {ownedCount(game,t)} · 빙고 {bingoLines(game,t)}줄{game.bonus[t]?` · 보너스 ${game.bonus[t]}`:''}</small>
   </section>)}</div>
-  <div className="qb-board" role="grid" aria-label="빙고판">{game.board.map((c,i)=>{
+  <div className="qb-board" role="grid" aria-label="빙고판">{game.board.map((_c,i)=>{
    const owner=game.owner[i],status=game.status[i];
-   const label=status==='owned'?`${i+1}번 칸 · ${game.teamNames[owner!]} 땅`:status==='void'?`${i+1}번 칸 · 빈 칸`:`${i+1}번 칸 · ${c.type==='move'?'움직임 칸일 수도 있어요':'열지 않은 칸'}`;
+   const label=status==='owned'?`${i+1}번 칸 · ${game.teamNames[owner!]} 땅`:status==='void'?`${i+1}번 칸 · 빈 칸`:`${i+1}번 칸 · 열지 않은 칸`;
    return <button key={i} type="button" className="qb-cell" data-status={status} data-team={owner??undefined} aria-label={label} aria-pressed={picked===i}
     disabled={game.finished||status!=='open'||(picked!==null&&picked!==i)} onClick={()=>{unlockAudio();setPicked(i);setChosen(null);setRevealed(false);setCoop(false);}}>
     {status==='owned'?<span aria-hidden="true">{TEAM_MARKS[owner!]}</span>:status==='void'?<span aria-hidden="true">·</span>:<span>{i+1}</span>}
    </button>;})}</div>
 
-  {cell&&!game.finished&&<section className="qb-panel" aria-label={`${picked!+1}번 칸`} aria-live="polite">
+  {cell&&!game.finished&&<section className="qb-panel" aria-label={`${picked!+1}번 칸`}>
    <p className="eyebrow">{picked!+1}번 칸 · {TEAM_MARKS[game.turn]} {game.teamNames[game.turn]}</p>
    {cell.type==='move'?<>
-    <h3>🏃 움직임 칸! 반 전체가 함께 해요</h3>
+    <h3>🚶 움직임 칸! 반 전체가 함께 해요</h3>
     <p className="qb-move">{cell.move}</p>
     <p className="sports-muted">기기는 내려놓고 제자리에서 해요. 불편한 친구는 작게 하거나 앉아서 해도 돼요.</p>
     {game.settings.coopBonus&&<label className="qb-check"><input type="checkbox" checked={coop} onChange={e=>setCoop(e.target.checked)}/> 팀 모두가 끝까지 함께했어요 (+{COOP_POINTS}점)</label>}
-    <div className="qb-row"><button type="button" className="primary" onClick={()=>apply('moved')}>모두 해냈어요 · 칸 차지</button><button type="button" onClick={closeCell}>다른 칸 고르기</button></div>
+    <div className="qb-row"><button type="button" className="primary" onClick={()=>apply('moved')}>모두 해냈어요 · 칸 차지</button><button type="button" onClick={()=>apply('pass')}>넘기기</button></div>
    </>:question&&<>
     <h3 className="qb-question">{question.prompt}</h3>
-    {left!==null&&<p className="qb-timer" data-low={left<=5?'yes':'no'}>⏱ {left}초</p>}
+    {left!==null&&<p className="qb-timer" data-low={left<=5?'yes':'no'} aria-hidden="true">⏱ {left}초</p>}
+    {/* 남은 시간은 5초 남았을 때와 끝났을 때만 읽어 준다. */}
+    <p className="sports-sr" role="status">{left===5?'5초 남았어요':left===0?'시간이 끝났어요':''}</p>
     {question.kind==='choice'?<>
-     <div className="qb-options">{choiceOptions(question,picked!).map(o=>{const state=chosen===null&&!expired?undefined:o===question.answer?'answer':o===chosen?'wrong':undefined;
+     <div className="qb-options">{choiceOptions(question,picked!,attempt).map(o=>{const state=chosen===null&&!expired?undefined:o===question.answer&&(chosen===question.answer||!keep)?'answer':o===chosen?'wrong':undefined;
       return <button key={o} type="button" data-state={state} disabled={chosen!==null||expired} onClick={()=>{setChosen(o);if(o===question.answer)sfxSuccess();else sfxPop();}}>{o}</button>;})}</div>
-     {(chosen!==null||expired)&&<p role="status" className="qb-result">{chosen===question.answer?'⭕ 정답이에요!':`❌ ${expired&&chosen===null?'시간이 끝났어요':'아쉬워요'} · 정답: ${question.answer}`}</p>}
+     {(chosen!==null||expired)&&<p role="status" className="qb-result">{chosen===question.answer?'⭕ 정답이에요!':`❌ ${expired&&chosen===null?'시간이 끝났어요':'아쉬워요'} · ${keep?'틀렸어요, 다른 팀이 다시 도전할 수 있어요':`정답: ${question.answer}`}`}</p>}
     </>:<>
-     {!revealed?<button type="button" className="primary" onClick={()=>setRevealed(true)}>👀 정답 보기</button>:<p className="qb-result">정답: <strong>{question.answer}</strong> · 선생님이 맞았는지 판정해 주세요</p>}
+     {!revealed?<button type="button" className="primary" onClick={()=>setRevealed(true)}>👀 {keep?'팀이 답을 말한 뒤 정답 보기':'정답 보기'}</button>:<p className="qb-result">정답: <strong>{question.answer}</strong> · 선생님이 맞았는지 판정해 주세요{keep?' · 틀리면 이 칸은 다른 문제로 바뀌어요':''}</p>}
     </>}
     {game.settings.coopBonus&&(question.kind==='short'?revealed:chosen===question.answer)&&<label className="qb-check"><input type="checkbox" checked={coop} onChange={e=>setCoop(e.target.checked)}/> 팀 모두가 이유를 말했어요 (+{COOP_POINTS}점)</label>}
     <div className="qb-row">
      {question.kind==='choice'&&chosen===question.answer&&<button type="button" className="primary" onClick={()=>apply('correct')}>칸 차지하고 다음 팀</button>}
      {question.kind==='choice'&&(chosen!==null&&chosen!==question.answer||expired&&chosen===null)&&<button type="button" className="primary" onClick={()=>apply('wrong')}>다음 팀으로</button>}
      {question.kind==='short'&&revealed&&<><button type="button" className="primary" onClick={()=>apply('correct')}>⭕ 맞았어요</button><button type="button" onClick={()=>apply('wrong')}>❌ 아쉬워요</button></>}
-     {chosen===null&&!revealed&&!expired&&<button type="button" onClick={closeCell}>다른 칸 고르기</button>}
+     {chosen===null&&!revealed&&!expired&&<button type="button" onClick={()=>apply('pass')}>넘기기 (이 칸은 그대로 남아요)</button>}
     </div>
    </>}
   </section>}
@@ -164,6 +167,7 @@ export function PeQuizBingo(){
    <div className="qb-row"><button type="button" className="primary" onClick={()=>start()}>🔁 같은 설정으로 다시</button><button type="button" onClick={()=>{setGame(null);setHistory([]);closeCell();}}>⚙️ 설정으로</button></div>
   </section>}
 
+  <p className="sports-muted">칸을 한 번 열면 다른 칸으로 바꿀 수 없어요. 어려우면 ‘넘기기’를 눌러요. 새로고침하면 되돌리기 목록은 비워지지만 점수와 판은 그대로 이어져요.</p>
   <details className="qb-log"><summary>📜 진행 기록 ({game.log.length})</summary><ol>{[...game.log].reverse().map((l,i)=><li key={i}>{l}</li>)}</ol></details>
   {!game.finished&&<p className="sports-muted"><button type="button" className="qb-link" onClick={()=>{if(window.confirm('지금 게임을 지우고 설정 화면으로 갈까요?')){setGame(null);setHistory([]);closeCell();}}}>⚙️ 게임을 지우고 설정으로</button></p>}
  </div>;

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {
  BINGO_LINES,BOARD_SIZE,CELL_POINTS,BINGO_POINTS,COOP_POINTS,DEFAULT_SETTINGS,EXAMPLE_QUESTIONS,EXAMPLE_QUESTIONS_TEXT,MOVE_TASKS,
  bingoLines,buildBoard,buildQuizPrompt,choiceOptions,finishGame,newGame,parseQuestions,resolveCell,serializeQuestions,standings,teamScore,validGame,
@@ -86,4 +87,49 @@ test('the AI prompt asks for the exact line format, verifiable facts and the app
 
 test('the quiz bingo is a class tool',()=>{
  assert(CLASS_TOOLS.some(t=>t.id==='quiz-bingo'));
+});
+
+/* ── 2026-11 점검 후속 ── */
+test('the parser reads common AI table shapes and keeps questions that start with a number',()=>{
+ const {questions,skipped}=parseQuestions([
+  '| 번호 | 문제 | 정답 | 오답1 |','|---|---|---|---|',
+  '| 1 | 농구 선수는 몇 명? | 5명 | 6명 |',
+  '**2. 셔틀콕은 무엇으로 칠까요? | 라켓**',
+  '3｜축구 선수는?｜11명｜9명',
+  '1.5m 높이 뛰기 전에 할 일은? | 준비운동 | 낮잠',
+  '계주에서 넘겨주는 것은? || 바통',
+ ].join('\n'));
+ assert.deepEqual(questions.map(q=>q.prompt),['농구 선수는 몇 명?','셔틀콕은 무엇으로 칠까요?','축구 선수는?','1.5m 높이 뛰기 전에 할 일은?']);
+ assert.equal(questions[0].answer,'5명');assert.equal(questions[1].answer,'라켓');assert.doesNotMatch(JSON.stringify(questions),/\*/);
+ assert.equal(skipped,1,'a line with an empty cell is counted as skipped, not turned into another format');
+});
+
+test('in keep mode a wrong answer swaps in an unused question, or reshuffles the choices when none is left',()=>{
+ const qs=parseQuestions(Array.from({length:27},(_,i)=>`문제 ${i+1}번은? | 정답${i} | 오답${i}a | 오답${i}b`).join('\n')).questions;
+ const g=newGame({...DEFAULT_SETTINGS,moveCells:0,onWrong:'keep'},['가','나'],qs,7);
+ const cell=g.board.findIndex(c=>c.type==='question'),before=g.board[cell].question;
+ const after=resolveCell(g,cell,'wrong');
+ assert.equal(after.status[cell],'open');assert.notEqual(after.board[cell].question,before,'the next team gets a different question');
+ assert.equal(after.attempts![cell],1);
+ const tight=newGame({...DEFAULT_SETTINGS,moveCells:0,onWrong:'keep'},['가','나'],qs.slice(0,25),7),c2=tight.board.findIndex(c=>c.type==='question');
+ const again=resolveCell(tight,c2,'wrong'),q=again.questions[again.board[c2].question!];
+ assert.equal(again.board[c2].question,tight.board[c2].question);
+ assert.notEqual(choiceOptions(q,c2,1).indexOf(q.answer),choiceOptions(q,c2,0).indexOf(q.answer));
+});
+
+test('saved games with bad question options or cell types are rejected, and old saves without attempts still load',()=>{
+ const g=newGame(DEFAULT_SETTINGS,['가','나'],EXAMPLE_QUESTIONS,3);
+ assert(validGame(JSON.parse(JSON.stringify(g))));
+ const old=JSON.parse(JSON.stringify(g));delete old.attempts;assert(validGame(old),'saves from before the attempts field');
+ const badWrong=JSON.parse(JSON.stringify(g));badWrong.questions[0]={...badWrong.questions[0],kind:'choice',wrong:[{}]};assert.equal(validGame(badWrong),null);
+ const badType=JSON.parse(JSON.stringify(g));badType.board[0].type='zzz';assert.equal(validGame(badType),null);
+});
+
+test('the screen hides the answer in keep mode, reads the timer only near the end and allows passing instead of peeking',()=>{
+ const src=readFileSync(new URL('../src/presentation/components/PeQuizBingo.tsx',import.meta.url),'utf8');
+ assert.match(src,/틀렸어요, 다른 팀이 다시 도전할 수 있어요/);
+ assert.match(src,/5초 남았어요/);assert.match(src,/className="qb-panel" aria-label=\{`\$\{picked!\+1\}번 칸`\}>/,'the question panel is not a live region');
+ assert.doesNotMatch(src,/움직임 칸일 수도/);assert.doesNotMatch(src,/다른 칸 고르기/);assert.match(src,/apply\('pass'\)/);
+ assert.doesNotMatch(src,/🏃/);assert.match(src,/새로고침하면 되돌리기 목록은 비워지/);
+ assert.match(src,/Array\.from\(\{length:4\},\(_,j\)=>j===i\?e\.target\.value:names\[j\]\?\?''\)/,'team names 3 and 4 stay editable');
 });
