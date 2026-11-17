@@ -107,6 +107,10 @@ export function bingoLines(done:readonly boolean[]):number{
  const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
  return lines.filter(line=>line.every(i=>done[i])).length;
 }
+/** 움직임 빙고는 과제마다 판의 한 줄(가로)을 지운다. 세 줄을 다 지우면 빙고. */
+export const BINGO_ROWS_TO_WIN=3;
+/** 다 지운 가로줄 수(과제 1·2·3이 각각 첫째·둘째·셋째 줄). */
+export function bingoRows(done:readonly boolean[]):number{return [0,1,2].filter(r=>[0,1,2].every(c=>done[r*3+c])).length;}
 const CORNER_MOVES=['1번 구석: 무릎 올려 걷기 8번','2번 구석: 팔 벌려 별 모양 5번','3번 구석: 한 발 서기 5초','4번 구석: 어깨 돌리기 6번'];
 export const CORNER_WALK='구석으로 걸어가요';
 function combinations(items:readonly number[],size:number):number[][]{

@@ -28,3 +28,26 @@
 @keyframes pc-pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.pc-bingo-win{animation:none}}
 .phone-class .pc-signal{justify-content:safe center;overflow-y:auto}
+/* 2026-11 재점검: 남은 시간은 머리글의 같은 자리에 늘 보인다. */
+.phone-class .pc-timer{margin:0 0 0 auto;padding:6px 14px;border-radius:999px;background:var(--forest-accent,#076d63);color:var(--forest-on,#fff);font-size:clamp(16px,2.2vw,30px);font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
+.phone-class .pc-head h1{flex:0 1 auto}
+/* 판·사다리·큰 숫자가 함께 나오는 놀이(101·104·105): 큰 글씨를 줄여 한 화면에 다 들어가게 한다. */
+.phone-class[data-board] .pc-signal{padding:clamp(10px,2vh,28px) clamp(12px,3vw,40px);gap:0}
+.phone-class[data-board] .pc-task{font-size:clamp(15px,2vh,26px)}
+.phone-class[data-board] .pc-cue,.phone-class[data-board] .pc-cue[data-length]{font-size:clamp(22px,min(4.4vw,6vh),64px);line-height:1.2;margin:clamp(4px,1vh,12px) 0}
+.phone-class[data-board] .pc-rule,.phone-class[data-board] .pc-hint{font-size:clamp(14px,2vh,24px);margin:0 0 clamp(4px,.8vh,10px)}
+.phone-class[data-board] .pc-number strong{font-size:clamp(48px,12vh,150px)}.phone-class[data-board] .pc-number span{font-size:clamp(26px,6vh,80px)}
+.phone-class[data-board] .pc-ladder{gap:6px;margin-bottom:clamp(4px,.8vh,10px)}.phone-class[data-board] .pc-ladder li{padding:4px 10px;font-size:clamp(12px,1.6vh,18px)}.phone-class[data-board] .pc-ladder li b{font-size:clamp(15px,2.4vh,28px)}
+.phone-class[data-board] .pc-bingo{margin-bottom:0}.phone-class[data-board] .pc-bingo-grid{gap:6px}.phone-play.phone-class[data-board] .pc-bingo-grid button{min-height:clamp(40px,7vh,84px);padding:4px 8px;font-size:clamp(13px,min(1.8vw,2.4vh),24px);line-height:1.3}
+.phone-class[data-board] .pc-bingo-win{font-size:clamp(22px,4.5vh,56px);margin:4px 0 0}
+.pc-bingo-progress{font-size:clamp(18px,3vh,36px);font-weight:850;margin:6px 0 0}
+/* 기기 1대 진행: 하는 동안에는 큰 신호가 맨 위에 오도록 머리글·진행 칸을 숨기고 글자를 키운다. */
+.phone-play[data-focus]>header{display:none}
+/* ActivityProgress.css가 display:grid!important라 같은 세기로 숨긴다. */
+.phone-play[data-focus] .activity-progress{display:none!important}
+.phone-play[data-focus]{margin-top:16px}
+.phone-play[data-focus] .pp-signal{min-height:min(48vh,520px)}
+.phone-play[data-focus] .pp-signal strong{font-size:clamp(32px,11vw,100px);line-height:1.25}
+.phone-play[data-focus] .pp-signal .pp-rule-line{font-size:clamp(18px,4vw,30px)}
+/* 기억 놀이 안내: 순서는 아래 칩으로도 보이므로 큰 글씨를 줄여 한 화면에 들어가게 한다. */
+.phone-class .pc-signal[data-memory-brief] .pc-cue,.phone-class .pc-signal[data-memory-brief] .pc-cue[data-length]{font-size:clamp(22px,min(4.2vw,6vh),60px);line-height:1.3}

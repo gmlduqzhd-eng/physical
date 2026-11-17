@@ -4,8 +4,8 @@ import {sfxPop,sfxWhistle,sfxCountdown,unlockAudio} from '../../../../applicatio
 import {useWakeLock} from '../../../../application/useWakeLock';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
-import {classCueMs,classOutcomeResult,classPhaseMs,classRoundView,type ClassOutcome} from '../../../../domain/phoneClassMode';
-import {adaptClassicPlay,BINGO_BOARD,bingoLines,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
+import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRoundView,type ClassOutcome} from '../../../../domain/phoneClassMode';
+import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
 interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
@@ -15,12 +15,12 @@ export function PhoneRuleCard({rule3,className=''}:{rule3:readonly string[];clas
  return <ol className={`pp-rule-card ${className}`} aria-label="놀이 규칙 세 줄">{rule3.map((line,i)=><li key={i}><b>{['무엇을','어떻게','언제 끝'][i]}</b><span>{line}</span></li>)}</ol>;
 }
 
-/** 움직임 빙고판: 다 한 칸을 눌러 지우고, 한 줄이 다 지워지면 빙고. */
+/** 움직임 빙고판: 다 한 칸을 눌러 지우고, 과제마다 한 줄씩 지워 세 줄을 다 지우면 빙고. */
 export function MovementBingoBoard({row,done,onToggle}:{row:number;done:readonly boolean[];onToggle:(index:number)=>void}){
- const lines=bingoLines(done);
- return <div className="pc-bingo" data-lines={lines}>
+ const rows=bingoRows(done),left=BINGO_ROWS_TO_WIN-rows;
+ return <div className="pc-bingo" data-rows={rows}>
   <div className="pc-bingo-grid" role="group" aria-label="움직임 빙고판 · 다 한 칸을 눌러 지워요">{BINGO_BOARD.flat().map((move,i)=><button key={i} type="button" aria-pressed={done[i]} data-row={Math.floor(i/3)} data-now={Math.floor(i/3)===row||undefined} onClick={()=>onToggle(i)}>{done[i]?'✔ ':''}{move}</button>)}</div>
-  {lines>0&&<p className="pc-bingo-win" role="status">🎉 빙고! {lines>1?`${lines}줄`:''}</p>}
+  {rows>0&&(left>0?<p className="pc-bingo-progress" role="status">✔ {rows}줄 지웠어요 · {left}줄 더 지우면 빙고!</p>:<p className="pc-bingo-win" role="status">🎉 빙고! 세 줄을 다 지웠어요</p>)}
  </div>;
 }
 
@@ -52,7 +52,9 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
  const moved=useRef(0),submitted=useRef(false);
  // 무작위 신호(숫자·구석·여우)는 진행마다 새 순서로 나오되, 화면이 다시 그려져도 바뀌지 않게 한 번 정한 씨앗을 쓴다.
  const [seed]=useState(()=>Math.floor(Math.random()*1e9));
- const cueMs=classCueMs(p.id)*pace,view=classRoundView(play,round,level,seated,seed,cueMs/1000,taskSeconds),cueIndex=Math.floor(elapsed/cueMs);
+ const baseCueMs=classCueMs(p.id)*pace,view=classRoundView(play,round,level,seated,seed,baseCueMs/1000,taskSeconds);
+ // 기억 놀이는 순서의 모든 신호가 과제 시간 안에 나와야 하므로, 느린 속도여도 간격을 과제 시간에 맞춘다.
+ const cueMs=classCueIntervalMs(baseCueMs,taskSeconds,view.cues.length,view.memory),cueIndex=Math.floor(elapsed/cueMs);
  const waiting=phase==='rules'&&waitForTeacher;
  const duration=classPhaseMs(phase,taskSeconds,view.memory||!!view.plan),cue=view.cues[cueIndex%view.cues.length];
  const step=view.steps.length?view.steps[cueIndex%view.steps.length]:-1,ruleLine=view.rules[cueIndex%Math.max(1,view.rules.length)]??p.rule3[1];
@@ -90,27 +92,33 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
  const left=Math.max(0,Math.ceil((duration-elapsed)/1000));
  const big=stopped?'멈춤':phase==='countdown'?String(left):phase==='brief'?view.brief:cue;
  const running=['brief','active'].includes(phase);
- return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
+ // 판·사다리·큰 숫자처럼 그림이 함께 나오는 놀이는 큰 글씨를 줄여 한 화면에 다 들어가게 한다.
+ const board=['phone-play-101','phone-play-104','phone-play-105'].includes(p.id);
+ // 남은 시간은 머리글의 같은 자리에 늘 보인다(신호 칸이 길어져도 가려지지 않게).
+ const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'곧 시작해요':phase==='brief'?`${left}초 뒤 시작`:phase==='active'?`${left}초 남음`:'';
+ // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
+ const shownSequence=phase==='active'?view.sequence:view.reveal;
+ return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
    <p className="pc-task">{stopped?'잠깐 멈췄어요':'이렇게 놀아요'}</p>
    <PhoneRuleCard rule3={p.rule3} className="pc-rule-card"/>
-   {waitForTeacher?<p className="pc-setup" role="note">먼저 정해요 · {p.setup}</p>:<p className="pc-left">{left}초 뒤 시작해요</p>}
+   {waitForTeacher?<p className="pc-setup" role="note">먼저 정해요 · {p.setup}</p>:<p className="pc-left">잠시 뒤 시작해요</p>}
   </div>}
-  {['countdown','brief','active'].includes(phase)&&<div className="pp-signal pc-signal" role="status" aria-live={phase==='active'?'off':'polite'}>
+  {['countdown','brief','active'].includes(phase)&&<div className="pp-signal pc-signal" data-memory-brief={phase==='brief'&&view.memory||undefined} role="status" aria-live={phase==='active'?'off':'polite'}>
    <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?CLASSIC_CLASS_BRIEF[p.id]??(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>
    {phase==='active'&&!stopped&&p.id==='phone-play-101'&&<GroupNumber cue={cue}/>}
    <strong className="pc-cue" data-length={big.length>44?'long':big.length>20?'medium':'short'}>{big}</strong>
    {running&&!stopped&&<p className="pc-rule">{phase==='brief'&&view.memory?'이 순서를 기억해요':ruleLine}</p>}
-   {running&&view.sequence.length>0&&<ol className="pc-sequence" aria-label="기억할 순서">{view.sequence.map((c,i)=><li key={i} data-now={phase==='active'&&i===step||undefined}>{c}</li>)}</ol>}
+   {(running||phase==='countdown')&&shownSequence.length>0&&<ol className="pc-sequence" aria-label={phase==='active'?'기억할 순서':'먼저 이 순서를 기억해요'}>{shownSequence.map((c,i)=><li key={i} data-now={phase==='active'&&i===step||undefined}>{c}</li>)}</ol>}
    {phase==='brief'&&view.plan&&<p className="pc-plan">👍 좋은 방법 · {view.plan}</p>}
    {running&&p.id==='phone-play-104'&&<EvolutionLadder top={ladderTop(round,level==='쉬운 방법')}/>}
    {running&&p.id==='phone-play-105'&&<MovementBingoBoard row={round} done={bingo} onToggle={i=>setBingo(b=>b.map((v,j)=>j===i?!v:v))}/>}
    {setupHint&&phase!=='countdown'&&<p className="pc-hint">준비 · {setupHint}</p>}
-   <p className="pc-left">{phase==='active'?`${left}초 남음`:phase==='brief'?(view.memory?`순서를 기억해요 · ${left}초 뒤 시작`:`${left}초 뒤 시작`):'곧 시작해요'}</p>
+   {phase==='brief'&&view.memory&&(p.id==='phone-play-006'||level==='추가 도전')&&<p className="pc-left">{p.id==='phone-play-006'?'시작하면 한 동작이 ?로 숨어요':'시작하면 순서가 가려져요'}</p>}
   </div>}
   {['rules','countdown','brief','active'].includes(phase)&&<div className="pc-controls">
-   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className="pp-primary" onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
+   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className="pp-primary" onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
    {phase!=='countdown'&&!waiting&&<button onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
   </div>}
   {phase==='record'&&<div className="pp-panel pc-record"><h2>우리 반은 어떻게 참여했나요?</h2><p>한 번만 고르면 기록돼요. 기기가 동작이나 체력을 판정하지 않아요.</p>
