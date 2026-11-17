@@ -109,6 +109,17 @@ const STANDARD_SYNONYMS: Record<string, string[]> = {
   리듬: ['리듬', '박자', '음악', '루프', '퍼커션'], 모방: ['흉내', '모방', '따라', '동물', '로봇'], 도구: ['도구', '리본', '스카프', '줄넘기'], 느낌과: ['감정', '느낌', '기분'],
   체력: ['체력', '근력', '지구력', '유연성', '버티', '스쿼트'], 건강: ['호흡', '쉼', '건강', '자세'], 안전한: ['안전'],
 };
+/** 성취기준과 활동이 맞는 정도(0이면 맞는 낱말이 없음). */
+export function standardScore(standard: CurriculumStandard, game: LessonGameMeta): number {
+  const text = [game.title, game.description, game.subCategory, ...game.learningKeywords, ...game.movementSkills].join(' ');
+  let value = standard.code === game.achievementCode ? 100 : 0;
+  if (game.sportType && standard.subArea.includes(game.sportType)) value += 20;
+  for (const word of standard.subArea.split(/\s+/)) {
+    if (GENERIC_WORDS.has(word) || word.length < 2) continue;
+    if ([word, ...(STANDARD_SYNONYMS[word] ?? [])].some(key => text.includes(key))) value += 5;
+  }
+  return value;
+}
 export function pickStandards(pool: CurriculumStandard[], game?: LessonGameMeta | null): CurriculumStandard[] {
   if (!game) return pool.slice(0, 2);
   const text = [game.title, game.description, game.subCategory, ...game.learningKeywords, ...game.movementSkills].join(' ');

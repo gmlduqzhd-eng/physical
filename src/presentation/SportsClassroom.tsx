@@ -100,7 +100,10 @@ function SportLessonBody({event}:{event:SportEvent}){
  const id=LESSON_STAGES[stage].id,played=scores.slice(0,teams),ranking=rankTeams(event,played.map((value,team)=>({team,value}))),ready=awardReady(played);
  // 되돌리기: 이번 경기에서 바꾼 점수를 최근 30번까지 기억한다(새로고침하면 점수는 이어지고 되돌리기 목록만 비워져요).
  const [undoStack,setUndoStack]=useState<Results[]>([]);
- const recordScores=(next:Results)=>{setUndoStack(u=>[...u.slice(-29),scores]);setScores(next);};
+ // 점수가 그대로인 변경(예: 타이머 시작)은 되돌리기 목록에 넣지 않는다.
+ const recordScores=(next:Results)=>{if(next.length===scores.length&&next.every((v,i)=>(v??0)===(scores[i]??0)))return;setUndoStack(u=>[...u.slice(-29),scores]);setScores(next);};
+ const [confirmClear,setConfirmClear]=useState<null|{teams?:number}>(null);
+ const hasRecord=scores.slice(0,teams).some(v=>v!==null);
  const undoScores=()=>{const last=undoStack.at(-1);if(!last)return;setUndoStack(u=>u.slice(0,-1));setScores(last);};
  const resetMatch=()=>{setScores(blankResults());setAwarded(false);setRound(r=>r+1);setUndoStack([]);};
  const award=()=>{if(awarded||!ready)return;const next=addMedals(readTally(),ranking);writeStorage(MEDAL_KEY,JSON.stringify(next));setTally(next);setAwarded(true);sfxWhistle();};
@@ -109,6 +112,7 @@ function SportLessonBody({event}:{event:SportEvent}){
   {hasDeepDive(event.id)&&<p><Link className="sports-deep-link" to={`/sports/${event.id}/deep`}>📖 {event.name} 깊이 보기 · 용어·기술·포지션·퀴즈 →</Link></p>}
   <ol className="sports-stages" aria-label="수업 단계">{LESSON_STAGES.map((s,i)=><li key={s.id}><button aria-current={i===stage?'step':undefined} onClick={()=>setStage(i)}>{i+1}. {s.label}</button></li>)}</ol>
   <section className="recipe-card sports-stage">
+   {confirmClear&&<div className="sports-confirm" role="alert"><p>{confirmClear.teams?`팀 수를 ${confirmClear.teams}팀으로 바꾸면 이번 경기 기록이 처음으로 돌아가요. 바꿀까요?`:'이번 경기 기록과 되돌리기 목록을 모두 지울까요?'}</p><button onClick={()=>setConfirmClear(null)}>그대로 두기</button><button className="primary" onClick={()=>{if(confirmClear.teams)setTeams(confirmClear.teams);resetMatch();setConfirmClear(null);}}>{confirmClear.teams?'지우고 바꾸기':'모두 지우기'}</button></div>}
    {id==='warmup'&&<><h2>몸을 깨우는 준비운동</h2><p>다치지 않게, 천천히 따라 해요.</p><ul className="sports-picture-list">{event.warmup.map(([icon,text])=><li key={text}><span aria-hidden="true">{icon}</span>{text}</li>)}</ul><p className="sports-guide">{event.guide}</p></>}
    {id==='mission'&&<><h2>{event.missionTitle}</h2><p><strong>오늘의 배움</strong> · {event.goal}</p>
     <div className="sports-filters" role="group" aria-label="규칙 수준">{([['easy','쉽게'],['basic','기본 규칙'],['hard','더 어렵게']] as const).map(([v,label])=><button key={v} aria-pressed={level===v} onClick={()=>setLevel(v)}>{label}</button>)}</div>
@@ -118,10 +122,10 @@ function SportLessonBody({event}:{event:SportEvent}){
    {id==='ready'&&<><h2>준비물과 안전 약속</h2><h3>준비물</h3><ul className="sports-check">{event.gear.map(g=><li key={g}><label><input type="checkbox"/>{g}</label></li>)}</ul>
     <h3>안전 약속</h3><ul className="sports-rules">{event.safety.map(s=><li key={s}>{s}</li>)}</ul>
     <h3>역할 나누기</h3><ul className="sports-roles">{event.roles.map(([role,count])=><li key={role}><strong>{role}</strong> {count?`팀마다 ${count}명`:'나머지 모두'}</li>)}</ul>
-    <label>팀 수<select aria-label="팀 수" value={teams} onChange={e=>{setTeams(Number(e.target.value));resetMatch();}}>{[2,3,4].map(n=><option key={n} value={n}>{n}팀</option>)}</select></label>
+    <label>팀 수<select aria-label="팀 수" value={teams} onChange={e=>{const n=Number(e.target.value);if(hasRecord)setConfirmClear({teams:n});else{setTeams(n);resetMatch();}}}>{[2,3,4].map(n=><option key={n} value={n}>{n}팀</option>)}</select></label>
     <p className="sports-muted">{event.place.join('·')}에서 해요. 권장 학년군: {event.grades.map(g=>g.replace('-','~')+'학년').join(', ')}{played.some(v=>v!==null)?' · 팀 수를 바꾸면 경기 기록이 처음으로 돌아가요.':''}</p></>}
    {id==='match'&&<><h2>{event.mode==='time'?'레이스':'경기'} · {teams}팀</h2>{event.mode==='time'?<TimeMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>:<ScoreMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>}
-    <div className="flagship-row"><button onClick={undoScores} disabled={!undoStack.length||awarded}>↶ 되돌리기</button><button onClick={resetMatch}>기록 처음으로</button></div>
+    <div className="flagship-row"><button onClick={undoScores} disabled={!undoStack.length||awarded}>↶ 되돌리기</button><button disabled={!hasRecord} onClick={()=>setConfirmClear({})}>기록 처음으로</button></div>
     <p className="sports-muted">점수는 이 탭에 저장돼서 새로고침해도 이어져요. 잘못 누른 점수는 되돌리기로 하나씩 취소해요.</p></>}
    {id==='award'&&<><h2>시상식</h2>{ready?<ol className="sports-podium">{ranking.map(r=><li key={r.team} data-medal={r.medal??'none'}><span aria-hidden="true">{r.medal?MEDAL_ICON[r.medal]:'👏'}</span><strong style={{color:TEAM_COLORS[r.team]}}>{TEAM_NAMES[r.team]}</strong><span>{r.rank}위 · {formatResult(event,r.value)}{r.medal?` · ${MEDAL_LABEL[r.medal]}메달`:''}</span></li>)}</ol>
      :<p className="sports-guide" role="status">{event.mode==='time'?'모든 팀의 도착 기록이 있어야 시상할 수 있어요.':event.lowerWins?'모든 팀이 기록해야 시상할 수 있어요.':'경기를 시작해야 시상할 수 있어요.'} 경기 단계에서 기록을 남겨 주세요.</p>}

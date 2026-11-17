@@ -47,3 +47,14 @@ test('league and sports scores can be undone, and tools offer export and the Run
  assert.match(tools,/↶ 되돌리기/);assert.match(tools,/gmlduqzhd123-lab\.github\.io\/RunRun/);assert((tools.match(/<ExportMenu /g)??[]).length>=4);
  assert.match(sports,/undoScores/);assert((sports.match(/<ExportMenu /g)??[]).length>=2);
 });
+
+test('export handles wide tables, odd values and unsafe file names',async()=>{
+ const {columnName,exportFileName}=await import('../src/application/documentExport');
+ assert.deepEqual([0,25,26,27,51,52,701,702].map(columnName),['A','Z','AA','AB','AZ','BA','ZZ','AAA']);
+ const wide:ExportTable={title:'넓은 표',fileBase:'축구/풋살:결과',meta:[],headers:Array.from({length:30},(_,i)=>`열${i+1}`),rows:[[...Array.from({length:29},(_,i)=>i),Number.NaN]]};
+ const sheet=unzip(await exportXlsx(wide)).get('xl/worksheets/sheet1.xml')!;
+ assert(sheet.includes('r="AD')&&!sheet.includes('undefined'));assert(!sheet.includes('<v>NaN</v>'));
+ const weird:ExportTable={...table,rows:[[1,'1팀\u0001\u0007',3]]};
+ assert(!unzip(await exportHwpx(weird)).get('Contents/section0.xml')!.includes('\u0001'));
+ assert.match(exportFileName(wide,'xlsx'),/^축구_풋살_결과_\d{8}_\d{4}\.xlsx$/);
+});

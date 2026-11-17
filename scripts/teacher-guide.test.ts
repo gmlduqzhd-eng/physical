@@ -32,3 +32,18 @@ test('codes written in the activity data are kept, and missing ones are marked a
 test('the activity library shows the guide to teachers only',()=>{
  assert.match(readFileSync(new URL('../src/presentation/ActivityLibrary.tsx',import.meta.url),'utf8'),/\{!solo&&<TeacherGuidePanel game=\{g\}\/>\}/);
 });
+
+test('fallback standards fit the activity, and nothing contradicts the suggestions',()=>{
+ const pick=(id:string)=>teacherGuide(AVAILABLE_GAMES.find(g=>g.type===id)!);
+ for(const id of ['phone-play-102','phone-play-103'])assert(!pick(id).standards.some(s=>s.standards.some(x=>x.subArea.includes('측정'))),id);
+ assert(!pick('partner-robot-lab').standards.some(s=>s.standards.some(x=>x.subArea.includes('전통'))));
+ assert.match(pick('partner-robot-lab').questions[0],/블록/);
+ for(const g of AVAILABLE_GAMES)assert.doesNotMatch(g.achievement.desc,/임의로 부여하지/,g.type);
+ assert.equal(teacherGuide(AVAILABLE_GAMES[0]),teacherGuide(AVAILABLE_GAMES[0]),'guides are cached per activity');
+});
+
+test('the sports scoreboard asks before clearing and skips undo entries that change nothing',()=>{
+ const source=readFileSync(new URL('../src/presentation/SportsClassroom.tsx',import.meta.url),'utf8');
+ assert.match(source,/setConfirmClear\(\{\}\)/);assert.match(source,/이번 경기 기록과 되돌리기 목록을 모두 지울까요/);
+ assert.match(source,/next\.every\(\(v,i\)=>\(v\?\?0\)===\(scores\[i\]\?\?0\)\)\)return;/);
+});
