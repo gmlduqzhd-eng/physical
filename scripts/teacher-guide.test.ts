@@ -42,8 +42,8 @@ test('fallback standards fit the activity, and nothing contradicts the suggestio
  assert.equal(teacherGuide(AVAILABLE_GAMES[0]),teacherGuide(AVAILABLE_GAMES[0]),'guides are cached per activity');
 });
 
-test('the sports scoreboard asks before clearing and skips undo entries that change nothing',()=>{
+test('the sports scoreboard asks before clearing and records the start without an undo entry',()=>{
  const source=readFileSync(new URL('../src/presentation/SportsClassroom.tsx',import.meta.url),'utf8');
  assert.match(source,/setConfirmClear\(\{\}\)/);assert.match(source,/이번 경기 기록과 되돌리기 목록을 모두 지울까요/);
- assert.match(source,/next\.every\(\(v,i\)=>\(v\?\?0\)===\(scores\[i\]\?\?0\)\)\)return;/);
+ assert.match(source,/const kind=scoreChange\(scores,next\);if\(kind==='same'\)return;if\(kind==='change'\)setUndoStack/);
 });

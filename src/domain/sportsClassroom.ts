@@ -82,3 +82,13 @@ export function parseMedalTally(value:unknown):MedalTally{
  for(const name of TEAM_NAMES){const v=(value as Record<string,unknown>)[name];if(!v||typeof v!=='object')continue;const m=v as Record<string,unknown>;const n=(x:unknown)=>Number.isInteger(x)&&Number(x)>=0&&Number(x)<=999?Number(x):0;out[name]={gold:n(m.gold),silver:n(m.silver),bronze:n(m.bronze)};}
  return out;
 }
+
+/**
+ * 점수 변경의 종류. 'same'은 무시하고, 'start'(시작할 때 빈 점수가 0점이 되는 것)는 점수에 반영하되 되돌리기 목록에는 넣지 않는다.
+ * 빈 점수(null)와 0점은 다르게 본다. 0:0으로 시작해야 0:0 경기도 시상할 수 있다.
+ */
+export function scoreChange(prev:readonly (number|null)[],next:readonly (number|null)[]):'same'|'start'|'change'{
+ if(prev.length!==next.length)return 'change';
+ if(next.every((v,i)=>v===prev[i]))return 'same';
+ return next.every((v,i)=>v===prev[i]||(prev[i]===null&&v===0))?'start':'change';
+}

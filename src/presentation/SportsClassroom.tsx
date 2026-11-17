@@ -6,7 +6,7 @@ import {Link,useParams,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
 import {readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxWhistle,sfxCountdown,unlockAudio} from '../application/soundEffects';
-import {LESSON_STAGES,MEDAL_LABEL,awardReady,blankResults,parseLessonProgress,startScores,SPORT_BY_ID,SPORT_FILTERS,SPORT_GROUPS,TEAM_COLORS,TEAM_NAMES,addMedals,filterSports,formatResult,medalStandings,parseMedalTally,rankTeams,type MedalTally,type SportEvent,type SportFilter,type SportGrade} from '../domain/sportsClassroom';
+import {LESSON_STAGES,MEDAL_LABEL,awardReady,blankResults,parseLessonProgress,startScores,SPORT_BY_ID,SPORT_FILTERS,SPORT_GROUPS,TEAM_COLORS,TEAM_NAMES,addMedals,filterSports,formatResult,medalStandings,parseMedalTally,rankTeams,scoreChange,type MedalTally,type SportEvent,type SportFilter,type SportGrade} from '../domain/sportsClassroom';
 import {hasDeepDive} from '../domain/sportDeepDive';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
@@ -100,8 +100,8 @@ function SportLessonBody({event}:{event:SportEvent}){
  const id=LESSON_STAGES[stage].id,played=scores.slice(0,teams),ranking=rankTeams(event,played.map((value,team)=>({team,value}))),ready=awardReady(played);
  // 되돌리기: 이번 경기에서 바꾼 점수를 최근 30번까지 기억한다(새로고침하면 점수는 이어지고 되돌리기 목록만 비워져요).
  const [undoStack,setUndoStack]=useState<Results[]>([]);
- // 점수가 그대로인 변경(예: 타이머 시작)은 되돌리기 목록에 넣지 않는다.
- const recordScores=(next:Results)=>{if(next.length===scores.length&&next.every((v,i)=>(v??0)===(scores[i]??0)))return;setUndoStack(u=>[...u.slice(-29),scores]);setScores(next);};
+ // 점수가 그대로인 변경은 무시하고, 타이머 시작(빈 점수→0)은 되돌리기 목록에 넣지 않는다.
+ const recordScores=(next:Results)=>{const kind=scoreChange(scores,next);if(kind==='same')return;if(kind==='change')setUndoStack(u=>[...u.slice(-29),scores]);setScores(next);};
  const [confirmClear,setConfirmClear]=useState<null|{teams?:number}>(null);
  const hasRecord=scores.slice(0,teams).some(v=>v!==null);
  const undoScores=()=>{const last=undoStack.at(-1);if(!last)return;setUndoStack(u=>u.slice(0,-1));setScores(last);};
