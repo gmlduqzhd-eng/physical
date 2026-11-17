@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useEffect,useState} from 'react';
-import {TEAM_COLORS,TEAM_NAMES} from '../../../../../domain/funLoop';
-import {REACTIONS,addReaction,bestByScore,emptyReactions,reactionTarget,scenesFor,stageSlot,stageTally,type Reaction,type ReactionCounts} from '../../../../../domain/signature/sig-stage-show';
+import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput} from '../../../../../domain/funLoop';
+import {REACTIONS,addReaction,bestByScore,curtainGroup,emptyReactions,reactionTarget,scenesFor,stageSlot,stageTally,type Reaction,type ReactionCounts} from '../../../../../domain/signature/sig-stage-show';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-stage-show.css';
 
@@ -23,13 +23,17 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
  if(phase!=='tutorial'&&phase!=='play'&&phase!=='climax')return null;
  const scenes=scenesFor(state.seed,state.teams);
  const target=reactionTarget({phase,index:state.cueIndex,teams:state.teams});
+ // 일시정지 중에는 응원을 받지 않는다(엔진이 점수를 거부하면 응원 수와 점수가 어긋나므로 여기서도 막는다).
+ const live=acceptsPlayInput(state);
  const react=(reaction:Reaction)=>{
-  if(target===null)return;
+  if(target===null||!acceptsPlayInput(state))return;
   if(phase==='tutorial'){setPractice(n=>n+1);dispatch({type:'score',team:target,delta:1});return;}
   const r=addReaction(counts,target,reaction);if(!r)return;
   store.set(state.seed,r.counts);setCounts(r.counts);dispatch(r.command);
  };
  const prep=slot?.kind==='prep'||phase==='tutorial';
+ // 무대에 선 모둠: 발표 중이면 그 모둠, 커튼콜이면 인사하는 모둠(점수는 세지 않음).
+ const onStage=phase==='climax'?curtainGroup(state.cueIndex,state.teams):target;
  return <div className="sig-stage" data-mode={prep?'prep':'show'}>
   {prep?<ol className="sig-stage-cards" aria-label="모둠별 장면 카드">
    {scenes.map((sc,g)=><li key={sc.id} style={{'--team':TEAM_COLORS[g]} as React.CSSProperties}>
@@ -38,15 +42,16 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
     <b>{phase==='tutorial'?'장면 카드는 본게임에서 받아요':sc.title}</b>
     {phase!=='tutorial'&&<small>{sc.hint}</small>}
    </li>)}
-  </ol>:<div className="sig-stage-now" style={target!==null?{'--team':TEAM_COLORS[target]} as React.CSSProperties:undefined}>
-   {target!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[target].emoji}</span><div><span className="sig-stage-team">{teamName(state.teams,target)} 무대</span><b>{scenes[target].title}</b></div></>:<b>🎬 다 같이 무대 인사를 준비해요</b>}
+  </ol>:<div className="sig-stage-now" style={onStage!==null?{'--team':TEAM_COLORS[onStage]} as React.CSSProperties:undefined}>
+   {onStage!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[onStage].emoji}</span><div><span className="sig-stage-team">{teamName(state.teams,onStage)} {phase==='climax'?'커튼콜 인사':'무대'}</span><b>{scenes[onStage].title}</b></div></>:<b>{phase==='climax'?'🎉 다 같이 인사해요':'🎬 다 같이 무대 인사를 준비해요'}</b>}
   </div>}
   <div className="sig-stage-react" role="group" aria-label="관객 반응 버튼">
-   {REACTIONS.map((r,k)=><button key={r.id} type="button" disabled={target===null} onClick={()=>react(r.id)} aria-label={`${r.label}${target!==null?` · ${teamName(state.teams,target)}에게`:''}`}>
+   {REACTIONS.map((r,k)=><button key={r.id} type="button" disabled={target===null||!live} onClick={()=>react(r.id)} aria-label={`${r.label}${target!==null?` · ${teamName(state.teams,target)}에게`:''}`}>
     <span aria-hidden="true">{r.emoji}</span>{r.label}{phase!=='tutorial'&&target!==null&&<em>{counts[target]?.[k]??0}</em>}
    </button>)}
    {phase==='tutorial'&&<p className="sig-stage-practice">연습으로 누른 응원 {practice}번 · 본게임에서 0부터 다시 세요</p>}
    {prep&&phase!=='tutorial'&&<p className="sig-stage-practice">준비 시간에는 응원 버튼이 쉬어요. 발표가 시작되면 눌러요</p>}
+   {phase==='climax'&&<p className="sig-stage-practice">커튼콜은 점수를 세지 않아요. 모든 모둠에게 큰 박수를 보내요</p>}
   </div>
  </div>;
 }

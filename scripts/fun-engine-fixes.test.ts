@@ -23,7 +23,7 @@ test('1: sig games replay inside the game — the page click-capture skips them,
  assert.match(page,/onRoundReset=\{resetForNextRound\}/);
  assert.match(page,/const resetForNextRound = useCallback\(\(\) => \{\n\s*completionRef\.current = false;\n\s*setGameFinished\(false\);/);
  const sig=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
- assert.match(sig,/onReplay=\{\(\)=>\{onRoundReset\?\.\(\);/,'한 판 더 resets the page completion lock first');
+ assert.match(sig,/onReplay=\{\(\)=>\{(disposeRound\(\);)?onRoundReset\?\.\(\);/,'한 판 더 resets the page completion lock first');
  // B: the legacy result card is not drawn behind a sig game result
  assert.match(page,/\{gameFinished && !showDetailedResult && !signatureGame && \(/);
 });

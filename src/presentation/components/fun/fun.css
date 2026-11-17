@@ -189,3 +189,27 @@
 .sig-bingo-cell[data-hint=block]{box-shadow:0 0 0 4px #93c5fd inset}
 .sig-bingo-hint{display:block;font-style:normal;font-size:.8em;font-weight:900;margin-top:2px}
 .sig-mem-variation{margin:0;text-align:center;font-weight:900;color:#fde68a;font-size:clamp(16px,1.8vw,22px)}
+/* 일시정지 덮개 뒤 화면(inert로 묶음). 배치에는 영향을 주지 않는다. */
+.fun-body{display:contents}
+/* 휴대폰 폭: 리모컨·'← 목록'은 머리줄 위 자기 줄(화면 위 고정 띠)로 — 단계 이름·남은 시간을 가리지 않게. */
+@media (max-width:640px){
+ .fun-dock{top:0;left:0;right:0;justify-content:flex-end;padding:8px 10px;background:var(--fun-bg);border-bottom:1px solid var(--fun-line);min-height:56px;box-sizing:border-box}
+ .fun-dock .fun-remote-btn,.fun-dock .fun-exit{min-height:40px;padding:2px 12px;font-size:14px}
+ .fun-arena{padding-top:64px}
+ .fun-arena[data-phase=result]{padding-top:64px}
+ /* 선생님 버튼: 한 줄로(옆으로 밀어 보기), 높이 약 60px */
+ .fun-controls{display:flex;flex:0 0 auto;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;padding-bottom:4px}
+ .fun-controls button{flex:0 0 auto;min-height:48px;padding:0 12px;font-size:14px;border-radius:12px;white-space:nowrap}
+ .fun-controls kbd{display:none}
+}
+/* TV(1280×800) 결과 화면이 한 화면에 들어오게 */
+@media (min-width:961px){
+ .fun-arena[data-phase=result]{padding-top:clamp(56px,7vh,68px);padding-bottom:12px}
+ .fun-result{gap:12px}
+ .fun-result h2{font-size:clamp(28px,3.4vw,52px)}
+ .fun-result-main,.fun-result-side{gap:8px}
+ .fun-result .fun-takeaways li{padding:7px 12px;font-size:clamp(15px,1.4vw,20px)}
+ .fun-result .class-feedback{margin-top:4px}
+ .fun-result-actions{gap:8px}
+ .fun-result-actions button{min-height:48px}
+}

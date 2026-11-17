@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useState} from 'react';
 import {cueIntervalMs} from '../../../../../domain/funLoop';
-import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,VARIATION_TEXT,longestSuccess,memoryRelayGate,memoryResultLine,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs,variationFor} from '../../../../../domain/signature/sig-memory-relay';
+import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,VARIATION_TEXT,longestSuccess,memoryRelayGate,memoryResultLine,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs,turnTooShort,variationFor} from '../../../../../domain/signature/sig-memory-relay';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-memory-relay.css';
 
@@ -12,6 +12,7 @@ const isTurnPhase=(p:string):p is Phase=>p==='tutorial'||p==='play'||p==='climax
 function MemoryPanel({state,seated}:SignatureModuleProps){
  const [peek,setPeek]=useState('');
  if(!isTurnPhase(state.phase))return null;
+ if(turnTooShort(state))return <div className="sig-mem" data-stage="short"><p className="sig-mem-stage"><span role="status">⏳ 시간이 얼마 남지 않았어요 · 새 차례는 다음 단계에서 시작해요</span></p></div>;
  const phase=state.phase,index=state.cueIndex,turnId=`${phase}:${index}`;
  const len=sequenceLength(state,phase,index);
  const seq=sequenceFor(state.seed,phase,index,len);
@@ -31,7 +32,7 @@ function MemoryPanel({state,seated}:SignatureModuleProps){
    </li>)}
   </ol>
   <div className="sig-mem-foot">
-   <span>길이 {len}/{MAX_LENGTH} · 가장 긴 성공 {longestSuccess(state)||'-'}개</span>
+   <span>길이 {len}/{MAX_LENGTH} · {longestSuccess(state)?`가장 긴 성공 ${longestSuccess(state)}개`:'아직 성공 기록이 없어요'}</span>
    {stage==='perform'&&<button type="button" onClick={()=>setPeek(peek===turnId?'':turnId)} aria-pressed={peek===turnId}>{peek===turnId?'🙈 다시 가리기':'👀 한 번 더 보기'}</button>}
   </div>
   <ul className="sig-mem-legend" aria-label="모양 뜻">{MEMORY_TILES.map(t=><li key={t.id}><span style={{color:t.color}} aria-hidden="true">{t.shape}</span> {seated?t.seated:t.action}</li>)}</ul>
@@ -44,6 +45,8 @@ function MemoryResult({state}:SignatureModuleProps){
 
 const memoryRelayModule:SignatureModule={
  Panel:MemoryPanel,Result:MemoryResult,hideFigure:true,wide:true,
+ // '모든 팀 +1' 대신 차례 팀의 성공 버튼(아래 controls)만 둔다. A 키도 차례 팀 성공으로 바뀐다.
+ scoreAllLabel:'차례 팀 성공',scoreAllButton:false,teamKeysLabel:'1~4 차례 팀 성공 (Shift −1 정정)',
  controls:({state})=>{
   if(!isTurnPhase(state.phase))return [];
   const team=relayTeam(state.cueIndex,state.teams),points=state.phase==='climax'?CLIMAX_POINTS:1;

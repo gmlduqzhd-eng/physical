@@ -19,6 +19,9 @@ export interface SignatureModuleProps {
  * - dispose: 판(seed)이 끝나 '한 판 더'·목록으로 나갈 때 모듈이 따로 모아 둔 기록을 지운다.
  * - scoreButtons: false면 점수판에 ± 버튼을 두지 않는다(점수를 판에서만 주는 놀이: 빙고).
  * - snapshot/restore: 새로고침 이어 하기용. 모듈이 따로 모은 기록을 꺼내 주고(JSON으로 저장됨), 되살린다(모양 검사 필수).
+ * - special: true면 이 놀이에 필살기가 있다(콤보 게이지·S 단축키를 보여 준다). 없으면 게이지를 숨기고 필살기 명령을 받지 않는다.
+ * - scoreAllButton: false면 선생님 버튼 줄에 '모든 팀 +1'을 두지 않는다(모듈이 자기 성공 버튼을 둘 때).
+ * - scoreAllLabel: 단축키 A의 뜻(단축키 안내에 쓴다. 기본 '모든 팀 +1').
  */
 export interface SignatureModule {
  Panel?:ComponentType<SignatureModuleProps>;
@@ -27,6 +30,10 @@ export interface SignatureModule {
  hideFigure?:boolean;
  wide?:boolean;
  scoreButtons?:boolean;
+ special?:boolean;
+ scoreAllButton?:boolean;
+ scoreAllLabel?:string;
+ /** 단축키 안내에서 1~4 키의 뜻(기본 '1~4 팀 +1 (Shift −1)'). */ teamKeysLabel?:string;
  snapshot?(seed:number):unknown;
  restore?(seed:number,data:unknown):void;
  dispose?(seed:number):void;

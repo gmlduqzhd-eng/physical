@@ -23,6 +23,7 @@ function BossResult({state}:SignatureModuleProps){
 }
 const bossRaidModule:SignatureModule={
  Panel:BossPanel,Result:BossResult,
+ special:true,
  controls:({state})=>[{label:`💥 필살기(피해 ${SPECIAL_DAMAGE})`,command:{type:'special'},disabled:!comboFull(state)||state.phase==='tutorial',hint:'S',tone:'gold'}],
 };
 export default bossRaidModule;

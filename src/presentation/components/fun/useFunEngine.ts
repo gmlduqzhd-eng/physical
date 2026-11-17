@@ -1,5 +1,5 @@
 import {useCallback,useEffect,useMemo,useReducer,useRef} from 'react';
-import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
+import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunHooks,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
@@ -14,6 +14,7 @@ export interface FunEngineOptions {
  gate?:FunCommandGate;
  /** 이 게임에서 쓰는 깜짝 이벤트. */ surprises?:SurpriseAllowance;
  /** 새로고침 이어 하기: 저장해 둔 상태에서 시작한다(restoreFunState로 검사한 값). */ initialState?:FunState;
+ /** 지금 신호만 다른 길이로 보여 줄 때(초). 없으면 게임 기본 간격. */ cueSeconds?:FunHooks['cueSeconds'];
 }
 type Action={kind:'cmd';cmd:FunCommand}|{kind:'reset';state:FunState};
 /** 움직임 줄이기 설정이면 시범을 저절로 넘기지 않는다. */
@@ -27,8 +28,9 @@ export function useFunEngine(opts:FunEngineOptions){
  const restored=useRef(opts.initialState);
  const initial=useMemo(()=>restored.current??createFunState({teams:opts.teams,timing:opts.timing,seed:opts.seed,holdDemo:prefersReducedMotion(),surprises:opts.surprises}),[opts.teams,opts.timing,opts.seed,opts.surprises]);
  const gateRef=useRef(opts.gate);gateRef.current=opts.gate;
+ const hooksRef=useRef<FunHooks>({});hooksRef.current={cueSeconds:opts.cueSeconds};
  // 문지기는 reducer 안에서 지난다: 같은 순간에 들어온 명령도 늘 최신 상태로 판정한다.
- const reducer=useCallback((s:FunState,a:Action)=>a.kind==='reset'?a.state:reduceGated(s,a.cmd,gateRef.current),[]);
+ const reducer=useCallback((s:FunState,a:Action)=>a.kind==='reset'?a.state:reduceGated(s,a.cmd,gateRef.current,hooksRef.current),[]);
  const [state,send]=useReducer(reducer,initial);
  const bus=useMemo(()=>opts.bus??createFunCommandBus(),[opts.bus]);
  const stateRef=useRef(state);stateRef.current=state;
@@ -93,5 +95,5 @@ export function useFunEngine(opts:FunEngineOptions){
  },[completeNow]);
 
  return {state,dispatch:(cmd:ExternalFunCommand)=>bus.dispatch(cmd,'tv'),bus,reset,completeNow,
-  secondsLeft:secondsLeft(state),cueMs:cueIntervalMs(state),finalCountdown:isFinalCountdown(state),comboFull:comboFull(state)};
+  secondsLeft:secondsLeft(state),cueMs:cueIntervalMs(state,opts.cueSeconds?.(state)),finalCountdown:isFinalCountdown(state),comboFull:comboFull(state)};
 }

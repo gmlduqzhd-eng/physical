@@ -39,7 +39,7 @@ export function ResultCeremony({summary,teams,scoreLabel,mvpMove,endedBy,extra,a
     <button type="button" className="fun-primary" onClick={()=>onRecord('performed')}>✅ 모두 참여했어요 · 기록하기</button>
     {!askRest?<button type="button" className="fun-secondary" onClick={()=>setAskRest(true)}>쉬면서 지켜본 친구가 많았어요</button>
      :<button type="button" className="fun-secondary" onClick={()=>onRecord('rested')}>‘쉬면서 함께함’으로 기록하기</button>}
-   </>:<p className="fun-note" role="status">기록했어요. 아래에서 오늘 놀이 반응을 남기고, 한 판 더 하거나 목록으로 돌아가요.</p>}
+   </>:<p className="fun-note" role="status">기록했어요. 위 칸에서 오늘 놀이 반응(👍/👎)을 남길 수 있어요. 한 판 더 하거나 목록으로 돌아가요.</p>}
    <button type="button" className="fun-secondary" onClick={onReplay}>🔁 한 판 더</button>
    <button type="button" className="fun-link" onClick={onExit}>활동 목록으로</button>
   </div>

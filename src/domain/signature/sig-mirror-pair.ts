@@ -22,10 +22,15 @@ export const MIRROR_MOVES:readonly MirrorMove[]=[
 export const CHANGE_PARTS:readonly string[]=['손 모양','팔 높이','고개 방향','발 위치','표정'];
 export const SEATED_CHANGE_PARTS:readonly string[]=['손 모양','팔 높이','고개 방향','손가락 개수','표정'];
 
-/** 한 라운드 = 신호 4개: 따라 하기 → 계속 따라 하기 → 하나 바꾸기 → 찾기. */
-export const STEPS_PER_ROUND=4;
-export type MirrorStep='lead'|'keep'|'change'|'find';
-const STEP_ORDER:readonly MirrorStep[]=['lead','keep','change','find'];
+/**
+ * 한 라운드 = 신호 5개: 따라 하기 → 계속 따라 하기 → 따라 하는 짝 눈 감기(3초) → 리더가 몰래 바꾸기 → 눈 뜨고 찾기.
+ * 짝이 눈을 감은 동안 바꿔야 정말 '몰래' 바꿀 수 있다.
+ */
+export const STEPS_PER_ROUND=5;
+export type MirrorStep='lead'|'keep'|'close'|'change'|'find';
+const STEP_ORDER:readonly MirrorStep[]=['lead','keep','close','change','find'];
+/** 눈 감기 신호는 짧게(3초), 몰래 바꾸기는 4초. */
+export const CLOSE_SECONDS=3,CHANGE_SECONDS=4;
 export type Leader='1번'|'2번';
 /** 라운드 번호(본게임과 마지막 승부를 이어서 센다: 마지막 승부도 리더가 계속 번갈아 바뀐다). */
 export function mirrorRound(ctx:Pick<SignatureCueContext,'phase'|'index'|'state'>):number{
@@ -60,22 +65,25 @@ export function mirrorPairCue(ctx:SignatureCueContext):SignatureCue{
   const steps:SignatureCue[]=[
    {text:'지금 짝과 마주 봐요',sub:'한 사람은 1번, 한 사람은 2번이에요. 팔을 뻗어도 닿지 않게 떨어져요',icon:'👫',tone:'calm',pose:'stand',scorable:false},
    {text:'지금 1번이 천천히 팔 올리기!',sub:'2번은 거울처럼 똑같이 따라 해요. 1번이 오른팔이면 2번은 왼팔!',icon:'🪞',pose:'armsUp',move:'팔 올리기'},
-   {text:'지금 하나 바꾸기 연습!',sub:'1번이 손 모양 하나만 몰래 바꿔요. 2번은 어디가 바뀌었는지 찾아요',icon:'🔀',tone:'gold',pose:'wave',move:'하나 바꾸기'},
-   {text:'찾았으면 짝과 손 번쩍!',sub:'선생님이 찾은 짝 수만큼 점수를 눌러요(연습이라 본게임에서 0부터)',icon:'🙋',tone:'go',pose:'armsUp',move:'바뀐 곳 찾기'},
+   {text:'지금 2번 눈 감기!',sub:'2번은 눈을 감거나 뒤돌아요(3초). 1번은 그대로 멈춰요',icon:'🙈',tone:'calm',pose:'stand',scorable:false,seconds:CLOSE_SECONDS},
+   {text:'지금 1번이 하나 바꾸기!',sub:'2번이 눈 감은 동안 1번이 손 모양 하나만 몰래 바꿔요',icon:'🔀',tone:'gold',pose:'wave',move:'하나 바꾸기',seconds:CHANGE_SECONDS},
+   {text:'2번 눈 뜨고 찾기! 찾으면 손 번쩍!',sub:'선생님이 찾은 짝 수만큼 점수를 눌러요(연습이라 본게임에서 0부터)',icon:'🙋',tone:'go',pose:'armsUp',move:'바뀐 곳 찾기'},
   ];
   return steps[Math.max(0,ctx.index)%steps.length];
  }
- const round=mirrorRound(ctx),leader=leaderFor(round),follower=followerOf(leader);
- const plan=roundPlan(ctx),climax=ctx.phase==='climax';
+ const round=mirrorRound(ctx),leader0=leaderFor(round);
  // 깜짝 '거꾸로!': 따라 하던 사람이 리더가 된다.
- const swapNote=ctx.reversed?` · 🔄 거꾸로! 이번엔 ${follower}이 리더`:'';
+ const leader=ctx.reversed?followerOf(leader0):leader0,follower=followerOf(leader);
+ const plan=roundPlan(ctx),climax=ctx.phase==='climax';
+ const swapNote=ctx.reversed?' · 🔄 거꾸로! 이번엔 리더가 바뀌었어요':'';
  switch(mirrorStep(ctx.index)){
   case 'lead':return {text:`${leader} 리더: ${plan.moveName}!`,sub:`${follower}은 거울처럼 똑같이 따라 해요${climax?' · 마지막 승부: 두 군데 바꾸기!':''}${swapNote}`,icon:'🪞',pose:plan.pose,move:plan.moveName};
   case 'keep':return {text:'거울처럼 똑같이~',sub:`${leader}은 천천히! ${follower}이 따라올 수 있게 움직여요${swapNote}`,icon:'🪞',tone:'calm',pose:plan.pose,move:plan.moveName};
+  case 'close':return {text:`${follower} 눈 감기!`,sub:`${follower}은 눈을 감거나 뒤돌아요(3초). ${leader}은 그대로 멈춰요`,icon:'🙈',tone:'calm',pose:'stand',scorable:false,seconds:CLOSE_SECONDS};
   case 'change':return climax
-   ?{text:'두 군데 바꾸기!',sub:`${leader}이 두 곳을 몰래 바꿔요 (예: ${plan.parts.join(' · ')}). ${follower}은 두 곳을 다 찾아요`,icon:'🔀',tone:'gold',pose:plan.pose,move:`${plan.moveName} · 두 군데 바꾸기`}
-   :{text:'하나 바꾸기!',sub:`${leader}이 몸 한 곳만 몰래 바꿔요 (예: ${plan.parts[0]})`,icon:'🔀',tone:'gold',pose:plan.pose,move:`${plan.moveName} · 하나 바꾸기`};
-  default:return {text:climax?'두 곳 다 찾았나요?':'어디가 바뀌었을까?',sub:'찾은 짝은 함께 손 번쩍! 선생님이 찾은 짝 수만큼 팀 점수를 더해요',icon:'🙋',tone:'go',pose:'armsUp',move:`${plan.moveName} · 바뀐 곳 찾기`};
+   ?{text:'두 군데 몰래 바꾸기!',sub:`${follower}이 눈 감은 동안 ${leader}이 두 곳을 바꿔요 (예: ${plan.parts.join(' · ')})`,icon:'🔀',tone:'gold',pose:plan.pose,move:`${plan.moveName} · 두 군데 바꾸기`,seconds:CHANGE_SECONDS}
+   :{text:'하나 몰래 바꾸기!',sub:`${follower}이 눈 감은 동안 ${leader}이 몸 한 곳만 바꿔요 (예: ${plan.parts[0]})`,icon:'🔀',tone:'gold',pose:plan.pose,move:`${plan.moveName} · 하나 바꾸기`,seconds:CHANGE_SECONDS};
+  default:return {text:`${follower} 눈 뜨고 찾기!`,sub:`${climax?'두 곳을 다 찾으면':'바뀐 곳을 찾으면'} 짝과 함께 손 번쩍! 선생님이 찾은 짝 수만큼 팀 점수를 더해요`,icon:'🙋',tone:'go',pose:'armsUp',move:`${plan.moveName} · 바뀐 곳 찾기`};
  }
 }
 
@@ -83,18 +91,19 @@ export const mirrorPair=defineSignatureGame({
  id:'sig-mirror-pair',ready:true,
  name:'거울 짝꿍',emoji:'🪞',
  oneLine:'짝이 거울처럼 따라 하다가 ‘하나 바꾸기!’가 나오면 바뀐 곳을 찾아요.',
- rules:['짝과 마주 보고, 리더가 움직이면 짝이 거울처럼 똑같이 따라 해요.','‘하나 바꾸기!’가 나오면 리더가 몸 한 곳만 바꾸고, 짝이 찾으면 둘이 손을 번쩍 들어요.','라운드마다 리더가 바뀌어요. 마지막 승부는 두 군데 바꾸기! 끝나면 결과 발표.'],
+ rules:['짝과 마주 보고, 리더가 움직이면 짝이 거울처럼 똑같이 따라 해요.','짝이 눈을 감으면 리더가 몸 한 곳만 몰래 바꾸고, 짝이 눈을 떠 찾으면 둘이 손을 번쩍 들어요.','라운드마다 리더가 바뀌어요. 마지막 승부는 두 군데 바꾸기! 끝나면 결과 발표.'],
  concept:'관찰과 협응',
  reflection:'짝이 바꾼 곳을 어떻게 알아챘나요? 거울처럼 따라 하기가 쉬웠던 동작은 무엇이었나요?',
  nextChallenge:'다음에는 더 작은 곳(손가락·표정)을 바꿔서 짝이 찾을 수 있는지 도전해 봐요.',
- scoringHint:'‘어디가 바뀌었을까?’ 때 손 든 짝 수만큼 그 팀 +1 · 빠른 셈 버튼(+3·+5)도 써요',
+ scoringHint:'‘눈 뜨고 찾기’ 때 손 든 짝 수만큼 그 팀 +1 · 빠른 셈 버튼(+3·+5)도 써요',
  scoreLabel:'찾은 짝',
  seatedNote:'의자에 앉아 마주 보고, 다리 대신 팔·손·고개·표정만 써요.',
  demo:[
   {pose:'stand',caption:'짝과 마주 봐요 (1번·2번)'},
   {pose:'armsUp',caption:'1번이 팔을 올리면 2번도 거울처럼!'},
-  {pose:'wave',caption:'‘하나 바꾸기!’ → 1번이 손 모양만 몰래 바꿔요'},
-  {pose:'point',caption:'2번이 바뀐 곳을 찾아요'},
+  {pose:'stand',caption:'2번이 눈을 감아요(3초)'},
+  {pose:'wave',caption:'그동안 1번이 손 모양만 몰래 바꿔요'},
+  {pose:'point',caption:'2번이 눈 뜨고 바뀐 곳을 찾아요'},
   {pose:'armsUp',caption:'찾았으면 둘이 함께 손 번쩍! 다음 라운드는 2번이 리더'},
  ],
  timing:{demo:12,tutorial:32,play:120,climax:40,cueSeconds:5},

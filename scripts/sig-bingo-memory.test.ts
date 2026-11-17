@@ -59,7 +59,7 @@ test('bingo lines: rows, columns and diagonals; bonus only for the new line',()=
  assert.deepEqual([0,1,2,3,4].map(t=>turnTeam(t,2)),[0,1,0,1,0]);
 });
 
-test('memory relay: sequence grows by one after each successful turn, capped',()=>{
+test('memory relay: every team in a round gets the same length; it grows after a round with a success, capped',()=>{
  let s=createFunState({teams:2,timing:memoryRelay.timing,seed:5,skipDemo:true});
  assert.equal(sequenceLength(s,'tutorial',0),TUTORIAL_LENGTH);
  s=run(s,{type:'next'});
@@ -67,13 +67,15 @@ test('memory relay: sequence grows by one after each successful turn, capped',()
  assert.equal(sequenceLength(s,'play',0),START_LENGTH);
  s=run(s,{type:'score',team:relayTeam(0,2),delta:1});
  assert.equal(sequenceLength(s,'play',0),START_LENGTH,'this turn keeps its length');
- assert.equal(sequenceLength(s,'play',1),START_LENGTH+1,'the next turn is one longer');
+ assert.equal(sequenceLength(s,'play',1),START_LENGTH,'the other team in the same round gets the same length');
+ assert.equal(sequenceLength(s,'play',2),START_LENGTH+1,'the next round is one longer');
+ assert.equal(sequenceLength(s,'play',3),START_LENGTH+1,'…for every team in that round');
  s=tickFor(s,cueIntervalMs(s)+100);
  assert.equal(s.cueIndex,1);
- assert.equal(sequenceLength(s,'play',2),START_LENGTH+1,'no success at turn 1 → same length');
+ assert.equal(sequenceLength(s,'play',4),START_LENGTH+1,'no success in round 1 yet → round 2 stays the same'); 
  assert.equal(longestSuccess(s),START_LENGTH);
  const many={...s,cueHits:Object.fromEntries(Array.from({length:12},(_,i)=>[`play:${i}`,1]))};
- assert.equal(sequenceLength(many,'play',12),MAX_LENGTH);
+ assert.equal(sequenceLength(many,'play',24),MAX_LENGTH);
  assert.equal(sequenceLength(many,'climax',0),MAX_LENGTH,'the climax carries over the play successes');
  const seq=sequenceFor(9,'play',3,7);
  assert.deepEqual(seq,sequenceFor(9,'play',3,7));

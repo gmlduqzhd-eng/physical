@@ -13,6 +13,7 @@ export interface SignatureCue {
  /** 결과의 'MVP 동작'에 쓸 동작 이름(없으면 text). */ move?:string;
  /** false면 동작 신호가 아니다(카드 안내·쉬는 신호): MVP 동작으로 뽑지 않는다. */ scorable?:boolean;
  /** 신호와 함께 그릴 막대 사람 자세(선택). */ pose?:Pose;
+ /** 이 신호만 다른 길이로 보여 줄 때(초). 예: '10초 달리기'는 12초. 없으면 게임 기본 간격. */ seconds?:number;
 }
 export interface SignatureCueContext {
  phase:'tutorial'|'play'|'climax';
@@ -46,6 +47,7 @@ export interface SignatureGameDef {
  /** 목표를 이뤄 일찍 끝나는 놀이(보스를 다 물리침 등)는 true를 돌려준다. 엔진이 승리 연출 뒤 결과로 넘긴다. */
  isComplete?(state:FunState):boolean;
  /** 결과 화면 큰 제목을 바꾸고 싶을 때. */ resultHeadline?(state:FunState):string|undefined;
+ /** 결과의 'MVP 동작'을 게임이 직접 정할 때(예: 표현 무대는 우승 모둠의 장면). 없으면 가장 많이 성공한 신호. */ mvpMove?(state:FunState):string|undefined;
  /**
   * 점수·이벤트 명령의 문지기(선택). 버튼에 건 규칙을 키보드·리모컨에도 똑같이 적용한다.
   * 받지 않을 명령은 null, 바꿀 명령은 바꾼 명령을 돌려준다. 점수판 버튼도 이 규칙으로 켜고 끈다.
