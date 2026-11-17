@@ -10,6 +10,7 @@ import {CLASS_TOOLS,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
+import {PeQuizBingo} from './components/PeQuizBingo';
 
 const LEAGUE_KEY='physical_class_league_v1';
 const today=()=>new Date().toLocaleString('ko-KR');
@@ -166,7 +167,7 @@ function Dice(){
  </>;
 }
 
-const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={league:League,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice};
+const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={league:League,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice,'quiz-bingo':PeQuizBingo};
 
 /** 수업 도구 모음. 여섯 도구를 늘 붙여 두고 보이는 것만 바꿔, 도구를 오가도 시계·뽑기 기록이 남는다. */
 export function ClassTools(){
