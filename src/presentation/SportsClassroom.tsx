@@ -1,6 +1,7 @@
 import {ExportMenu} from './components/ExportMenu';
 import type {ExportTable} from '../application/documentExport';
 import {useEffect,useMemo,useRef,useState} from 'react';
+import {placeLabels} from '../domain/glossary';
 import {useRunningClock} from '../application/useRunningClock';
 import {Link,useParams,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
@@ -110,6 +111,8 @@ function SportLessonBody({event}:{event:SportEvent}){
  return <FlowShell utilities back="/sports" backLabel="종목 고르기"><section className="play-experiences sports-lesson" aria-label={`${event.name} 수업`} data-sport={event.id} data-stage={id}>
   <p className="eyebrow">종목 교실 · {SPORT_GROUPS[event.group]}</p><h1><span aria-hidden="true">{event.icon}</span> {event.name} <small>{event.sub}</small></h1>
   {hasDeepDive(event.id)&&<p><Link className="sports-deep-link" to={`/sports/${event.id}/deep`}>📖 {event.name} 깊이 보기 · 용어·기술·포지션·퀴즈 →</Link></p>}
+  <div className="sports-progress" aria-hidden="true"><span style={{width:`${((stage+1)/LESSON_STAGES.length)*100}%`}}/></div>
+  <p className="sports-progress-label" aria-live="polite">{LESSON_STAGES.length}단계 중 {stage+1}단계 · {LESSON_STAGES[stage].label}</p>
   <ol className="sports-stages" aria-label="수업 단계">{LESSON_STAGES.map((s,i)=><li key={s.id}><button aria-current={i===stage?'step':undefined} onClick={()=>setStage(i)}>{i+1}. {s.label}</button></li>)}</ol>
   <section className="recipe-card sports-stage">
    {confirmClear&&<div className="sports-confirm" role="alert"><p>{confirmClear.teams?`팀 수를 ${confirmClear.teams}팀으로 바꾸면 이번 경기 기록이 처음으로 돌아가요. 바꿀까요?`:'이번 경기 기록과 되돌리기 목록을 모두 지울까요?'}</p><button onClick={()=>setConfirmClear(null)}>그대로 두기</button><button className="primary" onClick={()=>{if(confirmClear.teams)setTeams(confirmClear.teams);resetMatch();setConfirmClear(null);}}>{confirmClear.teams?'지우고 바꾸기':'모두 지우기'}</button></div>}
@@ -122,9 +125,10 @@ function SportLessonBody({event}:{event:SportEvent}){
    {id==='ready'&&<><h2>준비물과 안전 약속</h2><h3>준비물</h3><ul className="sports-check">{event.gear.map(g=><li key={g}><label><input type="checkbox"/>{g}</label></li>)}</ul>
     <h3>안전 약속</h3><ul className="sports-rules">{event.safety.map(s=><li key={s}>{s}</li>)}</ul>
     <h3>역할 나누기</h3><ul className="sports-roles">{event.roles.map(([role,count])=><li key={role}><strong>{role}</strong> {count?`팀마다 ${count}명`:'나머지 모두'}</li>)}</ul>
-    <label>팀 수<select aria-label="팀 수" value={teams} onChange={e=>{const n=Number(e.target.value);if(hasRecord)setConfirmClear({teams:n});else{setTeams(n);resetMatch();}}}>{[2,3,4].map(n=><option key={n} value={n}>{n}팀</option>)}</select></label>
-    <p className="sports-muted">{event.place.join('·')}에서 해요. 권장 학년군: {event.grades.map(g=>g.replace('-','~')+'학년').join(', ')}{played.some(v=>v!==null)?' · 팀 수를 바꾸면 경기 기록이 처음으로 돌아가요.':''}</p></>}
-   {id==='match'&&<><h2>{event.mode==='time'?'레이스':'경기'} · {teams}팀</h2>{event.mode==='time'?<TimeMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>:<ScoreMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>}
+    <p className="sports-muted">{placeLabels(event.place).join('·')}에서 해요. 권장 학년군: {event.grades.map(g=>g.replace('-','~')+'학년군').join(', ')} · 팀 수는 다음 ‘경기’ 단계에서 정해요.</p></>}
+   {id==='match'&&<><h2>{event.mode==='time'?'레이스':'경기'} · {teams}팀</h2>
+    <label className="sports-teams">팀 수<select aria-label="팀 수" value={teams} onChange={e=>{const n=Number(e.target.value);if(hasRecord)setConfirmClear({teams:n});else{setTeams(n);resetMatch();}}}>{[2,3,4].map(n=><option key={n} value={n}>{n}팀</option>)}</select>{hasRecord&&<small> · 바꾸면 경기 기록이 처음으로 돌아가요</small>}</label>
+{event.mode==='time'?<TimeMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>:<ScoreMatch key={`${teams}-${round}`} event={event} teams={teams} scores={scores} setScores={recordScores}/>}
     <div className="flagship-row"><button onClick={undoScores} disabled={!undoStack.length||awarded}>↶ 되돌리기</button><button disabled={!hasRecord} onClick={()=>setConfirmClear({})}>기록 처음으로</button></div>
     <p className="sports-muted">점수는 이 탭에 저장돼서 새로고침해도 이어져요. 잘못 누른 점수는 되돌리기로 하나씩 취소해요.</p></>}
    {id==='award'&&<><h2>시상식</h2>{ready?<ol className="sports-podium">{ranking.map(r=><li key={r.team} data-medal={r.medal??'none'}><span aria-hidden="true">{r.medal?MEDAL_ICON[r.medal]:'👏'}</span><strong style={{color:TEAM_COLORS[r.team]}}>{TEAM_NAMES[r.team]}</strong><span>{r.rank}위 · {formatResult(event,r.value)}{r.medal?` · ${MEDAL_LABEL[r.medal]}메달`:''}</span></li>)}</ol>

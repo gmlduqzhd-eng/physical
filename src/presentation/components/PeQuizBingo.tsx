@@ -102,7 +102,12 @@ export function PeQuizBingo(){
  const saveQuestions=(t:string)=>{setQuestionsText(t);writeStorage(SET_KEY,t);};
 
  if(!game)return <div className="qb">
-  <p>팀별로 체육 규칙·안전·건강 문제를 맞히고 5×5 빙고판을 차지해요. 움직임 칸에서는 반 전체가 함께 몸을 움직여요.</p>
+  <p className="qb-lead"><strong>문제를 맞히면 칸을 차지해요. 한 줄을 채우면 빙고!</strong> 팀이 돌아가며 5×5 판의 칸을 열어 체육 규칙·안전·건강 문제를 풀어요. 움직임 칸에서는 반 전체가 함께 움직여요.</p>
+  <div className="qb-quick">
+   <button type="button" className="primary tools-go" onClick={()=>start()}>🚩 바로 시작</button>
+   <p className="sports-muted">지금 설정: {settings.teams}팀 · 제한 시간 {settings.timeLimit?`${settings.timeLimit}초`:'없음'} · {settings.rounds?`${settings.rounds}라운드`:'칸이 다 열릴 때까지'} · 움직임 칸 {settings.moveCells?`${settings.moveCells}칸`:'없음'} · 문제 {questions.length}개</p>
+  </div>
+  <details className="qb-settings"><summary>설정 바꾸기 · 팀 이름 · 시간 · 라운드 · 문제 세트</summary>
   <section className="qb-setup" aria-label="게임 설정">
    <Choices label="팀 수" value={settings.teams} options={SETTINGS_OPTIONS.teams} format={n=>`${n}팀`} onChange={n=>setSettings({...settings,teams:n})}/>
    <div className="qb-teams">{Array.from({length:settings.teams},(_,i)=><label key={i} className="tools-text"><span>{TEAM_MARKS[i]} {i+1}팀 이름</span><input value={names[i]??''} maxLength={TEAM_NAME_MAX} placeholder={`${i+1}팀`} onChange={e=>setNames(Array.from({length:4},(_,j)=>j===i?e.target.value:names[j]??''))}/></label>)}</div>
@@ -115,7 +120,8 @@ export function PeQuizBingo(){
    <p>문제 세트: <strong>{questions.length}문제</strong> (객관식 {questions.filter(q=>q.kind==='choice').length} · 주관식 {questions.filter(q=>q.kind==='short').length}) <button type="button" onClick={()=>setEditing(!editing)} aria-expanded={editing}>📝 문제 세트 만들기 · AI 부탁 글</button></p>
   </section>
   {editing&&<QuestionEditor text={questionsText} onChange={saveQuestions} onClose={()=>setEditing(false)}/>}
-  <div className="flagship-row tools-center"><button type="button" className="primary tools-go" onClick={()=>start()}>🚩 게임 시작</button></div>
+  <div className="flagship-row tools-center"><button type="button" className="primary tools-go" onClick={()=>start()}>🚩 이 설정으로 시작</button></div>
+  </details>
   <p className="sports-muted">학생 이름은 넣지 않고 팀 이름만 써요. 진행 상황은 이 기기에만 저장돼서 새로고침해도 이어져요.</p>
  </div>;
 
