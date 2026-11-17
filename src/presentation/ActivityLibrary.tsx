@@ -8,7 +8,8 @@ import {matchesActivitySearch} from '../domain/activitySearch';
 import { AVAILABLE_GAMES as GAMES, type GameDef } from '../domain/gamesData';
 import { CORE_ACTIVITIES, SIMILAR_TO, SOLO_ACTIVITIES, isMovementActivity, shelfLabel } from '../domain/activityShelves';
 import { isQuestId } from '../domain/movementQuests';
-import { FIT_PEOPLE, FIT_SPACES, FIT_TIMES, matchesFit, situationBadges, type FitFilter } from '../domain/activityFit';
+import { FIT_PEOPLE, FIT_SPACES, FIT_TIMES, activityFit, matchesFit, parseFitPeople, parseFitSpace, parseFitTime, situationBadges, type FitFilter } from '../domain/activityFit';
+import { similarSuggestions } from '../domain/activitySearch';
 import { activityGroup, activityIcon } from '../domain/activityGroups';
 import { gradeLabel } from '../domain/glossary';
 import { useActivityFavorites } from '../application/useActivityFavorites';
@@ -41,15 +42,20 @@ function ActivityDetails({game:g,solo}:{game:GameDef;solo:boolean}){
 export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?: (game: GameDef) => void; solo?: boolean; exclude?: (game: GameDef) => boolean }) {
   const [params,setParams] = useSearchParams();
   const phoneOnly=params.get('collection')==='phone';
-  const phoneCategory=params.get('category')||'전체',people=params.get('people')||'전체',time=params.get('time')||'전체',intensity=params.get('intensity')||'전체',space=params.get('space')||'전체';
+  // 준비물 없는 놀이의 인원·시간은 위의 '몇 명 · 몇 분' 조건이 맡는다(같은 질문을 두 번 묻지 않게).
+  const phoneCategory=params.get('category')||'전체',intensity=params.get('intensity')||'전체',space=params.get('space')||'전체';
   // 어디서 · 몇 명 · 몇 분: 모든 활동에 쓰는 공통 조건(주소에 남아 새로고침해도 그대로).
-  const fit:FitFilter={space:(params.get('where')||'전체') as FitFilter['space'],people:(params.get('who')||'전체') as FitFilter['people'],time:(params.get('minutes')||'전체') as FitFilter['time']};
-  const fitActive=FIT_KEYS.some(k=>!!params.get(k));
+  // 주소 값은 고를 수 있는 값으로 바꿔 읽는다. 맞지 않는 값은 '전체'(예: ?where=체육관 → 체육관·강당, ?where=gym2 → 전체).
+  // 예전 칩 '교실에서 해요'(?purpose=)는 '어디서: 교실'로 이어 준다.
+  const legacyClassroom=params.get('purpose')==='교실에서 해요';
+  const fit:FitFilter={space:legacyClassroom&&!params.get('where')?FIT_SPACES[0]:parseFitSpace(params.get('where')),people:parseFitPeople(params.get('who'),solo?['혼자']:FIT_PEOPLE),time:parseFitTime(params.get('minutes'))};
+  const fitActive=fit.space!=='전체'||fit.people!=='전체'||fit.time!=='전체';
   const togglePhone=()=>{const next=new URLSearchParams(params);if(phoneOnly){['collection','category','people','time','intensity','space'].forEach(k=>next.delete(k));}else next.set('collection','phone');setParams(next,{replace:true});setLimit(12);};
   const location=useLocation();
   const {isFavorite,toggleFavorite}=useActivityFavorites();
   const [domain, setDomain] = useState(() => ['운동','스포츠','표현'].includes(params.get('domain') ?? '') ? params.get('domain')! : '전체');
-  const [purpose, setPurpose] = useState(()=>params.get('purpose')||''); const [query, setQuery] = useState(()=>params.get('q')||'');
+  // 지금 있는 목적 칩만 받는다. 모르는 값(예전 북마크)은 무시한다.
+  const [purpose, setPurpose] = useState(()=>{const raw=params.get('purpose')||'';return (purposes as readonly string[]).includes(raw)?raw:'';}); const [query, setQuery] = useState(()=>params.get('q')||'');
   const [all, setAll] = useState(false); const [limit, setLimit] = useState(6); const [showSimilar, setShowSimilar] = useState(false);
   const [grade, setGrade] = useState(()=>params.get('grade')||'전체'); const [device, setDevice] = useState(()=>params.get('device')||'전체');
   const updateFilter=(key:string,value:string)=>{const next=new URLSearchParams(params);if(!value||value==='전체')next.delete(key);else next.set(key,value);setParams(next,{replace:true});setLimit(6);};
@@ -60,9 +66,10 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
   const hideSimilar = !solo && !showSimilar && !query;
   const pool = solo ? SOLO_ACTIVITIES : all || isFiltered ? GAMES : CORE_ACTIVITIES;
   const source = exclude ? pool.filter(g => !exclude(g)) : pool;
-  const matched = source.filter(g => {const p=PHONE_PLAY_BY_ID.get(g.type);return matchesFit(g,fit)&&(!phoneOnly||!!p&&(phoneCategory==='전체'||p.category===phoneCategory)&&(people==='전체'||p.players===people)&&(time==='전체'||(time==='5분 이하'?p.minutes<=5:p.minutes>5))&&(intensity==='전체'||p.intensity===intensity)&&(space==='전체'||p.space===space))&&(domain === '전체' || g.domain === domain) && matchesActivitySearch(g,query) && (grade === '전체' || g.grades.some(v => v === grade)) && (device === '전체' || g.devices.some(v => v === device)) && (!purpose || (purpose === purposes[0] ? g.playMode === '협동' : purpose === purposes[1] ? isMovementActivity(g) : g.domain === '표현'));});
+  const matched = source.filter(g => {const p=PHONE_PLAY_BY_ID.get(g.type);return matchesFit(g,fit)&&(!phoneOnly||!!p&&(phoneCategory==='전체'||p.category===phoneCategory)&&(intensity==='전체'||p.intensity===intensity)&&(space==='전체'||p.space===space))&&(domain === '전체' || g.domain === domain) && matchesActivitySearch(g,query) && (grade === '전체' || g.grades.some(v => v === grade)) && (device === '전체' || g.devices.some(v => v === device)) && (!purpose || (purpose === purposes[0] ? g.playMode === '협동' : purpose === purposes[1] ? isMovementActivity(g) : g.domain === '표현'));});
   const games = hideSimilar ? matched.filter(g => !SIMILAR_TO.has(g.type)) : matched;
   const hiddenSimilar = matched.length - games.length;
+  const suggestions = !games.length && query ? similarSuggestions(query, exclude ? source : pool) : {games:[],sports:[],reason:'',length:0};
   const displayed = games.slice(0, solo || !(all || isFiltered) ? Math.max(12,limit) : limit);
   const fitOptions=[['where','어디서',fit.space,FIT_SPACES],['who','몇 명이',fit.people,solo?(['혼자'] as const):FIT_PEOPLE],['minutes','몇 분',fit.time,FIT_TIMES]] as const;
   return <>
@@ -73,7 +80,7 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
     </fieldset>
     <div className="chips" aria-label="활동 목적">{purposes.filter(p=>!solo||p!==purposes[0]).map(p => <button key={p} aria-pressed={purpose === p} onClick={() => { const value=p===purpose?'':p;setPurpose(value);updateFilter('purpose',value); }}>{p}</button>)}<button aria-pressed={phoneOnly} onClick={togglePhone}>📱 준비물 없는 놀이만 ({solo?SOLO_ACTIVITIES.filter(g=>PHONE_PLAY_BY_ID.has(g.type)).length:PHONE_PLAYS.length})</button></div>
     {phoneOnly&&<fieldset className="phone-filter-grid"><legend>준비물 없는 놀이 고르기</legend>{([
-      ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['people','참여 인원',people,solo?['전체','혼자']:['전체','혼자','짝','모둠']],['time','소요 시간',time,['전체','5분 이하','6분 이상']],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체',...SPACE_ORDER.filter(v=>PHONE_PLAYS.some(p=>p.space===v))]],
+      ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체',...SPACE_ORDER.filter(v=>PHONE_PLAYS.some(p=>p.space===v))]],
     ] as const).map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}<p>폰은 내려놓고 움직여요. 스마트폰 1대를 함께 쓰거나, TV에 띄워 반 전체가 해요.</p></fieldset>}
     <div className="activity-more-filters"><label>활동 영역<select aria-label="활동 영역" value={domain} onChange={e => { setDomain(e.target.value);updateFilter('domain',e.target.value); }}>{['전체','운동','스포츠','표현'].map(v => <option key={v}>{v}</option>)}</select></label>
     <details><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체','1~2학년','3~4학년군','5~6학년군'].map(v => <option key={v} value={v}>{gradeLabel(v)}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체','스마트폰','태블릿 PC','데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label></div></details></div>
@@ -82,15 +89,17 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
     <div className="grid three">{displayed.map(g => {const group=activityGroup(g);return <article className="card catalog-card" data-game-card={g.type} key={g.type}>
       <div className="activity-card-top"><span className="activity-card-icon" aria-hidden="true">{PHONE_PLAY_BY_ID.has(g.type)?<PhonePlayIcon gameType={g.type}/>:activityIcon(g)}</span>
        <button type="button" className="activity-fav" aria-pressed={isFavorite(g.type)} aria-label={`${g.name} 즐겨찾기`} onClick={()=>toggleFavorite(g.type)}>{isFavorite(g.type)?'★':'☆'}</button></div>
-      <p className="activity-situation" data-situation>{situationBadges(g).map(b=><span key={b}>{b}</span>)}</p>
+      <p className="activity-situation" data-situation>{situationBadges(g,fit).map(b=><span key={b}>{b}</span>)}</p>
       <h3>{g.name}</h3>
       <p className="activity-finish"><strong>이렇게 하면 끝나요</strong> · {finishLine(g)}</p>
       <p className="muted">{g.desc}</p>
       <p className="activity-tags"><span className="pill">{group.icon} {group.label}</span>{isQuestId(g.type) && <span className="pill">연습부터 차근차근</span>}{!solo&&shelfLabel(g.type)&&<span className="pill" data-shelf-note>{shelfLabel(g.type)}</span>}{variantsFor(g.type).length>0&&<span className="pill">다른 놀이 방법 {variantsFor(g.type).length}개</span>}</p>
-      {g.recommendedDevice&&<p className="small">기기: {g.recommendedDevice} 1대를 세워 두고 해요</p>}
+      {g.recommendedDevice&&<p className="small">{activityFit(g).wholeClass?'화면: TV·전자칠판 1대에 띄워 반 전체가 봐요(없으면 '+g.recommendedDevice+' 1대를 모두가 보이게 세워 둬요)':`기기: ${g.recommendedDevice} 1대를 세워 두고 해요`}</p>}
       <ActivityDetails game={g} solo={solo}/>
       <div className="card-action">{onSelect ? <button className="primary button-wide" onClick={() => onSelect(g)}>이 활동 선택</button> : <><Link className="primary button-wide" to={playHref(g.type)}>{solo ? '체험하기' : '활동 열기'}</Link>{!solo&&<Link className="secondary button-wide" style={{marginTop:8}} to={`/teacher/setup?game=${g.type}`}>이 활동으로 수업 준비</Link>}</>}</div></article>;})}</div>
-    {!games.length && <p role="status" className="notice">맞는 활동이 없어요. {fitActive?'‘어디서 · 몇 명 · 몇 분’ 가운데 하나를 ‘전체’로 바꿔 보세요.':'검색어나 조건을 바꿔 보세요.'}</p>}
+    {!games.length && <div role="status" className="notice"><p>맞는 활동이 없어요. {fitActive?'‘어디서 · 몇 명 · 몇 분’ 가운데 하나를 ‘전체’로 바꿔 보세요.':'검색어나 조건을 바꿔 보세요.'}</p>
+      {query&&<><p>{suggestions.reason}</p>{suggestions.length>0&&<ul className="activity-suggestions" aria-label="비슷한 활동">{suggestions.games.map(s=><li key={s.type}><Link to={playHref(s.type)}>{s.name}</Link></li>)}{!solo&&suggestions.sports.map(s=><li key={s.id}><Link to={`/sports/${s.id}`}>{s.name}</Link></li>)}</ul>}</>}
+      {isFiltered&&<button type="button" onClick={clearFilters}>조건 모두 지우기</button>}</div>}
     {hiddenSimilar>0&&<p className="notice" style={{marginTop:20}}>비슷한 활동 {hiddenSimilar}개는 대표 활동 하나로 묶어 숨겼어요. <button onClick={()=>setShowSimilar(true)}>비슷한 활동도 모두 보기</button></p>}
     {displayed.length < games.length && <button style={{marginTop:20}} onClick={() => setLimit(displayed.length + 12)}>활동 더 보기</button>}
     {!solo && !all && !isFiltered && <button style={{marginTop:20}} onClick={() => { setAll(true); setLimit(24); }}>전체 활동 목록 보기 ({exclude ? GAMES.filter(g => !exclude(g)).length : GAMES.length}개)</button>}
