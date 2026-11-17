@@ -3,8 +3,12 @@
  * 기록은 이 기기의 localStorage에만 남는다(학생 이름 없이 활동 id와 시각만).
  */
 export type Vote='up'|'down';
-export interface PlayEntry {id:string;at:number}
-export interface VoteEntry {id:string;at:number;vote:Vote}
+/**
+ * play: 한 판을 가리키는 id(게임을 시작할 때 만든다). 반응은 이 id로 판에 붙는다.
+ * 예전 기록에는 play가 없을 수 있다(그때는 시각으로 판을 가른다).
+ */
+export interface PlayEntry {id:string;at:number;play?:string}
+export interface VoteEntry {id:string;at:number;vote:Vote;play?:string}
 export interface ClassProgress {version:1;plays:PlayEntry[];votes:VoteEntry[]}
 
 export const EMPTY_PROGRESS:ClassProgress={version:1,plays:[],votes:[]};
@@ -13,46 +17,57 @@ export const MAX_ENTRIES=2000;
 
 const isId=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=80;
 const isTime=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>0;
+const isPlayId=(v:unknown):v is string=>typeof v==='string'&&v.length>0&&v.length<=64;
+const withPlay=<T extends object>(base:T,play:unknown):T&{play?:string}=>isPlayId(play)?{...base,play}:base;
 /** 저장된 값을 검사해 읽는다. 깨졌거나 모양이 다르면 빈 기록. */
 export function parseProgress(raw:unknown):ClassProgress{
  if(!raw||typeof raw!=='object')return {...EMPTY_PROGRESS,plays:[],votes:[]};
  const r=raw as {plays?:unknown;votes?:unknown};
- const plays=Array.isArray(r.plays)?r.plays.filter((p):p is PlayEntry=>!!p&&isId((p as PlayEntry).id)&&isTime((p as PlayEntry).at)).map(p=>({id:p.id,at:p.at})):[];
- const votes=Array.isArray(r.votes)?r.votes.filter((v):v is VoteEntry=>!!v&&isId((v as VoteEntry).id)&&isTime((v as VoteEntry).at)&&((v as VoteEntry).vote==='up'||(v as VoteEntry).vote==='down')).map(v=>({id:v.id,at:v.at,vote:v.vote})):[];
+ const plays=Array.isArray(r.plays)?r.plays.filter((p):p is PlayEntry=>!!p&&isId((p as PlayEntry).id)&&isTime((p as PlayEntry).at)).map(p=>withPlay({id:p.id,at:p.at},(p as PlayEntry).play)):[];
+ const votes=Array.isArray(r.votes)?r.votes.filter((v):v is VoteEntry=>!!v&&isId((v as VoteEntry).id)&&isTime((v as VoteEntry).at)&&((v as VoteEntry).vote==='up'||(v as VoteEntry).vote==='down')).map(v=>withPlay({id:v.id,at:v.at,vote:v.vote},(v as VoteEntry).play)):[];
  return {version:1,plays:plays.slice(-MAX_ENTRIES),votes:votes.slice(-MAX_ENTRIES)};
 }
 
-export function addPlay(p:ClassProgress,id:string,at:number):ClassProgress{
+export function addPlay(p:ClassProgress,id:string,at:number,play?:string):ClassProgress{
  if(!isId(id)||!isTime(at))return p;
- return {...p,plays:[...p.plays,{id,at}].slice(-MAX_ENTRIES)};
+ if(isPlayId(play)&&p.plays.some(x=>x.play===play))return p; // 같은 판을 두 번 세지 않는다
+ return {...p,plays:[...p.plays,withPlay({id,at},play)].slice(-MAX_ENTRIES)};
 }
 /**
- * 반응 남기기. 같은 활동의 가장 최근 판(마지막 기록 이후)에 이미 반응했으면 그 반응을 바꾼다.
- * 한 판에 한 표: 마지막 판 시각 이후의 반응만 덮어쓴다.
+ * 반응 남기기. 한 판에 한 표.
+ * play(판 id)가 있으면 그 판의 반응만 바꾼다. 그래서 기록하기 전에 누른 반응이 앞 판의 반응을 덮어쓰지 않는다.
+ * play가 없으면(예전 방식) 같은 활동의 마지막 판 시각 이후 반응을 바꾼다.
  */
-export function setVote(p:ClassProgress,id:string,vote:Vote,at:number):ClassProgress{
+export function setVote(p:ClassProgress,id:string,vote:Vote,at:number,play?:string):ClassProgress{
  if(!isId(id)||!isTime(at))return p;
+ if(isPlayId(play)){
+  const votes=p.votes.filter(v=>v.play!==play);
+  return {...p,votes:[...votes,{id,at,vote,play}].slice(-MAX_ENTRIES)};
+ }
  const lastPlay=Math.max(0,...p.plays.filter(x=>x.id===id).map(x=>x.at));
- const votes=p.votes.filter(v=>!(v.id===id&&v.at>=lastPlay));
+ const votes=p.votes.filter(v=>!(v.id===id&&!v.play&&v.at>=lastPlay));
  return {...p,votes:[...votes,{id,at,vote}].slice(-MAX_ENTRIES)};
 }
-/** 이 활동의 가장 최근 판에 남긴 반응(없으면 null). */
-export function currentVote(p:ClassProgress,id:string):Vote|null{
+/** 이 판(play)에 남긴 반응. play가 없으면 이 활동의 가장 최근 판에 남긴 반응. */
+export function currentVote(p:ClassProgress,id:string,play?:string):Vote|null{
+ if(isPlayId(play))return [...p.votes].reverse().find(x=>x.play===play)?.vote??null;
  const lastPlay=Math.max(0,...p.plays.filter(x=>x.id===id).map(x=>x.at));
- const v=[...p.votes].reverse().find(x=>x.id===id&&x.at>=lastPlay);
+ const v=[...p.votes].reverse().find(x=>x.id===id&&!x.play&&x.at>=lastPlay);
  return v?.vote??null;
 }
+/** 기록하지 않은 판에 남긴 반응인지(판 id가 있는데 그 판이 기록에 없음). */
+export const isUnrecordedVote=(p:ClassProgress,v:VoteEntry)=>!!v.play&&!p.plays.some(x=>x.play===v.play);
 
-export interface ReactionRow {id:string;plays:number;up:number;down:number;/** 👍 비율(반응이 없으면 null) */ ratio:number|null;lastAt:number}
+export interface ReactionRow {id:string;plays:number;up:number;down:number;/** 👍 비율(반응이 없으면 null) */ ratio:number|null;lastAt:number;/** 그중 기록하지 않은 판에 남긴 반응 수(👍·👎에는 들어 있음) */ unrecorded:number}
 export function reactionRows(p:ClassProgress):ReactionRow[]{
  const by=new Map<string,ReactionRow>();
- const row=(id:string)=>{let r=by.get(id);if(!r){r={id,plays:0,up:0,down:0,ratio:null,lastAt:0};by.set(id,r);}return r;};
+ const row=(id:string)=>{let r=by.get(id);if(!r){r={id,plays:0,up:0,down:0,ratio:null,lastAt:0,unrecorded:0};by.set(id,r);}return r;};
+ const recorded=new Set(p.plays.map(x=>x.play).filter(Boolean));
  for(const x of p.plays){const r=row(x.id);r.plays++;r.lastAt=Math.max(r.lastAt,x.at);}
- for(const v of p.votes){const r=row(v.id);if(v.vote==='up')r.up++;else r.down++;r.lastAt=Math.max(r.lastAt,v.at);}
+ for(const v of p.votes){const r=row(v.id);if(v.vote==='up')r.up++;else r.down++;if(v.play&&!recorded.has(v.play))r.unrecorded++;r.lastAt=Math.max(r.lastAt,v.at);}
  for(const r of by.values())r.ratio=r.up+r.down?r.up/(r.up+r.down):null;
  return [...by.values()].sort((a,b)=>b.plays-a.plays||(b.ratio??-1)-(a.ratio??-1)||a.id.localeCompare(b.id));
 }
-/** 보관함으로 보낼 후보: 대표 게임인데 3판 이상 했고 👍 비율이 40% 미만. */
 /** 추천에 필요한 최소 판 수와 반응 수. 한두 번의 반응으로 대표 게임을 내리거나 올리지 않게 넉넉히 잡는다. */
 export const MIN_PLAYS_FOR_SUGGESTION=5;
 export const MIN_DOWN_FOR_ARCHIVE=2;
@@ -111,4 +126,19 @@ export function classBadges(p:ClassProgress):ClassBadge[]{
 export function newBadges(before:ClassProgress,after:ClassProgress):ClassBadge[]{
  const had=new Set(classBadges(before).filter(b=>b.earned).map(b=>b.id));
  return classBadges(after).filter(b=>b.earned&&!had.has(b.id));
+}
+
+/**
+ * 두 기록 합치기(같은 판·같은 반응은 한 번만). 저장에 실패한 탭이 다른 탭의 기록을 잃지 않게 쓴다.
+ * 판 id가 있는 반응은 판마다 더 늦게 남긴 쪽을 남긴다.
+ */
+export function mergeProgress(a:ClassProgress,b:ClassProgress):ClassProgress{
+ const playKey=(x:PlayEntry)=>x.play?`p:${x.play}`:`t:${x.id}:${x.at}`;
+ const plays=new Map<string,PlayEntry>();
+ for(const x of [...a.plays,...b.plays])if(!plays.has(playKey(x)))plays.set(playKey(x),x);
+ const voteKey=(v:VoteEntry)=>v.play?`p:${v.play}`:`t:${v.id}:${v.at}`;
+ const votes=new Map<string,VoteEntry>();
+ for(const v of [...a.votes,...b.votes]){const k=voteKey(v),old=votes.get(k);if(!old||v.at>=old.at)votes.set(k,v);}
+ const byTime=<T extends {at:number}>(xs:T[])=>xs.sort((x,y)=>x.at-y.at).slice(-MAX_ENTRIES);
+ return {version:1,plays:byTime([...plays.values()]),votes:byTime([...votes.values()])};
 }

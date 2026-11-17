@@ -89,7 +89,7 @@ test('the active screen puts the instruction first and practice is only for the 
  assert.doesNotMatch(activity,/className="expedition-roles" open=/,'roles stay folded');
  assert.match(activity,/if\(revamped&&gentle\)\{setPracticePlan/);
  assert(activity.indexOf('expedition-rules')<activity.indexOf('<ExpeditionDemo'),'rule card first');
- assert(activity.indexOf('>원정 시작</button>')<activity.indexOf('<ExpeditionDemo'),'start button before the demo');
+ assert(activity.indexOf('<StartLabel sub="원정"/>')<activity.indexOf('<ExpeditionDemo'),'start button before the demo');
 });
 
 test('the boss starts on a route that needs no sensor devices',()=>{

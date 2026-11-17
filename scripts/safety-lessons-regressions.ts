@@ -16,9 +16,9 @@ try{
   const button=(name:string)=>page.getByRole('button',{name,exact:true});
   try{
    const response=await page.goto(base+'/solo/play/'+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
-   await button('활동 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
+   await button('시작 · 준비 확인').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
    assert.equal(await page.locator('.mq-heading h1').innerText(),SAFETY_LESSONS[id].name);
-   await button('안전 상황 살펴보기').click();
+   await button('시작 · 안전 상황 살펴보기').click();
    for(let i=0;i<3;i++){
     const scenario=SAFETY_LESSONS[id].scenarios[i];
     await button(scenario.choices.find(c=>c.id!==scenario.answer)!.label).click();await page.getByRole('alert').waitFor();
@@ -38,7 +38,7 @@ try{
    await page.locator('.game-result-overlay').waitFor();
    const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));
    assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,id);assert.equal(saved.recentGames[0].score,300);assert.match(saved.recentGames[0].details.metrics['점수 기준'],/역량 평가 아님/);
-   await button('다시 하기').click();await button('활동 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
+   await button('다시 하기').click();await button('시작 · 준비 확인').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
    assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),1);
    report.cases.push({id,width,status:'pass'});console.log('PASS',id,width);
   }catch(e){await page.screenshot({path:path.join(out,`${id}-${width}-failure.png`),fullPage:true});throw e;}finally{await context.close();}

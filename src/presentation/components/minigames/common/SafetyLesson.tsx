@@ -1,5 +1,6 @@
 import {LayoutDiagram} from '../../LayoutDiagram';
 import {useEffect,useRef,useState} from 'react';
+import {StartLabel} from '../../StartLabel';
 import {SAFETY_LESSONS,safetyScenarios,safetyLessonResult,type SafetyLessonId,type SafetyLearningRecord,type SafetyScenario} from '../../../../domain/safetyLessons';
 import {safetyChoiceOrder} from '../../../../domain/fourthGameRules';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
@@ -58,7 +59,7 @@ export function SafetyLesson({gameId,groupId='standalone-player',enqueueAction,o
   <header className="mq-heading"><span aria-hidden="true">{spec.emoji}</span><div><p>안전 상황 학습</p><h1>{spec.name}</h1></div><span className="mq-pill">{phase==='intro'?'준비':reviewing?'이유 다시 확인':phase==='summary'||phase==='done'?'학습 정리':`${index+1} / 3`}</span></header>
   {phase==='intro'&&<>
    <ol className="safety-rules3" aria-label="학습 방법 3줄">{spec.rules3.map((rule,i)=><li key={i}><strong>{['무엇을','어떻게','언제 끝나요'][i]}</strong><span>{rule}</span></li>)}</ol>
-   <button className="mq-primary safety-start" onClick={()=>{started.current=performance.now();setPhase('scenario');}}>안전 상황 살펴보기</button>
+   <button className="mq-primary safety-start" onClick={()=>{started.current=performance.now();setPhase('scenario');}}><StartLabel sub="안전 상황 살펴보기"/></button>
    <details className="mq-panel safety-prep"><summary>수업 준비 · 상황 카드 묶음 · 자료 확인</summary>
     <label>상황 카드 묶음<select value={scenarioSet} onChange={e=>setScenarioSet(e.target.value as 'core'|'alternate')}><option value="core">기본 상황</option><option value="alternate">다른 상황에서 같은 이유 확인</option></select></label>
     <p>선택지 위치보다 이유를 기억해요. 세 상황 뒤에 다른 상황으로 다시 확인할 수 있어요. 새로운 처치 방법을 제시하지 않아요.</p>

@@ -35,7 +35,7 @@ export function ClassroomSetup() {
   const [packageMinutes,setPackageMinutes]=useState<WorkshopSettings['packageMinutes']>(recipe?.settings.packageMinutes??requestedPackage);
   useEffect(()=>{if((window.location.hash.startsWith('#lesson=')||window.location.hash.startsWith('#recipe=')))window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);},[]);
   const [sharedSettings,setSharedSettings]=useState<WorkshopSettings|null>(recipe?.settings??null);
-  const [step, setStep] = useState(recipe?3:requestedGame?2:1); const [game, setGame] = useState<GameDef | null>(requestedGame||null);
+  /* 레시피의 게임이 TV 전용이면 3단계로 바로 가지 않는다(게임 없이 빈 화면이 되지 않게). */ const [step, setStep] = useState(recipe&&requestedGame?3:requestedGame?2:1); const [game, setGame] = useState<GameDef | null>(requestedGame||null);
   const [groups, setGroups] = useState(Math.min(MAX_LESSON_GROUPS,recipe?.groups??6)); const [minutes, setMinutes] = useState(recipe?.minutes??transfer?.minutes??requestedPackage??40);
   const [reviewScores, setReviewScores] = useState(false);
   const [checked, setChecked] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState('');

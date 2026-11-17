@@ -24,7 +24,7 @@ export function ClassProgressPage(){
  const archive=archiveCandidates(rows,isFeatured),promote=featuredCandidates(rows,isFeatured);
  const map=mapView(progress),week=weekCompare(progress,Date.now()),badges=classBadges(progress);
  const table=():ExportTable=>({title:'우리 반 활동 반응',fileBase:'우리반반응',meta:[['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['판 수',`${progress.plays.length}판`]],
-  headers:['활동','판 수','👍','👎','👍 비율','구분'],rows:rows.map(r=>[nameOf(r.id),r.plays,r.up,r.down,pct(r),isFeatured(r.id)?'대표':'보관함'])});
+  headers:['활동','기록한 판','👍','👎','👍 비율','기록 안 한 판 반응','구분'],rows:rows.map(r=>[nameOf(r.id),r.plays,r.up,r.down,pct(r),r.unrecorded,isFeatured(r.id)?'대표':'보관함'])});
  return <FlowShell utilities back="/tools" backLabel="수업 도구">
   <section className="class-progress" aria-labelledby="cp-title">
    <h1 id="cp-title">우리 반 반응 · 원정 지도</h1>
@@ -46,12 +46,13 @@ export function ClassProgressPage(){
       <li>🗄 보관함으로 보낼 후보: {SUGGESTION_RULES.archive}</li>
       <li>⭐ 대표로 올릴 후보: {SUGGESTION_RULES.featured}</li>
       <li>👍 비율은 👍와 👎를 누른 판만 세요. 반응을 남기지 않은 판은 판 수에만 들어가요.</li>
+      <li>반응은 판마다 따로 남아요. 결과를 기록하지 않고 누른 반응은 '기록 안 한 판 반응'으로 따로 세고, 👍·👎 수에도 들어가요.</li>
       <li>{SUGGESTION_RULES.note}</li>
      </ul></details>
      <h2 className="cp-h2">많이 한 활동</h2>
      <div className="cp-table-wrap"><table className="cp-table">
-      <thead><tr><th scope="col">활동</th><th scope="col">판 수</th><th scope="col">👍</th><th scope="col">👎</th><th scope="col">👍 비율</th></tr></thead>
-      <tbody>{rows.map(r=><tr key={r.id}><th scope="row">{nameOf(r.id)}{!isFeatured(r.id)&&<small> · 보관함</small>}</th><td>{r.plays}</td><td>{r.up}</td><td>{r.down}</td><td>{pct(r)}</td></tr>)}</tbody>
+      <thead><tr><th scope="col">활동</th><th scope="col">기록한 판</th><th scope="col">👍</th><th scope="col">👎</th><th scope="col">👍 비율</th><th scope="col" title="결과를 기록하지 않은 판에 남긴 반응">기록 안 한 판 반응</th></tr></thead>
+      <tbody>{rows.map(r=><tr key={r.id}><th scope="row">{nameOf(r.id)}{!isFeatured(r.id)&&<small> · 보관함</small>}</th><td>{r.plays}</td><td>{r.up}</td><td>{r.down}</td><td>{pct(r)}</td><td>{r.unrecorded||'-'}</td></tr>)}</tbody>
      </table></div>
      <ExportMenu table={table}/>
     </>}

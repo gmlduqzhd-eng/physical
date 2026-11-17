@@ -73,8 +73,8 @@ test('stored data is validated and bounded',()=>{
 
 test('every finished game passes the shared result screen: plays are counted there and the slot is shown',()=>{
  const page=readFileSync('src/presentation/GamePlayPage.tsx','utf8');
- assert.match(page,/setGameFinished\(true\);\n\s*if\(gameType\)recordPlay\(gameType\);/);
- assert.match(page,/<ClassFeedbackSlot gameId=\{gameType\}\/>/);
+ assert.match(page,/setGameFinished\(true\);\n\s*if\(gameType\)recordPlay\(gameType,Date\.now\(\),openPlayId\(gameType\)\?\?sessionPlayId\);/);
+ assert.match(page,/<ClassFeedbackSlot gameId=\{gameType\} playId=\{sessionPlayId\}\/>/);
  const sig=readFileSync('src/presentation/components/minigames/signature/SignaturePlay.tsx','utf8');
  assert.match(sig,/afterRecord=\{<ClassFeedbackSlot gameId=\{game\.id\}\/>\}/);
  // 리모컨은 판(round)보다 오래 사는 바깥 막대에 있다(결과·'한 판 더'에도 연결 유지).

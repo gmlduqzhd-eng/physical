@@ -20,7 +20,7 @@ export const LAYOUTS:Record<string,LayoutSpec>={
  'exp-phone-37':L('pair',['왼','가','오'],'받는 쪽에 표식 3개를 한 줄로',{distance:'2~3m'}),
  'exp-phone-38':L('row',['1','2','3'],'정거장 표식 3개를 한 줄로',{distance:'2m'}),
  'exp-tablet-01':L('grid',['●','▲','■','◆','★','♥'],'색·모양 표식 6개를 2줄 × 3칸으로',{distance:'1.5m'}),
- 'exp-tablet-02':L('star',['1','2','3','4'],'꼭짓점 자리 4개 · 모둠이 4m × 4m 안에서',{note:'모양'}),
+ 'exp-tablet-02':L('star',['1','2','3','4'],'자리 표식 4개 · 모둠이 4m × 4m 안에서 한 줄·세모·네모로',{note:'모양'}),
  'exp-tablet-06':L('star',SHAPES,'색 표식 4개를 둥글게, 한 번에 한 명씩',{note:'출발'}),
  'exp-tablet-07':L('row',NUM(8),'숫자 카드 1~8을 한 줄로',{distance:'1m'}),
  'exp-tablet-21':L('star',NUM(5),'표식 5개를 별 모양으로, 4명이 서고 하나는 비워요',{note:'빈자리'}),

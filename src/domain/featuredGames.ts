@@ -86,7 +86,11 @@ export const mergedInto=(id:string):GameDef|undefined=>{const target=MERGED_INTO
 export const includesArchive=(view:{viewAll:boolean;query:string;phoneOnly:boolean})=>view.viewAll||!!view.query.trim()||view.phoneOnly;
 export const hubPool=(view:{viewAll:boolean;query:string;phoneOnly:boolean}):GameDef[]=>includesArchive(view)?AVAILABLE_GAMES:FEATURED_GAMES;
 /** 머리말: 지금 목록이 보여 주는 것과 같은 말을 한다(대표 게임만 / 보관함까지). */
-export function libraryLead(solo:boolean,viewAll:boolean,soloCount:number):string{
+export function libraryLead(solo:boolean,viewAll:boolean,soloCount:number,view:{query?:string;phoneOnly?:boolean}={}):string{
  if(solo)return `학생 정보 입력 없이, 혼자 할 수 있는 ${soloCount}개 활동이에요.`;
- return viewAll?`대표 게임 ${FEATURED_GAMES.length}개와 보관함 ${AVAILABLE_GAMES.length-FEATURED_GAMES.length}개, 모든 활동 ${AVAILABLE_GAMES.length}개를 보여 줘요. 대표 게임이 먼저 나와요.`:`먼저 해 보기 좋은 대표 게임 ${FEATURED_GAMES.length}개를 보여 줘요. 나머지 ${AVAILABLE_GAMES.length-FEATURED_GAMES.length}개는 보관함에 있어요.`;
+ const archived=AVAILABLE_GAMES.length-FEATURED_GAMES.length;
+ // 검색어나 준비물 없는 놀이 모음은 보관함까지 찾는다. 머리말도 지금 보이는 범위를 그대로 말한다.
+ if(view.query?.trim())return `모든 활동 ${AVAILABLE_GAMES.length}개(보관함 포함)에서 찾아요. 대표 게임이 먼저 나와요.`;
+ if(view.phoneOnly)return `준비물 없는 놀이는 보관함까지 모두 보여 줘요. 대표 게임이 먼저 나와요.`;
+ return viewAll?`대표 게임 ${FEATURED_GAMES.length}개와 보관함 ${archived}개, 모든 활동 ${AVAILABLE_GAMES.length}개를 보여 줘요. 대표 게임이 먼저 나와요.`:`먼저 해 보기 좋은 대표 게임 ${FEATURED_GAMES.length}개를 보여 줘요. 나머지 ${archived}개는 보관함에 있어요.`;
 }

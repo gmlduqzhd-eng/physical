@@ -25,7 +25,7 @@ export const EXPEDITION_CLARITY:Record<string,ExpeditionClarity>={
  'exp-phone-37':{desc:'짝이 보낸 부드러운 공을 옆걸음으로 가서 받고 되돌려 줘요. 성공: 왼쪽·오른쪽에서 모두 받아 봤어요.',equipment:['부드러운 공 1개 · 짝당','표식 3개(왼쪽·가운데·오른쪽) · 짝당'],space:'짝 사이 2~3m · 짝마다 따로 떨어진 자리',grades:MID,minSeconds:15},
  'exp-phone-38':{desc:'라켓 위에 공을 올리고 걸어 정거장마다 멈추기·한 번 튀기기·방향 바꾸기를 해요. 성공: 세 정거장의 동작을 모두 해 봤어요.',equipment:['라켓 1개 · 1인당(없으면 종이접시)','풍선이나 스펀지공 1개 · 1인당','정거장 표식 3개 · 코스 1개당'],space:`정거장 사이 2m · ${TURNS}`,grades:MID,minSeconds:15},
  'exp-tablet-01':{name:'우리 자리 찾기',desc:'모둠 친구마다 화면에 나온 색·모양 표식을 하나씩 맡아 그 자리로 걸어가 서요. 성공: 모두 자기 표식에 섰어요.',equipment:['색·모양 표식 6개(2줄 × 3칸) · 모둠당'],space:'표식 사이 1.5m · 모둠마다 표식 한 판',grades:ALL},
- 'exp-tablet-02':{name:'몸으로 모양 만들기',desc:'모둠이 흩어져 걷다가 신호에 맞춰 화면의 모양(한 줄·세모·네모)으로 서요. 성공: 서로 밀지 않고 모양을 만들었어요.',equipment:['꼭짓점 자리 표식 4개 · 모둠당(처음 한 번만 써도 돼요)'],space:'모둠이 팔을 벌려 설 수 있는 4m × 4m',grades:ALL,minSeconds:15},
+ 'exp-tablet-02':{name:'몸으로 모양 만들기',desc:'모둠이 흩어져 걷다가 신호에 맞춰 화면의 모양(한 줄·세모·네모)으로 서요. 성공: 서로 밀지 않고 모양을 만들었어요.',equipment:['자리 표식 4개 · 모둠당(처음 한 번만 써도 돼요)'],space:'모둠이 팔을 벌려 설 수 있는 4m × 4m',grades:ALL,minSeconds:15},
  'exp-tablet-06':{desc:'화면 글자를 보고 1·2라운드는 글자의 뜻, 3라운드는 글자의 색에 맞는 표식을 다녀와요. 성공: 그 라운드 규칙에 맞는 표식을 골랐어요.',equipment:['색 표식 4개(빨강·파랑·노랑·초록) · 모둠당 1세트'],space:'출발점에서 네 표식까지 2~3m · 한 번에 한 명씩',grades:MID,minSeconds:30},
  'exp-tablet-07':{desc:'바닥 숫자줄에서 저마다 받은 순서(1→2→3→4, 2→4→6→8 등)대로 걸어요. 성공: 모두 자기 순서대로 다녀왔어요.',equipment:['숫자 카드 1~8 · 모둠당 한 줄'],space:'카드 사이 1m 한 줄 · 한 번에 한 명씩',grades:ALL,minSeconds:40},
  'exp-tablet-21':{desc:'네 사람이 표식 다섯 개를 쓰고, 공을 보낸 사람은 비어 있는 표식으로 옮겨요. 성공: 모두 받기와 옮기기를 했어요.',equipment:['부드러운 공 1개 · 모둠당','표식 5개 · 모둠당(별 모양으로)'],space:'표식 사이 2~3m',grades:MID,minSeconds:15},

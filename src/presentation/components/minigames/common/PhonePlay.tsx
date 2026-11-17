@@ -1,5 +1,6 @@
 import {ActivityCueControls} from './ActivityCueControls';
 import {validPhoneFill} from '../../../../domain/fourthGameRules';
+import {StartLabel} from '../../StartLabel';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {phonePlayerRange,phoneRecordValid,phoneSafety,phoneSequence,phoneSetup,phoneTarget,type PhonePlay as Play,type PhoneRecord} from '../../../../domain/phonePlayCatalog';
@@ -104,7 +105,7 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
    {/* 처음 본 사람도 5초 안에 알 수 있게: 3줄 규칙과 시작 버튼을 맨 위에 둔다. 나머지 준비·설정은 접어 둔다. */}
    <PhoneRuleCard rule3={p.rule3}/>
    <div className="pp-start">
-    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>반 전체로 바로 시작</button>}
+    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}><StartLabel sub="반 전체"/></button>}
     <button className={solo?'pp-primary':''} onClick={()=>setPhase('plan')}>{solo?'놀이 방법 익히기':'짝·모둠이 기기 1대로 하기'}</button>
     {!solo&&<p className="pp-start-note">반 전체: 이 화면을 TV에 띄우면 학생은 기기 없이 참여해요 · 기기 1대: 과제마다 직접 기록해요</p>}
    </div>
