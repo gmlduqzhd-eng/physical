@@ -1,5 +1,6 @@
 import {LayoutDiagram} from '../../LayoutDiagram';
 import {layoutFor} from '../../../../domain/layoutDiagrams';
+import {StartLabel} from '../../StartLabel';
 import {ActivityCueControls} from './ActivityCueControls';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {mergedMovementMeta,makeMergedMovementRound} from '../../../../domain/mergedMovementVariants';
@@ -132,7 +133,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
       <ol className="mq-rules mq-rules-three" aria-label="놀이 방법 세 줄">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
-      <button className="mq-primary" onClick={() => { unlockAudio(); setPhase('plan'); }}>시작</button>
+      <button className="mq-primary" onClick={() => { unlockAudio(); setPhase('plan'); }}><StartLabel sub="작전 고르기"/></button>
       <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact}/>
       <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId&&layoutFor(variantId)?variantId:gameId}/><p>내 자리를 넓게 잡고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
         <details className="mq-setup-options"><summary>참여 방법 바꾸기 · 앉아서·속도{meta.team?'·인원':''} (기본값 그대로 시작해도 돼요)</summary>
@@ -153,12 +154,12 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
       {/* 고를 필요가 없는 작전은 시작 버튼을 맨 위에 둔다(첫 방법이 미리 골라져 있어요). */}
       {!plan.decision&&<div className="mq-start-row"><button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>작전 시작 · 기기 내려놓기</button>
       <button className="mq-secondary" disabled={!validChoice} onClick={() => start(true)}>짧게 연습하기 (점수 없음 · 고르고 싶을 때만)</button></div>}
+      <fieldset className="mq-choices"><legend>{plan.decision?'어떻게 할까요? 골라 보세요':'어떤 방법으로 할까요? (첫 방법이 골라져 있어요)'}</legend>{plan.choices.map(c => {const blockedPath=!!c.path&&!safeRoute(c.path,plan.blocked!);return <button key={c.id} type="button" aria-pressed={choice === c.id} disabled={blockedPath} aria-label={blockedPath?`${c.label} · 막힌 길이라 고를 수 없어요`:undefined} onClick={() => changeChoice(c.id)}><strong>{c.label}{blockedPath?' · 막힌 길 ×':''}</strong><span>{c.detail}</span></button>;})}</fieldset>
       {!compact&&<ActivityDemo open={round===0&&!records.length} autoplay={round===0&&!records.length} steps={plan.cues} equipment={meta.equipment} roles={plan.roles} board={plan.blocked!==undefined?{size:3,blocked:[plan.blocked],path:selected?.path,start:6,destination:2}:undefined}/>}
       {plan.blocked !== undefined && <div className="mq-map" aria-label="3 곱하기 3 바닥 표식 지도">{Array.from({ length: 9 }, (_, n) => <div key={n} className={n === plan.blocked ? 'is-blocked' : selected?.path?.includes(n) ? 'is-path' : ''}><b>{n + 1}</b><small>{n === plan.blocked ? '막힌 길' : n === 6 ? '출발 기지' : n === 2 ? '목적지' : '표식'}</small></div>)}</div>}
       {plan.stimulus&&<div className="mq-panel"><p>이번 규칙: {plan.stimulus.rule}</p><strong className="game-word-cue" data-game-color="movement-word" style={{color:plan.stimulus.color,fontSize:48}}>{plan.stimulus.text}</strong></div>}
       {plan.roles && <div className="mq-panel"><h3>이번 출발 순서</h3><p>{plan.roles.join(' → ')}</p></div>}
-      <fieldset className="mq-choices"><legend>{plan.decision?'어떻게 할까요? 골라 보세요':'어떤 방법으로 할까요? (첫 방법이 골라져 있어요)'}</legend>{plan.choices.map(c => {const blockedPath=!!c.path&&!safeRoute(c.path,plan.blocked!);return <button key={c.id} type="button" aria-pressed={choice === c.id} disabled={blockedPath} aria-label={blockedPath?`${c.label} · 막힌 길이라 고를 수 없어요`:undefined} onClick={() => changeChoice(c.id)}><strong>{c.label}{blockedPath?' · 막힌 길 ×':''}</strong><span>{c.detail}</span></button>;})}</fieldset>
-      {selected&&<section className="activity-brief"><h3>고른 작전이 바꾼 것</h3><p>{selected.label} · {selected.detail}</p><p>몸으로 연결할 순서: {plan.cues.join(' → ')}</p>{plan.roles&&<div className="activity-role-cards">{plan.roles.map((role,i)=><p key={i}><strong>{i+1}번 자리</strong>{role}</p>)}</div>}<p>경로·도구·편한 대안을 먼저 확인하고, 기록은 활동 뒤 직접 남겨요.</p></section>}
+      {selected&&<details className="activity-brief mq-chosen"><summary>고른 작전이 바꾼 것 · {selected.label}</summary><p>{selected.label} · {selected.detail}</p><p>몸으로 연결할 순서: {plan.cues.join(' → ')}</p>{plan.roles&&<div className="activity-role-cards">{plan.roles.map((role,i)=><p key={i}><strong>{i+1}번 자리</strong>{role}</p>)}</div>}<p>경로·도구·편한 대안을 먼저 확인하고, 기록은 활동 뒤 직접 남겨요.</p></details>}
       {error && <p role="alert" className="mq-error">{error}</p>}{plan.decision&&choice===plan.decision.answer&&<p className="mq-panel">{plan.decision.explanation}</p>}
       {!validChoice&&plan.decision&&<p className="mq-hint-start">위에서 하나를 고르면 시작할 수 있어요.</p>}
       {plan.decision&&<div className="mq-start-row"><button className="mq-primary" disabled={!validChoice} onClick={() => start(false)}>작전 시작 · 기기 내려놓기</button>

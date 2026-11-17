@@ -42,13 +42,13 @@ const output = path.resolve(process.env.AUDIT_OUTPUT || 'test-results/solo');
     await page.getByRole('searchbox').fill(last.name);
     const lastCard = page.locator(`[data-game-card="${last.type}"]`);
     await lastCard.getByRole('link', { name: '체험하기', exact: true }).click();
-    await page.getByRole('button', { name: '활동 시작', exact: true }).waitFor();
+    await page.getByRole('button', { name: '시작 · 준비 확인', exact: true }).waitFor();
     assert.equal(new URL(page.url()).pathname, '/solo/play/' + last.type);
     await page.getByRole('button', { name: '활동 목록으로', exact: true }).click();
     await page.waitForURL('**/solo');
     // A stale classroom queue and room query must not activate classroom scoring.
     await page.goto(base + '/solo/play/stopwatch?room=11111111-1111-4111-8111-111111111111&group=22222222-2222-4222-8222-222222222222&guided=1&mission=test');
-    const start = page.getByRole('button', { name: '활동 시작', exact: true });
+    const start = page.getByRole('button', { name: '시작 · 준비 확인', exact: true });
     await start.waitFor();
     await page.clock.install();
     await page.clock.pauseAt(new Date(Date.now() + 100));

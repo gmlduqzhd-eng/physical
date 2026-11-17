@@ -61,7 +61,7 @@ test('team roles stay visible while playing; map and boss start from one big but
  assert.match(activity,/expedition-now-roles/);
  const flagship=readFileSync('src/presentation/flagship/FlagshipActivity.tsx','utf8');
  assert.doesNotMatch(flagship,/type="checkbox" checked=\{safety\}/,'no separate safety checkbox gate');
- assert.match(flagship,/안전 약속 확인하고 시작/);
+ assert.match(flagship,/StartLabel sub="안전 약속 확인"/);
  assert.match(flagship,/className="flagship-now"/);
  assert.match(flagship,/ExpeditionTutorial key="after-start" game=\{game\} collapsed/);
 });

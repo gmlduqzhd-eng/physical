@@ -51,9 +51,9 @@ async function run() {
         if (game.type === 'fate_card') await page.addInitScript(() => { Math.random = () => 0; });
         await page.clock.install();
         await page.goto(base + '/solo/play/' + game.type, { waitUntil: 'domcontentloaded' });
-        await page.getByRole('button', { name: '활동 시작', exact: true }).waitFor({ timeout: 15000 });
+        await page.getByRole('button', { name: '시작 · 준비 확인', exact: true }).waitFor({ timeout: 15000 });
         await page.clock.pauseAt(new Date(Date.now() + 100));
-        await page.getByRole('button', { name: '활동 시작', exact: true }).tap();
+        await page.getByRole('button', { name: '시작 · 준비 확인', exact: true }).tap();
         await sleep(30);
         const skip = page.getByRole('button', { name: /준비 완료/ });
         if (await skip.count()) await skip.tap();
@@ -183,7 +183,7 @@ async function run() {
         const cooldown = page.getByRole('dialog', {name:'쿨다운과 심박수 회복 루틴'});
         if(await cooldown.count()) await cooldown.getByRole('button', {name:/닫기|건너뛰기|완료/}).last().tap();
         await page.getByRole('button', { name: '다시 하기', exact: true }).tap();
-        await page.getByRole('button', { name: '활동 시작', exact: true }).waitFor();
+        await page.getByRole('button', { name: '시작 · 준비 확인', exact: true }).waitFor();
         assert.equal((await profile()).totalPlays, 1, 'replay preparation does not save');
         await page.getByRole('button', { name: '활동 목록으로', exact: true }).tap();
         await page.waitForURL('**/solo');

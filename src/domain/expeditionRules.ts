@@ -23,6 +23,8 @@ const colors=['빨강 ●','파랑 ▲','노랑 ■','초록 ◆'];
 /** 우리 자리 찾기의 표식 여섯 개(2줄 × 3칸). 행·열 좌표 대신 색과 모양으로 찾는다. */
 export const SPOT_MARKS=['빨강 ●','파랑 ▲','노랑 ■','초록 ◆','보라 ★','주황 ♥'] as const;
 const SHAPES=['한 줄','세모','네모'];
+/** 모양마다 서는 자리. '몸으로 모양 만들기'의 역할 안내에 쓴다. */
+const SHAPE_ROLES:Record<string,string[]>={'한 줄':['맨 앞 자리','둘째 자리','셋째 자리','맨 뒤 자리'],'세모':['꼭대기 자리','왼쪽 아래 자리','오른쪽 아래 자리','가운데에서 모양 봐 주기'],'네모':['앞쪽 모서리 자리','오른쪽 모서리 자리','뒤쪽 모서리 자리','왼쪽 모서리 자리']};
 const pick=(n:number,random:()=>number)=>Math.min(n-1,Math.max(0,Math.floor(random()*n)));
 export function shuffled<T>(items:T[],random:()=>number=Math.random):T[]{
   const result=[...items];for(let i=result.length-1;i>0;i--){const j=pick(i+1,random);[result[i],result[j]]=[result[j],result[i]];}return result;
@@ -59,7 +61,7 @@ const tasks=(entries:string[],seconds=8):ExpeditionStep[]=>entries.map(instructi
 /** 함께 하는 원정의 기본 역할. 규칙이 따로 역할을 정하지 않을 때 '개인 통로에서 수행' 대신 쓴다. */
 const DEFAULT_ROLES:Record<string,string[]>={
   S35:['풍선 띄우며 순찰하기','떨어진 풍선 주워 주기'],
-  T02:['앞쪽 꼭짓점 자리','오른쪽 꼭짓점 자리','뒤쪽 꼭짓점 자리','왼쪽 꼭짓점 자리'],
+  T02:['맨 앞 자리','둘째 자리','셋째 자리','맨 뒤 자리'],
   T06:['표식 다녀오기','규칙 크게 읽어 주기','다녀온 표식 확인하기','다음 차례 준비하기'],
   T21:['처음 공 보내기','받고 빈자리로 옮기기','받고 빈자리로 옮기기','빈자리 알려 주기'],
   T26:['드리블 · 빨강 출구부터','드리블 · 파랑 출구부터','드리블 · 노랑 출구부터','"정지!" 외치기'],
@@ -132,7 +134,9 @@ export function createExpeditionRound(game:ExpeditionSpec,round:number,players:n
     case 'S39': plan.bingoCells=shuffled([round*3,round*3+1,round*3+2],random);plan.targets=plan.bingoCells.map(cell=>({label:`${cell+1}번 칸`,goal:1}));plan.steps=tasks([`${number}번 출발 위치에서 배정된 세 숫자 표적으로 굴려요.`,'회수 신호에 공을 가져오고 출발 위치를 바꿔요.']);plan.checks=['공을 직접 회수하고 출발 위치를 바꿨어요.'];plan.kind='bingo';break;
     case 'S40': sequence([`${turn} 쪽 한 걸음: 각자 스카프 띄우고 오른손으로 상대 스카프 받기`,`${other} 쪽 한 걸음: 왼손으로 바꿔 받기`],'서로 부딪치지 않는 거리에서 바꿔잡기');plan.targets=[{label:'오른손 조합',goal:2},{label:'왼손 조합',goal:2}];break;
     case 'T01': {const spots=shuffled([...SPOT_MARKS],random).slice(0,players);plan.steps=tasks(['내가 맡은 색·모양 표식을 찾아 걸어가 서요. 모두 서면 손을 들어요.'],20);plan.roles=spots.map((spot,i)=>`${i+1}번: ${spot}`);plan.checks=['모두 자기 표식에 섰어요.'];break;}
-    case 'T02': {const shape=SHAPES[round%SHAPES.length];sequence([`${shape} 모양으로 서기`,'흩어져 천천히 걷기',`다시 ${shape} 모양으로 서기`],'서로 밀지 않고 모양을 만들어요');plan.checks=[`${shape} 모양을 서로 보고 확인했어요.`];break;}
+    case 'T02': {const shape=SHAPES[round%SHAPES.length];sequence([`${shape} 모양으로 서기`,'흩어져 천천히 걷기',`다시 ${shape} 모양으로 서기`],'서로 밀지 않고 모양을 만들어요');plan.checks=[`${shape} 모양을 서로 보고 확인했어요.`];
+      // 역할도 지금 모양에 맞춘다(한 줄에는 꼭짓점이 없다).
+      if(players>1)roleCycle(SHAPE_ROLES[shape]??DEFAULT_ROLES.T02);break;}
     case 'T03': {const first=1+pick(players-1,random);plan.allocation={labels:['왼쪽 섬','오른쪽 섬'],counts:[first,players-first]};plan.steps=tasks([`왼쪽 섬 ${first}명, 오른쪽 섬 ${players-first}명으로 나누어 이동해요.`],20);plan.targets=[];break;}
     case 'T04': plan.board=makeBoard(round,random);plan.steps=tasks(['개인 통로에서 지도에 남아 있는 길을 정해 보급품을 옮겨요.','출발점으로 돌아와 바뀐 도로를 확인해요.']);plan.checks=['막힌 도로 대신 연결된 다른 길로 이동했어요.'];break;
     case 'T05': memory(shuffled(colors,random).slice(0,players),'번호 순으로 실제 섰던 색 표식');plan.roles=Array.from({length:players},(_,i)=>`${i+1}번: ${i+1}번째 배치 기억`);break;

@@ -8,7 +8,7 @@ async function main(){
   const page=await browser.newPage({viewport:{width:dimensions[0],height:dimensions[1]},isMobile:true,hasTouch:true});
   await page.clock.install();
   await page.goto((process.env.AUDIT_URL||'http://127.0.0.1:5175')+'/solo/play/'+game);
-  await page.getByRole('button',{name:'활동 시작',exact:true}).tap();
+  await page.getByRole('button',{name:'시작 · 준비 확인',exact:true}).tap();
   await page.getByRole('button',{name:/준비 완료/}).tap();
   await page.clock.pauseAt(new Date(Date.now()+100));
   const surface=page.locator('.gameplay-content .touch-none').first();

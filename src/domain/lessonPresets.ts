@@ -1,6 +1,7 @@
 import {getRemovedGame,isCleanedGame,liveActivityId} from './gameLifecycle';
 import { AVAILABLE_GAMES, type GameDef } from './gamesData';
 import { resolveGuidedGameType } from './guidedMission';
+import { isSignatureId } from './signatureGames';
 import type { GameRoom, MissionTemplate } from './types';
 
 export type LessonPreset = { roomId: string; game: GameDef; groups: number; minutes: number | null };
@@ -19,7 +20,8 @@ export function lessonPresets(rooms: GameRoom[], templates: Pick<MissionTemplate
     const liveType = !gameType || (getRemovedGame(gameType) && !isCleanedGame(gameType)) ? '' : liveActivityId(gameType);
     const game = AVAILABLE_GAMES.find(item=>item.type===liveType);
     const groupCount = counts.get(room.id) || 0;
-    if (!game || groupCount < 1 || groupCount > 8) return [];
+    // 대표 게임(sig-*)은 TV 한 대로 하는 게임이라 학생 기기 수업방 설정으로 다시 쓰지 않는다.
+    if (!game || isSignatureId(game.type) || groupCount < 1 || groupCount > 8) return [];
     // Older rooms did not store the original duration. Their remaining-time
     // modifier may have changed during the lesson, so ask the teacher instead.
     const minutes = room.setup_minutes;

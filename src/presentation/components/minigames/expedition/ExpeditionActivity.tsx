@@ -1,5 +1,6 @@
 import {LayoutDiagram} from '../../LayoutDiagram';
 import {ActivityCueControls} from '../common/ActivityCueControls';
+import {StartLabel} from '../../StartLabel';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {paceExpeditionSteps} from '../../../../domain/fourthGameRules';
 import {ActivityProgress} from '../common/ActivityProgress';
@@ -127,7 +128,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         <p><b>성공</b>{rules.success}</p>
         <p><b>준비물</b>{game.equipment.join(' · ')}</p>
       </section>
-      {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 그대로 두고, 지금 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpeditionSteps(paceExpedition([createExpeditionRound(game,i,players)],revamped&&gentle),pace)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 지금 라운드 이어 하기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작할게요.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}>원정 시작</button>}
+      {resumeAvailable?<section className="activity-brief"><p>{records.length}개 기록을 그대로 두고, 지금 라운드부터 참여 방법을 바꿀 수 있어요.</p><button className="expedition-primary" onClick={()=>{const updated=plans.map((old,i)=>i<round?old:paceExpeditionSteps(paceExpedition([createExpeditionRound(game,i,players)],revamped&&gentle),pace)[0]);setPlans(updated);setResumeAvailable(false);beginRound(round,updated);}}>기록 유지 · 지금 라운드 이어 하기</button><label><input type="checkbox" checked={resetRequested} onChange={e=>setResetRequested(e.target.checked)}/>기록을 지우고 처음부터 새 원정을 시작할게요.</label><button disabled={!resetRequested} onClick={start}>기존 진행 지우고 새 원정</button></section>:<button className="expedition-primary" onClick={start}><StartLabel sub="원정"/></button>}
       {!compact&&<ExpeditionDemo steps={demo.steps.map(s=>s.title)} roles={demo.roles}/>}
       {!solo&&<label>참여 인원<select disabled={resumeAvailable} aria-label="참여 인원" value={players} onChange={e=>setPlayers(Number(e.target.value))}>{Array.from({length:(game.spec[0]==='T'?4:game.players)-expeditionMinimumPlayers(game)+1},(_,i)=>i+expeditionMinimumPlayers(game)).map(n=><option key={n} value={n}>{n}명</option>)}</select></label>}
       {solo&&players>1&&<p className="expedition-note">혼자 해보기에서는 여러 역할의 진행을 미리 겪어 봐요. 번호 확인은 실제로 모둠 친구가 참여했다는 자동 확인이 아니에요.</p>}

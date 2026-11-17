@@ -1,0 +1,3 @@
+.start-label{display:inline-flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}
+.start-label-main{font-size:1.15em;font-weight:900}
+.start-label-sub{font-size:.72em;font-weight:700;opacity:.85}

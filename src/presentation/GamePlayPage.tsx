@@ -1,5 +1,6 @@
 import {ActivityPauseBoundary} from '../application/ActivityPauseContext';
 import {classroomResultMessage} from '../domain/fourthGameRules';
+import {StartLabel} from './components/StartLabel';
 import {useClassroomActivityStatus} from '../application/useClassroomActivityStatus';
 import {FLAGSHIP_GAMES,isFlagship} from '../domain/flagship';
 import {FlagshipActivity} from './flagship/FlagshipActivity';
@@ -40,7 +41,7 @@ import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
 import {SignaturePlay} from './components/minigames/signature/SignaturePlay';
 import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
-import {recordPlay} from '../application/classProgressStore';
+import {newPlayId,openPlayId,recordPlay} from '../application/classProgressStore';
 import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
@@ -202,6 +203,8 @@ const GamePlaySession = () => {
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
   const enqueueGuidedCompletion = guidedSubmission.enqueueCompletion;
   const [key, setKey] = useState(0);
+  // 한 판을 가리키는 id. 다시 하기(key가 바뀜)마다 새로 만들어, 그 판의 기록과 👍/👎를 잇는다.
+  const sessionPlayId=useMemo(()=>`${key}-${newPlayId()}`,[key]);
   const [gameFinished, setGameFinished] = useState(false);
   const [resultDetails, setResultDetails] = useState<GameResultDetails | undefined>();
   const quietResult=resultDetails?.participation==='observed'||resultDetails?.participation==='rested';
@@ -318,7 +321,7 @@ const GamePlaySession = () => {
     setResultDetails(details);
     setLastEarnedScore(earned);
     setGameFinished(true);
-    if(gameType)recordPlay(gameType);
+    if(gameType)recordPlay(gameType,Date.now(),openPlayId(gameType)??sessionPlayId);
     if (guidedMode&&canReportCompletion(details)) {
       enqueueGuidedCompletion();
     }
@@ -350,7 +353,7 @@ const GamePlaySession = () => {
     }
 
     if(earnsParticipationReward(earned,details))checkBadges(earned);
-  }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion,selectedVariant,baseGameInfo,scoreKey]);
+  }, [gameType, gameInfo, addGameResult, addXpAndCoins, speak, checkBadges, hasBattle, battleGroupId, battleRoomId, enqueueClassroomScore, guidedMode, enqueueGuidedCompletion,selectedVariant,baseGameInfo,scoreKey,sessionPlayId]);
 
   const localEnqueueAction = useCallback((action: { payload: { amount: number; details?: GameResultDetails } }) => {
     if (classroomActivity.paused||completionRef.current || !Number.isFinite(action.payload.amount)) return;
@@ -473,7 +476,7 @@ const GamePlaySession = () => {
               </button>
             </div>
           )}
-          <button type="button" className="game-prepare-start" onClick={handleStartGame}>활동 시작</button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
+          <button type="button" className="game-prepare-start" onClick={handleStartGame}><StartLabel sub="준비 확인"/></button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
         </div></div>
       )}
 
@@ -601,7 +604,7 @@ const GamePlaySession = () => {
               <span>🫀 운동 후 쿨다운 루틴</span>
             </button>}
 
-            {gameType&&<ClassFeedbackSlot gameId={gameType}/>}
+            {gameType&&<ClassFeedbackSlot gameId={gameType} playId={sessionPlayId}/>}
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>

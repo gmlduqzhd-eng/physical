@@ -14,7 +14,7 @@
 
 /* 하는 중 화면: 신호만 크게, 첫 화면 안에 (2026-11 직관성 개선) */
 .movement-quest[data-focus]{padding-top:8px}
-.movement-quest .mq-focus-signal{min-height:min(72vh,620px);margin:0 0 12px;gap:10px;transition:background-color .2s}
+.movement-quest .mq-focus-signal{min-height:max(260px,min(calc(100dvh - 330px),620px));margin:0 0 12px;gap:10px;transition:background-color .2s}
 .movement-quest .mq-focus-signal .mq-focus-title{font-size:clamp(16px,2.4vw,22px);font-weight:800;margin:0}
 .movement-quest .mq-focus-signal .mq-focus-cue{font-size:clamp(40px,7vw,112px);line-height:1.2;min-height:0;word-break:keep-all}
 .movement-quest .mq-focus-signal .mq-focus-count{font-size:clamp(80px,16vw,200px);line-height:1}
@@ -50,3 +50,14 @@
 [data-consolidated]:has(> .movement-quest[data-phase=plan]){display:flex;flex-direction:column}
 [data-consolidated]:has(> .movement-quest[data-phase=plan]) > .consolidated-course-bar{order:2}
 .movement-quest .mq-start-row{display:grid;gap:8px;margin:12px 0}
+/* 작전 고르기 화면: 시범 순서는 한 줄에 여러 개씩(칩) 보여 TV 한 화면 가까이에 들어오게 한다. */
+.movement-quest[data-phase=plan] .activity-brief[open] > ol{display:flex;flex-wrap:wrap;gap:6px;padding:0;list-style:none;margin:8px 0}
+.movement-quest[data-phase=plan] .activity-brief[open] > ol > li{padding:4px 10px;border-radius:999px;border:1px solid rgba(68,98,72,.35);background:rgba(255,255,255,.6)}
+.movement-quest[data-phase=plan] .activity-brief[open] > ol > li[aria-current=step]{background:#d8e8cb;border-color:#5a7a50}
+.movement-quest[data-phase=plan] .activity-brief[open] > button{margin:4px 6px 0 0}
+.dark-theme .movement-quest[data-phase=plan] .activity-brief[open] > ol > li{background:rgba(15,23,42,.6);border-color:rgba(148,163,184,.4)}
+.dark-theme .movement-quest[data-phase=plan] .activity-brief[open] > ol > li[aria-current=step]{background:rgba(90,122,80,.5)}
+/* 하는 중(TV 한 화면): 신호·버튼·한 줄 안내가 1280×800 첫 화면 안에 들어오게 여백을 줄인다. */
+.movement-quest[data-focus] .mq-away{margin:6px 0 0;text-align:center}
+.movement-quest[data-focus] .mq-focus-actions{margin-top:4px}
+.movement-quest[data-focus]{min-height:0;padding-bottom:12px}

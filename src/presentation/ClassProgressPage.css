@@ -39,6 +39,7 @@
 .cp-table thead th{text-align:right;white-space:nowrap}
 .cp-table thead th:first-child,.cp-table tbody th{text-align:left}
 .cp-table thead th:not(:first-child),.cp-table td{width:5.5em}
+.cp-table thead th:last-child,.cp-table td:last-child{width:7.5em;white-space:normal}
 .cp-table thead th:first-child{width:auto}
 .cp-table tbody th{font-weight:700;overflow-wrap:anywhere}
 .cp-rules{padding:10px 14px;border-radius:14px;border:1px solid rgba(148,163,184,.5)}

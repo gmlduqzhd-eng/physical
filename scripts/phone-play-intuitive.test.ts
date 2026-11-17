@@ -85,7 +85,7 @@ test('classic plays get their own screens and timings',()=>{
 test('the start screen puts the rules and the start buttons first and folds the settings',()=>{
  const device=read('src/presentation/components/minigames/common/PhonePlay.tsx');
  const intro=device.slice(device.indexOf("{phase==='intro'&&<>"));
- const card=intro.indexOf('<PhoneRuleCard'),start=intro.indexOf('반 전체로 바로 시작'),more=intro.indexOf('<details className="pp-panel pp-more"');
+ const card=intro.indexOf('<PhoneRuleCard'),start=intro.indexOf('<StartLabel sub="반 전체"'),more=intro.indexOf('<details className="pp-panel pp-more"');
  assert(card>0&&start>card&&more>start,'rule card → start buttons → folded settings');
  assert.equal((device.match(/기기가 동작이나 체력을 판정하지 않아요/g)??[]).length,1,'the notice is shown once');
  assert.match(device,/blockReason/,'a disabled start explains why');

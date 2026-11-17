@@ -5,7 +5,7 @@ import {type ExperienceId} from '../../domain/playRecipes';
 import '../PlayExperiences.css';
 
 export function QuickExperience({kind}:{kind:ExperienceId}){
- return <section className="quick-experience" aria-label="점수 없는 원리 체험"><p className="simulation-label">시뮬레이션 · 실제 수업·학생 기록·센서와 연결되지 않아요.</p>
+ return <section className="quick-experience" aria-label="점수 없는 원리 체험"><p className="simulation-label">미리 해 보기 · 점수와 기록은 남지 않아요. 혼자 눌러 보며 놀이 방법을 익혀요.</p>
   {kind==='map'?<MapExperience/>:<LoopExperience/>}
  </section>;
 }
