@@ -45,3 +45,29 @@
 .teacher-guide ul,.teacher-guide ol{margin:0;padding-left:22px;line-height:1.7;font-size:14px}
 .teacher-guide ol{list-style:decimal}.teacher-guide ul{list-style:disc}
 .teacher-guide small{color:var(--forest-muted,#5d6659)}
+.teacher-guide-suggested{margin-top:6px}.teacher-guide-suggested summary{font-size:13px}
+
+/* 목록 머리: 한 줄 제목 + 한 줄 안내. TV 첫 화면에서 조건과 카드가 바로 보이게 짧게 둔다. */
+.activity-library-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin:0 0 18px}
+.flow.activity-tools-scope .activity-library-head h1{font-size:28px;margin:0;line-height:1.3}
+.activity-library-head .forest-lead{flex:1 1 320px;margin:0;font-size:15px;color:var(--forest-muted,#687163)}
+.activity-library-head nav{display:flex;flex-wrap:wrap;gap:8px}.activity-library-head nav a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border-radius:12px;border:1px solid var(--forest-line,#cbd1bf);text-decoration:none;font-weight:700;color:var(--forest-accent,#52634a);background:var(--forest-paper,#fffefa)}
+.activity-library-head nav a.primary{color:var(--forest-on,#fffefa);background:var(--forest-accent,#576c50)}
+/* 어디서 · 몇 명 · 몇 분: 늘 맨 위에 보이는 공통 조건 */
+.activity-fit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr);gap:12px;align-items:end;border:2px solid var(--forest-accent,#576c50);border-radius:18px;padding:14px 16px 16px;margin:0 0 4px;background:var(--forest-paper,#fffefa)}
+.activity-fit legend{font-weight:800;padding:0 8px;font-size:15px;color:var(--forest-accent,#52634a)}
+.activity-fit label{display:flex;flex-direction:column;gap:6px;min-width:0}.activity-fit select,.activity-fit input{width:100%}
+.activity-more-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin:0 0 12px}.activity-more-filters>label{display:flex;flex-direction:column;gap:6px;min-width:180px}.activity-more-filters>details{flex:1 1 260px}
+@media(max-width:700px){.activity-fit{grid-template-columns:repeat(3,minmax(0,1fr));padding:12px}.activity-fit-search{grid-column:1/-1}.flow.activity-tools-scope .activity-library-head h1{font-size:24px}}
+@media(max-width:380px){.activity-fit{grid-template-columns:1fr 1fr}}
+/* 카드: 상황 배지 → 이름 → 끝나는 조건 → 설명 */
+.activity-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}.activity-tools-scope .activity-card-top .activity-card-icon{margin-bottom:0}
+@media(max-width:700px){.activity-library-head nav a{min-height:40px;padding:0 12px;font-size:14px}.activity-library-head .forest-lead{font-size:14px}}
+.activity-fav{min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--forest-line,#dedfd2);background:var(--forest-paper,#fffefa);font-size:22px;line-height:1;color:#b7862b}
+.activity-situation{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}.activity-situation span{font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--forest-tint,#eef2e5);color:var(--forest-ink,#354239)}
+.flow.activity-tools-scope .catalog-card .activity-finish{font-size:14px;line-height:1.7;margin:0 0 10px;color:var(--forest-ink,#354239)}
+.activity-tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 6px}
+.flow.activity-tools-scope .catalog-card .activity-tags .pill{margin-bottom:0}
+.activity-detail h4{margin:10px 0 4px;font-size:14px;color:var(--forest-accent,#447565)}
+.activity-detail ol{list-style:decimal;padding-left:22px;margin:0}.activity-detail ul{list-style:disc;padding-left:22px;margin:0}
+.activity-adapt{margin:0}.activity-adapt div{display:grid;grid-template-columns:4.5em 1fr;gap:6px;font-size:14px;line-height:1.7}.activity-adapt dt{font-weight:800}.activity-adapt dd{margin:0}
