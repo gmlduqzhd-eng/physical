@@ -6,7 +6,7 @@ import {LESSON_GAME_CATALOG} from '../src/data/lessonGameCatalog';
 import {matchesActivitySearch} from '../src/domain/activitySearch';
 import {phoneTeamMotion} from '../src/domain/phonePlayProgression';
 import {classRoundView} from '../src/domain/phoneClassMode';
-import {CLASSIC_CLASS_BRIEF,CORNER_WALK,FOX_BACK,fitGroupCues,groupSizeOf} from '../src/domain/phonePlayClassicsMode';
+import {CLASSIC_CLASS_BRIEF,CORNER_WALK,EVOLVE_CUE,FOX_BACK,TAG_SWAP,WALK_ONLY,fitGroupCues,groupSizeOf} from '../src/domain/phonePlayClassicsMode';
 import {readFileSync} from 'node:fs';
 
 const IDS=['phone-play-101','phone-play-102','phone-play-103','phone-play-104','phone-play-105','phone-play-106'];
@@ -59,11 +59,16 @@ test('number groups never ask for a group bigger than the players who are there'
 });
 
 test('whole-class signals change during a task, and numbers and corners are random without repeats',()=>{
- for(const n of [101,102,103,104,105,106])for(const r of [0,1,2]){
+ // 숫자·여우·구석은 과제 동안 신호가 바뀐다. 술래는 '걷기만!'을 고정하고 술래 바꾸기만 알리며, 진화 산책과 빙고는 화면(사다리·빙고판)을 고정해 보여 준다.
+ for(const n of [101,102,106])for(const r of [0,1,2]){
   const cues=classRoundView(play(n),r,'기본 방법',false,42).cues;
   assert(new Set(cues).size>1,`${n} ${r}과제 신호가 바뀌어야 해요`);
   assert.deepEqual(classRoundView(play(n),r,'기본 방법',false,42).cues,cues,`${n} same seed, same order`);
  }
+ assert.deepEqual([...new Set(classRoundView(play(103),0,'기본 방법',false,42).cues)],[WALK_ONLY],'one tagger: walking only');
+ for(const r of [1,2])assert.deepEqual([...new Set(classRoundView(play(103),r,'기본 방법',false,42).cues)].sort(),[TAG_SWAP,WALK_ONLY].sort(),'only tagger-change alerts');
+ for(const r of [0,1,2]){const cues=classRoundView(play(104),r,'기본 방법',false,42).cues;assert.equal(cues.length,1,'the ladder is fixed, poses do not cycle');assert(cues[0].startsWith(EVOLVE_CUE));}
+ for(const r of [0,1,2])assert.equal(classRoundView(play(105),r,'기본 방법',false,42).cues.length,1,'one bingo row per task');
  for(const n of [101,106]){
   const a=classRoundView(play(n),2,'기본 방법',false,1).cues,b=classRoundView(play(n),2,'기본 방법',false,2).cues;
   assert.notDeepEqual(a,b,`${n} differs between runs`);

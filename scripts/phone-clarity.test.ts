@@ -21,11 +21,12 @@ test('plays whose order is the point keep their order; only signal and memory pl
  for(const p of PHONE_PLAYS.filter(p=>!p.roundCues&&!['signal','memory'].includes(p.kind)))assert.deepEqual(phoneSequence(p,1),phoneSequence(p,0),p.id);
  const rotating=PHONE_PLAYS.find(p=>p.kind==='signal'&&!p.roundCues&&p.cues.length>2)!;assert.notDeepEqual(phoneSequence(rotating,1),phoneSequence(rotating,0));
 });
-test('the TV shows the task the voice reads, keeps memory orders on the easy level and lists decision choices',()=>{
+test('the TV shows the task the voice reads, keeps memory orders visible and shows only the good plan for decisions',()=>{
  for(const p of PHONE_PLAYS.filter(p=>p.kind!=='memory'))for(let r=0;r<3;r++)assert.equal(classRoundView(p,r,'기본 방법',false).brief,p.rounds[r],p.id);
  const memory=PHONE_PLAYS.find(p=>p.kind==='memory'&&p.id!=='phone-play-006'&&p.id!=='phone-play-003')!;
- assert(classRoundView(memory,0,'쉬운 방법',false).cues.some(c=>c.startsWith('순서: ')));
- for(const p of PHONE_PLAYS.filter(p=>p.kind==='decision')){const v=classRoundView(p,0,'기본 방법',false);assert.deepEqual(v.choices,p.options??[],p.id);assert(v.choices.length>=2,p.id);}
+ for(const level of ['쉬운 방법','기본 방법'])assert(classRoundView(memory,0,level,false).sequence.length>=2,level);
+ // 반 전체 화면에는 틀린 방법('탈락시키기' 등)을 크게 띄우지 않고 좋은 방법 하나만 보여 준다.
+ for(const p of PHONE_PLAYS.filter(p=>p.kind==='decision')){const v=classRoundView(p,0,'기본 방법',false);assert.deepEqual(v.choices,[],p.id);assert.equal(v.plan,p.options?.[0],p.id);}
  assert(classPhaseMs('brief',45,true)>classPhaseMs('brief',45,false));
 });
 test('grade labels and space notes tell the truth',()=>{

@@ -96,6 +96,17 @@ function foxCues(round:number,easy:boolean,count:number,rng:()=>number,visible:n
  }
  return out;
 }
+export const WALK_ONLY='걷기만!',TAG_SWAP='술래 바꾸기!',EVOLVE_CUE='같은 자세 친구를 찾아 가위바위보!';
+/** 진화 산책의 단계(과제마다 올라갈 수 있는 곳까지). 화면에 사다리로 고정해 보여 준다. */
+export const CLASSIC_LADDER:readonly {name:string;pose:string}[]=[{name:'알',pose:'두 손을 동그랗게 모으고 걷기'},{name:'병아리',pose:'팔꿈치 날개로 걷기'},{name:'닭',pose:'팔을 펴고 무릎 올려 걷기'},{name:'하늘 새',pose:'가장자리에서 응원'}];
+export const ladderTop=(round:number,easy:boolean)=>easy?1:Math.min(3,round+1);
+/** 움직임 빙고판(3×3). 줄마다 과제 하나. */
+export const BINGO_BOARD:readonly (readonly string[])[]=[['제자리 걸음 10번','팔 벌려 별 모양 5번','무릎 손뼉 8번'],['한 발 서기 5초','제자리 걸음 10번','팔 벌려 별 모양 5번'],['무릎 손뼉 8번','한 발 서기 5초','제자리 걸음 10번']];
+/** 다 지운 칸(9칸, 줄 순서)으로 빙고가 된 줄 수를 센다(가로·세로·대각선). */
+export function bingoLines(done:readonly boolean[]):number{
+ const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+ return lines.filter(line=>line.every(i=>done[i])).length;
+}
 const CORNER_MOVES=['1번 구석: 무릎 올려 걷기 8번','2번 구석: 팔 벌려 별 모양 5번','3번 구석: 한 발 서기 5초','4번 구석: 어깨 돌리기 6번'];
 export const CORNER_WALK='구석으로 걸어가요';
 function combinations(items:readonly number[],size:number):number[][]{
@@ -117,6 +128,11 @@ export function classicClassCues(play:Pick<PhonePlay,'id'>,round:number,level:st
  if(play.id==='phone-play-101')return pickVaried(roundCues,count,rng);
  if(play.id==='phone-play-102')return foxCues(round,easy,count,rng,Math.max(1,Math.floor(taskSeconds/Math.max(1,cueSeconds))));
  if(play.id==='phone-play-106')return cornerCues(round,easy,count,rng,Math.round(cueSeconds));
- // 술래·진화 산책·움직임 빙고는 그 과제의 신호를 차례로 되풀이한다.
+ // 술래: 술래잡기를 끊지 않게 '걷기만!'을 고정하고, 술래가 둘 이상인 과제에서만 술래 바꾸기를 알린다.
+ if(play.id==='phone-play-103')return Array.from({length:count},(_,i)=>(round===1&&i%3===2)||(round===2&&i%2===1)?TAG_SWAP:WALK_ONLY);
+ // 진화 산책: 자세는 가위바위보 결과로 바뀌므로 화면은 사다리(CLASSIC_LADDER)를 고정해 보여 주고, 신호는 하나로 둔다.
+ if(play.id==='phone-play-104')return [`${EVOLVE_CUE} · ${CLASSIC_LADDER[ladderTop(round,easy)].name}까지`];
+ // 움직임 빙고: 그 과제의 줄(세 동작)을 보여 주고, 교사가 판에서 다 한 칸을 지운다.
+ if(play.id==='phone-play-105')return [`${['첫째','둘째','셋째'][Math.min(2,round)]} 줄을 함께 해요! (${roundCues.length}칸)`];
  return Array.from({length:count},(_,i)=>roundCues[i%roundCues.length]);
 }
