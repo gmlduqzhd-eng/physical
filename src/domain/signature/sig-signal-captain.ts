@@ -27,7 +27,7 @@ const OPPOSITES:readonly {say:string;do:string;pose:Pose}[]=[
  {say:'앞으로!',do:'팔을 뒤로',pose:'armsDown'},{say:'멈춰!',do:'제자리 걷기',pose:'run'},
 ];
 /** 라운드 카드 순서: 연습 판은 출동, 본게임은 6신호마다 카드를 바꾸고, 마지막 승부는 거꾸로. */
-export const CARD_EVERY=6;
+export const CARD_EVERY=6,NUMBER_CUE_SECONDS=8;
 export function cardFor(ctx:Pick<SignatureCueContext,'phase'|'index'>):RuleCard{
  if(ctx.phase==='tutorial')return SIGNAL_CARDS[0];
  if(ctx.phase==='climax')return SIGNAL_CARDS[4];
@@ -64,7 +64,8 @@ export function signalCaptainCue(ctx:SignatureCueContext):SignatureCue{
   }
   case 'number':{
    const n=r([2,3,4,2,3]) as number;
-   cue={text:`${n}!`,sub:ctx.seated?`손가락 ${n}개를 높이 들어요`:`${n}명이 모여 손을 잡아요`,icon:'👥',move:`${n}명 모이기`,pose:'wave'};
+   // 걸어가 모이고 손을 잡을 시간을 준다(8초).
+   cue={text:`${n}!`,sub:ctx.seated?`손가락 ${n}개를 높이 들어요`:`${n}명이 걸어가 모여 손을 잡아요`,icon:'👥',move:`${n}명 모이기`,pose:'wave',seconds:NUMBER_CUE_SECONDS};
    break;
   }
   default:{

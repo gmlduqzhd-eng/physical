@@ -67,6 +67,8 @@ export function bossStatus(s:FunState):{boss:Boss;index:number;hpLeft:number;def
  return {boss:bosses[last],index:last,hpLeft:0,defeated:bosses.length,done:true};
 }
 
+/** 동작 이름에 적힌 초('10초')를 읽는다. 없으면 undefined. */
+export const secondsIn=(move:string):number|undefined=>{const m=/(\d+)초/.exec(move);return m?Number(m[1]):undefined;};
 export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
  const {boss}=bossStatus(ctx.state);
  if(ctx.phase==='tutorial'){
@@ -83,6 +85,8 @@ export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
   text:`${weak}!`,
   sub:`${boss.emoji} ${boss.name}의 약점이에요${climax?' · 총공격! 피해 2배':''}`,
   icon:boss.emoji,tone:climax?'gold':undefined,move:weak,pose:boss.pose,
+  // '10초' 동작은 신호를 그만큼 길게 보여 준다(동작 10초 + 준비 2초).
+  ...(secondsIn(weak)?{seconds:secondsIn(weak)!+2}:{}),
  };
 }
 

@@ -1,4 +1,4 @@
-import {cueIntervalMs,seededRandom,TEAM_NAMES,type FunCommand,type FunState} from '../funLoop.js';
+import {cueIntervalMs,phaseSeconds,seededRandom,TEAM_NAMES,type FunCommand,type FunState} from '../funLoop.js';
 import {defineSignatureGame} from './define.js';
 import type {Pose,SignatureCue,SignatureCueContext} from './types.js';
 
@@ -17,15 +17,22 @@ export const MEMORY_TILES:readonly MemoryTile[]=[
 export const TUTORIAL_LENGTH=2,START_LENGTH=3,MAX_LENGTH=7,CLIMAX_POINTS=2;
 
 const hitKeys=(s:FunState,phase:'play'|'climax')=>Object.entries(s.cueHits).filter(([k,v])=>v>0&&k.startsWith(`${phase}:`)).map(([k])=>Number(k.split(':')[1]));
+/** 한 바퀴(라운드) = 모든 모둠이 한 번씩 차례를 하는 것. 같은 바퀴 안의 모둠은 늘 같은 길이를 받는다. */
+export const relayRound=(index:number,teams:number)=>Math.floor(Math.max(0,index)/Math.max(1,teams));
+/** 그 단계에서 round 바퀴 전까지, 한 모둠이라도 성공한 바퀴 수. */
+function successfulRounds(s:FunState,phase:'play'|'climax',beforeRound:number):number{
+ const rounds=new Set(hitKeys(s,phase).map(i=>relayRound(i,s.teams)));
+ return [...rounds].filter(r=>r<beforeRound).length;
+}
 /**
- * 이 차례(단계·신호 번호)의 순서 길이. 연습 판은 늘 2개, 본게임은 3개에서 시작해
- * 그 앞 차례들에서 성공한 만큼 늘어난다(마지막 승부는 본게임 성공 수를 이어받음). 최대 7개.
- * 같은 차례 안에서 ‘성공’을 눌러도 이번 순서는 바뀌지 않고 다음 차례부터 길어진다.
+ * 이 차례(단계·신호 번호)의 순서 길이. 연습 판은 늘 2개, 본게임은 3개에서 시작한다.
+ * 한 바퀴(모든 모둠이 한 번씩)가 끝날 때마다, 그 바퀴에서 한 모둠이라도 성공했으면 다음 바퀴부터 하나 늘어난다.
+ * 그래서 같은 바퀴의 모둠은 모두 같은 길이를 받는다(뒤 순서 모둠만 어려워지지 않음). 마지막 승부는 본게임을 이어받는다. 최대 7개.
  */
 export function sequenceLength(s:FunState,phase:'tutorial'|'play'|'climax',index:number):number{
  if(phase==='tutorial')return TUTORIAL_LENGTH;
- const before=(p:'play'|'climax',limit:number)=>hitKeys(s,p).filter(i=>i<limit).length;
- const done=phase==='play'?before('play',index):hitKeys(s,'play').length+before('climax',index);
+ const round=relayRound(index,s.teams);
+ const done=phase==='play'?successfulRounds(s,'play',round):successfulRounds(s,'play',Infinity)+successfulRounds(s,'climax',round);
  return Math.min(MAX_LENGTH,START_LENGTH+done);
 }
 /** 같은 (seed, 단계, 번호, 길이)면 늘 같은 순서. 같은 모양이 세 번 이어지지 않는다. */
@@ -49,9 +56,13 @@ export type MemoryVariation='normal'|'reverse'|'quick'|'reverse-quick';
 const VARIATIONS:readonly MemoryVariation[]=['reverse','quick','reverse-quick'];
 export function variationFor(s:FunState,phase:'tutorial'|'play'|'climax',index:number):MemoryVariation{
  if(phase==='tutorial'||sequenceLength(s,phase,index)<MAX_LENGTH)return 'normal';
- // 이 차례 전에 최고 길이에서 성공한 횟수
- const atMax=(p:'play'|'climax',limit:number)=>hitKeys(s,p).filter(i=>i<limit&&sequenceLength(s,p,i)>=MAX_LENGTH).length;
- const done=phase==='play'?atMax('play',index):atMax('play',Infinity)+atMax('climax',index);
+ // 이 바퀴 전에, 최고 길이에서 성공한 바퀴 수(바퀴마다 변형이 하나씩 바뀐다: 같은 바퀴의 모둠은 같은 변형)
+ const atMax=(p:'play'|'climax',beforeRound:number)=>{
+  const rounds=new Set(hitKeys(s,p).filter(i=>sequenceLength(s,p,i)>=MAX_LENGTH).map(i=>relayRound(i,s.teams)));
+  return [...rounds].filter(r=>r<beforeRound).length;
+ };
+ const round=relayRound(index,s.teams);
+ const done=phase==='play'?atMax('play',round):atMax('play',Infinity)+atMax('climax',round);
  return done===0?'normal':VARIATIONS[(done-1)%VARIATIONS.length];
 }
 export const VARIATION_TEXT:Readonly<Record<MemoryVariation,string>>={normal:'',reverse:'🔄 거꾸로 순서(마지막 모양부터)!','quick':'⚡ 번개 외우기(보는 시간 절반)!','reverse-quick':'🔄⚡ 거꾸로 + 번개!'};
@@ -59,6 +70,15 @@ export const VARIATION_TEXT:Readonly<Record<MemoryVariation,string>>={normal:'',
 export function showMs(length:number,intervalMs:number,variation:MemoryVariation='normal'):number{
  const base=Math.min(Math.round(intervalMs*0.5),1500+length*1000);
  return variation==='quick'||variation==='reverse-quick'?Math.round(base/2):base;
+}
+/**
+ * 지금 차례를 시작하기에 남은 시간이 모자란지(차례 하나 길이보다 짧으면 새 차례를 시작하지 않는다).
+ * 차례가 중간에 잘리지 않게, 이때는 '시간이 얼마 남지 않았어요'를 보여 주고 성공도 받지 않는다.
+ */
+export function turnTooShort(s:FunState):boolean{
+ if(s.phase!=='tutorial'&&s.phase!=='play'&&s.phase!=='climax')return false;
+ const startedAt=s.phaseMs-s.cueMs;
+ return phaseSeconds(s)*1000-startedAt<cueIntervalMs(s)-250;
 }
 /** 지금 차례가 외우기(show)인지 해내기(perform)인지. */
 export function memoryStage(s:FunState):'show'|'perform'{
@@ -69,7 +89,7 @@ export function memoryStage(s:FunState):'show'|'perform'{
 /** 결과 한 줄: 최고 길이까지 해냈으면 '다음에는 7개'가 아니라 변형 도전을 권한다. */
 export function memoryResultLine(s:FunState):string{
  const n=longestSuccess(s);
- if(!n)return `다음에는 ${START_LENGTH}개 순서부터 성공해 봐요`;
+ if(!n)return `아직 성공 기록이 없어요 · 다음에는 ${START_LENGTH}개 순서부터 성공해 봐요`;
  if(n>=MAX_LENGTH)return `최고 길이 ${MAX_LENGTH}개를 해냈어요! 다음에는 거꾸로 순서·번개 외우기로 도전해요`;
  return `가장 긴 순서 ${n}개 성공 · 다음에는 ${n+1}개에 도전해요`;
 }
@@ -86,12 +106,14 @@ export function longestSuccess(s:FunState):number{
  * 점수 규칙(버튼·키보드·리모컨 모두 같음): 더하기는 차례인 모둠만, 순서가 가려진 뒤에, 한 차례에 한 번,
  * 본게임 +1 · 마지막 승부 +2. 빼기(정정)는 언제든 받는다. '모든 팀 +1'은 차례인 모둠의 성공으로 바꾼다.
  */
+/** 이 차례에 차례인 모둠이 이미 성공했는지(연습 판 포함). */
+export const turnScored=(s:FunState)=>(s.teamHits[`${s.phase}:${s.cueIndex}:${relayTeam(s.cueIndex,s.teams)}`]??0)>0;
 export function memoryRelayGate(s:FunState,cmd:FunCommand):FunCommand|null{
  if(s.phase!=='tutorial'&&s.phase!=='play'&&s.phase!=='climax')return cmd;
  const turnTeam=relayTeam(s.cueIndex,s.teams);
  const success=(team:number):FunCommand|null=>{
-  if(team!==turnTeam||memoryStage(s)==='show')return null;
-  if((s.cueHits[`${s.phase}:${s.cueIndex}`]??0)>0)return null;
+  if(team!==turnTeam||memoryStage(s)==='show'||turnTooShort(s))return null;
+  if(turnScored(s))return null;
   return {type:'score',team,delta:s.phase==='climax'?CLIMAX_POINTS:1};
  };
  if(cmd.type==='score'&&cmd.delta>0)return success(cmd.team);
@@ -100,6 +122,9 @@ export function memoryRelayGate(s:FunState,cmd:FunCommand):FunCommand|null{
 }
 
 export function memoryRelayCue(ctx:SignatureCueContext):SignatureCue{
+ // 지금 차례인데 남은 시간이 한 차례보다 짧으면 새 차례를 시작하지 않는다.
+ if(ctx.phase===ctx.state.phase&&ctx.index===ctx.state.cueIndex&&turnTooShort(ctx.state))
+  return {text:'시간이 얼마 남지 않았어요',sub:'이번엔 새 차례를 시작하지 않아요 · 숨을 고르며 다음 단계를 기다려요',icon:'⏳',tone:'rest',pose:'stand',scorable:false};
  const len=sequenceLength(ctx.state,ctx.phase,ctx.index);
  const variation=variationFor(ctx.state,ctx.phase,ctx.index);
  const backwards=ctx.reversed||variation==='reverse'||variation==='reverse-quick';
@@ -120,11 +145,11 @@ export const memoryRelay=defineSignatureGame({
  id:'sig-memory-relay',ready:true,
  name:'기억 릴레이',emoji:'🧠',
  oneLine:'화면 순서를 외워 모둠이 이어서 해요. 성공할 때마다 하나씩 늘어나요.',
- rules:['차례가 시작되면 모양 타일 순서(● 손뼉 · ▲ 팔 위로 · ■ 무릎 굽히기 · ★ 별 점프)가 잠깐 보여요.','순서가 가려지면 차례인 모둠이 외운 순서대로 이어서 몸으로 해요.','성공하면 선생님이 ‘성공’을 눌러요. 다음 차례부터 순서가 하나씩 늘어나요!'],
+ rules:['차례가 시작되면 모양 타일 순서(● 손뼉 · ▲ 팔 위로 · ■ 무릎 굽히기 · ★ 별 점프)가 잠깐 보여요.','순서가 가려지면 차례인 모둠이 외운 순서대로 이어서 몸으로 해요.','성공하면 선생님이 ‘성공’을 눌러요. 모든 모둠이 한 번씩 하고 나면 순서가 하나씩 늘어나요!'],
  concept:'순서 기억',
  reflection:'긴 순서를 외울 때 우리 모둠은 어떤 방법을 썼나요?',
  nextChallenge:'다음에는 순서를 거꾸로 해내는 데 도전해 봐요.',
- scoringHint:'차례인 모둠이 순서를 끝까지 해내면 ‘성공’ +1 (마지막 승부 +2)',
+ scoringHint:'차례인 모둠이 순서를 끝까지 해내면 ‘성공’ +1 (마지막 승부 +2) · 한 바퀴에 한 모둠이라도 성공하면 다음 바퀴부터 하나 늘어요',
  seatedNote:'모양마다 앉아서 하는 동작(손뼉·팔 위로·무릎 치기·팔 벌리기)으로 해요.',
  demo:[
   {pose:'stand',caption:'모양 타일 순서가 잠깐 보여요'},{pose:'clap',caption:'● 동그라미 = 손뼉'},

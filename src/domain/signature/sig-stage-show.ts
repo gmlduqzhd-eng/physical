@@ -5,7 +5,8 @@ import type {SignatureCue,SignatureCueContext} from './types.js';
 /**
  * 표현 무대: 모둠마다 장면 카드를 뽑아 30초 동안 함께 준비하고, 차례로 20초씩 무대에서 보여 준다.
  * 관객은 👏(박수)·😮(놀라움)·😂(웃음) 버튼으로 응원하고, 누를 때마다 발표하는 모둠 점수가 +1.
- * 모든 모둠이 발표하면 커튼콜(마지막 승부)로 넘어가 모둠마다 가장 멋진 장면을 한 번 더 보여 준다.
+ * 모든 모둠이 발표하면 커튼콜(마지막 승부)로 넘어가 모둠마다 한 번씩 가장 멋진 장면으로 인사한다.
+ * 커튼콜은 점수를 세지 않는다(모둠마다 똑같이 한 번씩 인사하므로 순서에 따라 응원 기회가 달라지지 않게).
  * 무성 영화(029)·느린 장면(032)·한 장면 릴레이 극장·세 장면 뮤지컬을 한 판으로 합쳤다.
  */
 export interface SceneCard {id:string;emoji:string;title:string;hint:string}
@@ -51,10 +52,10 @@ export function scenesFor(seed:number,teams:number):SceneCard[]{
  for(let k=order.length-1;k>0;k--){const j=Math.floor(rnd()*(k+1));[order[k],order[j]]=[order[j],order[k]];}
  return order.slice(0,Math.max(0,teams)).map(k=>SCENE_CARDS[k]);
 }
-/** 커튼콜(마지막 승부): 첫 신호는 안내, 그다음 모둠이 차례로 인사(신호 하나씩, 모둠 수만큼 되풀이). */
+/** 커튼콜(마지막 승부): 첫 신호는 안내, 그다음 모둠마다 한 번씩 인사. 모두 인사하면 null(다 함께 인사). */
 export function curtainGroup(index:number,teams:number):number|null{
- if(index<=0||teams<1)return null;
- return (index-1)%teams;
+ if(index<=0||teams<1||index>teams)return null;
+ return index-1;
 }
 /** 관객 반응 집계: counts[모둠][반응 순서]. 반응 한 번 = 발표하는 모둠 점수 +1. */
 export type ReactionCounts=number[][];
@@ -81,10 +82,10 @@ export function bestByScore(scores:readonly number[]):number[]{
  const max=Math.max(0,...scores);
  return max>0?scores.map((v,g)=>v===max?g:-1).filter(g=>g>=0):[];
 }
-/** 지금 반응 버튼을 누르면 점수를 받을 모둠(없으면 null). */
+/** 지금 반응 버튼을 누르면 점수를 받을 모둠(없으면 null). 커튼콜은 점수를 세지 않는다. */
 export function reactionTarget(ctx:Pick<SignatureCueContext,'phase'|'index'|'teams'>):number|null{
  if(ctx.phase==='play'){const s=stageSlot(ctx.index,ctx.teams);return s.kind==='perform'?s.group:null;}
- if(ctx.phase==='climax')return curtainGroup(ctx.index,ctx.teams);
+ if(ctx.phase==='climax')return null;
  if(ctx.phase==='tutorial')return ctx.index>=2?0:null;
  return null;
 }
@@ -102,9 +103,11 @@ export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
  }
  if(ctx.phase==='climax'){
   const g=curtainGroup(ctx.index,ctx.teams);
-  if(g===null)return {text:'🎬 커튼콜!',sub:'모둠마다 자기 장면에서 가장 멋진 순간을 한 번 더 보여 줘요',icon:'🎬',tone:'gold',pose:'armsUp',scorable:false};
+  if(g===null)return ctx.index<=0
+   ?{text:'🎬 커튼콜!',sub:'모둠마다 한 번씩, 자기 장면에서 가장 멋진 순간으로 인사해요 (점수는 세지 않아요)',icon:'🎬',tone:'gold',pose:'armsUp',scorable:false}
+   :{text:'🎉 다 같이 인사!',sub:'모든 모둠이 손잡고 함께 인사해요. 서로에게 큰 박수!',icon:'👏',tone:'gold',pose:'armsUp',scorable:false};
   const sc=scenes[g];
-  return {text:`${teamName(ctx.teams,g)} 인사!`,sub:`${sc.emoji} ${sc.title} · 가장 멋진 순간에서 얼음! 관객은 큰 박수`,icon:sc.emoji,tone:'gold',pose:'freeze',move:sc.title};
+  return {text:`${teamName(ctx.teams,g)} 인사!`,sub:`${sc.emoji} ${sc.title} · 가장 멋진 순간에서 얼음! 관객은 큰 박수`,icon:sc.emoji,tone:'gold',pose:'freeze',move:sc.title,scorable:false};
  }
  const slot=stageSlot(ctx.index,ctx.teams);
  if(slot.kind==='prep'){
@@ -121,7 +124,7 @@ export const stageShow=defineSignatureGame({
  id:'sig-stage-show',ready:true,
  name:'표현 무대',emoji:'🎭',
  oneLine:'장면 카드를 뽑아 모둠이 30초 준비하고, 차례로 20초씩 몸으로 보여 줘요. 관객은 반응 버튼으로 응원해요!',
- rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 30초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 커튼콜! 가장 많은 응원을 받은 장면을 발표해요.'],
+ rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 30초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 모둠마다 한 번씩 커튼콜 인사(점수 없음)! 가장 많은 응원을 받은 장면을 발표해요.'],
  concept:'움직임 표현',
  reflection:'친구 모둠의 장면에서 어떤 몸짓이 가장 잘 보였나요? 우리 모둠은 무엇을 더 크게 보여 주면 좋을까요?',
  nextChallenge:'다음에는 장면 사이를 멈춤 없이 이어서, 처음부터 끝까지 한 번에 보여 줘요.',
@@ -142,7 +145,10 @@ export const stageShow=defineSignatureGame({
  cue:stageShowCue,
  // 발표 시간이 신호 간격에 묶여 있어 '빨리빨리'는 모둠 발표를 반으로 줄인다.
  // 응원 한 번 = 1점이라 '황금 신호'(2배)도 쓰지 않는다(응원 수와 점수가 같게).
- surprises:{play:['reverse','freeze'],climax:['reverse']},
+ // 커튼콜은 점수를 세지 않아 깜짝 이벤트도 쓰지 않는다.
+ surprises:{play:['reverse','freeze'],climax:[]},
+ // MVP: 우승(가장 많은 응원) 모둠의 장면. 동점이면 함께.
+ mvpMove:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ');},
  resultHeadline:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return `가장 많은 응원: ${best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ')}`;},
  domain:'표현',subCategory:'표현 대표 게임',
  achievement:{code:'연계 확인 필요',title:'장면을 몸으로 표현하기',desc:'주어진 장면을 모둠이 함께 구성하고 몸과 표정으로 표현하며, 친구의 표현을 감상하고 응원한다.'},
