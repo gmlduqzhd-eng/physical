@@ -1,7 +1,10 @@
 import {useEffect,useState} from 'react';
-import {EMPTY_PROGRESS,addPlay,mergeProgress,parseProgress,setVote,type ClassProgress,type Vote} from '../domain/classProgress';
+import {EMPTY_PROGRESS,addPlay,mergeProgress,parseProgress,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
 
-/** 이 기기에만 남는 우리 반 반응·원정 지도 기록. 저장이 막힌 브라우저에서도 화면은 그대로 쓸 수 있다. */
+/**
+ * 이 기기에만 남는 우리 반 반응·원정 지도 기록. 저장이 막힌 브라우저에서도 화면은 그대로 쓸 수 있다.
+ * 키 이름은 그대로 두고, 안의 version(2: 반응 이유 추가)으로 예전 기록을 읽어 옮긴다.
+ */
 export const CLASS_PROGRESS_KEY='physical_class_progress_v1';
 const EVENT='class-progress-change';
 let memory:ClassProgress=EMPTY_PROGRESS;
@@ -42,7 +45,9 @@ function write(next:ClassProgress){
 /** 판 기록. play(판 id)를 주지 않으면, 화면의 반응 칸이 잡아 둔 판 id를 쓴다. */
 export function recordPlay(id:string,at=Date.now(),play?:string){write(addPlay(readProgress(),id,at,play??openPlays.get(id)));}
 export function recordVote(id:string,vote:Vote,at=Date.now(),play?:string){write(setVote(readProgress(),id,vote,at,play));}
-export function clearProgress(){write({...EMPTY_PROGRESS,plays:[],votes:[]});}
+/** 한 판의 반응 이유와 한 줄 메모(고르지 않아도 된다). */
+export function recordReasons(id:string,play:string,reasons:readonly ReasonId[],note?:string,at=Date.now()){write(setReasons(readProgress(),id,play,reasons,note,at));}
+export function clearProgress(){write({...EMPTY_PROGRESS,plays:[],votes:[],reasons:[]});}
 
 /** 기록이 바뀌면(다른 탭 포함) 다시 그린다. */
 export function useClassProgress():ClassProgress{
