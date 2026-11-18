@@ -7,6 +7,7 @@ import {TvVoiceToggle} from '../../TvVoiceToggle';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
 import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRoundView,type ClassOutcome} from '../../../../domain/phoneClassMode';
+import {useReportLessonActivity} from '../../todayLessonActivity';
 import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
@@ -52,6 +53,8 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 시작 화면에서 이미 역할을 정하고 들어왔으면(rolesReady) 기다리지 않는다.
  const waitForTeacher=!!p.setup&&!seated&&!rolesReady;
  const [phase,setPhase]=useState<Phase>('rules'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
+ // '오늘 수업' 막대가 활동 중인지 알 수 있게 알린다(활동 중에 다음 단계로 가려 하면 한 번 묻는다).
+ useReportLessonActivity({gameId:play.id,phase:phase==='done'?'recorded':'playing'});
  const [bingo,setBingo]=useState<boolean[]>(()=>Array(9).fill(false));
  const moved=useRef(0),submitted=useRef(false);
  // 무작위 신호(숫자·구석·여우)는 진행마다 새 순서로 나오되, 화면이 다시 그려져도 바뀌지 않게 한 번 정한 씨앗을 쓴다.

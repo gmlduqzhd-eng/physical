@@ -40,6 +40,7 @@ import { StretchTimer } from './components/minigames/StretchTimer';
 import { EmotionThermometer } from './components/minigames/EmotionThermometer';
 import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
 import {SignaturePlay} from './components/minigames/signature/SignaturePlay';
+import {useReportLessonActivity} from './components/todayLessonActivity';
 import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
 import {newPlayId,openPlayId,recordPlay} from '../application/classProgressStore';
 import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
@@ -213,6 +214,9 @@ const GamePlaySession = () => {
   const ownsPreparation=isSignatureId(gameType||'')||isFlagship(gameType||'')||isPhonePlay(gameType||'')||isQuestId(gameType||'')||isSafetyLessonId(gameType||'')||EXPEDITION_BY_ID.get(gameType||'')?.kind==='B'||['stretch','rolling-curling','emotion-thermometer','partner-robot-lab','body-rhythm-orchestrator'].includes(gameType||'');
   const [hasStarted, setHasStarted] = useState(!!routeState?.activityPrepared||ownsPreparation);
   const [isCountingDown, setIsCountingDown] = useState(false);
+  // '오늘 수업' 막대가 활동 중인지 알 수 있게 알린다(활동 중에 다음 단계로 가려 하면 한 번 묻는다).
+  // 자기 시작 화면이 있는 활동(대표 게임·준비물 없는 놀이 등)은 그 화면이 직접 알린다.
+  useReportLessonActivity(gameType&&!isSignatureId(gameType)&&(gameFinished||(hasStarted&&!ownsPreparation))?{gameId:gameType,phase:gameFinished?'recorded':'playing'}:null);
   const [, setTotalPlays] = useState(0);
   const [newBadge, setNewBadge] = useState<string | null>(null);
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);

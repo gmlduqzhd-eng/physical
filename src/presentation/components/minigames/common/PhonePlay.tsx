@@ -14,6 +14,7 @@ import {PhonePlayIcon} from '../../PhonePlayIcon';
 import {PhonePlayClass} from './PhonePlayClass';
 import {CLASS_DEFAULT_SECONDS,CLASS_TASK_SECONDS,classMovementSeconds,deviceRuleLine} from '../../../../domain/phoneClassMode';
 import {MovementBingoBoard,PhoneRuleCard} from './PhonePlayClass';
+import {useReportLessonActivity} from '../../todayLessonActivity';
 import {adaptClassicPlay,fitGroupCues,isClassicPlay} from '../../../../domain/phonePlayClassicsMode';
 type Phase='intro'|'plan'|'countdown'|'active'|'record'|'done';
 interface Props {play:Play;solo:boolean;groupId:string;onExit:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
@@ -34,6 +35,8 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
  const [bingo,setBingo]=useState<boolean[]>(()=>Array(9).fill(false));
  const submitted=useRef(false),transition=useRef(false);
  const [classRun,setClassRun]=useState(false),[taskSeconds,setTaskSeconds]=useState<number>(CLASS_DEFAULT_SECONDS);
+ // '오늘 수업' 막대가 활동 중인지 알 수 있게 알린다(활동 중에 다음 단계로 가려 하면 한 번 묻는다). 반 전체 진행은 그 화면이 알린다.
+ useReportLessonActivity(classRun||phase==='intro'?null:{gameId:play.id,phase:phase==='done'?'recorded':'playing'});
  const memory=phoneMemoryTask(p,round,level==='쉬운 방법',level==='추가 도전',fill),observation=phoneObservation(p),roundCheck=phoneRoundCheck(p,round);
  // 숫자 모둠 만들기는 함께하는 인원보다 큰 모둠 신호를 내지 않는다.
  const sequence=fitGroupCues(p,p.kind==='memory'?(p.id==='phone-play-033'?memory.expected:memory.base):phoneSequence(p,round,level==='쉬운 방법',level==='추가 도전'),players),activeCues=fitGroupCues(p,phoneRoundCues(p,round,level,created,strategy),players);
