@@ -12,11 +12,11 @@ export function QuickExperience({kind}:{kind:ExperienceId}){
 function MapExperience(){
  const [role,setRole]=useState(0),[seed,setSeed]=useState(8),[station,setStation]=useState<Station|null>(null),[gesture,setGesture]=useState<MapGesture|null>(null),[result,setResult]=useState<string>(''),[won,setWon]=useState(false);
  const brief=mapBrief(role,3,seed);
- return <><h3>세 모둠의 단서를 연결해 첫 관문을 열어요</h3><p>아래 모둠은 체험용 역할이에요. 하나씩 눌러 서로 다른 정보를 확인해요.</p><div className="flagship-row">{['첫 길 탐사단','도착지 연결단','운반 약속 설계단'].map((name,i)=><button key={name} aria-pressed={role===i} onClick={()=>setRole(i)}>{name}</button>)}</div><p className="map-secret" role="status">{brief.text}</p>
+ return <><h3>세 모둠의 힌트를 모아 첫 문을 열어요</h3><p>아래 모둠을 하나씩 눌러, 모둠마다 다른 힌트를 읽어 봐요.</p><div className="flagship-row">{['첫 길 모둠','마지막 길 모둠','몸짓 약속 모둠'].map((name,i)=><button key={name} aria-pressed={role===i} onClick={()=>setRole(i)}>{name}</button>)}</div><p className="map-secret" role="status">{brief.text}</p>
   <fieldset><legend>첫 길</legend><div className="flagship-row">{STATIONS.map(s=><button key={s} aria-pressed={station===s} disabled={won} onClick={()=>setStation(s)}>{STATION_NAMES[s]}</button>)}</div></fieldset>
-  <fieldset><legend>첫 관문의 운반 약속</legend><div className="flagship-row">{MAP_GESTURES.map(g=><button key={g.id} aria-pressed={gesture===g.id} disabled={won} onClick={()=>setGesture(g.id)}><span aria-hidden="true">{g.icon}</span>{g.label}</button>)}</div></fieldset>
-  <button className="primary" disabled={!station||!gesture||won} onClick={()=>{const ok=mapAgreement(station!,gesture!,0,seed);setWon(ok);setResult(ok?'길과 운반 약속이 연결됐어요. 첫 관문 개방!':'아직 단서가 맞지 않아요. 첫 길과 첫 관문 약속을 다시 물어봐요.');}}>두 정보를 합쳐 관문 열기</button>
-  <div className="experience-gate" data-open={won} aria-label={won?'첫 관문 열림':'첫 관문 닫힘'}>{won?'◇ → ✦':'◇ · ◇'}</div><p role="status">{result}</p>{won&&<button onClick={()=>{setSeed(s=>s+1);setStation(null);setGesture(null);setWon(false);setResult('다른 길로 바뀌었어요. 세 단서를 다시 연결해요.');}}>다른 길로 한 번 더</button>}
+  <fieldset><legend>첫 문의 몸짓 약속</legend><div className="flagship-row">{MAP_GESTURES.map(g=><button key={g.id} aria-pressed={gesture===g.id} disabled={won} onClick={()=>setGesture(g.id)}><span aria-hidden="true">{g.icon}</span>{g.label}</button>)}</div></fieldset>
+  <button className="primary" disabled={!station||!gesture||won} onClick={()=>{const ok=mapAgreement(station!,gesture!,0,seed);setWon(ok);setResult(ok?'길과 몸짓 약속이 맞았어요. 첫 문이 열렸어요!':'아직 힌트와 맞지 않아요. 첫 길과 첫 문의 몸짓 약속을 다시 물어봐요.');}}>두 힌트를 모아 문 열기</button>
+  <div className="experience-gate" data-open={won} aria-label={won?'첫 문 열림':'첫 문 닫힘'}>{won?'◇ → ✦':'◇ · ◇'}</div><p role="status">{result}</p>{won&&<button onClick={()=>{setSeed(s=>s+1);setStation(null);setGesture(null);setWon(false);setResult('다른 길로 바뀌었어요. 세 힌트를 다시 모아요.');}}>다른 길로 한 번 더</button>}
  </>;
 }
 function LoopExperience(){

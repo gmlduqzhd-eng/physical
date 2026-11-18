@@ -49,6 +49,10 @@
 /* 작전 고르기 화면: '다른 놀이 방법 고르기' 막대는 작전 아래로 내린다(시작 버튼이 먼저 보이게). */
 [data-consolidated]:has(> .movement-quest[data-phase=plan]){display:flex;flex-direction:column}
 [data-consolidated]:has(> .movement-quest[data-phase=plan]) > .consolidated-course-bar{order:2}
+/* 다른 화면도 마찬가지: 휴대폰에서 시작 버튼·지금 할 일이 첫 화면에 들어오게 막대를 놀이 아래로 내린다. */
+div[data-consolidated]{display:flex;flex-direction:column}
+div[data-consolidated] > *{width:100%}
+div[data-consolidated] > .consolidated-course-bar{order:2}
 .movement-quest .mq-start-row{display:grid;gap:8px;margin:12px 0}
 /* 작전 고르기 화면: 시범 순서는 한 줄에 여러 개씩(칩) 보여 TV 한 화면 가까이에 들어오게 한다. */
 .movement-quest[data-phase=plan] .activity-brief[open] > ol{display:flex;flex-wrap:wrap;gap:6px;padding:0;list-style:none;margin:8px 0}

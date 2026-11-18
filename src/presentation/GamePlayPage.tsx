@@ -484,7 +484,7 @@ const GamePlaySession = () => {
       {isCountingDown && (
         <ReadyCountdownOverlay
           onComplete={handleCountdownComplete}
-          message={`${gameInfo.name} 시작 준비! 스마트폰을 거치하거나 손에 쥐세요.`}
+          message={`${gameInfo.name} 시작 준비! ${typeof window!=='undefined'&&window.matchMedia('(min-width: 768px)').matches?'화면을 모두가 볼 수 있게 두어요.':'스마트폰을 거치하거나 손에 쥐세요.'}`}
         />
       )}
 
