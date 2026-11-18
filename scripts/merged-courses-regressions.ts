@@ -17,12 +17,12 @@ try{for(let n=0;n<games.length;n++){
  await page.route('**/*',route=>{const r=route.request(),u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')||u.pathname.startsWith('/api/'))&&!['GET','HEAD','OPTIONS'].includes(r.method())){report.writes.push(u.pathname);return route.abort();}return route.continue();});
  const button=(name:string)=>page.getByRole('button',{name,exact:true}),advance=async(ms:number)=>{await page.clock.runFor(200);await page.clock.fastForward(ms);};
  try{
-  await page.clock.install();await page.goto(base+'/solo/play/'+g.id,{waitUntil:'domcontentloaded'});await button('바로 시작하기').click();
+  await page.clock.install();await page.goto(base+'/solo/play/'+g.id,{waitUntil:'domcontentloaded'});await button('시작 · 바로 시작').click();
   const movement=MERGED_MOVEMENT_IDS.includes(g.id);
   if(movement){
    const settings={gentle:true,seated,practice:true,players:2};
    await page.locator(`[data-movement-variant="${g.id}"][data-phase="intro"]`).waitFor();if(seated)await page.getByLabel('앉아서 팔 동작으로 참여하기').check();
-   await button('작전 고르고 시작').click();
+   await page.getByRole('button',{name:/^(시작 · 작전 고르기|작전 고르고 시작)$/}).first().click();
    const choose=async()=>page.getByRole('button',{name:/^가까운 범위/}).click();
    const phase=(p:string)=>page.locator(`[data-movement-variant][data-phase="${p}"]`).waitFor();
    const finish=async()=>{if(await page.locator('[data-phase="preview"]').count()){await advance(7500);await phase('countdown');}await advance(3500);await phase('active');await advance(100000);await phase('record');};
@@ -44,7 +44,7 @@ try{for(let n=0;n<games.length;n++){
   const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));assert.equal(saved.totalPlays,3);assert.equal(saved.recentGames[0].gameType,g.target);assert.equal(saved.recentGames[0].details.course.sourceId,g.id);assert.equal(saved.recentGames[0].score,movement?300:100);assert.equal(saved.recentGames[1].gameType,g.id);assert.equal(saved.recentGames[1].gameName,g.name);assert.equal(saved.recentGames[1].score,42);assert.equal(saved.recentGames[1].rpe,4);assert.equal(saved.highScores[g.id],9999);assert.equal(saved.highScores[`${g.target}::variant::${g.id}`],movement?300:100);assert.equal(saved.playCounts[g.id],2);assert.equal(await page.evaluate(id=>localStorage.getItem('physical_best_'+id),g.id),'9999');
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
   if(n%10===0)await page.screenshot({path:path.join(out,g.id+'.png'),fullPage:true,timeout:15000});
-  await button('다시 하기').click();await button('바로 시작하기').click();assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),3);
+  await button('다시 하기').click();await button('시작 · 바로 시작').click();assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),3);
   report.cases.push({id:g.id,target:g.target,width,status:'pass',historyPreserved:true});console.log('PASS',g.id);
  }catch(e){await page.screenshot({path:path.join(out,g.id+'-failure.png'),fullPage:true,timeout:15000}).catch(()=>{});writeFileSync(path.join(out,'partial-report.json'),JSON.stringify(report,null,2));throw e;}finally{await context.close();}
  }assert.deepEqual(report.errors,[]);assert.deepEqual(report.writes,[]);writeFileSync(path.join(out,'report.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({passed:report.cases.length}));}finally{await browser.close();}

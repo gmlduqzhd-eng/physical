@@ -120,8 +120,8 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
    {phase==='brief'&&view.memory&&(p.id==='phone-play-006'||level==='추가 도전')&&<p className="pc-left">{p.id==='phone-play-006'?'시작하면 한 동작이 ?로 숨어요':'시작하면 순서가 가려져요'}</p>}
   </div>}
   {['rules','countdown','brief','active'].includes(phase)&&<div className="pc-controls">
-   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className="pp-primary" onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
-   {phase!=='countdown'&&!waiting&&<button onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
+   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className={paused?'pp-primary':'pc-pause'} aria-pressed={paused} onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
+   {phase!=='countdown'&&!waiting&&<button className="pp-primary" onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
   </div>}
   {phase==='record'&&<div className="pp-panel pc-record"><h2>우리 반은 어떻게 참여했나요?</h2><p>한 번만 고르면 기록돼요. 기기가 동작이나 체력을 판정하지 않아요.</p>
    <button className="pp-primary" onClick={()=>record('all')}>모두 함께 했어요</button>

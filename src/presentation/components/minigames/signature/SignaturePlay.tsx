@@ -83,7 +83,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
   <p className="fun-oneline">{game.oneLine}</p>
   <ol className="fun-rule-card">{(['무엇을','어떻게','언제 끝'] as const).map((h,i)=><li key={h}><b>{h}</b>{game.rules[i]}</li>)}</ol>
   <div className="fun-start">
-   <button type="button" className="fun-primary fun-big" aria-label="시범 보고 연습 판으로 시작" onClick={()=>start(false)}><StartLabel sub="시범 보고 연습 판"/></button>
+   <button type="button" className="fun-primary fun-big" onClick={()=>start(false)}><StartLabel sub="시범 보고 연습 판"/></button>
    <button type="button" className="fun-secondary" onClick={()=>start(true)}>시범 건너뛰고 연습 판부터</button>
   </div>
   <fieldset className="fun-setup">

@@ -476,7 +476,7 @@ const GamePlaySession = () => {
               </button>
             </div>
           )}
-          <button type="button" className="game-prepare-start" onClick={handleStartGame}><StartLabel sub="바로 시작" spoken="바로 시작하기"/></button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
+          <button type="button" className="game-prepare-start" onClick={handleStartGame}><StartLabel sub="바로 시작"/></button><p className="game-prepare-note">몸을 움직이기 전 주변 공간과 기기를 확인해 주세요.</p>
         </div></div>
       )}
 

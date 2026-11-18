@@ -22,7 +22,7 @@ const report = { base, engine: engine.name(), checks: [] };
         const ownIntro = ['space-occupier', 'relay-mission-runner', 'body-rhythm-orchestrator'].includes(type);
         if (ownIntro) {
           assert.equal(await page.getByRole('button', { name: /준비 완료/ }).count(), 0, 'One preparation flow per game');
-          await page.getByRole('button', { name: /활동 시작하기/ }).tap();
+          await page.getByRole('button', { name: /^시작 · (활동|안전 약속 확인)$/ }).tap();
           await page.waitForTimeout(3300);
         } else await page.getByRole('button', { name: /준비 완료/ }).tap();
         await page.clock.pauseAt(new Date(Date.now() + 100));

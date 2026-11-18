@@ -29,6 +29,13 @@ export function ExpeditionWorld({snapshot:s}:{snapshot:ExpeditionSnapshot}){
  </section>;
 }
 
+/** 역할을 바꿀 때가 되면 '자세히' 밖, 하는 중 화면 위쪽에 크게 알린다. 평소에는 아무것도 그리지 않는다. */
+export function RoleSwapBanner({snapshot:s,group:g,send,disabled}:{snapshot:ExpeditionSnapshot;group:GroupProgress;send:ExpeditionAction;disabled:boolean}){
+ const now=useServerClock(s),w=groupWorkshop(g,s),config=settingsOf(s),due=now-w.roleAt>=config.roleEvery*60000;
+ if(!due)return null;
+ return <section className="role-swap-banner" role="alert" aria-label="역할 교대 알림"><strong>🔄 역할을 바꿀 시간이에요</strong><p>기기를 내려놓고, 조작 역할부터 다음 자리로 넘겨요.</p><button disabled={disabled||!s.workshop} onClick={()=>void send('rotate')}>역할 교대했어요</button></section>;
+}
+
 export function RoleRotation({snapshot:s,group:g,send,disabled}:{snapshot:ExpeditionSnapshot;group:GroupProgress;send:ExpeditionAction;disabled:boolean}){
  const now=useServerClock(s),w=groupWorkshop(g,s),config=settingsOf(s),due=now-w.roleAt>=config.roleEvery*60000;
  return <section className="workshop-roles" aria-label="모둠 역할 교대"><h3>모두의 차례 · {w.roleRound+1}라운드</h3><p>처음에 1번부터 {w.members}번까지 자리를 정해요. 자리 번호는 사람이나 계정과 연결하지 않아요.</p><div className="role-seats">{movementRoleSeats(s.game,w.members,w.roleRound).map(r=><div key={r.seat}><b>자리 {r.seat} · {r.role}</b><p>{r.action}</p><small>편한 대안: {r.alternative}</small></div>)}</div><p role="status">{due?'역할을 바꿀 시간이에요. 기기를 내려놓고 조작 역할부터 바꿔요.':`${config.roleEvery}분마다 또는 한 라운드 뒤 역할을 바꿔요.`}</p><button disabled={disabled||!s.workshop} onClick={()=>void send('rotate')}>기기를 내려놓고 역할 교대했어요</button><small>교대 버튼 기록 {w.roleSwaps}회 · 버튼만으로 실제 참여를 판단하지 않아요.</small></section>;

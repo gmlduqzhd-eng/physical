@@ -1,9 +1,10 @@
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import { useGameTimeouts } from './useGameTimeouts';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
-import { Play, ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
+import { ArrowLeft, RotateCcw, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { GameResultDetails } from '../../../../domain/gameResultDetails';
+import { StartLabel } from '../../StartLabel';
 
 export interface SafetyItem {
   id: string;
@@ -62,7 +63,6 @@ export const PhysicalActivityLayout = ({
   const [selfRating, setSelfRating] = useState<number | null>(null);
   const [completionSummary, setCompletionSummary] = useState<string>('');
   const [completionDetails, setCompletionDetails] = useState<GameResultDetails>({});
-  const [safetyChecked, setSafetyChecked] = useState<string[]>([]);
   const [performed, setPerformed] = useState(false);
   const completedRef = useRef(false);
   const submittedRef = useRef(false);
@@ -76,8 +76,9 @@ export const PhysicalActivityLayout = ({
     return () => clearTimeout(timer);
   }, [step, countdown, scheduleTimeout,classroomPaused]);
 
+  // 시작 버튼 하나로 안전 약속 확인까지 한다(누르면 약속을 모두 확인한 것으로 보고 바로 시작).
   const handleStartActivity = () => {
-    if(safetyItems.some(item=>!safetyChecked.includes(item.id)))return;
+    // (안전 약속은 시작 버튼 위에 접어 두고, 이 버튼을 누르는 것을 확인으로 본다.)
     completedRef.current = false;
     if(!useCountdown){setStep('active');return;}
     setStep('countdown');
@@ -128,6 +129,15 @@ export const PhysicalActivityLayout = ({
             </div>
           </div>
 
+          {/* 시작 버튼은 첫 화면 맨 위에 둔다. 안전 약속 확인은 이 버튼 하나로 합친다. */}
+          <button
+            onClick={handleStartActivity}
+            className="game-stage-primary w-full py-4 mb-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <StartLabel sub={safetyItems.length?'안전 약속 확인':'활동'}/>
+          </button>
+          {!!safetyItems.length&&<details className="bg-slate-900/90 rounded-2xl p-3 mb-4 text-xs"><summary className="font-bold text-slate-200">시작하기 전에 함께 확인해요 · 안전 약속 {safetyItems.length}가지</summary><ul className="mt-2 space-y-1 list-disc list-inside text-slate-300">{safetyItems.map(item=><li key={item.id}>{item.text}</li>)}</ul></details>}
+
           {/* 준비물 및 예상 시간 */}
           <div className="bg-slate-900/90 rounded-2xl p-4 border border-slate-800 mb-4 space-y-2">
             <div className="flex items-center justify-between text-xs">
@@ -154,14 +164,6 @@ export const PhysicalActivityLayout = ({
             </ol>
           </div>
 
-          {!!safetyItems.length&&<fieldset className="bg-slate-900/90 rounded-2xl p-4 mb-4"><legend>이 활동의 안전과 준비</legend><label className="flex items-start gap-3 my-2 font-bold"><input type="checkbox" className="mt-1 w-5 h-5 shrink-0" checked={safetyItems.every(item=>safetyChecked.includes(item.id))} onChange={e=>setSafetyChecked(e.target.checked?safetyItems.map(item=>item.id):[])}/><span>안전 약속 {safetyItems.length}가지를 모두 확인했어요</span></label><details><summary className="text-xs text-slate-300">안전 약속 하나씩 보기</summary>{safetyItems.map(item=><label className="flex items-start gap-3 my-3" key={item.id}><input type="checkbox" className="mt-1 w-5 h-5 shrink-0" checked={safetyChecked.includes(item.id)} onChange={e=>setSafetyChecked(old=>e.target.checked?[...old,item.id]:old.filter(id=>id!==item.id))}/><span>{item.text}</span></label>)}</details></fieldset>}
-          <button
-            onClick={handleStartActivity}
-            disabled={safetyItems.some(item=>!safetyChecked.includes(item.id))}
-            className="game-stage-primary w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-2xl font-black text-base shadow-lg shadow-cyan-500/20 active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            <Play className="w-5 h-5 fill-current" /> {useCountdown?'활동 시작하기 (3초 카운트)':'활동 시작하기'}
-          </button>
         </div>
       )}
 

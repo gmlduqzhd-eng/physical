@@ -109,7 +109,7 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
    <div className="pp-start">
     {/* 역할을 정해야 하는 놀이는 시작 버튼 바로 위에서 먼저 정하게 한다. 그러면 시작 버튼 한 번으로 바로 진행된다. */}
     {!solo&&classSetup&&<p className="pp-setup-first" role="note"><strong>시작하기 전에 정해요</strong> {classSetup}</p>}
-    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>{classSetup?<StartLabel sub="역할 정했어요 · 반 전체" spoken="역할을 정했으면 반 전체로 시작"/>:<StartLabel sub="반 전체" spoken="반 전체로 시작"/>}</button>}
+    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>{classSetup?<StartLabel sub="역할 정했어요 · 반 전체"/>:<StartLabel sub="반 전체"/>}</button>}
     <button className={solo?'pp-primary':''} onClick={()=>setPhase('plan')}>{solo?'놀이 방법 익히기':'짝·모둠이 기기 1대로 하기'}</button>
     {!solo&&<p className="pp-start-note">반 전체: 이 화면을 TV에 띄우면 학생은 기기 없이 참여해요 · 기기 1대: 과제마다 직접 기록해요</p>}
    </div>

@@ -61,3 +61,20 @@
 .movement-quest[data-focus] .mq-away{margin:6px 0 0;text-align:center}
 .movement-quest[data-focus] .mq-focus-actions{margin-top:4px}
 .movement-quest[data-focus]{min-height:0;padding-bottom:12px}
+/* 시작 화면의 첫 작전 지도·출발 순서: 한 화면에 들어오도록 작게 */
+.movement-quest .mq-start-brief{margin:8px 0;padding:6px 10px;border:2px solid var(--mq-accent);border-radius:14px;background:var(--forest-tint, #e6f1df)}
+.movement-quest .mq-start-brief h2{font-size:14px;margin:0 0 3px}
+.movement-quest .mq-start-brief p{margin:0;font-weight:700;font-size:14px;line-height:1.35}
+.movement-quest .mq-map-mini{max-width:300px;gap:3px;margin:4px 0 0}
+.movement-quest .mq-map-mini>div{min-height:22px;padding:1px 4px;border-radius:6px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px}
+.movement-quest .mq-map-mini b{font-size:14px;line-height:1.1}
+.movement-quest .mq-map-mini small{font-size:10px;line-height:1.1}
+/* 넓은 화면에서는 첫 작전 지도·출발 순서와 시작 버튼을 나란히 둬서 시작 버튼이 첫 화면 안에 들어오게 한다. */
+@media (min-width:820px){
+ .movement-quest .mq-start-area[data-with-brief]{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+ .movement-quest .mq-start-area[data-with-brief] .mq-start-brief{margin:0}
+ .movement-quest .mq-start-area[data-with-brief] .mq-start-row .mq-primary,.movement-quest .mq-start-area[data-with-brief] .mq-start-row .mq-secondary{margin:0}
+}
+/* 시작 화면에 첫 작전 지도·순서를 함께 보일 때는 규칙 줄 간격을 조금 줄여 시작 버튼이 첫 화면에 남게 한다. */
+.movement-quest:has(.mq-start-area[data-with-brief]) .mq-rules-three li{padding:3px 0}
+.movement-quest:has(.mq-start-area[data-with-brief]) .mq-rules-three{margin:6px 0}

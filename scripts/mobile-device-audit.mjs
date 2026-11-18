@@ -72,7 +72,7 @@ for (const engine of [chromium, webkit].filter(engine=>!process.env.MOBILE_ENGIN
         }
         for (const route of ['/lobby','/manual','/play/stopwatch']) {
           await page.goto(base+route,{waitUntil:'domcontentloaded'});
-          if (route.includes('/play')) await page.getByRole('button',{name:/바로 시작하기|활동 시작/}).waitFor();
+          if (route.includes('/play')) await page.getByRole('button',{name:/^시작 · (바로 시작|활동|안전 약속 확인)$/}).waitFor();
           else await page.locator('h1').first().waitFor();
           await checkLayout();
         }

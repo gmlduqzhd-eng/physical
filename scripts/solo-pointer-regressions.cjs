@@ -5,7 +5,7 @@ async function main(){
  try{
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
  await page.goto((process.env.AUDIT_URL||'http://127.0.0.1:5175')+'/solo/play/slingshot-archery');
- await page.getByRole('button',{name:'바로 시작하기',exact:true}).tap();
+ await page.getByRole('button',{name:'시작 · 바로 시작',exact:true}).tap();
  await page.getByRole('button',{name:/준비 완료/}).tap();
  const surface=page.locator('.gameplay-content .touch-none');const b=await surface.boundingBox();
  const cdp=await page.context().newCDPSession(page);
