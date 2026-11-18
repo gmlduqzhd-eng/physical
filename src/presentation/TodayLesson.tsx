@@ -1,4 +1,4 @@
-import {useMemo,useState} from 'react';
+import {useEffect,useMemo,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
 import {ClassFeedbackSlot,ClassMapLink} from './components/ClassFeedbackSlot';
@@ -8,7 +8,7 @@ import {useClassProgress} from '../application/classProgressStore';
 import {lessonPlayId} from '../domain/classProgress';
 import {
  DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- advanceRun,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,resumeRun,stageOutcomes,startRun,stagePath,summaryPlayId,
+ advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,recordsSince,resumeRun,runSeconds,stageOutcomes,startRun,stagePath,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
@@ -61,11 +61,12 @@ function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:S
  return <ol className="today-stages" aria-label="오늘 수업 순서">
   {plan.stages.map((s,i)=>{
    const result=run?.results[i],outcome=outcomes?.[i];
-   const state=outcome==='passed'?'passed':result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
+   // 끝 화면에서는 실제 결과(했어요/넘겼어요/건너뛰었어요)가 표시를 정한다: 기록한 뒤 '건너뛰기'로 나간 활동도 ✓.
+   const state=outcome?(outcome==='played'?'done':outcome):result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
    return <li key={i} data-state={state}>
-    <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':result?.status==='done'?'✓':result?.status==='skipped'?'–':i+1}</span>
+    <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':state==='done'?'✓':state==='skipped'?'–':i+1}</span>
     <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
-    <span className="today-stage-min">{result?formatSeconds(result.seconds):`약 ${s.minutes}분`}</span>
+    <span className="today-stage-min">{result?formatSeconds(result.seconds):s.kind==='main'?`여러 판 · 약 ${s.minutes}분`:`약 ${s.minutes}분`}</span>
     {!outcome&&<span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>}
    </li>;
   })}
@@ -126,7 +127,7 @@ function TodayStageView({run}:{run:TodayRun}){
   {stage.kind==='reflect'
    ?<><p className="today-question">{stage.note}</p><p className="today-lead">손을 들어 두세 명이 말해 봐요. 약 {stage.minutes}분이면 충분해요.</p>
      <button type="button" className="primary today-primary today-big" onClick={()=>step('done')}>✅ 오늘 수업 마치기</button></>
-   :<><p className="today-lead">{stage.note} 약 {stage.minutes}분.</p>
+   :<><p className="today-lead">{stage.note} {stage.kind==='main'?`한 판은 5~6분쯤이에요. 약 ${stage.minutes}분 동안 여러 판을 해요.`:`약 ${stage.minutes}분.`}</p>
      {path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>▶ {stage.title} 열기</button>}
      <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button><button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button></div></>}
   <StageList plan={run.plan} run={run}/>
@@ -142,9 +143,12 @@ function TodayStageView({run}:{run:TodayRun}){
 function TodaySummary({run}:{run:TodayRun}){
  const progress=useClassProgress();
  const finished=run.finishedAt??Date.now();
- const totalSec=Math.round((finished-run.startedAt)/1000);
- const playOf=(gameId:string)=>lessonPlayId(progress,gameId,run.startedAt,finished);
- const recorded=(gameId:string)=>progress.plays.some(x=>x.id===gameId&&x.at>=run.startedAt&&x.at<=finished);
+ const since=recordsSince(run);
+ const totalSec=runSeconds(run);
+ // 단계마다 반응을 붙일 판을 한 번 정해 수업에 적어 둔다. 그 뒤에는 다시 누르거나 새로고침해도 같은 판의 반응만 바뀐다.
+ const bound=bindStagePlays(run,gameId=>lessonPlayId(progress,gameId,since,finished));
+ useEffect(()=>{if(bound!==run)saveTodayRun(bound);},[bound,run]);
+ const recorded=(gameId:string)=>progress.plays.some(x=>x.id===gameId&&x.at>=since&&x.at<=finished);
  const outcomes=stageOutcomes(run,recorded);
  const count=(o:StageOutcome)=>outcomes.filter(x=>x===o).length;
  const parts=[`${count('played')}단계를 했어요`,count('passed')?`${count('passed')}단계는 기록 없이 넘겼어요`:'',count('skipped')?`${count('skipped')}단계는 건너뛰었어요`:''].filter(Boolean);
@@ -156,7 +160,7 @@ function TodaySummary({run}:{run:TodayRun}){
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>
   <p className="today-hint">게임 결과 화면에서 이미 누른 반응은 그대로 보여요. 바꾸고 싶을 때만 다시 눌러요.</p>
-  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={playOf(s.gameId)??summaryPlayId(run,i)} tone="light" showMap={false}/></div>)}
+  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={bound.stagePlays?.[i]} tone="light" showMap={false}/></div>)}
   <ClassMapLink progress={progress}/>
   <button type="button" className="primary today-primary" onClick={()=>saveTodayRun(null)}>새 수업 짜기</button>
  </section>;

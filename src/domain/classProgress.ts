@@ -32,7 +32,24 @@ export interface ReasonEntry {id:string;at:number;play:string;reasons:ReasonId[]
 /**
  * version 2: 반응 이유(reasons)를 더했다. version 1 기록은 이유가 없는 기록으로 그대로 읽는다.
  */
-export interface ClassProgress {version:2;plays:PlayEntry[];votes:VoteEntry[];reasons:ReasonEntry[]}
+export interface ClassProgress {version:2;plays:PlayEntry[];votes:VoteEntry[];reasons:ReasonEntry[];
+ /** 지금까지 기록한 판 수(오래된 판을 지워도 줄지 않는다). 지도와 배지가 쓴다. 없으면 plays 길이. */ total?:number}
+/** 지금까지 기록한 판 수. 저장 한도를 넘겨 오래된 판을 지운 뒤에도 지도와 배지가 이어진다. */
+export const totalPlays=(p:ClassProgress)=>Math.max(typeof p.total==='number'&&Number.isFinite(p.total)?Math.floor(p.total):0,p.plays.length);
+/**
+ * 저장 한도에 맞춰 오래된 것부터 지운다. 판을 지울 때 그 판의 반응·이유도 함께 지우고,
+ * 지운 판보다 오래된 '기록 안 한 판 반응'도 지워서, 남은 반응이 엉뚱하게 세어지지 않게 한다. 누적 판 수(total)는 지킨다.
+ */
+export function trimProgress(p:ClassProgress):ClassProgress{
+ if(p.plays.length<=MAX_ENTRIES&&p.votes.length<=MAX_ENTRIES&&p.reasons.length<=MAX_ENTRIES)return p;
+ const total=totalPlays(p);
+ const plays=p.plays.slice(-MAX_ENTRIES),dropped=p.plays.slice(0,p.plays.length-plays.length);
+ const gone=new Set(dropped.map(x=>x.play).filter((x):x is string=>!!x));
+ const cut=dropped.length?Math.max(...dropped.map(x=>x.at)):0;
+ const kept=new Set(plays.map(x=>x.play).filter(Boolean));
+ const alive=(x:{at:number;play?:string})=>!(x.play&&gone.has(x.play))&&(x.at>cut||(!!x.play&&kept.has(x.play)));
+ return {version:2,plays,votes:p.votes.filter(alive).slice(-MAX_ENTRIES),reasons:p.reasons.filter(alive).slice(-MAX_ENTRIES),total};
+}
 
 export const EMPTY_PROGRESS:ClassProgress={version:2,plays:[],votes:[],reasons:[]};
 /** 저장 크기를 묶어 둔다(한 학기 넉넉히). 넘치면 오래된 것부터 지운다. */
@@ -61,11 +78,12 @@ function parseReason(x:unknown):ReasonEntry|null{
 }
 export function parseProgress(raw:unknown):ClassProgress{
  if(!raw||typeof raw!=='object')return {...EMPTY_PROGRESS,plays:[],votes:[],reasons:[]};
- const r=raw as {plays?:unknown;votes?:unknown;reasons?:unknown};
+ const r=raw as {plays?:unknown;votes?:unknown;reasons?:unknown;total?:unknown};
  const plays=Array.isArray(r.plays)?r.plays.filter((p):p is PlayEntry=>!!p&&isId((p as PlayEntry).id)&&isTime((p as PlayEntry).at)).map(p=>withPlay({id:p.id,at:p.at},(p as PlayEntry).play)):[];
  const votes=Array.isArray(r.votes)?r.votes.filter((v):v is VoteEntry=>!!v&&isId((v as VoteEntry).id)&&isTime((v as VoteEntry).at)&&((v as VoteEntry).vote==='up'||(v as VoteEntry).vote==='down')).map(v=>withPlay({id:v.id,at:v.at,vote:v.vote},(v as VoteEntry).play)):[];
  const reasons=Array.isArray(r.reasons)?r.reasons.map(parseReason).filter((x):x is ReasonEntry=>!!x):[];
- return {version:2,plays:plays.slice(-MAX_ENTRIES),votes:votes.slice(-MAX_ENTRIES),reasons:reasons.slice(-MAX_ENTRIES)};
+ const total=typeof r.total==='number'&&Number.isFinite(r.total)&&r.total>plays.length?Math.floor(r.total):undefined;
+ return trimProgress(total===undefined?{version:2,plays,votes,reasons}:{version:2,plays,votes,reasons,total});
 }
 /**
  * 한 판(play)의 이유와 메모를 바꾼다. 이유도 메모도 비면 그 판의 이유 기록을 지운다.
@@ -76,14 +94,14 @@ export function setReasons(p:ClassProgress,id:string,play:string,reasons:readonl
  const rest=p.reasons.filter(x=>x.play!==play);
  const clean=cleanReasons(reasons),n=cleanNote(note);
  if(!clean.length&&!n)return {...p,reasons:rest};
- return {...p,reasons:[...rest,n?{id,at,play,reasons:clean,note:n}:{id,at,play,reasons:clean}].slice(-MAX_ENTRIES)};
+ return trimProgress({...p,reasons:[...rest,n?{id,at,play,reasons:clean,note:n}:{id,at,play,reasons:clean}]});
 }
 export const reasonsOf=(p:ClassProgress,play:string|undefined):ReasonEntry|null=>play?[...p.reasons].reverse().find(x=>x.play===play)??null:null;
 
 export function addPlay(p:ClassProgress,id:string,at:number,play?:string):ClassProgress{
  if(!isId(id)||!isTime(at))return p;
  if(isPlayId(play)&&p.plays.some(x=>x.play===play))return p; // 같은 판을 두 번 세지 않는다
- return {...p,plays:[...p.plays,withPlay({id,at},play)].slice(-MAX_ENTRIES)};
+ return trimProgress({...p,plays:[...p.plays,withPlay({id,at},play)],total:totalPlays(p)+1});
 }
 /**
  * 반응 남기기. 한 판에 한 표.
@@ -94,11 +112,11 @@ export function setVote(p:ClassProgress,id:string,vote:Vote,at:number,play?:stri
  if(!isId(id)||!isTime(at))return p;
  if(isPlayId(play)){
   const votes=p.votes.filter(v=>v.play!==play);
-  return {...p,votes:[...votes,{id,at,vote,play}].slice(-MAX_ENTRIES)};
+  return trimProgress({...p,votes:[...votes,{id,at,vote,play}]});
  }
  const lastPlay=Math.max(0,...p.plays.filter(x=>x.id===id).map(x=>x.at));
  const votes=p.votes.filter(v=>!(v.id===id&&!v.play&&v.at>=lastPlay));
- return {...p,votes:[...votes,{id,at,vote}].slice(-MAX_ENTRIES)};
+ return trimProgress({...p,votes:[...votes,{id,at,vote}]});
 }
 /** 이 판(play)에 남긴 반응. play가 없으면 이 활동의 가장 최근 판에 남긴 반응. */
 export function currentVote(p:ClassProgress,id:string,play?:string):Vote|null{
@@ -110,12 +128,14 @@ export function currentVote(p:ClassProgress,id:string,play?:string):Vote|null{
 /** 기록하지 않은 판에 남긴 반응인지(판 id가 있는데 그 판이 기록에 없음). */
 /**
  * 오늘 수업 끝 화면에서 한 활동의 반응을 붙일 판 id.
- * 수업 중(since~until)에 이 활동을 기록한 판이 있으면 가장 마지막 판 id를, 없으면 기록 없이 반응만 남긴 마지막 판 id를 쓴다.
+ * 수업 중(since~until)에 이 활동을 기록한 판이 있으면 가장 마지막 판 id를, 없으면 수업을 시작한 뒤 기록 없이 반응만 남긴 마지막 판 id를 쓴다.
+ * 반응은 끝 화면에서 다시 누르면 시각이 바뀌므로(수업이 끝난 뒤가 됨) 끝 시각으로 거르지 않는다.
  * 그래서 게임 결과 화면에서 이미 누른 반응이 그대로 보이고, 다시 눌러도 같은 판의 반응을 바꿀 뿐 새 표가 쌓이지 않는다.
  */
 export function lessonPlayId(p:ClassProgress,id:string,since:number,until:number):string|undefined{
- const inLesson=(x:{id:string;at:number;play?:string})=>x.id===id&&!!x.play&&x.at>=since&&x.at<=until;
- return [...p.plays].reverse().find(inLesson)?.play??[...p.votes].reverse().find(inLesson)?.play;
+ const mine=(x:{id:string;at:number;play?:string})=>x.id===id&&!!x.play&&x.at>=since;
+ const recorded=new Set(p.plays.map(x=>x.play));
+ return [...p.plays].reverse().find(x=>mine(x)&&x.at<=until)?.play??[...p.votes].reverse().find(x=>mine(x)&&!recorded.has(x.play))?.play;
 }
 export const isUnrecordedVote=(p:ClassProgress,v:VoteEntry)=>!!v.play&&!p.plays.some(x=>x.play===v.play);
 
@@ -157,7 +177,7 @@ export const MAP_REGIONS=[
 export const regionOf=(tile:number)=>[...MAP_REGIONS].reverse().find(r=>tile>=r.from)!;
 export interface MapView {total:number;lap:number;opened:number;tiles:{index:number;open:boolean;region:string;icon:string}[];current:{name:string;icon:string};nextRegion:{name:string;icon:string;left:number}|null}
 export function mapView(p:ClassProgress):MapView{
- const total=p.plays.length,lap=Math.floor(total/MAP_TILES)+1,opened=total%MAP_TILES;
+ const total=totalPlays(p),lap=Math.floor(total/MAP_TILES)+1,opened=total%MAP_TILES;
  const tiles=Array.from({length:MAP_TILES},(_,index)=>{const r=regionOf(index);return {index,open:index<opened,region:r.name,icon:r.icon};});
  const cur=regionOf(Math.max(0,opened-1)),next=MAP_REGIONS.find(r=>r.from>=opened&&r.from>0);
  return {total,lap,opened,tiles,current:{name:cur.name,icon:cur.icon},nextRegion:next?{name:next.name,icon:next.icon,left:next.from-opened+1}:null};
@@ -177,7 +197,7 @@ export interface ClassBadge {id:string;icon:string;name:string;desc:string;earne
 const PLAY_MILESTONES:[number,string,string][]=[[1,'🌱','첫 걸음'],[5,'🥾','꾸준한 탐험대'],[10,'🧭','길잡이 반'],[20,'⛰️','언덕을 넘은 반'],[30,'🏰','지도 완성'],[50,'🌟','전설의 원정대']];
 const VARIETY_MILESTONES:[number,string,string][]=[[5,'🎨','다섯 가지 놀이'],[10,'🌈','열 가지 놀이']];
 export function classBadges(p:ClassProgress):ClassBadge[]{
- const total=p.plays.length,distinct=new Set(p.plays.map(x=>x.id)).size;
+ const total=totalPlays(p),distinct=new Set(p.plays.map(x=>x.id)).size;
  return [
   ...PLAY_MILESTONES.map(([n,icon,name])=>({id:`plays-${n}`,icon,name,desc:`${n}판 마치기`,earned:total>=n})),
   ...VARIETY_MILESTONES.map(([n,icon,name])=>({id:`variety-${n}`,icon,name,desc:`서로 다른 활동 ${n}개 하기`,earned:distinct>=n})),
@@ -200,10 +220,13 @@ export function mergeProgress(a:ClassProgress,b:ClassProgress):ClassProgress{
  const voteKey=(v:VoteEntry)=>v.play?`p:${v.play}`:`t:${v.id}:${v.at}`;
  const votes=new Map<string,VoteEntry>();
  for(const v of [...a.votes,...b.votes]){const k=voteKey(v),old=votes.get(k);if(!old||v.at>=old.at)votes.set(k,v);}
- const byTime=<T extends {at:number}>(xs:T[])=>xs.sort((x,y)=>x.at-y.at).slice(-MAX_ENTRIES);
+ const byTime=<T extends {at:number}>(xs:T[])=>xs.sort((x,y)=>x.at-y.at);
  const reasons=new Map<string,ReasonEntry>();
  for(const x of [...a.reasons,...b.reasons]){const old=reasons.get(x.play);if(!old||x.at>=old.at)reasons.set(x.play,x);}
- return {version:2,plays:byTime([...plays.values()]),votes:byTime([...votes.values()]),reasons:byTime([...reasons.values()])};
+ const merged=[...plays.values()].sort((x,y)=>x.at-y.at);
+ // 누적 판 수: 두 쪽 가운데 큰 값에서 시작해, 한쪽에만 있는 판 수만큼은 적어도 더해진다.
+ const total=Math.max(totalPlays(a),totalPlays(b),merged.length);
+ return trimProgress({version:2,plays:merged,votes:byTime([...votes.values()]),reasons:byTime([...reasons.values()]),total});
 }
 
 /** 활동마다 모은 이유. ratio는 reactionRows와 같은 👍 비율. */
@@ -256,7 +279,7 @@ export const SUMMARY_NOTES=20,SUMMARY_ACTIVITIES=30;
 /** 공유용 짧은 요약(메신저에 붙여 넣기 좋게). 학생 이름 없이 활동·숫자·선생님 메모만. */
 export function shareSummary(p:ClassProgress,nameOf:(id:string)=>string,now=new Date()):string{
  const rows=reasonRows(p),reactions=reactionRows(p),problems=topProblems(p);
- const lines=[`[땀방울 원정대 · 우리 반 반응 요약 ${now.toLocaleDateString('ko-KR')}]`,`기록한 판 ${p.plays.length}판 · 반응 ${p.votes.length}개 · 이유 ${p.reasons.length}개`];
+ const lines=[`[땀방울 원정대 · 우리 반 반응 요약 ${now.toLocaleDateString('ko-KR')}]`,`기록한 판 ${totalPlays(p)}판 · 반응 ${p.votes.length}개 · 이유 ${p.reasons.length}개`];
  if(problems.length){lines.push('','많이 나온 문제');for(const t of problems)lines.push(`- ${t.label}: ${t.games.map(g=>`${nameOf(g.id)}(${g.count})`).join(', ')}`);}
  const loved=rows.filter(r=>r.counts.loved>=MIN_REASON_COUNT);
  if(loved.length)lines.push('','학생들이 좋아한 활동',...loved.map(r=>`- ${nameOf(r.id)}(${r.counts.loved})`));
@@ -268,9 +291,11 @@ export function shareSummary(p:ClassProgress,nameOf:(id:string)=>string,now=new 
   if(notes.length>SUMMARY_NOTES)lines.push(`- 외 ${notes.length-SUMMARY_NOTES}개 (전체는 '내보내기' 파일에 있어요)`);
  }
  // 활동마다 판 수와 👍/👎 수: 어떤 게임을 고치거나 늘릴지 정할 때 가장 먼저 보는 숫자.
- lines.push('','활동별 반응 (판 수 · 👍 · 👎)');
+ // 고른 이유도 이름으로 적는다(예: 어려웠어요 2, 헷갈렸어요 1).
+ const reasonText=new Map(rows.map(r=>[r.id,REASONS.filter(x=>r.counts[x.id]>0).map(x=>`${x.label} ${r.counts[x.id]}`).join(', ')]));
+ lines.push('','활동별 반응 (판 수 · 👍 · 👎 · 고른 이유)');
  if(reactions.length){
-  lines.push(...reactions.slice(0,SUMMARY_ACTIVITIES).map(r=>`- ${nameOf(r.id)}: ${r.plays}판 · 👍 ${r.up} · 👎 ${r.down}${r.ratio===null?'':` (👍 ${Math.round(r.ratio*100)}%)`}`));
+  lines.push(...reactions.slice(0,SUMMARY_ACTIVITIES).map(r=>`- ${nameOf(r.id)}: ${r.plays}판 · 👍 ${r.up} · 👎 ${r.down}${r.ratio===null?'':` (👍 ${Math.round(r.ratio*100)}%)`}${reasonText.get(r.id)?` · 이유: ${reasonText.get(r.id)}`:''}`));
   if(reactions.length>SUMMARY_ACTIVITIES)lines.push(`- 외 ${reactions.length-SUMMARY_ACTIVITIES}개 활동`);
  }else lines.push('- 아직 기록이 없어요');
  return lines.join('\n');

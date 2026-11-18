@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {EMPTY_PROGRESS,addPlay,mergeProgress,parseProgress,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
+import {EMPTY_PROGRESS,addPlay,mergeProgress,parseProgress,reasonsOf,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
 
 /**
  * 이 기기에만 남는 우리 반 반응·원정 지도 기록. 저장이 막힌 브라우저에서도 화면은 그대로 쓸 수 있다.
@@ -14,11 +14,23 @@ let memory:ClassProgress=EMPTY_PROGRESS;
  */
 let saveFailed=false;
 export const progressSaveFailed=()=>saveFailed;
+/**
+ * 저장이 실패한 동안 이 탭에서 지운 것. 저장소의 예전 값과 합칠 때 지운 이유나 '모두 지우기'가 되살아나지 않게 한다.
+ * 저장이 다시 되면 비운다.
+ */
+let clearedAt=0;
+const removedReasons=new Set<string>();
+/** 저장소 값에서 이 탭이 지운 것을 뺀다(저장 실패 중에만 쓴다). */
+export function withoutRemoved(stored:ClassProgress,cleared:number,removed:ReadonlySet<string>):ClassProgress{
+ if(!cleared&&!removed.size)return stored;
+ const keep=(x:{at:number})=>x.at>cleared;
+ return {version:2,plays:stored.plays.filter(keep),votes:stored.votes.filter(keep),reasons:stored.reasons.filter(x=>keep(x)&&!removed.has(x.play)),...(cleared?{}:stored.total===undefined?{}:{total:stored.total})};
+}
 
 export function readProgress():ClassProgress{
  try{
   const raw=window.localStorage.getItem(CLASS_PROGRESS_KEY);
-  if(raw){const stored=parseProgress(JSON.parse(raw));memory=saveFailed?mergeProgress(memory,stored):stored;}
+  if(raw){const stored=parseProgress(JSON.parse(raw));memory=saveFailed?mergeProgress(memory,withoutRemoved(stored,clearedAt,removedReasons)):stored;}
  }catch{/* 저장소를 못 쓰면 메모리 값 */}
  return memory;
 }
@@ -39,15 +51,20 @@ export function releasePlayId(gameId:string,id:string){if(openPlays.get(gameId)=
 export const openPlayId=(gameId:string)=>openPlays.get(gameId);
 function write(next:ClassProgress){
  memory=next;
- try{window.localStorage.setItem(CLASS_PROGRESS_KEY,JSON.stringify(next));saveFailed=false;}catch{saveFailed=true;/* 저장소가 막혀도 이번 화면에서는 쓴다 */}
+ try{window.localStorage.setItem(CLASS_PROGRESS_KEY,JSON.stringify(next));saveFailed=false;clearedAt=0;removedReasons.clear();}catch{saveFailed=true;/* 저장소가 막혀도 이번 화면에서는 쓴다 */}
  try{window.dispatchEvent(new Event(EVENT));}catch{/* 서버 렌더링 등 */}
 }
 /** 판 기록. play(판 id)를 주지 않으면, 화면의 반응 칸이 잡아 둔 판 id를 쓴다. */
 export function recordPlay(id:string,at=Date.now(),play?:string){write(addPlay(readProgress(),id,at,play??openPlays.get(id)));}
 export function recordVote(id:string,vote:Vote,at=Date.now(),play?:string){write(setVote(readProgress(),id,vote,at,play));}
 /** 한 판의 반응 이유와 한 줄 메모(고르지 않아도 된다). */
-export function recordReasons(id:string,play:string,reasons:readonly ReasonId[],note?:string,at=Date.now()){write(setReasons(readProgress(),id,play,reasons,note,at));}
-export function clearProgress(){write({...EMPTY_PROGRESS,plays:[],votes:[],reasons:[]});}
+export function recordReasons(id:string,play:string,reasons:readonly ReasonId[],note?:string,at=Date.now()){
+ const next=setReasons(readProgress(),id,play,reasons,note,at);
+ // 이 판의 이유를 지웠으면(저장이 막힌 동안) 저장소의 예전 이유와 다시 합쳐지지 않게 적어 둔다.
+ if(reasonsOf(next,play))removedReasons.delete(play);else removedReasons.add(play);
+ write(next);
+}
+export function clearProgress(){clearedAt=Date.now();removedReasons.clear();write({...EMPTY_PROGRESS,plays:[],votes:[],reasons:[]});}
 
 /** 기록이 바뀌면(다른 탭 포함) 다시 그린다. */
 export function useClassProgress():ClassProgress{

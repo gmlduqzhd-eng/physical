@@ -92,7 +92,7 @@ test('merging tabs keeps the later reason for the same play and every other play
 
 test('the feedback slot offers the reasons for the chosen vote as optional chips and a capped one-line note',()=>{
  const slot=readFileSync('src/presentation/components/ClassFeedbackSlot.tsx','utf8');
- assert.match(slot,/reasonsForVote\(vote\)\.map/);
+ assert.match(slot,/reasonsForVote\(vote\)/);
  assert.match(slot,/maxLength=\{MAX_NOTE\}/);
  assert.match(slot,/골라도 되고 안 골라도 돼요/);
  assert.equal(REASONS.length,8);

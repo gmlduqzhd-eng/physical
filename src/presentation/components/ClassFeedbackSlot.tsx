@@ -1,5 +1,5 @@
 import {Link} from 'react-router-dom';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {holdPlayId,newPlayId,recordReasons,recordVote,releasePlayId,useClassProgress} from '../../application/classProgressStore';
 import {MAX_NOTE,REASONS,currentVote,mapView,reasonsForVote,reasonsOf,weekCompare,type ClassProgress,type ReasonId,type Vote} from '../../domain/classProgress';
 import './ClassFeedbackSlot.css';
@@ -20,11 +20,17 @@ export function ClassFeedbackSlot({gameId,playId,tone='dark',showMap=true}:{game
  useEffect(()=>{if(!claimed)return;holdPlayId(gameId,claimed);return ()=>releasePlayId(gameId,claimed);},[gameId,claimed]);
  const play=playId||claimed;
  const vote=currentVote(progress,gameId,play);
+ // 👍↔👎를 오가도 앞서 고른 이유를 잃지 않게, 이 화면에 있는 동안 반응마다 고른 이유를 기억한다(저장은 지금 반응의 이유만).
+ const remembered=useRef<{play:string;up:ReasonId[];down:ReasonId[]}>({play,up:[],down:[]});
  const cast=(v:Vote)=>{
+  if(v===vote)return; // 같은 반응을 다시 눌러도 바뀌는 것이 없다(예전 기록의 이유도 그대로 둔다)
+  if(remembered.current.play!==play)remembered.current={play,up:[],down:[]};
   recordVote(gameId,v,Date.now(),play);
-  // 👍↔👎를 바꾸면 다른 쪽 이유는 지운다(메모는 남긴다).
   const saved=reasonsOf(progress,play);
-  if(saved&&saved.reasons.some(r=>VOTE_OF.get(r)!==v))recordReasons(gameId,play,saved.reasons.filter(r=>VOTE_OF.get(r)===v),saved.note);
+  if(vote&&saved)remembered.current[vote]=saved.reasons;
+  // 👍↔👎를 바꾸면 다른 쪽 이유는 빼고, 이 반응에서 앞서 골랐던 이유를 되살린다(메모는 남긴다).
+  const next=[...new Set([...(saved?.reasons??[]).filter(r=>VOTE_OF.get(r)===v),...remembered.current[v]])];
+  if(saved||next.length)recordReasons(gameId,play,next,saved?.note);
  };
  return <section className="class-feedback" data-tone={tone} aria-label={showMap?'선생님 반응과 반 원정 지도':'선생님 반응'}>
   <p className="class-feedback-q">선생님, 이 활동 우리 반에 잘 맞았나요?</p>
@@ -49,7 +55,8 @@ function ReasonPicker({progress,gameId,play,vote}:{progress:ClassProgress;gameId
  return <details className="class-feedback-reasons" open>
   <summary>이유 더하기 <small>(골라도 되고 안 골라도 돼요)</small></summary>
   <div className="class-feedback-chips" role="group" aria-label={vote==='up'?'좋았던 이유 고르기(여러 개 가능)':'아쉬웠던 이유 고르기(여러 개 가능)'}>
-   {reasonsForVote(vote).map(r=><button key={r.id} type="button" aria-pressed={picked.has(r.id)} onClick={()=>toggle(r.id)}>{r.label}</button>)}
+   {/* 예전 기록에서 이 반응에 고른 다른 쪽 이유(👍 + '너무 쉬웠어요' 등)도 보여 주어 뺄 수 있게 한다. */}
+   {[...reasonsForVote(vote),...REASONS.filter(r=>r.vote!==vote&&picked.has(r.id))].map(r=><button key={r.id} type="button" aria-pressed={picked.has(r.id)} onClick={()=>toggle(r.id)}>{r.label}</button>)}
   </div>
   <label className="class-feedback-note">한 줄 메모 <small>({note.length}/{MAX_NOTE})</small>
    <input type="text" maxLength={MAX_NOTE} value={note} placeholder={vote==='up'?'예: 마지막 승부에서 모두 신났어요':'예: 1번 신호가 빨라서 헷갈려했어요'} onChange={e=>setNote(e.target.value)} onBlur={e=>saveNote(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();saveNote(e.currentTarget.value);}}}/>
