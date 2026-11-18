@@ -22,12 +22,37 @@ export const BINGO_MOVES:readonly BingoMove[]=[
  {label:'허공 펀치 10번',seated:'허공 펀치 10번',pose:'punch'},
  {label:'얼음 자세 5초',seated:'얼음 자세 5초',pose:'freeze'},
  {label:'팔 크게 원 그리기 5번',seated:'팔 크게 원 그리기 5번',pose:'armsSide'},
+ {label:'발끝 들었다 내리기 10번',seated:'발끝 들었다 내리기 10번',pose:'armsDown'},
+ {label:'제자리 걷기 20걸음',seated:'앉아서 발 구르기 20번',pose:'run'},
+ {label:'두 팔 위로 쭉 뻗고 5초',seated:'두 팔 위로 쭉 뻗고 5초',pose:'armsUp'},
 ];
 /** 체육 지식 칸에 쓰는 문제(객관식만: 손을 들어 보기 중 하나를 골라요). */
 export const BINGO_QUIZ=EXAMPLE_QUESTIONS.filter(q=>q.wrong.length>=2);
 export const BOARD_CELLS=9,QUIZ_CELLS=3,BINGO_BONUS=2;
+/**
+ * 판 크기: 2팀은 3×3, 3~4팀은 4×4.
+ * 4팀이 3×3 판을 나눠 쓰면 한 판에 팀마다 두 칸쯤이라 빙고가 거의 나오지 않는다(점검에서 3판 내내 0줄).
+ * 2팀씩 짝을 지어 겨루면 팀 점수·우승 방식이 바뀌므로, 팀은 그대로 두고 판을 키우고 '세 칸 잇기'를 빙고로 센다.
+ */
+export const boardSizeFor=(teams:number)=>teams>=3?4:3;
+export const cellsFor=(size:number)=>size*size;
+/** 판 크기별 문제 칸 수(3×3 → 3칸, 4×4 → 5칸). */
+export const quizCellsFor=(size:number)=>size>=4?5:QUIZ_CELLS;
 /** 3×3 판의 줄: 가로 3, 세로 3, 대각선 2. */
-export const LINES_3X3:readonly (readonly [number,number,number])[]=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+export const LINES_3X3:readonly (readonly number[])[]=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+/** 4×4 판의 줄: 가로·세로·대각선으로 이어진 세 칸(모두 24줄). */
+export const LINES_4X4:readonly (readonly number[])[]=(()=>{
+ const out:number[][]=[],at=(r:number,c:number)=>r*4+c;
+ for(let r=0;r<4;r++)for(let c=0;c<4;c++){
+  if(c<=1)out.push([at(r,c),at(r,c+1),at(r,c+2)]);
+  if(r<=1)out.push([at(r,c),at(r+1,c),at(r+2,c)]);
+  if(r<=1&&c<=1)out.push([at(r,c),at(r+1,c+1),at(r+2,c+2)]);
+  if(r<=1&&c>=2)out.push([at(r,c),at(r+1,c-1),at(r+2,c-2)]);
+ }
+ return out;
+})();
+/** 칸 수로 줄 목록을 고른다(9칸 → 3×3, 16칸 → 4×4). */
+export const linesForCells=(cells:number)=>cells===16?LINES_4X4:LINES_3X3;
 
 export type BingoCellKind='move'|'quiz';
 export interface MoveBingoCell {
@@ -42,14 +67,17 @@ function shuffle<T>(list:readonly T[],rnd:()=>number):T[]{
  for(let k=out.length-1;k>0;k--){const j=Math.floor(rnd()*(k+1));[out[k],out[j]]=[out[j],out[k]];}
  return out;
 }
-/** seed와 판 번호가 같으면 늘 같은 판. 동작 6칸 + 문제 3칸(가운데 칸은 늘 동작). */
-export function buildMoveBoard(seed:number,boardNo=0):MoveBingoCell[]{
- const rnd=seededRandom(seed*97+boardNo*7919+11);
- const moves=shuffle(BINGO_MOVES,rnd).slice(0,BOARD_CELLS-QUIZ_CELLS);
- const quiz=shuffle(BINGO_QUIZ,rnd).slice(0,QUIZ_CELLS);
- const quizSlots=new Set(shuffle([0,1,2,3,5,6,7,8],rnd).slice(0,QUIZ_CELLS));
+/** seed와 판 번호·크기가 같으면 늘 같은 판. 3×3: 동작 6칸 + 문제 3칸(가운데 칸은 늘 동작). 4×4: 동작 11칸 + 문제 5칸. */
+export function buildMoveBoard(seed:number,boardNo=0,size=3):MoveBingoCell[]{
+ const cells=cellsFor(size),quizCount=quizCellsFor(size);
+ const rnd=seededRandom(seed*97+boardNo*7919+11+(size===4?50021:0));
+ const moves=shuffle(BINGO_MOVES,rnd).slice(0,cells-quizCount);
+ const quiz=shuffle(BINGO_QUIZ,rnd).slice(0,quizCount);
+ // 3×3은 가운데(4번) 칸을, 4×4는 가운데 네 칸을 늘 동작 칸으로 둔다.
+ const center=size===4?[5,6,9,10]:[4];
+ const quizSlots=new Set(shuffle(Array.from({length:cells},(_,i)=>i).filter(i=>!center.includes(i)),rnd).slice(0,quizCount));
  let m=0,q=0;
- return Array.from({length:BOARD_CELLS},(_,index):MoveBingoCell=>{
+ return Array.from({length:cells},(_,index):MoveBingoCell=>{
   if(quizSlots.has(index)&&quiz[q]){
    const item=quiz[q++];
    const choices=shuffle([item.answer,...item.wrong.slice(0,2)],rnd);
@@ -62,14 +90,14 @@ export function buildMoveBoard(seed:number,boardNo=0):MoveBingoCell[]{
 
 /** 칸 주인: 팀 번호 또는 null(빈칸). */
 export type Owners=readonly (number|null)[];
-export const emptyOwners=():(number|null)[]=>Array(BOARD_CELLS).fill(null);
+export const emptyOwners=(size=3):(number|null)[]=>Array(cellsFor(size)).fill(null);
 /** 그 팀이 다 차지한 줄 수. */
 export function linesOf(owners:Owners,team:number):number{
- return LINES_3X3.filter(line=>line.every(i=>owners[i]===team)).length;
+ return linesForCells(owners.length).filter(line=>line.every(i=>owners[i]===team)).length;
 }
 /** team이 cell을 차지하면 새로 생기는 빙고 줄 수(이미 찬 칸이면 0). */
 export function newLinesIfClaimed(owners:Owners,cell:number,team:number):number{
- if(cell<0||cell>=BOARD_CELLS||owners[cell]!==null)return 0;
+ if(cell<0||cell>=owners.length||owners[cell]!==null)return 0;
  const next=owners.map((v,i)=>i===cell?team:v);
  return linesOf(next,team)-linesOf(owners,team);
 }
@@ -101,12 +129,12 @@ export function moveBingoCue(ctx:SignatureCueContext):SignatureCue{
  if(ctx.phase==='tutorial'){
   return ctx.index%2===0
    ?{text:'지금 칸 하나를 골라요!',sub:'연습 판이에요. 칸을 누르고 동작을 해 본 뒤 ‘성공’을 눌러요',icon:'🎯',move:'칸 고르기',pose:'point',scorable:false}
-   :{text:'한 줄이면 빙고!',sub:'가로·세로·대각선 세 칸을 한 팀이 모두 차지하면 보너스 +2',icon:'✨',tone:'calm',pose:'armsUp',scorable:false};
+   :{text:'세 칸 이으면 빙고!',sub:'가로·세로·대각선으로 이어진 세 칸을 한 팀이 모두 차지하면 보너스 +2',icon:'✨',tone:'calm',pose:'armsUp',scorable:false};
  }
  const climax=ctx.phase==='climax';
  return {
   text:climax?'마지막 승부! 빙고를 노려요':'칸을 골라 동작을 해내요!',
-  sub:`해내면 그 칸은 우리 팀 것 · 한 줄이면 빙고 +${BINGO_BONUS}${ctx.reversed?' · 🔄 거꾸로! 이번에는 상대 팀이 칸을 골라 줘요':''}`,
+  sub:`해내면 그 칸은 우리 팀 것 · 세 칸 이으면 빙고 +${BINGO_BONUS}${ctx.reversed?' · 🔄 거꾸로! 이번에는 상대 팀이 칸을 골라 줘요':''}`,
   icon:climax?'🏁':'🎯',tone:climax?'gold':undefined,move:'칸 차지하기',pose:'point',scorable:false,
  };
 }
@@ -114,8 +142,8 @@ export function moveBingoCue(ctx:SignatureCueContext):SignatureCue{
 export const moveBingo=defineSignatureGame({
  id:'sig-move-bingo',ready:true,
  name:'몸 빙고',emoji:'🎯',
- oneLine:'3×3 동작판에서 팀이 차례로 칸을 골라 동작을 해내면 그 칸을 차지해요. 한 줄을 모두 차지하면 빙고예요!',
- rules:['차례인 팀이 판에서 칸 하나를 골라요(동작 칸 또는 ❓ 체육 지식 칸).','동작을 모두 해내거나 문제를 맞히면 선생님이 ‘성공’을 눌러 그 칸을 차지해요.','가로·세로·대각선 한 줄을 차지하면 빙고 +2! 시간이 끝나면 점수가 많은 팀이 우승.'],
+ oneLine:'동작판(2팀 3×3, 3~4팀 4×4)에서 팀이 차례로 칸을 골라 동작을 해내면 그 칸을 차지해요. 세 칸을 이으면 빙고예요!',
+ rules:['차례인 팀이 판에서 칸 하나를 골라요(동작 칸 또는 ❓ 체육 지식 칸).','동작을 모두 해내거나 문제를 맞히면 선생님이 ‘성공’을 눌러 그 칸을 차지해요.','가로·세로·대각선으로 세 칸을 이으면 빙고 +2! 시간이 끝나면 점수가 많은 팀이 우승.'],
  concept:'민첩성',
  reflection:'우리 팀은 빙고를 만들려고 어떤 칸을 먼저 골랐나요? 그 까닭은?',
  nextChallenge:'다음에는 상대 팀의 줄을 막으면서 우리 줄을 만들어 봐요.',
@@ -123,7 +151,7 @@ export const moveBingo=defineSignatureGame({
  seatedNote:'동작 칸을 앉아서 하는 동작으로 바꿔서 해요.',
  demo:[
   {pose:'point',caption:'차례인 팀이 칸 하나를 골라요'},{pose:'jump',caption:'칸의 동작을 팀이 함께 해내요'},
-  {pose:'armsUp',caption:'해내면 그 칸을 차지! ❓ 칸은 문제를 맞혀요'},{pose:'clap',caption:'한 줄을 모두 차지하면 빙고!'},
+  {pose:'armsUp',caption:'해내면 그 칸을 차지! ❓ 칸은 문제를 맞혀요'},{pose:'clap',caption:'세 칸을 이으면 빙고!'},
  ],
  timing:{demo:10,tutorial:30,play:150,climax:45,cueSeconds:10},
  teamsDefault:2,teamsMin:2,

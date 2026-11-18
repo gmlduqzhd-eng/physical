@@ -136,7 +136,8 @@ export const secondsLeft=(s:FunState)=>s.phase==='result'?0:Math.max(0,Math.ceil
  * 게임이 엔진에 건네는 선택 규칙(상태에 넣지 않는 함수라 저장·이어 하기와 상관없다).
  * cueSeconds: 지금 신호만 다른 길이로 보여 줄 때(예: '10초 달리기'는 12초). 없으면 게임 기본 간격.
  */
-export interface FunHooks {cueSeconds?:(s:FunState)=>number|undefined}
+export interface FunHooks {cueSeconds?:(s:FunState)=>number|undefined;
+ /** 지금 신호에 이 깜짝 이벤트가 맞는지(아니면 예약된 이벤트는 맞는 신호까지 미룬다). 없으면 늘 맞음. */ allowsEvent?:(s:FunState,kind:SurpriseKind)=>boolean}
 /** 지금 신호 간격(ms). 연습 판은 느리게, '빨리빨리!' 동안은 빠르게. cueSeconds를 주면 그 신호만 그 길이로. */
 export function cueIntervalMs(s:FunState,cueSeconds?:number):number{
  const base=typeof cueSeconds==='number'&&Number.isFinite(cueSeconds)&&cueSeconds>0?cueSeconds:s.timing.cueSeconds;
@@ -153,7 +154,9 @@ export const frozen=(s:FunState)=>s.event?.kind==='freeze';
 export const comboFull=(s:FunState)=>s.combo>=COMBO_MAX;
 
 function enter(s:FunState,phase:FunPhase,text:string):FunState{
- const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,cueLenSec:null,event:null,deferred:null,phaseCues:{...s.phaseCues,[s.phase]:s.cueIndex+1},log:[...s.log,{phase,text}]};
+ // 보여 준 신호 수: 지금 신호가 한 번도 보이지 않았으면(시간 0ms에서 단계가 끝남) 세지 않는다.
+ const shown=s.cueMs>0?s.cueIndex+1:s.cueIndex;
+ const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,cueLenSec:null,event:null,deferred:null,phaseCues:{...s.phaseCues,[s.phase]:shown},log:[...s.log,{phase,text}]};
  // 연습 판에서 누른 점수는 본게임에 들어가면 0부터 다시 센다.
  if(phase==='play')return {...next,scores:Array(s.teams).fill(0),combo:0,specials:0,cueHits:{},teamHits:{}};
  return next;
@@ -270,22 +273,28 @@ function tick(s:FunState,ms:number,hooks?:FunHooks):FunState{
  // 움직임 줄이기: 시범은 선생님이 넘길 때까지 기다린다.
  if(s.phase==='demo'&&s.holdDemo)return s;
  const step=Math.min(ms,1000);
- let n:FunState={...s,phaseMs:s.phaseMs+step,cueMs:s.cueMs+step};
+ // 얼음 동안에는 신호 시간이 흐르지 않는다(얼음이 풀리면 그 신호를 이어서 보여 준다).
+ let n:FunState={...s,phaseMs:s.phaseMs+step,cueMs:s.cueMs+(frozen(s)?0:step)};
  if(n.event){const leftMs=n.event.leftMs-step;n={...n,event:leftMs>0?{...n.event,leftMs}:null};}
  // 예약된 깜짝 이벤트. 다른 이벤트가 진행 중이면 미뤘다가 끝나자마자 일으킨다(마지막 3초에는 일으키지 않음).
+ // 지금 신호에 맞지 않는 이벤트(예: 숫자 카드의 '거꾸로!')도 맞는 신호가 올 때까지 미룬다.
  if(isScoringPhase(n)){
+  const fits=(kind:SurpriseKind)=>hooks?.allowsEvent?.(n,kind)??true;
   const due=n.surprises.find(x=>x.phase===n.phase&&x.atMs>s.phaseMs&&x.atMs<=n.phaseMs);
-  if(due){if(n.event)n={...n,deferred:due.kind};else n=startEvent(n,due.kind);}
+  if(due){if(n.event||!fits(due.kind))n={...n,deferred:due.kind};else n=startEvent(n,due.kind);}
   else if(!n.event&&n.deferred){
    const left=phaseSeconds(n)*1000-n.phaseMs;
-   n=left>3000?startEvent({...n,deferred:null},n.deferred):{...n,deferred:null};
+   if(left<=3000)n={...n,deferred:null};
+   else if(fits(n.deferred))n=startEvent({...n,deferred:null},n.deferred);
   }
  }
  // 신호 길이는 그 신호가 시작될 때 한 번 정한다(신호 도중에 상태가 바뀌어도 길이는 그대로).
- if(n.cueLenSec===null||n.cueLenSec===undefined){const sec=hooks?.cueSeconds?.(n);n={...n,cueLenSec:typeof sec==='number'&&Number.isFinite(sec)&&sec>0?sec:0};}
- // 얼음 동안에는 신호를 넘기지 않는다.
- if(!frozen(n)&&n.cueMs>=cueIntervalMs(n,n.cueLenSec||undefined))n={...n,cueIndex:n.cueIndex+1,cueMs:0,cueLenSec:null};
- if(n.phaseMs>=phaseSeconds(n)*1000){const to=nextPhase(n.phase);n=enter(n,to,PHASE_TEXT[to]);if(to==='result')n={...n,endedBy:'time'};}
+ // 얼음 동안에는 정하지 않는다('얼음!' 신호에는 길이가 없어 0으로 굳으면 12초 신호가 6초가 된다).
+ if((n.cueLenSec===null||n.cueLenSec===undefined)&&!frozen(n)){const sec=hooks?.cueSeconds?.(n);n={...n,cueLenSec:typeof sec==='number'&&Number.isFinite(sec)&&sec>0?sec:0};}
+ // 얼음 동안에는 신호를 넘기지 않는다. 넘길 때 남은 시간은 다음 신호로 이어 준다(틱이 조금씩 늦어도 신호가 밀리지 않는다).
+ // 이번 틱에 단계가 끝나면 신호를 넘기지 않는다(단계 끝에서 0초짜리 신호가 '보여 준 신호'로 세지지 않게).
+ if(n.phaseMs>=phaseSeconds(n)*1000){const to=nextPhase(n.phase);n=enter(n,to,PHASE_TEXT[to]);if(to==='result')n={...n,endedBy:'time'};return n;}
+ if(!frozen(n)){const interval=cueIntervalMs(n,n.cueLenSec||undefined);if(n.cueMs>=interval)n={...n,cueIndex:n.cueIndex+1,cueMs:Math.min(n.cueMs-interval,interval-1),cueLenSec:null};}
  return n;
 }
 

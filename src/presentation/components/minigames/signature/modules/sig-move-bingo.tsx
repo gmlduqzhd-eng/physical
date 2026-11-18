@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useEffect,useState,useSyncExternalStore} from 'react';
 import type {SignatureCue} from '../../../../../domain/signatureGames';
-import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput} from '../../../../../domain/funLoop';
-import {BINGO_BONUS,BOARD_CELLS,boardFull,buildMoveBoard,cellHints,claimPoints,emptyOwners,LINES_3X3,newLinesIfClaimed,turnTeam,type MoveBingoCell} from '../../../../../domain/signature/sig-move-bingo';
+import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput,frozen} from '../../../../../domain/funLoop';
+import {BINGO_BONUS,boardFull,boardSizeFor,buildMoveBoard,cellHints,claimPoints,emptyOwners,linesForCells,newLinesIfClaimed,turnTeam,type MoveBingoCell} from '../../../../../domain/signature/sig-move-bingo';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-move-bingo.css';
 
@@ -13,15 +13,17 @@ import './sig-move-bingo.css';
  * 새로고침하면 새 판(새 seed)으로 시작한다.
  */
 interface BoardRecord {boardNo:number;owners:(number|null)[];turns:number;lines:number[];claims:number[];boardsDone:number}
-const fresh=():BoardRecord=>({boardNo:0,owners:emptyOwners(),turns:0,lines:[0,0,0,0],claims:[0,0,0,0],boardsDone:0});
+const fresh=(size:number):BoardRecord=>({boardNo:0,owners:emptyOwners(size),turns:0,lines:[0,0,0,0],claims:[0,0,0,0],boardsDone:0});
+const validCells=(n:number)=>n===9||n===16;
 const records=new Map<string,BoardRecord>();
 const listeners=new Set<()=>void>();
-function read(key:string):BoardRecord{
- const hit=records.get(key);if(hit)return hit;
- const rec=fresh();records.set(key,rec);return rec;
+/** 판 크기는 팀 수로 정한다(2팀 3×3, 3~4팀 4×4). 크기가 다른 기록은 버리고 새로 만든다. */
+function read(key:string,size:number):BoardRecord{
+ const hit=records.get(key);if(hit&&hit.owners.length===size*size)return hit;
+ const rec=fresh(size);records.set(key,rec);return rec;
 }
 function write(key:string,rec:BoardRecord){
- if(rec.owners.length!==BOARD_CELLS)return;
+ if(!validCells(rec.owners.length))return;
  records.set(key,rec);
  listeners.forEach(l=>l());
 }
@@ -41,7 +43,7 @@ export const bingoRecordCount=()=>records.size;
 const isRecord=(v:unknown):v is BoardRecord=>{
  const r=v as BoardRecord;const nums=(a:unknown,n?:number)=>Array.isArray(a)&&(n===undefined||a.length===n)&&a.every(x=>typeof x==='number'&&Number.isFinite(x));
  return !!r&&typeof r==='object'&&Number.isInteger(r.boardNo)&&Number.isInteger(r.turns)&&Number.isInteger(r.boardsDone)
-  &&Array.isArray(r.owners)&&r.owners.length===BOARD_CELLS&&r.owners.every(o=>o===null||(Number.isInteger(o)&&o>=0&&o<4))&&nums(r.lines,4)&&nums(r.claims,4);
+  &&Array.isArray(r.owners)&&validCells(r.owners.length)&&r.owners.every(o=>o===null||(Number.isInteger(o)&&o>=0&&o<4))&&nums(r.lines,4)&&nums(r.claims,4);
 };
 /** 새로고침 이어 하기: 이 판(seed)의 연습·본판 기록을 꺼내고 되살린다. */
 export function snapshotBingo(seed:number):Record<string,BoardRecord>{return Object.fromEntries([...records.entries()].filter(([k])=>k.startsWith(`${seed}:`)));}
@@ -52,9 +54,9 @@ export function restoreBingo(seed:number,data:unknown){
 }
 const subscribe=(l:()=>void)=>{listeners.add(l);return()=>{listeners.delete(l);};};
 const boardKey=(seed:number,phase:string)=>`${seed}:${phase==='tutorial'?'practice':'main'}`;
-function useBoard(seed:number,phase:string):BoardRecord{
+function useBoard(seed:number,phase:string,size:number):BoardRecord{
  const key=boardKey(seed,phase);
- return useSyncExternalStore(subscribe,()=>read(key),()=>read(key));
+ return useSyncExternalStore(subscribe,()=>read(key,size),()=>read(key,size));
 }
 function usePick(seed:number,phase:string):BingoPick|null{
  const key=boardKey(seed,phase);
@@ -62,16 +64,16 @@ function usePick(seed:number,phase:string):BingoPick|null{
 }
 const turnIdOf=(phase:string,rec:BoardRecord)=>`${phase}:${rec.boardNo}:${rec.turns}`;
 /** 차지: 주인을 적고, 새 빙고 줄을 세고, 판이 다 차면 새 판으로 넘긴다. */
-function claim(seed:number,phase:string,cell:number,team:number){
- const key=boardKey(seed,phase),rec=read(key);
+function claim(seed:number,phase:string,cell:number,team:number,size:number){
+ const key=boardKey(seed,phase),rec=read(key,size);
  if(rec.owners[cell]!==null)return;
  const gained=newLinesIfClaimed(rec.owners,cell,team);
  const owners=rec.owners.map((v,i)=>i===cell?team:v);
  const lines=rec.lines.map((v,i)=>i===team?v+gained:v),claims=rec.claims.map((v,i)=>i===team?v+1:v);
  const full=boardFull(owners);
- write(key,{...rec,owners:full?emptyOwners():owners,boardNo:full?rec.boardNo+1:rec.boardNo,boardsDone:full?rec.boardsDone+1:rec.boardsDone,turns:rec.turns+1,lines,claims});
+ write(key,{...rec,owners:full?emptyOwners(size):owners,boardNo:full?rec.boardNo+1:rec.boardNo,boardsDone:full?rec.boardsDone+1:rec.boardsDone,turns:rec.turns+1,lines,claims});
 }
-const pass=(seed:number,phase:string)=>{const key=boardKey(seed,phase),rec=read(key);setPick(key,null);write(key,{...rec,turns:rec.turns+1});};
+const pass=(seed:number,phase:string,size:number)=>{const key=boardKey(seed,phase),rec=read(key,size);setPick(key,null);write(key,{...rec,turns:rec.turns+1});};
 
 const teamName=(t:number)=>TEAM_NAMES[t]??`${t+1}팀`;
 /**
@@ -79,12 +81,14 @@ const teamName=(t:number)=>TEAM_NAMES[t]??`${t+1}팀`;
  * 칸을 고르기 전에는 null(게임 신호 '칸을 골라 동작을 해내요!'가 그대로 보인다).
  */
 function useBingoSignal({state,seated}:SignatureModuleProps):SignatureCue|null{
- const phase=state.phase;
- const rec=useBoard(state.seed,phase);
+ const phase=state.phase,size=boardSizeFor(state.teams);
+ const rec=useBoard(state.seed,phase,size);
  const pick=usePick(state.seed,phase);
  if(phase!=='tutorial'&&phase!=='play'&&phase!=='climax')return null;
+ // 얼음 동안에는 '🧊 얼음!' 큰 신호를 덮지 않는다("멈춰요"와 "동작해요"가 함께 보이지 않게).
+ if(frozen(state))return null;
  if(!pick||pick.turn!==turnIdOf(phase,rec))return null;
- const board=buildMoveBoard(state.seed,phase==='tutorial'?999:rec.boardNo);
+ const board=buildMoveBoard(state.seed,phase==='tutorial'?999:rec.boardNo,size);
  const cell=board[pick.cell];if(!cell)return null;
  const team=turnTeam(rec.turns,state.teams);
  const who=teamName(team);
@@ -95,12 +99,12 @@ function useBingoSignal({state,seated}:SignatureModuleProps):SignatureCue|null{
  const label=(seated?cell.seated:undefined)??cell.label;
  return {kicker:`${who} 도전!${willBingo?' 🎯 이 칸이면 빙고!':''}`,text:`${label}!`,sub:'팀이 모두 해내면 선생님이 ‘✔ 성공’을 눌러요',icon:'🎯',accent:TEAM_COLORS[team],pose:cell.pose,move:label};
 }
-const lineCells=(owners:readonly (number|null)[])=>new Set(LINES_3X3.filter(l=>owners[l[0]]!==null&&l.every(i=>owners[i]===owners[l[0]])).flat());
+const lineCells=(owners:readonly (number|null)[])=>new Set(linesForCells(owners.length).filter(l=>owners[l[0]]!==null&&l.every(i=>owners[i]===owners[l[0]])).flat());
 
 function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
- const phase=state.phase;
- const rec=useBoard(state.seed,phase);
- const board=buildMoveBoard(state.seed,phase==='tutorial'?999:rec.boardNo);
+ const phase=state.phase,size=boardSizeFor(state.teams);
+ const rec=useBoard(state.seed,phase,size);
+ const board=buildMoveBoard(state.seed,phase==='tutorial'?999:rec.boardNo,size);
  const team=turnTeam(rec.turns,state.teams);
  const pick=usePick(state.seed,phase);
  const key=boardKey(state.seed,phase);
@@ -120,15 +124,15 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
   const points=claimPoints(rec.owners,cell.index,team),lines=newLinesIfClaimed(rec.owners,cell.index,team);
   // tag:'cell' — 빙고 점수는 칸 차지로만 받는다(점수판 ±·키보드·리모컨 점수는 받지 않음).
   dispatch({type:'score',team,delta:points,tag:'cell'});
-  claim(state.seed,phase,cell.index,team);
+  claim(state.seed,phase,cell.index,team,size);
   const full=boardFull(rec.owners.map((v,i)=>i===cell.index?team:v));
   setToast(lines?`🎉 ${teamName(team)} 빙고! +${BINGO_BONUS*lines} 보너스`:full?'판이 다 찼어요! 새 판으로 이어서 해요':`${teamName(team)}이 칸을 차지했어요`);
   setPick(key,null);
  };
  const willBingo=cell?newLinesIfClaimed(rec.owners,cell.index,team):0;
  return <div className="sig-bingo" data-practice={phase==='tutorial'||undefined}>
-  <div className="sig-bingo-board" role="grid" aria-label={`몸 빙고 판${phase==='tutorial'?' (연습)':` · ${rec.boardNo+1}번째 판`}`}>
-   {[0,1,2].map(r=><div role="row" key={r} className="sig-bingo-row">{board.slice(r*3,r*3+3).map(c=>{
+  <div className="sig-bingo-board" data-size={size} role="grid" aria-label={`몸 빙고 판 ${size}×${size}${phase==='tutorial'?' (연습)':` · ${rec.boardNo+1}번째 판`}`}>
+   {Array.from({length:size},(_,r)=>r).map(r=><div role="row" key={r} className="sig-bingo-row" style={{gridTemplateColumns:`repeat(${size},minmax(0,1fr))`}}>{board.slice(r*size,r*size+size).map(c=>{
     const owner=rec.owners[c.index];
     return <div role="gridcell" key={c.index}>
      <button type="button" className="sig-bingo-cell" data-kind={c.kind} data-owner={owner??undefined} data-line={done.has(c.index)||undefined} data-hint={hints[c.index]??undefined} aria-pressed={selected?.cell===c.index}
@@ -152,7 +156,7 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
     </div>}
    <div className="sig-bingo-actions">
     <button type="button" className="sig-bingo-success" disabled={!cell||!live} onClick={success}>✔ 성공{cell?` +${1+BINGO_BONUS*willBingo}${willBingo?' 빙고!':''}`:''}</button>
-    <button type="button" onClick={()=>{pass(state.seed,phase);setToast(`${teamName(team)} 차례를 넘겼어요`);}}>↷ 넘기기</button>
+    <button type="button" onClick={()=>{pass(state.seed,phase,size);setToast(`${teamName(team)} 차례를 넘겼어요`);}}>↷ 넘기기</button>
    </div>
    <p className="sig-bingo-toast" role="status">{toast}</p>
   </div>
@@ -160,7 +164,7 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
 }
 
 function BingoResult({state}:SignatureModuleProps){
- const rec=useBoard(state.seed,'play');
+ const rec=useBoard(state.seed,'play',boardSizeFor(state.teams));
  const teams=Array.from({length:state.teams},(_,t)=>t);
  return <p className="sig-bingo-result">{teams.map(t=>`${teamName(t)} 칸 ${rec.claims[t]??0}개 · 빙고 ${rec.lines[t]??0}줄`).join(' / ')}{rec.boardsDone?` · 다 채운 판 ${rec.boardsDone}개`:''}</p>;
 }

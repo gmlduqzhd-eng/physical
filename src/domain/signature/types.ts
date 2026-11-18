@@ -1,4 +1,4 @@
-import type {FunCommandGate,FunState,FunTiming,SurpriseAllowance} from '../funLoop.js';
+import type {FunCommandGate,FunState,FunTiming,SurpriseAllowance,SurpriseKind} from '../funLoop.js';
 
 /** 시범 애니메이션(DemoLoop)이 그리는 막대 사람 자세. */
 export type Pose='stand'|'armsUp'|'armsSide'|'armsFront'|'armsDown'|'squat'|'jump'|'stepLeft'|'stepRight'|'oneLeg'|'clap'|'point'|'freeze'|'punch'|'wave'|'sit'|'run';
@@ -16,6 +16,7 @@ export interface SignatureCue {
  /** 이 신호만 다른 길이로 보여 줄 때(초). 예: '10초 달리기'는 12초. 없으면 게임 기본 간격. */ seconds?:number;
  /** 신호 칸 테두리·띠 색(예: 도전하는 팀 색). */ accent?:string;
  /** 큰 글자 위에 붙는 짧은 줄(예: '청팀 도전!'). */ kicker?:string;
+ /** 이 신호에는 맞지 않는 깜짝 이벤트(예: 숫자 카드에는 '거꾸로!'가 뜻이 없다). 예약된 이벤트는 미루고, 손으로 누른 이벤트는 받지 않는다. */ blockEvents?:readonly SurpriseKind[];
 }
 export interface SignatureCueContext {
  phase:'tutorial'|'play'|'climax';

@@ -20,7 +20,8 @@ const tick=(s:FunState,ms:number,hooks?:Parameters<typeof reduce>[2])=>{let n=s;
 
 test('per-cue seconds: the boss "10초" cue lasts 12s and number cards 8s; the engine honors the hook',()=>{
  const s=createFunState({teams:2,timing:bossRaid.timing,seed:3,skipDemo:true});
- const dragon=bossRaidCue(ctxOf(bossRaid,{...s,phase:'play',cueHits:{'play:0':999}},'play',0));
+ // 신호 내용은 그 신호가 시작될 때의 보스로 정한다: 앞 신호(0번)에서 보스를 다 쓰러뜨렸으면 1번 신호는 드래곤.
+ const dragon=bossRaidCue(ctxOf(bossRaid,{...s,phase:'play',cueIndex:1,cueHits:{'play:0':999}},'play',1));
  assert.match(dragon.text,/10초/);
  assert.equal(dragon.seconds,12);
  const slime=bossRaidCue(ctxOf(bossRaid,{...s,phase:'play'},'play',0));
@@ -73,7 +74,7 @@ test('memory relay: same length per round, short turns are not started, success 
  const interval=cueIntervalMs(p);
  const late:FunState={...p,phaseMs:memoryRelay.timing.play*1000-interval+2000,cueMs:0,cueIndex:9};
  assert.equal(turnTooShort(late),true);
- assert.equal(memoryRelay.cue(ctxOf(memoryRelay,late,'play',9)).text,'시간이 얼마 남지 않았어요');
+ assert.equal(memoryRelay.cue(ctxOf(memoryRelay,late,'play',9)).text,'다 같이 마무리!');
  const lateTeam=relayTeam(9,4);
  // 같은 차례 안에서 시간이 흘러(외우기가 끝난 뒤) 성공을 눌러도 받지 않는다.
  const laterInTurn={...late,phaseMs:late.phaseMs+6000,cueMs:6000};
