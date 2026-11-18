@@ -50,7 +50,8 @@ export function loadRemoteRoom(gameId:string,now=Date.now()):string|undefined{
  try{
   const raw=s.getItem(roomKey(gameId));if(!raw)return undefined;
   const v=JSON.parse(raw) as {code?:unknown;at?:unknown};
-  if(typeof v?.code==='string'&&ROOM_RE.test(v.code)&&typeof v.at==='number'&&now-v.at>=0&&now-v.at<=REMOTE_ROOM_TTL_MS)return v.code;
+  // 쓰는 중인 코드는 기한을 늘린다(불러올 때마다: 2시간 넘게 쓰다 새로고침해도 이어지게).
+  if(typeof v?.code==='string'&&ROOM_RE.test(v.code)&&typeof v.at==='number'&&now-v.at>=0&&now-v.at<=REMOTE_ROOM_TTL_MS){saveRemoteRoom(gameId,v.code,now);return v.code;}
  }catch{/* 예전 형식(코드만 저장)이거나 깨진 값: 기한을 알 수 없으므로 쓰지 않는다 */}
  clearRemoteRoom(gameId);
  return undefined;
@@ -68,7 +69,9 @@ export function clearRemoteRoom(gameId:string){
  try{
   const raw=s.getItem(roomKey(gameId));
   let code:string|undefined;
-  try{const v=raw?JSON.parse(raw) as {code?:unknown}:null;if(typeof v?.code==='string')code=v.code;}catch{if(raw&&ROOM_RE.test(raw))code=raw;}
+  // 예전 형식은 코드만 저장했다(숫자만 있는 코드는 JSON으로 읽으면 숫자가 된다).
+  if(raw&&ROOM_RE.test(raw))code=raw;
+  else try{const v=raw?JSON.parse(raw) as {code?:unknown}:null;if(typeof v?.code==='string')code=v.code;}catch{/* 깨진 값 */}
   s.removeItem(roomKey(gameId));
   if(!code)return;
   const keys:string[]=[];

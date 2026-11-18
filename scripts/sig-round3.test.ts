@@ -147,7 +147,9 @@ test('resume is not offered for a recorded result; the remote room code expires 
  const now=Date.now();
  saveRemoteRoom('sig-boss-raid','ABC234',now);
  assert.equal(loadRemoteRoom('sig-boss-raid',now+1000),'ABC234');
- assert.equal(loadRemoteRoom('sig-boss-raid',now+REMOTE_ROOM_TTL_MS+1),undefined,'expired');
+ // 불러올 때(쓰는 중) 기한이 늘어난다: 마지막으로 쓴 때로부터 2시간이 지나야 끝난다.
+ assert.equal(loadRemoteRoom('sig-boss-raid',now+REMOTE_ROOM_TTL_MS),'ABC234','using the code refreshes its 2-hour window');
+ assert.equal(loadRemoteRoom('sig-boss-raid',now+REMOTE_ROOM_TTL_MS+REMOTE_ROOM_TTL_MS+1),undefined,'expired 2 hours after the last use');
  saveRemoteRoom('sig-boss-raid','ABC234',now);
  store.setItem('physical_fun_remote_approved_ABC234','["d1"]');
  store.setItem('fun-remote:approved:ABC234','["d1"]');
