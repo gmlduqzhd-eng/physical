@@ -75,7 +75,7 @@ export interface TeacherButton {label:string;command:ExternalFunCommand;disabled
 /** 선생님 버튼 줄. 키보드 단축키를 버튼에 적어 둔다. */
 export function TeacherControls({buttons,dispatch}:{buttons:TeacherButton[];dispatch:(c:ExternalFunCommand)=>void}){
  return <div className="fun-controls" role="group" aria-label="선생님 버튼">
-  {buttons.map(b=><button key={b.label} type="button" data-tone={b.tone} disabled={b.disabled} onClick={()=>dispatch(b.command)}>
+  {buttons.map(b=><button key={b.label} type="button" data-tone={b.tone} data-command={b.command.type} disabled={b.disabled} onClick={()=>dispatch(b.command)}>
    {b.label}{b.hint&&<kbd>{b.hint}</kbd>}
   </button>)}
  </div>;

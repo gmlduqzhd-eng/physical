@@ -15,33 +15,55 @@ export const BOSSES:readonly Boss[]=[
 /** 기본(2팀) HP 합. 실제 HP는 팀 수·시간에 맞춰 bossesFor()가 정한다. */
 export const BOSS_TOTAL_HP=BOSSES.reduce((n,b)=>n+b.hp,0);
 export const SPECIAL_DAMAGE=5,CLIMAX_MULTIPLIER=2;
-/** 쉬는 신호를 뺀 신호 비율(세 번째마다 쉼)과, 한 팀이 한 신호에 약점 동작을 해낼 것으로 보는 비율. */
-const SCORABLE_SHARE=2/3,EXPECTED_HIT_RATE=0.7;
+/** 한 팀이 한 신호에 약점 동작을 해낼 것으로 보는 비율. */
+const EXPECTED_HIT_RATE=0.7;
+/** 동작 이름에 적힌 초('10초')를 읽는다. 없으면 undefined. */
+export const secondsIn=(move:string):number|undefined=>{const m=/(\d+)초/.exec(move);return m?Number(m[1]):undefined;};
+/** 약점 동작 신호의 길이(초): '10초' 동작은 동작 시간 + 준비 2초, 나머지는 게임 기본 간격. */
+export const weakCueSeconds=(boss:Pick<Boss,'weak'>,timing:Pick<FunTiming,'cueSeconds'>)=>{const sec=secondsIn(boss.weak);return sec?sec+2:timing.cueSeconds;};
 /**
- * 기대 피해: 팀마다 신호 하나에 EXPECTED_HIT_RATE만큼 공격하고, 콤보가 차면 필살기를 쓴다고 본다.
- * play = 본게임에서 줄 피해(필살기 포함), total = 마지막 승부(2배)까지 더한 피해.
+ * 기대 피해를 신호 하나하나 따라가며 센다(신호 길이가 보스마다 다르므로: 드래곤의 '10초 달리기'는 12초).
+ * 팀마다 공격 신호 하나에 EXPECTED_HIT_RATE만큼 공격하고, 콤보가 차면 필살기를 쓴다고 본다(본게임).
+ * 세 번째 신호마다 쉬는 신호. 남은 시간이 4초보다 짧은 신호는 세지 않는다.
+ * play = 본게임 피해(필살기 포함), total = 마지막 승부(2배)까지 더한 피해.
  */
-export function expectedDamage(teams:number,timing:FunTiming):{play:number;total:number}{
+export function expectedDamage(teams:number,timing:FunTiming,bosses:readonly Pick<Boss,'hp'|'weak'>[]=BOSSES):{play:number;total:number}{
  const t=Math.max(1,teams);
- const cues=(sec:number)=>Math.floor(sec/timing.cueSeconds)*SCORABLE_SHARE;
- const playHits=t*EXPECTED_HIT_RATE*cues(timing.play);
- const specials=Math.floor(playHits*COMBO_PER_POINT/COMBO_MAX);
- const play=playHits+specials*SPECIAL_DAMAGE;
- const climax=CLIMAX_MULTIPLIER*t*EXPECTED_HIT_RATE*cues(timing.climax);
- return {play,total:play+climax};
+ let dmg=0,combo=0,play=0;
+ const bossAt=(d:number)=>{let left=d;for(let i=0;i<bosses.length;i++){if(left<bosses[i].hp)return bosses[i];left-=bosses[i].hp;}return bosses[bosses.length-1];};
+ for(const phase of ['play','climax'] as const){
+  const length=timing[phase];
+  for(let at=0,index=0;at<length;index++){
+   const rest=index%3===2;
+   const len=rest?timing.cueSeconds:weakCueSeconds(bossAt(dmg),timing);
+   if(!rest&&length-at>=4){
+    const hits=t*EXPECTED_HIT_RATE;
+    dmg+=hits*(phase==='climax'?CLIMAX_MULTIPLIER:1);
+    if(phase==='play'){combo+=hits*COMBO_PER_POINT;while(combo>=COMBO_MAX){combo-=COMBO_MAX;dmg+=SPECIAL_DAMAGE;}}
+   }
+   at+=len;
+  }
+  if(phase==='play')play=dmg;
+ }
+ return {play,total:dmg};
 }
-/**
- * 팀 수·시간에 맞춘 보스 HP. 본게임에서 기대 피해보다 조금 많게(마지막 승부가 늘 나오게),
- * 마지막 승부까지 더한 기대 피해보다는 적게(한 팀이어도 이길 수 있게) 잡고, 보스 셋에 10:14:18로 나눈다.
- */
-export function bossesFor(teams:number,timing:FunTiming):Boss[]{
- const {play,total}=expectedDamage(teams,timing);
- const target=Math.max(BOSSES.length*2,Math.min(Math.floor(total*0.95),Math.ceil(play*1.15)));
+const splitHp=(target:number):Boss[]=>{
  let used=0;
  return BOSSES.map((b,i)=>{
   const hp=i===BOSSES.length-1?target-used:Math.max(2,Math.round(target*b.hp/BOSS_TOTAL_HP));
   used+=hp;return {...b,hp};
  });
+};
+/**
+ * 팀 수·시간에 맞춘 보스 HP. 본게임 기대 피해의 1.3배(마지막 승부가 늘 나오게),
+ * 마지막 승부까지 더한 기대 피해의 1.05배를 넘지 않게(70% 성공이면 대개 이기도록) 잡고, 보스 셋에 10:14:18로 나눈다.
+ * 드래곤 신호가 길어 피해 속도가 보스마다 다르므로, HP를 정하고 다시 세기를 몇 번 되풀이해 맞춘다.
+ */
+export function bossesFor(teams:number,timing:FunTiming):Boss[]{
+ const pick=(bosses:readonly Boss[])=>{const {play,total}=expectedDamage(teams,timing,bosses);return Math.max(BOSSES.length*2,Math.min(Math.floor(total*1.05),Math.ceil(play*1.3)));};
+ let target=pick(BOSSES);
+ for(let k=0;k<8;k++){const next=pick(splitHp(target));if(next===target)break;target=next;}
+ return splitHp(target);
 }
 export const bossTotalHp=(s:Pick<FunState,'teams'|'timing'>)=>bossesFor(s.teams,s.timing).reduce((n,b)=>n+b.hp,0);
 const REST:readonly {text:string;sub:string}[]=[
@@ -67,8 +89,6 @@ export function bossStatus(s:FunState):{boss:Boss;index:number;hpLeft:number;def
  return {boss:bosses[last],index:last,hpLeft:0,defeated:bosses.length,done:true};
 }
 
-/** 동작 이름에 적힌 초('10초')를 읽는다. 없으면 undefined. */
-export const secondsIn=(move:string):number|undefined=>{const m=/(\d+)초/.exec(move);return m?Number(m[1]):undefined;};
 export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
  const {boss}=bossStatus(ctx.state);
  if(ctx.phase==='tutorial'){
