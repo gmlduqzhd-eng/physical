@@ -31,6 +31,12 @@ export type MirrorStep='lead'|'keep'|'close'|'change'|'find';
 const STEP_ORDER:readonly MirrorStep[]=['lead','keep','close','change','find'];
 /** 눈 감기 신호는 짧게(3초), 몰래 바꾸기는 4초. */
 export const CLOSE_SECONDS=3,CHANGE_SECONDS=4;
+/** 나머지 신호(따라 하기·계속·찾기)의 길이(초). */
+export const MIRROR_CUE_SECONDS=5;
+/** 한 라운드 길이(초): 5 + 5 + 3 + 4 + 5 = 22초. 본게임·마지막 승부는 이 길이의 배수라 라운드가 중간에 잘리지 않는다. */
+export const ROUND_SECONDS=MIRROR_CUE_SECONDS*3+CLOSE_SECONDS+CHANGE_SECONDS;
+/** 연습 판은 1.6배 느리게 보여 주므로 한 라운드 = 22 × 1.6 = 35.2초 → 36초. */
+export const MIRROR_TIMING={demo:12,tutorial:Math.ceil(ROUND_SECONDS*1.6),play:ROUND_SECONDS*5,climax:ROUND_SECONDS*2,cueSeconds:MIRROR_CUE_SECONDS};
 export type Leader='1번'|'2번';
 /** 라운드 번호(본게임과 마지막 승부를 이어서 센다: 마지막 승부도 리더가 계속 번갈아 바뀐다). */
 export function mirrorRound(ctx:Pick<SignatureCueContext,'phase'|'index'|'state'>):number{
@@ -106,12 +112,14 @@ export const mirrorPair=defineSignatureGame({
   {pose:'point',caption:'2번이 눈 뜨고 바뀐 곳을 찾아요'},
   {pose:'armsUp',caption:'찾았으면 둘이 함께 손 번쩍! 다음 라운드는 2번이 리더'},
  ],
- timing:{demo:12,tutorial:32,play:120,climax:40,cueSeconds:5},
+ // 본게임 5라운드(110초)·마지막 승부 2라운드(44초): 라운드마다 '찾기' 신호가 끝까지 나온다.
+ timing:MIRROR_TIMING,
  teamsDefault:2,teamsMin:1,
  mergedFrom:['exp-phone-49','shadow_puppeteer','phone-play-028'],
  cue:mirrorPairCue,
- // '천천히 따라 하기'가 규칙이라 '빨리빨리'는 쓰지 않는다.
- surprises:{play:['golden','reverse','freeze'],climax:['golden','reverse']},
+ // '천천히 따라 하기'가 규칙이라 '빨리빨리'는 쓰지 않는다. '얼음'은 신호를 3초 멈춰 라운드가 단계 끝을 넘기므로(마지막 '찾기'가 잘림) 쓰지 않는다.
+ // (짝 눈 감기 단계가 이미 '멈춤' 역할을 한다.)
+ surprises:{play:['golden','reverse'],climax:['golden','reverse']},
  domain:'표현',subCategory:'표현 대표 게임',
  achievement:{code:'연계 확인 필요',title:'거울처럼 따라 하며 움직임 표현하기',desc:'짝의 움직임을 관찰하고 거울처럼 따라 하며 몸의 여러 부분으로 움직임을 표현한다.'},
  grades:['1~2학년','3~4학년군','5~6학년군'],

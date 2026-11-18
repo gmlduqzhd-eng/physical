@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useState} from 'react';
 import {cueIntervalMs} from '../../../../../domain/funLoop';
-import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,VARIATION_TEXT,longestSuccess,memoryRelayGate,memoryResultLine,memoryStage,relayTeam,relayTeamName,sequenceFor,sequenceLength,showMs,turnTooShort,variationFor} from '../../../../../domain/signature/sig-memory-relay';
+import {CLIMAX_POINTS,MAX_LENGTH,MEMORY_TILES,VARIATION_TEXT,longestSuccess,memoryRelayGate,memoryResultLine,memoryStage,currentTurnTeam,turnTeamNameAt,sequenceFor,sequenceLength,showMs,turnTooShort,variationFor} from '../../../../../domain/signature/sig-memory-relay';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-memory-relay.css';
 
@@ -24,7 +24,7 @@ function MemoryPanel({state,seated}:SignatureModuleProps){
  return <div className="sig-mem" data-stage={stage}>
   {/* 초 숫자는 낭독 영역 밖에 둔다(매초 읽지 않게). */}
   {variation!=='normal'&&<p className="sig-mem-variation">{VARIATION_TEXT[variation]}</p>}
-  <p className="sig-mem-stage"><span role="status">{stage==='show'?'👀 외워요!':`🙈 가려졌어요 → ${relayTeamName(index,state.teams)}이 ${reversed?'마지막 모양부터 거꾸로':'차례대로'} 해요`}</span>{stage==='show'&&<span aria-hidden="true"> {left}초 뒤에 가려져요</span>}</p>
+  <p className="sig-mem-stage"><span role="status">{stage==='show'?'👀 외워요!':`🙈 가려졌어요 → ${turnTeamNameAt(state,state.phase==='climax'?'climax':state.phase==='play'?'play':'tutorial',index)}이 ${reversed?'마지막 모양부터 거꾸로':'차례대로'} 해요`}</span>{stage==='show'&&<span aria-hidden="true"> {left}초 뒤에 가려져요</span>}</p>
   <ol className="sig-mem-tiles" aria-label={`${len}개 순서`} data-count={len}>
    {seq.map((t,i)=><li key={i} className="sig-mem-tile" style={visible?{borderColor:t.color}:undefined} data-hidden={!visible||undefined}>
     <span className="sig-mem-no">{i+1}</span>
@@ -49,10 +49,10 @@ const memoryRelayModule:SignatureModule={
  scoreAllLabel:'차례 팀 성공',scoreAllButton:false,teamKeysLabel:'1~4 차례 팀 성공 (Shift −1 정정)',
  controls:({state})=>{
   if(!isTurnPhase(state.phase))return [];
-  const team=relayTeam(state.cueIndex,state.teams),points=state.phase==='climax'?CLIMAX_POINTS:1;
+  const team=currentTurnTeam(state),points=state.phase==='climax'?CLIMAX_POINTS:1;
   // 버튼도 키보드·리모컨과 같은 규칙(memoryRelayGate)으로 켜고 끈다.
   const allowed=!state.paused&&!!memoryRelayGate(state,{type:'score',team,delta:1});
-  return [{label:`✔ ${relayTeamName(state.cueIndex,state.teams)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:!allowed,hint:String(team+1),tone:'primary'}];
+  return [{label:`✔ ${turnTeamNameAt(state,state.phase==='climax'?'climax':state.phase==='play'?'play':'tutorial',state.cueIndex)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:!allowed,hint:String(team+1),tone:'primary'}];
  },
 };
 export default memoryRelayModule;

@@ -1,9 +1,9 @@
-import {TEAM_NAMES,seededRandom} from '../funLoop.js';
+import {TEAM_NAMES,seededRandom,type FunCommand,type FunState} from '../funLoop.js';
 import {defineSignatureGame} from './define.js';
 import type {SignatureCue,SignatureCueContext} from './types.js';
 
 /**
- * 표현 무대: 모둠마다 장면 카드를 뽑아 30초 동안 함께 준비하고, 차례로 20초씩 무대에서 보여 준다.
+ * 표현 무대: 모둠마다 장면 카드를 뽑아 45초 동안 함께 준비하고, 차례로 20초씩 무대에서 보여 준다.
  * 관객은 👏(박수)·😮(놀라움)·😂(웃음) 버튼으로 응원하고, 누를 때마다 발표하는 모둠 점수가 +1.
  * 모든 모둠이 발표하면 커튼콜(마지막 승부)로 넘어가 모둠마다 한 번씩 가장 멋진 장면으로 인사한다.
  * 커튼콜은 점수를 세지 않는다(모둠마다 똑같이 한 번씩 인사하므로 순서에 따라 응원 기회가 달라지지 않게).
@@ -29,8 +29,8 @@ export type Reaction='clap'|'wow'|'laugh';
 export const REACTIONS:readonly {id:Reaction;emoji:string;label:string}[]=[
  {id:'clap',emoji:'👏',label:'박수'},{id:'wow',emoji:'😮',label:'놀라워요'},{id:'laugh',emoji:'😂',label:'재밌어요'},
 ];
-/** 본게임: 처음 신호 6개(30초)는 모든 모둠이 동시에 준비, 그다음 모둠마다 신호 4개(20초)씩 발표. */
-export const PREP_CUES=6,PERFORM_CUES=4;
+/** 본게임: 처음 신호 9개(45초)는 모든 모둠이 동시에 준비, 그다음 모둠마다 신호 4개(20초)씩 발표. */
+export const PREP_CUES=9,PERFORM_CUES=4;
 export type StageSlot=
  |{kind:'prep';cuesLeft:number}
  |{kind:'perform';group:number;cuesLeft:number}
@@ -91,6 +91,13 @@ export function reactionTarget(ctx:Pick<SignatureCueContext,'phase'|'index'|'tea
 }
 
 const teamName=(teams:number,g:number)=>teams===1?'우리 반':TEAM_NAMES[g];
+/** 커튼콜에는 더하는 점수를 받지 않는다(모둠마다 한 번씩 인사하므로 점수에 영향이 없어야 공평하다). */
+export function stageShowGate(s:FunState,cmd:FunCommand):FunCommand|null{
+ if(s.phase!=='climax')return cmd;
+ if((cmd.type==='score'||cmd.type==='scoreAll')&&cmd.delta>0)return null;
+ if(cmd.type==='combo'&&cmd.delta>0)return null;
+ return cmd;
+}
 export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
  const scenes=scenesFor(ctx.seed,ctx.teams);
  if(ctx.phase==='tutorial'){
@@ -123,8 +130,8 @@ export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
 export const stageShow=defineSignatureGame({
  id:'sig-stage-show',ready:true,
  name:'표현 무대',emoji:'🎭',
- oneLine:'장면 카드를 뽑아 모둠이 30초 준비하고, 차례로 20초씩 몸으로 보여 줘요. 관객은 반응 버튼으로 응원해요!',
- rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 30초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 모둠마다 한 번씩 커튼콜 인사(점수 없음)! 가장 많은 응원을 받은 장면을 발표해요.'],
+ oneLine:'장면 카드를 뽑아 모둠이 45초 준비하고, 차례로 20초씩 몸으로 보여 줘요. 관객은 반응 버튼으로 응원해요!',
+ rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 45초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 모둠마다 한 번씩 커튼콜 인사(점수 없음)! 가장 많은 응원을 받은 장면을 발표해요.'],
  concept:'움직임 표현',
  reflection:'친구 모둠의 장면에서 어떤 몸짓이 가장 잘 보였나요? 우리 모둠은 무엇을 더 크게 보여 주면 좋을까요?',
  nextChallenge:'다음에는 장면 사이를 멈춤 없이 이어서, 처음부터 끝까지 한 번에 보여 줘요.',
@@ -133,13 +140,13 @@ export const stageShow=defineSignatureGame({
  seatedNote:'의자에 앉은 채로 상체·팔·손·표정만 써서 장면을 보여 줘요.',
  demo:[
   {pose:'stand',caption:'모둠마다 장면 카드를 받아요 🎴'},
-  {pose:'armsSide',caption:'30초 동안 시작 → 가운데 → 끝 자세를 정해요'},
+  {pose:'armsSide',caption:'45초 동안 시작 → 가운데 → 끝 자세를 정해요'},
   {pose:'wave',caption:'차례가 되면 20초 동안 몸으로 보여 줘요'},
   {pose:'clap',caption:'관객은 👏 😮 😂 버튼으로 응원해요'},
   {pose:'armsUp',caption:'모든 모둠이 끝나면 커튼콜!'},
  ],
- // 본게임은 모둠 4개가 다 발표할 시간(30초 + 20초×4)에 여유를 둔다. 모든 모둠이 발표하면 커튼콜로 바로 넘어간다.
- timing:{demo:12,tutorial:24,play:130,climax:35,cueSeconds:5},
+ // 본게임은 모둠 4개가 다 발표할 시간(준비 45초 + 20초×4 = 125초)에 여유를 둔다. 모든 모둠이 발표하면 커튼콜로 바로 넘어간다.
+ timing:{demo:12,tutorial:24,play:135,climax:35,cueSeconds:5},
  teamsDefault:3,teamsMin:2,
  mergedFrom:['phone-play-029','phone-play-032','story_drama_relay','musical_scene_maker'],
  cue:stageShowCue,
@@ -147,6 +154,8 @@ export const stageShow=defineSignatureGame({
  // 응원 한 번 = 1점이라 '황금 신호'(2배)도 쓰지 않는다(응원 수와 점수가 같게).
  // 커튼콜은 점수를 세지 않아 깜짝 이벤트도 쓰지 않는다.
  surprises:{play:['reverse','freeze'],climax:[]},
+ // 커튼콜(마지막 승부)은 점수를 세지 않는다: 더하는 점수는 버튼·키보드·리모컨 모두 받지 않는다(빼기 정정은 받음).
+ commandGate:stageShowGate,
  // MVP: 우승(가장 많은 응원) 모둠의 장면. 동점이면 함께.
  mvpMove:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ');},
  resultHeadline:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return `가장 많은 응원: ${best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ')}`;},

@@ -22,6 +22,7 @@ export interface SignatureModuleProps {
  * - special: true면 이 놀이에 필살기가 있다(콤보 게이지·S 단축키를 보여 준다). 없으면 게이지를 숨기고 필살기 명령을 받지 않는다.
  * - scoreAllButton: false면 선생님 버튼 줄에 '모든 팀 +1'을 두지 않는다(모듈이 자기 성공 버튼을 둘 때).
  * - scoreAllLabel: 단축키 A의 뜻(단축키 안내에 쓴다. 기본 '모든 팀 +1').
+ * - useSignalCue: 판에서 고른 것(예: 빙고 칸)을 큰 신호 칸에 띄울 때 쓰는 훅. 신호를 돌려주면 게임 신호 대신 그것을 크게 보여 준다(없으면 null).
  */
 export interface SignatureModule {
  Panel?:ComponentType<SignatureModuleProps>;
@@ -34,6 +35,7 @@ export interface SignatureModule {
  scoreAllButton?:boolean;
  scoreAllLabel?:string;
  /** 단축키 안내에서 1~4 키의 뜻(기본 '1~4 팀 +1 (Shift −1)'). */ teamKeysLabel?:string;
+ useSignalCue?:(p:SignatureModuleProps)=>SignatureCue|null;
  snapshot?(seed:number):unknown;
  restore?(seed:number,data:unknown):void;
  dispose?(seed:number):void;

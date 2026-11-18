@@ -14,6 +14,8 @@ export interface SignatureCue {
  /** false면 동작 신호가 아니다(카드 안내·쉬는 신호): MVP 동작으로 뽑지 않는다. */ scorable?:boolean;
  /** 신호와 함께 그릴 막대 사람 자세(선택). */ pose?:Pose;
  /** 이 신호만 다른 길이로 보여 줄 때(초). 예: '10초 달리기'는 12초. 없으면 게임 기본 간격. */ seconds?:number;
+ /** 신호 칸 테두리·띠 색(예: 도전하는 팀 색). */ accent?:string;
+ /** 큰 글자 위에 붙는 짧은 줄(예: '청팀 도전!'). */ kicker?:string;
 }
 export interface SignatureCueContext {
  phase:'tutorial'|'play'|'climax';
