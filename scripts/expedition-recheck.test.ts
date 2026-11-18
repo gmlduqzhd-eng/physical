@@ -56,12 +56,22 @@ test('color-word game shows its rule once; the mirror game starts with the real 
  assert.match(stepCue(mirror.steps[0] as {guide:string;title:string}),/거울처럼 똑같이 따라/);
 });
 
-test('team roles stay visible while playing; map and boss start from one big button and pin what to do now',()=>{
+test('team roles stay visible while playing; map and boss start from one big button and pin what to do now',async()=>{
+ // 지도·보스전 첫 화면을 그려 본다: 큰 시작 버튼 하나가 안전 약속 확인을 겸하고, 따로 체크해야 하는 칸은 없다.
+ const {renderHtml,textOf}=await import('./render-for-test');
+ const {createElement}=await import('react');
+ const {FlagshipActivity}=await import('../src/presentation/flagship/FlagshipActivity');
+ for(const game of ['expedition-map','expedition-boss'] as const){
+  const html=await renderHtml(createElement(FlagshipActivity,{game,onFinish:()=>{}}));
+  const starts=[...html.matchAll(/<button[^>]*>((?:(?!<\/button>).)*)<\/button>/g)].map(m=>m[1]).filter(b=>b.includes('aria-hidden="true">▶'));
+  assert.equal(starts.length,1,`${game}: one big start button`);
+  assert.match(textOf(starts[0]),/시작 · 안전 약속 확인/,game);
+  assert.doesNotMatch(html,/type="checkbox"/,`${game}: no separate safety checkbox gate`);
+ }
+ // 하는 중 화면(역할 띠·지금 할 일·접힌 안내)은 시작 버튼을 누른 뒤에만 나와 첫 화면 그리기로 닿지 않아 소스로 확인한다.
  const activity=readFileSync('src/presentation/components/minigames/expedition/ExpeditionActivity.tsx','utf8');
  assert.match(activity,/expedition-now-roles/);
  const flagship=readFileSync('src/presentation/flagship/FlagshipActivity.tsx','utf8');
- assert.doesNotMatch(flagship,/type="checkbox" checked=\{safety\}/,'no separate safety checkbox gate');
- assert.match(flagship,/StartLabel sub="안전 약속 확인"/);
  assert.match(flagship,/className="flagship-now"/);
  assert.match(flagship,/ExpeditionTutorial key="after-start" game=\{game\} collapsed/);
 });

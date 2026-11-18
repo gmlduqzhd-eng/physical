@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {renderHtml,textOf} from './render-for-test';
 import {EMPTY_PROGRESS,addPlay,currentVote,mergeProgress,parseProgress,reactionRows,setVote,type ClassProgress} from '../src/domain/classProgress';
 import {libraryLead,FEATURED_GAMES} from '../src/domain/featuredGames';
 import {AVAILABLE_GAMES} from '../src/domain/gamesData';
@@ -64,16 +65,33 @@ test('the feedback slot keys votes by play, and results record the same play id'
  assert.match(dash,/기록 안 한 판 반응/);
 });
 
-test('primary start buttons share one label shape',()=>{
- const files={
-  'src/presentation/components/minigames/common/PhonePlay.tsx':'<StartLabel sub="반 전체"/>',
-  'src/presentation/components/minigames/expedition/ExpeditionActivity.tsx':'<StartLabel sub="원정"/>',
-  'src/presentation/components/minigames/common/MovementQuest.tsx':'<StartLabel sub="바로 첫 작전"/>',
-  'src/presentation/components/minigames/common/SafetyLesson.tsx':'<StartLabel sub="안전 상황 살펴보기"/>',
-  'src/presentation/GamePlayPage.tsx':'<StartLabel sub="바로 시작"/>',
-  'src/presentation/flagship/FlagshipActivity.tsx':'<StartLabel sub="안전 약속 확인"/>',
- };
- for(const [file,label] of Object.entries(files))assert.ok(readFileSync(file,'utf8').includes(label),file);
+test('primary start buttons share one label shape',async()=>{
+ // 첫 화면을 실제로 그려, 큰 시작 버튼이 모두 '▶ 시작 · …' 한 모양인지 본다.
+ const {createElement}=await import('react');
+ const {PhonePlay}=await import('../src/presentation/components/minigames/common/PhonePlay');
+ const {MovementQuest}=await import('../src/presentation/components/minigames/common/MovementQuest');
+ const {SafetyLesson}=await import('../src/presentation/components/minigames/common/SafetyLesson');
+ const {ExpeditionActivity}=await import('../src/presentation/components/minigames/expedition/ExpeditionActivity');
+ const {PHONE_PLAYS}=await import('../src/domain/phonePlayCatalog');
+ const {adaptClassicPlay}=await import('../src/domain/phonePlayClassicsMode');
+ const {EXPEDITION_GAMES}=await import('../src/domain/expeditionGames');
+ const {SAFETY_LESSONS}=await import('../src/domain/safetyLessons');
+ const {FlagshipActivity}=await import('../src/presentation/flagship/FlagshipActivity');
+ const screens:[string,ReturnType<typeof createElement>,string][]=[
+  ['phone play',createElement(PhonePlay,{play:PHONE_PLAYS.find(p=>!adaptClassicPlay(p,false,Infinity).setup)!}),'반 전체'],
+  ['expedition',createElement(ExpeditionActivity,{game:EXPEDITION_GAMES[0],groupId:'g',solo:false,enqueueAction:()=>{}}),'원정'],
+  ['movement quest',createElement(MovementQuest,{gameId:'zigzag' as never,solo:true}),'바로 첫 작전'],
+  ['safety lesson',createElement(SafetyLesson,{gameId:Object.keys(SAFETY_LESSONS)[0] as never}),'안전 상황 살펴보기'],
+  ['flagship',createElement(FlagshipActivity,{game:'expedition-map',onFinish:()=>{}}),'안전 약속 확인'],
+ ];
+ for(const [name,element,sub] of screens){
+  const html=await renderHtml(element);
+  const button=[...html.matchAll(/<button[^>]*>((?:(?!<\/button>).)*)<\/button>/g)].map(m=>m[1]).find(b=>b.includes('aria-hidden="true">▶'));
+  assert.ok(button,`${name}: a ▶ start button`);
+  assert.equal(textOf(button.replace(/<span aria-hidden="true">[^<]*<\/span>/g,'')),`시작 · ${sub}`,name);
+ }
+ // GamePlayPage의 '바로 시작'은 주소의 게임 ID·로그인·수업 방을 다 갖춘 경로 안에서만 그려져 첫 화면 그리기로는 닿지 않아 소스로 확인한다.
+ assert.ok(readFileSync('src/presentation/GamePlayPage.tsx','utf8').includes('<StartLabel sub="바로 시작"/>'),'GamePlayPage');
 });
 
 test('shape game roles follow the current shape (no corners in a line)',()=>{
@@ -95,11 +113,16 @@ test('TV-only signature games are not offered as student-device lesson presets',
  assert.match(guided,/useState\(recipe&&requestedGame\?3:requestedGame\?2:1\)/);
 });
 
-test('hub lead text follows search and the equipment-free collection',()=>{
+test('hub lead text follows search and the equipment-free collection',async()=>{
  assert.match(libraryLead(false,false,0,{query:'달리기'}),new RegExp(`모든 활동 ${AVAILABLE_GAMES.length}개`));
  assert.match(libraryLead(false,false,0,{phoneOnly:true}),/보관함까지 모두/);
  assert.match(libraryLead(false,false,0),new RegExp(`대표 게임 ${FEATURED_GAMES.length}개`));
- const lib=readFileSync('src/presentation/ActivityLibrary.tsx','utf8');
- assert.match(lib,/\{games\.length>0&&<span className="muted small" data-list-count>/);
- assert.match(lib,/보관함 포함/);
+ // 활동 목록 화면을 그려 본다: 찾은 활동 수를 보여 주고, 준비물 없는 놀이 칩은 보관함까지 센다고 알려 준다.
+ const {createElement}=await import('react');
+ const {ActivityPicker}=await import('../src/presentation/ActivityLibrary');
+ const found=await renderHtml(createElement(ActivityPicker,{}),'/?q='+encodeURIComponent('달리기'));
+ assert.match(found,/data-list-count/,'the list shows how many it found');
+ assert.match(textOf(found),/준비물 없는 놀이만 \(\d+ · 보관함 포함\)/);
+ const none=await renderHtml(createElement(ActivityPicker,{}),'/?q='+encodeURIComponent('쿼디치'));
+ assert.doesNotMatch(none,/data-list-count/,'no count when nothing is found');
 });

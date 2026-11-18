@@ -179,10 +179,10 @@ test('per-game shortcut help shows only the keys the game uses',()=>{
 test('the gate blocks specials in games without one (wired in SignaturePlay)',async()=>{
  const {readFileSync}=await import('node:fs');
  const src=readFileSync('src/presentation/components/minigames/signature/SignaturePlay.tsx','utf8');
+ // 콤보 게이지가 필살기 있는 게임에만 보이는지, 일시정지 때 화면이 inert가 되고 '다시 시작'에 초점이 가는지는
+ // 실제 브라우저에서 6개 게임을 끝까지 하는 scripts/signature-e2e.cjs(npm run test:signature:e2e)가 확인한다.
+ // 아래는 화면에 드러나지 않는 연결(명령 거르기·저장소 정리·리모컨 스냅숏)이라 브라우저로도 관찰하기 어려워 소스로 확인한다.
  assert.match(src,/cmd\.type==='special'&&!mod\.special\?null/);
- assert.match(src,/\{mod\.special&&<ComboGauge/);
- assert.match(src,/inert=\{state\.paused\|\|undefined\}/);
- assert.match(src,/resumeRef\.current\?\.focus/);
  assert.doesNotMatch(src,/useEffect\(\(\)=>\(\)=>dispose\?\.\(seed\)/,'module stores are not disposed in an unmount cleanup');
  // 결과 단계 리모컨 스냅숏에는 결과 제목을 보낸다.
  assert.match(src,/cue:state\.phase==='result'\?resultHeadlineOf\(game,state\):cue\.text/);
