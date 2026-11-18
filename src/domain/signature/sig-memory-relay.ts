@@ -106,11 +106,22 @@ export function longestSuccess(s:FunState):number{
  * 점수 규칙(버튼·키보드·리모컨 모두 같음): 더하기는 차례인 모둠만, 순서가 가려진 뒤에, 한 차례에 한 번,
  * 본게임 +1 · 마지막 승부 +2. 빼기(정정)는 언제든 받는다. '모든 팀 +1'은 차례인 모둠의 성공으로 바꾼다.
  */
+/**
+ * 그 단계·신호 번호에서 차례인 모둠. 마지막 승부는 본게임의 차례 순서를 이어받는다
+ * (다시 청팀부터 시작하면 앞 순서 모둠만 차례를 더 받으므로). 본게임에서 보여 준 차례 수만큼 밀어서 센다.
+ */
+export function turnTeamAt(s:Pick<FunState,'teams'|'phaseCues'>,phase:'tutorial'|'play'|'climax',index:number):number{
+ const offset=phase==='climax'?(s.phaseCues.play??0):0;
+ return relayTeam(Math.max(0,index)+offset,s.teams);
+}
+export const turnTeamNameAt=(s:Pick<FunState,'teams'|'phaseCues'>,phase:'tutorial'|'play'|'climax',index:number)=>s.teams<=1?'우리 반':TEAM_NAMES[turnTeamAt(s,phase,index)];
+/** 지금 차례인 모둠. */
+export const currentTurnTeam=(s:FunState)=>turnTeamAt(s,s.phase==='climax'?'climax':s.phase==='play'?'play':'tutorial',s.cueIndex);
 /** 이 차례에 차례인 모둠이 이미 성공했는지(연습 판 포함). */
-export const turnScored=(s:FunState)=>(s.teamHits[`${s.phase}:${s.cueIndex}:${relayTeam(s.cueIndex,s.teams)}`]??0)>0;
+export const turnScored=(s:FunState)=>(s.teamHits[`${s.phase}:${s.cueIndex}:${currentTurnTeam(s)}`]??0)>0;
 export function memoryRelayGate(s:FunState,cmd:FunCommand):FunCommand|null{
  if(s.phase!=='tutorial'&&s.phase!=='play'&&s.phase!=='climax')return cmd;
- const turnTeam=relayTeam(s.cueIndex,s.teams);
+ const turnTeam=currentTurnTeam(s);
  const success=(team:number):FunCommand|null=>{
   if(team!==turnTeam||memoryStage(s)==='show'||turnTooShort(s))return null;
   if(turnScored(s))return null;
@@ -129,7 +140,7 @@ export function memoryRelayCue(ctx:SignatureCueContext):SignatureCue{
  const variation=variationFor(ctx.state,ctx.phase,ctx.index);
  const backwards=ctx.reversed||variation==='reverse'||variation==='reverse-quick';
  const seq=sequenceFor(ctx.seed,ctx.phase,ctx.index,len);
- const who=relayTeamName(ctx.index,ctx.teams);
+ const who=turnTeamNameAt(ctx.state,ctx.phase,ctx.index);
  const act=(t:MemoryTile)=>ctx.seated?t.seated:t.action;
  const order=seq.map(act).join(' → ');
  if(ctx.phase==='tutorial')return {text:`지금 ${len}개 순서를 외워요!`,sub:`연습 판 · 순서가 사라지면 ${who}이 차례대로 몸으로 해요`,icon:'🧠',tone:'calm',move:order,pose:seq[0].pose};

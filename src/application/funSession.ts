@@ -10,6 +10,7 @@ export interface FunSession {
  v:1;gameId:string;savedAt:number;setup:FunSetup;seed:number;state:FunState;
  /** 결과를 이미 기록했는지(새로고침 뒤 두 번 기록하지 않게). */ recorded:boolean;
  /** 게임 화면 부품(모듈)이 따로 모은 기록. */ module?:unknown;
+ /** 이 판의 id(👍/👎 반응과 판 기록을 잇는다). 새로고침해도 같은 판이면 같은 id를 쓴다. */ playId?:string;
 }
 export const FUN_SESSION_TTL_MS=3*60*60*1000;
 const sessionKey=(gameId:string)=>`fun-session:${gameId}`;
@@ -34,7 +35,8 @@ export function loadFunSession(gameId:string,timing:FunTiming,now=Date.now()):Fu
  if(!state||state.seed!==v.seed){clearFunSession(gameId);return null;}
  // 이미 결과를 기록한 판은 이어 할 것이 없다(끝난 판을 '하던 판'으로 다시 보여 주지 않는다).
  if(state.phase==='result'&&v.recorded===true){clearFunSession(gameId);return null;}
- return {v:1,gameId,savedAt:v.savedAt,setup:{...setup!,skipDemo:true},seed:v.seed,state,recorded:v.recorded===true,module:v.module};
+ const playId=typeof v.playId==='string'&&/^[\w-]{6,48}$/.test(v.playId)?v.playId:undefined;
+ return {v:1,gameId,savedAt:v.savedAt,setup:{...setup!,skipDemo:true},seed:v.seed,state,recorded:v.recorded===true,module:v.module,playId};
 }
 export function clearFunSession(gameId:string){try{storage()?.removeItem(sessionKey(gameId));}catch{/* 무시 */}}
 
