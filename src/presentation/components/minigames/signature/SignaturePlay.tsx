@@ -39,7 +39,8 @@ function resultHeadlineOf(game:SignatureGameDef,state:FunState):string{
 export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,onExit,onRoundReset}:Props){
  const game=getSignatureGame(gameId);
  const [setup,setSetup]=useState<FunSetup|null>(null);
- const [teams,setTeams]=useState<number>(game?.teamsDefault??2);
+ // '오늘 수업'에서 고른 팀 수(?teams=1~4)가 있으면 처음 값으로 쓴다. 없거나 맞지 않으면 게임 기본값.
+ const [teams,setTeams]=useState<number>(()=>{const q=Number(typeof window==='undefined'?NaN:new URLSearchParams(window.location.search).get('teams'));return game&&Number.isInteger(q)&&q>=game.teamsMin&&q<=4?q:game?.teamsDefault??2;});
  const [seated,setSeated]=useState(false);
  // 명령 버스와 리모컨 연결은 판(round)보다 오래 산다: 결과 화면·'한 판 더'에서도 휴대폰 리모컨이 끊기지 않는다.
  const bus=useMemo(()=>createFunCommandBus(),[]);

@@ -77,7 +77,7 @@ test('the activity library puts the fit filter first, a one-line header and the 
  const order=['<h4>규칙</h4>','<h4>준비</h4>','<h4>안전</h4>','<h4>쉽게 · 어렵게 · 앉아서</h4>'].map(h=>src.indexOf(h));
  assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])),'rules → prepare → safety → adapt');
  assert.doesNotMatch(src,/ForestOrbit/,'the big hero art is gone from the list page');
- assert.match(src,/className="primary" to="\/teacher">수업 준비 시작/,'the primary button is lesson preparation, not records');
+ assert.match(src,/className="primary" to="\/today">📋 오늘 수업 40분<\/Link>}{!solo&&<Link to="\/teacher">수업 준비 시작/,'the primary button is lesson preparation (오늘 수업 40분 → 수업 준비), not records');
 });
 
 test('seated alternatives leave the safety list and rules leave the tips',async()=>{
