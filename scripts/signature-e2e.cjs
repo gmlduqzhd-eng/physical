@@ -29,8 +29,30 @@ async function overflow(page) {
   }));
 }
 
+const GUIDE_KEY = 'physical_teacher_guide_seen_v1';
+
+// 처음 쓰는 선생님 안내: 첫 방문에 한 번 뜨고, Esc로 닫히고, 다시 열어도 또 뜨지 않아야 합니다.
+async function guideOnce(browser) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
+  const page = await context.newPage();
+  try {
+    await page.goto(`${base}/play/sig-signal-captain`, { waitUntil: 'networkidle' });
+    const backdrop = page.locator('.tqg-backdrop');
+    await backdrop.waitFor({ state: 'visible', timeout: 10000 });
+    await page.keyboard.press('Escape');
+    await backdrop.waitFor({ state: 'detached', timeout: 5000 });
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+    if (await backdrop.count()) throw new Error('guideOnce: 안내가 다시 떴어요');
+  } finally {
+    await context.close();
+  }
+}
+
 async function playOne(browser, run, id) {
   const context = await browser.newContext({ viewport: run.viewport, serviceWorkers: 'block' });
+  // 첫 방문 1분 안내는 guideOnce에서 따로 확인하고, 게임 진행 검사에서는 이미 본 것으로 둡니다.
+  await context.addInitScript(key => { try { localStorage.setItem(key, '1'); } catch { /* 무시 */ } }, GUIDE_KEY);
   // No remote backend in this test: answer Supabase calls with empty data so nothing leaves the machine.
   await context.route('**/*', route => {
     const url = route.request().url();
@@ -111,6 +133,7 @@ async function playOne(browser, run, id) {
   const browser = await chromium.launch({ channel: process.env.BROWSER_CHANNEL || undefined, headless: true });
   const results = [];
   try {
+    if (!only) { await guideOnce(browser); console.log('PASS guide-once'); }
     for (const run of RUNS) for (const id of GAMES) {
       if (only && !only.includes(id)) continue;
       const r = await playOne(browser, run, id);
