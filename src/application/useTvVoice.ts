@@ -1,0 +1,67 @@
+import {useCallback,useEffect,useSyncExternalStore} from 'react';
+import {useActivityPause} from './ActivityPauseContext';
+import {readStorage,writeStorage} from './browserStorage';
+import {createAnnouncer,parseSpeechPrefs,SPEECH_PREFS_KEY,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
+
+/**
+ * TV 화면(대표 게임·반 전체 진행)의 음성 안내. 기기마다 켜기/끄기·속도·크기를 기억한다.
+ * 한 화면에 TV 음성은 하나뿐이라 안내기는 하나를 함께 쓴다.
+ */
+let announcer:Announcer|null=null;
+let prefsCache:SpeechPrefs|null=null;
+const listeners=new Set<()=>void>();
+const notify=()=>listeners.forEach(l=>l());
+
+const browserSynth=()=>typeof window!=='undefined'&&'speechSynthesis' in window&&typeof window.SpeechSynthesisUtterance==='function'?window.speechSynthesis:null;
+function readPrefs():SpeechPrefs{
+ if(!prefsCache)prefsCache=parseSpeechPrefs(readStorage(SPEECH_PREFS_KEY));
+ return prefsCache;
+}
+export function tvAnnouncer():Announcer{
+ if(!announcer){
+  const synth=browserSynth();
+  announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs()});
+  // 목소리 목록은 늦게 온다: 오면 지원 상태 표시를 다시 그린다.
+  try{synth?.addEventListener?.('voiceschanged',notify);}catch{/* 무시 */}
+ }
+ return announcer;
+}
+function setPrefs(next:SpeechPrefs){
+ prefsCache={...next};
+ try{writeStorage(SPEECH_PREFS_KEY,JSON.stringify(prefsCache));}catch{/* 저장이 막혀도 이번 화면에서는 그대로 쓴다 */}
+ tvAnnouncer().setPrefs(prefsCache);
+ notify();
+}
+const subscribe=(l:()=>void)=>{listeners.add(l);return ()=>{listeners.delete(l);};};
+
+/** 첫 손동작에서 음성을 깨운다(iOS·Chrome 자동 재생 규칙). */
+let unlockBound=false;
+function bindUnlock(){
+ if(unlockBound||typeof window==='undefined')return;unlockBound=true;
+ const go=()=>{tvAnnouncer().unlock();window.removeEventListener('pointerdown',go,true);window.removeEventListener('keydown',go,true);};
+ window.addEventListener('pointerdown',go,true);window.addEventListener('keydown',go,true);
+}
+
+export interface TvVoice {
+ prefs:SpeechPrefs;status:SpeechStatus;
+ say:(text:string,opts?:SayOptions)=>boolean;
+ setPrefs:(next:SpeechPrefs)=>void;
+ /** '목소리 확인' 단추. */ test:()=>boolean;
+ stop:()=>void;
+}
+
+/** paused: 이 화면이 멈춰 있으면 true(읽지 않고, 읽던 말도 끊는다). 수업 전체 일시정지도 함께 따른다. */
+export function useTvVoice({paused=false}:{paused?:boolean}={}):TvVoice{
+ const prefs=useSyncExternalStore(subscribe,readPrefs,readPrefs);
+ const status=useSyncExternalStore(subscribe,()=>tvAnnouncer().status(),()=>'unknown' as SpeechStatus);
+ const classroomPaused=useActivityPause();
+ const stopped=paused||classroomPaused;
+ useEffect(()=>{bindUnlock();},[]);
+ useEffect(()=>{tvAnnouncer().setPaused(stopped);},[stopped]);
+ // 화면을 떠나면 읽던 말을 끊는다.
+ useEffect(()=>()=>{tvAnnouncer().cancel();},[]);
+ const say=useCallback((text:string,opts?:SayOptions)=>tvAnnouncer().say(text,opts),[]);
+ const test=useCallback(()=>{tvAnnouncer().unlock();return tvAnnouncer().say('목소리 확인. 신호를 이렇게 읽어 줘요.',{priority:true,force:true});},[]);
+ const stop=useCallback(()=>tvAnnouncer().cancel(),[]);
+ return {prefs,status,say,setPrefs,test,stop};
+}
