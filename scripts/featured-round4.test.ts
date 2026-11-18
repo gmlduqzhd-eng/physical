@@ -93,7 +93,7 @@ test('the secret map shows one step at a time',async()=>{
   groups:[{id:'g1',name:'1모둠',visited:[],vote:null,done:false,loop:[],quality:0,ship:{checkpoint:0}}]} as unknown as ExpeditionSnapshot;
  const html=await renderHtml(createElement(CooperativeMapGame,{snapshot,send:async()=>true,practice:true,disabled:false}));
  const steps=[...html.matchAll(/<button type="button"([^>]*)>(?:<span aria-hidden="true">[^<]*<\/span>)?([^<]+)<\/button>/g)].map(m=>({current:/aria-current="step"/.test(m[1]),name:m[2]}));
- assert.deepEqual(steps.map(s=>s.name),['① 단서 묻기','② 걸어가 확인','③ 같은 길 고르기']);
+ assert.deepEqual(steps.map(s=>s.name),['① 힌트 묻기','② 걸어가 확인','③ 같은 길 고르기']);
  assert.deepEqual(steps.map(s=>s.current),[true,false,false],'only the current step is marked');
  const text=textOf(html);
  assert.match(text,/다른 모둠에게 물어봐요/,'step ① panel is shown');
@@ -136,4 +136,18 @@ test('robot-lab style layouts start with one tap that also confirms the safety p
  const button=html.slice(start,html.indexOf('</button>',start));
  assert.doesNotMatch(button,/disabled/,'no checkbox gate before starting');
  assert.match(textOf(button),/안전/,'the one tap also confirms the safety promises');
+});
+
+test('easy words: signature concepts and the map game read at a grade 1–2 level',async()=>{
+ const {SIGNATURE_GAMES}=await import('../src/domain/signatureGames');
+ const {easyMapWords,mapBrief}=await import('../src/domain/cooperativeMap');
+ for(const g of SIGNATURE_GAMES){
+  const shown=[g.concept,g.oneLine,...g.rules,g.reflection,g.nextChallenge,...g.demo.map(d=>d.caption)].join(' ');
+  assert.doesNotMatch(shown,/심폐 지구력|민첩성|협응|반응 속도|콤보|커튼콜|까닭/,`${g.id} uses easy words`);
+ }
+ // 수업방(서버)이 보내는 예전 낱말도 화면에서는 쉬운 말로 바뀐다. 이미 쉬운 말은 그대로다.
+ assert.equal(easyMapWords('길 단서는 다른 모둠에게 물어봐요. 운반 약속: 1관문 손바닥 펴기 → 2관문 팔 작게 펼치기. 관문마다 몸짓으로 전해요.'),
+  '길 힌트는 다른 모둠에게 물어봐요. 몸짓 약속: 1번 문 손바닥 펴기 → 2번 문 팔 작게 펼치기. 문마다 몸짓으로 알려 줘요.');
+ assert.equal(easyMapWords('운반 약속 설계단'),'몸짓 약속 모둠');
+ for(const i of [0,1,2]){const b=mapBrief(i,3,4);assert.equal(easyMapWords(b.text),b.text);assert.equal(easyMapWords(b.title),b.title);assert.doesNotMatch(b.title+b.text,/단서|관문|운반|탐사단|설계단|연결단/);}
 });

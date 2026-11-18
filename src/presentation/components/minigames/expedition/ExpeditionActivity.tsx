@@ -160,7 +160,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
       {phase!=='active'&&phase!=='countdown'&&phase!=='preview'&&<div className="expedition-round-title"><h2>{plan.title}</h2></div>}
       <details className="expedition-roles"><summary>이번 라운드 역할 · {plan.roles.length}명</summary><ul>{plan.roles.map(role=><li key={role}>{role}</li>)}</ul><p>번호는 이 게임에서 역할을 나누려고 붙인 번호예요. {source==='peer-report'?'짝과 함께 확인해 기록해요.':'직접 확인해 기록해요.'} 센서나 카메라는 쓰지 않아요.</p></details>
       {records.length>0&&phase!=='active'&&<p className="activity-brief">앞 라운드에서 확인한 횟수: {records.at(-1)!.counts.join(' · ')||'화면 문제·역할 확인'} · 어려우면 쉬운 동작을 골라도 돼요.</p>}
-      {phase!=='record'&&<div className="expedition-controls"><button aria-pressed={paused} onClick={()=>{setPaused(!paused);stop();}}>{paused?'계속하기':'일시정지'}</button><button aria-pressed={!sound} onClick={()=>{setSound(!sound);stop();}}>{sound?'소리 끄기':'소리 켜기'}</button><button onClick={()=>{stop();setPaused(false);setResumeAvailable(!practicing);setPhase('ready');}}>기록 유지하고 참여 방법 바꾸기</button></div>}
+      {phase!=='record'&&<div className="expedition-controls"><button aria-pressed={paused} onClick={()=>{setPaused(!paused);stop();}}>{paused?'계속하기':'일시정지'}</button><button aria-pressed={!sound} onClick={()=>{setSound(!sound);stop();}}>{sound?'소리 끄기':'소리 켜기'}</button><button onClick={()=>{stop();setPaused(false);setResumeAvailable(!practicing);setPhase('ready');}}>하는 방법 바꾸기</button></div>}
       {paused&&<p role="status" className="expedition-note">잠시 멈췄어요. 주변을 확인한 뒤 계속하기를 눌러 주세요.</p>}
       {phase==='record'&&practicing&&<div className="expedition-record"><h3>연습을 마쳤어요</h3><p>내 공간과 도구가 준비됐나요? 어려우면 준비 화면에서 대체 동작을 골라도 돼요. 연습은 기록과 점수에 넣지 않아요.</p><button onClick={()=>{setPracticing(false);setPhase('ready');}}>준비 다시 하기</button><button className="expedition-primary" onClick={()=>{setPracticing(false);beginRound(0,plans);}}>첫 작전 시작</button></div>}
       {phase==='record'&&!practicing&&<div className="expedition-record">
@@ -172,7 +172,7 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         {plan.timing&&<p>앱에 기록한 시간: {Math.round(elapsed.current/100)/10}초{plan.timing==='estimate'&&` · 목표 ${plan.targetSeconds}초 · 차이 ${Math.round(Math.abs(elapsed.current/1000-plan.targetSeconds!)*10)/10}초`}. 실제 거리·속도·운동량은 측정하지 않았어요.</p>}
         {plan.timing==='arrival'&&arrivals.some(t=>t===null)&&<button onClick={()=>setArrivals(previous=>previous.map(t=>t===null?-1:t))}>미도착 번호를 확인하고 다음에 다시 시도</button>}
         {revamped&&<div className="expedition-note"><strong>직접 확인할 목표</strong><ul>{plan.targets.map(t=><li key={t.label}>{t.label}: {t.goal}회</li>)}{plan.checks.map(c=><li key={c}>{c}</li>)}</ul><p>{solo?'혼자 겪어 본 모든 역할과':'모두의 참여와'} 위 목표를 모두 확인했다면 한 번에 기록할 수 있어요. 일부만 성공했으면 세부 기록을 입력해요. 화면 문제 답과 도착 기록은 별도로 확인해요.</p><button className="expedition-primary" onClick={()=>save(true)}>모든 목표와 역할을 직접 확인했어요</button></div>}
-        <details open={!revamped||detailOpen} onToggle={e=>setDetailOpen(e.currentTarget.open)}><summary>세부 기록 직접 입력 · 일부 성공도 기록</summary>
+        <details open={!revamped||detailOpen} onToggle={e=>setDetailOpen(e.currentTarget.open)}><summary>자세히 적기 · 조금만 해냈어도 적어요</summary>
         {plan.targets.map((target,i)=><label key={target.label}>{target.label} (0~{target.goal})<input aria-label={target.label} type="number" inputMode="numeric" min={0} max={target.goal} value={counts[i]||''} onChange={e=>setCounts(previous=>previous.map((v,j)=>i===j?e.target.value:v))}/></label>)}
         <fieldset><legend>{solo&&players>1?'체험에서 진행한 역할 번호':'실제로 참여한 번호'}</legend><div className="expedition-participants">{Array.from({length:players},(_,i)=>i+1).map(n=><button key={n} aria-pressed={participants.includes(n)} onClick={()=>toggleNumber(n)}>{n}번 {participants.includes(n)?'확인 ✓':'확인 전'}</button>)}</div></fieldset>
         {plan.checks.map(check=><label className="expedition-check" key={check}><input type="checkbox" checked={checks.includes(check)} onChange={e=>setChecks(previous=>e.target.checked?[...previous,check]:previous.filter(c=>c!==check))}/>{check}</label>)}
@@ -182,6 +182,6 @@ export function ExpeditionActivity({game,groupId,solo,enqueueAction}:Props){
         {error&&<p role="alert" className="expedition-error">{error}</p>}
         <button onClick={()=>beginRound(round,plans)}>이번 라운드 다시 하기</button>
       </div>}
-    </>}{plan&&!practicing&&phase!=='ready'&&phase!=='tutorial'&&<div className="activity-brief"><button onClick={()=>save('rest')}>이번 라운드 휴식 · 0점 기록</button><button onClick={()=>save('observe')}>이번 라운드 관찰 참여 · 0점 기록</button><p>쉬거나 지켜본 라운드는 한 것으로 세지 않고 다음 라운드로 가요.</p></div>}
+    </>}{plan&&!practicing&&phase!=='ready'&&phase!=='tutorial'&&<div className="activity-brief"><button onClick={()=>save('rest')}>이번 판은 쉬어요 · 점수 없음</button><button onClick={()=>save('observe')}>이번 판은 지켜봐요 · 점수 없음</button><p>쉬거나 지켜본 판은 점수 없이 다음 판으로 넘어가요.</p></div>}
   </section>;
 }

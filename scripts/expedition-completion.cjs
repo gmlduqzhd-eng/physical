@@ -60,7 +60,7 @@ async function main(){
      for(let grace=0;grace<3&&await page.locator('[data-phase="active"]').count();grace++)await advance(1000);
      await page.locator('[data-phase="record"]').waitFor();await layout();
      if(process.env.CAPTURE_STAGES==='1'&&r===0)await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-record.png'),fullPage:true});
-     if(revamped)await tap(page.getByText('세부 기록 직접 입력 · 일부 성공도 기록',{exact:true}));
+     if(revamped)await tap(page.getByText('자세히 적기 · 조금만 해냈어도 적어요',{exact:true}));
      const finish=page.getByRole('button',{name:r+1<game.rounds?'기록하고 다음 라운드':'기록하고 원정 마치기',exact:true});
      await tap(finish);await page.getByRole('alert').waitFor();assert.equal(await page.locator('.game-result-overlay').count(),0,'timer alone cannot submit a result');
      let answer=plan.allocation?plan.allocation.counts.map(String):plan.kind==='unique'?plan.question.options.slice(0,players):plan.kind==='choice'?[plan.question.options[0]]:plan.question?.answer||[];

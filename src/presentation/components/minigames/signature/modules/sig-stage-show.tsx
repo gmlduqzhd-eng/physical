@@ -43,7 +43,7 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
     {phase!=='tutorial'&&<small>{sc.hint}</small>}
    </li>)}
   </ol>:<div className="sig-stage-now" style={onStage!==null?{'--team':TEAM_COLORS[onStage]} as React.CSSProperties:undefined}>
-   {onStage!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[onStage].emoji}</span><div><span className="sig-stage-team">{teamName(state.teams,onStage)} {phase==='climax'?'커튼콜 인사':'무대'}</span><b>{scenes[onStage].title}</b></div></>:<b>{phase==='climax'?'🎉 다 같이 인사해요':'🎬 다 같이 무대 인사를 준비해요'}</b>}
+   {onStage!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[onStage].emoji}</span><div><span className="sig-stage-team">{teamName(state.teams,onStage)} {phase==='climax'?'마지막 인사':'무대'}</span><b>{scenes[onStage].title}</b></div></>:<b>{phase==='climax'?'🎉 다 같이 인사해요':'🎬 다 같이 무대 인사를 준비해요'}</b>}
   </div>}
   <div className="sig-stage-react" role="group" aria-label="관객 반응 버튼">
    {REACTIONS.map((r,k)=><button key={r.id} type="button" disabled={target===null||!live} onClick={()=>react(r.id)} aria-label={`${r.label}${target!==null?` · ${teamName(state.teams,target)}에게`:''}`}>
@@ -51,7 +51,7 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
    </button>)}
    {phase==='tutorial'&&<p className="sig-stage-practice">연습으로 누른 응원 {practice}번 · 본게임에서 0부터 다시 세요</p>}
    {prep&&phase!=='tutorial'&&<p className="sig-stage-practice">준비 시간에는 응원 버튼이 쉬어요. 발표가 시작되면 눌러요</p>}
-   {phase==='climax'&&<p className="sig-stage-practice">커튼콜은 점수를 세지 않아요. 모든 모둠에게 큰 박수를 보내요</p>}
+   {phase==='climax'&&<p className="sig-stage-practice">마지막 인사는 점수를 세지 않아요. 모든 모둠에게 큰 박수를 보내요</p>}
   </div>
  </div>;
 }

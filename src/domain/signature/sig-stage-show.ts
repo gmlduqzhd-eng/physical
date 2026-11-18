@@ -111,7 +111,7 @@ export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
  if(ctx.phase==='climax'){
   const g=curtainGroup(ctx.index,ctx.teams);
   if(g===null)return ctx.index<=0
-   ?{text:'🎬 커튼콜!',sub:'모둠마다 한 번씩, 자기 장면에서 가장 멋진 순간으로 인사해요 (점수는 세지 않아요)',icon:'🎬',tone:'gold',pose:'armsUp',scorable:false}
+   ?{text:'🎬 마지막 인사!',sub:'모둠마다 한 번씩, 자기 장면에서 가장 멋진 순간으로 인사해요 (점수는 세지 않아요)',icon:'🎬',tone:'gold',pose:'armsUp',scorable:false}
    :{text:'🎉 다 같이 인사!',sub:'모든 모둠이 손잡고 함께 인사해요. 서로에게 큰 박수!',icon:'👏',tone:'gold',pose:'armsUp',scorable:false};
   const sc=scenes[g];
   return {text:`${teamName(ctx.teams,g)} 인사!`,sub:`${sc.emoji} ${sc.title} · 가장 멋진 순간에서 얼음! 관객은 큰 박수`,icon:sc.emoji,tone:'gold',pose:'freeze',move:sc.title,scorable:false};
@@ -121,7 +121,7 @@ export function stageShowCue(ctx:SignatureCueContext):SignatureCue{
   const sec=slot.cuesLeft*ctx.state.timing.cueSeconds;
   return {text:ctx.index===0?'장면 카드 뽑기!':`모둠별 준비 · ${sec}초`,sub:ctx.index===0?'모둠마다 다른 장면 카드를 받아요. 시작 → 가운데 → 끝 3장면을 함께 정해요':'말 대신 몸과 표정으로! 시작 자세와 끝 자세를 꼭 정해요',icon:'🎴',tone:'calm',pose:'armsSide',scorable:false};
  }
- if(slot.kind==='done')return {text:'모든 모둠 발표 끝!',sub:'커튼콜로 넘어가요',icon:'🎬',tone:'calm',pose:'armsUp',scorable:false};
+ if(slot.kind==='done')return {text:'모든 모둠 발표 끝!',sub:'마지막 인사로 넘어가요',icon:'🎬',tone:'calm',pose:'armsUp',scorable:false};
  const sc=scenes[slot.group];
  const reverse=ctx.reversed?' · 🔄 거꾸로! 끝 장면부터 거꾸로 보여 줘요':'';
  return {text:`${teamName(ctx.teams,slot.group)} 무대!`,sub:`${sc.emoji} ${sc.title} · 관객은 👏 😮 😂 버튼으로 응원해요${reverse}`,icon:sc.emoji,tone:'go',pose:'wave',move:sc.title};
@@ -131,8 +131,8 @@ export const stageShow=defineSignatureGame({
  id:'sig-stage-show',ready:true,
  name:'표현 무대',emoji:'🎭',
  oneLine:'장면 카드를 뽑아 모둠이 45초 준비하고, 차례로 20초씩 몸으로 보여 줘요. 관객은 반응 버튼으로 응원해요!',
- rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 45초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 모둠마다 한 번씩 커튼콜 인사(점수 없음)! 가장 많은 응원을 받은 장면을 발표해요.'],
- concept:'움직임 표현',
+ rules:['모둠마다 장면 카드를 받아 시작 → 가운데 → 끝 3장면을 45초 동안 함께 정해요.','차례가 되면 20초 동안 말 대신 몸과 표정으로 보여 주고, 관객은 👏 😮 😂 버튼으로 응원해요.','모든 모둠이 발표하면 모둠마다 한 번씩 마지막 인사(점수 없음)! 가장 많은 응원을 받은 장면을 발표해요.'],
+ concept:'몸으로 표현하기',
  reflection:'친구 모둠의 장면에서 어떤 몸짓이 가장 잘 보였나요? 우리 모둠은 무엇을 더 크게 보여 주면 좋을까요?',
  nextChallenge:'다음에는 장면 사이를 멈춤 없이 이어서, 처음부터 끝까지 한 번에 보여 줘요.',
  scoringHint:'발표 중에 관객이 반응 버튼을 누를 때마다 그 모둠 +1 · 선생님도 팀 버튼으로 더할 수 있어요',
@@ -143,7 +143,7 @@ export const stageShow=defineSignatureGame({
   {pose:'armsSide',caption:'45초 동안 시작 → 가운데 → 끝 자세를 정해요'},
   {pose:'wave',caption:'차례가 되면 20초 동안 몸으로 보여 줘요'},
   {pose:'clap',caption:'관객은 👏 😮 😂 버튼으로 응원해요'},
-  {pose:'armsUp',caption:'모든 모둠이 끝나면 커튼콜!'},
+  {pose:'armsUp',caption:'모든 모둠이 끝나면 마지막 인사!'},
  ],
  // 본게임은 모둠 4개가 다 발표할 시간(준비 45초 + 20초×4 = 125초)에 여유를 둔다. 모든 모둠이 발표하면 커튼콜로 바로 넘어간다.
  timing:{demo:12,tutorial:24,play:135,climax:35,cueSeconds:5},

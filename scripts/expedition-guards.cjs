@@ -32,7 +32,7 @@ async function main(){
   await open('exp-phone-06');await tap('시작 · 원정');await tap('점수 없는 연습 시작');await advance(3000);await advance(8000);await tap('첫 작전 시작');
   for(let round=0;round<3;round++){
    await page.clock.runFor(3000);await page.clock.runFor(20000);await page.locator('[data-phase="record"]').waitFor();
-   await page.getByText('세부 기록 직접 입력 · 일부 성공도 기록',{exact:true}).click();
+   await page.getByText('자세히 적기 · 조금만 해냈어도 적어요',{exact:true}).click();
    const finish=round<2?'기록하고 다음 라운드':'기록하고 원정 마치기';await tap(finish);await page.getByRole('alert').waitFor();
    await page.getByRole('spinbutton',{name:'안내된 구간을 수행한 수',exact:true}).fill('-1');await tap('1');await tap('1');await tap('1번 확인 전');await tap(finish);await page.getByRole('alert').waitFor();
    await page.getByRole('spinbutton',{name:'안내된 구간을 수행한 수',exact:true}).fill('1');
