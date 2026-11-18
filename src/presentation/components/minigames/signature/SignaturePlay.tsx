@@ -53,20 +53,22 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  if(!game)return <div className="fun-arena"><p>이 대표 게임은 아직 준비 중이에요.</p><button type="button" className="fun-primary" onClick={onExit}>활동 목록으로</button></div>;
  // 목록으로 나가면 이어 할 판을 지운다(새로고침은 그대로 남는다).
  const exit=()=>{disposeRound();clearFunSession(game.id);clearRemoteRoom(game.id);onExit();};
- if(setup)return <>
+ // 리모컨 막대는 시작 화면(이어 할 판이 있을 때)과 게임 화면에서 같은 자리에 하나만 둔다.
+ // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
+ const dock=(setup||(saved&&room))?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'}>
+  <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>saveRemoteRoom(game.id,code)}/>
+  {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
+  {setup&&<button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>}
+ </div>):null;
+ if(setup)return <>{dock}
   <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit}
    onSeed={seed=>{seedRef.current=seed;}}
    onReplay={()=>{disposeRound();onRoundReset?.();setResume(null);setSetup(s=>s&&{...s,skipDemo:true,round:s.round+1});}}/>
-  {arena(<div className="fun-dock" role="group" aria-label="리모컨·나가기">
-   <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>saveRemoteRoom(game.id,code)}/>
-   {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
-   <button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>
-  </div>)}
  </>;
  const merged=game.mergedFrom.map(id=>GAMES.find(g=>g.type===id)?.name).filter(Boolean);
  const start=(skipDemo:boolean)=>{unlockAudio();clearFunSession(game.id);setSaved(null);setResume(null);setSetup({teams,seated,skipDemo,round:0});};
  const resumeSaved=()=>{if(!saved)return;unlockAudio();setResume(saved);setSetup(saved.setup);};
- return <main className="fun-intro" data-game={game.id}>
+ return <>{dock}<main className="fun-intro" data-game={game.id}>
   <p className="fun-eyebrow">대표 게임 · TV 하나로 반 전체가 함께</p>
   <h1><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
   {saved&&<section className="fun-resume" aria-label="이어 하기">
@@ -97,7 +99,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
    </ul>
   </details>
   <button type="button" className="fun-link" onClick={onExit}>활동 목록으로</button>
- </main>;
+ </main></>;
 }
 
 function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onReplay,onSeed}:{game:SignatureGameDef;bus:FunCommandBus;setup:FunSetup;restore:FunSession|null;groupId:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;onReplay:()=>void;onSeed:(seed:number)=>void}){
