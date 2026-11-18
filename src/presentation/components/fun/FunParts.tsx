@@ -24,7 +24,7 @@ export function TeamScoreboard({state,label,dispatch,disabled,canScore,readOnly}
 }
 
 /** 반 전체 콤보 게이지. 꽉 차면 필살기 버튼이 켜진다(게임마다 쓰임이 다름). */
-export function ComboGauge({combo,label='반 전체 콤보'}:{combo:number;label?:string}){
+export function ComboGauge({combo,label='반 전체 힘 모으기'}:{combo:number;label?:string}){
  const pct=Math.round(combo/COMBO_MAX*100);
  return <div className="fun-combo" data-full={pct>=100||undefined}>
   <span>{label}</span>
