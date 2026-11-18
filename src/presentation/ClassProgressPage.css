@@ -46,3 +46,11 @@
 .cp-rules summary{cursor:pointer;font-weight:800;min-height:32px}
 .cp-rules ul{margin:6px 0 0;padding-left:1.2em;line-height:1.6}
 @media (max-width:480px){.cp-table thead th:not(:first-child),.cp-table td{width:3.6em;padding:8px 4px}}
+.cp-share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0 14px}
+.cp-share-btn{min-height:44px;padding:8px 16px;border-radius:12px;font-weight:800}
+.cp-problems{margin:0 0 14px;padding:12px 14px;border-radius:14px;border:1px solid var(--border, rgba(148,163,184,.4))}
+.cp-problems h3{margin:0 0 6px;font-size:1rem}
+.cp-problems ul{margin:0;padding-left:18px}
+.cp-notes span{display:block;font-size:.85rem}
+.cp-reason-table td,.cp-reason-table th{white-space:nowrap}
+.cp-reason-table td.cp-notes{white-space:normal;min-width:180px}
