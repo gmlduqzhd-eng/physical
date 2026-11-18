@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {COUNTDOWN_SPOKEN,DEFAULT_SPEECH_PREFS,PRIORITY_HOLD_MS,REPEAT_GAP_MS,countdownSpeech,createAnnouncer,parseSpeechPrefs,speechText,surpriseSpeech,type SpeechPrefs,type SpeechUtteranceLike} from '../src/application/speechAnnouncer';
+import {keyToFunCommand} from '../src/application/funCommandBus';
+import {CANCEL_GAP_MS,COUNTDOWN_SPOKEN,DEFAULT_SPEECH_PREFS,PRIORITY_HOLD_MS,VOICE_WAIT_MS,REPEAT_GAP_MS,countdownSpeech,createAnnouncer,parseSpeechPrefs,speechText,surpriseSpeech,type SpeechPrefs,type SpeechUtteranceLike} from '../src/application/speechAnnouncer';
 
 const read=(path:string)=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
 
@@ -143,6 +144,52 @@ test('unlock speaks one silent line only once',()=>{
  assert.equal(log.spoken[0].volume,0);
 });
 
+test('an empty voice list turns into unsupported after waiting, and a late list still recovers',()=>{
+ const voices:{lang:string}[]=[];
+ let t=0;
+ const a=createAnnouncer({synth:{speak(){},cancel(){},getVoices:()=>voices},utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t});
+ assert.equal(a.status(),'unknown');
+ t=VOICE_WAIT_MS-1;assert.equal(a.status(),'unknown');
+ t=VOICE_WAIT_MS;assert.equal(a.status(),'unsupported');
+ assert.equal(a.say('앉기'),false,'no voice at all: stay silent instead of pretending to be on');
+ voices.push({lang:'ko-KR'});
+ assert.equal(a.status(),'ok','voiceschanged later brings it back');
+});
+
+test('while a line is playing, cancel then wait a moment before the new line (Safari drop)',()=>{
+ const spoken:string[]=[];let busy=false;const timers:(()=>void)[]=[];let t=0;
+ const synth={speak(u:SpeechUtteranceLike){spoken.push(u.text);busy=true;},cancel(){busy=false;},getVoices:()=>[{lang:'ko-KR'}],get speaking(){return busy;}};
+ const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,later:(fn,ms)=>{assert.equal(ms,CANCEL_GAP_MS);timers.push(fn);return timers.length;},clearLater:id=>{timers[(id as number)-1]=()=>{};}});
+ assert.equal(a.say('앉기'),true);assert.deepEqual(spoken,['앉기'],'idle: speaks at once');
+ t+=REPEAT_GAP_MS;busy=true;
+ assert.equal(a.say('서기'),true);assert.deepEqual(spoken,['앉기'],'busy: waits for the gap');
+ t+=REPEAT_GAP_MS;
+ assert.equal(a.say('점프'),true,'a newer line replaces the waiting one');
+ timers.forEach(fn=>fn());
+ assert.deepEqual(spoken,['앉기','점프']);
+ a.say('박수',{priority:true,force:true});a.cancel();timers.forEach(fn=>fn());
+ assert.deepEqual(spoken,['앉기','점프'],'cancel drops a waiting line');
+});
+
+test('unlock can be retried until it runs, and is skipped when the device has no voice',()=>{
+ const voices:{lang:string}[]=[{lang:'en-US'}];const spoken:SpeechUtteranceLike[]=[];
+ const a=createAnnouncer({synth:{speak(u){spoken.push(u);},cancel(){},getVoices:()=>voices},utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>0});
+ a.unlock();assert.equal(a.unlocked(),false,'no Korean voice yet: nothing is spent');
+ voices.push({lang:'ko-KR'});
+ a.unlock();assert.equal(a.unlocked(),true);assert.equal(spoken.length,1);
+ a.unlock();assert.equal(spoken.length,1);
+});
+
+test('keyboard shortcuts work while a radio or checkbox has focus, but not in text boxes',()=>{
+ assert.deepEqual(keyToFunCommand({key:'p',target:{tagName:'INPUT',type:'radio'}}),{type:'pause'});
+ assert.deepEqual(keyToFunCommand({key:'1',target:{tagName:'INPUT',type:'checkbox'}}),{type:'score',team:0,delta:1});
+ assert.equal(keyToFunCommand({key:'p',target:{tagName:'INPUT',type:'text'}}),null);
+ assert.equal(keyToFunCommand({key:'p',target:{tagName:'INPUT'}}),null,'no type means a text box');
+ assert.equal(keyToFunCommand({key:'p',target:{tagName:'INPUT',type:'search'}}),null);
+ assert.equal(keyToFunCommand({key:'p',target:{tagName:'TEXTAREA'}}),null);
+ assert.equal(keyToFunCommand({key:'p',target:{tagName:'DIV',isContentEditable:true}}),null);
+});
+
 test('TV screens wire voice: signature arena and class mode share the toggle',()=>{
  const sig=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
  assert.match(sig,/useTvVoice\(\{paused:state\.paused\}\)/);
@@ -154,7 +201,9 @@ test('TV screens wire voice: signature arena and class mode share the toggle',()
  assert.match(cls,/<TvVoiceToggle voice=\{voice\}/);
  assert.doesNotMatch(cls,/new SpeechSynthesisUtterance/,'class mode reuses the shared announcer');
  const toggle=read('src/presentation/components/TvVoiceToggle.tsx');
- assert.match(toggle,/이 기기는 음성 안내를 지원하지 않아요/);
+ assert.match(toggle,/이 기기는 음성 안내가 안 돼요/);
+ assert.match(toggle,/Escape/,'the settings panel closes with Esc');
+ assert.doesNotMatch(toggle,/>⚙</,'the gear is drawn, not a font glyph');
  assert.match(toggle,/목소리 확인/);
  assert.match(toggle,/aria-pressed/);
 });

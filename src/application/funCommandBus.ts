@@ -49,10 +49,19 @@ export function createFunCommandBus():FunCommandBus{
  };
 }
 
-/** 키보드 단축키 → 명령. 입력칸에서 누른 키는 무시한다. */
+// 글자를 써 넣는 입력칸만 단축키를 막는다(라디오·체크박스·슬라이더에 초점이 있어도 단축키는 그대로 동작).
+const NON_TEXT_INPUT=/^(radio|checkbox|range|button|submit|reset|color|file|image)$/i;
+function isTextEntry(el:{tagName?:string;isContentEditable?:boolean;type?:string}|null):boolean{
+ if(!el)return false;
+ if(el.isContentEditable)return true;
+ const tag=el.tagName??'';
+ if(tag==='TEXTAREA'||tag==='SELECT')return true;
+ return tag==='INPUT'&&!NON_TEXT_INPUT.test(el.type??'text');
+}
+
+/** 키보드 단축키 → 명령. 글자를 써 넣는 입력칸에서 누른 키는 무시한다. */
 export function keyToFunCommand(e:{key:string;shiftKey?:boolean;target?:unknown}):ExternalFunCommand|null{
- const el=e.target as {tagName?:string;isContentEditable?:boolean}|null;
- if(el&&(el.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName??'')))return null;
+ if(isTextEntry(e.target as {tagName?:string;isContentEditable?:boolean;type?:string}|null))return null;
  const k=e.key;
  if(k===' '||k==='Enter')return {type:'next'};
  if(k==='p'||k==='P')return {type:'pause'};

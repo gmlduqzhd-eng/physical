@@ -10,7 +10,7 @@ import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRound
 import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
-interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void;
+interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void;
  /** 시작 화면에서 역할 정하기를 이미 안내했으면 true: 규칙 카드에서 '준비됐어요'를 기다리지 않고 저절로 넘어간다. */ rolesReady?:boolean}
 
 /** 무엇을 · 어떻게 · 언제 끝: 놀이마다 같은 자리에 같은 순서로 보여 준다. */
