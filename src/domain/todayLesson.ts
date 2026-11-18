@@ -77,7 +77,13 @@ export function buildTodayPlan(settings:TodaySettings,seed:number):TodayPlan{
 
 /** 단계 하나의 결과: 다 했어요 / 건너뛰었어요. 걸린 시간(초)을 함께 남긴다. */
 export interface TodayStageResult {status:'done'|'skipped';seconds:number}
-export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number}
+/**
+ * recordsSince: 이 수업의 판·반응을 찾을 때 쓰는 시작 시각. '이어 하기'로 startedAt(표시용)을 당겨도 처음 시작한 때를 지킨다.
+ * stagePlays: 끝 화면에서 단계마다 반응을 붙일 판 id. 한 번 정하면 그대로 두어, 다시 누르거나 새로고침해도 같은 판의 반응만 바뀐다.
+ */
+export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number;recordsSince?:number;stagePlays?:string[]}
+/** 이 수업의 판·반응을 찾는 시작 시각. */
+export const recordsSince=(run:TodayRun)=>run.recordsSince??run.startedAt;
 
 export function startRun(plan:TodayPlan,now:number):TodayRun{return {plan,index:0,startedAt:now,stageStartedAt:now,results:[]};}
 /** 지금 단계를 마치고(또는 건너뛰고) 다음 단계로 간다. 마지막 단계 뒤에는 finishedAt이 생긴다. */
@@ -109,14 +115,16 @@ export function parseRun(raw:unknown):TodayRun|null{
  if(r.results.length!==r.index)return null;
  if(!r.results.every(x=>!!x&&(x.status==='done'||x.status==='skipped')&&typeof x.seconds==='number'&&Number.isFinite(x.seconds)&&x.seconds>=0))return null;
  // 끝 표시와 단계 위치가 서로 맞아야 한다: 마지막 단계 뒤면 끝난 수업, 아니면 진행 중.
- if(r.finishedAt!==undefined&&!isTime(r.finishedAt))return null;
+ if(r.finishedAt!==undefined&&(!isTime(r.finishedAt)||r.finishedAt<r.startedAt))return null;
+ if(r.recordsSince!==undefined&&(!isTime(r.recordsSince)||r.recordsSince>r.startedAt))return null;
+ if(r.stagePlays!==undefined&&(!Array.isArray(r.stagePlays)||r.stagePlays.length!==p.stages.length||!r.stagePlays.every(x=>typeof x==='string'&&x.length<=64)))return null;
  if((r.index===p.stages.length)!==(r.finishedAt!==undefined))return null;
  const st=p.settings as Partial<TodaySettings>;
  if(!TODAY_GRADES.some(g=>g.id===st.grade)||!TODAY_SPACES.includes(st.space as FitSpace)||!(TODAY_MINUTES as readonly number[]).includes(st.minutes as number))return null;
  if(typeof st.teams!=='number'||!(TODAY_TEAMS as readonly number[]).includes(st.teams))return null;
  if(st.mainId!==undefined&&typeof st.mainId!=='string')return null;
  const kinds:TodayStageKind[]=['warmup','main','cooldown','reflect'];
- for(const s of p.stages){if(!s||!kinds.includes(s.kind as TodayStageKind)||typeof s.minutes!=='number'||typeof s.title!=='string')return null;if(s.gameId!==undefined&&!BY_ID.has(s.gameId)&&!READY_SIGNATURE_GAMES.some(g=>g.id===s.gameId))return null;}
+ for(const s of p.stages){if(!s||!kinds.includes(s.kind as TodayStageKind)||typeof s.minutes!=='number'||!Number.isFinite(s.minutes)||s.minutes<=0||typeof s.title!=='string')return null;if(s.gameId!==undefined&&!BY_ID.has(s.gameId)&&!READY_SIGNATURE_GAMES.some(g=>g.id===s.gameId))return null;}
  return r as TodayRun;
 }
 export const formatSeconds=(sec:number)=>sec<60?`${sec}초`:`${Math.floor(sec/60)}분${sec%60?` ${sec%60}초`:''}`;
@@ -131,8 +139,12 @@ export const isStaleRun=(run:TodayRun,now:number)=>!sameLocalDay(run.startedAt,n
  */
 export function resumeRun(run:TodayRun,now:number):TodayRun{
  const spent=run.results.reduce((a,r)=>a+r.seconds,0)*1000;
- return {...run,startedAt:now-spent,stageStartedAt:now};
+ // 한 단계를 아주 오래 띄워 둔 수업도 오늘 수업으로 보이게, 표시용 시작 시각은 오늘 0시보다 앞서지 않는다(이어 하기 안내가 되풀이되지 않게).
+ const day=new Date(now);day.setHours(0,0,0,0);
+ return {...run,recordsSince:recordsSince(run),startedAt:Math.max(now-spent,day.getTime()),stageStartedAt:now};
 }
+/** 수업에 걸린 시간(초): 단계마다 걸린 시간의 합. 밤사이 흐른 시간은 들어가지 않는다. */
+export const runSeconds=(run:TodayRun)=>run.results.reduce((a,r)=>a+r.seconds,0);
 
 /**
  * 끝 화면에 보여 줄 단계 결과.
@@ -145,11 +157,21 @@ export type StageOutcome='played'|'passed'|'skipped';
 export function stageOutcomes(run:TodayRun,recorded:(gameId:string)=>boolean):StageOutcome[]{
  return run.plan.stages.map((s,i)=>{
   const r=run.results[i];
+  // 결과를 기록한 활동은 '건너뛰기'로 나갔어도 한 것으로 본다.
+  if(s.gameId&&recorded(s.gameId))return 'played';
   if(!r||r.status==='skipped')return 'skipped';
-  if(!s.gameId)return 'played';
-  return recorded(s.gameId)?'played':'passed';
+  return s.gameId?'passed':'played';
  });
 }
 
 /** 끝 화면 반응 칸의 판 id(그 활동에 남긴 판이 없을 때). 같은 수업·같은 단계면 늘 같아서 새로고침해도 표가 두 번 쌓이지 않는다. */
-export const summaryPlayId=(run:TodayRun,index:number)=>`today-${run.startedAt.toString(36)}-${index}`;
+export const summaryPlayId=(run:TodayRun,index:number)=>`today-${recordsSince(run).toString(36)}-${index}`;
+/**
+ * 끝 화면에서 단계마다 반응을 붙일 판 id를 한 번 정한다(이미 정했으면 그대로).
+ * lookup(gameId): 수업 중 그 활동에 남긴 판(기록한 판, 없으면 반응만 누른 판). 없으면 이 수업·이 단계로 정해지는 id.
+ * 돌아보기처럼 활동이 없는 단계는 빈 문자열.
+ */
+export function bindStagePlays(run:TodayRun,lookup:(gameId:string)=>string|undefined):TodayRun{
+ if(run.stagePlays?.length===run.plan.stages.length)return run;
+ return {...run,stagePlays:run.plan.stages.map((s,i)=>s.gameId?lookup(s.gameId)??summaryPlayId(run,i):'')};
+}

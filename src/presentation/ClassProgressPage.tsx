@@ -33,7 +33,7 @@ export function ClassProgressPage(){
  const tab=tabParam==='map'?'map':tabParam==='reasons'?'reasons':'reactions';
  const [copied,setCopied]=useState('');
  // 복사가 막힌 기기(학교 PC·일부 태블릿): 요약 글을 칸에 보여 주고 전체 선택해 두어 손으로 복사하게 한다.
- const [fallback,setFallback]=useState('');
+ const [fallbackOpen,setFallbackOpen]=useState(false);
  const [confirm,setConfirm]=useState(false);
  const rows=useMemo(()=>reactionRows(progress),[progress]);
  const archive=archiveCandidates(rows,isFeatured),promote=featuredCandidates(rows,isFeatured);
@@ -44,8 +44,8 @@ export function ClassProgressPage(){
   const text=shareSummary(progress,nameOf);
   try{
    if(!navigator.clipboard?.writeText)throw new Error('no clipboard');
-   await navigator.clipboard.writeText(text);setFallback('');setCopied('요약을 복사했어요. 메신저에 붙여 넣으면 돼요.');
-  }catch{setFallback(text);setCopied('이 기기에서는 바로 복사할 수 없어요. 아래 글을 길게 눌러(또는 Ctrl+C로) 복사해요.');}
+   await navigator.clipboard.writeText(text);setFallbackOpen(false);setCopied('요약을 복사했어요. 메신저에 붙여 넣으면 돼요.');
+  }catch{setFallbackOpen(true);setCopied('이 기기에서는 바로 복사할 수 없어요. 아래 글을 길게 눌러(또는 Ctrl+C로) 복사해요.');}
  };
  const table=():ExportTable=>({title:'우리 반 활동 반응',fileBase:'우리반반응',meta:[['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['판 수',`${progress.plays.length}판`]],
   headers:['활동','기록한 판','👍','👎','👍 비율','기록 안 한 판 반응','구분'],rows:rows.map(r=>[nameOf(r.id),r.plays,r.up,r.down,pct(r),r.unrecorded,isFeatured(r.id)?'대표':'보관함'])});
@@ -63,7 +63,8 @@ export function ClassProgressPage(){
     <h2 id="cp-reasons-title" className="cp-h2">반응 이유</h2>
     <p className="cp-hint">결과 화면에서 👍/👎 뒤에 고른 이유와 한 줄 메모를 모아요. 같은 이유가 {MIN_REASON_COUNT}번 이상 나오면 다음 할 일을 알려 줘요.</p>
     <div className="cp-share"><button type="button" className="cp-share-btn" onClick={copySummary} disabled={!progress.plays.length&&!progress.votes.length&&!progress.reasons.length}>📋 공유용 요약 복사</button>{copied&&<span role="status">{copied}</span>}</div>
-    {fallback&&<SummaryFallback text={fallback}/>}
+    {/* 기록이 바뀌면 글 칸의 요약도 함께 바뀐다. */}
+    {fallbackOpen&&<SummaryFallback text={shareSummary(progress,nameOf)}/>}
     {!reasons.length?<p className="cp-empty">아직 이유가 없어요. 게임 결과 화면에서 👍/👎를 누른 뒤 '어려웠어요', '헷갈렸어요' 같은 이유를 골라 보세요.</p>:<>
      <article className="cp-problems"><h3>많이 나온 문제</h3>
       {problems.length?<ul>{problems.map(t=><li key={t.reason}><b>{t.label}</b>가 많은 활동: {t.games.map(g=>`${nameOf(g.id)}(${g.count})`).join(', ')}</li>)}</ul>:<p>아직 {MIN_REASON_COUNT}번 이상 나온 문제가 없어요.</p>}
