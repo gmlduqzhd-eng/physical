@@ -1,16 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {CMD_PER_SEC,MAX_REMOTES,MAX_SEQ_JUMP,confirmCode,createCommandFilter,createRemoteSender,createTvTransport,generateRoomCode,isValidRoomCode,loadRemoteKeys,normalizeRoomCode,parseSnapshot,remoteFingerprint,remoteUrl,signRemote,type RemoteAccess,type RemoteAck,type RemoteChannel,type RemoteDevice,type RemoteKeys,type RemoteStatus} from '../src/application/funRemote';
+import {ADMIT_WINDOW_MS,CMD_PER_SEC,MAX_PENDING,MAX_REMOTES,MAX_SEQ_JUMP,confirmCode,createCommandFilter,createRemoteSender,createTvTransport,formatConfirmCode,generateRoomCode,isValidRoomCode,loadRemoteKeys,memoryKeyStore,normalizeRoomCode,parseSnapshot,remoteFingerprint,remotePin,remoteUrl,signRemote,type RemoteAccess,type RemoteAck,type RemoteChannel,type RemoteDevice,type RemoteKeys,type RemoteStatus} from '../src/application/funRemote';
 import {createFunCommandBus,type FunRemoteSnapshot} from '../src/application/funCommandBus';
 
 /** 여러 쪽을 잇는 가짜 broadcast 채널(자기가 보낸 것은 받지 않는다 = self:false). 모든 메시지는 누구나 엿볼 수 있다(sent). */
-function fakeHub(){
+/** 객체 키 순서를 거꾸로 바꿔 다시 만든다(서버가 키를 정렬해 보내는 경우 흉내). */
+const reorder=(v:unknown):unknown=>Array.isArray(v)?v.map(reorder):v&&typeof v==='object'?Object.fromEntries(Object.keys(v as object).reverse().map(k=>[k,reorder((v as Record<string,unknown>)[k])])):v;
+function fakeHub(opts:{reorderKeys?:boolean}={}){
  const peers:{handlers:Map<string,((p:unknown)=>void)[]>}[]=[];
  const sent:[string,unknown][]=[];
+ const deliver=(payload:unknown)=>opts.reorderKeys?reorder(structuredClone(payload)):structuredClone(payload);
  const make=(statusOnOpen:RemoteStatus='connected'):RemoteChannel=>{
   const me={handlers:new Map<string,((p:unknown)=>void)[]>()};peers.push(me);
   return {
-   send(event,payload){sent.push([event,structuredClone(payload)]);for(const p of peers)if(p!==me)for(const h of p.handlers.get(event)??[])h(structuredClone(payload));},
+   send(event,payload){sent.push([event,structuredClone(payload)]);for(const p of peers)if(p!==me)for(const h of p.handlers.get(event)??[])h(deliver(payload));},
    on(event,handler){me.handlers.set(event,[...(me.handlers.get(event)??[]),handler]);},
    open(onStatus){onStatus(statusOnOpen);return ()=>{const i=peers.indexOf(me);if(i>=0)peers.splice(i,1);};},
   };
@@ -26,20 +29,22 @@ const ROOM='ABCDEF';
 const memStore=()=>{let v:string|null=null;return {get:()=>v,set:(x:string)=>{v=x;}};};
 
 /** TV와 휴대폰을 붙인다. 키는 진짜 WebCrypto로 만든다. */
-async function setup(opts:{tvNow?:()=>number;phoneNow?:()=>number;tvKeys?:RemoteKeys;preapproved?:string[];pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>}={}){
+async function setup(opts:{tvNow?:()=>number;phoneNow?:()=>number;tvKeys?:RemoteKeys;preapproved?:string[];pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>;beatMs?:number}={}){
  const hub=opts.hub??fakeHub();
  const bus=createFunCommandBus();const got:unknown[]=[];bus.subscribe((cmd,src)=>got.push([cmd,src]));
  let devices:RemoteDevice[]=[];
  const tvKeys=opts.tvKeys??await loadRemoteKeys();
- const tv=createTvTransport(hub.make(),{room:ROOM,keys:tvKeys,now:opts.tvNow,onDevices:l=>{devices=l;},beatMs:20,preapproved:opts.preapproved,pendingTtlMs:opts.pendingTtlMs});
+ const tv=createTvTransport(hub.make(),{room:ROOM,keys:tvKeys,now:opts.tvNow,onDevices:l=>{devices=l;},beatMs:opts.beatMs??20,preapproved:opts.preapproved,pendingTtlMs:opts.pendingTtlMs});
+ const pin=await remotePin(tvKeys.pub);
  const detach=bus.attach(tv);
- const phone=async(o:{keys?:RemoteKeys;seqStore?:ReturnType<typeof memStore>;goneMs?:number}={})=>{
-  const access:RemoteAccess[]=[];const states:FunRemoteSnapshot[]=[];const acks:RemoteAck[]=[];const tvCodes:string[]=[];const hidden:boolean[]=[];
+ /** pin: undefined면 QR처럼 TV 지문을 넣고, null이면 코드만 넣은 연결(사람 확인 필요). */
+ const phone=async(o:{keys?:RemoteKeys;seqStore?:ReturnType<typeof memStore>;goneMs?:number;pin?:string|null;timeoutMs?:number}={})=>{
+  const access:RemoteAccess[]=[];const states:FunRemoteSnapshot[]=[];const acks:RemoteAck[]=[];const tvCodes:string[]=[];const hidden:boolean[]=[];const idle:boolean[]=[];const pinned:string[]=[];
   const keys=o.keys??await loadRemoteKeys();
-  const s=createRemoteSender(hub.make(),{room:ROOM,keys,now:opts.phoneNow,onAccess:a=>access.push(a),onState:x=>states.push(x),onAck:a=>acks.push(a),onTvCode:c=>tvCodes.push(c),onTvHidden:h=>hidden.push(h),timeoutMs:150,tickMs:15,goneMs:o.goneMs??10_000,seqStore:o.seqStore});
-  return {s,keys,access,states,acks,tvCodes,hidden};
+  const s=createRemoteSender(hub.make(),{room:ROOM,keys,now:opts.phoneNow,tvPin:o.pin===undefined?pin:o.pin,onPinned:x=>pinned.push(x),onAccess:a=>access.push(a),onState:x=>states.push(x),onAck:a=>acks.push(a),onTvCode:c=>tvCodes.push(c),onTvHidden:h=>hidden.push(h),onTvIdle:i=>idle.push(i),timeoutMs:o.timeoutMs??150,tickMs:15,goneMs:o.goneMs??10_000,seqStore:o.seqStore});
+  return {s,keys,access,states,acks,tvCodes,hidden,idle,pinned};
  };
- return {hub,bus,got,tv,tvKeys,detach,phone,devices:()=>devices};
+ return {hub,bus,got,tv,tvKeys,pin,detach,phone,devices:()=>devices};
 }
 const settle=()=>wait(120);
 
@@ -48,16 +53,24 @@ test('room codes are 6 unambiguous characters and survive normalization',()=>{
  assert.equal(normalizeRoomCode(' ab-c2 3d '),'ABC23D');
  assert.equal(isValidRoomCode('ABC12D'),false,'1 is excluded');
  assert.equal(remoteUrl('https://x.app/','ABCDEF'),'https://x.app/fun-remote?room=ABCDEF');
+ const pin='A'.repeat(43);
+ assert.equal(remoteUrl('https://x.app','ABCDEF',pin),`https://x.app/fun-remote?room=ABCDEF&tv=${pin}`);
+ assert.equal(remoteUrl('https://x.app','ABCDEF','bad'),'https://x.app/fun-remote?room=ABCDEF','a malformed pin is not put in the link');
 });
 
-test('keys: the device id is the public-key fingerprint, the 4-digit code comes from it, and stored keys come back the same',async()=>{
- const store=memStore();
+test('keys: the device id is the public-key fingerprint, the 6-character code comes from it, and stored keys come back the same (never as text)',async()=>{
+ const store=memoryKeyStore();
  const a=await loadRemoteKeys(store),b=await loadRemoteKeys(store);
  assert.equal(a.fp,b.fp,'reloading the page keeps the same device');
  assert.match(a.fp,/^[0-9A-F]{16}$/);
  assert.equal(a.fp,await remoteFingerprint(a.pub));
- assert.match(confirmCode(a.fp),/^\d{4}$/);
- assert.equal(a.privateKey.extractable,false,'the key used for signing cannot be exported');
+ assert.match(confirmCode(a.fp),/^[A-HJKMNP-Z2-9]{6}$/);
+ assert.equal(formatConfirmCode('ABCDEF'),'ABC DEF');
+ assert.equal(a.privateKey.extractable,false,'the key used for signing cannot be exported, even when stored');
+ const rec=await store.get();
+ assert.equal(typeof rec?.privateKey,'object','the stored private key is a CryptoKey, not a JWK string');
+ assert.ok(!JSON.stringify(rec).includes('"d"'),'no private key material in a serializable form');
+ assert.notEqual(confirmCode(a.fp),confirmCode('0000000000000000'));
  const c=await loadRemoteKeys();assert.notEqual(c.fp,a.fp);
 });
 
@@ -126,7 +139,7 @@ test('🔴 forged closed / state / beat / access from someone without the TV key
  assert.ok(p.states.every(s=>s.scores[0]!==99));
  // 가짜 beat로 사라진 TV를 살아 있는 척 못 한다.
  tv.notifyReload();detach();await settle();
- assert.equal(p.access.at(-1),'stale');
+ assert.equal(p.access.at(-1),'reloading','the phone shows that the TV is reopening');
  for(let i=0;i<8;i++){await forge('beat',{hidden:false},2000+i);await wait(30);}
  assert.equal(p.s.check(),'stale','fake heartbeats do not keep a missing TV alive');
  p.s.close();
@@ -155,18 +168,21 @@ test('seq: a verified phone cannot jump more than MAX_SEQ_JUMP at once; normal s
  detach();b.s.close();
 });
 
-test('pending requests: TTL, busy when full, and the 2-phone limit',async()=>{
+test('pending requests: TTL, the newest request wins when full (oldest is told busy), and the 2-phone limit',async()=>{
  const {tv,detach,phone,devices}=await setup({pendingTtlMs:300});
- const ps=await Promise.all([phone(),phone(),phone(),phone()]);
+ const ps=[];for(let i=0;i<MAX_PENDING;i++){ps.push(await phone());await wait(40);}
  await settle();
- assert.equal(devices().filter(d=>d.state==='pending').length,4);
+ assert.equal(devices().filter(d=>d.state==='pending').length,MAX_PENDING);
+ await wait(ADMIT_WINDOW_MS+100);
  const fifth=await phone();await settle();
- assert.equal(fifth.access.at(-1),'busy','a full queue answers busy instead of silence');
+ assert.equal(fifth.access.at(-1),'pending','a full queue lets the newest request in');
+ assert.ok(devices().some(d=>d.device===fifth.keys.fp));
+ assert.equal(devices().filter(d=>d.state==='pending').length,MAX_PENDING,'still at most MAX_PENDING');
  // 넷 중 셋이 사라지면(다시 묻지 않음) 시간이 지나 목록에서 빠진다.
  for(const p of ps.slice(1))p.s.close();
  await wait(800);
  assert.ok(devices().length<=3,'stale requests expire');
- assert.ok(['pending','busy'].includes(fifth.access.at(-1)!));
+ assert.ok(['pending','busy','asking'].includes(fifth.access.at(-1)!));
  // 허용은 2대까지.
  const ids=devices().filter(d=>d.state==='pending').map(d=>d.device);
  for(const id of ids)tv.approve(id);
@@ -194,6 +210,8 @@ test('acks: paused and disallowed events come back as 반영되지 않았어요;
  tv.publishState(snap({paused:true,events:['golden']}));await wait(300);
  const s1=p.s.send({type:'score',team:0,delta:1});await settle();
  assert.deepEqual(p.acks.at(-1),{seq:s1,ok:false,reason:'paused'});
+ const sNext=p.s.send({type:'next'});await settle();
+ assert.deepEqual(p.acks.at(-1),{seq:sNext,ok:false,reason:'paused'},'next waits until the game is resumed');
  tv.publishState(snap({paused:false,events:['golden']}));await wait(300);
  const s2=p.s.send({type:'event',event:'speed'});await settle();
  assert.deepEqual(p.acks.at(-1),{seq:s2,ok:false,reason:'event'});
@@ -256,8 +274,8 @@ test('TV reload with the same code and key: approved phones go stale then reconn
  const a=await first.phone(),b=await first.phone();await settle();
  first.tv.approve(a.keys.fp);await settle();
  first.tv.notifyReload();first.detach();await settle();
- assert.equal(a.access.at(-1),'stale','approved phone waits for the TV');
- assert.equal(b.access.at(-1),'asking','pending phone goes back to asking instead of closed');
+ assert.equal(a.access.at(-1),'reloading','approved phone waits for the TV (TV에서 이어 하기를 눌러요)');
+ assert.equal(b.access.at(-1),'reloading','pending phone waits too instead of closed');
  // 같은 코드·같은 키로 TV가 돌아온다(전에 허용한 지문은 다시 묻지 않음).
  const second=await setup({hub,tvKeys,preapproved:[a.keys.fp]});
  await wait(120);
@@ -289,7 +307,7 @@ test('TV reload: the reload notice goes out synchronously (pre-signed), and the 
  first.tv.notifyReload();
  assert.equal(hub.seen('closed').length,before+1,'sent in the same tick, before the page goes away');
  first.detach();await settle();
- assert.equal(a.access.at(-1),'stale');
+ assert.equal(a.access.at(-1),'reloading');
  const second=await setup({hub,tvKeys,preapproved:[a.keys.fp]});
  await settle();
  assert.equal(a.access.at(-1),'approved','moved to the new TV connection right away');
