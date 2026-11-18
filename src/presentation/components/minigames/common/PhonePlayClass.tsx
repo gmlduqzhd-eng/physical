@@ -2,6 +2,8 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {sfxPop,sfxWhistle,sfxCountdown,unlockAudio} from '../../../../application/soundEffects';
 import {useWakeLock} from '../../../../application/useWakeLock';
+import {useTvVoice} from '../../../../application/useTvVoice';
+import {TvVoiceToggle} from '../../TvVoiceToggle';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
 import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRoundView,type ClassOutcome} from '../../../../domain/phoneClassMode';
@@ -41,7 +43,7 @@ function EvolutionLadder({top}:{top:number}){
  * The rule card comes first (it waits for the teacher when roles must be chosen), then all three tasks run in a row;
  * one tap at the end records how the class took part.
  */
-export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,onLeave,enqueueAction,rolesReady=false}:Props){
+export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave,enqueueAction,rolesReady=false}:Props){
  const classroomPaused=useActivityPause();
  useWakeLock();
  // 숫자 모둠 만들기는 쉬운 방법이면 과제 제목도 쉬운 신호(둘 모둠)에 맞춘다.
@@ -64,10 +66,12 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
  const stopped=paused||classroomPaused;
  // 놀이 101~106의 준비 안내는 3초 카운트다운에만 두면 금방 사라지므로, 진행하는 동안 작은 글씨로 계속 보여 준다.
  const setupHint=seated?undefined:CLASSIC_CLASS_BRIEF[p.id];
- const say=useCallback((text:string)=>{if(!voice||!window.speechSynthesis)return;const speech=new SpeechSynthesisUtterance(text);speech.lang='ko-KR';window.speechSynthesis.cancel();window.speechSynthesis.speak(speech);},[voice]);
+ // 음성 안내는 대표 게임과 같은 TV 음성 설정(🔊 단추)을 따른다. 멈춤 중에는 읽지 않는다.
+ const voice=useTvVoice({paused:stopped});
+ const sayRaw=voice.say,stopVoice=voice.stop;
+ const say=useCallback((text:string,long=false)=>{sayRaw(text,long?{long:true}:undefined);},[sayRaw]);
 
- useEffect(()=>()=>window.speechSynthesis?.cancel(),[]);
- useEffect(()=>{const hide=()=>{if(document.hidden){setPaused(true);window.speechSynthesis?.cancel();}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[]);
+ useEffect(()=>{const hide=()=>{if(document.hidden){setPaused(true);stopVoice();}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[stopVoice]);
  useEffect(()=>{
   if(!['rules','countdown','brief','active'].includes(phase)||stopped||waiting)return;
   let last=performance.now();
@@ -83,8 +87,9 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
   else if(phase==='active'){if(sound)sfxWhistle();setElapsed(0);if(round<2){setRound(round+1);setPhase('brief');}else{setPhase('record');say('세 과제가 끝났어요. 제자리에 멈추고 선생님을 봐요.');}}
  },[phase,elapsed,duration,stopped,waiting,round,sound,say]);
  // Sound and voice: the rules once, countdown tick, task announcement, whistle at start, a pop and the spoken cue at every change.
- useEffect(()=>{if(phase==='rules')say(`${p.name}. ${p.rule3.join('. ')}${waitForTeacher&&p.setup?`. ${p.setup}`:''}`);},[phase,say,p.name,p.rule3,p.setup,waitForTeacher]);
- useEffect(()=>{if(stopped)return;if(phase==='countdown'&&sound)sfxCountdown();if(phase==='brief')say(`${round+1}번 과제. ${p.rounds[round]}${view.memory?`. 순서는 ${view.brief}`:''}${view.plan?`. 좋은 방법은 ${view.plan}`:''}`);if(phase==='active'&&sound)sfxWhistle();},[phase,round,stopped,sound,say,p.rounds,view.memory,view.brief,view.plan]);
+ useEffect(()=>{if(phase==='rules')say(`${p.name}. ${p.rule3.join('. ')}${waitForTeacher&&p.setup?`. ${p.setup}`:''}`,true);},[phase,say,p.name,p.rule3,p.setup,waitForTeacher]);
+ const briefLine=`${round+1}번 과제. ${p.rounds[round]}${view.memory?`. 순서는 ${view.brief}`:''}${view.plan?`. 좋은 방법은 ${view.plan}`:''}`;
+ useEffect(()=>{if(stopped)return;if(phase==='countdown'&&sound)sfxCountdown();if(phase==='brief')say(briefLine,true);if(phase==='active'&&sound)sfxWhistle();},[phase,stopped,sound,say,briefLine]);
  useEffect(()=>{if(phase!=='active'||stopped||document.hidden)return;if(sound&&cueIndex>0)sfxPop();say(cue);},[phase,stopped,cueIndex,cue,sound,say]);
 
  const record=(outcome:ClassOutcome)=>{
@@ -101,7 +106,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
  // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
  const shownSequence=phase==='active'?view.sequence:view.reveal;
  return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><TvVoiceToggle voice={voice} className="pc-voice"/>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
    <p className="pc-task">{stopped?'잠깐 멈췄어요':'이렇게 놀아요'}</p>
    <PhoneRuleCard rule3={p.rule3} className="pc-rule-card"/>
@@ -120,7 +125,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
    {phase==='brief'&&view.memory&&(p.id==='phone-play-006'||level==='추가 도전')&&<p className="pc-left">{p.id==='phone-play-006'?'시작하면 한 동작이 ?로 숨어요':'시작하면 순서가 가려져요'}</p>}
   </div>}
   {['rules','countdown','brief','active'].includes(phase)&&<div className="pc-controls">
-   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className={paused?'pp-primary':'pc-pause'} aria-pressed={paused} onClick={()=>{if(paused)unlockAudio();setPaused(!paused);window.speechSynthesis?.cancel();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
+   {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className={paused?'pp-primary':'pc-pause'} aria-pressed={paused} onClick={()=>{if(paused)unlockAudio();setPaused(!paused);voice.stop();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
    {phase!=='countdown'&&!waiting&&<button className="pp-primary" onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
   </div>}
   {phase==='record'&&<div className="pp-panel pc-record"><h2>우리 반은 어떻게 참여했나요?</h2><p>한 번만 고르면 기록돼요. 기기가 동작이나 체력을 판정하지 않아요.</p>
