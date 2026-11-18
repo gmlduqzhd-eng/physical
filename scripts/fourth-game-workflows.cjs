@@ -44,7 +44,7 @@ function world(){
  return {env,pose,load,actor,advance,flush,emit(name){for(const fn of env.listeners.get(name)??[])fn();}};
 }
 function nodes(root){if(root==null||typeof root==='boolean')return [];if(Array.isArray(root))return root.flatMap(nodes);if(typeof root!=='object')return [];return [root,...nodes(root.props?.children)];}
-function text(root){if(root==null||typeof root==='boolean')return '';if(Array.isArray(root))return root.map(text).join('');if(typeof root!=='object')return String(root);if(typeof root.type==='function'&&root.type.name==='StartLabel')return root.props?.spoken??('시작'+(root.props?.sub?' · '+root.props.sub:''));return text(root.props?.children);}
+function text(root){if(root==null||typeof root==='boolean')return '';if(Array.isArray(root))return root.map(text).join('');if(typeof root!=='object')return String(root);if(typeof root.type==='function'&&root.type.name==='StartLabel')return '시작'+(root.props?.sub?' · '+root.props.sub:'');return text(root.props?.children);}
 function view(a,complete=()=>{}){const r=a.flush();return typeof r.props?.children==='function'?r.props.children({onComplete:complete}):r;}
 function button(a,name,complete){const list=nodes(view(a,complete)).filter(n=>n.type==='button');const b=list.find(n=>typeof name==='string'?text(n).replace(/\s+/g,' ').trim()===name:name.test(text(n)));assert(b,'button '+name+'; available: '+list.map(text).join(' | '));return b;}
 function click(a,name,complete){const b=button(a,name,complete);assert(!b.props.disabled,'disabled '+name);b.props.onClick();a.flush();}
@@ -88,7 +88,7 @@ test('retrying emotion role A preserves the already completed role B',()=>{
 });
 test('safety review uses another context and does not add fake learning points or duplicate results',()=>{
  const w=world(),id='heatwave-pm25-shield',spec=w.load('src/domain/safetyLessons.ts').SAFETY_LESSONS[id],a=w.actor(w.load('src/presentation/components/minigames/common/SafetyLesson.tsx').SafetyLesson,{gameId:id,enqueueAction:x=>w.env.received.push(x)});
- click(a,'안전 상황 살펴보기 시작');
+ click(a,'시작 · 안전 상황 살펴보기');
  const answer=(index,first=false)=>{if(first)click(a,spec.scenarios[index].choices.find(c=>c.id!=='safe').label);click(a,spec.scenarios[index].choices.find(c=>c.id==='safe').label);click(a,index===2||text(view(a)).includes('다른 상황에서 이유 확인')?'읽고 설명을 확인했어요 · 학습 정리':'읽고 설명을 확인했어요 · 다음 상황');};
  answer(0,true);answer(1);answer(2);assert.equal(w.env.received.length,0);click(a,'다른 상황으로 이유 한 번 더 확인');assert(text(view(a)).includes('뜨거운 운동장'));answer(0);click(a,'세 상황의 학습 결과 기록하기');assert.equal(w.env.received.length,1);const result=w.env.received[0].payload;assert.equal(w.load('src/domain/gameResultDetails.ts').classroomResultScore(result.amount,result.details),0);assert.equal(result.details.learning.confirmed,3);
 });

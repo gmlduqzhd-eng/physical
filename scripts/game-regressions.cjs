@@ -283,7 +283,7 @@ async function main() {
 
   await check('pulse detective retains the post-exercise measurement stage after the workout timer', async () => {
     await mount('PulseDetective.tsx', 'PulseDetective');
-    await fixture.getByRole('button', { name: /활동 시작하기/ }).click();
+    await fixture.getByRole('button', { name: /^시작 · (활동|안전 약속 확인)$/ }).click();
     await advance(3);
     await fixture.getByRole('button', { name: /15초 측정 타이머 시작/ }).click();
     await advance(15);

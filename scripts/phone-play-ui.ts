@@ -18,7 +18,7 @@ try{
    try{
     await page.goto(base+(width===390?'/solo/play/':'/play/')+p.id,{waitUntil:'networkidle'});
     const before=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')||'{"totalPlays":0}').totalPlays);
-    await button('바로 시작하기').click();await phase('intro');
+    await button('시작 · 바로 시작').click();await phase('intro');
     assert.equal(await page.locator('.phone-play h1').innerText(),p.name);
     if(width>700)await page.getByLabel('앉아서 참여하기',{exact:true}).check();
     const easy=process.env.TEST_EASY==='1';if(easy)await page.getByLabel('도전 방법',{exact:true}).selectOption('쉬운 방법');

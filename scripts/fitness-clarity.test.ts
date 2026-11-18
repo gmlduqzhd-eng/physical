@@ -51,8 +51,8 @@ test('the quest screen starts with one tap per step, shows the signal alone, and
  const src=read('src/presentation/components/minigames/common/MovementQuest.tsx');
  assert.match(src,/useState\(\(\)=>defaultChoice\(0\)\)/,'the first method is chosen in advance');
  // 고를 것이 없는 첫 작전은 시작 한 번으로 바로 시작하고, 먼저 고르고 싶으면 '작전 고르고 시작'을 눌러요.
- assert.match(src,/<StartLabel sub="바로 첫 작전" spoken="첫 작전 바로 시작"\/><\/button>/);
- assert.match(src,/<StartLabel sub="작전 고르기" spoken="작전 고르고 시작"\/><\/button>/);
+ assert.match(src,/<StartLabel sub="바로 첫 작전"\/><\/button>/);
+ assert.match(src,/<StartLabel sub="작전 고르기"\/><\/button>/);
  assert.match(src,/작전 시작 · 기기 내려놓기/);assert.match(src,/짧게 연습하기 \(점수 없음/,'practice is optional');
  assert.doesNotMatch(src,/rehearsed/,'practice no longer gates the real start');
  assert.match(src,/disabled=\{blockedPath\}/);
@@ -67,7 +67,7 @@ test('emotion picks the feeling without a countdown, the robot lab folds its saf
  assert.match(read('src/presentation/components/minigames/EmotionThermometer.tsx'),/countdown=\{false\}/);
  assert.doesNotMatch(read('src/presentation/components/minigames/EmotionThermometer.tsx'),/심미성/);
  const layout=read('src/presentation/components/minigames/common/PhysicalActivityLayout.tsx');
- assert.match(layout,/countdown: useCountdown = true/);assert.match(layout,/안전 약속 \{safetyItems\.length\}가지를 모두 확인했어요/);
+ assert.match(layout,/countdown: useCountdown = true/);assert.match(layout,/<StartLabel sub=\{safetyItems\.length\?'안전 약속 확인':'활동'\}\/>/);
  assert.match(read('src/presentation/components/minigames/PartnerRobotLab.tsx'),/예시 블록 넣어 보기/);
  const options=makeQuestRound('pulse-detective',1,settings).reflection!.options;
  assert.deepEqual(options.slice(0,3),['🐢 느려요','🙂 보통이에요','🐇 빨라요']);

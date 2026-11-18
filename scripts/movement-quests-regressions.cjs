@@ -26,7 +26,7 @@ async function phase(page, value) {
 }
 async function launch(page, id, solo = true) {
   await page.goto(`${base}/${solo ? 'solo/play' : 'play'}/${id}`, { waitUntil: 'networkidle' });
-  await button(page, '바로 시작하기').click();if(await button(page,'기본 활동 시작').count())await button(page,'기본 활동 시작').click(); await phase(page, 'intro');
+  await button(page, '시작 · 바로 시작').click();if(await button(page,'기본 활동 시작').count())await button(page,'기본 활동 시작').click(); await phase(page, 'intro');
 }
 async function choose(page, id, round) {
   const options = id === 'zigzag' ? ['위쪽 길','아래쪽 길','위쪽 길'] : id === 'dribble-rhythm' ? ['편한 손으로 연결','두 손 번갈아 연결','두 손 번갈아 연결'] : ['가까이서 정확하게','간격을 조금 넓혀 도전','가까이서 정확하게'];
@@ -65,7 +65,7 @@ async function checkLayout(page) {
         await launch(page,id); await checkLayout(page);
         if(id==='zigzag') await page.evaluate(()=>localStorage.setItem('physical_best_zigzag','999'));
         if (id === 'dribble-rhythm') { await page.locator('.mq-setup-options summary').click(); await page.getByLabel('앉아서 팔 동작으로 참여하기').check(); }
-        await button(page,'작전 고르고 시작').click(); await phase(page,'plan');
+        await page.getByRole('button',{name:/^(시작 · 작전 고르기|작전 고르고 시작)$/}).first().click(); await phase(page,'plan');
         if (id === 'zigzag') {
           assert(await page.getByRole('button',{ name:/^가운데 길/ }).isDisabled(), 'blocked path cannot be chosen');
         }
@@ -116,7 +116,7 @@ async function checkLayout(page) {
         if(id==='zigzag') assert.equal(record.details.metrics['다시 시도'],'1회 · 감점 없음');
         if(id==='dribble-rhythm') assert.match(record.details.metrics['활동 선택'],/앉아서/);
         await page.screenshot({ path:path.join(out,`${id}-${viewport.width}-result.png`),fullPage:true });
-        await button(page,'다시 하기').click(); await button(page,'바로 시작하기').click(); await phase(page,'intro');
+        await button(page,'다시 하기').click(); await button(page,'시작 · 바로 시작').click(); await phase(page,'intro');
         assert.equal((await profile(page)).totalPlays,after.totalPlays,'replay does not resubmit');
         await page.getByRole('button',{ name:'활동 목록으로',exact:true }).click();
         await page.waitForURL('**/solo');
@@ -130,7 +130,7 @@ async function checkLayout(page) {
     await launch(page,'pass-gate-rescue',false);
     if (await page.locator('.mq-setup-options:not([open]) summary').count()) await page.locator('.mq-setup-options summary').click();
     await page.getByLabel('함께할 인원').selectOption('6'); await checkLayout(page);
-    await button(page,'작전 고르고 시작').click(); await choose(page,'pass-gate-rescue',0);
+    await page.getByRole('button',{name:/^(시작 · 작전 고르기|작전 고르고 시작)$/}).first().click(); await choose(page,'pass-gate-rescue',0);
     assert.match(await page.locator('.mq-panel').innerText(),/6번 친구/);
     await run(page,true); await button(page,'연습 마치고 작전으로').click();
     for(let round=0;round<3;round++){
