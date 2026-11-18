@@ -71,8 +71,9 @@ test('boss raid: HP accounts for the long dragon cues; at a 70% success rate the
    }
    if(reached)climax++;
   }
+  // 70% 성공이면 대개 이기고(75% 이상), 거의 늘 마지막 승부까지 간다(95% 이상).
   assert.ok(climax/N>=0.95,`teams ${teams}: climax reached ${climax}/${N}`);
-  assert.ok(wins/N>=0.6&&wins/N<=0.97,`teams ${teams}: win rate ${wins}/${N} (HP ${bossesFor(teams,bossRaid.timing).map(b=>b.hp).join('/')})`);
+  assert.ok(wins/N>=0.75&&wins/N<=0.99,`teams ${teams}: win rate ${wins}/${N} (HP ${bossesFor(teams,bossRaid.timing).map(b=>b.hp).join('/')})`);
  }
 });
 
@@ -98,6 +99,7 @@ test('memory relay: the climax continues the play turn order, so 4 teams get equ
  let s=reduce(reduce(createFunState({teams:4,timing:memoryRelay.timing,seed:9,surprises:memoryRelay.surprises}),{type:'next'}),{type:'next'});
  // play shows 6 turns (청 홍 황 녹 청 홍), then the climax
  for(let i=0;i<5;i++)s={...s,cueIndex:s.cueIndex+1};
+ s={...s,cueMs:1000};// 여섯 번째 차례도 화면에 나왔다
  s=reduce(s,{type:'next'});
  assert.equal(s.phase,'climax');
  assert.equal(s.phaseCues.play,6);

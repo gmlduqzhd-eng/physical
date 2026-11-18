@@ -135,7 +135,8 @@ export function memoryRelayGate(s:FunState,cmd:FunCommand):FunCommand|null{
 export function memoryRelayCue(ctx:SignatureCueContext):SignatureCue{
  // 지금 차례인데 남은 시간이 한 차례보다 짧으면 새 차례를 시작하지 않는다.
  if(ctx.phase===ctx.state.phase&&ctx.index===ctx.state.cueIndex&&turnTooShort(ctx.state))
-  return {text:'시간이 얼마 남지 않았어요',sub:'이번엔 새 차례를 시작하지 않아요 · 숨을 고르며 다음 단계를 기다려요',icon:'⏳',tone:'rest',pose:'stand',scorable:false};
+  // 빈 시간 대신 반 전체 마무리: 방금 외운 순서를 다 같이 한 번 더(점수 없음).
+  return {text:'다 같이 마무리!',sub:'새 차례는 시간이 모자라요 · 방금 순서를 반 전체가 함께 한 번 더 해요',icon:'🙌',tone:'calm',pose:'clap',move:'다 같이 마무리',scorable:false};
  const len=sequenceLength(ctx.state,ctx.phase,ctx.index);
  const variation=variationFor(ctx.state,ctx.phase,ctx.index);
  const backwards=ctx.reversed||variation==='reverse'||variation==='reverse-quick';
@@ -167,7 +168,8 @@ export const memoryRelay=defineSignatureGame({
   {pose:'armsUp',caption:'▲ 세모 = 팔 위로'},{pose:'squat',caption:'■ 네모 = 무릎 굽히기'},
   {pose:'jump',caption:'★ 별 = 별 모양 점프'},{pose:'point',caption:'가려지면 외운 순서대로 이어서 해요!'},
  ],
- timing:{demo:12,tutorial:36,play:150,climax:45,cueSeconds:16},
+ // 단계 길이를 차례 길이(16초, 연습 판은 ×1.6 = 25.6초)의 배수로 맞춰, 단계 끝에 빈 시간이 생기지 않게 한다.
+ timing:{demo:12,tutorial:26,play:144,climax:48,cueSeconds:16},
  teamsDefault:2,teamsMin:1,
  mergedFrom:['phone-play-006','phone-play-014','phone-play-015','phone-play-019','phone-play-044','memory','exp-phone-05','exp-phone-45'],
  cue:memoryRelayCue,

@@ -37,7 +37,10 @@ const isAnnounce=(ctx:SignatureCueContext)=>ctx.phase==='play'&&ctx.index%CARD_E
 
 export function signalCaptainCue(ctx:SignatureCueContext):SignatureCue{
  const card=cardFor(ctx),rule=ctx.seated?card.seatedRule:card.rule;
- if(isAnnounce(ctx))return {text:`${card.icon} ${card.title}`,sub:rule,tone:'calm',move:card.title,scorable:false};
+ // 숫자·신호등 카드에는 '반대로'가 뜻이 없다(무엇의 반대인지 알 수 없음): 깜짝 '거꾸로!'를 걸지 않는다.
+ const noReverse=card.id==='number'||card.id==='traffic';
+ const block=noReverse?{blockEvents:['reverse'] as const}:{};
+ if(isAnnounce(ctx))return {text:`${card.icon} ${card.title}`,sub:rule,tone:'calm',move:card.title,scorable:false,...block};
  const r=(list:readonly unknown[],salt=0)=>pickCue(list,ctx,salt);
  const prefix=ctx.phase==='tutorial'?'지금 ':'';
  let cue:SignatureCue;
@@ -74,8 +77,8 @@ export function signalCaptainCue(ctx:SignatureCueContext):SignatureCue{
   }
  }
  // 깜짝 '거꾸로!' 동안에는 반대로 움직인다(거꾸로 카드는 이미 반대라 그대로).
- if(ctx.reversed&&card.id!=='opposite')cue={...cue,sub:'🔄 거꾸로! 신호와 반대로 움직여요'};
- return cue;
+ if(ctx.reversed&&card.id!=='opposite'&&!noReverse)cue={...cue,sub:'🔄 거꾸로! 신호와 반대로 움직여요'};
+ return {...cue,...block};
 }
 
 export const signalCaptain=defineSignatureGame({
