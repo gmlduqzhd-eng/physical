@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import type {ExternalFunCommand,FunRemoteSnapshot} from '../application/funCommandBus';
-import {createRemoteSender,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phoneSeqStore,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
+import {createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
 import {TEAM_COLORS,TEAM_NAMES,type FunPhase,type SurpriseKind} from '../domain/funLoop';
 import './FunRemotePage.css';
 
@@ -11,6 +11,9 @@ const ACCESS:Record<RemoteAccess,string>={
  asking:'TV에 연결을 요청하는 중…',pending:'TV에서 선생님이 ‘허용’을 눌러 주세요',approved:'TV와 연결됐어요',rejected:'TV에서 연결을 거절했어요',
  full:'이미 휴대폰 2대가 연결돼 있어요',busy:'TV에 연결 요청이 밀려 있어요 · 잠시 뒤 다시 물어요',gone:'이 코드는 끝났어요 · TV의 새 코드로 다시 연결해요',
  closed:'연결이 끝났어요 · 새 코드로 다시 연결해요',stale:'TV 응답 없음 · TV 화면이 켜져 있는지 확인해요',
+ reloading:'TV 화면을 다시 여는 중이에요 · TV에서 ‘이어 하기’를 눌러요',
+ verify:'TV 화면의 확인 번호와 같은지 확인해 주세요',
+ conflict:'TV인 척하는 기기가 있어요 · TV 화면의 QR을 찍어 다시 연결해요',
 };
 const EVENT_BUTTON:Record<SurpriseKind,string>={golden:'✨ 황금 신호',reverse:'🔄 거꾸로',freeze:'🧊 얼음',speed:'⚡ 빨리빨리'};
 const EVENT_LABEL:Record<SurpriseKind,string>={golden:'황금 신호',reverse:'거꾸로',freeze:'얼음',speed:'빨리빨리'};
@@ -23,12 +26,17 @@ export function FunRemotePage(){
  const [params,setParams]=useSearchParams();
  const room=normalizeRoomCode(params.get('room'));
  const valid=isValidRoomCode(room);
+ // QR 주소에 담긴 TV 키 지문. 없으면(코드만 입력) 이 탭에서 전에 확인한 TV 키를 쓰고, 그것도 없으면 사람이 확인한다.
+ const urlPin=params.get('tv');
+ const tvPin=isRemotePin(urlPin)?urlPin:valid?phonePinStore(room)?.get()??null:null;
+ const pinned=isRemotePin(tvPin);
  const [draft,setDraft]=useState(room);
  const [status,setStatus]=useState<RemoteStatus>('idle');
  const [access,setAccess]=useState<RemoteAccess>('asking');
  const [code,setCode]=useState('');
  const [tvCode,setTvCode]=useState('');
  const [tvHidden,setTvHidden]=useState(false);
+ const [tvIdle,setTvIdle]=useState(false);
  const [snap,setSnap]=useState<FunRemoteSnapshot|null>(null);
  const [sent,setSent]=useState<{text:string;tone:'wait'|'ok'|'no'}|null>(null);
  const sender=useRef<ReturnType<typeof createRemoteSender>|null>(null);
@@ -47,7 +55,7 @@ export function FunRemotePage(){
     clearTimeout(w.timer);pending.delete(a.seq);
     setSent(a.ok?{text:`보냈어요: ${w.label}`,tone:'ok'}:{text:`반영되지 않았어요: ${w.label}${a.reason&&ACK_REASON[a.reason]?` (${ACK_REASON[a.reason]})`:''}`,tone:'no'});
    };
-   const s=createRemoteSender(channel,{room,keys,seqStore:phoneSeqStore(keys.fp),onState:setSnap,onStatus:setStatus,onAccess:setAccess,onAck,onTvHidden:setTvHidden,onTvCode:setTvCode});
+   const s=createRemoteSender(channel,{room,keys,tvPin:isRemotePin(tvPin)?tvPin:null,onPinned:pin=>phonePinStore(room)?.set(pin),seqStore:phoneSeqStore(keys.fp),onState:setSnap,onStatus:setStatus,onAccess:setAccess,onAck,onTvHidden:setTvHidden,onTvIdle:setTvIdle,onTvCode:setTvCode});
    sender.current=s;setCode(s.code);setAccess(s.access);
    // 페이지를 닫거나 다른 앱으로 넘어가 사라지면, 허용 전 요청은 TV 목록에서 빼 달라고 알린다.
    const leave=()=>s.bye();
@@ -55,7 +63,8 @@ export function FunRemotePage(){
    dispose=()=>{window.removeEventListener('pagehide',leave);sender.current=null;s.close();};
   }).catch(()=>{if(alive)setStatus('unavailable');});
   return ()=>{alive=false;dispose();for(const w of pending.values())clearTimeout(w.timer);pending.clear();};
- },[room,valid]);
+  // tvPin은 주소(또는 이 탭의 확인 기록)에서 정해지고, 바뀌면 처음부터 다시 연결한다.
+ },[room,valid,tvPin]);
  const send=(cmd:ExternalFunCommand,label:string)=>{
   const seq=sender.current?.send(cmd);if(!seq)return;
   setSent({text:`보내는 중: ${label}`,tone:'wait'});
@@ -69,7 +78,7 @@ export function FunRemotePage(){
  const result=snap?.phase==='result';
  const scoring=!!snap&&snap.phase!=='demo'&&!result&&!paused;
  const ready=status==='connected'&&access==='approved';
- const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone';
+ const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone'||access==='conflict';
  const events=snap?.events??DEFAULT_EVENTS;
  const teamRows=useMemo(()=>Array.from({length:teams},(_,i)=>i),[teams]);
  if(!valid)return <main className="fun-remote-page">
@@ -81,33 +90,43 @@ export function FunRemotePage(){
   </form>
   {params.get('room')&&<p role="alert">방 코드가 맞지 않아요. 다시 확인해 주세요.</p>}
  </main>;
- const statusText=status!=='connected'?STATUS[status]:access==='stale'&&tvHidden?'TV 화면이 잠시 가려졌어요 · TV에서 게임 화면을 다시 보여 주세요':ACCESS[access];
+ const idleNow=ready&&tvIdle;
+ const statusText=status!=='connected'?STATUS[status]:access==='stale'&&tvHidden?'TV 화면이 잠시 가려졌어요 · TV에서 게임 화면을 다시 보여 주세요':idleNow?'TV와 연결됐어요 · TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요':ACCESS[access];
+ const codeText=formatConfirmCode(code),tvCodeText=formatConfirmCode(tvCode);
  return <main className="fun-remote-page" data-status={status}>
   <header>
    <h1>📱 리모컨 · {room}</h1>
    <p role="status" className="frp-status" data-status={status==='connected'?access:status}>{statusText}</p>
    {ready&&tvHidden&&access==='approved'&&<p className="frp-note">TV 화면이 잠시 가려져 있어요. 명령이 늦게 반영될 수 있어요.</p>}
-   {tvCode&&<p className="frp-note">TV 확인 번호 <b className="frp-tvcode">{tvCode}</b> · TV 화면의 번호와 같은지 확인해요</p>}
+   {tvCode&&access!=='verify'&&<p className="frp-note">TV 확인 번호 <b className="frp-tvcode">{tvCodeText}</b> · TV 화면의 번호와 같은지 확인해요</p>}
+   {!pinned&&access!=='conflict'&&<p className="frp-warn" role="note">⚠️ QR 없이 코드로 연결했어요. 다른 기기가 TV인 척할 수 있으니, TV 화면의 확인 번호와 이 휴대폰에 뜨는 번호가 같은지 꼭 확인해요. QR로 연결하면 이 확인이 필요 없어요.</p>}
    {!remoteConfigured()&&<p className="frp-note">실시간 연결이 설정되지 않은 사이트예요. 같은 기기의 다른 창에서만 동작해요.</p>}
   </header>
+  {status==='connected'&&access==='verify'&&<section className="frp-wait" aria-label="TV 확인">
+   <p>이 방 코드로 답한 TV의 확인 번호</p>
+   <p className="frp-pin" aria-label={`TV 확인 번호 ${tvCode.split('').join(' ')}`}>{tvCodeText||'······'}</p>
+   <p>TV 화면의 <b>‘TV 확인 번호’</b>와 같나요? 같을 때만 눌러요.</p>
+   <button type="button" className="frp-primary" onClick={()=>{void sender.current?.confirmTv();}}>✅ TV 번호와 같아요</button>
+   <button type="button" onClick={()=>{setParams({});setDraft('');}}>다르면 QR로 다시 연결</button>
+  </section>}
   {status==='connected'&&(access==='asking'||access==='pending'||access==='busy')&&<section className="frp-wait" aria-label="허용 기다림">
    <p>이 휴대폰 확인 번호</p>
-   <p className="frp-pin" aria-label={`확인 번호 ${code.split('').join(' ')}`}>{code||'····'}</p>
-   <p>TV 화면에 같은 번호 <b>{code}</b>의 연결 요청이 떠요. 선생님이 TV에서 <b>‘허용’</b>을 누르면 시작해요.</p>
+   <p className="frp-pin" aria-label={`확인 번호 ${code.split('').join(' ')}`}>{codeText||'······'}</p>
+   <p>TV 화면에 같은 번호 <b>{codeText}</b>의 연결 요청이 떠요. 선생님이 TV에서 <b>‘허용’</b>을 누르면 시작해요.</p>
   </section>}
   {ended&&<section className="frp-ended" aria-label="연결 끝">
-   <p>{access==='closed'?'TV에서 새 방 코드를 만들었거나 게임 화면을 닫았어요.':access==='gone'?'이 방 코드로 답하는 TV가 없어요. TV 화면의 새 코드를 확인해요.':access==='full'?'다른 휴대폰을 끊은 뒤 다시 연결해요.':'다시 연결하려면 새로 요청해요.'}</p>
+   <p>{access==='closed'?'TV에서 새 방 코드를 만들었거나 게임 화면을 닫았어요.':access==='gone'?'이 방 코드로 답하는 TV가 없어요. TV 화면의 새 코드를 확인해요.':access==='full'?'다른 휴대폰을 끊은 뒤 다시 연결해요.':access==='conflict'?'같은 방 코드로 서로 다른 TV가 답했어요. 가짜 TV일 수 있어요. TV 화면의 QR을 휴대폰 카메라로 찍어 다시 연결해요.':'다시 연결하려면 새로 요청해요.'}</p>
    <button type="button" className="frp-primary" onClick={()=>{setParams({});setDraft('');}}>새 코드로 다시 연결</button>
   </section>}
   {result&&access!=='closed'&&<p className="frp-done" role="status">🏁 게임이 끝났어요 · TV에서 결과를 함께 봐요</p>}
-  {snap?<section className="frp-snap" aria-label="TV 상태">
+  {snap&&!idleNow?<section className="frp-snap" aria-label="TV 상태">
    <p><b>{snap.gameName}</b> · {snap.phaseLabel??PHASE[snap.phase]}{paused?' · ⏸ 일시정지 중':''}{result?'':` · ⏱ ${snap.secondsLeft}초`}</p>
    {!result&&snap.cue&&<p className="frp-cue">{snap.cue}</p>}
    {result&&<p className="frp-cue">{teams===1?`우리 반 ${snap.scores[0]}점`:snap.scores.map((n,i)=>`${TEAM_NAMES[i]} ${n}`).join(' · ')}</p>}
-  </section>:<p className="frp-note">{ready?'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.':''}</p>}
-  {paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 점수와 이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
+  </section>:<p className="frp-note">{ready?(tvIdle?'TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요.':'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.'):''}</p>}
+  {paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
   <div className="frp-main">
-   <button type="button" className="frp-primary" disabled={!ready||result} onClick={()=>send({type:'next'},'다음')}>▶ 다음</button>
+   <button type="button" className="frp-primary" disabled={!ready||result||paused} onClick={()=>send({type:'next'},'다음')}>▶ 다음</button>
    <button type="button" disabled={!ready||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>{paused?'▶ 다시 시작':'⏸ 일시정지'}</button>
   </div>
   <section className="frp-teams" aria-label="팀 점수">

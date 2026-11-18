@@ -18,3 +18,5 @@
 .fun-remote-pin{display:inline-block;padding:0 .3em;border-radius:8px;background:#111827;color:#fbbf24;font-size:1.5em;letter-spacing:.12em;font-variant-numeric:tabular-nums}
 .fun-remote-tvcode{font-weight:700}
 .fun-remote-tvcode b{font-size:1.25em;letter-spacing:.12em;font-variant-numeric:tabular-nums}
+.fun-remote-request[data-twin]{border-color:#dc2626;background:rgba(220,38,38,.12)}
+.fun-remote-warn{width:100%;padding:8px 10px;border-radius:10px;border:2px solid #dc2626;background:rgba(220,38,38,.12);font-weight:800;line-height:1.4}

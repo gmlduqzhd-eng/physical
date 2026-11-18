@@ -10,6 +10,7 @@ export interface FunSession {
  v:1;gameId:string;savedAt:number;setup:FunSetup;seed:number;state:FunState;
  /** 결과를 이미 기록했는지(새로고침 뒤 두 번 기록하지 않게). */ recorded:boolean;
  /** 게임 화면 부품(모듈)이 따로 모은 기록. */ module?:unknown;
+ /** 이 판의 id(👍/👎 반응과 판 기록을 잇는다). 새로고침해도 같은 판이면 같은 id를 쓴다. */ playId?:string;
 }
 export const FUN_SESSION_TTL_MS=3*60*60*1000;
 const sessionKey=(gameId:string)=>`fun-session:${gameId}`;
@@ -34,7 +35,8 @@ export function loadFunSession(gameId:string,timing:FunTiming,now=Date.now()):Fu
  if(!state||state.seed!==v.seed){clearFunSession(gameId);return null;}
  // 이미 결과를 기록한 판은 이어 할 것이 없다(끝난 판을 '하던 판'으로 다시 보여 주지 않는다).
  if(state.phase==='result'&&v.recorded===true){clearFunSession(gameId);return null;}
- return {v:1,gameId,savedAt:v.savedAt,setup:{...setup!,skipDemo:true},seed:v.seed,state,recorded:v.recorded===true,module:v.module};
+ const playId=typeof v.playId==='string'&&/^[\w-]{6,48}$/.test(v.playId)?v.playId:undefined;
+ return {v:1,gameId,savedAt:v.savedAt,setup:{...setup!,skipDemo:true},seed:v.seed,state,recorded:v.recorded===true,module:v.module,playId};
 }
 export function clearFunSession(gameId:string){try{storage()?.removeItem(sessionKey(gameId));}catch{/* 무시 */}}
 
@@ -48,7 +50,8 @@ export function loadRemoteRoom(gameId:string,now=Date.now()):string|undefined{
  try{
   const raw=s.getItem(roomKey(gameId));if(!raw)return undefined;
   const v=JSON.parse(raw) as {code?:unknown;at?:unknown};
-  if(typeof v?.code==='string'&&ROOM_RE.test(v.code)&&typeof v.at==='number'&&now-v.at>=0&&now-v.at<=REMOTE_ROOM_TTL_MS)return v.code;
+  // 쓰는 중인 코드는 기한을 늘린다(불러올 때마다: 2시간 넘게 쓰다 새로고침해도 이어지게).
+  if(typeof v?.code==='string'&&ROOM_RE.test(v.code)&&typeof v.at==='number'&&now-v.at>=0&&now-v.at<=REMOTE_ROOM_TTL_MS){saveRemoteRoom(gameId,v.code,now);return v.code;}
  }catch{/* 예전 형식(코드만 저장)이거나 깨진 값: 기한을 알 수 없으므로 쓰지 않는다 */}
  clearRemoteRoom(gameId);
  return undefined;
@@ -66,7 +69,9 @@ export function clearRemoteRoom(gameId:string){
  try{
   const raw=s.getItem(roomKey(gameId));
   let code:string|undefined;
-  try{const v=raw?JSON.parse(raw) as {code?:unknown}:null;if(typeof v?.code==='string')code=v.code;}catch{if(raw&&ROOM_RE.test(raw))code=raw;}
+  // 예전 형식은 코드만 저장했다(숫자만 있는 코드는 JSON으로 읽으면 숫자가 된다).
+  if(raw&&ROOM_RE.test(raw))code=raw;
+  else try{const v=raw?JSON.parse(raw) as {code?:unknown}:null;if(typeof v?.code==='string')code=v.code;}catch{/* 깨진 값 */}
   s.removeItem(roomKey(gameId));
   if(!code)return;
   const keys:string[]=[];

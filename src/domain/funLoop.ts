@@ -55,6 +55,11 @@ export interface FunState {
  /** 지금 단계에서 흐른 시간(ms). */ phaseMs:number;
  timing:FunTiming;
  /** 신호 번호. 신호 간격마다 1씩 늘고, 단계가 바뀌면 0으로 돌아간다. */ cueIndex:number;cueMs:number;
+ /**
+  * 지금 신호의 길이(초). 신호가 시작될 때 한 번 정하고 그 신호가 끝날 때까지 바꾸지 않는다
+  * (보스가 바뀌는 순간 6초↔12초로 흔들리지 않게). null이면 아직 정하지 않음, 0이면 게임 기본 간격.
+  */
+ cueLenSec?:number|null;
  combo:number;specials:number;
  /** 지금 깜짝 이벤트. seq는 이벤트마다 1씩 늘어난다(같은 이벤트를 두 번 알리지 않게). */
  event:{kind:SurpriseKind;leftMs:number;seq:number}|null;
@@ -118,7 +123,7 @@ export function createFunState(opts:{teams:number;timing:FunTiming;seed?:number;
  const allowedSurprises=resolveSurprises(opts.surprises);
  return {
   teams,scores:Array(teams).fill(0),phase:opts.skipDemo?'tutorial':'demo',paused:false,phaseMs:0,timing:opts.timing,
-  cueIndex:0,cueMs:0,combo:0,specials:0,event:null,eventSeq:0,deferred:null,phaseCues:{},holdDemo:!!opts.holdDemo,allowedSurprises,
+  cueIndex:0,cueMs:0,cueLenSec:null,combo:0,specials:0,event:null,eventSeq:0,deferred:null,phaseCues:{},holdDemo:!!opts.holdDemo,allowedSurprises,
   surprises:[...scheduleSurprises(seed,opts.timing.play,'play',allowedSurprises.play),...scheduleSurprises(seed,opts.timing.climax,'climax',allowedSurprises.climax)],
   cueHits:{},teamHits:{},log:[],seed,endedBy:null,
  };
@@ -148,7 +153,7 @@ export const frozen=(s:FunState)=>s.event?.kind==='freeze';
 export const comboFull=(s:FunState)=>s.combo>=COMBO_MAX;
 
 function enter(s:FunState,phase:FunPhase,text:string):FunState{
- const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,event:null,deferred:null,phaseCues:{...s.phaseCues,[s.phase]:s.cueIndex+1},log:[...s.log,{phase,text}]};
+ const next:FunState={...s,phase,phaseMs:0,cueIndex:0,cueMs:0,cueLenSec:null,event:null,deferred:null,phaseCues:{...s.phaseCues,[s.phase]:s.cueIndex+1},log:[...s.log,{phase,text}]};
  // 연습 판에서 누른 점수는 본게임에 들어가면 0부터 다시 센다.
  if(phase==='play')return {...next,scores:Array(s.teams).fill(0),combo:0,specials:0,cueHits:{},teamHits:{}};
  return next;
@@ -276,8 +281,10 @@ function tick(s:FunState,ms:number,hooks?:FunHooks):FunState{
    n=left>3000?startEvent({...n,deferred:null},n.deferred):{...n,deferred:null};
   }
  }
+ // 신호 길이는 그 신호가 시작될 때 한 번 정한다(신호 도중에 상태가 바뀌어도 길이는 그대로).
+ if(n.cueLenSec===null||n.cueLenSec===undefined){const sec=hooks?.cueSeconds?.(n);n={...n,cueLenSec:typeof sec==='number'&&Number.isFinite(sec)&&sec>0?sec:0};}
  // 얼음 동안에는 신호를 넘기지 않는다.
- if(!frozen(n)&&n.cueMs>=cueIntervalMs(n,hooks?.cueSeconds?.(n)))n={...n,cueIndex:n.cueIndex+1,cueMs:0};
+ if(!frozen(n)&&n.cueMs>=cueIntervalMs(n,n.cueLenSec||undefined))n={...n,cueIndex:n.cueIndex+1,cueMs:0,cueLenSec:null};
  if(n.phaseMs>=phaseSeconds(n)*1000){const to=nextPhase(n.phase);n=enter(n,to,PHASE_TEXT[to]);if(to==='result')n={...n,endedBy:'time'};}
  return n;
 }
@@ -304,7 +311,7 @@ export function restoreFunState(raw:unknown,expect:{timing:FunTiming;teams:numbe
  if(!teamHits||typeof teamHits!=='object'||!Object.values(teamHits).every(num))return null;
  const s=v as FunState;
  return {...s,teamHits,eventSeq:num(s.eventSeq)?s.eventSeq:0,deferred:null,phaseCues:s.phaseCues&&typeof s.phaseCues==='object'?s.phaseCues:{},
-  event:null,paused:s.phase!=='demo'&&s.phase!=='result',endedBy:s.endedBy??null};
+  cueLenSec:null,event:null,paused:s.phase!=='demo'&&s.phase!=='result',endedBy:s.endedBy??null};
 }
 
 /** 리모컨 등 바깥에서 온 값이 올바른 명령인지 검사한다. 틀리면 null. tick은 바깥에서 받지 않는다. */

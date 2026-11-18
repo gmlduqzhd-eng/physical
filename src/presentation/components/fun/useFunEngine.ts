@@ -95,5 +95,5 @@ export function useFunEngine(opts:FunEngineOptions){
  },[completeNow]);
 
  return {state,dispatch:(cmd:ExternalFunCommand)=>bus.dispatch(cmd,'tv'),bus,reset,completeNow,
-  secondsLeft:secondsLeft(state),cueMs:cueIntervalMs(state,opts.cueSeconds?.(state)),finalCountdown:isFinalCountdown(state),comboFull:comboFull(state)};
+  secondsLeft:secondsLeft(state),cueMs:cueIntervalMs(state,state.cueLenSec||opts.cueSeconds?.(state)),finalCountdown:isFinalCountdown(state),comboFull:comboFull(state)};
 }
