@@ -107,21 +107,21 @@ export function FunRemotePage(){
    <h1>📱 리모컨 · {room}</h1>
    <p role="status" className="frp-status" data-status={status==='connected'?access:status}>{statusText}</p>
    {ready&&tvHidden&&access==='approved'&&<p className="frp-note">TV 화면이 잠시 가려져 있어요. 명령이 늦게 반영될 수 있어요.</p>}
-   {tvCode&&access!=='verify'&&<p className="frp-note">TV 확인 번호 <b className="frp-tvcode">{tvCodeText}</b> · TV 화면의 번호와 같은지 확인해요</p>}
+   {tvCode&&access!=='verify'&&!pinned&&<p className="frp-note">TV 확인 번호 <b className="frp-tvcode">{tvCodeText}</b> · TV 화면의 번호와 같은지 확인해요</p>}
    {!pinned&&access!=='conflict'&&<p className="frp-warn" role="note">⚠️ QR 없이 코드로 연결했어요. 다른 기기가 TV인 척할 수 있으니, TV 화면의 확인 번호와 이 휴대폰에 뜨는 번호가 같은지 꼭 확인해요. QR로 연결하면 이 확인이 필요 없어요.</p>}
    {!remoteConfigured()&&<p className="frp-note">실시간 연결이 설정되지 않은 사이트예요. 같은 기기의 다른 창에서만 동작해요.</p>}
   </header>
   {status==='connected'&&access==='verify'&&<section className="frp-wait" aria-label="TV 확인">
    <p>이 방 코드로 답한 TV의 확인 번호</p>
    <p className="frp-pin" aria-label={`TV 확인 번호 ${tvCode.split('').join(' ')}`}>{tvCodeText||'······'}</p>
-   <p>TV 화면의 <b>‘TV 확인 번호’</b>와 같나요? 같을 때만 눌러요.</p>
+   <p>TV 리모컨 창의 <b>‘QR 없이 코드만 넣어 연결할 때’</b>를 열면 <b>‘TV 확인 번호’</b>가 나와요. 그 번호와 같을 때만 눌러요.</p>
    <button type="button" className="frp-primary" onClick={()=>{void sender.current?.confirmTv();}}>✅ TV 번호와 같아요</button>
    <button type="button" onClick={()=>{setParams({});setDraft('');}}>다르면 QR로 다시 연결</button>
   </section>}
   {status==='connected'&&(access==='asking'||access==='pending'||access==='busy')&&<section className="frp-wait" aria-label="허용 기다림">
    <p>이 휴대폰 확인 번호</p>
    <p className="frp-pin" aria-label={`확인 번호 ${code.split('').join(' ')}`}>{codeText||'······'}</p>
-   <p>TV 화면에 같은 번호 <b>{codeText}</b>의 연결 요청이 떠요. 선생님이 TV에서 <b>‘허용’</b>을 누르면 시작해요.</p>
+   <p>TV 화면에도 같은 확인 번호 <b>{codeText}</b>가 떠요. 휴대폰과 TV에 나온 확인 번호가 같으면 선생님이 TV에서 <b>‘허용’</b>을 눌러요.</p>
   </section>}
   {ended&&<section className="frp-ended" aria-label="연결 끝">
    <p>{access==='closed'?'TV에서 새 방 코드를 만들었거나 게임 화면을 닫았어요.':access==='gone'?'이 방 코드로 답하는 TV가 없어요. TV 화면의 새 코드를 확인해요.':access==='full'?'다른 휴대폰을 끊은 뒤 다시 연결해요.':access==='conflict'?'같은 방 코드로 서로 다른 TV가 답했어요. 가짜 TV일 수 있어요. TV 화면의 QR을 휴대폰 카메라로 찍어 다시 연결해요.':'다시 연결하려면 새로 요청해요.'}</p>
@@ -155,7 +155,7 @@ export function FunRemotePage(){
   <div className="frp-extra">
    <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
    {events.map(e=><button key={e} type="button" disabled={!live||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
-   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'필살기')}>💥 필살기</button>
+   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'한 방 공격')}>💥 한 방 공격</button>
    <button type="button" className="frp-danger" disabled={!live||result} onClick={()=>send({type:'end'},'끝내기')}>■ 끝내기</button>
   </div>
   <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>

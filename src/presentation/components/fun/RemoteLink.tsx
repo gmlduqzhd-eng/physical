@@ -7,6 +7,8 @@ import './RemoteLink.css';
 const STATUS_TEXT:Record<RemoteStatus,string>={idle:'연결 전',connecting:'연결하는 중…',connected:'휴대폰을 기다려요',unavailable:'이 기기에서는 리모컨을 쓸 수 없어요',error:'연결이 끊겼어요 · TV 버튼으로 계속할 수 있어요'};
 /** 새 요청이 와도 패널을 다시 여는 것은 이 간격에 한 번까지(요청이 쏟아져도 게임 화면을 계속 가리지 않게). */
 const AUTO_OPEN_GAP_MS=5_000;
+/** 휴대폰을 허용하면 이만큼 뒤에 패널을 저절로 닫는다(큰 신호 칸을 계속 가리지 않게). */
+const AUTO_CLOSE_AFTER_APPROVE_MS=1_500;
 /** 쓰고 있는 방 코드의 기한을 이 간격마다 늘린다(2시간 넘게 써도 새로고침에 끊기지 않게). */
 const ROOM_TOUCH_MS=10*60*1000;
 
@@ -135,6 +137,17 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
  };
  const approved=devices.filter(d=>d.state==='approved');
  const pending=devices.filter(d=>d.state==='pending');
+ // 새로 허용한 휴대폰이 생기면 잠깐 '연결됐어요'를 보여 주고 패널을 닫는다(기다리는 요청이 남아 있으면 그대로 둔다).
+ const approvedCount=approved.length,pendingCount=pending.length;
+ const lastApproved=useRef(approvedCount);
+ const [justLinked,setJustLinked]=useState(false);
+ useEffect(()=>{
+  const grew=approvedCount>lastApproved.current;lastApproved.current=approvedCount;
+  if(!grew||!open||pendingCount>0)return;
+  setJustLinked(true);
+  const id=window.setTimeout(()=>{setOpen(false);setJustLinked(false);},AUTO_CLOSE_AFTER_APPROVE_MS);
+  return ()=>window.clearTimeout(id);
+ },[approvedCount,pendingCount,open]);
  const full=approved.length>=MAX_REMOTES;
  // 같은 확인 번호를 가진 요청이 둘 이상이면(가짜 휴대폰 의심) 어느 쪽도 허용하지 못하게 한다.
  // TV 연결은 최근에 밀려나거나 거절된 기기, 이미 허용된 기기와도 견준다(d.twin).
@@ -150,7 +163,8 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
    {flooded&&<p className="fun-remote-warn" role="alert">⚠️ 연결 요청이 너무 많아요 · 새 코드 만들기를 눌러 다시 연결해요 <button type="button" className="fun-secondary" onClick={rotate}>새 코드 만들기</button></p>}
    {pending.length>0&&<section className="fun-remote-requests" aria-label="연결 요청">
     {pending.map(d=><div key={d.device} className="fun-remote-request" data-twin={twins.has(d.name)||undefined}>
-     <p>휴대폰이 연결하려고 해요{d.trusted?' (QR로 연결)':' (코드만 넣어 연결)'}. 휴대폰 화면의 확인 번호가 <b className="fun-remote-pin">{formatConfirmCode(d.name)}</b> 인가요?</p>
+     <p>휴대폰이 연결하려고 해요{d.trusted?' (QR로 연결)':' (코드만 넣어 연결)'}. 확인 번호 <b className="fun-remote-pin">{formatConfirmCode(d.name)}</b></p>
+     <p className="fun-remote-ask">휴대폰과 TV에 나온 확인 번호가 같으면 ‘허용’을 눌러요.</p>
      <div className="fun-remote-request-actions">
       <button type="button" className="fun-primary" disabled={full||twins.has(d.name)} onClick={()=>controls.current?.approve(d.device)}>✅ {formatConfirmCode(d.name)} 휴대폰 허용</button>
       <button type="button" className="fun-secondary" onClick={()=>controls.current?.reject(d.device)}>거절</button>
@@ -161,14 +175,17 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
     <p className="fun-note">번호가 다르면 거절해요. 선생님 휴대폰만 허용해요.</p>
    </section>}
    {code?<>
-    <p>휴대폰 카메라로 QR을 찍거나 주소를 열어요. 연결 요청이 오면 휴대폰의 확인 번호를 보고 ‘허용’을 눌러요.</p>
+    <p>휴대폰 카메라로 QR을 찍어요. 연결 요청이 오면, 휴대폰과 TV에 나온 확인 번호가 같으면 ‘허용’을 눌러요.</p>
     <div className="fun-remote-qr">{url&&<LocalQRCode value={url} alt={`리모컨 주소 QR, 방 코드 ${code}`} size={180}/>}</div>
     <p className="fun-remote-code" aria-label={`방 코드 ${code.split('').join(' ')}`}>{code}</p>
     {url&&<p className="fun-remote-url"><a href={url} target="_blank" rel="noreferrer">🔗 리모컨 주소(QR과 같아요)</a></p>}
-    <p className="fun-note">QR로 연결하는 것이 가장 안전해요. 코드만 넣어 연결하면 휴대폰에 뜨는 TV 확인 번호를 아래 번호와 맞춰 봐요.</p>
-    {tvCode&&<p className="fun-remote-tvcode">TV 확인 번호 <b>{formatConfirmCode(tvCode)}</b></p>}
+    {/* QR로 연결하면 이 번호는 필요 없다. 코드만 넣어 연결한 휴대폰이 TV를 확인할 때만 쓴다(접어 둔다). */}
+    {tvCode&&<details className="fun-remote-codeonly"><summary>QR 없이 코드만 넣어 연결할 때</summary>
+     <p className="fun-note">휴대폰이 먼저 ‘TV 확인 번호’를 물어요. 이 번호와 같을 때만 휴대폰에서 눌러요.</p>
+     <p className="fun-remote-tvcode">TV 확인 번호 <b>{formatConfirmCode(tvCode)}</b></p>
+    </details>}
    </>:null}
-   <p role="status" className="fun-remote-status" data-status={status}>{approved.length?`✅ 연결된 휴대폰 ${approved.length}/${MAX_REMOTES}대`:STATUS_TEXT[status]}</p>
+   <p role="status" className="fun-remote-status" data-status={status}>{justLinked?'✅ 연결됐어요 · 곧 게임 화면으로 돌아가요':approved.length?`✅ 연결된 휴대폰 ${approved.length}/${MAX_REMOTES}대`:STATUS_TEXT[status]}</p>
    {approved.length>0&&<ul className="fun-remote-devices" aria-label="연결된 휴대폰">
     {approved.map(d=><li key={d.device}><span aria-hidden="true">📱</span>{formatConfirmCode(d.name)} 연결됨 <button type="button" className="fun-link" onClick={()=>controls.current?.reject(d.device)}>끊기</button></li>)}
    </ul>}

@@ -20,3 +20,7 @@
 .fun-remote-tvcode b{font-size:1.25em;letter-spacing:.12em;font-variant-numeric:tabular-nums}
 .fun-remote-request[data-twin]{border-color:#dc2626;background:rgba(220,38,38,.12)}
 .fun-remote-warn{width:100%;padding:8px 10px;border-radius:10px;border:2px solid #dc2626;background:rgba(220,38,38,.12);font-weight:800;line-height:1.4}
+.fun-remote-ask{font-size:1.05em}
+.fun-remote-codeonly{width:100%;border:1px dashed currentColor;border-radius:12px;padding:6px 10px;opacity:.9}
+.fun-remote-codeonly summary{cursor:pointer;font-weight:700}
+.fun-remote-codeonly[open]{display:flex;flex-direction:column;gap:6px}

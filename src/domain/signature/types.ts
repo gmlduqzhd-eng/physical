@@ -16,6 +16,7 @@ export interface SignatureCue {
  /** 이 신호만 다른 길이로 보여 줄 때(초). 예: '10초 달리기'는 12초. 없으면 게임 기본 간격. */ seconds?:number;
  /** 신호 칸 테두리·띠 색(예: 도전하는 팀 색). */ accent?:string;
  /** 큰 글자 위에 붙는 짧은 줄(예: '청팀 도전!'). */ kicker?:string;
+ /** sub를 크게 보여 줄 때(예: 빙고 퀴즈의 보기 — 멀리서도 읽혀야 한다). */ bigSub?:boolean;
  /** 이 신호에는 맞지 않는 깜짝 이벤트(예: 숫자 카드에는 '거꾸로!'가 뜻이 없다). 예약된 이벤트는 미루고, 손으로 누른 이벤트는 받지 않는다. */ blockEvents?:readonly SurpriseKind[];
 }
 export interface SignatureCueContext {
@@ -51,6 +52,7 @@ export interface SignatureGameDef {
  isComplete?(state:FunState):boolean;
  /** 결과 화면 큰 제목을 바꾸고 싶을 때. */ resultHeadline?(state:FunState):string|undefined;
  /** 결과의 'MVP 동작'을 게임이 직접 정할 때(예: 표현 무대는 우승 모둠의 장면). 없으면 가장 많이 성공한 신호. */ mvpMove?(state:FunState):string|undefined;
+ /** 결과의 '가장 잘한 동작' 칸 이름을 바꿀 때(예: 표현 무대는 '가장 큰 응원 장면'). */ mvpLabel?:string;
  /**
   * 점수·이벤트 명령의 문지기(선택). 버튼에 건 규칙을 키보드·리모컨에도 똑같이 적용한다.
   * 받지 않을 명령은 null, 바꿀 명령은 바꾼 명령을 돌려준다. 점수판 버튼도 이 규칙으로 켜고 끈다.

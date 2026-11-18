@@ -3,11 +3,11 @@ import {TEAM_COLORS,TEAM_NAMES,type ResultSummary} from '../../../domain/funLoop
 
 const MEDAL=['🥇','🥈','🥉','🏅'];
 /**
- * 결과 발표: 우승 팀, 배운 개념, MVP 동작, 돌아보기 질문, 다음 도전.
+ * 결과 발표: 우승 팀, 배운 개념, 가장 잘한 동작, 돌아보기 질문, 다음 도전.
  * 기록은 선생님이 버튼 하나로 확인해 남긴다(참여를 미리 체크해 두지 않는다).
  */
-export function ResultCeremony({summary,teams,scoreLabel,mvpMove,endedBy,extra,afterRecord,onRecord,onReplay,onExit,recorded}:{
- summary:ResultSummary;teams:number;scoreLabel:string;mvpMove?:string;endedBy:'time'|'goal'|'teacher'|null;extra?:ReactNode;
+export function ResultCeremony({summary,teams,scoreLabel,mvpMove,mvpLabel='가장 잘한 동작',endedBy,extra,afterRecord,onRecord,onReplay,onExit,recorded}:{
+ summary:ResultSummary;teams:number;scoreLabel:string;mvpMove?:string;mvpLabel?:string;endedBy:'time'|'goal'|'teacher'|null;extra?:ReactNode;
  /** 선생님 반응(👍/👎)·반 원정 지도 칸. 결과 화면이 열리면 바로 보인다(기록 전에도 반응을 남길 수 있다). */ afterRecord?:ReactNode;
  onRecord:(participation:'performed'|'rested')=>void;onReplay:()=>void;onExit:()=>void;recorded:boolean;
 }){
@@ -28,7 +28,7 @@ export function ResultCeremony({summary,teams,scoreLabel,mvpMove,endedBy,extra,a
   <div className="fun-result-side">
   <ul className="fun-takeaways">
    <li><b>배운 것</b>{summary.conceptLine}</li>
-   {mvpMove&&!summary.practiceOnly&&<li><b>MVP 동작</b>가장 많이 성공한 동작: {mvpMove}</li>}
+   {mvpMove&&!summary.practiceOnly&&<li><b>{mvpLabel}</b>{mvpMove}</li>}
    <li><b>이야기 나누기</b>{summary.question}</li>
    <li><b>다음 도전</b>{summary.nextChallenge}</li>
   </ul>

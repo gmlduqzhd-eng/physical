@@ -94,7 +94,7 @@ function useBingoSignal({state,seated}:SignatureModuleProps):SignatureCue|null{
  const who=teamName(team);
  const willBingo=newLinesIfClaimed(rec.owners,cell.index,team)>0;
  if(cell.kind==='quiz')return {kicker:`${who} 도전! · 체육 지식`,text:cell.prompt??'체육 지식 문제',
-  sub:pick.reveal?`정답: ${cell.answer}`:(cell.choices??[]).map((c,i)=>`${i+1} ${c}`).join('   ·   '),
+  sub:pick.reveal?`정답: ${cell.answer}`:(cell.choices??[]).map((c,i)=>`${i+1} ${c}`).join('   ·   '),bigSub:true,
   icon:'❓',accent:TEAM_COLORS[team],scorable:false,tone:pick.reveal?'go':undefined};
  const label=(seated?cell.seated:undefined)??cell.label;
  return {kicker:`${who} 도전!${willBingo?' 🎯 이 칸이면 빙고!':''}`,text:`${label}!`,sub:'팀이 모두 해내면 선생님이 ‘✔ 성공’을 눌러요',icon:'🎯',accent:TEAM_COLORS[team],pose:cell.pose,move:label};

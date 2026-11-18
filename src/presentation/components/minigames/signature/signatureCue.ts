@@ -23,6 +23,6 @@ export function shortcutHelp(game:SignatureGameDef,mod:SignatureModule):string{
  }
  const golden=[...(game.surprises?.play??['golden']),...(game.surprises?.climax??['golden'])].includes('golden');
  if(golden)parts.push('G 황금 신호');
- if(mod.special)parts.push('S 필살기');
+ if(mod.special)parts.push('S 한 방 공격');
  return parts.join(' · ');
 }
