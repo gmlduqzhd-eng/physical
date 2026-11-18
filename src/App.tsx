@@ -47,6 +47,12 @@ const ClassJourney = lazy(() => import('./presentation/ClassJourney').then(m=>({
 const SportDeepDive = lazy(() => import('./presentation/SportDeepDive').then(m=>({default:m.SportDeepDive})));
 const AngleLab = lazy(() => import('./presentation/AngleLab').then(m=>({default:m.AngleLab})));
 const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:m.MoreApps})));
+const TodayLesson = lazy(() => import('./presentation/TodayLesson').then(m=>({default:m.TodayLesson})));
+const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').then(m=>({default:m.TeacherGuidePage})));
+const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
+const TodayLessonBar = lazy(() => import('./presentation/components/TodayLessonBar').then(m=>({default:m.TodayLessonBar})));
+/** 활동 화면(/play/…)에서만 단계 막대 코드를 불러온다. */
+function TodayBarGate(){const {pathname}=useLocation();return pathname.startsWith('/play/')?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;}
 const PrintCards = lazy(() => import('./presentation/PrintCards').then(m=>({default:m.PrintCards})));
 const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
@@ -91,6 +97,9 @@ function App() {
         <Route path="/class-progress" element={<ClassProgressPage/>} />
         <Route path="/fun-remote" element={<FunRemotePage/>} />
         <Route path="/print" element={<PrintCards/>} />
+        <Route path="/print/signature-cards" element={<SignatureCardsPrint/>} />
+        <Route path="/today" element={<TodayLesson/>} />
+        <Route path="/guide" element={<TeacherGuidePage/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
@@ -128,6 +137,8 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
+      {/* '오늘 수업' 단계 막대·처음 안내: 활동 화면 위에 겹쳐 띄운다 */}
+      <TodayBarGate />
       </BackgroundMusicProvider>
     </BrowserRouter>
     </ThemeProvider>

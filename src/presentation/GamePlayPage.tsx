@@ -197,7 +197,7 @@ const GamePlaySession = () => {
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
   const catalogReturn=searchParams.get('returnTo');
-  const safeCatalogReturn=catalogReturn&&/^\/(solo|hub)(\?[^#]*)?$/.test(catalogReturn)?catalogReturn:null;
+  const safeCatalogReturn=catalogReturn&&/^\/(solo|hub|today)(\?[^#]*)?$/.test(catalogReturn)?catalogReturn:null;
   const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : safeCatalogReturn||(soloMode?'/solo':'/hub');
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
