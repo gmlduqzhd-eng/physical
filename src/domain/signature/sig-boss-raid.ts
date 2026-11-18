@@ -15,6 +15,8 @@ export const BOSSES:readonly Boss[]=[
 /** 기본(2팀) HP 합. 실제 HP는 팀 수·시간에 맞춰 bossesFor()가 정한다. */
 export const BOSS_TOTAL_HP=BOSSES.reduce((n,b)=>n+b.hp,0);
 export const SPECIAL_DAMAGE=5,CLIMAX_MULTIPLIER=2;
+/** 이름 뒤 '이/가'(받침이 있으면 '이'). */
+const subj=(name:string)=>{const c=name.charCodeAt(name.length-1)-0xac00;return c>=0&&c<11172&&c%28!==0?'이':'가';};
 /** 한 팀이 한 신호에 약점 동작을 해낼 것으로 보는 비율. */
 const EXPECTED_HIT_RATE=0.7;
 /** 동작 이름에 적힌 초('10초')를 읽는다. 없으면 undefined. */
@@ -106,7 +108,7 @@ export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
  const climax=ctx.phase==='climax';
  return {
   text:`${weak}!`,
-  sub:`${boss.emoji} ${boss.name}의 약점이에요${climax?' · 총공격! 피해 2배':''}`,
+  sub:`${boss.emoji} ${boss.name}${subj(boss.name)} 싫어하는 동작이에요${climax?' · 총공격! 공격 2배':''}`,
   icon:boss.emoji,tone:climax?'gold':undefined,move:weak,pose:boss.pose,
   // '10초' 동작은 신호를 그만큼 길게 보여 준다(동작 10초 + 준비 2초).
   ...(secondsIn(weak)?{seconds:secondsIn(weak)!+2}:{}),
@@ -116,25 +118,25 @@ export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
 export const bossRaid=defineSignatureGame({
  id:'sig-boss-raid',ready:true,
  name:'우리 반 보스전',emoji:'🐉',
- oneLine:'보스의 약점 동작을 해내면 공격 성공! 반 전체가 힘을 모아 보스 셋을 물리쳐요.',
- rules:['화면에 나온 보스의 약점 동작을 팀이 함께 해내요.','해낸 팀은 선생님이 공격 버튼을 눌러 보스 HP를 깎아요. 콤보가 꽉 차면 필살기!','보스 셋을 모두 물리치거나 시간이 끝나면 결과 발표!'],
+ oneLine:'보스가 싫어하는 동작을 해내면 공격 성공! 반 전체가 힘을 모아 보스 셋을 물리쳐요.',
+ rules:['화면에 나온, 보스가 싫어하는 동작을 팀이 함께 해내요.','해낸 팀은 선생님이 공격 버튼을 눌러 보스의 힘을 줄여요. 콤보가 꽉 차면 한 방 공격!','보스 셋을 모두 물리치거나 시간이 끝나면 결과 발표!'],
  concept:'심폐 지구력',
  reflection:'숨이 가장 차오른 동작은 무엇이었나요? 쉬는 신호 때 몸은 어떻게 느껴졌나요?',
  nextChallenge:'다음에는 쉬는 신호 없이 보스 하나를 더 빨리 물리쳐 봐요.',
- scoringHint:'약점 동작을 해낸 팀마다 공격 +1 · 쉬는 신호 때는 누르지 않아요',
+ scoringHint:'보스가 싫어하는 동작을 해낸 팀마다 공격 +1 · 쉬는 신호 때는 누르지 않아요',
  scoreLabel:'공격',
- seatedNote:'약점 동작을 앉아서 하는 동작(팔 뻗기·발 구르기·팔 흔들기)으로 바꿔요.',
+ seatedNote:'보스가 싫어하는 동작을 앉아서 하는 동작(팔 뻗기·발 구르기·팔 흔들기)으로 바꿔요.',
  demo:[
-  {pose:'stand',caption:'보스가 나타났어요!'},{pose:'jump',caption:'약점 동작: 팔 벌려 높이 뛰기'},
-  {pose:'armsUp',caption:'팀이 해내면 공격 성공 → 보스 HP가 줄어요'},{pose:'armsFront',caption:'쉬는 신호에는 방패 자세로 숨 고르기'},
-  {pose:'punch',caption:'콤보가 꽉 차면 필살기!'},
+  {pose:'stand',caption:'보스가 나타났어요!'},{pose:'jump',caption:'보스가 싫어하는 동작: 팔 벌려 높이 뛰기'},
+  {pose:'armsUp',caption:'팀이 해내면 공격 성공 → 보스의 힘이 줄어요'},{pose:'armsFront',caption:'쉬는 신호에는 방패 자세로 숨 고르기'},
+  {pose:'punch',caption:'콤보가 꽉 차면 한 방 공격!'},
  ],
  timing:{demo:12,tutorial:24,play:150,climax:45,cueSeconds:6},
  teamsDefault:2,teamsMin:1,
  mergedFrom:['expedition-boss','fitness','jump','squat'],
  cue:bossRaidCue,
  isComplete:s=>bossStatus(s).done,
- resultHeadline:s=>{const st=bossStatus(s);return st.done?'보스 셋을 모두 물리쳤어요! 🎉':`보스 ${st.defeated}마리를 물리쳤어요 · ${st.boss.name} HP ${st.hpLeft} 남음`;},
+ resultHeadline:s=>{const st=bossStatus(s);return st.done?'보스 셋을 모두 물리쳤어요! 🎉':`보스 ${st.defeated}마리를 물리쳤어요 · ${st.boss.name} 힘 ${st.hpLeft} 남음`;},
  domain:'운동',subCategory:'체력 대표 게임',
  achievement:{code:'[4체01-02]',title:'기본 체력운동 시도',desc:'기본 체력운동의 방법과 절차를 익혀 자신의 수준에 맞게 시도한다.'},
  spaces:['교실','체육관','다목적실','운동장'],minutes:6,players:{min:4,max:30},intensity:'높음',

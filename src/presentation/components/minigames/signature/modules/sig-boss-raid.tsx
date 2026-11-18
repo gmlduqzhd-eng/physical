@@ -11,19 +11,19 @@ function BossPanel({state}:SignatureModuleProps){
   <span className="sig-boss-emoji" aria-hidden="true">{st.done?'🏆':st.boss.emoji}</span>
   <div className="sig-boss-body">
    <b>{st.done?'보스를 모두 물리쳤어요!':`보스 ${st.index+1}/${BOSSES.length} · ${st.boss.name}`}</b>
-   <div className="sig-hp" role="meter" aria-label={`${st.boss.name} HP`} aria-valuemin={0} aria-valuemax={st.boss.hp} aria-valuenow={st.hpLeft}><i style={{width:`${st.done?0:pct}%`}}/></div>
-   <span>HP {st.hpLeft}/{st.boss.hp}{state.phase==='climax'?' · 총공격! 피해 2배':''}</span>
+   <div className="sig-hp" role="meter" aria-label={`${st.boss.name} 남은 힘`} aria-valuemin={0} aria-valuemax={st.boss.hp} aria-valuenow={st.hpLeft}><i style={{width:`${st.done?0:pct}%`}}/></div>
+   <span>남은 힘 {st.hpLeft}/{st.boss.hp}{state.phase==='climax'?' · 총공격! 공격 2배':''}</span>
   </div>
   <ol className="sig-boss-list" aria-label="보스 셋">{BOSSES.map((b,i)=><li key={b.id} data-state={i<st.defeated?'done':i===st.index&&!st.done?'now':undefined}><span aria-hidden="true">{b.emoji}</span>{i<st.defeated?'✔':''}</li>)}</ol>
  </div>;
 }
 function BossResult({state}:SignatureModuleProps){
  const st=bossStatus(state);
- return <p className="sig-boss-result">총 피해 {Math.min(bossDamage(state),bossTotalHp(state))}/{bossTotalHp(state)} · 물리친 보스 {st.defeated}/{BOSSES.length}{state.specials?` · 필살기 ${state.specials}번`:''}</p>;
+ return <p className="sig-boss-result">줄인 힘 {Math.min(bossDamage(state),bossTotalHp(state))}/{bossTotalHp(state)} · 물리친 보스 {st.defeated}/{BOSSES.length}{state.specials?` · 한 방 공격 ${state.specials}번`:''}</p>;
 }
 const bossRaidModule:SignatureModule={
  Panel:BossPanel,Result:BossResult,
  special:true,
- controls:({state})=>[{label:`💥 필살기(피해 ${SPECIAL_DAMAGE})`,command:{type:'special'},disabled:!comboFull(state)||state.phase==='tutorial',hint:'S',tone:'gold'}],
+ controls:({state})=>[{label:`💥 한 방 공격(−${SPECIAL_DAMAGE})`,command:{type:'special'},disabled:!comboFull(state)||state.phase==='tutorial',hint:'S',tone:'gold'}],
 };
 export default bossRaidModule;

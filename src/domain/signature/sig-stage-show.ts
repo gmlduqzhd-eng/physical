@@ -157,6 +157,7 @@ export const stageShow=defineSignatureGame({
  // 커튼콜(마지막 승부)은 점수를 세지 않는다: 더하는 점수는 버튼·키보드·리모컨 모두 받지 않는다(빼기 정정은 받음).
  commandGate:stageShowGate,
  // MVP: 우승(가장 많은 응원) 모둠의 장면. 동점이면 함께.
+ mvpLabel:'가장 큰 응원 장면',
  mvpMove:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ');},
  resultHeadline:s=>{const best=bestByScore(s.scores);if(!best.length)return undefined;const scenes=scenesFor(s.seed,s.teams);return `가장 많은 응원: ${best.map(g=>`${teamName(s.teams,g)} 「${scenes[g].title}」`).join(' · ')}`;},
  domain:'표현',subCategory:'표현 대표 게임',

@@ -217,7 +217,7 @@ export function stateBeforeCue(s:FunState,at:{phase:'tutorial'|'play'|'climax';i
  const specials=s.log.filter(e=>e.text===SPECIAL_TEXT&&e.cue!==undefined&&e.phase!=='tutorial'&&(PHASE_RANK[e.phase]??-1)*1e6+e.cue<limit).length;
  return {...s,cueHits,specials};
 }
-const SPECIAL_TEXT='필살기!';
+const SPECIAL_TEXT='한 방 공격!';
 /** 본게임까지 갔는지(연습만 하고 끝났으면 false: 우승 팀을 정하지 않는다). */
 export const reachedPlay=(s:FunState)=>s.log.some(e=>e.phase==='play');
 /** 점수·이벤트를 받는 때인지: 일시정지 중·시범·결과에는 받지 않는다. */

@@ -166,12 +166,12 @@ test('resume is not offered for a recorded result; the remote room code expires 
 
 test('per-game shortcut help shows only the keys the game uses',()=>{
  const bingo=shortcutHelp(moveBingo,{scoreButtons:false});
- assert.doesNotMatch(bingo,/1~4|A |S 필살기/);
+ assert.doesNotMatch(bingo,/1~4|A |S 한 방 공격/);
  const boss=shortcutHelp(bossRaid,{special:true});
- assert.match(boss,/S 필살기/);
+ assert.match(boss,/S 한 방 공격/);
  const memory=shortcutHelp(memoryRelay,{scoreAllLabel:'차례 팀 성공',teamKeysLabel:'1~4 차례 팀 성공 (Shift −1 정정)'});
  assert.match(memory,/A 차례 팀 성공/);
- assert.doesNotMatch(memory,/S 필살기/);
+ assert.doesNotMatch(memory,/S 한 방 공격/);
  const stage=shortcutHelp(stageShow,{});
  assert.doesNotMatch(stage,/G 황금 신호/,'stage show has no golden event');
 });
