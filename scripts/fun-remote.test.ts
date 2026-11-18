@@ -29,7 +29,7 @@ const ROOM='ABCDEF';
 const memStore=()=>{let v:string|null=null;return {get:()=>v,set:(x:string)=>{v=x;}};};
 
 /** TV와 휴대폰을 붙인다. 키는 진짜 WebCrypto로 만든다. */
-async function setup(opts:{tvNow?:()=>number;phoneNow?:()=>number;tvKeys?:RemoteKeys;preapproved?:string[];pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>;beatMs?:number}={}){
+async function setup(opts:{tvNow?:()=>number;phoneNow?:()=>number;tvKeys?:RemoteKeys;preapproved?:string[];pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>;beatMs?:number;idle?:boolean}={}){
  const hub=opts.hub??fakeHub();
  const bus=createFunCommandBus();const got:unknown[]=[];bus.subscribe((cmd,src)=>got.push([cmd,src]));
  let devices:RemoteDevice[]=[];
@@ -37,12 +37,14 @@ async function setup(opts:{tvNow?:()=>number;phoneNow?:()=>number;tvKeys?:Remote
  const tv=createTvTransport(hub.make(),{room:ROOM,keys:tvKeys,now:opts.tvNow,onDevices:l=>{devices=l;},beatMs:opts.beatMs??20,preapproved:opts.preapproved,pendingTtlMs:opts.pendingTtlMs});
  const pin=await remotePin(tvKeys.pub);
  const detach=bus.attach(tv);
+ // TV가 게임을 띄운 상태(시작 화면이면 휴대폰 명령은 'idle'로 거절된다: round5).
+ if(!opts.idle)bus.publishState(snap());
  /** pin: undefined면 QR처럼 TV 지문을 넣고, null이면 코드만 넣은 연결(사람 확인 필요). */
  const phone=async(o:{keys?:RemoteKeys;seqStore?:ReturnType<typeof memStore>;goneMs?:number;pin?:string|null;timeoutMs?:number}={})=>{
-  const access:RemoteAccess[]=[];const states:FunRemoteSnapshot[]=[];const acks:RemoteAck[]=[];const tvCodes:string[]=[];const hidden:boolean[]=[];const idle:boolean[]=[];const pinned:string[]=[];
+  const access:RemoteAccess[]=[];const states:FunRemoteSnapshot[]=[];const acks:RemoteAck[]=[];const tvCodes:string[]=[];const hidden:boolean[]=[];const idle:boolean[]=[];const pinned:string[]=[];const codes:string[]=[];
   const keys=o.keys??await loadRemoteKeys();
-  const s=createRemoteSender(hub.make(),{room:ROOM,keys,now:opts.phoneNow,tvPin:o.pin===undefined?pin:o.pin,onPinned:x=>pinned.push(x),onAccess:a=>access.push(a),onState:x=>states.push(x),onAck:a=>acks.push(a),onTvCode:c=>tvCodes.push(c),onTvHidden:h=>hidden.push(h),onTvIdle:i=>idle.push(i),timeoutMs:o.timeoutMs??150,tickMs:15,goneMs:o.goneMs??10_000,seqStore:o.seqStore});
-  return {s,keys,access,states,acks,tvCodes,hidden,idle,pinned};
+  const s=createRemoteSender(hub.make(),{room:ROOM,keys,now:opts.phoneNow,tvPin:o.pin===undefined?pin:o.pin,onPinned:x=>pinned.push(x),onAccess:a=>access.push(a),onState:x=>states.push(x),onAck:a=>acks.push(a),onTvCode:c=>tvCodes.push(c),onTvHidden:h=>hidden.push(h),onTvIdle:i=>idle.push(i),onCode:c=>codes.push(c),timeoutMs:o.timeoutMs??150,tickMs:15,goneMs:o.goneMs??10_000,seqStore:o.seqStore});
+  return {s,keys,access,states,acks,tvCodes,hidden,idle,pinned,codes};
  };
  return {hub,bus,got,tv,tvKeys,pin,detach,phone,devices:()=>devices};
 }
@@ -81,7 +83,7 @@ test('approval by fingerprint: a phone cannot control the TV until the teacher a
  assert.deepEqual(p.access,['pending']);
  assert.equal(devices().length,1);
  assert.equal(devices()[0].device,p.keys.fp,'the TV lists the phone by its key fingerprint');
- assert.equal(devices()[0].name,p.s.code,'the TV shows the same confirmation code as the phone');
+ assert.equal(devices()[0].name,p.codes.at(-1),'the TV shows the same confirmation code as the phone');
  assert.deepEqual(p.tvCodes,[tv.code],'the phone shows the TV code too');
  assert.equal(p.s.send({type:'end'}),0,'the phone itself refuses to send while pending');
  tv.approve(devices()[0].device);
@@ -151,7 +153,7 @@ test('seq: a verified phone cannot jump more than MAX_SEQ_JUMP at once; normal s
  const f=createCommandFilter({room:ROOM,epoch:'EPOCHAAAAAAA',pubOf:d=>d===filterKeys.fp?filterKeys.pub:undefined});
  const cmd=async(seq:number,command:unknown={type:'next'})=>f.accept({device:filterKeys.fp,epoch:'EPOCHAAAAAAA',seq,command,sig:await signRemote(filterKeys,['cmd',ROOM,'EPOCHAAAAAAA',seq,filterKeys.fp,command])});
  assert.equal((await cmd(5))?.ok,true,'the first seq may be anything');
- assert.equal(await cmd(5),null,'replay ignored');
+ assert.deepEqual(await cmd(5),{dup:true,device:filterKeys.fp,seq:5},'replay is not applied again (only re-acked: round5 lost-ack retry)');
  assert.deepEqual(await cmd(5+MAX_SEQ_JUMP+1),{ok:false,device:filterKeys.fp,seq:5+MAX_SEQ_JUMP+1,reason:'jump'});
  assert.equal((await cmd(6))?.ok,true,'the jump did not move the counter, so the next real one works');
  assert.equal((await cmd(7,{type:'hack'}))?.ok,false,'malformed command is answered, not applied');

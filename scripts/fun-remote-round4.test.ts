@@ -30,13 +30,15 @@ const settle=()=>wait(120);
 const ROOM='ABCDEF';
 const memStore=()=>{let v:string|null=null;return {get:()=>v,set:(x:string)=>{v=x;}};};
 
-async function setup(opts:{tvKeys?:RemoteKeys;pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>;beatMs?:number}={}){
+async function setup(opts:{tvKeys?:RemoteKeys;pendingTtlMs?:number;hub?:ReturnType<typeof fakeHub>;beatMs?:number;idle?:boolean}={}){
  const hub=opts.hub??fakeHub();
  const bus=createFunCommandBus();const got:unknown[]=[];bus.subscribe((cmd,src)=>got.push([cmd,src]));
  let devices:RemoteDevice[]=[];
  const tvKeys=opts.tvKeys??await loadRemoteKeys();
  const tv=createTvTransport(hub.make(),{room:ROOM,keys:tvKeys,onDevices:l=>{devices=l;},beatMs:opts.beatMs??20,pendingTtlMs:opts.pendingTtlMs});
  const detach=bus.attach(tv);
+ // TV가 게임을 띄운 상태(시작 화면이면 휴대폰 명령은 'idle'로 거절된다: round5).
+ if(!opts.idle)bus.publishState(snap());
  const pin=await remotePin(tvKeys.pub);
  /** pin: undefined면 QR처럼 TV 지문을 넣고, null이면 코드만 넣은 연결(사람 확인 필요). */
  const phone=async(o:{keys?:RemoteKeys;seqStore?:ReturnType<typeof memStore>;pin?:string|null;timeoutMs?:number}={})=>{
@@ -196,7 +198,7 @@ test('seq jump: after a jump is refused, the phone re-syncs with a signed messag
 });
 
 test('idle TV: before the game screen publishes anything, beats tell the phone to start or press 이어 하기 on the TV',async()=>{
- const {tv,detach,phone,devices}=await setup();
+ const {tv,detach,phone,devices}=await setup({idle:true});
  const p=await phone();await settle();tv.approve(devices()[0].device);await wait(150);
  assert.equal(p.idle.at(-1),true,'the TV has not shown a game yet');
  tv.publishState(snap());await wait(300);
