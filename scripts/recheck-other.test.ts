@@ -6,10 +6,19 @@ import {activityFit,matchesFit,parseFitPeople,parseFitSpace,parseFitTime,situati
 import {matchesActivitySearch,similarSuggestions} from '../src/domain/activitySearch';
 import {questCueView} from '../src/domain/questCueView';
 import {EXPRESSION_GAMES} from '../src/presentation/components/minigames/expression/expressionGamesData';
+import {renderHtml,textOf} from './render-for-test';
+
+/** 활동 목록 첫 화면(주소의 조건을 읽은 상태)을 그린다. */
+const library=async(query:string,solo=false)=>{
+ const {createElement}=await import('react');
+ const {ActivityPicker}=await import('../src/presentation/ActivityLibrary');
+ return renderHtml(createElement(ActivityPicker,{solo}),'/?'+query);
+};
+const selected=(html:string,label:string)=>html.match(new RegExp(`aria-label="${label}">(?:(?!</select>).)*?<option selected="">([^<]*)<`))?.[1];
 
 const read=(p:string)=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
 
-test('hub address values fall back to 전체 or map to a real choice',()=>{
+test('hub address values fall back to 전체 or map to a real choice',async()=>{
  assert.equal(parseFitSpace('체육관'),'체육관·강당');
  assert.equal(parseFitSpace('강당'),'체육관·강당');
  assert.equal(parseFitSpace('운동장'),'운동장');
@@ -20,9 +29,11 @@ test('hub address values fall back to 전체 or map to a real choice',()=>{
  assert.equal(parseFitTime('10'),'6~10분');
  assert.equal(parseFitTime('6~10분'),'6~10분');
  assert.equal(parseFitTime('soon'),'전체');
- const page=read('src/presentation/ActivityLibrary.tsx');
- assert.match(page,/purposes as readonly string\[\]\)\.includes\(raw\)/,'unknown purposes are ignored');
- assert.match(page,/교실에서 해요/,'the retired 교실 chip maps to where=교실');
+ const unknown=await library('purpose=gym-day');
+ assert.doesNotMatch(unknown,/aria-label="활동 목적">(?:(?!<\/div>).)*aria-pressed="true"/,'unknown purposes are ignored');
+ assert.doesNotMatch(unknown,/검색·조건 초기화/,'an unknown purpose is not an active filter');
+ assert.equal(selected(await library('purpose='+encodeURIComponent('교실에서 해요')),'어디서'),'교실','the retired 교실 chip maps to where=교실');
+ assert.equal(selected(await library('where='+encodeURIComponent('체육관')),'어디서'),'체육관·강당');
 });
 
 test('searching "10분" gives the same activities as the 6~10분 filter',()=>{
@@ -43,20 +54,28 @@ test('an empty search suggests similar activities or sports',()=>{
  assert.ok(similarSuggestions('쿼디치',AVAILABLE_GAMES).reason.length>0,'always a hint');
 });
 
-test('the place badge follows the chosen place',()=>{
+test('the place badge follows the chosen place',async()=>{
  const multi=AVAILABLE_GAMES.find(g=>activityFit(g).spaces.length>1&&activityFit(g).spaces[0]==='교실'&&activityFit(g).spaces.includes('운동장'))!;
  assert.ok(multi);
  const badge=situationBadges(multi,{space:'운동장'})[0];
  assert.match(badge,/운동장/);
  assert.doesNotMatch(badge,/교실|부터/);
  assert.doesNotMatch(situationBadges(multi)[0],/부터/);
- const page=read('src/presentation/ActivityLibrary.tsx');
- assert.match(page,/wholeClass\?'화면: TV·전자칠판 1대에 띄워/,'whole-class cards do not say a phone is enough');
- assert.doesNotMatch(page,/\['people','참여 인원'/,'phone mode does not repeat the people filter');
- assert.doesNotMatch(page,/\['time','소요 시간'/,'phone mode does not repeat the time filter');
+ // 반 전체 활동 카드는 '폰 1대면 된다'가 아니라 TV·전자칠판에 띄우라고 안내한다.
+ const whole=AVAILABLE_GAMES.find(g=>activityFit(g).wholeClass&&g.recommendedDevice)!;
+ assert.ok(whole,'a whole-class activity with a device');
+ const card=textOf(await library('view=all&q='+encodeURIComponent(whole.name)));
+ assert.match(card,/화면: TV·전자칠판 1대에 띄워 반 전체가 봐요/,'whole-class cards do not say a phone is enough');
+ // 준비물 없는 놀이 모드는 위의 '몇 명 · 몇 분'을 다시 묻지 않는다.
+ const phone=await library('collection=phone');
+ const grid=phone.slice(phone.indexOf('phone-filter-grid'),phone.indexOf('</fieldset>',phone.indexOf('phone-filter-grid')));
+ assert.ok(grid.length>0,'phone filters are shown');
+ assert.doesNotMatch(grid,/참여 인원|몇 명/,'phone mode does not repeat the people filter');
+ assert.doesNotMatch(grid,/소요 시간|몇 분/,'phone mode does not repeat the time filter');
 });
 
 test('expression: no result without every rating, and quick skips are not counted as performed',()=>{
+ // 평가 점수를 모두 눌러야 결과 버튼이 열리는 흐름은 클릭이 필요해 첫 화면 그리기로 볼 수 없다(Node에 DOM 없음). 소스로 확인한다.
  const src=read('src/presentation/components/minigames/common/ExpressionActivityLayout.tsx');
  assert.match(src,/ratings\.length===assessment\.length&&ratings\.every\(rating=>rating>=1\)/);
  assert.match(src,/disabled=\{!ratingsReady\}/);
@@ -73,6 +92,7 @@ test('story relay uses the story the group chose',()=>{
 });
 
 test('movement quests: start is on top, the player count refreshes the default, the traffic light does not repeat itself',()=>{
+ // 작전 고르기 화면과 인원 바꾸기는 버튼을 눌러야 나오고, 순서(order)는 CSS라 Node에서 그릴 수 없어 소스로 확인한다.
  const src=read('src/presentation/components/minigames/common/MovementQuest.tsx');
  const plan=src.slice(src.indexOf("{phase === 'plan' && <>"));
  assert.ok(plan.indexOf('mq-start-row')<plan.indexOf('<ActivityDemo'),'start row before the demo');
@@ -82,6 +102,7 @@ test('movement quests: start is on top, the player count refreshes the default, 
 });
 
 test('safety choices stay in place and are big on a TV',()=>{
+ // 다시 풀 때 보기 순서를 그대로 두는 인자와 TV 글자 크기(CSS)는 화면 밖 설정이라 소스로 확인한다.
  assert.match(read('src/presentation/components/minigames/common/SafetyLesson.tsx'),/safetyChoiceOrder\(current\.choices,choiceSeed,index,false\)/);
  assert.match(read('src/presentation/components/minigames/common/SafetyLesson.css'),/\.safety-lesson \.mq-choices button\{font-size:clamp\(20px,2\.4vw,28px\)/);
 });

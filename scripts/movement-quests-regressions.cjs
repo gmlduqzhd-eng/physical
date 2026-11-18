@@ -26,7 +26,8 @@ async function phase(page, value) {
 }
 async function launch(page, id, solo = true) {
   await page.goto(`${base}/${solo ? 'solo/play' : 'play'}/${id}`, { waitUntil: 'networkidle' });
-  await button(page, '시작 · 바로 시작').click();if(await button(page,'기본 활동 시작').count())await button(page,'기본 활동 시작').click(); await phase(page, 'intro');
+  // 미션 화면이 바로 열린다(예전의 '시작 · 바로 시작' 준비 화면은 없어졌다). 남아 있는 화면에서만 누른다.
+  if(await button(page,'시작 · 바로 시작').count())await button(page,'시작 · 바로 시작').click();if(await button(page,'기본 활동 시작').count())await button(page,'기본 활동 시작').click(); await phase(page, 'intro');
 }
 async function choose(page, id, round) {
   const options = id === 'zigzag' ? ['위쪽 길','아래쪽 길','위쪽 길'] : id === 'dribble-rhythm' ? ['편한 손으로 연결','두 손 번갈아 연결','두 손 번갈아 연결'] : ['가까이서 정확하게','간격을 조금 넓혀 도전','가까이서 정확하게'];
@@ -109,16 +110,17 @@ async function checkLayout(page) {
         assert.equal(record.score,id==='dribble-rhythm'?200:300);
         if(id==='zigzag') {
           assert.equal(await page.evaluate(()=>localStorage.getItem('physical_best_zigzag')),'999','legacy best is preserved');
-          assert.equal(await page.evaluate(()=>localStorage.getItem('physical_best_zigzag_movement_v1')),'300','new score has a separate best');
+          // 최고 기록은 공용 기기 개인정보 보호로 sessionStorage에 남는다(browserStorage.privacyKind).
+          assert.equal(await page.evaluate(()=>sessionStorage.getItem('physical_best_zigzag_movement_v1')),'300','new score has a separate best');
         }
         assert.match(record.details.metrics['기록 방식'],/직접 확인/);
         assert.match(record.details.metrics['참여 방식'],/모둠 참여 미확인/);
         if(id==='zigzag') assert.equal(record.details.metrics['다시 시도'],'1회 · 감점 없음');
         if(id==='dribble-rhythm') assert.match(record.details.metrics['활동 선택'],/앉아서/);
         await page.screenshot({ path:path.join(out,`${id}-${viewport.width}-result.png`),fullPage:true });
-        await button(page,'다시 하기').click(); await button(page,'시작 · 바로 시작').click(); await phase(page,'intro');
+        await button(page,'다시 하기').click(); if(await button(page,'시작 · 바로 시작').count())await button(page,'시작 · 바로 시작').click(); await phase(page,'intro');
         assert.equal((await profile(page)).totalPlays,after.totalPlays,'replay does not resubmit');
-        await page.getByRole('button',{ name:'활동 목록으로',exact:true }).click();
+        await page.getByRole('button',{ name:'활동 목록으로',exact:true }).first().click();
         await page.waitForURL('**/solo');
         cases.push({id,viewport,status:'pass',checks:'blocked routes / rehearsal / pause / background / retry / partial / result / replay / catalog'});
       }
@@ -131,11 +133,11 @@ async function checkLayout(page) {
     if (await page.locator('.mq-setup-options:not([open]) summary').count()) await page.locator('.mq-setup-options summary').click();
     await page.getByLabel('함께할 인원').selectOption('6'); await checkLayout(page);
     await page.getByRole('button',{name:/^(시작 · 작전 고르기|작전 고르고 시작)$/}).first().click(); await choose(page,'pass-gate-rescue',0);
-    assert.match(await page.locator('.mq-panel').innerText(),/6번 친구/);
+    assert.match(await page.locator('div.mq-panel').first().innerText(),/6번 친구/);
     await run(page,true); await button(page,'연습 마치고 작전으로').click();
     for(let round=0;round<3;round++){
       await choose(page,'pass-gate-rescue',round);
-      assert.match(await page.locator('.mq-panel').innerText(),new RegExp(`시계 방향 1번째 표식: ${round+1}번 친구`));
+      assert.match(await page.locator('div.mq-panel').first().innerText(),new RegExp(`시계 방향 1번째 표식: ${round+1}번 친구`));
       await run(page); await button(page,`달성했어요 · ${round===2?'원정 마치기':'다음 작전'}`).click();
     }
     assert.match((await profile(page)).recentGames[0].details.metrics['참여 방식'],/6명 함께 활동 · 직접 확인/);

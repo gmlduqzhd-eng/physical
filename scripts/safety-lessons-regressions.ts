@@ -7,16 +7,20 @@ import {SAFETY_LESSON_IDS,SAFETY_LESSONS} from '../src/domain/safetyLessons';
 const base=process.argv[2]||'http://127.0.0.1:5173';
 const out=path.resolve(process.env.TEST_OUTPUT_DIR||'test-results/safety-lessons');mkdirSync(out,{recursive:true});
 const report:{base:string;cases:unknown[];errors:string[];writes:string[]}={base,cases:[],errors:[],writes:[]};
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({channel:process.env.BROWSER_CHANNEL||'chrome',headless:true});
 try{
  for(const width of [320,1024])for(const id of SAFETY_LESSON_IDS){
   const context=await browser.newContext({viewport:{width,height:800},reducedMotion:'reduce'});
   const page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));
-  await page.route('**/*',route=>{const r=route.request(),u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')||u.pathname.startsWith('/api/'))&&!['GET','HEAD','OPTIONS'].includes(r.method())){report.writes.push(u.pathname);return route.abort();}return route.continue();});
+  await page.route('**/*',route=>{const r=route.request(),u=new URL(r.url());if((u.hostname.endsWith('.supabase.co')||u.pathname.startsWith('/api/'))&&!['GET','HEAD','OPTIONS'].includes(r.method())){
+    // Supabase RPC는 읽기도 POST로 보낸다. 인자 없는 점검 기록 조회(activity_review_records)는 읽기라 쓰기로 세지 않는다.
+    const readRpc=u.pathname==='/rest/v1/rpc/activity_review_records'&&['','{}'].includes((r.postData()||'').trim());
+    if(!readRpc)report.writes.push(u.pathname);return route.abort();}return route.continue();});
   const button=(name:string)=>page.getByRole('button',{name,exact:true});
   try{
    const response=await page.goto(base+'/solo/play/'+id,{waitUntil:'networkidle'});assert.equal(response?.status(),200);
-   await button('시작 · 바로 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
+   // 안전 학습 화면이 바로 열린다(예전의 '시작 · 바로 시작' 준비 화면은 없어졌다). 남아 있으면 누른다.
+   if(await button('시작 · 바로 시작').count())await button('시작 · 바로 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
    assert.equal(await page.locator('.mq-heading h1').innerText(),SAFETY_LESSONS[id].name);
    await button('시작 · 안전 상황 살펴보기').click();
    for(let i=0;i<3;i++){
@@ -37,8 +41,9 @@ try{
    await button('세 상황의 학습 결과 기록하기').click();
    await page.locator('.game-result-overlay').waitFor();
    const saved=await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!));
-   assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,id);assert.equal(saved.recentGames[0].score,300);assert.match(saved.recentGames[0].details.metrics['점수 기준'],/역량 평가 아님/);
-   await button('다시 하기').click();await button('시작 · 바로 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
+   assert.equal(saved.totalPlays,1);assert.equal(saved.recentGames[0].gameType,id);// 읽기만 한 학습은 '지켜봄(observed)'으로 남아 점수는 0이다(GamePlayPage quietRecord). 역할 표현은 300점.
+   assert.equal(saved.recentGames[0].score,width===320?300:0);assert.equal(saved.recentGames[0].details.participation,width===320?'performed':'observed');assert.match(saved.recentGames[0].details.metrics['점수 기준'],/역량 평가 아님/);
+   await button('다시 하기').click();if(await button('시작 · 바로 시작').count())await button('시작 · 바로 시작').click();await page.locator('[data-safety][data-phase="intro"]').waitFor();
    assert.equal(await page.evaluate(()=>JSON.parse(sessionStorage.getItem('physical_player_profile')!).totalPlays),1);
    report.cases.push({id,width,status:'pass'});console.log('PASS',id,width);
   }catch(e){await page.screenshot({path:path.join(out,`${id}-${width}-failure.png`),fullPage:true});throw e;}finally{await context.close();}

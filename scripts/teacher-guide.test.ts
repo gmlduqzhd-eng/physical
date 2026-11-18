@@ -29,8 +29,12 @@ test('codes written in the activity data are kept, and missing ones are marked a
  assert(fox.standards.every(s=>s.source==='suggested'));assert.match(fox.questions[0],/밥 먹을 시간/);
 });
 
-test('the activity library shows the guide to teachers only',()=>{
- assert.match(readFileSync(new URL('../src/presentation/ActivityLibrary.tsx',import.meta.url),'utf8'),/\{!solo&&<TeacherGuidePanel game=\{g\}\/>\}/);
+test('the activity library shows the guide to teachers only',async()=>{
+ const {renderHtml}=await import('./render-for-test');
+ const {createElement}=await import('react');
+ const {ActivityPicker}=await import('../src/presentation/ActivityLibrary');
+ assert.match(await renderHtml(createElement(ActivityPicker,{})),/class="teacher-guide"/,'teacher library cards carry the guide');
+ assert.doesNotMatch(await renderHtml(createElement(ActivityPicker,{solo:true})),/class="teacher-guide"/,'solo (student) cards do not');
 });
 
 test('fallback standards fit the activity, and nothing contradicts the suggestions',()=>{

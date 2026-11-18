@@ -53,6 +53,8 @@ function readGameInventory() {
     const device = mobile ? devices[engine === 'webkit' ? 'iPhone 13' : 'Pixel 7'] : {};
     // The offline cache has its own tests; without the service worker a slow first load cannot be mistaken for a broken game.
     const context = await browser.newContext({ ...device, viewport, isMobile: mobile, hasTouch: mobile, serviceWorkers: 'block' });
+    // The first-visit teacher guide is checked in signature-e2e; here every game starts as if it was already seen.
+    await context.addInitScript(() => { try { localStorage.setItem('physical_teacher_guide_seen_v1', '1'); } catch { /* ignore */ } });
     const page = await context.newPage();
     const activate = (locator, timeout = 8000) => mobile ? locator.tap({ timeout }) : locator.click({ timeout });
     const touchGameControl = async locator => {

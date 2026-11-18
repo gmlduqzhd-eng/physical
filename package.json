@@ -20,6 +20,7 @@
     "test:physical": "tsx --test scripts/physical-activity-plans.test.ts",
     "test:catalog": "node scripts/game-catalog-smoke.cjs",
     "test:catalog:ci": "BROWSER_CHANNEL=chromium MOBILE_ONLY=1 node scripts/game-catalog-smoke.cjs http://127.0.0.1:4173",
+    "test:signature:e2e": "BROWSER_CHANNEL=chromium node scripts/signature-e2e.cjs http://127.0.0.1:4173",
     "test:audit": "node scripts/audit-repair-regressions.cjs",
     "test:mobile": "node scripts/mobile-device-audit.mjs",
     "test:mobile-new-games": "node scripts/new-games-mobile-regressions.cjs",
