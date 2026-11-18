@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {getSignatureGame,type SignatureGameDef} from '../../../../domain/signatureGames';
-import {FUN_PHASE_LABEL,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState} from '../../../../domain/funLoop';
+import {FUN_PHASE_LABEL,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState,type SurpriseKind} from '../../../../domain/funLoop';
 import {createFunCommandBus,type FunCommandBus} from '../../../../application/funCommandBus';
 import {clearFunSession,clearRemoteRoom,loadFunSession,loadRemoteRoom,saveFunSession,saveRemoteRoom,type FunSession,type FunSetup} from '../../../../application/funSession';
 import {GAMES} from '../../../../domain/gamesData';
@@ -109,10 +109,12 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
  // 이어 하기: 모듈 기록(빙고판·응원 수)을 판을 그리기 전에 되살린다.
  useState(()=>{onSeed(seed);if(restore?.module!=null)mod.restore?.(seed,restore.module);return true;});
  // 필살기가 없는 놀이는 필살기 명령(키보드 S·리모컨)을 받지 않는다. 나머지는 게임 문지기.
- const gate:FunCommandGate=(s,cmd)=>cmd.type==='special'&&!mod.special?null:game.commandGate?game.commandGate(s,cmd):cmd;
+ // 신호에 맞지 않는 깜짝 이벤트(예: 숫자 카드의 '거꾸로!')는 버튼·키보드·리모컨으로 눌러도 받지 않고, 예약된 것은 미룬다.
+ const allowsEvent=(s:FunState,kind:SurpriseKind)=>!isCuePhase(s.phase)||!(cueOf(game,s,seated).blockEvents??[]).includes(kind);
+ const gate:FunCommandGate=(s,cmd)=>cmd.type==='special'&&!mod.special?null:cmd.type==='event'&&!allowsEvent(s,cmd.event)?null:game.commandGate?game.commandGate(s,cmd):cmd;
  // 신호마다 길이가 다를 수 있다(예: '10초 달리기'는 12초, 숫자 카드는 8초).
  const cueSeconds=(s:FunState)=>isCuePhase(s.phase)?cueOf(game,s,seated).seconds:undefined;
- const engine=useFunEngine({teams,timing:game.timing,seed,keyboard:true,isComplete:game.isComplete,bus,gate,cueSeconds,surprises:game.surprises,initialState:restore?.state});
+ const engine=useFunEngine({teams,timing:game.timing,seed,keyboard:true,isComplete:game.isComplete,bus,gate,cueSeconds,allowsEvent,surprises:game.surprises,initialState:restore?.state});
  const {state,dispatch}=engine;
  const [recorded,setRecorded]=useState(restore?.recorded??false);
  // 이 판의 id: 판을 시작할 때 정하고, 새로고침 이어 하기에도 같은 id를 쓴다(기록 전에 누른 👍/👎가 이 판에 붙어 있게).

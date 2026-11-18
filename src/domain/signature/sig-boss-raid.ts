@@ -1,4 +1,4 @@
-import {COMBO_MAX,COMBO_PER_POINT,type FunState,type FunTiming} from '../funLoop.js';
+import {COMBO_MAX,COMBO_PER_POINT,stateBeforeCue,type FunState,type FunTiming} from '../funLoop.js';
 import {defineSignatureGame,pickCue} from './define.js';
 import type {Pose,SignatureCue,SignatureCueContext} from './types.js';
 
@@ -55,12 +55,14 @@ const splitHp=(target:number):Boss[]=>{
  });
 };
 /**
- * 팀 수·시간에 맞춘 보스 HP. 본게임 기대 피해의 1.3배(마지막 승부가 늘 나오게),
- * 마지막 승부까지 더한 기대 피해의 1.05배를 넘지 않게(70% 성공이면 대개 이기도록) 잡고, 보스 셋에 10:14:18로 나눈다.
+ * 팀 수·시간에 맞춘 보스 HP. 본게임 기대 피해의 1.3배(마지막 승부가 거의 늘 나오게),
+ * 마지막 승부까지 더한 기대 피해의 1.02배를 넘지 않게 잡고, 보스 셋에 10:14:18로 나눈다.
+ * 기대 피해에는 깜짝 '황금 신호(2배)'를 넣지 않았으므로, 실제 판(엔진·황금 신호 포함)으로 무작위 시뮬레이션하면
+ * 팀마다 신호당 70% 성공일 때 1~4팀 모두 이기는 판 83~94%, 마지막 승부까지 가는 판 98~100%다(scripts/sig-round4·round5 테스트).
  * 드래곤 신호가 길어 피해 속도가 보스마다 다르므로, HP를 정하고 다시 세기를 몇 번 되풀이해 맞춘다.
  */
 export function bossesFor(teams:number,timing:FunTiming):Boss[]{
- const pick=(bosses:readonly Boss[])=>{const {play,total}=expectedDamage(teams,timing,bosses);return Math.max(BOSSES.length*2,Math.min(Math.floor(total*1.05),Math.ceil(play*1.3)));};
+ const pick=(bosses:readonly Boss[])=>{const {play,total}=expectedDamage(teams,timing,bosses);return Math.max(BOSSES.length*2,Math.min(Math.floor(total*1.02),Math.ceil(play*1.3)));};
  let target=pick(BOSSES);
  for(let k=0;k<8;k++){const next=pick(splitHp(target));if(next===target)break;target=next;}
  return splitHp(target);
@@ -90,7 +92,8 @@ export function bossStatus(s:FunState):{boss:Boss;index:number;hpLeft:number;def
 }
 
 export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
- const {boss}=bossStatus(ctx.state);
+ // 신호 내용은 그 신호가 시작될 때 싸우던 보스로 정한다(신호 도중에 보스를 쓰러뜨려도 6초 신호에 '10초 달리기'가 끼지 않는다).
+ const {boss}=bossStatus(ctx.phase==='tutorial'?ctx.state:stateBeforeCue(ctx.state,{phase:ctx.phase,index:ctx.index}));
  if(ctx.phase==='tutorial'){
   const weak=ctx.seated?BOSSES[0].weakSeated:BOSSES[0].weak;
   return ctx.index%2===0
