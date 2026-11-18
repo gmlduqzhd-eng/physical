@@ -37,3 +37,7 @@
 .frp-sent[data-tone=no]{color:#dc2626;font-weight:800;opacity:1}
 .frp-status[data-status=busy],.frp-status[data-status=gone]{color:#dc2626}
 .frp-warn{font-size:.9rem;padding:8px 10px;border-radius:10px;border:2px solid #f59e0b;background:rgba(245,158,11,.12);font-weight:700;line-height:1.4}
+/* 본게임 중 '마지막 승부로'는 보조 버튼(작게)이고, 누르면 한 번 더 확인한다. */
+.frp-main .frp-skip{min-height:96px;font-size:1.05rem;background:transparent;border-style:dashed}
+.fun-remote-page .frp-confirm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding:12px;border:2px solid #f59e0b;border-radius:14px}
+.fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.05rem}

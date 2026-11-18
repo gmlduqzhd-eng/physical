@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {getSignatureGame,type SignatureGameDef} from '../../../../domain/signatureGames';
-import {FUN_PHASE_LABEL,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState} from '../../../../domain/funLoop';
+import {FUN_PHASE_LABEL,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState,type SurpriseKind} from '../../../../domain/funLoop';
 import {createFunCommandBus,type FunCommandBus} from '../../../../application/funCommandBus';
 import {clearFunSession,clearRemoteRoom,loadFunSession,loadRemoteRoom,saveFunSession,saveRemoteRoom,type FunSession,type FunSetup} from '../../../../application/funSession';
 import {GAMES} from '../../../../domain/gamesData';
@@ -46,7 +46,8 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  // 새로고침 이어 하기: 이 탭에 남은 판이 있으면 시작 화면에서 '이어 하기'를 고를 수 있다.
  const [saved,setSaved]=useState<FunSession|null>(()=>game?loadFunSession(game.id,game.timing):null);
  const [resume,setResume]=useState<FunSession|null>(null);
- const room=useMemo(()=>game?loadRemoteRoom(game.id):undefined,[game]);
+ // 지금 쓰는 리모컨 방 코드. '모두 끊기'로 바뀌면 새 코드로 갱신한다(버린 코드가 되살아나지 않게).
+ const [room,setRoom]=useState<string|undefined>(()=>game?loadRemoteRoom(game.id):undefined);
  // 지금 판의 seed. 모듈이 따로 모은 기록(빙고판·응원 수)은 '한 판 더'·목록으로 나갈 때 지운다(화면 정리 때 지우면 개발 모드에서 이어 하기가 깨진다).
  const seedRef=useRef<number|null>(null);
  const disposeRound=()=>{const mod=game?SIGNATURE_MODULES[game.id]:undefined;if(seedRef.current!==null)mod?.dispose?.(seedRef.current);seedRef.current=null;};
@@ -55,8 +56,9 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  const exit=()=>{disposeRound();clearFunSession(game.id);clearRemoteRoom(game.id);onExit();};
  // 리모컨 막대는 시작 화면(이어 할 판이 있을 때)과 게임 화면에서 같은 자리에 하나만 둔다.
  // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
- const dock=(setup||(saved&&room))?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'}>
-  <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>saveRemoteRoom(game.id,code)}/>
+ // 방 코드가 있는 동안은 시작 화면에서도 막대를 둔다('새로 시작'으로 남은 판을 지워도 휴대폰 연결이 이어진다).
+ const dock=(setup||room)?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'}>
+  <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>{saveRemoteRoom(game.id,code);setRoom(code);}} announceStop={()=>!loadRemoteRoom(game.id)}/>
   {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
   {setup&&<button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>}
  </div>):null;
@@ -109,10 +111,12 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
  // 이어 하기: 모듈 기록(빙고판·응원 수)을 판을 그리기 전에 되살린다.
  useState(()=>{onSeed(seed);if(restore?.module!=null)mod.restore?.(seed,restore.module);return true;});
  // 필살기가 없는 놀이는 필살기 명령(키보드 S·리모컨)을 받지 않는다. 나머지는 게임 문지기.
- const gate:FunCommandGate=(s,cmd)=>cmd.type==='special'&&!mod.special?null:game.commandGate?game.commandGate(s,cmd):cmd;
+ // 신호에 맞지 않는 깜짝 이벤트(예: 숫자 카드의 '거꾸로!')는 버튼·키보드·리모컨으로 눌러도 받지 않고, 예약된 것은 미룬다.
+ const allowsEvent=(s:FunState,kind:SurpriseKind)=>!isCuePhase(s.phase)||!(cueOf(game,s,seated).blockEvents??[]).includes(kind);
+ const gate:FunCommandGate=(s,cmd)=>cmd.type==='special'&&!mod.special?null:cmd.type==='event'&&!allowsEvent(s,cmd.event)?null:game.commandGate?game.commandGate(s,cmd):cmd;
  // 신호마다 길이가 다를 수 있다(예: '10초 달리기'는 12초, 숫자 카드는 8초).
  const cueSeconds=(s:FunState)=>isCuePhase(s.phase)?cueOf(game,s,seated).seconds:undefined;
- const engine=useFunEngine({teams,timing:game.timing,seed,keyboard:true,isComplete:game.isComplete,bus,gate,cueSeconds,surprises:game.surprises,initialState:restore?.state});
+ const engine=useFunEngine({teams,timing:game.timing,seed,keyboard:true,isComplete:game.isComplete,bus,gate,cueSeconds,allowsEvent,surprises:game.surprises,initialState:restore?.state});
  const {state,dispatch}=engine;
  const [recorded,setRecorded]=useState(restore?.recorded??false);
  // 이 판의 id: 판을 시작할 때 정하고, 새로고침 이어 하기에도 같은 id를 쓴다(기록 전에 누른 👍/👎가 이 판에 붙어 있게).

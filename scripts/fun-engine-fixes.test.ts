@@ -71,9 +71,9 @@ test('5: while paused nothing scores; one event at a time; the memory-relay gate
  assert.deepEqual(g(m,{type:'scoreAll',delta:1}).scores,[1,0]);
  assert.deepEqual(g(m,{type:'score',team:0,delta:-1}).scores,[0,0],'corrections are always allowed');
  let c=run(createFunState({teams:2,timing:memoryRelay.timing,seed:5,skipDemo:true}),{type:'next'},{type:'next'});
- // 마지막 승부는 본게임 차례를 이어받는다: 본게임에서 차례 1번(청팀)을 보여 줬으므로 마지막 승부 첫 차례는 홍팀.
- c=tickFor(c,9000);c=g(c,{type:'score',team:1,delta:1});
- assert.deepEqual(c.scores,[0,2],'climax success is +2 even from the keyboard');
+ // 마지막 승부는 본게임 차례를 이어받는다: 본게임을 곧바로 넘겨 보여 준 차례가 없으므로 마지막 승부 첫 차례는 청팀.
+ c=tickFor(c,9000);c=g(c,{type:'score',team:0,delta:1});
+ assert.deepEqual(c.scores,[2,0],'climax success is +2 even from the keyboard');
 });
 
 test('6: boss MVP uses the boss that was fighting at that cue; a −1 correction restores HP',()=>{
