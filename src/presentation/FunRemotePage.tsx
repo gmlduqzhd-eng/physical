@@ -1,7 +1,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {useSearchParams} from 'react-router-dom';
 import type {ExternalFunCommand,FunRemoteSnapshot} from '../application/funCommandBus';
-import {createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
+import {ACK_GIVE_UP_MS,ACK_RETRY_MS,createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,readRoomSecret,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
 import {TEAM_COLORS,TEAM_NAMES,type FunPhase,type SurpriseKind} from '../domain/funLoop';
 import './FunRemotePage.css';
 
@@ -18,8 +18,7 @@ const ACCESS:Record<RemoteAccess,string>={
 const EVENT_BUTTON:Record<SurpriseKind,string>={golden:'✨ 황금 신호',reverse:'🔄 거꾸로',freeze:'🧊 얼음',speed:'⚡ 빨리빨리'};
 const EVENT_LABEL:Record<SurpriseKind,string>={golden:'황금 신호',reverse:'거꾸로',freeze:'얼음',speed:'빨리빨리'};
 const DEFAULT_EVENTS:SurpriseKind[]=['golden','reverse','freeze'];
-const ACK_WAIT_MS=3_000;
-const ACK_REASON:Record<string,string>={paused:'일시정지 중이라',event:'이 게임에서는 쓰지 않는 이벤트라',rate:'너무 빨리 눌러서',jump:'순서가 맞지 않아서',invalid:'알 수 없는 명령이라'};
+const ACK_REASON:Record<string,string>={paused:'일시정지 중이라',event:'이 게임에서는 쓰지 않는 이벤트라',rate:'너무 빨리 눌러서',jump:'순서가 맞지 않아서',invalid:'알 수 없는 명령이라',idle:'TV에서 아직 게임을 시작하지 않아서'};
 
 /** 선생님 휴대폰 리모컨: 큰 버튼만. 명령은 서명해서 TV의 대표 게임 화면으로 간다. */
 export function FunRemotePage(){
@@ -30,6 +29,8 @@ export function FunRemotePage(){
  const urlPin=params.get('tv');
  const tvPin=isRemotePin(urlPin)?urlPin:valid?phonePinStore(room)?.get()??null:null;
  const pinned=isRemotePin(tvPin);
+ // QR 주소의 # 뒤 방 비밀값(서버로 가지 않는다). 있으면 TV가 이 휴대폰의 요청을 먼저 받는다.
+ const secret=typeof window==='undefined'?null:readRoomSecret(window.location.hash);
  const [draft,setDraft]=useState(room);
  const [status,setStatus]=useState<RemoteStatus>('idle');
  const [access,setAccess]=useState<RemoteAccess>('asking');
@@ -39,38 +40,43 @@ export function FunRemotePage(){
  const [tvIdle,setTvIdle]=useState(false);
  const [snap,setSnap]=useState<FunRemoteSnapshot|null>(null);
  const [sent,setSent]=useState<{text:string;tone:'wait'|'ok'|'no'}|null>(null);
+ /** 본게임 중 '마지막 승부로 건너뛰기'를 한 번 더 확인하는 중. */
+ const [confirmSkip,setConfirmSkip]=useState(false);
  const sender=useRef<ReturnType<typeof createRemoteSender>|null>(null);
- const waiting=useRef(new Map<number,{label:string;timer:ReturnType<typeof setTimeout>}>());
+ const waiting=useRef(new Map<number,{label:string;timers:ReturnType<typeof setTimeout>[]}>());
  useEffect(()=>{
   if(!valid)return;
   let alive=true,dispose=()=>{};
   const pending=waiting.current;
-  setSnap(null);setAccess('asking');setTvCode('');
-  void loadPhoneKeys().then(keys=>{
+  setSnap(null);setAccess('asking');setTvCode('');setCode('');
+  // 방 코드마다 새 키(다른 방에서 엿본 지문으로 확인 번호를 미리 맞춰 둘 수 없게).
+  void loadPhoneKeys(room).then(keys=>{
    if(!alive)return;
    const channel=openRemoteChannel(room);
    if(!channel){setStatus('unavailable');return;}
    const onAck=(a:RemoteAck)=>{
     const w=pending.get(a.seq);if(!w)return;
-    clearTimeout(w.timer);pending.delete(a.seq);
+    w.timers.forEach(clearTimeout);pending.delete(a.seq);
     setSent(a.ok?{text:`보냈어요: ${w.label}`,tone:'ok'}:{text:`반영되지 않았어요: ${w.label}${a.reason&&ACK_REASON[a.reason]?` (${ACK_REASON[a.reason]})`:''}`,tone:'no'});
    };
-   const s=createRemoteSender(channel,{room,keys,tvPin:isRemotePin(tvPin)?tvPin:null,onPinned:pin=>phonePinStore(room)?.set(pin),seqStore:phoneSeqStore(keys.fp),onState:setSnap,onStatus:setStatus,onAccess:setAccess,onAck,onTvHidden:setTvHidden,onTvIdle:setTvIdle,onTvCode:setTvCode});
+   const s=createRemoteSender(channel,{room,keys,secret,tvPin:isRemotePin(tvPin)?tvPin:null,onPinned:pin=>phonePinStore(room)?.set(pin),seqStore:phoneSeqStore(keys.fp),onState:setSnap,onStatus:setStatus,onAccess:setAccess,onAck,onTvHidden:setTvHidden,onTvIdle:setTvIdle,onTvCode:setTvCode,onCode:setCode});
    sender.current=s;setCode(s.code);setAccess(s.access);
    // 페이지를 닫거나 다른 앱으로 넘어가 사라지면, 허용 전 요청은 TV 목록에서 빼 달라고 알린다.
    const leave=()=>s.bye();
    window.addEventListener('pagehide',leave);
    dispose=()=>{window.removeEventListener('pagehide',leave);sender.current=null;s.close();};
   }).catch(()=>{if(alive)setStatus('unavailable');});
-  return ()=>{alive=false;dispose();for(const w of pending.values())clearTimeout(w.timer);pending.clear();};
-  // tvPin은 주소(또는 이 탭의 확인 기록)에서 정해지고, 바뀌면 처음부터 다시 연결한다.
- },[room,valid,tvPin]);
+  return ()=>{alive=false;dispose();for(const w of pending.values())w.timers.forEach(clearTimeout);pending.clear();};
+  // tvPin·secret은 주소(또는 이 탭의 확인 기록)에서 정해지고, 바뀌면 처음부터 다시 연결한다.
+ },[room,valid,tvPin,secret]);
  const send=(cmd:ExternalFunCommand,label:string)=>{
   const seq=sender.current?.send(cmd);if(!seq)return;
   setSent({text:`보내는 중: ${label}`,tone:'wait'});
-  // TV가 받았다고 답하면 '보냈어요'. 답이 없으면 '반영되지 않았어요'.
-  const timer=setTimeout(()=>{if(waiting.current.delete(seq))setSent({text:`반영되지 않았어요: ${label} (TV가 답하지 않아요)`,tone:'no'});},ACK_WAIT_MS);
-  waiting.current.set(seq,{label,timer});
+  // TV가 받았다고 답하면 '보냈어요'. 응답이 늦으면 '확인 중…'(그 사이 같은 명령을 한 번 더 보낸다: 점수가 두 번 들어가지 않는다).
+  // 그래도 답이 없을 때만 '반영되지 않았어요'.
+  const checking=setTimeout(()=>{if(waiting.current.has(seq))setSent({text:`확인 중…: ${label}`,tone:'wait'});},ACK_RETRY_MS);
+  const giveUp=setTimeout(()=>{if(waiting.current.delete(seq))setSent({text:`반영되지 않았어요: ${label} (TV가 답하지 않아요)`,tone:'no'});},ACK_GIVE_UP_MS);
+  waiting.current.set(seq,{label,timers:[checking,giveUp]});
   try{navigator.vibrate?.(30);}catch{/* 진동 없음 */}
  };
  const teams=snap?.teams??2;
@@ -78,6 +84,9 @@ export function FunRemotePage(){
  const result=snap?.phase==='result';
  const scoring=!!snap&&snap.phase!=='demo'&&!result&&!paused;
  const ready=status==='connected'&&access==='approved';
+ // TV가 아직 게임을 띄우지 않았으면(시작·이어 하기 화면) 끝내기·일시정지를 포함해 모두 끈다(눌러도 반영되지 않는다).
+ const live=ready&&!tvIdle;
+ const inPlay=snap?.phase==='play';
  const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone'||access==='conflict';
  const events=snap?.events??DEFAULT_EVENTS;
  const teamRows=useMemo(()=>Array.from({length:teams},(_,i)=>i),[teams]);
@@ -126,21 +135,28 @@ export function FunRemotePage(){
   </section>:<p className="frp-note">{ready?(tvIdle?'TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요.':'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.'):''}</p>}
   {paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
   <div className="frp-main">
-   <button type="button" className="frp-primary" disabled={!ready||result||paused} onClick={()=>send({type:'next'},'다음')}>▶ 다음</button>
-   <button type="button" disabled={!ready||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>{paused?'▶ 다시 시작':'⏸ 일시정지'}</button>
+   {/* 본게임 중 '다음'은 마지막 승부로 일찍 건너뛰는 버튼이라, TV처럼 작게 두고 한 번 더 확인한다. */}
+   {inPlay?<button type="button" className="frp-skip" disabled={!live||result||paused} onClick={()=>setConfirmSkip(true)}>⏭ 마지막 승부로</button>
+    :<button type="button" className="frp-primary" disabled={!live||result||paused} onClick={()=>send({type:'next'},'다음')}>▶ 다음</button>}
+   <button type="button" disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>{paused?'▶ 다시 시작':'⏸ 일시정지'}</button>
   </div>
+  {confirmSkip&&inPlay&&live&&!paused&&<section className="frp-confirm" role="alertdialog" aria-label="마지막 승부로 건너뛰기">
+   <p>본게임을 끝내고 마지막 승부로 넘어갈까요? 시간이 되면 저절로 넘어가요.</p>
+   <button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);send({type:'next'},'마지막 승부로');}}>넘어가기</button>
+   <button type="button" onClick={()=>setConfirmSkip(false)}>취소</button>
+  </section>}
   <section className="frp-teams" aria-label="팀 점수">
    {teamRows.map(i=><div key={i} className="frp-team" style={{'--team':TEAM_COLORS[i]} as React.CSSProperties}>
     <b>{teams===1?'우리 반':TEAM_NAMES[i]} {snap?.scores[i]??0}</b>
-    <button type="button" disabled={!ready||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${TEAM_NAMES[i]} −1`)}>−1</button>
-    <button type="button" disabled={!ready||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${TEAM_NAMES[i]} +1`)}>+1</button>
+    <button type="button" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${TEAM_NAMES[i]} −1`)}>−1</button>
+    <button type="button" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${TEAM_NAMES[i]} +1`)}>+1</button>
    </div>)}
   </section>
   <div className="frp-extra">
-   <button type="button" disabled={!ready||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
-   {events.map(e=><button key={e} type="button" disabled={!ready||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
-   <button type="button" disabled={!ready||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'필살기')}>💥 필살기</button>
-   <button type="button" className="frp-danger" disabled={!ready||result} onClick={()=>send({type:'end'},'끝내기')}>■ 끝내기</button>
+   <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
+   {events.map(e=><button key={e} type="button" disabled={!live||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
+   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'필살기')}>💥 필살기</button>
+   <button type="button" className="frp-danger" disabled={!live||result} onClick={()=>send({type:'end'},'끝내기')}>■ 끝내기</button>
   </div>
   <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>
  </main>;
