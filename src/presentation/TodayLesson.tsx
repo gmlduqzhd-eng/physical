@@ -1,13 +1,15 @@
 import {useMemo,useState} from 'react';
 import {Link,useNavigate,useSearchParams} from 'react-router-dom';
 import {FlowShell} from './FlowShell';
-import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
+import {ClassFeedbackSlot,ClassMapLink} from './components/ClassFeedbackSlot';
 import {TeacherQuickGuide} from './components/TeacherQuickGuide';
-import {saveTodayRun,useTodayRun} from '../application/todayLessonStore';
+import {saveTodayRun,useStoredTodayRun} from '../application/todayLessonStore';
+import {useClassProgress} from '../application/classProgressStore';
+import {lessonPlayId} from '../domain/classProgress';
 import {
  DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- advanceRun,buildTodayPlan,currentStage,formatSeconds,mainCandidates,startRun,stagePath,
- type TodayPlan,type TodayRun,type TodaySettings,type TodayStage,
+ advanceRun,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,resumeRun,stageOutcomes,startRun,stagePath,summaryPlayId,
+ type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
 
@@ -18,31 +20,59 @@ import './TodayLesson.css';
 const newSeed=()=>Math.floor(Math.random()*1e9);
 
 export function TodayLesson(){
- const run=useTodayRun();
+ const run=useStoredTodayRun();
  const [params]=useSearchParams();
- const forceGuide=params.get('guide')==='1';
+ // '1분 안내 다시 보기'를 누를 때마다 안내 창을 새로 띄운다(주소의 ?guide=1로도 열린다).
+ const [guideAgain,setGuideAgain]=useState(0);
+ const openGuide=()=>setGuideAgain(n=>n+1);
+ const forceGuide=params.get('guide')==='1'||guideAgain>0;
+ // 다른 날 남은 수업: 끝난 수업이면 조용히 치우고, 하던 수업이면 이어 할지 묻는다(기본은 새로 짜기).
+ const stale=!!run&&isStaleRun(run,Date.now());
+ const view=!run||(stale&&run.finishedAt!==undefined)?<TodaySetup openGuide={openGuide}/>
+  :stale?<StalePrompt run={run}/>
+  :run.finishedAt!==undefined?<TodaySummary run={run}/>:<TodayStageView run={run}/>;
  return <FlowShell utilities className="today-page">
-  <TeacherQuickGuide force={forceGuide}/>
-  {run?(run.finishedAt!==undefined?<TodaySummary run={run}/>:<TodayStageView run={run}/>):<TodaySetup/>}
+  <TeacherQuickGuide key={guideAgain} force={forceGuide}/>
+  {view}
  </FlowShell>;
 }
 
-function StageList({plan,run}:{plan:TodayPlan;run?:TodayRun}){
+function StalePrompt({run}:{run:TodayRun}){
+ const navigate=useNavigate();
+ const day=new Date(run.startedAt).toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'short'});
+ const resume=()=>{
+  const next=resumeRun(run,Date.now());saveTodayRun(next);
+  const s=currentStage(next);const p=s&&stagePath(s,next.plan.settings.teams);
+  if(p)navigate(p);
+ };
+ return <section className="today-card" aria-labelledby="today-stale-title">
+  <p className="eyebrow">오늘 수업</p>
+  <h1 id="today-stale-title">{day}에 하던 수업이 남아 있어요</h1>
+  <p className="today-lead">오늘은 새 수업을 짜는 것을 권해요. 하던 수업을 이어 하면 {run.index+1}단계({STAGE_LABEL[run.plan.stages[run.index]?.kind??'reflect']})부터 다시 해요.</p>
+  <button type="button" className="primary today-primary today-big" onClick={()=>saveTodayRun(null)} autoFocus>✨ 오늘 수업 새로 짜기</button>
+  <div className="today-row"><button type="button" className="today-secondary" onClick={resume}>{day} 수업 이어 하기</button></div>
+  <StageList plan={run.plan} run={run}/>
+ </section>;
+}
+
+const OUTCOME_TEXT:Record<StageOutcome,string>={played:'했어요',passed:'기록 없이 넘겼어요',skipped:'건너뛰었어요'};
+/** outcomes: 끝 화면에서만 넘긴다(활동을 실제로 했는지, 열지 않고 넘겼는지). */
+function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:StageOutcome[]}){
  return <ol className="today-stages" aria-label="오늘 수업 순서">
   {plan.stages.map((s,i)=>{
-   const result=run?.results[i];
-   const state=result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
+   const result=run?.results[i],outcome=outcomes?.[i];
+   const state=outcome==='passed'?'passed':result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
    return <li key={i} data-state={state}>
-    <span className="today-stage-no" aria-hidden="true">{result?.status==='done'?'✓':result?.status==='skipped'?'–':i+1}</span>
-    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</span>
+    <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':result?.status==='done'?'✓':result?.status==='skipped'?'–':i+1}</span>
+    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
     <span className="today-stage-min">{result?formatSeconds(result.seconds):`약 ${s.minutes}분`}</span>
-    <span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>
+    {!outcome&&<span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>}
    </li>;
   })}
  </ol>;
 }
 
-function TodaySetup(){
+function TodaySetup({openGuide}:{openGuide:()=>void}){
  const navigate=useNavigate();
  const [settings,setSettings]=useState<TodaySettings>(DEFAULT_TODAY);
  const [seed,setSeed]=useState(newSeed);
@@ -75,13 +105,14 @@ function TodaySetup(){
    </label>
    <button type="button" className="today-secondary" onClick={()=>setSeed(newSeed())}>🔀 다른 준비·정리운동으로</button>
   </details>
-  <p className="today-more"><Link to="/guide">처음 쓰는 선생님 1분 안내</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
+  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
  </section>;
 }
 
 function TodayStageView({run}:{run:TodayRun}){
  const navigate=useNavigate();
- const stage=currentStage(run) as TodayStage;
+ const stage=currentStage(run);
+ if(!stage)return null; // parseRun이 걸러 주지만, 혹시 모를 깨진 값에서도 화면이 멈추지 않게
  const total=run.plan.stages.length,path=stagePath(stage,run.plan.settings.teams);
  const step=(status:'done'|'skipped')=>{
   const next=advanceRun(run,status,Date.now());saveTodayRun(next);
@@ -103,17 +134,30 @@ function TodayStageView({run}:{run:TodayRun}){
  </section>;
 }
 
+/**
+ * 끝 화면의 반응은 수업 중에 그 활동에 남긴 판(기록한 판, 없으면 반응만 누른 판)에 붙인다.
+ * 게임 결과 화면에서 이미 누른 반응이 그대로 보이고, 다시 눌러도 같은 판의 반응을 바꿀 뿐이다.
+ * 그런 판이 없으면 이 수업·이 단계로 정해지는 판 id를 써서 새로고침해도 같은 칸으로 이어진다.
+ */
 function TodaySummary({run}:{run:TodayRun}){
- const totalSec=Math.round(((run.finishedAt??Date.now())-run.startedAt)/1000);
- const done=run.results.filter(r=>r.status==='done').length;
+ const progress=useClassProgress();
+ const finished=run.finishedAt??Date.now();
+ const totalSec=Math.round((finished-run.startedAt)/1000);
+ const playOf=(gameId:string)=>lessonPlayId(progress,gameId,run.startedAt,finished);
+ const recorded=(gameId:string)=>progress.plays.some(x=>x.id===gameId&&x.at>=run.startedAt&&x.at<=finished);
+ const outcomes=stageOutcomes(run,recorded);
+ const count=(o:StageOutcome)=>outcomes.filter(x=>x===o).length;
+ const parts=[`${count('played')}단계를 했어요`,count('passed')?`${count('passed')}단계는 기록 없이 넘겼어요`:'',count('skipped')?`${count('skipped')}단계는 건너뛰었어요`:''].filter(Boolean);
  return <section className="today-card" aria-labelledby="today-summary-title">
   <p className="eyebrow">오늘 수업 끝 · {formatSeconds(totalSec)}</p>
   <h1 id="today-summary-title">🎉 오늘 수업을 마쳤어요</h1>
-  <p className="today-lead">{run.plan.stages.length}단계 중 {done}단계를 했어요.</p>
-  <StageList plan={run.plan} run={run}/>
+  <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
+  <StageList plan={run.plan} run={run} outcomes={outcomes}/>
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>
-  {run.plan.stages.filter(s=>s.gameId).map(s=><div key={s.gameId} className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId!} tone="light"/></div>)}
+  <p className="today-hint">게임 결과 화면에서 이미 누른 반응은 그대로 보여요. 바꾸고 싶을 때만 다시 눌러요.</p>
+  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={playOf(s.gameId)??summaryPlayId(run,i)} tone="light" showMap={false}/></div>)}
+  <ClassMapLink progress={progress}/>
   <button type="button" className="primary today-primary" onClick={()=>saveTodayRun(null)}>새 수업 짜기</button>
  </section>;
 }
