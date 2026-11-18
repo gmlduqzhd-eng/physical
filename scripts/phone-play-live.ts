@@ -31,7 +31,7 @@ try{
   await page.goto(index?base+'/join?'+new URLSearchParams({room:room.id,group:group.group_name})+'#'+new URLSearchParams({code:invite.code}):base+'/lobby?pin='+invite.short_pin);
   await page.getByLabel('학생 번호 (1~99)',{exact:true}).fill('91');await page.getByLabel('별명 (2~12자)',{exact:true}).fill('놀이검증');await page.getByRole('button',{name:/우리 모둠으로 입장|참여하기/}).click();await page.waitForURL('**/mobile/**');
   must(await teacher.from('game_rooms').update({status:'playing',started_at:new Date().toISOString()}).eq('id',room.id));await page.reload();await page.getByRole('button',{name:'게임 시작 →',exact:true}).click();
-  await page.getByRole('button',{name:'시작 · 준비 확인',exact:true}).click();await page.locator('[data-phone-play]').waitFor();
+  await page.getByRole('button',{name:'바로 시작하기',exact:true}).click();await page.locator('[data-phone-play]').waitFor();
   const button=(name:string)=>page.getByRole('button',{name,exact:true}),phase=(p:string)=>page.locator(`[data-phone-play][data-phase="${p}"]`).waitFor();
   await button('놀이 방법 익히기').click();await button('짧게 연습하기').click();await phase('countdown');await page.clock.fastForward(4100);await page.clock.runFor(200);await phase('active');await page.clock.fastForward(8500);await page.clock.runFor(200);await phase('record');assert.equal(must(await teacher.from('room_groups').select('score').eq('id',group.id).single()).score,0);await button('연습 마치고 첫 과제로').click();
   for(let n=0;n<3;n++){

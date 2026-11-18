@@ -97,7 +97,9 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
   }
   queueMicrotask(()=>{transition.current=false;});
  };
- if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction}/>;
+ // 반 전체 진행에서 정해야 할 역할(여우·술래·지휘자·번호 등). 앉아서 할 때는 역할 정하기를 건너뛴다.
+ const classSetup=seated?undefined:adaptClassicPlay(play,level==='쉬운 방법',Infinity).setup;
+ if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction} rolesReady/>;
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-focus={phase==='countdown'||phase==='active'||undefined} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 신체 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div>{phase!=='intro'&&<p>{`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p>}</header>
   {phase!=='intro'&&<ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/>}
@@ -105,7 +107,9 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
    {/* 처음 본 사람도 5초 안에 알 수 있게: 3줄 규칙과 시작 버튼을 맨 위에 둔다. 나머지 준비·설정은 접어 둔다. */}
    <PhoneRuleCard rule3={p.rule3}/>
    <div className="pp-start">
-    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}><StartLabel sub="반 전체"/></button>}
+    {/* 역할을 정해야 하는 놀이는 시작 버튼 바로 위에서 먼저 정하게 한다. 그러면 시작 버튼 한 번으로 바로 진행된다. */}
+    {!solo&&classSetup&&<p className="pp-setup-first" role="note"><strong>시작하기 전에 정해요</strong> {classSetup}</p>}
+    {!solo&&<button className="pp-primary" onClick={()=>{unlockAudio();setVoice('speechSynthesis' in window);setClassRun(true);}}>{classSetup?<StartLabel sub="역할 정했어요 · 반 전체" spoken="역할을 정했으면 반 전체로 시작"/>:<StartLabel sub="반 전체" spoken="반 전체로 시작"/>}</button>}
     <button className={solo?'pp-primary':''} onClick={()=>setPhase('plan')}>{solo?'놀이 방법 익히기':'짝·모둠이 기기 1대로 하기'}</button>
     {!solo&&<p className="pp-start-note">반 전체: 이 화면을 TV에 띄우면 학생은 기기 없이 참여해요 · 기기 1대: 과제마다 직접 기록해요</p>}
    </div>

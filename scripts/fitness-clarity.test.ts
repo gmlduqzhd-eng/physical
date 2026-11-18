@@ -50,7 +50,9 @@ test('activity names agree everywhere: library, game page, daily routine, type t
 test('the quest screen starts with one tap per step, shows the signal alone, and blocks unsafe paths',()=>{
  const src=read('src/presentation/components/minigames/common/MovementQuest.tsx');
  assert.match(src,/useState\(\(\)=>defaultChoice\(0\)\)/,'the first method is chosen in advance');
- assert.match(src,/<StartLabel sub="작전 고르기"\/><\/button>/);
+ // 고를 것이 없는 첫 작전은 시작 한 번으로 바로 시작하고, 먼저 고르고 싶으면 '작전 고르고 시작'을 눌러요.
+ assert.match(src,/<StartLabel sub="바로 첫 작전" spoken="첫 작전 바로 시작"\/><\/button>/);
+ assert.match(src,/<StartLabel sub="작전 고르기" spoken="작전 고르고 시작"\/><\/button>/);
  assert.match(src,/작전 시작 · 기기 내려놓기/);assert.match(src,/짧게 연습하기 \(점수 없음/,'practice is optional');
  assert.doesNotMatch(src,/rehearsed/,'practice no longer gates the real start');
  assert.match(src,/disabled=\{blockedPath\}/);

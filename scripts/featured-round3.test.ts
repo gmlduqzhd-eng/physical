@@ -66,16 +66,17 @@ test('the feedback slot keys votes by play, and results record the same play id'
 
 test('primary start buttons share one label shape',()=>{
  const files={
-  'src/presentation/components/minigames/common/PhonePlay.tsx':'<StartLabel sub="반 전체"/>',
-  'src/presentation/components/minigames/expedition/ExpeditionActivity.tsx':'<StartLabel sub="원정"/>',
-  'src/presentation/components/minigames/common/MovementQuest.tsx':'<StartLabel sub="작전 고르기"/>',
-  'src/presentation/components/minigames/common/SafetyLesson.tsx':'<StartLabel sub="안전 상황 살펴보기"/>',
-  'src/presentation/GamePlayPage.tsx':'<StartLabel sub="준비 확인"/>',
-  'src/presentation/flagship/FlagshipActivity.tsx':'<StartLabel sub="안전 약속 확인"/>',
+  'src/presentation/components/minigames/common/PhonePlay.tsx':'<StartLabel sub="반 전체" spoken="반 전체로 시작"/>',
+  'src/presentation/components/minigames/expedition/ExpeditionActivity.tsx':'<StartLabel sub="원정" spoken="원정 시작하기"/>',
+  'src/presentation/components/minigames/common/MovementQuest.tsx':'<StartLabel sub="바로 첫 작전" spoken="첫 작전 바로 시작"/>',
+  'src/presentation/components/minigames/common/SafetyLesson.tsx':'<StartLabel sub="안전 상황 살펴보기" spoken="안전 상황 살펴보기 시작"/>',
+  'src/presentation/GamePlayPage.tsx':'<StartLabel sub="바로 시작" spoken="바로 시작하기"/>',
+  'src/presentation/flagship/FlagshipActivity.tsx':'<StartLabel sub="안전 약속 확인" spoken="안전 약속을 확인하고 시작"/>',
  };
  for(const [file,label] of Object.entries(files))assert.ok(readFileSync(file,'utf8').includes(label),file);
  const label=readFileSync('src/presentation/components/StartLabel.tsx','utf8');
- assert.match(label,/▶ <\/span>시작/);assert.match(label,/sr-only"> · </);
+ // 보이는 글자는 "▶ 시작 · 부제" 모양 그대로, 낭독기는 자연스러운 한 문장(spoken)을 읽는다.
+ assert.match(label,/aria-hidden="true">▶ 시작</);assert.match(label,/<span className="sr-only">\{sentence\}<\/span>/);
 });
 
 test('shape game roles follow the current shape (no corners in a line)',()=>{

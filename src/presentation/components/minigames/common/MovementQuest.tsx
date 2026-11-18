@@ -126,6 +126,8 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   const retry = () => { setRetries(retries + 1); setActiveMs(0); setPhase('plan'); };
 
   const focus=phase==='preview'||phase==='countdown'||phase==='active';
+  // 첫 작전이 판단 작전이 아니고 방법이 이미 골라져 있으면, 고르는 화면 없이 바로 시작할 수 있다.
+  const directStart=round===0&&records.length===0&&!plan.decision&&validChoice;
   const view=questCueView(gameId,cue);
   return <section className="movement-quest" data-quest={gameId} data-movement-variant={variantId} data-phase={phase} data-focus={focus||undefined} data-active-ms={Math.floor(activeMs)} aria-label={meta.name}>
     {!focus&&<header className="mq-heading"><span aria-hidden="true">{meta.emoji}</span><div><p>몸으로 하는 미션</p><h1>{meta.name}</h1></div></header>}
@@ -133,7 +135,11 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
     {phase === 'intro' && <>
       <p className="mq-lead">{meta.description}</p>
       <ol className="mq-rules mq-rules-three" aria-label="놀이 방법 세 줄">{introRules.map(rule => <li key={rule}>{rule}</li>)}</ol>
-      <button className="mq-primary" onClick={() => { unlockAudio(); setPhase('plan'); }}><StartLabel sub="작전 고르기"/></button>
+      {/* 첫 작전에 고를 것이 없으면(방법이 미리 골라져 있어요) 시작 버튼 한 번으로 바로 첫 작전을 시작한다. 판단 작전만 고르는 화면을 거친다. */}
+      {directStart
+        ?<div className="mq-start-row"><button className="mq-primary" onClick={() => start(false)}><StartLabel sub="바로 첫 작전" spoken="첫 작전 바로 시작"/></button>
+          <button className="mq-secondary" onClick={() => { unlockAudio(); setPhase('plan'); }}>작전 고르고 시작</button></div>
+        :<button className="mq-primary" onClick={() => { unlockAudio(); setPhase('plan'); }}><StartLabel sub="작전 고르기" spoken="작전 고르고 시작"/></button>}
       <ActivityCueControls pace={pace} compact={compact} onPace={setPace} onCompact={setCompact}/>
       <div className="mq-panel"><h2>이렇게 준비해요</h2><p>{meta.setup}</p><LayoutDiagram activity={variantId&&layoutFor(variantId)?variantId:gameId}/><p>내 자리를 넓게 잡고, 기기는 내려놓아요. 이동은 걷기로 해요.</p>
         <details className="mq-setup-options"><summary>참여 방법 바꾸기 · 앉아서·속도{meta.team?'·인원':''} (기본값 그대로 시작해도 돼요)</summary>
