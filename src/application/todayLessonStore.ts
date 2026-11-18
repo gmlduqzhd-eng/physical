@@ -1,5 +1,5 @@
 import {useSyncExternalStore} from 'react';
-import {parseRun,type TodayRun} from '../domain/todayLesson';
+import {isStaleRun,parseRun,type TodayRun} from '../domain/todayLesson';
 
 /**
  * '오늘 수업' 진행 상태를 이 탭의 sessionStorage에 둔다. 새로고침해도 이어지고, 탭을 닫으면 사라진다.
@@ -19,7 +19,11 @@ export function saveTodayRun(run:TodayRun|null){
  listeners.forEach(l=>l());
 }
 const subscribe=(l:()=>void)=>{listeners.add(l);return ()=>{listeners.delete(l);};};
-export const useTodayRun=()=>useSyncExternalStore(subscribe,loadTodayRun,()=>null);
+/** 오늘 시작한 수업만(게임 위 단계 막대 등). 다른 날 남은 수업은 '오늘 수업' 화면에서 이어 할지 묻는다. */
+const loadFreshRun=()=>{const run=loadTodayRun();return run&&!isStaleRun(run,Date.now())?run:null;};
+export const useTodayRun=()=>useSyncExternalStore(subscribe,loadFreshRun,()=>null);
+/** 날짜와 상관없이 남아 있는 수업('오늘 수업' 화면이 어제 수업을 알아보는 데 쓴다). */
+export const useStoredTodayRun=()=>useSyncExternalStore(subscribe,loadTodayRun,()=>null);
 
 /** 처음 쓰는 선생님 안내를 한 번 봤는지(이 브라우저). */
 const GUIDE_KEY='physical_teacher_guide_seen_v1';

@@ -97,17 +97,59 @@ export function stagePath(stage:TodayStage,teams:number):string|undefined{
  return `/play/${stage.gameId}?${q.toString()}`;
 }
 
+const isTime=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>0;
 /** sessionStorage에서 읽은 값이 올바른 진행 상태인지 확인한다(새로고침 이어 하기). */
 export function parseRun(raw:unknown):TodayRun|null{
  if(!raw||typeof raw!=='object')return null;
  const r=raw as Partial<TodayRun>;
  const p=r.plan as Partial<TodayPlan>|undefined;
  if(!p||!Array.isArray(p.stages)||!p.stages.length||typeof p.seed!=='number'||!p.settings)return null;
- if(typeof r.index!=='number'||r.index<0||r.index>p.stages.length)return null;
- if(typeof r.startedAt!=='number'||typeof r.stageStartedAt!=='number'||!Array.isArray(r.results))return null;
- if(r.results.length!==Math.min(r.index,p.stages.length))return null;
+ if(typeof r.index!=='number'||!Number.isInteger(r.index)||r.index<0||r.index>p.stages.length)return null;
+ if(!isTime(r.startedAt)||!isTime(r.stageStartedAt)||!Array.isArray(r.results))return null;
+ if(r.results.length!==r.index)return null;
+ if(!r.results.every(x=>!!x&&(x.status==='done'||x.status==='skipped')&&typeof x.seconds==='number'&&Number.isFinite(x.seconds)&&x.seconds>=0))return null;
+ // 끝 표시와 단계 위치가 서로 맞아야 한다: 마지막 단계 뒤면 끝난 수업, 아니면 진행 중.
+ if(r.finishedAt!==undefined&&!isTime(r.finishedAt))return null;
+ if((r.index===p.stages.length)!==(r.finishedAt!==undefined))return null;
+ const st=p.settings as Partial<TodaySettings>;
+ if(!TODAY_GRADES.some(g=>g.id===st.grade)||!TODAY_SPACES.includes(st.space as FitSpace)||!(TODAY_MINUTES as readonly number[]).includes(st.minutes as number))return null;
+ if(typeof st.teams!=='number'||!(TODAY_TEAMS as readonly number[]).includes(st.teams))return null;
+ if(st.mainId!==undefined&&typeof st.mainId!=='string')return null;
  const kinds:TodayStageKind[]=['warmup','main','cooldown','reflect'];
  for(const s of p.stages){if(!s||!kinds.includes(s.kind as TodayStageKind)||typeof s.minutes!=='number'||typeof s.title!=='string')return null;if(s.gameId!==undefined&&!BY_ID.has(s.gameId)&&!READY_SIGNATURE_GAMES.some(g=>g.id===s.gameId))return null;}
  return r as TodayRun;
 }
 export const formatSeconds=(sec:number)=>sec<60?`${sec}초`:`${Math.floor(sec/60)}분${sec%60?` ${sec%60}초`:''}`;
+
+/** 두 시각이 같은 날(이 기기의 지역 날짜)인지. */
+export const sameLocalDay=(a:number,b:number)=>new Date(a).toDateString()===new Date(b).toDateString();
+/** 다른 날 시작한 수업인지(교실 PC 탭을 켜 둔 채 다음 날 연 경우). */
+export const isStaleRun=(run:TodayRun,now:number)=>!sameLocalDay(run.startedAt,now);
+/**
+ * 어제 수업을 오늘 이어 한다. 이미 한 단계의 걸린 시간은 그대로 두고, 밤사이 흐른 시간은 빼서
+ * 지금 단계는 지금부터, 전체 시간은 한 단계들의 합부터 다시 센다('1400분' 같은 값이 나오지 않게).
+ */
+export function resumeRun(run:TodayRun,now:number):TodayRun{
+ const spent=run.results.reduce((a,r)=>a+r.seconds,0)*1000;
+ return {...run,startedAt:now-spent,stageStartedAt:now};
+}
+
+/**
+ * 끝 화면에 보여 줄 단계 결과.
+ * - played: 활동을 열어 결과까지 기록했어요(돌아보기는 '마치기'를 누르면 played)
+ * - passed: 활동을 열지 않았거나 기록 없이 '다음 단계'로 넘겼어요
+ * - skipped: 건너뛰었어요
+ * recorded(gameId): 수업 시간 안에 그 활동을 기록한 판이 있는지.
+ */
+export type StageOutcome='played'|'passed'|'skipped';
+export function stageOutcomes(run:TodayRun,recorded:(gameId:string)=>boolean):StageOutcome[]{
+ return run.plan.stages.map((s,i)=>{
+  const r=run.results[i];
+  if(!r||r.status==='skipped')return 'skipped';
+  if(!s.gameId)return 'played';
+  return recorded(s.gameId)?'played':'passed';
+ });
+}
+
+/** 끝 화면 반응 칸의 판 id(그 활동에 남긴 판이 없을 때). 같은 수업·같은 단계면 늘 같아서 새로고침해도 표가 두 번 쌓이지 않는다. */
+export const summaryPlayId=(run:TodayRun,index:number)=>`today-${run.startedAt.toString(36)}-${index}`;

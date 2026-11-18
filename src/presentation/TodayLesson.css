@@ -54,3 +54,12 @@ body:has(.today-bar) .fun-arena,body:has(.today-bar) .fun-victory{top:48px}
 .today-linkbtn{display:inline-flex;align-items:center;text-decoration:none}
 .today-guide-body{border-radius:16px;background:#0f172a;color:#f8fafc;padding:12px}
 html .flow.today-page .today-big{min-height:clamp(60px,9vh,80px);font-size:clamp(19px,2.2vw,26px);font-weight:800}
+
+/* 끝 화면: 열지 않고 넘긴 단계, 단계 결과 글, 반응 안내 */
+.today-stages li[data-state=passed]{border-style:dashed}
+.today-stages li[data-state=passed] .today-stage-no{background:#fef3c7;color:#92400e}
+.today-stage-outcome{font-weight:600;color:var(--muted,#57534e)}
+.today-hint{margin:0;color:var(--muted,#57534e);font-size:15px}
+.today-guide-again{padding:0 4px;min-height:36px;font-weight:700}
+:root.dark-theme .today-stages li[data-state=passed] .today-stage-no{background:#713f12;color:#fef3c7}
+:root.dark-theme .today-stage-outcome,:root.dark-theme .today-hint{color:#d6d3d1}

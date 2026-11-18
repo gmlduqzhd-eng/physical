@@ -90,12 +90,13 @@ test('merging tabs keeps the later reason for the same play and every other play
  assert.deepEqual(reasonsOf(m,'p1')?.reasons,['long']);
 });
 
-test('the feedback slot offers every reason as an optional chip and a capped one-line note',()=>{
+test('the feedback slot offers the reasons for the chosen vote as optional chips and a capped one-line note',()=>{
  const slot=readFileSync('src/presentation/components/ClassFeedbackSlot.tsx','utf8');
- assert.match(slot,/REASONS\.map/);
+ assert.match(slot,/reasonsForVote\(vote\)\.map/);
  assert.match(slot,/maxLength=\{MAX_NOTE\}/);
  assert.match(slot,/골라도 되고 안 골라도 돼요/);
- assert.equal(REASONS.length,6);
+ assert.equal(REASONS.length,8);
+ assert.ok(REASONS.every(r=>r.vote==='up'||r.vote==='down'));
  const page=readFileSync('src/presentation/ClassProgressPage.tsx','utf8');
  assert.match(page,/공유용 요약 복사/);
  assert.match(page,/tab:'reasons'/);
