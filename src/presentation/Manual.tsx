@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
 import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import { CORE_ACTIVITIES } from '../domain/activityShelves';
@@ -22,6 +22,7 @@ export const Manual = () => {
     <FlowShell utilities className="manual-page">
       <div className="manual-content space-y-6 relative">
         <section className="manual-intro"><p className="eyebrow">땀방울 원정대 사용 안내</p><h1>이용 안내</h1><p className="muted">수업 준비부터 학생 참여까지, 필요한 내용을 차근차근 살펴보세요.</p></section>
+        <aside className="manual-ai-link"><div><strong>처음 쓰는 선생님</strong><p>TV에 띄우기 → 휴대폰 리모컨 연결 → 시작·다음·점수, 1분이면 돼요.</p></div><Link className="primary" to="/guide">처음 쓰는 선생님 1분 안내 다시 보기</Link></aside>
         <aside className="manual-ai-link"><div><strong>AI로 수업을 준비하고 싶다면</strong><p>기존 지도안 생성기는 조건과 문구를 조합하는 일반 도구입니다. 생성형 AI는 별도의 AI 수업 준비실에서 사용합니다.</p></div><button className="primary" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 열기</button></aside>
         <nav className="manual-tabs" aria-label="안내 화면 선택"><button aria-pressed={activeTab === 'manual'} onClick={() => setActiveTab('manual')}><Sparkles aria-hidden="true"/>사용 설명서</button><button aria-pressed={activeTab === 'lesson'} onClick={() => setActiveTab('lesson')}><FileText aria-hidden="true"/>수업 지도안 생성기</button></nav>
         {/* 사용 설명서 탭 */}

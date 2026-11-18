@@ -1,0 +1,25 @@
+.tv-voice{position:relative;display:inline-flex;align-items:center;gap:4px}
+.tv-voice button{font:inherit;cursor:pointer}
+.tv-voice-toggle{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(15,23,42,.55);color:#fff;font-weight:700;font-size:14px;white-space:nowrap}
+.tv-voice-toggle[aria-pressed="false"]{opacity:.8}
+.tv-voice-toggle:disabled{cursor:not-allowed;opacity:.6}
+.tv-voice-more{min-width:40px;min-height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(15,23,42,.55);color:#fff;font-size:16px}
+.tv-voice-toggle:focus-visible,.tv-voice-more:focus-visible,.tv-voice-test:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.tv-voice-panel{position:absolute;top:calc(100% + 6px);right:0;z-index:30;min-width:240px;max-width:min(320px,calc(100vw - 32px));padding:12px 14px;border-radius:14px;background:#0f172a;color:#f8fafc;box-shadow:0 12px 30px rgba(0,0,0,.4);display:grid;gap:10px;font-size:14px}
+.tv-voice-panel fieldset{border:0;margin:0;padding:0;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.tv-voice-panel legend{font-weight:700;margin-bottom:4px;width:100%}
+.tv-voice-panel label{display:inline-flex;align-items:center;gap:4px}
+.tv-voice-test{min-height:40px;border-radius:10px;border:0;background:#fbbf24;color:#111827;font-weight:800}
+.tv-voice-note{margin:0;color:#cbd5e1;font-size:13px;line-height:1.45}
+/* 밝은 화면(반 전체 진행): 놀이 화면 공통 단추·묶음 모양을 덮어쓴다 */
+.phone-play .tv-voice{flex:0 0 auto}
+.phone-play .tv-voice .tv-voice-toggle,.phone-play .tv-voice .tv-voice-toggle[aria-pressed],.phone-play .tv-voice .tv-voice-more{display:inline-flex;align-items:center;justify-content:center;width:auto;min-height:40px;margin:0;padding:6px 12px;border-radius:999px;border:1px solid #1e293b;outline:none;background:#1e293b;color:#fff;font-size:14px;font-weight:700;white-space:nowrap}
+.phone-play .tv-voice .tv-voice-toggle:focus-visible,.phone-play .tv-voice .tv-voice-more:focus-visible,.phone-play .tv-voice .tv-voice-test:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.phone-play .tv-voice .tv-voice-more{padding:6px 10px}
+.phone-play .tv-voice .tv-voice-test{display:block;width:100%;margin:0;border:0;border-radius:10px;background:#fbbf24;color:#111827;font-weight:800}
+.phone-play .tv-voice .tv-voice-panel fieldset{border:0;background:none;box-shadow:none;margin:0;padding:0;border-radius:0}
+.phone-play .tv-voice .tv-voice-panel legend{padding:0;font-weight:700}
+.phone-play .tv-voice .tv-voice-panel :is(legend,label){color:#f8fafc;margin:0}
+.phone-play .tv-voice .tv-voice-panel .tv-voice-note{color:#cbd5e1}
+/* 좁은 화면: 판을 띄우지 않고 단추 아래에 펼친다(화면 밖으로 나가지 않게) */
+@media (max-width:640px){.tv-voice[data-open]{flex-wrap:wrap;flex-basis:100%}.tv-voice-panel{position:static;flex-basis:100%;max-width:none;box-sizing:border-box}}

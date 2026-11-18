@@ -1,0 +1,30 @@
+.sig-print-page .sig-print-tools{max-width:880px;margin:0 auto 16px;display:flex;flex-direction:column;gap:8px}
+.sig-print-page .sig-print-tools h1{margin:0;font-size:clamp(22px,3vw,32px)}
+.sig-print-page .sig-print-tools p{margin:0}
+.sig-print-actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.sig-print-page .today-primary{min-height:52px;padding:0 22px;border-radius:14px;border:0;background:#f59e0b;color:#1c1917;font:inherit;font-weight:800;cursor:pointer}
+.sig-print-sheet{max-width:880px;margin:0 auto 16px}
+.sig-poster,.sig-card{box-sizing:border-box;max-width:880px;margin:0 auto 16px;padding:clamp(16px,3vw,32px);border-radius:18px;border:3px solid #1c1917;background:#fff;color:#1c1917}
+.sig-poster{background:#0f172a;color:#f8fafc;border-color:#f59e0b}
+.sig-poster-eyebrow,.sig-card-eyebrow{margin:0 0 6px;font-weight:800;color:#b45309;font-size:16px}
+.sig-poster .sig-poster-eyebrow{color:#fbbf24}
+.sig-poster h2{margin:0 0 14px;font-size:clamp(30px,5vw,52px);line-height:1.25}
+.sig-poster ol{margin:0;padding-left:1.4em;font-size:clamp(18px,2.4vw,26px);line-height:1.6}
+.sig-poster-note{margin:14px 0 0;font-size:16px;color:#cbd5e1}
+.sig-card h2{margin:0 0 6px;font-size:clamp(30px,5vw,52px);line-height:1.2}
+.sig-card-one{margin:0 0 14px;font-size:clamp(18px,2.4vw,26px);font-weight:700}
+.sig-card dl{margin:0;display:grid;gap:10px}
+.sig-card dl>div{display:grid;grid-template-columns:5.5em 1fr;gap:12px;align-items:baseline;padding:10px 12px;border-radius:12px;background:#fef3c7}
+.sig-card dt{font-weight:800;color:#92400e;font-size:clamp(16px,2vw,20px)}
+.sig-card dd{margin:0;font-size:clamp(20px,2.8vw,30px);font-weight:700;line-height:1.4}
+.sig-card-concept{margin:12px 0 0;font-size:16px;color:#57534e}
+@media (max-width:520px){.sig-card dl>div{grid-template-columns:1fr;gap:2px}}
+@media print{
+ @page{size:A4;margin:12mm}
+ .sig-print-page header,.sig-print-page footer,.no-print,.today-bar{display:none!important}
+ .sig-print-page,.sig-print-page .flow-wrap{background:#fff!important;padding:0!important;margin:0!important;max-width:none!important}
+ .sig-print-sheet{break-after:page;margin:0;max-width:none}
+ .sig-poster,.sig-card{break-inside:avoid;max-width:none;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .sig-card{min-height:125mm;margin:0 0 8mm}
+ .sig-card:nth-of-type(2n){break-after:page}
+}
