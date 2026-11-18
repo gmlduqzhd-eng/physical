@@ -14,8 +14,11 @@ export interface SpeechSynthLike {
  speak(u:SpeechUtteranceLike):void;
  cancel():void;
  getVoices():ReadonlyArray<{lang:string;name?:string}>;
+ /** 지금 읽는 중인지(있으면 끊은 뒤 잠깐 쉬고 읽는다: Safari는 cancel 바로 뒤의 speak를 버리기도 한다). */
+ readonly speaking?:boolean;
+ readonly pending?:boolean;
 }
-export interface SpeechUtteranceLike {text:string;lang:string;rate:number;volume:number;pitch:number;voice?:unknown}
+export interface SpeechUtteranceLike {text:string;lang:string;rate:number;volume:number;pitch:number;voice?:unknown;onstart?:((...args:never[])=>unknown)|null}
 export type UtteranceFactory=(text:string)=>SpeechUtteranceLike;
 
 export type SpeechRate='normal'|'slow';
@@ -26,12 +29,14 @@ export const SPEECH_RATE:Readonly<Record<SpeechRate,number>>={normal:1,slow:0.82
 export const SPEECH_VOLUME:Readonly<Record<SpeechVolume,number>>={normal:1,soft:0.6};
 export const SPEECH_PREFS_KEY='physical_tv_voice_v1';
 
-/** 지원 상태: ok(한국어 목소리 있음) · no-korean(목소리는 있는데 한국어가 없음) · unsupported(음성 안내 자체가 없음) · unknown(목소리 목록을 아직 못 받음). */
+/** 지원 상태: ok(한국어 목소리 있음) · no-korean(목소리는 있는데 한국어가 없음) · unsupported(음성 안내 자체가 없거나, 기다려도 목소리가 하나도 없음) · unknown(목소리 목록을 아직 못 받음). */
 export type SpeechStatus='ok'|'no-korean'|'unsupported'|'unknown';
 
 /** 같은 문장을 다시 읽지 않는 시간. */ export const REPEAT_GAP_MS=1500;
 /** 우선 안내(카운트다운·이벤트)를 읽은 뒤 보통 신호를 건너뛰는 시간. */ export const PRIORITY_HOLD_MS=1200;
 /** 너무 긴 문장은 이 길이 안에서 문장 끝에서 자른다. */ export const MAX_SPEECH_CHARS=90;
+/** 목소리 목록이 이만큼 지나도 비어 있으면 '이 기기는 음성 안내가 안 돼요'로 본다. */ export const VOICE_WAIT_MS=3000;
+/** 읽던 말을 끊은 뒤 새 말을 읽기까지 쉬는 시간(Safari가 새 말을 버리지 않게). */ export const CANCEL_GAP_MS=60;
 
 // 그림 문자(이모지)와 그 꾸밈 글자(색 바꿈·ZWJ·피부색·국기 글자)
 const PICTOGRAPH=/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]|[\u{1F3FB}-\u{1F3FF}]|‍|︎|️|⃣/gu;
@@ -105,14 +110,24 @@ export interface Announcer {
  setPrefs(prefs:SpeechPrefs):void;
  prefs():SpeechPrefs;
  status():SpeechStatus;
- /** 첫 손동작에서 한 번 부른다(iOS·Chrome은 사용자 동작 뒤에만 소리를 낸다). */ unlock():void;
+ /** 손동작(클릭·터치 끝·키) 안에서 부른다(iOS·Chrome은 사용자 동작 뒤에만 소리를 낸다). 성공할 때까지 여러 번 불러도 된다. */ unlock():void;
+ /** 소리가 한 번이라도 실제로 났거나, 사용자 동작 안에서 깨우기를 시도했으면 true. */ unlocked():boolean;
  /** 마지막으로 읽은 문장(테스트·화면 표시용). */ last():string|null;
 }
 
-export function createAnnouncer(env:{synth:SpeechSynthLike|null;utterance:UtteranceFactory|null;now?:()=>number;prefs?:SpeechPrefs}):Announcer{
+export interface AnnouncerEnv {
+ synth:SpeechSynthLike|null;utterance:UtteranceFactory|null;now?:()=>number;prefs?:SpeechPrefs;
+ /** 끊은 뒤 잠깐 쉬고 읽을 때 쓰는 타이머(테스트에서 바꿀 수 있게). */
+ later?:(fn:()=>void,ms:number)=>unknown;clearLater?:(id:unknown)=>void;
+}
+export function createAnnouncer(env:AnnouncerEnv):Announcer{
  const now=env.now??(()=>Date.now());
+ const later=env.later??((fn,ms)=>setTimeout(fn,ms));
+ const clearLater=env.clearLater??(id=>clearTimeout(id as ReturnType<typeof setTimeout>));
+ const createdAt=now();
  let prefs:SpeechPrefs={...(env.prefs??DEFAULT_SPEECH_PREFS)};
  let paused=false,unlocked=false;
+ let waiting:unknown=null;
  let lastText:string|null=null,lastAt=-Infinity,priorityAt=-Infinity;
  const synth=env.synth,make=env.utterance;
  const korean=()=>{try{return synth?.getVoices().find(v=>/^ko([-_]|$)/i.test(v.lang))??null;}catch{return null;}};
@@ -120,17 +135,24 @@ export function createAnnouncer(env:{synth:SpeechSynthLike|null;utterance:Uttera
   if(!synth||!make)return 'unsupported';
   let voices:ReadonlyArray<{lang:string}>;
   try{voices=synth.getVoices();}catch{return 'unsupported';}
-  if(!voices.length)return 'unknown';
+  if(!voices.length)return now()-createdAt>=VOICE_WAIT_MS?'unsupported':'unknown';
   return korean()?'ok':'no-korean';
  };
- const cancel=()=>{try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}};
+ const dropWaiting=()=>{if(waiting!==null){clearLater(waiting);waiting=null;}};
+ const cancel=()=>{dropWaiting();try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}};
  const speakNow=(text:string)=>{
   if(!synth||!make)return false;
   try{
    const u=make(text);
    u.lang='ko-KR';u.rate=SPEECH_RATE[prefs.rate];u.volume=SPEECH_VOLUME[prefs.volume];u.pitch=1;
    const voice=korean();if(voice)u.voice=voice;
-   synth.cancel();synth.speak(u);return true;
+   u.onstart=()=>{unlocked=true;};
+   const busy=Boolean(synth.speaking||synth.pending);
+   cancel();
+   if(!busy){synth.speak(u);return true;}
+   // 읽던 말이 있으면 끊고 잠깐 쉰 뒤 읽는다(그 사이 새 말이 오면 새 말만 읽는다).
+   waiting=later(()=>{waiting=null;try{synth.speak(u);}catch{/* 무시 */}},CANCEL_GAP_MS);
+   return true;
   }catch{return false;}
  };
  return {
@@ -157,9 +179,16 @@ export function createAnnouncer(env:{synth:SpeechSynthLike|null;utterance:Uttera
   prefs:()=>({...prefs}),
   status,
   unlock(){
-   if(unlocked||!synth||!make||status()==='no-korean')return;unlocked=true;
-   try{const u=make(' ');u.lang='ko-KR';u.volume=0;u.rate=1;u.pitch=1;synth.speak(u);}catch{/* 무시 */}
+   if(unlocked||!synth||!make)return;
+   const st=status();if(st==='no-korean'||st==='unsupported')return;
+   try{
+    const u=make(' ');u.lang='ko-KR';u.volume=0;u.rate=1;u.pitch=1;u.onstart=()=>{unlocked=true;};
+    synth.speak(u);
+    // 사용자 동작 안에서 한 번 깨웠으면 됐다고 본다(빈 문장은 시작 알림이 오지 않는 브라우저도 있다).
+    unlocked=true;
+   }catch{/* 무시: 다음 손동작에서 다시 시도 */}
   },
+  unlocked:()=>unlocked,
   last:()=>lastText,
  };
 }

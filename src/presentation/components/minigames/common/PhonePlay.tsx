@@ -99,7 +99,7 @@ export function PhonePlay({play,solo,onExit,enqueueAction}:Props){
  };
  // 반 전체 진행에서 정해야 할 역할(여우·술래·지휘자·번호 등). 앉아서 할 때는 역할 정하기를 건너뛴다.
  const classSetup=seated?undefined:adaptClassicPlay(play,level==='쉬운 방법',Infinity).setup;
- if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} voice={voice} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction} rolesReady/>;
+ if(classRun)return <PhonePlayClass play={play} taskSeconds={taskSeconds} seated={seated} level={level} sound={sound} pace={pace} onLeave={()=>setClassRun(false)} enqueueAction={enqueueAction} rolesReady/>;
  return <section className="phone-play" data-phone-play={p.id} data-phase={phase} data-focus={phase==='countdown'||phase==='active'||undefined} data-active-ms={Math.floor(elapsed)} aria-label={p.name}>
   <header><p className="pp-eyebrow">준비물 없는 신체 놀이 · {p.category}</p><div className="pp-title"><PhonePlayIcon gameType={p.id} size={40}/><h1>{p.name}</h1></div>{phase!=='intro'&&<p>{`${round+1} / 3 과제 · ${practice&&phase!=='plan'?'연습':solo&&range.min>1?'혼자 규칙 연습':p.players}`}</p>}</header>
   {phase!=='intro'&&<ActivityProgress steps={p.rounds} current={round} results={records.map(r=>r.outcome)}/>}

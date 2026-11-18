@@ -9,13 +9,21 @@ export type Vote='up'|'down';
  */
 export interface PlayEntry {id:string;at:number;play?:string}
 export interface VoteEntry {id:string;at:number;vote:Vote;play?:string}
-/** 반응의 이유(여러 개 고를 수 있음). 👍/👎 뒤에 골라도 되고 안 골라도 된다. */
-export type ReasonId='hard'|'long'|'boring'|'confusing'|'easy'|'loved';
-export const REASONS:readonly {id:ReasonId;label:string;negative:boolean}[]=[
- {id:'hard',label:'어려웠어요',negative:true},{id:'long',label:'길었어요',negative:true},
- {id:'boring',label:'지루했어요',negative:true},{id:'confusing',label:'헷갈렸어요',negative:true},
- {id:'easy',label:'너무 쉬웠어요',negative:true},{id:'loved',label:'학생들이 좋아했어요',negative:false},
+/**
+ * 반응의 이유(여러 개 고를 수 있음). 👍/👎 뒤에 골라도 되고 안 골라도 된다.
+ * vote: 이 이유를 보여 주는 반응. 👍에는 좋은 이유만, 👎에는 고칠 이유만 보여 준다.
+ * 예전 기록(👍에 고른 '너무 쉬웠어요' 등)도 그대로 읽고 센다.
+ */
+export type ReasonId='hard'|'long'|'boring'|'confusing'|'easy'|'loved'|'right'|'again';
+export const REASONS:readonly {id:ReasonId;label:string;negative:boolean;vote:Vote}[]=[
+ {id:'hard',label:'어려웠어요',negative:true,vote:'down'},{id:'long',label:'길었어요',negative:true,vote:'down'},
+ {id:'boring',label:'지루했어요',negative:true,vote:'down'},{id:'confusing',label:'헷갈렸어요',negative:true,vote:'down'},
+ {id:'easy',label:'너무 쉬웠어요',negative:true,vote:'down'},
+ {id:'loved',label:'학생들이 좋아했어요',negative:false,vote:'up'},{id:'right',label:'딱 알맞았어요',negative:false,vote:'up'},
+ {id:'again',label:'또 하고 싶어요',negative:false,vote:'up'},
 ];
+/** 이 반응(👍/👎)에서 고를 수 있는 이유. */
+export const reasonsForVote=(vote:Vote)=>REASONS.filter(r=>r.vote===vote);
 export const REASON_LABEL=Object.fromEntries(REASONS.map(r=>[r.id,r.label])) as Record<ReasonId,string>;
 const REASON_IDS=new Set<string>(REASONS.map(r=>r.id));
 export const MAX_NOTE=80;
@@ -100,6 +108,15 @@ export function currentVote(p:ClassProgress,id:string,play?:string):Vote|null{
  return v?.vote??null;
 }
 /** 기록하지 않은 판에 남긴 반응인지(판 id가 있는데 그 판이 기록에 없음). */
+/**
+ * 오늘 수업 끝 화면에서 한 활동의 반응을 붙일 판 id.
+ * 수업 중(since~until)에 이 활동을 기록한 판이 있으면 가장 마지막 판 id를, 없으면 기록 없이 반응만 남긴 마지막 판 id를 쓴다.
+ * 그래서 게임 결과 화면에서 이미 누른 반응이 그대로 보이고, 다시 눌러도 같은 판의 반응을 바꿀 뿐 새 표가 쌓이지 않는다.
+ */
+export function lessonPlayId(p:ClassProgress,id:string,since:number,until:number):string|undefined{
+ const inLesson=(x:{id:string;at:number;play?:string})=>x.id===id&&!!x.play&&x.at>=since&&x.at<=until;
+ return [...p.plays].reverse().find(inLesson)?.play??[...p.votes].reverse().find(inLesson)?.play;
+}
 export const isUnrecordedVote=(p:ClassProgress,v:VoteEntry)=>!!v.play&&!p.plays.some(x=>x.play===v.play);
 
 export interface ReactionRow {id:string;plays:number;up:number;down:number;/** 👍 비율(반응이 없으면 null) */ ratio:number|null;lastAt:number;/** 그중 기록하지 않은 판에 남긴 반응 수(👍·👎에는 들어 있음) */ unrecorded:number}
@@ -190,8 +207,8 @@ export function mergeProgress(a:ClassProgress,b:ClassProgress):ClassProgress{
 }
 
 /** 활동마다 모은 이유. ratio는 reactionRows와 같은 👍 비율. */
-export interface ReasonRow {id:string;counts:Record<ReasonId,number>;/** 이유나 메모를 남긴 판 수 */ answered:number;notes:{at:number;note:string}[];plays:number;up:number;down:number;ratio:number|null;hint:string|null}
-const zero=():Record<ReasonId,number>=>({hard:0,long:0,boring:0,confusing:0,easy:0,loved:0});
+export interface ReasonRow {id:string;counts:Record<ReasonId,number>;/** 이유나 메모를 남긴 판 수 */ answered:number;/** 이 활동의 메모 전부(최근 것부터). 화면은 앞의 몇 개만 보여 준다. */ notes:{at:number;note:string;play:string}[];plays:number;up:number;down:number;ratio:number|null;hint:string|null}
+const zero=():Record<ReasonId,number>=>({hard:0,long:0,boring:0,confusing:0,easy:0,loved:0,right:0,again:0});
 /** 이 수 이상 모이면 그 이유를 '많다'고 본다(한두 번으로 판단하지 않게). */
 export const MIN_REASON_COUNT=2;
 /**
@@ -205,6 +222,7 @@ export const REASON_HINTS:readonly {reason:ReasonId;hint:string}[]=[
  {reason:'easy',hint:'어려운 단계 필요 (속도·규칙 카드 늘리기)'},
  {reason:'boring',hint:'변형 필요 (새 규칙 카드) · 계속 지루하면 보관함 후보'},
  {reason:'loved',hint:'좋아했어요 · 대표로 두거나 올리기'},
+ {reason:'again',hint:'또 하고 싶어해요 · 대표로 두거나 올리기'},
 ];
 export function reasonHint(counts:Record<ReasonId,number>):string|null{
  return REASON_HINTS.find(h=>counts[h.reason]>=MIN_REASON_COUNT)?.hint??null;
@@ -216,9 +234,9 @@ export function reasonRows(p:ClassProgress):ReasonRow[]{
   let r=by.get(x.id);
   if(!r){const re=reactions.get(x.id);r={id:x.id,counts:zero(),answered:0,notes:[],plays:re?.plays??0,up:re?.up??0,down:re?.down??0,ratio:re?.ratio??null,hint:null};by.set(x.id,r);}
   r.answered++;for(const id of x.reasons)r.counts[id]++;
-  if(x.note)r.notes.push({at:x.at,note:x.note});
+  if(x.note)r.notes.push({at:x.at,note:x.note,play:x.play});
  }
- for(const r of by.values()){r.notes.sort((a,b)=>b.at-a.at);r.notes=r.notes.slice(0,3);r.hint=reasonHint(r.counts);}
+ for(const r of by.values()){r.notes.sort((a,b)=>b.at-a.at);r.hint=reasonHint(r.counts);}
  return [...by.values()].sort((a,b)=>b.answered-a.answered||a.id.localeCompare(b.id));
 }
 /** 이유마다 많이 나온 활동(문제 이유만, 많은 순). '헷갈렸어요가 많은 게임' 같은 목록. */
@@ -233,6 +251,8 @@ export const REASON_EXPORT_HEADERS=['활동','기록한 판','👍','👎','👍
 export function reasonExportRows(p:ClassProgress,nameOf:(id:string)=>string):(string|number)[][]{
  return reasonRows(p).map(r=>[nameOf(r.id),r.plays,r.up,r.down,r.ratio===null?'반응 없음':`${Math.round(r.ratio*100)}%`,...REASONS.map(x=>r.counts[x.id]),r.hint??'-',r.notes.map(n=>n.note).join(' / ')||'-']);
 }
+/** 요약에 넣는 메모·활동 수. 넘치면 '외 N개'로 알린다. */
+export const SUMMARY_NOTES=20,SUMMARY_ACTIVITIES=30;
 /** 공유용 짧은 요약(메신저에 붙여 넣기 좋게). 학생 이름 없이 활동·숫자·선생님 메모만. */
 export function shareSummary(p:ClassProgress,nameOf:(id:string)=>string,now=new Date()):string{
  const rows=reasonRows(p),reactions=reactionRows(p),problems=topProblems(p);
@@ -242,11 +262,16 @@ export function shareSummary(p:ClassProgress,nameOf:(id:string)=>string,now=new 
  if(loved.length)lines.push('','학생들이 좋아한 활동',...loved.map(r=>`- ${nameOf(r.id)}(${r.counts.loved})`));
  const withHint=rows.filter(r=>r.hint);
  if(withHint.length)lines.push('','다음 할 일',...withHint.map(r=>`- ${nameOf(r.id)}: ${r.hint}`));
- const notes=rows.flatMap(r=>r.notes.map(n=>({...n,id:r.id}))).sort((a,b)=>b.at-a.at).slice(0,5);
- if(notes.length)lines.push('','최근 메모',...notes.map(n=>`- ${nameOf(n.id)}: ${n.note}`));
- if(!problems.length&&!loved.length&&!notes.length){
-  const top=reactions.slice(0,5);
-  lines.push('','많이 한 활동',...(top.length?top.map(r=>`- ${nameOf(r.id)} ${r.plays}판 · 👍 ${r.ratio===null?'반응 없음':Math.round(r.ratio*100)+'%'}`):['- 아직 기록이 없어요']));
+ const notes=rows.flatMap(r=>r.notes.map(n=>({...n,id:r.id}))).sort((a,b)=>b.at-a.at);
+ if(notes.length){
+  lines.push('','최근 메모',...notes.slice(0,SUMMARY_NOTES).map(n=>`- ${nameOf(n.id)}: ${n.note}`));
+  if(notes.length>SUMMARY_NOTES)lines.push(`- 외 ${notes.length-SUMMARY_NOTES}개 (전체는 '내보내기' 파일에 있어요)`);
  }
+ // 활동마다 판 수와 👍/👎 수: 어떤 게임을 고치거나 늘릴지 정할 때 가장 먼저 보는 숫자.
+ lines.push('','활동별 반응 (판 수 · 👍 · 👎)');
+ if(reactions.length){
+  lines.push(...reactions.slice(0,SUMMARY_ACTIVITIES).map(r=>`- ${nameOf(r.id)}: ${r.plays}판 · 👍 ${r.up} · 👎 ${r.down}${r.ratio===null?'':` (👍 ${Math.round(r.ratio*100)}%)`}`));
+  if(reactions.length>SUMMARY_ACTIVITIES)lines.push(`- 외 ${reactions.length-SUMMARY_ACTIVITIES}개 활동`);
+ }else lines.push('- 아직 기록이 없어요');
  return lines.join('\n');
 }
