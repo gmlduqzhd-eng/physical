@@ -18,7 +18,9 @@ export function TvVoiceToggle({voice,className}:{voice:TvVoice;className?:string
  const [open,setOpen]=useState(false);
  const rootRef=useRef<HTMLDivElement>(null),moreRef=useRef<HTMLButtonElement>(null);
  const {prefs,status}=voice;
- const unsupported=status==='unsupported'||status==='no-korean';
+ // 목소리 목록이 비어 있는 기기(no-voices)는 켜고 끄기는 막되 '목소리 확인'은 남긴다: 소리가 나면 그때부터 쓸 수 있다.
+ const noVoices=status==='no-voices';
+ const unsupported=status==='unsupported'||status==='no-korean'||noVoices;
  const on=prefs.on&&!unsupported;
  useEffect(()=>{
   if(!open)return;
@@ -33,11 +35,14 @@ export function TvVoiceToggle({voice,className}:{voice:TvVoice;className?:string
   <button type="button" className="tv-voice-toggle" aria-pressed={on} disabled={unsupported}
    title={unsupported?'이 기기는 음성 안내가 안 돼요':on?'음성 안내 끄기':'음성 안내 켜기'}
    onClick={()=>voice.setPrefs({...prefs,on:!prefs.on})}>
-   <span aria-hidden="true">{on?'🔊':'🔇'}</span> 음성 안내 {unsupported?'안 돼요':on?'켜짐':'꺼짐'}
+   <span aria-hidden="true">{on?'🔊':'🔇'}</span> <span className="tv-voice-label">음성 안내 {unsupported?'안 돼요':on?'켜짐':'꺼짐'}</span>
   </button>
   <button ref={moreRef} type="button" className="tv-voice-more" aria-expanded={open} aria-label="음성 안내 설정" onClick={()=>setOpen(o=>!o)}><GearIcon/></button>
   {open&&<div className="tv-voice-panel" role="group" aria-label="음성 안내 설정">
-   {unsupported?<p className="tv-voice-note" role="note">이 기기는 음성 안내가 안 돼요. 화면 신호만으로 그대로 진행돼요.</p>:<>
+   {noVoices?<>
+    <p className="tv-voice-note" role="note">이 기기에서 목소리를 찾지 못했어요. 아래 단추를 눌러 소리가 나면 음성 안내를 쓸 수 있어요.</p>
+    <button type="button" className="tv-voice-test" onClick={()=>voice.test()}>🔈 목소리 확인</button>
+   </>:unsupported?<p className="tv-voice-note" role="note">이 기기는 음성 안내가 안 돼요. 화면 신호만으로 그대로 진행돼요.</p>:<>
     <fieldset><legend>빠르기</legend>
      {(['normal','slow'] as const).map(r=><label key={r}><input type="radio" name="tv-voice-rate" checked={prefs.rate===r} onChange={()=>voice.setPrefs({...prefs,rate:r})}/>{r==='normal'?'보통':'느리게'}</label>)}
     </fieldset>

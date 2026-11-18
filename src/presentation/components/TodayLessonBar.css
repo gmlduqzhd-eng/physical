@@ -7,10 +7,14 @@
 .today-bar[data-mode="away"]{background:#1e293b;border-bottom-color:#38bdf8}
 .today-bar[data-mode="away"] .today-bar-next{background:#38bdf8;color:#0c1a2a}
 .today-bar-ask{display:flex;align-items:center;gap:8px;min-width:0}
-.today-bar-ask-text{font-weight:800;color:#fde68a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.today-bar-ask-text{font-weight:800;color:#fde68a;min-width:0;line-height:1.25}
+.today-bar-ask:focus{outline:none}
+/* 묻는 동안에는 막대가 필요한 만큼 커진다(휴대폰에서 글이 잘리지 않게 줄을 바꾼다). */
+.today-bar[data-asking]{height:auto;min-height:var(--today-bar-h);padding-top:6px;padding-bottom:6px}
+.today-bar[data-asking] .today-bar-ask{flex-wrap:wrap;justify-content:center}
 .today-bar-ask .today-bar-next{background:#f59e0b;color:#1c1917;border:0}
 @media (max-width:520px){
  .today-bar:has(.today-bar-ask) .today-bar-label{display:none}
- .today-bar-ask{gap:4px}
- .today-bar-ask-text{font-size:12px}
+ .today-bar-ask{gap:6px}
+ .today-bar-ask-text{font-size:13px;flex:1 0 100%;text-align:center}
 }

@@ -144,30 +144,58 @@ test('unlock speaks one silent line only once',()=>{
  assert.equal(log.spoken[0].volume,0);
 });
 
-test('an empty voice list turns into unsupported after waiting, and a late list still recovers',()=>{
+test('an empty voice list turns into no-voices after waiting, and a late list still recovers',()=>{
  const voices:{lang:string}[]=[];
  let t=0;
  const a=createAnnouncer({synth:{speak(){},cancel(){},getVoices:()=>voices},utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t});
  assert.equal(a.status(),'unknown');
  t=VOICE_WAIT_MS-1;assert.equal(a.status(),'unknown');
- t=VOICE_WAIT_MS;assert.equal(a.status(),'unsupported');
+ t=VOICE_WAIT_MS;assert.equal(a.status(),'no-voices');
  assert.equal(a.say('앉기'),false,'no voice at all: stay silent instead of pretending to be on');
  voices.push({lang:'ko-KR'});
  assert.equal(a.status(),'ok','voiceschanged later brings it back');
 });
 
+test('a device whose voice list stays empty but can speak is promoted once a line really starts',()=>{
+ const spoken:SpeechUtteranceLike[]=[];let t=0;let heard=0;
+ const a=createAnnouncer({synth:{speak(u){spoken.push(u);},cancel(){},getVoices:()=>[]},utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,onHeard:()=>{heard++;}});
+ t=VOICE_WAIT_MS;
+ assert.equal(a.status(),'no-voices');
+ assert.equal(a.say('앉기'),false,'ordinary cues stay silent');
+ assert.equal(a.say('목소리 확인',{force:true,priority:true}),true,'the voice check button may still try');
+ assert.equal(a.status(),'no-voices','not promoted until sound really starts');
+ (spoken[0].onstart as ()=>void)();
+ assert.equal(a.status(),'ok');assert.equal(heard,1);
+ t+=REPEAT_GAP_MS+PRIORITY_HOLD_MS;
+ assert.equal(a.say('앉기'),true,'from then on cues are read');
+ (spoken[1].onstart as ()=>void)();assert.equal(heard,1,'announced once');
+});
+
+test('the first voice check speaks inside the same gesture: it queues behind the silent unlock line instead of waiting',()=>{
+ const spoken:SpeechUtteranceLike[]=[];let pending=false;let cancels=0;const timers:(()=>void)[]=[];
+ const synth={speak(u:SpeechUtteranceLike){spoken.push(u);pending=true;},cancel(){cancels++;pending=false;},getVoices:()=>[{lang:'ko-KR'}],get pending(){return pending;}};
+ const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>0,later:fn=>{timers.push(fn);return timers.length;},clearLater:()=>{}});
+ a.unlock();
+ assert.equal(a.say('목소리 확인',{force:true,priority:true}),true);
+ assert.deepEqual(spoken.map(u=>u.text),[' ','목소리 확인'],'spoken at once, not on a timer');
+ assert.equal(timers.length,0);assert.equal(cancels,0,'the silent line is not cut');
+});
+
 test('while a line is playing, cancel then wait a moment before the new line (Safari drop)',()=>{
- const spoken:string[]=[];let busy=false;const timers:(()=>void)[]=[];let t=0;
+ const spoken:string[]=[];let busy=false;const timers=new Map<number,()=>void>();let next=0;let t=0;
+ const flush=()=>{const fns=[...timers.values()];timers.clear();fns.forEach(fn=>fn());};
  const synth={speak(u:SpeechUtteranceLike){spoken.push(u.text);busy=true;},cancel(){busy=false;},getVoices:()=>[{lang:'ko-KR'}],get speaking(){return busy;}};
- const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,later:(fn,ms)=>{assert.equal(ms,CANCEL_GAP_MS);timers.push(fn);return timers.length;},clearLater:id=>{timers[(id as number)-1]=()=>{};}});
+ const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,later:(fn,ms)=>{assert.equal(ms,CANCEL_GAP_MS);timers.set(++next,fn);return next;},clearLater:id=>{timers.delete(id as number);}});
  assert.equal(a.say('앉기'),true);assert.deepEqual(spoken,['앉기'],'idle: speaks at once');
  t+=REPEAT_GAP_MS;busy=true;
  assert.equal(a.say('서기'),true);assert.deepEqual(spoken,['앉기'],'busy: waits for the gap');
  t+=REPEAT_GAP_MS;
  assert.equal(a.say('점프'),true,'a newer line replaces the waiting one');
- timers.forEach(fn=>fn());
+ assert.deepEqual(spoken,['앉기'],'the replacing line also waits: the cut happened a moment ago');
+ assert.equal(timers.size,1,'only the newest line is waiting');
+ flush();
  assert.deepEqual(spoken,['앉기','점프']);
- a.say('박수',{priority:true,force:true});a.cancel();timers.forEach(fn=>fn());
+ a.say('박수',{priority:true,force:true});a.cancel();flush();
  assert.deepEqual(spoken,['앉기','점프'],'cancel drops a waiting line');
 });
 
@@ -178,6 +206,12 @@ test('unlock can be retried until it runs, and is skipped when the device has no
  voices.push({lang:'ko-KR'});
  a.unlock();assert.equal(a.unlocked(),true);assert.equal(spoken.length,1);
  a.unlock();assert.equal(spoken.length,1);
+});
+
+test('Space, Enter and arrows on a radio, checkbox or slider keep their own job instead of moving the game',()=>{
+ for(const type of ['radio','checkbox','range'])for(const key of [' ','Enter','ArrowRight','ArrowDown'])assert.equal(keyToFunCommand({key,target:{tagName:'INPUT',type}}),null,`${key} on ${type}`);
+ assert.deepEqual(keyToFunCommand({key:' ',target:{tagName:'BUTTON'}}),{type:'next'},'Space on a button still means next');
+ assert.deepEqual(keyToFunCommand({key:' ',target:{tagName:'DIV'}}),{type:'next'});
 });
 
 test('keyboard shortcuts work while a radio or checkbox has focus, but not in text boxes',()=>{

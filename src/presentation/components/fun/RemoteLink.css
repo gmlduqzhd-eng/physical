@@ -24,3 +24,7 @@
 .fun-remote-codeonly{width:100%;border:1px dashed currentColor;border-radius:12px;padding:6px 10px;opacity:.9}
 .fun-remote-codeonly summary{cursor:pointer;font-weight:700}
 .fun-remote-codeonly[open]{display:flex;flex-direction:column;gap:6px}
+
+/* 코드만 넣어 연결할 때: 휴대폰이 먼저 묻는 TV 확인 번호를 요청 칸에서 바로 보여 준다. */
+.fun-remote-step{padding-bottom:8px;border-bottom:1px dashed currentColor}
+.fun-remote-pin[data-kind="tv"]{color:#7dd3fc}

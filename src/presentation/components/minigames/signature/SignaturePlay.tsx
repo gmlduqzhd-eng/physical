@@ -131,12 +131,20 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  // 결과를 기록할 때 이 판 id로 남도록 잡아 둔다.
  useEffect(()=>{holdPlayId(game.id,playId);return ()=>releasePlayId(game.id,playId);},[game.id,playId]);
  // 새로고침해도 이어 할 수 있게 지금 판을 이 탭에 적어 둔다. 결과를 기록한 판은 지운다(이어 할 것이 없음).
+ // 연습 판까지만 하고 끝낸 판은 기록하지 않는다(판 수에 넣지 않는다). 기록할 것이 없으니 이어 할 판도 남기지 않는다.
+ const practiceOnly=state.phase==='result'&&resultSummary(state,game).practiceOnly;
  useEffect(()=>{
-  if(state.phase==='result'&&recorded){clearFunSession(game.id);return;}
+  if(state.phase==='result'&&(recorded||practiceOnly)){clearFunSession(game.id);return;}
   saveFunSession({gameId:game.id,setup,seed,state,recorded,module:mod.snapshot?.(seed),playId});
  });
  // '오늘 수업' 막대가 진행 중인지 알 수 있게 알린다(진행 중이면 다음 단계 전에 확인을 받는다).
- useReportLessonActivity({gameId:game.id,phase:state.phase!=='result'?'playing':recorded?'recorded':'result',finish:()=>dispatch({type:'end'}),cleanup:onLeave});
+ // 막대의 확인 창이 떠 있는 동안에는 시간을 멈춘다. 이때는 일시정지 덮개가 초점을 가져가지 않는다(초점은 확인 창에).
+ const pausedRef=useRef(state.paused);pausedRef.current=state.paused;
+ const quietPause=useRef(false);
+ const dispatchRef=useRef(dispatch);dispatchRef.current=dispatch;
+ useReportLessonActivity({gameId:game.id,phase:state.phase!=='result'?'playing':recorded||practiceOnly?'recorded':'result',finish:()=>{quietPause.current=false;dispatchRef.current({type:'end'});},cleanup:onLeave,
+  hold:()=>{if(pausedRef.current)return false;quietPause.current=true;dispatchRef.current({type:'pause'});return true;},
+  release:()=>{if(pausedRef.current){quietPause.current=true;dispatchRef.current({type:'resume'});}}});
  const skipped=useRef(false);
  useEffect(()=>{if(skipDemo&&!skipped.current&&state.phase==='demo'){skipped.current=true;dispatch({type:'next'});}},[skipDemo,state.phase,dispatch]);
  const cue=cueOf(game,state,seated);
@@ -154,11 +162,15 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  useEffect(()=>{if(state.phase!=='result')titleRef.current?.focus({preventScroll:true});},[state.phase]);
  // 일시정지하면 덮개의 '다시 시작'으로 초점을 옮긴다(덮개 뒤 버튼은 inert라 누를 수 없다).
  const resumeRef=useRef<HTMLButtonElement>(null);
- useEffect(()=>{if(state.paused)resumeRef.current?.focus({preventScroll:true});},[state.paused]);
+ useEffect(()=>{if(state.paused&&!quietPause.current)resumeRef.current?.focus({preventScroll:true});},[state.paused]);
  // 다시 시작하면 초점을 '일시정지' 버튼으로 돌려준다(덮개 버튼이 사라져 초점을 잃지 않게).
  const wasPaused=useRef(state.paused);
  useEffect(()=>{
-  if(wasPaused.current&&!state.paused){const btn=document.querySelector<HTMLButtonElement>('.fun-arena .fun-controls button[data-command="pause"]');btn?.focus({preventScroll:true});}
+  if(wasPaused.current&&!state.paused){
+   // 확인 창을 닫으며 다시 움직인 경우에는 초점을 옮기지 않는다(막대의 버튼으로 돌아간다).
+   if(quietPause.current)quietPause.current=false;
+   else document.querySelector<HTMLButtonElement>('.fun-arena .fun-controls button[data-command="pause"]')?.focus({preventScroll:true});
+  }
   wasPaused.current=state.paused;
  },[state.paused]);
 
@@ -192,7 +204,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
   const mvp=mvpGame?{move:mvpGame,text:mvpGame}:Object.entries(state.cueHits).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])).map(([k])=>{const [phase,index]=k.split(':');return cueOf(game,state,seated,{phase:phase as 'play'|'climax',index:Number(index)});}).find(c=>c.scorable!==false);
   const Extra=mod.Result;
   const record=(participation:'performed'|'rested')=>{
-   if(recorded)return;setRecorded(true);clearFunSession(game.id);
+   if(recorded||summary.practiceOnly)return;setRecorded(true);clearFunSession(game.id);
    enqueueAction?.({id:Math.random().toString(),type:'INCREMENT_SCORE',timestamp:Date.now(),payload:{id:groupId,amount:100,details:{
     participation,completion:state.endedBy==='teacher'||summary.practiceOnly?'partial':'complete',
     metrics:{'대표 게임':game.name,'팀 점수':state.scores.map((v,i)=>`${teams===1?'우리 반':TEAM_NAMES[i]} ${v}`).join(' · '),'결과':headline,'배운 개념':game.concept,'진행 방법':seated?'앉아서':'서서','기록 기준':'선생님이 확인한 참여 · 신체 능력 측정 아님'},
@@ -248,6 +260,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
     {mod.special&&<ComboGauge combo={state.combo}/>}
    </div>
   </>}
+  {engine.skipArmed&&<p className="fun-skip-hint" role="status">Space를 한 번 더 누르면 {state.phase==='climax'?'결과 발표로':'마지막 승부로'} 넘어가요</p>}
   <TeacherControls buttons={state.phase==='demo'?buttons.filter(b=>b.command.type!=='scoreAll'&&b.command.type!=='event'&&b.tone!=='gold'):buttons} dispatch={dispatch}/>
   </div>
   {/* 이벤트 번호(seq)로 구분한다: 필살기처럼 다른 기록이 늘어도 같은 알림을 두 번 읽지 않는다. */}

@@ -50,9 +50,15 @@ const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:
 const TodayLesson = lazy(() => import('./presentation/TodayLesson').then(m=>({default:m.TodayLesson})));
 const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').then(m=>({default:m.TeacherGuidePage})));
 const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
-const TodayLessonBar = lazy(() => import('./presentation/components/TodayLessonBar').then(m=>({default:m.TodayLessonBar})));
-/** 활동 화면(/play/…)에서만 단계 막대 코드를 불러온다. */
-function TodayBarGate(){const {pathname}=useLocation();return pathname.startsWith('/play/')?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;}
+const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
+const TodayLessonBar = lazy(() => loadTodayLessonBar().then(m=>({default:m.TodayLessonBar})));
+/** 활동 화면(/play/…)과 활동 목록(/hub)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
+function TodayBarGate(){
+  const {pathname}=useLocation();
+  const shown=pathname.startsWith('/play/')||pathname==='/hub'||pathname.startsWith('/hub/');
+  useEffect(()=>{if(shown||pathname.startsWith('/today'))void loadTodayLessonBar().catch(()=>{});},[shown,pathname]);
+  return shown?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;
+}
 const PrintCards = lazy(() => import('./presentation/PrintCards').then(m=>({default:m.PrintCards})));
 const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
 const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));

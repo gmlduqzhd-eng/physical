@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useMemo,useReducer,useRef} from 'react';
+import {useCallback,useEffect,useMemo,useReducer,useRef,useState} from 'react';
 import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunHooks,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
@@ -17,6 +17,9 @@ export interface FunEngineOptions {
  /** 지금 신호만 다른 길이로 보여 줄 때(초). 없으면 게임 기본 간격. */ cueSeconds?:FunHooks['cueSeconds'];
  /** 지금 신호에 맞지 않는 깜짝 이벤트는 미룬다. */ allowsEvent?:FunHooks['allowsEvent'];
 }
+/** Space를 한 번 누른 뒤 이 시간 안에 한 번 더 눌러야 본게임·마지막 승부를 넘긴다. */
+export const SKIP_CONFIRM_MS=3000;
+const isSkipPhase=(p:FunState['phase'])=>p==='play'||p==='climax';
 type Action={kind:'cmd';cmd:FunCommand}|{kind:'reset';state:FunState};
 /** 움직임 줄이기 설정이면 시범을 저절로 넘기지 않는다. */
 export const prefersReducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -59,6 +62,12 @@ export function useFunEngine(opts:FunEngineOptions){
   document.addEventListener('visibilitychange',onHide);return ()=>document.removeEventListener('visibilitychange',onHide);
  },[]);
 
+ // 본게임·마지막 승부에서 Space(다음)를 한 번 누른 상태. 화면이 '한 번 더 누르면 넘어가요'를 보여 준다.
+ const [skipArmed,setSkipArmed]=useState(false);
+ const armed=useRef(false),armTimer=useRef<number|undefined>(undefined);
+ const disarm=useCallback(()=>{window.clearTimeout(armTimer.current);armed.current=false;setSkipArmed(false);},[]);
+ const arm=useCallback(()=>{window.clearTimeout(armTimer.current);armed.current=true;setSkipArmed(true);armTimer.current=window.setTimeout(()=>{armed.current=false;setSkipArmed(false);},SKIP_CONFIRM_MS);},[]);
+
  // 키보드: Space 다음(Enter는 버튼이 아닐 때만), P 일시정지, 1~4 팀 +1(Shift −1), A 모든 팀 +1, G 황금 신호, S 필살기
  useEffect(()=>{
   if(!opts.keyboard)return;
@@ -71,10 +80,18 @@ export function useFunEngine(opts:FunEngineOptions){
    if(e.key==='Enter'&&target?.closest('button,a,summary'))return;
    const cmd=keyToFunCommand({key:e.key,shiftKey:e.shiftKey,target});
    if(!cmd)return;
-   e.preventDefault();bus.dispatch(cmd,'key');
+   e.preventDefault();
+   // 본게임·마지막 승부에서 '다음'은 판을 일찍 끝내는 키다: 한 번 누르면 알리고, 3초 안에 한 번 더 눌러야 넘어간다(리모컨의 '넘어갈까요?'와 같은 뜻).
+   if(cmd.type==='next'&&isSkipPhase(stateRef.current.phase)){
+    if(!armed.current){arm();return;}
+    disarm();
+   }
+   bus.dispatch(cmd,'key');
   };
   window.addEventListener('keydown',onKey);return ()=>window.removeEventListener('keydown',onKey);
- },[opts.keyboard,bus]);
+ },[opts.keyboard,bus,arm,disarm]);
+ // 단계가 바뀌면 '한 번 더' 대기를 푼다.
+ useEffect(()=>disarm,[state.phase,disarm]);
 
  // 소리: 단계가 바뀔 때 호루라기, 깜짝 이벤트 때 휙, 마지막 10초 째깍.
  const prev=useRef(state);
@@ -95,6 +112,6 @@ export function useFunEngine(opts:FunEngineOptions){
   return ()=>window.clearTimeout(id);
  },[completeNow]);
 
- return {state,dispatch:(cmd:ExternalFunCommand)=>bus.dispatch(cmd,'tv'),bus,reset,completeNow,
+ return {state,dispatch:(cmd:ExternalFunCommand)=>bus.dispatch(cmd,'tv'),bus,reset,completeNow,skipArmed,
   secondsLeft:secondsLeft(state),cueMs:cueIntervalMs(state,state.cueLenSec??opts.cueSeconds?.(state)),finalCountdown:isFinalCountdown(state),comboFull:comboFull(state)};
 }

@@ -114,7 +114,7 @@ export function FunRemotePage(){
   {status==='connected'&&access==='verify'&&<section className="frp-wait" aria-label="TV 확인">
    <p>이 방 코드로 답한 TV의 확인 번호</p>
    <p className="frp-pin" aria-label={`TV 확인 번호 ${tvCode.split('').join(' ')}`}>{tvCodeText||'······'}</p>
-   <p>TV 리모컨 창의 <b>‘QR 없이 코드만 넣어 연결할 때’</b>를 열면 <b>‘TV 확인 번호’</b>가 나와요. 그 번호와 같을 때만 눌러요.</p>
+   <p>TV 리모컨 창의 연결 요청 칸에 <b>‘TV 확인 번호’</b>가 나와요(안 보이면 <b>‘QR 없이 코드만 넣어 연결할 때’</b>를 열어요). 그 번호와 같을 때만 눌러요.</p>
    <button type="button" className="frp-primary" onClick={()=>{void sender.current?.confirmTv();}}>✅ TV 번호와 같아요</button>
    <button type="button" onClick={()=>{setParams({});setDraft('');}}>다르면 QR로 다시 연결</button>
   </section>}

@@ -7,10 +7,14 @@ import {useEffect,useSyncExternalStore} from 'react';
  */
 export type LessonActivityPhase='playing'|'result'|'recorded';
 export interface LessonActivity {gameId:string;phase:LessonActivityPhase;
- /** 결과 발표 화면으로 보낸다(기록하고 넘어가도록). */
- finish:()=>void;
+ /** 결과 발표 화면으로 보낸다(기록하고 넘어가도록). 결과 화면이 따로 없는 활동은 없다. */
+ finish?:()=>void;
  /** 결과 없이 떠날 때 이 판을 정리한다(이어 할 판·리모컨 방 지우기). */
- cleanup:()=>void}
+ cleanup?:()=>void;
+ /** 확인 창이 떠 있는 동안 시간을 멈춘다. 이 호출로 멈췄으면 true(이미 멈춰 있었으면 false). */
+ hold?:()=>boolean;
+ /** hold로 멈춘 것을 다시 움직인다. */
+ release?:()=>void}
 
 let current:LessonActivity|null=null;
 const listeners=new Set<()=>void>();
@@ -25,7 +29,8 @@ export const useLessonActivity=()=>useSyncExternalStore(subscribe,getLessonActiv
 export function useReportLessonActivity(activity:LessonActivity|null){
  const gameId=activity?.gameId,phase=activity?.phase;
  useEffect(()=>{
-  if(!activity){setLessonActivity(null);return;}
+  // 알릴 것이 없으면 다른 화면(안쪽 활동)이 알린 값을 건드리지 않는다.
+  if(!activity)return;
   setLessonActivity(activity);
   return ()=>{if(current===activity)setLessonActivity(null);};
   // eslint-disable-next-line react-hooks/exhaustive-deps -- 게임과 진행 상태가 바뀔 때만 다시 알린다(함수는 매번 새로 만들어진다).

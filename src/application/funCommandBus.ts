@@ -59,9 +59,22 @@ function isTextEntry(el:{tagName?:string;isContentEditable?:boolean;type?:string
  return tag==='INPUT'&&!NON_TEXT_INPUT.test(el.type??'text');
 }
 
-/** 키보드 단축키 → 명령. 글자를 써 넣는 입력칸에서 누른 키는 무시한다. */
+/** 라디오·체크박스·슬라이더·고르기 칸: Space·Enter·화살표는 그 칸의 원래 동작(고르기)에 쓴다. */
+const NATIVE_KEY_INPUT=/^(radio|checkbox|range)$/i;
+const NATIVE_KEYS=new Set([' ','Enter','ArrowUp','ArrowDown','ArrowLeft','ArrowRight']);
+function usesKeyItself(el:{tagName?:string;type?:string}|null,key:string):boolean{
+ return !!el&&el.tagName==='INPUT'&&NATIVE_KEY_INPUT.test(el.type??'')&&NATIVE_KEYS.has(key);
+}
+/** 확인 창(모달)이 떠 있는지. 떠 있는 동안에는 게임 단축키를 받지 않는다(창 뒤의 게임이 움직이지 않게). */
+export function modalDialogOpen():boolean{
+ if(typeof document==='undefined')return false;
+ try{return !!document.querySelector('[aria-modal="true"],[role="alertdialog"]');}catch{return false;}
+}
+
+/** 키보드 단축키 → 명령. 글자를 써 넣는 입력칸에서 누른 키, 확인 창이 떠 있을 때 누른 키는 무시한다. */
 export function keyToFunCommand(e:{key:string;shiftKey?:boolean;target?:unknown}):ExternalFunCommand|null{
- if(isTextEntry(e.target as {tagName?:string;isContentEditable?:boolean;type?:string}|null))return null;
+ const el=e.target as {tagName?:string;isContentEditable?:boolean;type?:string}|null;
+ if(isTextEntry(el)||usesKeyItself(el,e.key)||modalDialogOpen())return null;
  const k=e.key;
  if(k===' '||k==='Enter')return {type:'next'};
  if(k==='p'||k==='P')return {type:'pause'};

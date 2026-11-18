@@ -33,9 +33,10 @@ export function ResultCeremony({summary,teams,scoreLabel,mvpMove,mvpLabel='가�
    <li><b>다음 도전</b>{summary.nextChallenge}</li>
   </ul>
   {endedBy==='teacher'&&!summary.practiceOnly&&<p className="fun-note">선생님이 중간에 끝냈어요. 기록은 ‘일부 완료’로 남아요.</p>}
-  {afterRecord}
+  {/* 연습만 한 판은 기록하지 않으므로 반응 칸도 두지 않는다(기록 없는 판의 반응이 쌓이지 않게). */}
+  {!summary.practiceOnly&&afterRecord}
   <div className="fun-result-actions">
-   {!recorded?<>
+   {summary.practiceOnly?<p className="fun-note" role="status">연습 판은 기록하지 않아요. 본게임까지 하면 기록할 수 있어요.</p>:!recorded?<>
     <button type="button" className="fun-primary" onClick={()=>onRecord('performed')}>✅ 모두 참여했어요 · 기록하기</button>
     {!askRest?<button type="button" className="fun-secondary" onClick={()=>setAskRest(true)}>쉬면서 지켜본 친구가 많았어요</button>
      :<button type="button" className="fun-secondary" onClick={()=>onRecord('rested')}>‘쉬면서 함께함’으로 기록하기</button>}
