@@ -1,7 +1,8 @@
-import {useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useState} from 'react';
 import {createPortal} from 'react-dom';
 import {Link} from 'react-router-dom';
 import {guideSeen,markGuideSeen} from '../../application/todayLessonStore';
+import {useModalDialog} from '../../application/useModalDialog';
 import './TeacherQuickGuide.css';
 
 /**
@@ -10,8 +11,8 @@ import './TeacherQuickGuide.css';
  */
 const STEPS=[
  {title:'TV에 띄워요',text:'교실 TV나 프로젝터에 이 화면을 크게 띄워요. 학생들은 TV를 보고 몸으로 따라 해요.',art:'tv'},
- {title:'휴대폰 리모컨을 연결해요',text:'게임 화면의 📱 휴대폰 리모컨을 누르고, 휴대폰 카메라로 QR을 찍어요. TV에 뜬 확인 번호가 같으면 ‘허용’을 눌러요.',art:'phone'},
- {title:'시작 · 다음 · 점수',text:'▶ 시작으로 시범과 연습 판이 나와요. 다음 단계는 ‘다음’, 팀 점수는 +1 버튼(또는 휴대폰)으로 줘요. 키보드는 Space가 다음이에요.',art:'buttons'},
+ {title:'휴대폰 리모컨을 연결해요',text:'게임 화면의 📱 휴대폰 리모컨을 누르고, 휴대폰 카메라로 QR을 찍어요. 휴대폰과 TV에 나온 확인 번호가 같으면 ‘허용’을 눌러요.',art:'phone'},
+ {title:'시작 · 다음 · 점수',text:'▶ 시작으로 시범과 연습 판이 나와요. 게임 안의 ‘다음’ 버튼(키보드 Space)은 게임을 한 단계씩 넘겨요. 팀 점수는 +1 버튼(또는 휴대폰)으로 줘요. ‘오늘 수업’ 중이면 맨 위 막대는 다음 활동으로 넘어갈 때만 눌러요.',art:'buttons'},
 ] as const;
 
 function Art({kind}:{kind:typeof STEPS[number]['art']}){
@@ -27,21 +28,28 @@ export function TeacherQuickGuideBody({compact=false}:{compact?:boolean}){
  </ol>;
 }
 
-/** 처음 한 번 저절로 뜨는 안내 창. force면 이미 봤어도 띄운다. */
+/**
+ * 처음 한 번 저절로 뜨는 안내 창. force면 이미 봤어도 띄운다.
+ * 공용 useModalDialog로 초점을 창 안에 가두고, 뒤 화면 스크롤을 막고, 닫으면 원래 초점으로 돌려놓는다.
+ */
 export function TeacherQuickGuide({force=false,onClose}:{force?:boolean;onClose?:()=>void}){
  const [open,setOpen]=useState(()=>force||!guideSeen());
- const closeRef=useRef<HTMLButtonElement>(null);
- const close=()=>{markGuideSeen();setOpen(false);onClose?.();};
- useEffect(()=>{if(open)closeRef.current?.focus();},[open]);
- useEffect(()=>{if(!open)return;const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.stopPropagation();close();}};window.addEventListener('keydown',key,true);return ()=>window.removeEventListener('keydown',key,true);});
+ const close=useCallback(()=>{markGuideSeen();setOpen(false);onClose?.();},[onClose]);
+ const dialogRef=useModalDialog(open,close);
+ // Esc는 창만 닫고 게임 단축키 쪽으로 새지 않게 capture 단계에서 멈춘다.
+ useEffect(()=>{
+  if(!open)return;
+  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.stopPropagation();e.preventDefault();close();}};
+  window.addEventListener('keydown',key,true);return ()=>window.removeEventListener('keydown',key,true);
+ },[open,close]);
  if(!open)return null;
  const node=<div className="tqg-backdrop" role="presentation" onClick={e=>{if(e.target===e.currentTarget)close();}}>
-  <section className="tqg-dialog" role="dialog" aria-modal="true" aria-labelledby="tqg-title">
+  <section ref={dialogRef as React.RefObject<HTMLElement>} tabIndex={-1} className="tqg-dialog" role="dialog" aria-modal="true" aria-labelledby="tqg-title">
    <p className="tqg-eyebrow">처음 쓰는 선생님 · 1분 안내</p>
    <h2 id="tqg-title">세 가지만 알면 바로 수업할 수 있어요</h2>
    <TeacherQuickGuideBody compact/>
    <div className="tqg-actions">
-    <button ref={closeRef} type="button" className="tqg-primary" onClick={close}>알겠어요 · 시작하기</button>
+    <button type="button" className="tqg-primary" onClick={close}>알겠어요 · 시작하기</button>
     <Link to="/print/signature-cards" onClick={close}>🖨 규칙 카드·QR 안내 인쇄</Link>
    </div>
   </section>

@@ -1,7 +1,7 @@
 import {useCallback,useEffect,useSyncExternalStore} from 'react';
 import {useActivityPause} from './ActivityPauseContext';
 import {readStorage,writeStorage} from './browserStorage';
-import {createAnnouncer,parseSpeechPrefs,SPEECH_PREFS_KEY,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
+import {createAnnouncer,parseSpeechPrefs,SPEECH_PREFS_KEY,VOICE_WAIT_MS,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
 
 /**
  * TV 화면(대표 게임·반 전체 진행)의 음성 안내. 기기마다 켜기/끄기·속도·크기를 기억한다.
@@ -23,6 +23,8 @@ export function tvAnnouncer():Announcer{
   announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs()});
   // 목소리 목록은 늦게 온다: 오면 지원 상태 표시를 다시 그린다.
   try{synth?.addEventListener?.('voiceschanged',notify);}catch{/* 무시 */}
+  // 끝내 목록이 오지 않으면(목소리가 없는 기기) '안 돼요' 표시로 바꾼다.
+  if(synth)setTimeout(notify,VOICE_WAIT_MS+50);
  }
  return announcer;
 }
@@ -34,12 +36,20 @@ function setPrefs(next:SpeechPrefs){
 }
 const subscribe=(l:()=>void)=>{listeners.add(l);return ()=>{listeners.delete(l);};};
 
-/** 첫 손동작에서 음성을 깨운다(iOS·Chrome 자동 재생 규칙). */
+/**
+ * 손동작에서 음성을 깨운다(iOS·Chrome 자동 재생 규칙).
+ * iOS는 pointerdown·touchstart를 '사용자 동작'으로 치지 않으므로 click·touchend·keydown에서 깨운다.
+ * 깨우기에 성공할 때까지(예: 목소리 목록이 늦게 와서 건너뛴 경우) 다음 손동작에서도 다시 시도한다.
+ */
+const UNLOCK_EVENTS=['click','touchend','keydown'] as const;
 let unlockBound=false;
 function bindUnlock(){
  if(unlockBound||typeof window==='undefined')return;unlockBound=true;
- const go=()=>{tvAnnouncer().unlock();window.removeEventListener('pointerdown',go,true);window.removeEventListener('keydown',go,true);};
- window.addEventListener('pointerdown',go,true);window.addEventListener('keydown',go,true);
+ const go=()=>{
+  const a=tvAnnouncer();a.unlock();
+  if(a.unlocked())for(const ev of UNLOCK_EVENTS)window.removeEventListener(ev,go,true);
+ };
+ for(const ev of UNLOCK_EVENTS)window.addEventListener(ev,go,true);
 }
 
 export interface TvVoice {
