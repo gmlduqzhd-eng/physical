@@ -20,6 +20,8 @@ const RUNS = [
   { name: 'phone', viewport: { width: 390, height: 844 }, teams: 2, checkVertical: false },
 ];
 const SPECIAL = new Set(['sig-boss-raid']); // games whose module defines a special move (src/domain/signature/*.ts)
+// Games whose scoreboard is read-only (points come from the board, not 1~4 keys): src/presentation/components/minigames/signature/modules/*.tsx scoreButtons:false
+const READ_ONLY_SCORES = new Set(['sig-move-bingo']);
 const only = process.argv[3] ? process.argv[3].split(',') : null;
 
 async function overflow(page) {
@@ -35,6 +37,8 @@ const GUIDE_KEY = 'physical_teacher_guide_seen_v1';
 async function guideOnce(browser) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
   const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
   try {
     await page.goto(`${base}/play/sig-signal-captain`, { waitUntil: 'networkidle' });
     const backdrop = page.locator('.tqg-backdrop');
@@ -42,8 +46,13 @@ async function guideOnce(browser) {
     await page.keyboard.press('Escape');
     await backdrop.waitFor({ state: 'detached', timeout: 5000 });
     await page.reload({ waitUntil: 'networkidle' });
-    await page.waitForTimeout(500);
-    if (await backdrop.count()) throw new Error('guideOnce: 안내가 다시 떴어요');
+    // 시작 화면이 다 그려진 뒤에도 1.5초 동안 안내가 다시 뜨지 않아야 합니다(안내는 늦게 불러오는 조각이라 바로 보면 놓칠 수 있어요).
+    await page.locator('.fun-intro .fun-primary').first().waitFor({ state: 'visible', timeout: 10000 });
+    for (let t = 0; t < 6; t++) {
+      if (await backdrop.count()) throw new Error('guideOnce: 안내가 다시 떴어요');
+      await page.waitForTimeout(250);
+    }
+    assert.deepEqual(errors, [], 'guideOnce: no page errors');
   } finally {
     await context.close();
   }
@@ -74,15 +83,17 @@ async function playOne(browser, run, id) {
     // TV button: the big start button (demo first).
     await page.locator('.fun-intro .fun-primary').first().click();
     await page.locator('.fun-arena').waitFor();
-    // Games with a scoreboard must show one column per chosen team.
-    const board = page.locator('.fun-scoreboard').first();
-    if (await board.count()) assert.equal(await board.getAttribute('data-teams'), String(run.teams), `${id} ${run.name}: scoreboard teams`);
     await measure();
     // TV button: the first control in the teacher bar advances demo → tutorial.
     const controls = page.locator('.fun-controls button');
     await controls.first().click();
     await page.waitForTimeout(300);
     await measure();
+    // Every signature game shows a scoreboard from the tutorial on, with one column per chosen team.
+    const board = page.locator('.fun-scoreboard').first();
+    await board.waitFor({ timeout: 5000 });
+    assert.equal(await board.getAttribute('data-teams'), String(run.teams), `${id} ${run.name}: scoreboard teams`);
+    assert.equal(await board.locator('.fun-team-score').count(), run.teams, `${id} ${run.name}: one score per team`);
     // Only the game with a special move shows the combo gauge (boss raid); the others never offer it.
     assert.equal(await page.locator('.fun-combo').count() > 0, SPECIAL.has(id), `${id} ${run.name}: combo gauge only where a special exists`);
     // Keyboard pause: the play area becomes inert and focus lands on the resume button; P again resumes.
@@ -93,8 +104,29 @@ async function playOne(browser, run, id) {
     await page.keyboard.press('p');
     await page.locator('.fun-paused').waitFor({ state: 'detached' });
     assert.equal(await page.locator('.fun-body').getAttribute('inert'), null, `${id} ${run.name}: resumed`);
-    // Give a point with the keyboard (1 = first team +1) when the game takes scoreboard points.
-    await page.keyboard.press('1');
+    // Give a point with the keyboard (1~4 = that team +1) to a team whose TV +1 button is on (turn games allow only
+    // the team on turn); the score must go up by one. Read-only boards have no ± buttons and ignore the key.
+    const scoreOf = async team => Number(await board.locator('.fun-team-score').nth(team).innerText());
+    if (READ_ONLY_SCORES.has(id)) {
+      assert.equal(await board.locator('.fun-plus').count(), 0, `${id} ${run.name}: read-only board has no +1 buttons`);
+      const before = await scoreOf(0);
+      await page.keyboard.press('1');
+      await page.waitForTimeout(200);
+      assert.equal(await scoreOf(0), before, `${id} ${run.name}: key 1 does not change a read-only board`);
+    } else {
+      const plus = board.locator('.fun-plus');
+      // Turn games open scoring after a short "watch first" moment (memory relay shows the order first): wait for it.
+      let team = -1;
+      for (let wait = 0; wait < 60 && team < 0; wait++) {
+        for (let t = 0; t < run.teams; t++) if (await plus.nth(t).isEnabled()) { team = t; break; }
+        if (team < 0) await page.waitForTimeout(250);
+      }
+      assert.ok(team >= 0, `${id} ${run.name}: some team can score in the tutorial`);
+      const before = await scoreOf(team);
+      await page.keyboard.press(String(team + 1));
+      await page.waitForTimeout(200);
+      assert.equal(await scoreOf(team), before + 1, `${id} ${run.name}: key ${team + 1} gives that team +1`);
+    }
     // Keyboard: Space is always "next". Walk the remaining phases to the result.
     for (let i = 0; i < 12; i++) {
       if (await page.locator('.fun-result').count()) break;
