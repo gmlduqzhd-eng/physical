@@ -20,7 +20,7 @@ function readPrefs():SpeechPrefs{
 export function tvAnnouncer():Announcer{
  if(!announcer){
   const synth=browserSynth();
-  announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs()});
+  announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs(),onHeard:notify});
   // 목소리 목록은 늦게 온다: 오면 지원 상태 표시를 다시 그린다.
   try{synth?.addEventListener?.('voiceschanged',notify);}catch{/* 무시 */}
   // 끝내 목록이 오지 않으면(목소리가 없는 기기) '안 돼요' 표시로 바꾼다.
