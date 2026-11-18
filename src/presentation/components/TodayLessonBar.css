@@ -1,0 +1,16 @@
+/* '오늘 수업' 막대: 게임이 진행 중이면 게임의 주황 '다음' 버튼과 헷갈리지 않게 낮춘다. */
+.today-bar[data-mode="playing"]{background:#1e293b;border-bottom-color:#475569;justify-content:flex-start}
+.today-bar[data-mode="playing"] .today-bar-next{background:transparent;color:#e2e8f0;border:1px solid #64748b;font-weight:700;min-height:32px;font-size:14px}
+.today-bar[data-mode="playing"] .today-bar-skip{min-height:32px;font-size:14px}
+.today-bar[data-mode="playing"] .today-bar-label{opacity:.85}
+/* 앞 단계로 돌아와 있을 때: 수업 중이라는 표시와 돌아갈 길만. */
+.today-bar[data-mode="away"]{background:#1e293b;border-bottom-color:#38bdf8}
+.today-bar[data-mode="away"] .today-bar-next{background:#38bdf8;color:#0c1a2a}
+.today-bar-ask{display:flex;align-items:center;gap:8px;min-width:0}
+.today-bar-ask-text{font-weight:800;color:#fde68a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.today-bar-ask .today-bar-next{background:#f59e0b;color:#1c1917;border:0}
+@media (max-width:520px){
+ .today-bar:has(.today-bar-ask) .today-bar-label{display:none}
+ .today-bar-ask{gap:4px}
+ .today-bar-ask-text{font-size:12px}
+}

@@ -18,6 +18,7 @@ import type {SignatureModuleProps} from './moduleTypes';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {countdownSpeech,surpriseSpeech} from '../../../../application/speechAnnouncer';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
+import {useReportLessonActivity} from '../../todayLessonActivity';
 import '../../fun/fun.css';
 
 interface Props {gameId:string;groupId?:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;
@@ -57,7 +58,9 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  const disposeRound=()=>{const mod=game?SIGNATURE_MODULES[game.id]:undefined;if(seedRef.current!==null)mod?.dispose?.(seedRef.current);seedRef.current=null;};
  if(!game)return <div className="fun-arena"><p>이 대표 게임은 아직 준비 중이에요.</p><button type="button" className="fun-primary" onClick={onExit}>활동 목록으로</button></div>;
  // 목록으로 나가면 이어 할 판을 지운다(새로고침은 그대로 남는다).
- const exit=()=>{disposeRound();clearFunSession(game.id);clearRemoteRoom(game.id);onExit();};
+ // '오늘 수업' 막대로 다음 단계에 가거나 목록으로 나가면 이어 할 판과 리모컨 방을 지운다(새로고침은 그대로 남는다).
+ const leave=()=>{disposeRound();clearFunSession(game.id);clearRemoteRoom(game.id);};
+ const exit=()=>{leave();onExit();};
  // 리모컨 막대는 시작 화면(이어 할 판이 있을 때)과 게임 화면에서 같은 자리에 하나만 둔다.
  // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
  // 방 코드가 있는 동안은 시작 화면에서도 막대를 둔다('새로 시작'으로 남은 판을 지워도 휴대폰 연결이 이어진다).
@@ -67,7 +70,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
   {setup&&<button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>}
  </div>):null;
  if(setup)return <>{dock}
-  <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit}
+  <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit} onLeave={leave}
    onSeed={seed=>{seedRef.current=seed;}}
    onReplay={()=>{disposeRound();onRoundReset?.();setResume(null);setSetup(s=>s&&{...s,skipDemo:true,round:s.round+1});}}/>
  </>;
@@ -108,7 +111,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  </main></>;
 }
 
-function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onReplay,onSeed}:{game:SignatureGameDef;bus:FunCommandBus;setup:FunSetup;restore:FunSession|null;groupId:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;onReplay:()=>void;onSeed:(seed:number)=>void}){
+function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onLeave,onReplay,onSeed}:{game:SignatureGameDef;bus:FunCommandBus;setup:FunSetup;restore:FunSession|null;groupId:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;onLeave:()=>void;onReplay:()=>void;onSeed:(seed:number)=>void}){
  const {teams,seated,skipDemo}=setup;
  const seed=useMemo(()=>restore?.seed??Math.floor(Math.random()*1e9),[restore]);
  const mod=SIGNATURE_MODULES[game.id]??{};
@@ -132,6 +135,8 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
   if(state.phase==='result'&&recorded){clearFunSession(game.id);return;}
   saveFunSession({gameId:game.id,setup,seed,state,recorded,module:mod.snapshot?.(seed),playId});
  });
+ // '오늘 수업' 막대가 진행 중인지 알 수 있게 알린다(진행 중이면 다음 단계 전에 확인을 받는다).
+ useReportLessonActivity({gameId:game.id,phase:state.phase!=='result'?'playing':recorded?'recorded':'result',finish:()=>dispatch({type:'end'}),cleanup:onLeave});
  const skipped=useRef(false);
  useEffect(()=>{if(skipDemo&&!skipped.current&&state.phase==='demo'){skipped.current=true;dispatch({type:'next'});}},[skipDemo,state.phase,dispatch]);
  const cue=cueOf(game,state,seated);
@@ -194,7 +199,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
    }}});
   };
   return arena(<div className="fun-arena" data-phase="result">
-   <ResultCeremony summary={{...summary,headline}} teams={teams} scoreLabel={game.scoreLabel} mvpMove={mvp?.move??mvp?.text} endedBy={state.endedBy}
+   <ResultCeremony summary={{...summary,headline}} teams={teams} scoreLabel={game.scoreLabel} mvpMove={mvp?.move??mvp?.text} mvpLabel={game.mvpLabel} endedBy={state.endedBy}
     extra={Extra?<Extra {...props}/>:undefined} afterRecord={<ClassFeedbackSlot gameId={game.id} playId={playId}/>} recorded={recorded} onRecord={record} onReplay={onReplay} onExit={onExit}/>
   </div>);
  }
@@ -232,7 +237,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
       {shown.kicker&&<span className="fun-cue-kicker">{shown.kicker}</span>}
       {shown.icon&&<span className="fun-signal-icon" aria-hidden="true">{shown.icon}</span>}
       <strong className="fun-cue" data-length={lengthOf(shown.text)}>{shown.text}</strong>
-      {shown.sub&&<p className="fun-cue-sub">{shown.sub}</p>}
+      {shown.sub&&<p className="fun-cue-sub" data-big={shown.bigSub||undefined}>{shown.sub}</p>}
      </div>
     </section>
     {Panel&&<div className="fun-panel"><Panel {...props}/></div>}
