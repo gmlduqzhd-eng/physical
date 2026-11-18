@@ -15,6 +15,9 @@ import type {SignatureCue} from '../../../../domain/signatureGames';
 import {SIGNATURE_MODULES} from './modules';
 import {cueOf,shortcutHelp} from './signatureCue';
 import type {SignatureModuleProps} from './moduleTypes';
+import {useTvVoice} from '../../../../application/useTvVoice';
+import {countdownSpeech,surpriseSpeech} from '../../../../application/speechAnnouncer';
+import {TvVoiceToggle} from '../../TvVoiceToggle';
 import '../../fun/fun.css';
 
 interface Props {gameId:string;groupId?:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;
@@ -154,6 +157,27 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
   wasPaused.current=state.paused;
  },[state.paused]);
 
+ // 음성 안내: TV를 보지 않는 학생도 큰 신호를 소리로 따라오게. 일시정지면 읽지 않는다.
+ const voice=useTvVoice({paused:state.paused});
+ const say=voice.say;
+ const spokenPhase=useRef<FunState['phase']|null>(null);
+ const eventSeq=state.event?.seq;
+ useEffect(()=>{if(state.event&&!state.paused)say(surpriseSpeech(state.event.kind),{priority:true});
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 깜짝 이벤트가 시작될 때만 읽는다.
+ },[eventSeq]);
+ const cueKey=isCuePhase(state.phase)&&!state.paused?`${state.phase}:${state.cueIndex}:${shown.text}`:'';
+ useEffect(()=>{
+  if(!cueKey)return;
+  // 판이 바뀐 첫 신호는 판 이름을 붙여 한 번에 읽는다(두 문장이 서로 끊지 않게).
+  const fresh=spokenPhase.current!==state.phase;
+  if(say(`${fresh?`${PHASE_LABEL[state.phase]}! `:''}${shown.text}`))spokenPhase.current=state.phase;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- 신호가 바뀔 때만 읽는다.
+ },[cueKey]);
+ const countdown=engine.finalCountdown&&!state.paused?countdownSpeech(engine.secondsLeft):null;
+ useEffect(()=>{if(countdown)say(countdown,{priority:true});},[countdown,say]);
+ const resultLine=state.phase==='result'?resultHeadlineOf(game,state):'';
+ useEffect(()=>{if(resultLine)say(`${FUN_PHASE_LABEL.result}! ${resultLine}`,{priority:true});},[resultLine,say]);
+
  if(state.phase==='result'){
   const summary=resultSummary(state,game);
   // 연습만 하고 끝냈으면 게임별 제목(예: '보스 0마리…') 대신 '연습만 했어요'.
@@ -196,6 +220,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onR
    <h1 ref={titleRef} tabIndex={-1}><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
    <span className="fun-phase" data-phase={state.phase}>{PHASE_LABEL[state.phase]}</span>
    <span className="fun-timer" aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
+   <TvVoiceToggle voice={voice} className="fun-voice"/>
    {/* 휴대폰 리모컨·'← 목록' 버튼은 판이 바뀌어도 남도록 바깥(fun-dock)에 있다. */}
   </header>
   <div className="fun-body" inert={state.paused||undefined}>
