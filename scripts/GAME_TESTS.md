@@ -34,7 +34,7 @@ npm run test:catalog:ci
 
 How the script reads the current screens:
 
-- An activity with its own introduction (phone plays, movement quests, expeditions, flagship expeditions, safety lessons and a few stand-alone games) opens straight into the game area. The others show the shared preparation screen with `▶ 시작 · 준비 확인` first.
+- An activity with its own introduction (phone plays, movement quests, expeditions, flagship expeditions, safety lessons and a few stand-alone games) opens straight into the game area. The others show the shared preparation screen with `▶ 시작 · 바로 시작` (낭독 이름 "바로 시작하기") first.
 - A retired game shows its notice and must link to a replacement. It is recorded as `retired` and nothing is started.
 - A merged game is followed to its target course and recorded with `redirectedTo`.
 - If the touched control opened an information dialog, the script closes it before leaving the game.

@@ -39,5 +39,5 @@
 /* 거꾸로 옆걸음: 생각할 시간 뒤 실제로 움직일 쪽을 확인시켜 준다. */
 .expedition-reveal{margin-top:6px;color:var(--expedition-accent,#1d5f8a);font-size:clamp(36px,6vw,88px)}
 /* 하는 중에도 꼭 필요한 역할은 신호 아래에 보인다. */
-.expedition-now-roles{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;margin:10px 0 0;padding:0;list-style:none}
+.expedition-activity .expedition-now-roles,.expedition-now-roles{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 10px;margin:10px 0 0;padding:0;list-style:none}
 .expedition-now-roles li{padding:4px 12px;border-radius:999px;border:1px solid currentColor;font-size:clamp(15px,1.6vw,20px);font-weight:600;opacity:.9}

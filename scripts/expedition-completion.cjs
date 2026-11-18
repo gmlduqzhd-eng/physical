@@ -25,7 +25,7 @@ async function main(){
   const layout=async()=>assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'no horizontal overflow');
   try{
    await page.clock.install();await page.goto(base+'/solo/play/'+game.id,{waitUntil:'domcontentloaded'});
-   await page.getByRole('button',{name:'시작 · 준비 확인',exact:true}).waitFor({timeout:15000});await page.clock.pauseAt(await page.evaluate(()=>new Date(Date.now()+1000).toISOString()));await tap(page.getByRole('button',{name:'시작 · 준비 확인',exact:true}));if(await page.getByRole('button',{name:'기본 활동 시작',exact:true}).count())await tap(page.getByRole('button',{name:'기본 활동 시작',exact:true}));
+   await page.getByRole('button',{name:'바로 시작하기',exact:true}).waitFor({timeout:15000});await page.clock.pauseAt(await page.evaluate(()=>new Date(Date.now()+1000).toISOString()));await tap(page.getByRole('button',{name:'바로 시작하기',exact:true}));if(await page.getByRole('button',{name:'기본 활동 시작',exact:true}).count())await tap(page.getByRole('button',{name:'기본 활동 시작',exact:true}));
    if(game.kind==='A'){
     await tap(page.getByRole('button',{name:/준비 완료/}));
     for(const step of EXPRESSION_GAMES.find(g=>g.id===game.id).steps){await advance(1000);await tap(page.locator('.gameplay-content').getByRole('button',{name:/다음 단계|활동 마치고 평가하기/}));}
@@ -35,7 +35,7 @@ async function main(){
     await page.locator('[data-phase="ready"]').waitFor();await page.evaluate(()=>{Math.random=()=>.42;});
     const players=Number(process.env.PARTICIPANTS)||game.players;
     if(players!==game.players)await page.getByRole('combobox',{name:'참여 인원',exact:true}).selectOption(String(players));
-    await tap(page.getByRole('button',{name:'시작 · 원정',exact:true}));
+    await tap(page.getByRole('button',{name:'원정 시작하기',exact:true}));
     const revamped=isRevampedExpedition(game.id);
     if(revamped){
      await page.getByRole('heading',{name:'먼저 8초만 연습해요',exact:true}).waitFor();
@@ -79,7 +79,7 @@ async function main(){
    if(game.kind==='B'){const a=saved.recentGames[0].details.activity;assert.equal(a.gameId,game.id);assert.equal(a.specId,game.spec);assert.equal(a.rounds.length,game.rounds);assert.equal(a.soloPreview,true);assert(a.rounds.every(r=>r.source==='self-report'));}
    await advance(15000);assert.equal((await profile()).totalPlays,1);item.score=saved.recentGames[0].score;
    await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-result.png')});
-   await tap(page.getByRole('button',{name:'다시 하기',exact:true}));await page.getByRole('button',{name:'시작 · 준비 확인',exact:true}).waitFor();assert.equal((await profile()).totalPlays,1);
+   await tap(page.getByRole('button',{name:'다시 하기',exact:true}));await page.getByRole('button',{name:'바로 시작하기',exact:true}).waitFor();assert.equal((await profile()).totalPlays,1);
    await tap(page.getByRole('button',{name:'활동 목록으로',exact:true}));await page.waitForURL('**/solo');await page.getByRole('heading',{name:'혼자 해보기',exact:true}).waitFor();
    assert.deepEqual(item.errors,[]);assert.deepEqual(item.serverCalls,[]);item.status='pass';item.resultOnce=true;item.replay=true;item.returnToCatalog=true;
   }catch(e){item.status='fail';item.error=e.message;await page.screenshot({timeout:15000,path:path.join(out,game.spec+'-failure.png'),fullPage:true}).catch(()=>{});}

@@ -1,11 +1,12 @@
 import type {ExpeditionSnapshot,FlagshipId} from './flagship.js';
-export function expeditionNextStep(s:ExpeditionSnapshot,game:FlagshipId){
+/** practice: 한 기기로 연습할 때는 QR 대신 버튼으로 다녀온 곳을 눌러요. */
+export function expeditionNextStep(s:ExpeditionSnapshot,game:FlagshipId,practice=false){
  const me=s.groups.find(g=>g.id===s.groupId)??s.groups[0];
  if(s.status!=='playing')return {title:'선생님의 안내를 확인해요',instruction:'기기를 멈추고 주변을 확인해요. 수업이 다시 시작되면 다음 행동을 안내해요.'};
  if(!me)return {title:'모둠 연결을 확인해요',instruction:'우리 모둠으로 다시 들어온 뒤 시작해요.'};
  if(game==='expedition-map'){
   if(s.phase>=3)return {title:'세 길을 연결했어요',instruction:'돌아와 모두의 참여를 확인하고 결과를 제출해요.'};
-  if(!me.visited.length)return {title:'단서를 모으고 지점을 정해요',instruction:'기기를 세워 두고 단서를 함께 읽고, 정해진 통로를 걸어요. 지점에 멈춘 뒤 QR을 확인해요.'};
+  if(!me.visited.length)return {title:'단서를 모으고 지점을 정해요',instruction:practice?'단서를 함께 읽고 정해진 통로를 걸어요. 다녀온 곳은 버튼으로 눌러요.':'기기를 세워 두고 단서를 함께 읽고, 정해진 통로를 걸어요. 지점에 멈춘 뒤 안내판 QR을 확인해요.'};
   if(!me.vote)return {title:'방문한 길 중 다음 길에 투표해요',instruction:'도착·귀환을 함께 확인했으면 우리 모둠의 다음 길을 선택해요.'};
   const waiting=s.groups.filter(g=>!g.vote).length;
   return {title:waiting?`${waiting}모둠의 길 선택을 기다려요`:'함께 같은 길을 다시 의논해요',instruction:waiting?'다른 모둠과 단서를 몸짓으로 전달해요. 기다리는 동안 기기는 놓아요.':'각 모둠의 단서를 다시 연결하고, 우리 모둠의 투표를 바꾸어 볼 수 있어요.'};

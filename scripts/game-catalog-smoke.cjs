@@ -79,7 +79,7 @@ function readGameInventory() {
         // Activities with their own introduction (phone plays, movement quests, expeditions, flagship,
         // safety lessons and a few stand-alone games) open straight into the game area; the others
         // show the shared preparation screen with a start button first.
-        const normal = page.getByRole('button', { name: '시작 · 준비 확인', exact: true });
+        const normal = page.getByRole('button', { name: '바로 시작하기', exact: true });
         const content = page.locator('.gameplay-content');
         const retired = page.locator('[data-retired]');
         const opened = () => normal.or(content).or(retired).first().waitFor({ state: 'visible', timeout: 15000 });
@@ -105,7 +105,7 @@ function readGameInventory() {
         if (active.sharedPreparation) {
           await activate(normal);
           const skip = page.getByRole('button', { name: /준비 완료/ });
-          const own = page.getByRole('button', { name: '시작 · 원정', exact: true }).or(page.getByRole('button', { name: /활동 시작하기/ }));
+          const own = page.getByRole('button', { name: '원정 시작하기', exact: true }).or(page.getByRole('button', { name: /활동 시작하기/ }));
           await skip.or(own).or(content).first().waitFor({ state: 'visible', timeout: 8000 });
           if (await skip.count()) await activate(skip);
           else if (await own.count()) { await activate(own.first()); await page.waitForTimeout(3300); }

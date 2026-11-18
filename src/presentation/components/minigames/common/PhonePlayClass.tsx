@@ -8,7 +8,8 @@ import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRound
 import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
-interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void}
+interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;voice:boolean;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void;
+ /** 시작 화면에서 역할 정하기를 이미 안내했으면 true: 규칙 카드에서 '준비됐어요'를 기다리지 않고 저절로 넘어간다. */ rolesReady?:boolean}
 
 /** 무엇을 · 어떻게 · 언제 끝: 놀이마다 같은 자리에 같은 순서로 보여 준다. */
 export function PhoneRuleCard({rule3,className=''}:{rule3:readonly string[];className?:string}){
@@ -40,13 +41,14 @@ function EvolutionLadder({top}:{top:number}){
  * The rule card comes first (it waits for the teacher when roles must be chosen), then all three tasks run in a row;
  * one tap at the end records how the class took part.
  */
-export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,onLeave,enqueueAction}:Props){
+export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,onLeave,enqueueAction,rolesReady=false}:Props){
  const classroomPaused=useActivityPause();
  useWakeLock();
  // 숫자 모둠 만들기는 쉬운 방법이면 과제 제목도 쉬운 신호(둘 모둠)에 맞춘다.
  const p=adaptClassicPlay(play,level==='쉬운 방법',Infinity);
  // 역할·번호를 정해야 하는 놀이는 교사가 '준비됐어요'를 누를 때까지 규칙 카드에서 기다린다.
- const waitForTeacher=!!p.setup&&!seated;
+ // 시작 화면에서 이미 역할을 정하고 들어왔으면(rolesReady) 기다리지 않는다.
+ const waitForTeacher=!!p.setup&&!seated&&!rolesReady;
  const [phase,setPhase]=useState<Phase>('rules'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
  const [bingo,setBingo]=useState<boolean[]>(()=>Array(9).fill(false));
  const moved=useRef(0),submitted=useRef(false);
@@ -103,7 +105,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,voice,sound,pace,o
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
    <p className="pc-task">{stopped?'잠깐 멈췄어요':'이렇게 놀아요'}</p>
    <PhoneRuleCard rule3={p.rule3} className="pc-rule-card"/>
-   {waitForTeacher?<p className="pc-setup" role="note">먼저 정해요 · {p.setup}</p>:<p className="pc-left">잠시 뒤 시작해요</p>}
+   {waitForTeacher?<p className="pc-setup" role="note">먼저 정해요 · {p.setup}</p>:p.setup&&!seated?<p className="pc-setup" role="note">정한 역할 그대로 · {p.setup}</p>:<p className="pc-left">잠시 뒤 시작해요</p>}
   </div>}
   {['countdown','brief','active'].includes(phase)&&<div className="pp-signal pc-signal" data-memory-brief={phase==='brief'&&view.memory||undefined} role="status" aria-live={phase==='active'?'off':'polite'}>
    <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?CLASSIC_CLASS_BRIEF[p.id]??(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>

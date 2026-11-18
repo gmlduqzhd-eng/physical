@@ -51,3 +51,6 @@
 .phone-play[data-focus] .pp-signal .pp-rule-line{font-size:clamp(18px,4vw,30px)}
 /* 기억 놀이 안내: 순서는 아래 칩으로도 보이므로 큰 글씨를 줄여 한 화면에 들어가게 한다. */
 .phone-class .pc-signal[data-memory-brief] .pc-cue,.phone-class .pc-signal[data-memory-brief] .pc-cue[data-length]{font-size:clamp(22px,min(4.2vw,6vh),60px);line-height:1.3}
+
+.phone-play .pp-setup-first{margin:0;padding:10px 14px;border-radius:12px;background:var(--pp-soft,#fff6d8);color:inherit;font-size:clamp(16px,2.2vw,19px);font-weight:700;line-height:1.4}.phone-play .pp-setup-first strong{display:block;font-size:.8em;opacity:.8}
+:root.dark-theme .phone-play .pp-setup-first{background:rgba(255,214,102,.14)}
