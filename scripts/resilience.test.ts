@@ -150,3 +150,73 @@ test('hashed files are cached long by the host, and the font script leaves no __
   assert.match(script, /sys\.dont_write_bytecode = True/);
   assert.match(read('.gitignore'), /__pycache__\//);
 });
+
+test('a failed game file reloads the page only for a new deploy, never while offline', async () => {
+  const { entryScriptFrom, decideReloadAfterChunkError, claimReloadSlot } = await import('../src/application/deployCheck');
+  const html = (entry: string) => `<!doctype html><html><head><script type="module" crossorigin src="${entry}"></script></head><body><div id="root"></div></body></html>`;
+  assert.equal(entryScriptFrom(html('/assets/index-abc123.js')), '/assets/index-abc123.js');
+  assert.equal(entryScriptFrom(html('https://physical.test/assets/index-abc123.js?v=1')), '/assets/index-abc123.js');
+  assert.equal(entryScriptFrom('<script type="module" src="/@vite/client"></script><script type="module" src="/src/main.tsx"></script>'), '/src/main.tsx');
+  let fetches = 0;
+  const index = (entry: string) => async () => { fetches++; return html(entry); };
+  // Offline: never reload, and do not even try the network.
+  assert.equal(await decideReloadAfterChunkError({ online: false, current: '/assets/index-a.js', fetchIndex: index('/assets/index-b.js') }), 'stay');
+  assert.equal(fetches, 0);
+  // Same deploy: the file is only temporarily unreachable; the play error screen retries without a reload.
+  assert.equal(await decideReloadAfterChunkError({ online: true, current: '/assets/index-a.js', fetchIndex: index('/assets/index-a.js') }), 'stay');
+  // A new deploy replaced the old files: reload once.
+  assert.equal(await decideReloadAfterChunkError({ online: true, current: '/assets/index-a.js', fetchIndex: index('/assets/index-b.js') }), 'reload');
+  // Server unreachable: stay on the error screen.
+  assert.equal(await decideReloadAfterChunkError({ online: true, current: '/assets/index-a.js', fetchIndex: async () => { throw new TypeError('Failed to fetch'); } }), 'stay');
+  // Unknown entry on either side: keep the old behavior (reload).
+  assert.equal(await decideReloadAfterChunkError({ online: true, current: null, fetchIndex: index('/assets/index-b.js') }), 'reload');
+  // The 60-second guard still prevents a reload loop.
+  const store = new Map<string, string>();
+  const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => { store.set(k, v); } };
+  assert.equal(claimReloadSlot(1_000_000, storage), true);
+  assert.equal(claimReloadSlot(1_030_000, storage), false);
+  assert.equal(claimReloadSlot(1_061_000, storage), true);
+  const main = read('src/main.tsx');
+  assert.doesNotMatch(main, /preventDefault\(\)/, 'the chunk error reaches the play error screen');
+  assert.match(main, /navigator\.onLine !== false/);
+  const boundary = read('src/components/PlayErrorBoundary.tsx');
+  assert.match(boundary, /chunk && navigator\.onLine === false\) \{ this\.forceUpdate\(\); return; \}/, "'다시 열기' while offline does not reload into the browser's offline page");
+  assert.match(boundary, /addEventListener\('online', this\.onOnline\)/, 'coming back online reopens by itself');
+  assert.match(boundary, /onOnline = \(\) => \{ if \(isChunkLoadError\(this\.state\.error\)\) window\.location\.reload\(\)/, 'the reload waits until the connection is back');
+  assert.match(boundary, /인터넷이 끊겨 있어요\. 연결되면 저절로 다시 열어요\./);
+});
+
+test('the service worker serves ?retry= imports from the cache and never stores them', async () => {
+  const origin = 'https://physical.test';
+  const values = new Map<string, Response>();
+  const strip = (u: string) => { const url = new URL(u); url.search = ''; return url.href; };
+  const key = (value: string | { url: string }) => new URL(typeof value === 'string' ? value : value.url, origin).href;
+  const cache = {
+    async put(k: string | { url: string }, v: Response) { values.set(key(k), v.clone()); },
+    async match(k: string | { url: string }, options?: { ignoreSearch?: boolean }) {
+      const want = options?.ignoreSearch ? strip(key(k)) : key(k);
+      for (const [stored, response] of values) if ((options?.ignoreSearch ? strip(stored) : stored) === want) return response.clone();
+      return undefined;
+    },
+    async keys() { return [...values.keys()].map(url => ({ url })); },
+    async delete(k: string | { url: string }) { return values.delete(key(k)); },
+  };
+  const caches = { async open() { return cache; }, async keys() { return ['physical-v3']; }, async delete() { return true; } };
+  let online = true;
+  const network = async (request: string | { url: string }) => { if (!online) throw new TypeError('offline'); return new Response('bytes ' + strip(key(request))); };
+  const listeners: Record<string, (event: unknown) => void> = {};
+  vm.runInNewContext(read('public/sw.js'), {
+    self: { location: { origin }, addEventListener(name: string, handler: (event: unknown) => void) { listeners[name] = handler; }, async skipWaiting() {}, clients: { async claim() {} } },
+    fetch: network, caches, URL, Response, Promise, Set, JSON,
+  });
+  const respond = async (url: string) => { let task: Promise<Response> | undefined; listeners.fetch({ request: { url, method: 'GET', destination: 'script' }, respondWith(p: Promise<Response>) { task = p; } }); return task!; };
+  const plain = origin + '/assets/GamePlayPage-abc123.js';
+  // Not cached yet: goes to the network, and the ?retry= copy is not stored.
+  assert.equal(await (await respond(plain + '?retry=1-xyz')).text(), 'bytes ' + plain);
+  assert.equal([...values.keys()].some(k => k.includes('retry=')), false, 'no ?retry= entries pile up');
+  // The plain file is cached on normal use; a later retry import is served from it, even offline.
+  await respond(plain);
+  assert.ok(values.has(plain));
+  online = false;
+  assert.equal((await respond(plain + '?retry=2-abc')).status, 200);
+});
