@@ -62,3 +62,7 @@
 
 /* TV(1024px 이상)에서는 아래 진행 버튼 글씨를 키워 멀리서도 읽히게 한다. */
 @media (min-width:1024px){.phone-class .pc-controls button,.phone-class .pp-exit{min-height:64px;font-size:clamp(20px,1.9vw,28px)}}
+
+/* 반 전체 진행: 음성 단추 옆 밝기 바꾸기 단추(작게, 진행을 가리지 않게). */
+.phone-class .pc-theme{min-width:44px;min-height:44px;border-radius:999px;border:1px solid var(--forest-line,rgba(0,0,0,.15));background:var(--forest-card,#fff);color:inherit;font-size:20px;line-height:1;cursor:pointer}
+.phone-class .pc-theme:focus-visible{outline:3px solid var(--forest-focus,#0e7490);outline-offset:2px}

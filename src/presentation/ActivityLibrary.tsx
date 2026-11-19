@@ -18,6 +18,9 @@ import { useActivityFavorites } from '../application/useActivityFavorites';
 import { activityDetail, finishLine } from './activityDetail';
 import { FlowShell } from './FlowShell';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
+
+const GRADE_OPTIONS=['1~2학년','3~4학년군','5~6학년군'] as const;
+const DEVICE_OPTIONS=['스마트폰','태블릿 PC','데스크톱 PC'] as const;
 // 데이터에 있는 공간만 고를 수 있게 한다. 고르면 항상 0개가 나오는 선택지를 만들지 않는다.
 const SPACE_ORDER=['제자리','두 걸음','넓은 공간'] as const;
 import './ActivityLibrary.css';
@@ -63,7 +66,8 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
   // 지금 있는 목적 칩만 받는다. 모르는 값(예전 북마크)은 무시한다.
   const [purpose, setPurpose] = useState(()=>{const raw=params.get('purpose')||'';return (purposes as readonly string[]).includes(raw)?raw:'';}); const [query, setQuery] = useState(()=>params.get('q')||'');
   const PAGE=12; const [limit, setLimit] = useState(PAGE);
-  const [grade, setGrade] = useState(()=>params.get('grade')||'전체'); const [device, setDevice] = useState(()=>params.get('device')||'전체');
+  // 주소의 학년·기기 값은 고를 수 있는 값일 때만 쓴다(모르는 값이면 결과가 0개인데 선택 칸은 '전체'로 보이는 일이 없게).
+  const [grade, setGrade] = useState(()=>{const raw=params.get('grade')||'';return (GRADE_OPTIONS as readonly string[]).includes(raw)?raw:'전체';}); const [device, setDevice] = useState(()=>{const raw=params.get('device')||'';return (DEVICE_OPTIONS as readonly string[]).includes(raw)?raw:'전체';});
   const updateFilter=(key:string,value:string)=>{const next=new URLSearchParams(params);if(!value||value==='전체')next.delete(key);else next.set(key,value);setParams(next,{replace:true});setLimit(PAGE);};
   const clearFilters=()=>{setDomain('전체');setPurpose('');setQuery('');setGrade('전체');setDevice('전체');const next=new URLSearchParams(params);for(const key of ['domain','purpose','q','grade','device','collection','category','people','time','intensity','space',...FIT_KEYS])next.delete(key);setParams(next,{replace:true});setLimit(PAGE);};
   const setViewAll=(on:boolean)=>{const next=new URLSearchParams(params);if(on)next.set('view','all');else next.delete('view');setParams(next,{replace:true});setLimit(PAGE);};
@@ -108,7 +112,7 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
       ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체',...SPACE_ORDER.filter(v=>PHONE_PLAYS.some(p=>p.space===v))]],
     ] as const).map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}<p>폰은 내려놓고 움직여요. 스마트폰 1대를 함께 쓰거나, TV에 띄워 반 전체가 해요.</p></fieldset>}
     <div className="activity-more-filters"><label>활동 영역<select aria-label="활동 영역" value={domain} onChange={e => { setDomain(e.target.value);updateFilter('domain',e.target.value); }}>{['전체','운동','스포츠','표현'].map(v => <option key={v}>{v}</option>)}</select></label>
-    <details open={gradeOpen} onToggle={e=>setGradeOpen(e.currentTarget.open)}><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체','1~2학년','3~4학년군','5~6학년군'].map(v => <option key={v} value={v}>{gradeLabel(v)}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체','스마트폰','태블릿 PC','데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label></div></details></div>
+    <details open={gradeOpen} onToggle={e=>setGradeOpen(e.currentTarget.open)}><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체',...GRADE_OPTIONS].map(v => <option key={v} value={v}>{gradeLabel(v)}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체',...DEVICE_OPTIONS].map(v => <option key={v}>{v}</option>)}</select></label></div></details></div>
     </details>
     {!moreOpen&&chosenFilters.length>0&&<ul className="activity-filter-chosen" aria-label="고른 조건">{chosenFilters.map(f=><li key={f.key}><button type="button" onClick={f.clear} aria-label={`${f.label} 조건 지우기`}>{f.label} <span aria-hidden="true">✕</span></button></li>)}</ul>}
     {isFiltered&&<button style={{marginTop:4}} onClick={clearFilters}>검색·조건 초기화</button>}

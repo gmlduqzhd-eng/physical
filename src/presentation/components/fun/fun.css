@@ -1,5 +1,5 @@
 /* 대표 게임 · 재미 뼈대. TV(교사 화면 1대)에서 반 전체가 멀리서 읽는 무대. 밝은/어두운 테마 모두 같은 어두운 무대를 쓴다. */
-.fun-arena,.fun-intro,.fun-dock{--fun-bg:#0f172a;--fun-panel:#1e293b;--fun-line:#334155;--fun-ink:#f8fafc;--fun-muted:#cbd5e1;--fun-accent:#f59e0b;--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
+.fun-arena,.fun-intro,.fun-dock,.fun-leave-backdrop{--fun-bg:#0f172a;--fun-panel:#1e293b;--fun-line:#334155;--fun-ink:#f8fafc;--fun-muted:#cbd5e1;--fun-accent:#f59e0b;--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
 .fun-arena{position:fixed;inset:0;z-index:20000;overflow:auto;background:var(--fun-bg);color:var(--fun-ink);display:flex;flex-direction:column;gap:clamp(8px,1.4vh,16px);padding:clamp(10px,2vw,28px);font-family:inherit;line-height:1.5}
 .fun-arena button,.fun-intro button{font:inherit;touch-action:manipulation;cursor:pointer}
 .fun-arena button:disabled,.fun-intro button:disabled{opacity:.45;cursor:not-allowed}
@@ -256,22 +256,34 @@
 .fun-remote-panel>.fun-secondary:last-child{position:sticky;bottom:0;z-index:1;background:var(--fun-bg);box-shadow:0 -10px 0 var(--fun-bg),0 20px 0 var(--fun-bg)}
 
 /* '오늘 수업' 확인 창이 떠 있는 동안: 게임 무대는 누를 수 없고(inert), 일시정지 덮개는 흐리게 해 확인 창에 눈이 가게 한다. */
-.fun-arena[data-confirming] .fun-paused{background:rgba(15,23,42,.55)}
+.fun-arena[data-confirming] .fun-paused{background:rgba(15,23,42,.95)}
 .fun-arena[data-confirming] .fun-paused>*{opacity:.35}
+/* 확인 창이 떠 있을 때의 덮개에는 '다시 시작'을 두지 않고, 확인 창에서 고르라는 말만 크게 보인다. */
+.fun-arena[data-confirming] .fun-paused[data-confirming]>*{opacity:1}
+.fun-paused[data-confirming] strong{font-size:clamp(32px,5vw,64px)}
+.fun-paused[data-confirming] .fun-paused-note{font-size:clamp(22px,3.4vw,44px);color:#fff}
+/* 일시정지 덮개는 뒤의 큰 신호 글자가 비쳐 겹쳐 읽히지 않게 거의 불투명하게 한다. */
+.fun-paused{background:#0f172a}
+/* 게임 중 '← 목록'을 누르면 묻는 창: TV 가운데에 크게. */
+.fun-leave-backdrop{position:fixed;inset:0;z-index:20010;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.72)}
+.fun-leave-ask{width:min(640px,100%);display:grid;gap:14px;padding:clamp(18px,3vw,32px);border-radius:24px;background:var(--fun-panel,#1e293b);color:var(--fun-ink,#fff);border:3px solid #fde68a;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.fun-leave-ask h2{margin:0;font-size:clamp(26px,3.6vw,44px);font-weight:900;color:#fde68a}
+.fun-leave-ask p{margin:0;font-size:clamp(17px,2.2vw,26px);font-weight:750;line-height:1.4;word-break:keep-all}
+.fun-leave-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px}
+.fun-leave-actions button{min-height:56px;font-size:clamp(16px,1.9vw,22px);font-weight:850;border-radius:14px}
 .fun-paused-note{margin:0;font-weight:800;color:var(--fun-muted);font-size:clamp(15px,1.8vw,22px)}
 /* '■ 끝내기'를 한 번 누르면 '한 번 더' 알림이 뜬다. */
 .fun-skip-hint[data-kind=end]{background:#fecaca;color:#450a0a}
 
-/* 낮은 휴대폰(360×640 등)에서 3·4팀: 점수판을 한 줄로 줄여(−1은 숨기고 +1만) 큰 신호가 가려지지 않게 한다. */
+/* 낮은 휴대폰(360×640 등)에서 3·4팀: 점수판을 한 줄로 줄여 큰 신호가 가려지지 않게 한다. −1은 작게 남겨 잘못 누른 +1을 되돌릴 수 있게 한다. */
 @media (max-width:640px) and (max-height:720px){
  .fun-scoreboard[data-teams="3"]{--cols:3}.fun-scoreboard[data-teams="4"]{--cols:4}
  .fun-scoreboard[data-teams="3"] li,.fun-scoreboard[data-teams="4"] li{grid-template-columns:1fr auto;grid-template-areas:"name score" "buttons buttons";padding:4px 6px;gap:2px 4px}
  .fun-scoreboard[data-teams="3"] li[data-readonly],.fun-scoreboard[data-teams="4"] li[data-readonly]{grid-template-areas:"name score"}
  .fun-scoreboard[data-teams="3"] .fun-team-name,.fun-scoreboard[data-teams="4"] .fun-team-name{font-size:13px}
  .fun-scoreboard[data-teams="3"] .fun-team-score,.fun-scoreboard[data-teams="4"] .fun-team-score{font-size:22px;line-height:1.1}
- .fun-scoreboard[data-teams="3"] .fun-team-buttons,.fun-scoreboard[data-teams="4"] .fun-team-buttons{grid-template-columns:1fr}
- .fun-scoreboard[data-teams="3"] .fun-team-buttons button:not(.fun-plus),.fun-scoreboard[data-teams="4"] .fun-team-buttons button:not(.fun-plus){display:none}
- .fun-scoreboard[data-teams="3"] .fun-team-buttons .fun-plus,.fun-scoreboard[data-teams="4"] .fun-team-buttons .fun-plus{min-height:38px;min-width:0}
+ .fun-scoreboard[data-teams="3"] .fun-team-buttons,.fun-scoreboard[data-teams="4"] .fun-team-buttons{grid-template-columns:minmax(0,2fr) minmax(0,3fr);gap:3px}
+ .fun-scoreboard[data-teams="3"] .fun-team-buttons button,.fun-scoreboard[data-teams="4"] .fun-team-buttons button{min-height:38px;min-width:0;padding:0 2px;font-size:14px}
  .fun-arena:not([data-phase=result]){padding-bottom:0}
  .fun-controls{gap:4px}
  .fun-controls button{min-height:40px}

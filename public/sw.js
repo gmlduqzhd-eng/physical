@@ -111,15 +111,18 @@ self.addEventListener('fetch', (event) => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME).catch(() => null);
     // Hashed Vite assets and hashed font pieces are immutable; other assets are refreshed online.
-    if (url.pathname.startsWith('/assets/') || HASHED_FONT.test(url.pathname)) {
+    const hashed = url.pathname.startsWith('/assets/') || HASHED_FONT.test(url.pathname);
+    if (hashed) {
       // Precache requests lack the Origin header attached to module imports.
       // These public same-origin files have identical bytes for both requests.
-      const cached = await cache?.match(event.request, { ignoreVary: true }).catch(() => undefined);
+      // A retry import adds ?retry=… to the same hashed file, so match it without the query string.
+      const cached = await cache?.match(event.request, { ignoreVary: true, ignoreSearch: true }).catch(() => undefined);
       if (cached) return cached;
     }
     try {
       const response = await fetch(event.request);
-      if (response.ok && cache) await cache.put(event.request, response.clone()).catch(() => {});
+      // Never store hashed files under a query string: ?retry= copies would pile up until the next deploy.
+      if (response.ok && cache && !(hashed && url.search)) await cache.put(event.request, response.clone()).catch(() => {});
       if (response.status < 500) return response;
     } catch { /* Fall back to assets from this deployment only. */ }
     return (await cache?.match(event.request, { ignoreVary: true }).catch(() => undefined)) ?? new Response('', { status: 503 });

@@ -89,7 +89,7 @@ test("막대: 다른 대표 게임도 지금 단계로 보고, 시작한 활동�
 
 test('준비운동(반 전체 진행): 2·3번 과제는 짧은 신호 뒤 바로 시작한다',()=>{
  const src=read('src/presentation/components/minigames/common/PhonePlayClass.tsx');
- assert.match(src,/QUICK_BRIEF_MS=2000/);
- assert.match(src,/quickBrief=phase==='brief'&&round>0&&!view\.memory&&!view\.plan/,'순서·방법을 읽는 과제는 안내 시간을 그대로 둔다');
+ assert.match(read('src/domain/phonePlayBriefs.ts'),/QUICK_BRIEF_MS=2000/);
+ assert.match(src,/quickBrief=phase==='brief'&&round>0&&!view\.memory&&!view\.plan&&!classBriefChangesRule\(play\.id,round\)/,'순서·방법을 읽는 과제와 역할·규칙이 바뀌는 과제는 안내 시간을 그대로 둔다');
  assert.match(src,/!quickBrief&&<button/,"짧은 신호 동안에는 '바로 시작'을 누를 필요가 없다");
 });

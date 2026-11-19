@@ -170,6 +170,13 @@ function readGameInventory() {
           if (!await page.getByText('화면 게임 점수 · 신체 활동 증거 아님', { exact: true }).isVisible()) throw error;
           await activate(finishedHome.last());
         }
+        // Leaving a signature game mid-round now asks first (결과 발표 보기 / 기록 없이 나가기 / 취소).
+        // Answer it the way a teacher who just wants to go back would.
+        const leaveAsk = page.locator('[role="alertdialog"][aria-labelledby="fun-leave-title"]');
+        if (await leaveAsk.waitFor({ state: 'visible', timeout: 1500 }).then(() => true, () => false)) {
+          await activate(leaveAsk.getByRole('button', { name: '기록 없이 나가기' }));
+          active.answeredLeaveAsk = true;
+        }
         }
         await page.waitForURL(url => url.pathname === hubPath, { timeout: 10000 });
         // The catalog is back when its activity cards are on screen (the hero heading has changed over time).

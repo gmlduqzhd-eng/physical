@@ -115,12 +115,17 @@ async function lessonConfirm(browser) {
     assert.equal(await arena.getAttribute('data-paused'), 'true', 'lessonConfirm: P does not resume behind the dialog');
     assert.equal(await page.locator('.fun-team-score').first().innerText(), scoreBefore, 'lessonConfirm: 1 does not score behind the dialog');
     assert.equal(await ask.count(), 1, 'lessonConfirm: the dialog stays open');
-    // 마우스로 덮개의 '다시 시작'을 눌러도(무대 전체가 inert) 게임은 멈춘 채, 확인 창은 그대로입니다.
-    const resumeBox = await page.locator('.fun-paused button').boundingBox();
-    assert.ok(resumeBox, 'lessonConfirm: the pause cover is shown behind the dialog');
-    await page.mouse.click(resumeBox.x + resumeBox.width / 2, resumeBox.y + resumeBox.height / 2);
+    // 확인 창이 떠 있는 동안 덮개에는 '다시 시작'이 없고 '확인 창에서 골라 주세요'만 보입니다.
+    // 덮개(무대)를 마우스로 눌러도(무대 전체가 inert) 게임은 멈춘 채, 확인 창은 그대로, 초점도 창 안에 남습니다.
+    const cover = page.locator('.fun-paused[data-confirming]');
+    assert.equal(await cover.count(), 1, 'lessonConfirm: the confirming cover is shown behind the dialog');
+    assert.equal(await page.locator('.fun-paused button').count(), 0, 'lessonConfirm: no resume button on the cover while asking');
+    assert.match(await cover.innerText(), /확인 창에서 골라 주세요/, 'lessonConfirm: the cover points to the dialog');
+    const coverBox = await cover.boundingBox();
+    await page.mouse.click(coverBox.x + coverBox.width / 2, coverBox.y + coverBox.height * 0.6);
     await page.waitForTimeout(300);
     assert.equal(await arena.getAttribute('data-paused'), 'true', 'lessonConfirm: a mouse click on the cover does not resume behind the dialog');
+    assert.ok(await page.evaluate(() => !!document.activeElement?.closest('.today-bar-ask')), 'lessonConfirm: a click on the arena keeps focus in the dialog');
     assert.equal(await arena.getAttribute('inert'), '', 'lessonConfirm: the arena is inert while the dialog is open');
     assert.equal(await ask.count(), 1, 'lessonConfirm: the dialog stays open after the click');
     await page.keyboard.press('Escape');
@@ -208,6 +213,35 @@ async function controlGuards(browser) {
     await page.locator('.fun-remote-panel').waitFor({ state: 'detached', timeout: 3000 });
     assert.equal(await arena.getAttribute('data-phase'), 'play', 'controlGuards: Space on the remote button does not skip');
     assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'controlGuards: closing the panel resumes the round');
+    // 리모컨 창을 연 채 P로 다시 시작하면 창이 닫히고 판이 움직입니다(창 뒤에서 흐르지 않게).
+    // 그 뒤 선생님이 직접 멈추고 창을 열었다 닫아도, 직접 건 일시정지는 그대로입니다.
+    await page.locator('.fun-remote-btn').click();
+    await page.locator('.fun-remote-panel').waitFor({ timeout: 3000 });
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === 'true', 3000), 'panelHold: opening pauses');
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.keyboard.press('p');
+    await page.locator('.fun-remote-panel').waitFor({ state: 'detached', timeout: 3000 });
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'panelHold: P with the panel open resumes and closes the panel');
+    await page.keyboard.press('p');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === 'true', 3000), 'panelHold: manual pause');
+    await page.locator('.fun-remote-btn').click();
+    await page.locator('.fun-remote-panel').waitFor({ timeout: 3000 });
+    await page.keyboard.press('Escape');
+    await page.locator('.fun-remote-panel').waitFor({ state: 'detached', timeout: 3000 });
+    await page.waitForTimeout(300);
+    assert.equal(await arena.getAttribute('data-paused'), 'true', 'panelHold: Esc closes the panel and keeps the teacher\'s own pause');
+    await page.keyboard.press('p');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'panelHold: P resumes');
+    // 게임 중 '← 목록'은 바로 나가지 않고 묻습니다(취소에 초점, 묻는 동안 멈춤, Esc는 취소).
+    await page.locator('.fun-exit').click();
+    const leaveAsk = page.locator('.fun-leave-ask');
+    await leaveAsk.waitFor({ timeout: 3000 });
+    assert.match(await page.evaluate(() => document.activeElement?.textContent || ''), /^취소$/, 'leaveAsk: focus on 취소');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === 'true', 3000), 'leaveAsk: the round is held while asking');
+    assert.ok(page.url().includes('/play/sig-signal-captain'), 'leaveAsk: still on the game');
+    await page.keyboard.press('Escape');
+    await leaveAsk.waitFor({ state: 'detached', timeout: 3000 });
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'leaveAsk: Esc cancels and resumes');
     // 끝내기 두 번이면 결과 발표.
     await end.click();
     await end.click();

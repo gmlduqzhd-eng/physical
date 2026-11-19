@@ -102,8 +102,9 @@ test('the remote panel pauses the round and blocks game keys while it covers the
  assert.match(read('src/presentation/components/fun/RemoteLink.tsx'),/useEffect\(\(\)=>\{setRemotePanelOpen\(open\);\},\[open\]\)/,'the panel reports when it opens and closes');
  assert.match(read('src/presentation/components/fun/useFunEngine.ts'),/if\(isRemotePanelOpen\(\)&&cmd\.type!=='pause'\)return;/,'only P works while the panel is open');
  const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
- assert.match(play,/if\(isCuePhase\(phaseRef\.current\)&&!pausedRef\.current\)\{panelHeld\.current=true;/,'opening the panel during a round pauses it');
- assert.match(play,/else if\(panelHeld\.current\)\{/,'closing resumes only what the panel paused');
+ assert.match(play,/if\(isCuePhase\(state\.phase\)&&!state\.paused\)\{panelHeld\.current=true;/,'opening the panel during a round (or reaching a round with it open) pauses it');
+ assert.match(play,/if\(panelHeld\.current\)\{panelHeld\.current=false;if\(state\.paused\)/,'closing resumes only what the panel paused');
+ assert.match(play,/if\(resumed\)\{panelHeld\.current=false;requestRemotePanelClose\(\);return;\}/,'resuming with the panel open (P or phone) closes the panel instead of running behind it, and forgets the panel hold');
 });
 
 test('ending a round asks once more, and the arena cannot be clicked behind the lesson dialog',()=>{
@@ -124,4 +125,45 @@ test('expression activities keep the variant bar at the top on wide screens',()=
  const css=read('src/presentation/components/minigames/common/ExpressionActivity.css');
  assert.match(css,/@media \(max-width:640px\)\{\[data-consolidated\]:has\(\.expression-activity\) > \.movement-quest:first-child\{order:2/);
  assert.doesNotMatch(css.replace(/@media \(max-width:640px\)\{[^\n]*\}\}/g,''),/:has\(\.expression-activity\) > \.movement-quest:first-child\{order:2/);
+});
+
+test('the phone keeps the TV busy flag so it can say TV 확인 중 before any press',async()=>{
+ const {parseSnapshot}=await import('../src/application/funRemote');
+ const base={teams:2,scores:[0,1],phase:'play',secondsLeft:30,combo:0,gameName:'신호 대장',cue:'출동!'};
+ assert.equal(parseSnapshot({...base,busy:true})?.busy,true);
+ assert.equal(parseSnapshot(base)?.busy,undefined);
+ assert.equal(parseSnapshot({...base,busy:'yes'})?.busy,undefined,'only a real true counts');
+});
+
+test('leaving a running round from the in-game back button asks first, and says 오늘 수업 inside a lesson',()=>{
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/onClick=\{askLeave\}>\{inLesson\?'← 오늘 수업':'← 목록'\}/);
+ assert.match(play,/if\(act\?\.gameId===game\.id&&act\.phase==='playing'\)\{leaveHeld\.current=!!act\.hold\?\.\(\);setLeaveAsk\(true\);\}/,'only a running round asks; the round is held while asking');
+ assert.match(play,/role="alertdialog" aria-modal="true"/);
+ for(const label of ['결과 발표 보기','기록 없이 나가기','취소'])assert.ok(play.includes(`>${label}</button>`),label);
+ assert.match(play,/setLessonConfirming\(true\);leaveCancelRef\.current\?\.focus\(\)/,'the arena and the phone remote are blocked while asking, and focus starts on 취소');
+});
+
+test('while a confirm dialog is open the pause cover shows no resume button and clicks cannot steal focus',()=>{
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/confirming\?<div className="fun-paused" data-confirming="true" role="status">/);
+ assert.match(play,/document\.addEventListener\('mousedown',keep,true\)/);
+});
+
+test('ending from the result button also needs a second press; skipping to the climax does not',()=>{
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/cmd\.type==='next'&&state\.phase==='climax'\?'result'/);
+ assert.match(play,/'▶ 한 번 더 누르면 결과 발표'/);
+});
+
+test('the remote panel closes with Esc unless a modal dialog is open',()=>{
+ const link=read('src/presentation/components/fun/RemoteLink.tsx');
+ assert.match(link,/e\.key!=='Escape'\|\|document\.querySelector\('\[aria-modal="true"\],\[role="alertdialog"\]'\)/);
+ assert.match(link,/onRemotePanelCloseRequest\(\(\)=>closeRef\.current\(\)\)/);
+});
+
+test('short phones keep a small −1 next to +1 for 3–4 teams',()=>{
+ const css=read('src/presentation/components/fun/fun.css');
+ assert.doesNotMatch(css,/\.fun-team-buttons button:not\(\.fun-plus\)\{display:none\}/);
+ assert.match(css,/\.fun-scoreboard\[data-teams="4"\] \.fun-team-buttons\{grid-template-columns:minmax\(0,2fr\) minmax\(0,3fr\)/);
 });

@@ -6,7 +6,7 @@ import type {ExportTable} from '../application/documentExport';
 import {isRecord,readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxPop,sfxTimerTick,sfxWhistle,unlockAudio} from '../application/soundEffects';
 import {useRunningClock} from '../application/useRunningClock';
-import {CLASS_TOOLS,COUNTDOWN_PRESETS,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
+import {CLASS_TOOLS,COUNTDOWN_PRESETS,withRo,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
@@ -85,7 +85,12 @@ function Race(){
  useEffect(()=>{if(resetTick)zero();},[resetTick,zero]);
  // 달리기 시작·멈춤·도착·취소 때마다 적어 둔다. 달리는 중이면 '적은 때'부터 흐른 시간을 나중에 더한다.
  const {read}=clock,cleared=clock.ms===0;
- useEffect(()=>{const ms=read();if(!running&&ms===0&&times.every(t=>t===null))removeStorage(RACE_KEY,'session');else writeStorage(RACE_KEY,JSON.stringify({lanes,times,ms,running,savedAt:Date.now()}),'session');},[lanes,times,running,read,cleared,resetTick]);
+ // 적은 때(savedAt): 달리는 중이면 지금 시각(흐른 시간을 나중에 더하므로)으로 적는다. 멈춘 기록은 되살릴 때 다시 적어도
+ // 처음 적은 때를 그대로 두어, 새로고침만으로 하루 보관 기간이나 '오래전 레이스' 안내가 늘어나거나 사라지지 않게 한다.
+ const stamp=useRef(saved?.savedAt??Date.now()),staleKept=useRef(!!saved?.stale),firstWrite=useRef(true);
+ useEffect(()=>{const ms=read();const restoring=firstWrite.current;firstWrite.current=false;
+  if(!restoring||running){stamp.current=Date.now();staleKept.current=false;}
+  if(!running&&ms===0&&times.every(t=>t===null))removeStorage(RACE_KEY,'session');else writeStorage(RACE_KEY,JSON.stringify({lanes,times,ms,running,savedAt:stamp.current,...(staleKept.current?{stale:true}:{})}),'session');},[lanes,times,running,read,cleared,resetTick]);
  const order=active.map((time,lane)=>({time,lane})).filter((r):r is {time:number;lane:number}=>r.time!==null).sort((a,b)=>a.time-b.time);
  const rank=(lane:number)=>{const mine=active[lane];return mine===null?null:1+order.filter(r=>r.time<mine).length;};
  const finish=(lane:number)=>{const at=clock.read(),next=times.map((t,i)=>i===lane?at:t);setTimes(next);setAnnounce(`${lane+1}팀 도착 ${formatClock(at)}`);sfxPop();if(next.slice(0,lanes).every(t=>t!==null)){setRunning(false);sfxWhistle();}};
@@ -191,32 +196,37 @@ function Countdown(){
  useEffect(()=>{
   if(!running)return;
   const tick=()=>{const remain=Math.max(0,(endAt.current-Date.now())/1000),sec=Math.ceil(remain);setLeft(remain);
-   if(remain<=0){setRunning(false);sfxWhistle();return;}
+   if(remain<=0){focusNext.current='start-soft';setRunning(false);sfxWhistle();return;}
    if(sec<=5&&sec!==lastBeep.current){lastBeep.current=sec;sfxTimerTick(sec);}};
   const timer=setInterval(tick,100);document.addEventListener('visibilitychange',tick);
   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};
  },[running]);
  // 시작·멈춤·시간 바꾸기 때마다 적어 둔다(1초마다 쓰지 않는다: 세는 중에는 끝나는 시각만 있으면 된다).
  const fresh=!running&&left===total,done=!running&&left<=0;
- useEffect(()=>{if(fresh)removeStorage(COUNTDOWN_KEY,'session');else writeStorage(COUNTDOWN_KEY,JSON.stringify({total,left,running,endAt:running?endAt.current:null,savedAt:Date.now()}),'session');
+ // 되살린 직후의 첫 기록은 처음 적은 때를 그대로 둔다(새로고침만으로 1시간 보관 기간이 늘어나지 않게).
+ const stamp=useRef(saved?.savedAt??Date.now()),firstWrite=useRef(true);
+ useEffect(()=>{const restoring=firstWrite.current;firstWrite.current=false;if(!restoring)stamp.current=Date.now();
+  if(fresh)removeStorage(COUNTDOWN_KEY,'session');else writeStorage(COUNTDOWN_KEY,JSON.stringify({total,left,running,endAt:running?endAt.current:null,savedAt:stamp.current}),'session');
  // left는 세는 동안 0.1초마다 바뀌므로 멈췄을 때·끝났을 때만 반영한다.
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[total,running,fresh,done]);
  // 초점: 시작하면 '멈춤'으로, 멈추거나 끝나면 '시작'으로 옮겨 키보드로도 이어서 누를 수 있게 한다.
- const focusNext=useRef<'start'|'pause'|null>(null);
- useEffect(()=>{const want=focusNext.current;focusNext.current=null;if(want==='pause')pauseRef.current?.focus();else if(want==='start')startRef.current?.focus();},[running]);
+ // 저절로 끝났을 때(start-soft)는 초점이 막 꺼진 '멈춤'이나 아무 데도 없을 때만 옮긴다(다른 곳을 보던 선생님을 방해하지 않게).
+ const focusNext=useRef<'start'|'start-soft'|'pause'|null>(null);
+ const focusStart=(soft=false)=>{const active=document.activeElement;if(soft&&active&&active!==document.body&&active!==pauseRef.current)return;startRef.current?.focus();};
+ useEffect(()=>{const want=focusNext.current;focusNext.current=null;if(want==='pause')pauseRef.current?.focus();else if(want==='start')focusStart();else if(want==='start-soft')focusStart(true);},[running]);
  const apply=(seconds:number)=>{setRunning(false);setTotal(seconds);setLeft(seconds);setPending(null);};
- // 세는 중에 다른 시간을 누르면 바로 바꾸지 않고 먼저 묻는다.
- const choose=(seconds:number)=>{if(running){if(seconds!==total)setPending(seconds);return;}apply(seconds);};
+ // 세는 중이거나, 멈춰 둔 남은 시간이 있으면 다른 시간을 바로 바꾸지 않고 먼저 묻는다.
+ const choose=(seconds:number)=>{if(seconds===total)return;if(running||(!fresh&&!done)){setPending(seconds);return;}apply(seconds);};
  const start=()=>{unlockAudio();const from=left>0?left:total;if(left<=0)setLeft(total);endAt.current=Date.now()+from*1000;lastBeep.current=-1;focusNext.current='pause';setResumed(false);setRunning(true);};
  const pause=()=>{setLeft(Math.max(0,(endAt.current-Date.now())/1000));focusNext.current='start';setRunning(false);};
  const label=(seconds:number)=>COUNTDOWN_PRESETS.find(p=>p.seconds===seconds)?.label??formatCountdown(seconds);
  return <>
   <div className="tools-bar"><div className="sports-filters tools-presets" role="group" aria-label="시간 고르기">{COUNTDOWN_PRESETS.map(p=><button key={p.seconds} aria-pressed={total===p.seconds} onClick={()=>choose(p.seconds)}>{total===p.seconds&&<span aria-hidden="true">✓ </span>}{p.label}</button>)}</div>
-   <div className="flagship-row tools-countdown-controls"><button ref={startRef} className="primary tools-go" disabled={running} onClick={start}>{done?'▶ 다시 시작':fresh?'▶ 시작':'▶ 이어서'}</button>
-    <button ref={pauseRef} className="tools-go" disabled={!running} onClick={pause}>멈춤</button><button className="tools-go" disabled={fresh} onClick={()=>{focusNext.current='start';apply(total);}}>처음으로</button></div></div>
+   <div className="flagship-row tools-countdown-controls"><button ref={startRef} className="primary tools-go" disabled={running} hidden={running} onClick={start}>{done?'▶ 다시 시작':fresh?'▶ 시작':'▶ 이어서'}</button>
+    <button ref={pauseRef} className="tools-go" disabled={!running} onClick={pause}>멈춤</button><button className="tools-go" disabled={fresh} onClick={()=>{const wasRunning=running;focusNext.current='start';apply(total);if(!wasRunning)requestAnimationFrame(()=>focusStart());}}>처음으로</button></div></div>
   {resumed&&saved&&<Resume message={saved.running?`${label(total)} 카운트다운을 이어서 세고 있어요.`:saved.left<=0?'카운트다운이 끝나 있어요.':`멈춰 둔 ${label(total)} 카운트다운이 남아 있어요.`} onKeep={()=>setResumed(false)} onFresh={()=>{apply(total);setResumed(false);}}/>}
-  {pending!==null&&<Confirm message={`지금 세는 시간을 멈추고 ${label(pending)}로 바꿀까요?`} yes={`${label(pending)}로 바꾸기`} onNo={()=>setPending(null)} onYes={()=>apply(pending)}/>}
+  {pending!==null&&<Confirm message={running?`지금 세는 시간을 멈추고 ${withRo(label(pending))} 바꿀까요?`:`멈춰 둔 남은 시간이 지워져요. ${withRo(label(pending))} 바꿀까요?`} yes={`${withRo(label(pending))} 바꾸기`} onNo={()=>setPending(null)} onYes={()=>apply(pending)}/>}
   <div className="tools-big tools-countdown" data-done={done?'yes':'no'} data-last={running&&left<=5?'yes':'no'}><strong role="timer" aria-live="off" aria-label={`남은 시간 ${formatCountdown(left)}`}>{formatCountdown(left)}</strong>
    <span role="status">{done?'끝! 모두 멈춰요':running?`${label(total)} · 시간이 가고 있어요`:fresh?`${label(total)} · 시작을 눌러요`:'멈췄어요'}</span></div>
   <p className="sports-muted">마지막 5초는 소리로 세고, 끝나면 호루라기가 울려요. 소리가 안 나면 기기 소리를 켜요. 새로고침해도 이어서 세요.</p>

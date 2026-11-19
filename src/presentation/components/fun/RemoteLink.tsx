@@ -1,5 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
-import {setRemotePanelOpen} from './remotePanelState';
+import {onRemotePanelCloseRequest,setRemotePanelOpen} from './remotePanelState';
 import type {FunCommandBus} from '../../../application/funCommandBus';
 import {createTvTransport,forgetTvKeys,formatConfirmCode,generateRoomCode,generateRoomSecret,isRoomSecret,isValidRoomCode,loadTvKeys,MAX_REMOTES,normalizeRoomCode,openRemoteChannel,remoteConfigured,remotePin,remoteUrl,touchTvKeys,type RemoteDevice,type RemoteStatus,type TvRemoteControls} from '../../../application/funRemote';
 import {LocalQRCode} from '../LocalQRCode';
@@ -133,6 +133,19 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
  useEffect(()=>()=>setRemotePanelOpen(false),[]);
  const start=()=>{setOpen(true);if(!detach.current&&!codeRef.current)connect(initialCode);};
  const close=()=>{setOpen(false);if(devices.some(d=>d.state==='pending'))autoOpenOff.current=true;};
+ // 게임이 다시 움직이면(선생님이 P·휴대폰으로 '다시 시작') 창을 닫는다: 창 뒤에서 판이 흐르지 않게.
+ const closeRef=useRef(close);closeRef.current=close;
+ useEffect(()=>onRemotePanelCloseRequest(()=>closeRef.current()),[]);
+ // Esc로도 닫는다(확인 창처럼 다른 모달이 떠 있으면 그쪽이 Esc를 받는다). 닫으면 초점을 '📱' 버튼으로 돌려준다.
+ const btnRef=useRef<HTMLButtonElement>(null);
+ useEffect(()=>{
+  if(!open)return;
+  const key=(e:KeyboardEvent)=>{
+   if(e.key!=='Escape'||document.querySelector('[aria-modal="true"],[role="alertdialog"]'))return;
+   e.preventDefault();e.stopPropagation();closeRef.current();btnRef.current?.focus({preventScroll:true});
+  };
+  window.addEventListener('keydown',key,true);return ()=>window.removeEventListener('keydown',key,true);
+ },[open]);
  const rotate=()=>{
   if(codeRef.current){writeApproved(codeRef.current,[]);forgetTvKeys(codeRef.current);forgetSecret(codeRef.current);}
   controls.current?.disconnectAll('rotated');
@@ -160,7 +173,7 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
  const url=code&&pin?remoteUrl(window.location.origin,code,pin,secret||undefined):'';
  const label=approved.length?`📱 리모컨 ${approved.length}대 연결됨`:'📱 휴대폰 리모컨';
  return <>
-  <button type="button" className="fun-remote-btn" aria-expanded={open} data-linked={approved.length>0||undefined} data-pending={pending.length>0||undefined} onClick={()=>open?close():start()}>
+  <button ref={btnRef} type="button" className="fun-remote-btn" aria-expanded={open} data-linked={approved.length>0||undefined} data-pending={pending.length>0||undefined} onClick={()=>open?close():start()}>
    {label}{pending.length>0&&<span className="fun-remote-badge" aria-label={`허용 기다리는 휴대폰 ${pending.length}대`}>{pending.length}</span>}
   </button>
   {open&&<div className="fun-remote-panel" role="dialog" aria-label="휴대폰 리모컨 연결">
