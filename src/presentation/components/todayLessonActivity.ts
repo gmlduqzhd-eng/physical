@@ -25,6 +25,14 @@ export const getLessonActivity=()=>current;
 export function setLessonActivity(next:LessonActivity|null){if(current===next)return;current=next;emit();}
 export const useLessonActivity=()=>useSyncExternalStore(subscribe,getLessonActivity,()=>null);
 
+// '다음 활동으로 갈까요?' 확인 창이 떠 있는지. 떠 있는 동안 게임은 리모컨 명령도 받지 않는다(창 뒤에서 게임이 움직이지 않게).
+let confirming=false;
+const confirmListeners=new Set<()=>void>();
+const subscribeConfirm=(l:()=>void)=>{confirmListeners.add(l);return ()=>{confirmListeners.delete(l);};};
+export const isLessonConfirming=()=>confirming;
+export function setLessonConfirming(next:boolean){if(confirming===next)return;confirming=next;confirmListeners.forEach(l=>l());}
+export const useLessonConfirming=()=>useSyncExternalStore(subscribeConfirm,isLessonConfirming,()=>false);
+
 /** 게임 화면이 지금 상태를 알린다. 화면이 사라지면 지운다. */
 export function useReportLessonActivity(activity:LessonActivity|null){
  const gameId=activity?.gameId,phase=activity?.phase;

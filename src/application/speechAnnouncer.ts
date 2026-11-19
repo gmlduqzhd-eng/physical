@@ -192,12 +192,13 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
   status,
   unlock(){
    if(unlocked||!synth||!make)return;
-   // 목록이 비어 있는 기기(no-voices)도 깨워 본다: 소리가 시작되면 읽을 수 있는 기기다.
+   // 목록이 비어 있는 기기(no-voices)도 깨워 둔다(이어지는 '목소리 확인'이 같은 손동작 안에서 읽히게).
    const st=status();if(st==='no-korean'||st==='unsupported')return;
    try{
     const u=make(' ');u.lang='ko-KR';u.volume=0;u.rate=1;u.pitch=1;
     const done=()=>{warming=false;};
-    u.onstart=()=>{markHeard();};u.onend=done;u.onerror=done;
+    // 소리 없는 빈 문장이 시작됐다고 '읽을 수 있는 기기'로 보지 않는다: 지원 판정은 실제로 들리는 문장('목소리 확인' 등)이 시작될 때만 한다.
+    u.onstart=()=>{unlocked=true;};u.onend=done;u.onerror=done;
     warming=true;
     synth.speak(u);
     // 사용자 동작 안에서 한 번 깨웠으면 됐다고 본다(빈 문장은 시작 알림이 오지 않는 브라우저도 있다).

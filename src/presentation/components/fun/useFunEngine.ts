@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useMemo,useReducer,useRef,useState} from 'react';
 import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunHooks,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
+import {isLessonConfirming} from '../todayLessonActivity';
 import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
 export interface FunEngineOptions {
@@ -20,6 +21,8 @@ export interface FunEngineOptions {
 /** Space를 한 번 누른 뒤 이 시간 안에 한 번 더 눌러야 본게임·마지막 승부를 넘긴다. */
 export const SKIP_CONFIRM_MS=3000;
 const isSkipPhase=(p:FunState['phase'])=>p==='play'||p==='climax';
+/** 이 안의 버튼은 Space가 버튼 자체를 누른다. 그 밖(무대의 선생님 버튼 등)에서는 Space가 늘 '다음'이다. */
+const NATIVE_SPACE_ZONES='.tv-voice,.fun-remote-panel,.fun-paused';
 type Action={kind:'cmd';cmd:FunCommand}|{kind:'reset';state:FunState};
 /** 움직임 줄이기 설정이면 시범을 저절로 넘기지 않는다. */
 export const prefersReducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -47,7 +50,8 @@ export function useFunEngine(opts:FunEngineOptions){
  const reset=useCallback(()=>send({kind:'reset',state:createFunState({teams:opts.teams,timing:opts.timing,seed:opts.seed+1})}),[opts.teams,opts.timing,opts.seed]);
 
  // 명령 버스: TV 버튼·키보드·리모컨이 모두 여기로 들어온다.
- useEffect(()=>bus.subscribe(cmd=>dispatch(cmd)),[bus,dispatch]);
+ // '다음 활동으로 갈까요?' 확인 창이 떠 있는 동안에는 리모컨 명령을 받지 않는다(창 뒤에서 게임이 다시 움직이지 않게).
+ useEffect(()=>bus.subscribe((cmd,source)=>{if(source==='remote'&&isLessonConfirming())return;dispatch(cmd);}),[bus,dispatch]);
 
  // 시간: 250ms마다 실제 흐른 시간만큼 tick.
  useEffect(()=>{
@@ -78,6 +82,8 @@ export function useFunEngine(opts:FunEngineOptions){
    if(stateRef.current.phase==='result')return;
    // Enter는 초점이 있는 버튼을 누르게 둔다. Space는 늘 '다음'이다(마우스로 버튼을 누른 뒤에도 Space로 진행).
    if(e.key==='Enter'&&target?.closest('button,a,summary'))return;
+   // 음성 설정·리모컨 창·일시정지 덮개의 버튼에 초점이 있으면 Space도 그 버튼을 누른다(게임을 넘기지 않는다).
+   if(e.key===' '&&target?.closest(NATIVE_SPACE_ZONES)?.contains(target.closest('button,a,summary')))return;
    const cmd=keyToFunCommand({key:e.key,shiftKey:e.shiftKey,target});
    if(!cmd)return;
    e.preventDefault();

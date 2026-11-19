@@ -15,6 +15,7 @@ export interface FunRemoteSnapshot {
  gameId:string;gameName:string;phase:FunPhase;paused:boolean;secondsLeft:number;
  teams:number;scores:number[];scoreLabel:string;cue:string;combo:number;comboFull:boolean;
  /** 단계 이름(TV와 같은 말: '마지막 승부' 등). 리모컨은 이 글자를 그대로 보여 준다. */ phaseLabel?:string;
+ /** TV가 확인 창을 띄워 둔 동안 true: 리모컨 명령을 받지 않고 'TV에서 확인 중'이라고 알린다. */ busy?:boolean;
  /** 지금 일으킬 수 있는 깜짝 이벤트(게임마다 다름). 리모컨은 여기 없는 이벤트 버튼을 끈다. */ events?:SurpriseKind[];
 }
 export interface FunTransport {
