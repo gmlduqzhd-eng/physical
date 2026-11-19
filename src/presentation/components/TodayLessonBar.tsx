@@ -5,7 +5,7 @@ import {saveTodayRun,useTodayRun} from '../../application/todayLessonStore';
 import {STAGE_LABEL,advanceRun,currentStage,stagePath} from '../../domain/todayLesson';
 import {isSignatureId} from '../../domain/signatureGames';
 import {TeacherQuickGuide} from './TeacherQuickGuide';
-import {getLessonActivity,useLessonActivity} from './todayLessonActivity';
+import {getLessonActivity,setLessonConfirming,useLessonActivity} from './todayLessonActivity';
 import {useModalDialog} from '../../application/useModalDialog';
 import '../TodayLesson.css';
 import './TodayLessonBar.css';
@@ -35,6 +35,12 @@ export function TodayLessonBar(){
  const release=()=>{if(held.current){held.current=false;getLessonActivity()?.release?.();}};
  const cancel=()=>{release();refocus.current=true;setAsking(null);};
  const dialogRef=useModalDialog(!!ask,cancel);
+ // 처음 초점은 '취소'에 둔다: Space·Enter를 무심코 눌러도 게임이 끝나거나 다음 활동으로 넘어가지 않는다.
+ const cancelRef=useRef<HTMLButtonElement>(null);
+ const asked=!!ask;
+ useEffect(()=>{if(asked)cancelRef.current?.focus();},[asked]);
+ // 확인 창이 떠 있는 동안 게임이 리모컨 명령을 받지 않게 알린다.
+ useEffect(()=>{setLessonConfirming(asked);return ()=>setLessonConfirming(false);},[asked]);
  // 취소하면 초점을 '다음 단계' 버튼으로 돌려준다(창이 사라지며 초점을 잃지 않게).
  useEffect(()=>{if(ask)return;held.current=false;if(refocus.current){refocus.current=false;nextRef.current?.focus();}},[ask]);
  const guide=playId&&isSignatureId(playId)?<TeacherQuickGuide/>:null;
@@ -75,7 +81,7 @@ export function TodayLessonBar(){
    <span id="today-bar-ask-text" className="today-bar-ask-text">{askText}</span>
    {playing&&finish&&<button type="button" className="today-bar-next" onClick={()=>{held.current=false;setAsking(null);finish();}}>결과 발표 보기</button>}
    <button type="button" className="today-bar-skip" onClick={()=>go(ask.status)}>기록 없이 넘어가기</button>
-   <button type="button" className="today-bar-skip" onClick={cancel}>취소</button>
+   <button ref={cancelRef} type="button" className="today-bar-skip" onClick={cancel}>취소</button>
   </div>:<>
    <button ref={nextRef} type="button" className="today-bar-next" onClick={()=>step('done')}>{playing?'이 활동 마치고 다음 활동':'다음 단계 ▶'}</button>
    <button type="button" className="today-bar-skip" onClick={()=>step('skipped')}>건너뛰기</button>

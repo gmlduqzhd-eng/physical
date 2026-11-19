@@ -610,6 +610,8 @@ export function createTvTransport(channel:RemoteChannel,opts:{room:string;keys:R
  const blockedNow=(cmd:ExternalFunCommand)=>{
   // TV 화면이 아직 게임을 띄우지 않았으면(시작·이어 하기 화면) 받지 않는다: 휴대폰에 '보냈어요'가 거짓으로 뜨지 않게.
   if(!latest)return 'idle';
+  // TV가 '다음 활동으로 갈까요?'를 묻는 동안에는 받지 않는다(창 뒤에서 게임이 움직이지 않게).
+  if(latest.busy)return 'busy';
   if(latest.paused&&PAUSED_BLOCKED.has(cmd.type))return 'paused';
   if(cmd.type==='event'&&latest.events&&!latest.events.includes(cmd.event))return 'event';
   return null;
