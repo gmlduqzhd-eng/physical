@@ -10,10 +10,15 @@
  */
 
 /** 브라우저 speechSynthesis에서 이 모듈이 쓰는 부분만(테스트에서 가짜로 바꿀 수 있게). */
+import {createPhrasePicker,nativeCounts,TONE_PROSODY,type SpeechTone} from './speechText';
+export type {SpeechTone} from './speechText';
+
+/** 목소리 목록의 한 항목(브라우저 SpeechSynthesisVoice에서 쓰는 부분만). */
+export interface VoiceLike {lang:string;name?:string;voiceURI?:string;localService?:boolean;default?:boolean}
 export interface SpeechSynthLike {
  speak(u:SpeechUtteranceLike):void;
  cancel():void;
- getVoices():ReadonlyArray<{lang:string;name?:string}>;
+ getVoices():ReadonlyArray<VoiceLike>;
  /** 지금 읽는 중인지(있으면 끊은 뒤 잠깐 쉬고 읽는다: Safari는 cancel 바로 뒤의 speak를 버리기도 한다). */
  readonly speaking?:boolean;
  readonly pending?:boolean;
@@ -58,6 +63,8 @@ export function speechText(raw:string|undefined|null,maxChars=MAX_SPEECH_CHARS):
  // 'N/M'(진행) → 'M 중 N'
  t=t.replace(/(\d+)\s*\/\s*(\d+)/g,'$2 중 $1');
  t=t.replace(QUIET,' ').replace(PAUSE,', ');
+ // 작은 수는 고유어로: '3명' → '세 명', '2번째' → '두 번째'
+ t=nativeCounts(t);
  // 괄호 안 짧은 설명은 쉼표로 붙여 읽는다
  t=t.replace(/[()（）]/g,', ');
  t=t.replace(/\s*,(\s*,)+/g,',').replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])(?=[^\s,.!?])/g,'$1 ').replace(/\s{2,}/g,' ').trim();
@@ -67,6 +74,29 @@ export function speechText(raw:string|undefined|null,maxChars=MAX_SPEECH_CHARS):
   t=(end>20?cut.slice(0,end+1):cut.replace(/[,\s]+\S*$/,'')).trim();
  }
  return /[\p{L}\p{N}]/u.test(t)?t:'';
+}
+
+/**
+ * 한국어 목소리 고르기: 사람 목소리에 가까운 것을 먼저.
+ * 1) 이름에 Natural·Online·Neural·Premium·Enhanced·향상이 있거나 이름이 알려진 좋은 목소리(Google 한국의·유나·선희·인준·현수)
+ * 2) 기기 밖(온라인) 목소리 3) 기기 기본 목소리 4) 그 밖의 한국어 목소리. 딱딱하게 들리는 오래된 데스크톱 목소리(Heami 등)는 다른 게 있으면 뒤로 뺀다.
+ */
+export function koreanVoiceScore(v:VoiceLike):number{
+ if(!/^ko([-_]|$)/i.test(v.lang))return -Infinity;
+ const id=`${v.name??''} ${v.voiceURI??''}`;
+ let score=0;
+ if(/natural|neural|online|premium|enhanced|향상|고급/i.test(id))score+=60;
+ if(/google\s*한국의|google.*korean/i.test(id))score+=45;
+ if(/yuna|유나|sunhi|선희|injoon|인준|hyunsu|현수|seoyeon|서연|jimin|지민/i.test(id))score+=30;
+ if(v.localService===false)score+=15;
+ if(v.default)score+=3;
+ if(/heami|해미|compact|eloquence/i.test(id))score-=40;
+ return score;
+}
+export function bestKoreanVoice<V extends VoiceLike>(voices:ReadonlyArray<V>):V|null{
+ let best:V|null=null,bestScore=-Infinity;
+ for(const v of voices){const sc=koreanVoiceScore(v);if(sc>bestScore){best=v;bestScore=sc;}}
+ return bestScore===-Infinity?null:best;
 }
 
 /** 마지막 10초에 읽는 초: 10, 5, 3, 2, 1. */
@@ -102,6 +132,8 @@ export interface SayOptions {
  priority?:boolean;
  /** 일시정지여도 읽는다('목소리 확인' 단추). */ force?:boolean;
  /** 규칙 안내처럼 긴 문장도 자르지 않고 읽는다. */ long?:boolean;
+ /** 말투: 차분하게(준비·정리운동·안내) / 보통 / 신나게(마지막 승부·결과·깜짝 이벤트). 기본은 보통. */ tone?:SpeechTone;
+ /** 앞에 붙는 알림음(띵)을 내지 않는다. */ noEarcon?:boolean;
 }
 export interface Announcer {
  say(text:string,opts?:SayOptions):boolean;
@@ -113,6 +145,7 @@ export interface Announcer {
  /** 손동작(클릭·터치 끝·키) 안에서 부른다(iOS·Chrome은 사용자 동작 뒤에만 소리를 낸다). 성공할 때까지 여러 번 불러도 된다. */ unlock():void;
  /** 소리가 한 번이라도 실제로 났거나, 사용자 동작 안에서 깨우기를 시도했으면 true. */ unlocked():boolean;
  /** 마지막으로 읽은 문장(테스트·화면 표시용). */ last():string|null;
+ /** 지금 고른 목소리 이름(설정 판 표시용). 없으면 null(브라우저 기본 목소리). */ voiceName():string|null;
 }
 
 export interface AnnouncerEnv {
@@ -121,7 +154,11 @@ export interface AnnouncerEnv {
  later?:(fn:()=>void,ms:number)=>unknown;clearLater?:(id:unknown)=>void;
  /** 소리가 처음 실제로 났을 때 부른다(목소리 목록이 비어 있어도 읽을 수 있는 기기에서 지원 표시를 다시 그리게). */
  onHeard?:()=>void;
+ /** 말하기 시작·끝(배경음악 줄이기에 쓴다). */ onSpeaking?:(speaking:boolean)=>void;
+ /** 한동안 조용하다가 말을 꺼낼 때 앞에 낼 짧은 알림음. */ earcon?:()=>void;
+ /** 바꿔 쓸 말 고르기에 쓰는 난수(테스트에서 바꿀 수 있게). */ random?:()=>number;
 }
+/** 이만큼 조용했다가 말할 때만 알림음을 낸다(신호가 빠르게 이어질 때는 내지 않는다). */ export const EARCON_QUIET_MS=4000;
 export function createAnnouncer(env:AnnouncerEnv):Announcer{
  const now=env.now??(()=>Date.now());
  const later=env.later??((fn,ms)=>setTimeout(fn,ms));
@@ -136,8 +173,12 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
  let waiting:unknown=null;
  const markHeard=()=>{unlocked=true;if(!heard){heard=true;env.onHeard?.();}};
  let lastText:string|null=null,lastAt=-Infinity,priorityAt=-Infinity;
+ let current:SpeechUtteranceLike|null=null;
  const synth=env.synth,make=env.utterance;
- const korean=()=>{try{return synth?.getVoices().find(v=>/^ko([-_]|$)/i.test(v.lang))??null;}catch{return null;}};
+ const korean=()=>{try{return synth?bestKoreanVoice(synth.getVoices()):null;}catch{return null;}};
+ const picker=createPhrasePicker(env.random);
+ let speakingNow=false;
+ const setSpeaking=(on:boolean)=>{if(on===speakingNow)return;speakingNow=on;try{env.onSpeaking?.(on);}catch{/* 무시 */}};
  const status=():SpeechStatus=>{
   if(!synth||!make)return 'unsupported';
   let voices:ReadonlyArray<{lang:string}>;
@@ -146,14 +187,18 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
   return korean()?'ok':'no-korean';
  };
  const dropWaiting=()=>{if(waiting!==null){clearLater(waiting);waiting=null;}};
- const cancel=()=>{dropWaiting();warming=false;try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}};
- const speakNow=(text:string)=>{
+ const cancel=()=>{dropWaiting();warming=false;try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}setSpeaking(false);};
+ const speakNow=(text:string,tone:SpeechTone='normal')=>{
   if(!synth||!make)return false;
   try{
    const u=make(text);
-   u.lang='ko-KR';u.rate=SPEECH_RATE[prefs.rate];u.volume=SPEECH_VOLUME[prefs.volume];u.pitch=1;
+   const pro=TONE_PROSODY[tone]??TONE_PROSODY.normal;
+   u.lang='ko-KR';u.rate=SPEECH_RATE[prefs.rate]*pro.rate;u.volume=SPEECH_VOLUME[prefs.volume];u.pitch=pro.pitch;
    const voice=korean();if(voice)u.voice=voice;
-   u.onstart=markHeard;
+   u.onstart=()=>{markHeard();setSpeaking(true);};
+   u.onend=()=>{if(u===current)setSpeaking(false);};
+   u.onerror=()=>{if(u===current)setSpeaking(false);};
+   current=u;
    // 깨우기용 빈 문장만 줄에 있으면 끊지 않고 바로 뒤에 붙인다(끊고 쉬면 손동작 밖에서 읽게 되어 iOS에서 소리가 안 난다).
    if(warming){warming=false;dropWaiting();synth.speak(u);return true;}
    // 방금 끊고 쉬는 중이어도 '읽는 중'으로 본다(끊은 바로 뒤에 읽으면 Safari가 새 말을 버린다).
@@ -181,7 +226,9 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
     if(text===lastText&&t-lastAt<REPEAT_GAP_MS)return false;
     if(!opts.priority&&t-priorityAt<PRIORITY_HOLD_MS)return false;
    }
-   if(!speakNow(text))return false;
+   // 한동안 조용했으면 짧은 알림음(띵)으로 먼저 알린다.
+   if(!opts.noEarcon&&env.earcon&&t-lastAt>=EARCON_QUIET_MS){try{env.earcon();}catch{/* 무시 */}}
+   if(!speakNow(picker.vary(text),opts.tone))return false;
    lastText=text;lastAt=t;if(opts.priority)priorityAt=t;
    return true;
   },
@@ -207,5 +254,6 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
   },
   unlocked:()=>unlocked,
   last:()=>lastText,
+  voiceName(){const v=korean();return v?.name??null;},
  };
 }

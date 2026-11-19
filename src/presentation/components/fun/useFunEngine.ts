@@ -3,7 +3,7 @@ import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,co
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {isLessonConfirming} from '../todayLessonActivity';
 import {isRemotePanelOpen} from './remotePanelState';
-import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
+import {sfxCountdown,sfxFanfare,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
 export interface FunEngineOptions {
  teams:number;timing:FunTiming;seed:number;
@@ -108,7 +108,7 @@ export function useFunEngine(opts:FunEngineOptions){
  useEffect(()=>{
   const p=prev.current;prev.current=state;
   if(opts.sound===false)return;
-  if(p.phase!==state.phase){if(state.phase==='result')sfxSuccess();else if(state.phase!=='demo')sfxWhistle();}
+  if(p.phase!==state.phase){if(state.phase==='result')sfxFanfare();else if(state.phase!=='demo')sfxWhistle();}
   if(!p.event&&state.event)sfxWhoosh();
   if(isFinalCountdown(state)&&secondsLeft(state)!==secondsLeft(p))sfxTimerTick(secondsLeft(state));
   if(state.phase==='tutorial'&&p.phase==='demo')sfxCountdown();

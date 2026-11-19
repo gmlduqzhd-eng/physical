@@ -260,7 +260,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  const say=voice.say;
  const spokenPhase=useRef<FunState['phase']|null>(null);
  const eventSeq=state.event?.seq;
- useEffect(()=>{if(state.event&&!state.paused)say(surpriseSpeech(state.event.kind),{priority:true});
+ useEffect(()=>{if(state.event&&!state.paused)say(surpriseSpeech(state.event.kind),{priority:true,tone:'excited'});
   // eslint-disable-next-line react-hooks/exhaustive-deps -- 새 깜짝 이벤트가 시작될 때만 읽는다.
  },[eventSeq]);
  const cueKey=isCuePhase(state.phase)&&!state.paused?`${state.phase}:${state.cueIndex}:${shown.text}`:'';
@@ -268,13 +268,14 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
   if(!cueKey)return;
   // 판이 바뀐 첫 신호는 판 이름을 붙여 한 번에 읽는다(두 문장이 서로 끊지 않게).
   const fresh=spokenPhase.current!==state.phase;
-  if(say(`${fresh?`${PHASE_LABEL[state.phase]}! `:''}${shown.text}`))spokenPhase.current=state.phase;
+  // 마지막 승부는 신나게, 시범·연습 판은 차분하게 읽는다.
+  if(say(`${fresh?`${PHASE_LABEL[state.phase]}! `:''}${shown.text}`,{tone:state.phase==='climax'?'excited':state.phase==='demo'||state.phase==='tutorial'?'calm':'normal'}))spokenPhase.current=state.phase;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- 신호가 바뀔 때만 읽는다.
  },[cueKey]);
  const countdown=engine.finalCountdown&&!state.paused?countdownSpeech(engine.secondsLeft):null;
- useEffect(()=>{if(countdown)say(countdown,{priority:true});},[countdown,say]);
+ useEffect(()=>{if(countdown)say(countdown,{priority:true,tone:'excited',noEarcon:true});},[countdown,say]);
  const resultLine=state.phase==='result'?resultHeadlineOf(game,state):'';
- useEffect(()=>{if(resultLine)say(`${FUN_PHASE_LABEL.result}! ${resultLine}`,{priority:true});},[resultLine,say]);
+ useEffect(()=>{if(resultLine)say(`${FUN_PHASE_LABEL.result}! ${resultLine}`,{priority:true,tone:'excited'});},[resultLine,say]);
 
  if(state.phase==='result'){
   const summary=resultSummary(state,game);
