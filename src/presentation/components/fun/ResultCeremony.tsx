@@ -6,10 +6,11 @@ const MEDAL=['🥇','🥈','🥉','🏅'];
  * 결과 발표: 우승 팀, 배운 개념, 가장 잘한 동작, 돌아보기 질문, 다음 도전.
  * 기록은 선생님이 버튼 하나로 확인해 남긴다(참여를 미리 체크해 두지 않는다).
  */
-export function ResultCeremony({summary,teams,scoreLabel,mvpMove,mvpLabel='가장 잘한 동작',endedBy,extra,afterRecord,onRecord,onReplay,onExit,recorded}:{
+export function ResultCeremony({summary,teams,scoreLabel,mvpMove,mvpLabel='가장 잘한 동작',endedBy,extra,afterRecord,onRecord,onReplay,onExit,recorded,exitLabel='활동 목록으로'}:{
  summary:ResultSummary;teams:number;scoreLabel:string;mvpMove?:string;mvpLabel?:string;endedBy:'time'|'goal'|'teacher'|null;extra?:ReactNode;
  /** 선생님 반응(👍/👎)·반 원정 지도 칸. 결과 화면이 열리면 바로 보인다(기록 전에도 반응을 남길 수 있다). */ afterRecord?:ReactNode;
  onRecord:(participation:'performed'|'rested')=>void;onReplay:()=>void;onExit:()=>void;recorded:boolean;
+ /** 나가는 버튼 이름. '오늘 수업'에서 열었으면 '오늘 수업으로'. */ exitLabel?:string;
 }){
  const [askRest,setAskRest]=useState(false);
  // 결과 화면이 열리면 제목으로 초점을 옮긴다(키보드·화면 낭독기가 결과부터 읽게).
@@ -40,9 +41,9 @@ export function ResultCeremony({summary,teams,scoreLabel,mvpMove,mvpLabel='가�
     <button type="button" className="fun-primary" onClick={()=>onRecord('performed')}>✅ 모두 참여했어요 · 기록하기</button>
     {!askRest?<button type="button" className="fun-secondary" onClick={()=>setAskRest(true)}>쉬면서 지켜본 친구가 많았어요</button>
      :<button type="button" className="fun-secondary" onClick={()=>onRecord('rested')}>‘쉬면서 함께함’으로 기록하기</button>}
-   </>:<p className="fun-note" role="status">기록했어요. 위 칸에서 오늘 놀이 반응(👍/👎)을 남길 수 있어요. 한 판 더 하거나 목록으로 돌아가요.</p>}
+   </>:<p className="fun-note" role="status">기록했어요. 위 칸에서 오늘 놀이 반응(👍/👎)을 남길 수 있어요. 한 판 더 하거나 {exitLabel==='활동 목록으로'?'목록으로 돌아가요':'오늘 수업으로 돌아가요'}.</p>}
    <button type="button" className="fun-secondary" onClick={onReplay}>🔁 한 판 더</button>
-   <button type="button" className="fun-link" onClick={onExit}>활동 목록으로</button>
+   <button type="button" className="fun-link" onClick={onExit}>{exitLabel}</button>
   </div>
   </div>
  </section>;

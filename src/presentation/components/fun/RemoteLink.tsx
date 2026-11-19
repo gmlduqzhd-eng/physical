@@ -1,4 +1,5 @@
 import {useEffect,useRef,useState} from 'react';
+import {setRemotePanelOpen} from './remotePanelState';
 import type {FunCommandBus} from '../../../application/funCommandBus';
 import {createTvTransport,forgetTvKeys,formatConfirmCode,generateRoomCode,generateRoomSecret,isRoomSecret,isValidRoomCode,loadTvKeys,MAX_REMOTES,normalizeRoomCode,openRemoteChannel,remoteConfigured,remotePin,remoteUrl,touchTvKeys,type RemoteDevice,type RemoteStatus,type TvRemoteControls} from '../../../application/funRemote';
 import {LocalQRCode} from '../LocalQRCode';
@@ -127,6 +128,9 @@ export function RemoteLink({bus,initialCode,onCodeChange,announceStop}:{bus:FunC
   window.addEventListener('pagehide',bye);window.addEventListener('pageshow',back);document.addEventListener('visibilitychange',vis);
   return ()=>{window.removeEventListener('pagehide',bye);window.removeEventListener('pageshow',back);document.removeEventListener('visibilitychange',vis);};
  },[]);
+ // 창이 열려 있는 동안 게임은 시간을 멈추고 키보드 '다음'을 받지 않는다(창이 큰 신호를 가리므로).
+ useEffect(()=>{setRemotePanelOpen(open);},[open]);
+ useEffect(()=>()=>setRemotePanelOpen(false),[]);
  const start=()=>{setOpen(true);if(!detach.current&&!codeRef.current)connect(initialCode);};
  const close=()=>{setOpen(false);if(devices.some(d=>d.state==='pending'))autoOpenOff.current=true;};
  const rotate=()=>{

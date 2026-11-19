@@ -129,20 +129,52 @@ export function parseGroupsSaved(raw:unknown):GroupsSaved|null{
  if(groups.length&&(flat.length!==total||new Set(flat).size!==total))return null;
  return {total,count:raw.count,groups:groups as number[][]};
 }
-export interface RaceSaved {lanes:number;times:(number|null)[];ms:number;running:boolean;savedAt:number}
+export interface RaceSaved {lanes:number;times:(number|null)[];ms:number;running:boolean;savedAt:number;
+ /** 달리는 채로 오래(STALE_RACE_MS 넘게) 떠나 있던 레이스: 흐른 시간을 더하지 않고 저장한 때의 시간에서 멈춰 둔다. */
+ stale?:boolean}
 const DAY_MS=24*60*60*1000;
-/** 레이스 시계: 달리는 중에 새로고침했으면 저장한 뒤 흐른 시간을 더해 이어 간다(하루를 넘긴 기록은 버린다). */
+/** 달리는 채로 이만큼 넘게 떠나 있었으면 수업이 끝난 것으로 보고 시계를 멈춰 둔다. */
+export const STALE_RACE_MS=60*60*1000;
+/** 레이스 시계가 보여 줄 수 있는 가장 긴 시간(6시간). 이보다 큰 값은 잘못 저장된 것으로 본다. */
+export const RACE_MAX_MS=6*60*60*1000;
+/**
+ * 레이스 시계: 달리는 중에 새로고침했으면 저장한 뒤 흐른 시간을 더해 이어 간다.
+ * 달리는 채로 1시간 넘게 떠나 있었으면 저장한 때의 시간에서 멈춘 채로 돌려준다(stale).
+ * 하루를 넘긴 기록이나 6시간을 넘는 시간은 버린다.
+ */
 export function parseRaceSaved(raw:unknown,now:number):RaceSaved|null{
  if(!rec(raw)||!intIn(raw.lanes,2,8)||!Array.isArray(raw.times)||raw.times.length!==8)return null;
- if(typeof raw.ms!=='number'||!Number.isFinite(raw.ms)||raw.ms<0||typeof raw.savedAt!=='number'||!Number.isFinite(raw.savedAt))return null;
+ if(typeof raw.ms!=='number'||!Number.isFinite(raw.ms)||raw.ms<0||raw.ms>RACE_MAX_MS||typeof raw.savedAt!=='number'||!Number.isFinite(raw.savedAt))return null;
  const times=raw.times as unknown[];
- if(!times.every(t=>t===null||(typeof t==='number'&&Number.isFinite(t)&&t>=0)))return null;
+ if(!times.every(t=>t===null||(typeof t==='number'&&Number.isFinite(t)&&t>=0&&t<=RACE_MAX_MS)))return null;
  const gap=now-raw.savedAt;
  if(gap<0||gap>DAY_MS)return null;
- const running=raw.running===true,ms=raw.ms+(running?gap:0);
+ const wasRunning=raw.running===true,stale=wasRunning&&gap>STALE_RACE_MS;
+ const running=wasRunning&&!stale,ms=Math.min(RACE_MAX_MS,raw.ms+(running?gap:0));
  if(!running&&ms===0&&times.every(t=>t===null))return null;
- return {lanes:raw.lanes,times:times as (number|null)[],ms,running,savedAt:raw.savedAt};
+ return {lanes:raw.lanes,times:times as (number|null)[],ms,running,savedAt:raw.savedAt,...(stale?{stale:true}:{})};
 }
 /** 카운트다운 표시: 90 → '1:30', 5 → '0:05'. */
 export const formatCountdown=(seconds:number)=>{const s=Math.max(0,Math.ceil(seconds));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 export const COUNTDOWN_PRESETS=[{seconds:30,label:'30초'},{seconds:60,label:'1분'},{seconds:180,label:'3분'},{seconds:300,label:'5분'}] as const;
+export const COUNTDOWN_SECONDS=COUNTDOWN_PRESETS.map(p=>p.seconds) as readonly number[];
+export interface CountdownSaved {total:number;left:number;running:boolean;endAt:number|null;savedAt:number}
+/**
+ * 카운트다운: 고른 시간·남은 시간·세는 중인지를 이 탭에 적어 둔다.
+ * 세는 중에 새로고침했으면 끝나는 시각(endAt)으로 남은 시간을 다시 센다. 그 사이 끝났으면 0초(끝)로 돌려준다.
+ * 고른 시간은 프리셋 가운데 하나여야 하고, 1시간 넘게 지난 기록은 버린다.
+ */
+export function parseCountdownSaved(raw:unknown,now:number):CountdownSaved|null{
+ if(!rec(raw)||typeof raw.total!=='number'||!COUNTDOWN_SECONDS.includes(raw.total))return null;
+ if(typeof raw.left!=='number'||!Number.isFinite(raw.left)||raw.left<0||raw.left>raw.total)return null;
+ if(typeof raw.savedAt!=='number'||!Number.isFinite(raw.savedAt))return null;
+ const gap=now-raw.savedAt;if(gap<0||gap>STALE_RACE_MS)return null;
+ const total=raw.total;
+ if(raw.running===true){
+  if(typeof raw.endAt!=='number'||!Number.isFinite(raw.endAt)||raw.endAt-raw.savedAt>total*1000+1000)return null;
+  const left=Math.max(0,(raw.endAt-now)/1000);
+  return left>0?{total,left,running:true,endAt:raw.endAt,savedAt:raw.savedAt}:{total,left:0,running:false,endAt:null,savedAt:raw.savedAt};
+ }
+ if(raw.left===total)return null;
+ return {total,left:raw.left,running:false,endAt:null,savedAt:raw.savedAt};
+}

@@ -1,5 +1,6 @@
 import {FlowShell} from './presentation/FlowShell';
 import {PlayErrorBoundary} from './components/PlayErrorBoundary';
+import {lazyWithRetry} from './application/lazyWithRetry';
 import { cleanClassroomStorage } from './application/storageRetention';
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
@@ -22,7 +23,8 @@ const QuickJoin = lazy(() => import('./presentation/QuickJoin').then(m => ({ def
 const BoardEntry = lazy(() => import('./presentation/BoardEntry').then(m => ({ default: m.BoardEntry })));
 const IntroLandingPage = lazy(() => import('./presentation/IntroLandingPage').then(m => ({ default: m.IntroLandingPage })));
 const GameHub = lazy(() => import('./presentation/GameHub').then(m => ({ default: m.GameHub })));
-const GamePlayPage = lazy(() => import('./presentation/GamePlayPage').then(m => ({ default: m.GamePlayPage })));
+// 놀이 화면 파일을 한 번 못 받아도, 다른 놀이를 열거나 '다시 열기'를 누르면 새로 받는다.
+const GamePlayPage = lazyWithRetry(() => import('./presentation/GamePlayPage'), m => m.GamePlayPage);
 const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
 const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry').then(m => ({ default: m.TeacherStudioEntry })));
 const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));

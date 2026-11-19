@@ -82,7 +82,7 @@ test('the lesson confirm opens on 취소, and the game ignores the remote while 
 
 test('Space presses the focused button inside the voice panel, the remote panel and the pause cover',()=>{
  const engine=read('src/presentation/components/fun/useFunEngine.ts');
- assert.match(engine,/NATIVE_SPACE_ZONES='\.tv-voice,\.fun-remote-panel,\.fun-paused'/);
+ assert.match(engine,/NATIVE_SPACE_ZONES='\.tv-voice,\.fun-remote-panel,\.fun-dock,\.fun-paused'/);
  assert.match(engine,/e\.key===' '&&target\?\.closest\(NATIVE_SPACE_ZONES\)/);
 });
 
@@ -95,4 +95,33 @@ test('whole-class and device play tell the lesson bar when they are really runni
  const dev=read('src/presentation/components/minigames/common/PhonePlay.tsx');
  assert.match(dev,/phase==='intro'\|\|phase==='plan'\|\|\(phase==='record'&&practice\)\?null:/);
  assert.match(dev,/hold:\(\)=>\{if\(pausedRef\.current\)return false;setPaused\(true\)/);
+});
+
+test('the remote panel pauses the round and blocks game keys while it covers the signal',()=>{
+ assert.match(read('src/presentation/components/fun/remotePanelState.ts'),/export function setRemotePanelOpen/);
+ assert.match(read('src/presentation/components/fun/RemoteLink.tsx'),/useEffect\(\(\)=>\{setRemotePanelOpen\(open\);\},\[open\]\)/,'the panel reports when it opens and closes');
+ assert.match(read('src/presentation/components/fun/useFunEngine.ts'),/if\(isRemotePanelOpen\(\)&&cmd\.type!=='pause'\)return;/,'only P works while the panel is open');
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/if\(isCuePhase\(phaseRef\.current\)&&!pausedRef\.current\)\{panelHeld\.current=true;/,'opening the panel during a round pauses it');
+ assert.match(play,/else if\(panelHeld\.current\)\{/,'closing resumes only what the panel paused');
+});
+
+test('ending a round asks once more, and the arena cannot be clicked behind the lesson dialog',()=>{
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/export const END_CONFIRM_MS=3000/);
+ assert.match(play,/label:endArmed\?'■ 한 번 더 누르면 끝나요':'■ 끝내기'/);
+ assert.match(play,/data-confirming=\{confirming\|\|undefined\} inert=\{confirming\|\|undefined\}/,'the whole arena (incl. the pause cover) is inert while the lesson dialog is open');
+ assert.match(play,/className="fun-dock"[^>]*inert=\{lessonConfirming\|\|undefined\}/);
+});
+
+test('inside a lesson the result says 오늘 수업으로, and the phone shows TV 확인 중 before any press',()=>{
+ assert.match(read('src/presentation/components/fun/ResultCeremony.tsx'),/exitLabel='활동 목록으로'/);
+ assert.match(read('src/presentation/components/minigames/signature/SignaturePlay.tsx'),/exitLabel=\{fromTodayLesson\(\)\?'오늘 수업으로':undefined\}/);
+ assert.match(read('src/presentation/FunRemotePage.tsx'),/ready&&tvBusy\?'TV에서 확인 중이에요/);
+});
+
+test('expression activities keep the variant bar at the top on wide screens',()=>{
+ const css=read('src/presentation/components/minigames/common/ExpressionActivity.css');
+ assert.match(css,/@media \(max-width:640px\)\{\[data-consolidated\]:has\(\.expression-activity\) > \.movement-quest:first-child\{order:2/);
+ assert.doesNotMatch(css.replace(/@media \(max-width:640px\)\{[^\n]*\}\}/g,''),/:has\(\.expression-activity\) > \.movement-quest:first-child\{order:2/);
 });

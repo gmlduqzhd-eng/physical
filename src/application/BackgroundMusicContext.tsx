@@ -25,11 +25,15 @@ const loadVolume = () => {
 };
 const BackgroundMusicContext = createContext<{
   enabled: boolean;
+  /** 켜 두었지만 브라우저가 소리를 막아 아직 나지 않는 상태(새로고침 직후 등). 한 번 누르면 다시 난다. */
+  blocked: boolean;
   volume: number;
   setVolume: (value: number) => void;
   toggle: () => void;
   suppress: (value: boolean) => void;
   suspendLesson: (value: boolean) => void;
+  /** 막혔던 소리를 사용자의 손동작에 맞춰 다시 낸다. */
+  resume: () => void;
 } | null>(null);
 
 export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
@@ -40,6 +44,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     () => readStorage(preferenceKey) === "on",
   );
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [blocked, setBlocked] = useState(false);
   const [volume, updateVolume] = useState(loadVolume);
   const enabledRef = useRef(enabled);
   const eligibleRef = useRef(false);
@@ -60,7 +65,10 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
       return;
     if (!audio.src) audio.src = musicSource;
     // Audible autoplay can be denied; retry only on a real user interaction.
-    void audio.play().catch(() => {});
+    // Remember the refusal so the button can say "음악 다시 켜기" instead of claiming music is playing.
+    void audio.play().then(() => setBlocked(false), (error: unknown) => {
+      if (error instanceof DOMException && error.name === "NotAllowedError") setBlocked(true);
+    });
   }, []);
 
   const suppress = useCallback(
@@ -79,7 +87,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     writeStorage(preferenceKey, next ? "on" : "off");
     setEnabled(next);
     if (next) attemptPlay();
-    else audioRef.current?.pause();
+    else { audioRef.current?.pause(); setBlocked(false); }
   }, [attemptPlay]);
 
   const setVolume = useCallback((value: number) => {
@@ -111,6 +119,8 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
       if (document.hidden) audio?.pause();
       else attemptPlay();
     };
+    const onPlaying = () => setBlocked(false);
+    audio?.addEventListener("playing", onPlaying);
     window.addEventListener("pointerdown", attemptPlay, { passive: true });
     window.addEventListener("keydown", attemptPlay);
     document.addEventListener("visibilitychange", onVisibility);
@@ -118,12 +128,13 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("pointerdown", attemptPlay);
       window.removeEventListener("keydown", attemptPlay);
       document.removeEventListener("visibilitychange", onVisibility);
+      audio?.removeEventListener("playing", onPlaying);
       audio?.pause();
     };
   }, [attemptPlay]);
 
   return (
-    <BackgroundMusicContext.Provider value={{ enabled, volume, setVolume, toggle, suppress,suspendLesson }}>
+    <BackgroundMusicContext.Provider value={{ enabled, blocked: enabled && blocked, volume, setVolume, toggle, suppress,suspendLesson, resume: attemptPlay }}>
       <audio
         ref={audioRef}
         data-background-music="expedition"

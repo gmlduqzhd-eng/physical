@@ -1,8 +1,9 @@
-import {useCallback,useEffect,useState} from 'react';
+import {useCallback,useEffect,useState,useSyncExternalStore} from 'react';
 import {createPortal} from 'react-dom';
 import {Link} from 'react-router-dom';
 import {guideSeen,markGuideSeen} from '../../application/todayLessonStore';
 import {useModalDialog} from '../../application/useModalDialog';
+import {playErrorActive,subscribePlayError} from '../../application/playErrorSignal';
 import './TeacherQuickGuide.css';
 
 /**
@@ -33,7 +34,10 @@ export function TeacherQuickGuideBody({compact=false}:{compact?:boolean}){
  * 공용 useModalDialog로 초점을 창 안에 가두고, 뒤 화면 스크롤을 막고, 닫으면 원래 초점으로 돌려놓는다.
  */
 export function TeacherQuickGuide({force=false,onClose}:{force?:boolean;onClose?:()=>void}){
- const [open,setOpen]=useState(()=>force||!guideSeen());
+ const [wanted,setOpen]=useState(()=>force||!guideSeen());
+ // 놀이가 오류 화면으로 바뀌었으면 처음 안내는 띄우지 않는다(본 것으로 치지 않으니, 다음에 놀이가 열리면 뜬다).
+ const playError=useSyncExternalStore(subscribePlayError,playErrorActive,()=>false);
+ const open=wanted&&(force||!playError);
  const close=useCallback(()=>{markGuideSeen();setOpen(false);onClose?.();},[onClose]);
  const dialogRef=useModalDialog(open,close);
  // Esc는 창만 닫고 게임 단축키 쪽으로 새지 않게 capture 단계에서 멈춘다.

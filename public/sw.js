@@ -4,6 +4,13 @@ const SHELL_URL = '/';
 // The list of hashed files this deployment precached. Files from older deployments are removed on activate,
 // so the cache does not grow with every release.
 const MANIFEST_URL = '/__sw-precache.json';
+// Every font piece the current CSS names, whether or not it was fetched. Used to drop pieces of older builds.
+const FONTS_URL = '/__sw-fonts.json';
+// Font pieces carry a content hash in their name, so a cached copy never goes stale.
+const HASHED_FONT = /^\/fonts\/[^/]+\.[0-9a-f]{8}\.woff2$/;
+// The rare-letter pieces (-rest, -ks) are fetched only when a page draws one of their letters.
+// Precaching them would add about 2 MB to every install, so they are cached on first use instead.
+const LAZY_FONT = /^\/fonts\/[^/]+-(?:rest|ks)\.[0-9a-f]{8}\.woff2$/;
 
 const assetDependencies = (source, parentUrl) => {
   const references = [
@@ -28,8 +35,11 @@ self.addEventListener('install', (event) => {
       .map(match => new URL(match[1], self.location.origin))
       .filter(url => url.origin === self.location.origin && (url.pathname.startsWith('/assets/') || /\.(?:svg|png|webmanifest|json)$/.test(url.pathname)));
     const visited = new Set();
+    const fonts = new Set();
     const cacheAsset = async (url) => {
       if (visited.has(url.href)) return;
+      if (HASHED_FONT.test(url.pathname)) fonts.add(url.href);
+      if (LAZY_FONT.test(url.pathname)) return;
       visited.add(url.href);
       const response = await fetch(url.href);
       if (!response.ok || response.headers.get('Content-Type')?.includes('text/html')) return;
@@ -41,6 +51,7 @@ self.addEventListener('install', (event) => {
     };
     await Promise.all(assets.map(cacheAsset));
     await cache.put(MANIFEST_URL, new Response(JSON.stringify([...visited]), { headers: { 'Content-Type': 'application/json' } }));
+    await cache.put(FONTS_URL, new Response(JSON.stringify([...fonts]), { headers: { 'Content-Type': 'application/json' } }));
     await self.skipWaiting();
   })());
 });
@@ -50,10 +61,15 @@ async function pruneOldAssets() {
   const manifest = await cache.match(MANIFEST_URL);
   if (!manifest || typeof cache.keys !== 'function') return;
   const current = new Set(await manifest.json());
+  const fontList = await cache.match(FONTS_URL);
+  const fonts = fontList ? new Set(await fontList.json()) : null;
   const requests = await cache.keys();
   await Promise.all(requests.map(request => {
     const url = new URL(request.url, self.location.origin);
-    return url.pathname.startsWith('/assets/') && !current.has(url.href) ? cache.delete(request) : null;
+    if (url.pathname.startsWith('/assets/') && !current.has(url.href)) return cache.delete(request);
+    // A font piece no longer named by the current CSS belongs to an older build.
+    if (fonts && HASHED_FONT.test(url.pathname) && !fonts.has(url.href) && !current.has(url.href)) return cache.delete(request);
+    return null;
   }));
 }
 
@@ -94,8 +110,8 @@ self.addEventListener('fetch', (event) => {
   if (!isStaticAsset) return;
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_NAME).catch(() => null);
-    // Hashed Vite assets are immutable; other assets are refreshed online.
-    if (url.pathname.startsWith('/assets/')) {
+    // Hashed Vite assets and hashed font pieces are immutable; other assets are refreshed online.
+    if (url.pathname.startsWith('/assets/') || HASHED_FONT.test(url.pathname)) {
       // Precache requests lack the Origin header attached to module imports.
       // These public same-origin files have identical bytes for both requests.
       const cached = await cache?.match(event.request, { ignoreVary: true }).catch(() => undefined);

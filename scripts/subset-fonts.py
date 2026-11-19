@@ -14,15 +14,25 @@ uses a rare letter still renders in the same font; it only costs one more downlo
 Re-run after large text changes to keep the first piece complete:
 
   python3 -m venv .venv-fonts && .venv-fonts/bin/pip install fonttools brotli
-  .venv-fonts/bin/python scripts/subset-fonts.py
-"""
-import hashlib
-import io
-import pathlib
-import re
+  .venv-fonts/bin/python -B scripts/subset-fonts.py
 
-from fontTools import subset
-from fontTools.ttLib import TTFont
+The output is deterministic: the same source fonts and the same app text give the same
+files and the same hashes. A hash changes only when a letter is added to or removed from
+the app's text (the first piece is exactly the letters the text uses), so a re-run that
+renames a piece means the app gained or lost a letter since the last run.
+"""
+import sys
+
+# Running or importing this script must not leave scripts/__pycache__ behind.
+sys.dont_write_bytecode = True
+
+import hashlib  # noqa: E402
+import io  # noqa: E402
+import pathlib  # noqa: E402
+import re  # noqa: E402
+
+from fontTools import subset  # noqa: E402
+from fontTools.ttLib import TTFont  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'public' / 'fonts'

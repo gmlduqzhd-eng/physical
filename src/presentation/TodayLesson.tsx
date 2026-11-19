@@ -8,7 +8,7 @@ import {useClassProgress} from '../application/classProgressStore';
 import {lessonPlayId} from '../domain/classProgress';
 import {
  DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,startRun,stagePath,
+ addExtraMain,advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
@@ -65,7 +65,7 @@ function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:S
    const state=outcome?(outcome==='played'?'done':outcome):result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
    return <li key={i} data-state={state}>
     <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':state==='done'?'✓':state==='skipped'?'–':i+1}</span>
-    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
+    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {run?stageTitle(run,i):s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
     <span className="today-stage-min">{result?<>{formatSeconds(result.seconds)}<small> · 계획 {s.minutes}분</small></>:stagePlanText(s)}</span>
     {!outcome&&<span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>}
    </li>;
@@ -153,7 +153,7 @@ function TodayStageView({run}:{run:TodayRun}){
         <div className="today-row">{path&&<button type="button" className="today-secondary" onClick={()=>navigate(path)}>🔁 {again} · {stage.title}</button>}</div></>
       :<>{path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>{rounds>0?`🔁 ${again} · ${stage.title}`:`▶ ${stage.title} 열기`}</button>}
         <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button>{rounds===0&&<button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button>}</div></>}
-     {stage.kind==='main'&&rounds>0&&!over&&others.length>0&&<div className="today-others"><p>다른 대표 게임으로 한 판 더</p><div className="today-choice">{others.map(g=><button key={g.id} type="button" onClick={()=>navigate(mainPath(g.id,teams))}>{g.emoji} {g.name}</button>)}</div></div>}</>}
+     {stage.kind==='main'&&rounds>0&&!over&&others.length>0&&<div className="today-others"><p>다른 대표 게임으로 한 판 더</p><div className="today-choice">{others.map(g=><button key={g.id} type="button" onClick={()=>{saveTodayRun(addExtraMain(run,g.id));navigate(mainPath(g.id,teams));}}>{g.emoji} {g.name}</button>)}</div></div>}</>}
   <StageList plan={run.plan} run={run}/>
   <p className="today-more"><button type="button" className="today-link" onClick={quit}>오늘 수업 그만하고 새로 짜기</button></p>
  </section>;
@@ -184,7 +184,11 @@ function TodaySummary({run}:{run:TodayRun}){
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>
   <p className="today-hint">게임 결과 화면에서 이미 누른 반응은 그대로 보여요. 바꾸고 싶을 때만 다시 눌러요.</p>
-  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={bound.stagePlays?.[i]} tone="light" showMap={false}/></div>)}
+  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback-group">
+   <div className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={bound.stagePlays?.[i]} tone="light" showMap={false}/></div>
+   {/* 본게임 중 '다른 대표 게임으로 한 판 더'로 한 게임도 칸을 따로 둔다(그 게임에 남긴 판에 붙는다). */}
+   {s.kind==='main'&&(run.extraMains??[]).map((id,k)=><div key={`x-${id}`} className="today-feedback"><p><b>{STAGE_LABEL.main}</b> · {mainGameLabel(id)} <small>(한 판 더)</small></p><ClassFeedbackSlot gameId={id} playId={bound.extraPlays?.[k]} tone="light" showMap={false}/></div>)}
+  </div>)}
   <ClassMapLink progress={progress}/>
   <button type="button" className="primary today-primary" onClick={()=>saveTodayRun(null)}>새 수업 짜기</button>
  </section>;
