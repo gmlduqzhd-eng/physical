@@ -1,6 +1,7 @@
 import {spawnSync} from 'node:child_process';
 
-// Run inside the hosting build itself: a failed check prevents a READY deployment.
+// Full pre-release check. Vercel now runs only `npm run build` (GitHub CI runs verify:release on every PR and main push);
+// run this by hand, or point a hosting build at it, when a failed check must block the deployment itself.
 // Test processes never inherit production AI keys, account secrets or DB credentials.
 const target=process.argv[2];
 if(!['main','studio'].includes(target))throw Error('Choose main or studio');
