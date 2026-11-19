@@ -6,7 +6,7 @@
 .tools-match{display:grid;gap:8px;padding:10px 0;border-top:1px solid var(--forest-line)}.tools-match[data-played=yes]{background:linear-gradient(var(--forest-tint),var(--forest-tint)) left/4px 100% no-repeat;padding-left:12px}
 .tools-side{display:grid;grid-template-columns:1fr 46px 46px 46px;align-items:center;gap:8px}.tools-side output{text-align:center;font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}.play-experiences .tools-side button{min-height:46px;padding:0;font-size:22px;justify-content:center}.play-experiences .tools-draw{font-size:14px;min-height:40px}
 .tools-table{font-size:16px}.tools-table th,.tools-table td{padding:8px 4px}
-.tools-lanes{display:grid;gap:10px;margin:16px 0}.tools-lane{display:grid;grid-template-columns:70px 1fr auto auto;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--forest-line);border-radius:16px}.tools-lane[data-done=yes]{background:var(--forest-tint);border-color:var(--forest-accent)}.tools-lane strong{font-size:20px}.tools-lane output{font-size:clamp(17px,2.4vw,24px);font-weight:700;font-variant-numeric:tabular-nums}
+.tools-lanes{display:grid;gap:10px;margin:16px 0}.tools-lane{display:grid;grid-template-columns:70px 1fr minmax(120px,auto) auto;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--forest-line);border-radius:16px}.tools-lane[data-done=yes]{background:var(--forest-tint);border-color:var(--forest-accent)}.tools-lane strong{font-size:20px}.tools-lane output{font-size:clamp(17px,2.4vw,24px);font-weight:700;font-variant-numeric:tabular-nums}
 .tools-ladder{margin:8px auto 16px;width:100%}.tools-ladder svg{display:block;width:100%;height:auto;margin:8px 0}.tools-rail{stroke:var(--forest-ink);stroke-width:3;stroke-linecap:round;opacity:.55}
 .tools-trace{fill:none;stroke:var(--forest-accent);stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:tools-trace 1.6s ease-out forwards}@keyframes tools-trace{to{stroke-dashoffset:0}}
 .tools-ladder-row{display:grid;gap:4px;text-align:center}.play-experiences .tools-ladder-row button{min-height:46px;padding:4px 2px;justify-content:center;font-size:clamp(13px,2.6vw,17px)}.tools-ladder-row span{padding:8px 2px;border-radius:10px;font-weight:700;font-size:clamp(13px,2.6vw,17px);overflow-wrap:anywhere}.tools-ladder-row span[data-hit=yes]{background:var(--forest-tint);outline:2px solid var(--forest-accent)}
@@ -16,7 +16,22 @@
 @keyframes tools-pop{from{transform:scale(.6);opacity:.2}to{transform:scale(1);opacity:1}}
 .tools-center{justify-content:center}.play-experiences .tools-go{min-height:60px;padding:14px 28px;font-size:20px}.tools-drawn{font-size:18px;line-height:1.8;text-align:center}
 .tools-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.tools-group{padding:14px;border-radius:16px;background:var(--forest-tint)}.tools-group h3{margin:0 0 6px;font-size:19px}.tools-group h3 small{font-weight:500;color:var(--forest-muted)}.tools-group p{margin:0;font-size:19px;line-height:1.7;font-variant-numeric:tabular-nums}
-@media(max-width:520px){.tools-lane{grid-template-columns:54px 1fr;row-gap:8px}.tools-lane button{grid-column:auto}}
+/* 도착은 크게, 취소는 작게. 팀이 많으면(5팀 이상) 넓은 화면에서 두 줄로 놓아 TV 첫 화면에 모두 보이게 한다. */
+/* 숲 테마의 공통 단추 규칙(html[data-design] :is(...))이 더 세서, 크기와 모서리만 !important로 정한다. */
+.play-experiences .tools-lane .tools-arrive{min-height:56px!important;padding:8px 22px;border-radius:14px!important;font-size:20px;font-weight:800;justify-content:center}
+.play-experiences .tools-lane .tools-cancel{min-height:44px!important;min-width:44px;padding:4px 10px;border-radius:12px!important;font-size:14px;font-weight:600;justify-content:center}
+@media(min-width:900px){.tools-lanes[data-many=yes]{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.tools-lane{grid-template-columns:44px minmax(0,1fr) minmax(96px,auto) auto;gap:6px;padding:6px 8px}.tools-lane strong{font-size:17px}.tools-lane output{font-size:15px}.play-experiences .tools-lane .tools-arrive{min-height:52px!important;padding:6px 12px;font-size:18px}}
+.tools-resume{margin:0 0 14px}
+/* '다른 도구' 고르기 상자는 휴대폰에서만(넓은 화면에는 탭이 있다). */
+.class-tools>.tools-switch{display:none!important}@media(max-width:700px){.class-tools>.tools-switch{display:block!important}}
+/* 레이스 중에는 제목·설명·탭·팀 수 고르기를 숨겨, 8팀도 TV 첫 화면에 들어오게 한다('처음으로'를 누르면 다시 보인다). */
+.class-tools[data-tool=race]:has(.tools-lanes[data-busy=yes])>:is(.eyebrow,h1,h1+p,.tools-tabs,.tools-switch){display:none!important}
+[data-tool-panel=race]:has(.tools-lanes[data-busy=yes]) .tools-bar{display:none}
+.tools-lanes[data-busy=yes]{margin-top:8px}[data-tool-panel=race]:has(.tools-lanes[data-busy=yes]) .sports-timer>strong{font-size:clamp(44px,8vw,84px)}
+@media(min-width:900px){.tools-lanes[data-many=yes] .tools-lane{padding:6px 12px}}
+.tools-countdown strong{font-size:clamp(96px,26vw,340px);letter-spacing:-.02em;animation:none}.tools-countdown[data-last=yes] strong{color:#c2410c}.tools-countdown[data-done=yes] strong{color:#b91c1c}
+html.dark-theme .tools-countdown[data-last=yes] strong{color:#fdba74}html.dark-theme .tools-countdown[data-done=yes] strong{color:#fca5a5}
 @media(prefers-reduced-motion:reduce){.tools-trace{animation:none;stroke-dashoffset:0}.tools-big strong{animation:none}}
 @media print{.tools-bar,.tools-tabs,.tools-side button,.tools-draw{display:none}}
 .play-experiences[hidden],.class-tools [hidden]{display:none!important}
@@ -26,5 +41,5 @@
 .tools-select{display:none;margin:0 0 14px;font-weight:700}.tools-select select{display:block;width:100%;min-height:48px;margin-top:6px}
 @media(max-width:700px){.class-tools .tools-tabs{display:none}.tools-select{display:block}}
 /* 빙고 게임 중에는 제목·설명·탭을 숨겨 판이 첫 화면에 보이게 한다(뒤로 가기는 위쪽 링크). */
-.class-tools[data-tool=quiz-bingo]:has(.qb-turn)>:is(.eyebrow,h1,h1+p,.tools-tabs,.tools-select){display:none}
+.class-tools[data-tool=quiz-bingo]:has(.qb-turn)>:is(.eyebrow,h1,h1+p,.tools-tabs,.tools-select){display:none!important}
 .tools-progress-link{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}.tools-progress-link a{font-weight:800}.tools-progress-link span{opacity:.8;font-size:.9rem}

@@ -67,6 +67,6 @@ test('six flagship guides reflect actual waiting, voting, control and finishing 
  const s={groupId:'group',phase:0,status:'playing',groups:[group]} as unknown as ExpeditionSnapshot;
  for(const game of FLAGSHIP_IDS){const hint=expeditionNextStep(s,game);assert(hint.title&&hint.instruction);assert.match(expeditionNextStep({...s,status:'paused'},game).title,/선생님/);}
  const voted={...s,groups:[{...group,visited:['forest'],vote:'forest'},{...group,id:'second',vote:null}]} as unknown as ExpeditionSnapshot;
- assert.match(expeditionNextStep(voted,'expedition-map').title,/1모둠/);assert.match(expeditionNextStep({...s,phase:3},'expedition-boss').title,/세 관문/);
+ assert.match(expeditionNextStep(voted,'expedition-map').title,/1모둠/);assert.match(expeditionNextStep({...s,phase:3},'expedition-boss').title,/세 문/);
  assert.match(rhythmTimingHint([100,1300,2500,3700],[1,0,1,0,1,0,1,0]),/늦/);assert.match(rhythmTimingHint([0,1,2,3,4],[1,0,1,0,1,0,1,0]),/입력이 많/);
 });

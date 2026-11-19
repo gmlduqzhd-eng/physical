@@ -10,6 +10,8 @@ interface Props {
   onExit?: () => void;
 }
 
+/** 화면에 보여 줄 쉬운 말. 자료의 kind(순차·종합)는 그대로 두고 표시만 바꾼다. */
+const KIND_LABEL: Record<string, string> = { 순차: '차례대로', 반복: '되풀이', 선택: '골라서', 종합: '모두 섞기' };
 const KIND_COLOR: Record<string, string> = { 순차: 'bg-emerald-950 text-emerald-300 border-emerald-700', 반복: 'bg-amber-950 text-amber-300 border-amber-700', 선택: 'bg-cyan-950 text-cyan-300 border-cyan-700', 종합: 'bg-purple-950 text-purple-300 border-purple-700' };
 
 /**
@@ -53,7 +55,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
   const missionDone = () => {
     sfxSuccess();
     setDone(d => d.map((v, i) => i === mission || v));
-    setLog(l => [...l, `${current.stage}단계 ${current.kind} · ${programmerFor(mission)} 프로그래머 · 블록 ${blockCount(program)}개`]);
+    setLog(l => [...l, `${current.stage}단계 ${KIND_LABEL[current.kind]} · ${programmerFor(mission)} 프로그래머 · 블록 ${blockCount(program)}개`]);
     if (mission < MISSIONS.length - 1) setMission(mission + 1);
     reset();
   };
@@ -92,14 +94,14 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
             {MISSIONS.map((m, i) => (
               <button key={m.stage} type="button" aria-pressed={i === mission} onClick={() => { setMission(i); reset(); }}
                 className={`rounded-xl border px-2 py-2 text-sm md:text-base font-bold ${i === mission ? 'bg-purple-950 border-purple-500 text-purple-200' : 'bg-slate-950 border-slate-800 text-slate-400'}`}>
-                {done[i] ? '✅' : `${m.stage}단계`}<span className="block">{m.kind}</span>
+                {done[i] ? '✅' : `${m.stage}단계`}<span className="block">{KIND_LABEL[m.kind]}</span>
               </button>
             ))}
           </nav>
 
           <section className="rounded-2xl border border-slate-800 bg-slate-950 p-4 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className={`rounded-full border px-2 py-0.5 text-sm font-black ${KIND_COLOR[current.kind]}`}>{current.kind}</span>
+              <span className={`rounded-full border px-2 py-0.5 text-sm font-black ${KIND_COLOR[current.kind]}`}>{KIND_LABEL[current.kind]}</span>
               <h3 className="text-xl md:text-2xl font-black text-white">{current.stage}단계 · {current.title}</h3>
             </div>
             <p className="text-base md:text-lg text-slate-300">{missionGoal(current, seated)}</p>
@@ -181,7 +183,7 @@ export const PartnerRobotLab = ({ groupId, enqueueAction, onExit }: Props) => {
             className="w-full rounded-2xl border border-slate-700 py-3 text-base md:text-lg font-black text-slate-200 disabled:opacity-40">활동 마치기</button>
           <details className="text-sm text-slate-400">
             <summary className="cursor-pointer font-bold">선생님 정보 · 함께 쓸 수 있는 교과</summary>
-            <p className="mt-1">몸으로 하는 코딩 · 체육 표현(움직임 요소) · 실과 [6실05-01] 알고리즘 표현, [6실05-02] 명령하는 방법 체험</p>
+            <p className="mt-1">몸으로 하는 코딩(순차·반복·선택) · 체육 표현 [4체03-02] 움직임 요소 · 실과 [6실05-01] 알고리즘 표현, [6실05-02] 명령하는 방법 체험</p>
           </details>
         </div>
       )}

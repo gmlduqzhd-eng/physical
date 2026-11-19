@@ -53,7 +53,7 @@ export function MovementQuest({ gameId,variantId, groupId = 'standalone-player',
   const validChoice = !!selected && (!plan.decision || choice===plan.decision.answer) && (!selected.path || safeRoute(selected.path, plan.blocked!));
   const introRules = gameId === 'pass-gate-rescue' && settings.practice ? [
     '삼각형으로 표식 세 개를 놓고 한 표식에서 시작해요.',
-    '다음 표식으로 공을 굴리고, 걸어서 공을 회수해요.',
+    '다음 표식으로 공을 굴리고, 걸어가서 공을 주워 와요.',
     '빈 표식으로 옮겨 다시 시작해요. 실제 모둠 활동과는 다른 연습이에요.',
   ] : meta.rules;
 
