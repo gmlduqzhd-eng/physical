@@ -119,10 +119,33 @@ async function lessonConfirm(browser) {
     await ask.waitFor({ state: 'detached', timeout: 3000 });
     assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'lessonConfirm: Esc resumes the game');
     assert.match(await page.evaluate(() => document.activeElement?.textContent || ''), /이 활동 마치고 다음 활동/, 'lessonConfirm: focus returns to the bar button');
-    // Space on the focused "결과 발표 보기" presses that button (and does not also advance the game).
+    // 일시정지 덮개의 '다시 시작', 음성 설정 단추에 초점이 있으면 Space는 그 버튼을 누릅니다(게임을 넘기지 않습니다).
+    await page.keyboard.press('p');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === 'true', 3000), 'nativeSpace: P pauses');
+    assert.ok(await poll(async () => await page.evaluate(() => !!document.activeElement?.closest('.fun-paused')), 3000), 'nativeSpace: focus moves to the resume button');
+    await page.keyboard.press('Space');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'nativeSpace: Space on the resume button resumes');
+    assert.equal(await arena.getAttribute('data-phase'), 'tutorial', 'nativeSpace: Space on the resume button does not advance the game');
+    await page.locator('.fun-head .tv-voice-more').focus();
+    await page.keyboard.press('Space');
+    assert.ok(await poll(async () => await page.locator('.tv-voice-panel').count() === 1, 3000), 'nativeSpace: Space opens the voice settings');
+    assert.equal(await arena.getAttribute('data-phase'), 'tutorial', 'nativeSpace: Space on the voice button does not advance the game');
+    await page.keyboard.press('Escape');
+    // 확인 창은 '취소'에 초점을 두고 엽니다: Space를 눌러도 게임이 끝나거나 다음 활동으로 넘어가지 않습니다.
     await next.click();
     await ask.waitFor({ timeout: 3000 });
+    assert.match(await page.evaluate(() => document.activeElement?.textContent || ''), /^취소$/, 'lessonConfirm: the dialog opens with focus on 취소');
+    const urlBefore = page.url();
     await page.keyboard.press('Space');
+    await ask.waitFor({ state: 'detached', timeout: 3000 });
+    await page.waitForTimeout(300);
+    assert.equal(await arena.getAttribute('data-phase'), 'tutorial', 'lessonConfirm: Space in the dialog does not end or advance the game');
+    assert.equal(page.url(), urlBefore, 'lessonConfirm: Space in the dialog does not leave the activity');
+    assert.equal(await page.locator('.fun-result').count(), 0, 'lessonConfirm: Space in the dialog does not open the result');
+    // '결과 발표 보기'를 눌러야 결과로 갑니다.
+    await next.click();
+    await ask.waitFor({ timeout: 3000 });
+    await ask.getByRole('button', { name: '결과 발표 보기' }).click();
     await page.locator('.fun-result').waitFor({ timeout: 5000 });
     // 연습 판에서 끝냈으므로 기록 버튼이 없습니다.
     assert.equal(await page.locator('.fun-result[data-practice]').count(), 1, 'lessonConfirm: practice-only result');

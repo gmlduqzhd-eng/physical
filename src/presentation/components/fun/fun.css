@@ -246,3 +246,11 @@
  .fun-team-buttons button{min-height:44px;min-width:36px;padding:0 6px;font-size:15px}
  .fun-team-buttons .fun-plus{min-width:44px}
 }
+
+/* 휴대폰 폭: 판이 길어 화면을 넘는 놀이(거울 짝꿍·표현 무대·4팀 빙고)도 점수판이 선생님 버튼 줄 바로 위에 붙어 늘 보인다. */
+@media (max-width:640px){
+ .fun-arena .fun-scoreboard{position:sticky;bottom:var(--fun-controls-h,113px);z-index:2;background:var(--fun-bg);padding:6px 0 2px;box-shadow:0 -10px 12px -10px rgba(0,0,0,.6)}
+}
+/* 리모컨 창이 화면보다 길어도(코드만 넣어 연결할 때 등) '닫기'는 창 아래에 붙어 늘 보인다. */
+.fun-remote-panel>*{flex-shrink:0}
+.fun-remote-panel>.fun-secondary:last-child{position:sticky;bottom:0;z-index:1;background:var(--fun-bg);box-shadow:0 -10px 0 var(--fun-bg),0 20px 0 var(--fun-bg)}

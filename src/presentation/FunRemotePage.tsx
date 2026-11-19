@@ -18,7 +18,7 @@ const ACCESS:Record<RemoteAccess,string>={
 const EVENT_BUTTON:Record<SurpriseKind,string>={golden:'✨ 황금 신호',reverse:'🔄 거꾸로',freeze:'🧊 얼음',speed:'⚡ 빨리빨리'};
 const EVENT_LABEL:Record<SurpriseKind,string>={golden:'황금 신호',reverse:'거꾸로',freeze:'얼음',speed:'빨리빨리'};
 const DEFAULT_EVENTS:SurpriseKind[]=['golden','reverse','freeze'];
-const ACK_REASON:Record<string,string>={paused:'일시정지 중이라',event:'이 게임에서는 쓰지 않는 이벤트라',rate:'너무 빨리 눌러서',jump:'순서가 맞지 않아서',invalid:'알 수 없는 명령이라',idle:'TV에서 아직 게임을 시작하지 않아서'};
+const ACK_REASON:Record<string,string>={paused:'일시정지 중이라',event:'이 게임에서는 쓰지 않는 이벤트라',rate:'너무 빨리 눌러서',jump:'순서가 맞지 않아서',invalid:'알 수 없는 명령이라',idle:'TV에서 아직 게임을 시작하지 않아서',busy:'TV에서 확인 중이라'};
 
 /** 선생님 휴대폰 리모컨: 큰 버튼만. 명령은 서명해서 TV의 대표 게임 화면으로 간다. */
 export function FunRemotePage(){

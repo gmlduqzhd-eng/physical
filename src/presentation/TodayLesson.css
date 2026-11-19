@@ -63,3 +63,15 @@ html .flow.today-page .today-big{min-height:clamp(60px,9vh,80px);font-size:clamp
 .today-guide-again{padding:0 4px;min-height:36px;font-weight:700}
 :root.dark-theme .today-stages li[data-state=passed] .today-stage-no{background:#713f12;color:#fef3c7}
 :root.dark-theme .today-stage-outcome,:root.dark-theme .today-hint{color:#d6d3d1}
+/* 지금 단계의 시간: '지금 4분째 · 계획 25분'을 한눈에 */
+.today-clock{margin:0;display:inline-flex;align-self:flex-start;padding:6px 14px;border-radius:999px;background:#fef3c7;color:#78350f;font-weight:800;font-size:clamp(15px,1.5vw,18px)}
+:root.dark-theme .today-clock{background:#422006;color:#fde68a}
+.today-stage-min small{font-weight:600;opacity:.85}
+.today-others{display:flex;flex-direction:column;gap:6px}
+.today-others>p{margin:0;font-weight:800}
+@media(max-width:520px){.today-stage-min{white-space:normal;text-align:right;max-width:9.5em}}
+/* 끝 화면의 반응 버튼: 화면 공통 버튼 색이 덮어써서 누른 표시가 안 보였다. 누른 반응을 진하게 채운다. */
+html .today-page .class-feedback[data-tone=light] .class-feedback-votes button,html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-votes button{border:2px solid #64748b;background:#fff;color:#0f172a}
+html .today-page .class-feedback[data-tone=light] .class-feedback-votes button[aria-pressed=true],html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-votes button[aria-pressed=true]{border-color:#0e7490;background:#0e7490;color:#fff}
+html .today-page .class-feedback[data-tone=light] .class-feedback-chips button,html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-chips button{border:1.5px solid #64748b;background:#fff;color:#0f172a}
+html .today-page .class-feedback[data-tone=light] .class-feedback-chips button[aria-pressed=true],html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-chips button[aria-pressed=true]{border-color:#a16207;background:#fde68a;color:#0f172a}
