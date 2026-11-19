@@ -3,9 +3,10 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 /**
  * 달리는 동안 실제로 흐른 시간을 잰다. 다른 탭이나 화면을 보고 와도 그 시간까지 센다.
  * 멈추면 그때까지의 시간을 쌓아 두고, 다시 달리면 이어서 센다.
+ * initialMs: 새로고침 뒤 이어서 할 때 처음부터 쌓여 있던 시간(기본 0).
  */
-export function useRunningClock(running:boolean){
- const [ms,setMs]=useState(0),base=useRef(0),start=useRef<number|null>(null);
+export function useRunningClock(running:boolean,initialMs=0){
+ const [ms,setMs]=useState(initialMs),base=useRef(initialMs),start=useRef<number|null>(null);
  const read=useCallback(()=>base.current+(start.current===null?0:performance.now()-start.current),[]);
  useEffect(()=>{
   if(!running)return;

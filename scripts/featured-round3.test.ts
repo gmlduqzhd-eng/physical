@@ -116,7 +116,7 @@ test('TV-only signature games are not offered as student-device lesson presets',
 test('hub lead text follows search and the equipment-free collection',async()=>{
  assert.match(libraryLead(false,false,0,{query:'달리기'}),new RegExp(`모든 활동 ${AVAILABLE_GAMES.length}개`));
  assert.match(libraryLead(false,false,0,{phoneOnly:true}),/보관함까지 모두/);
- assert.match(libraryLead(false,false,0),new RegExp(`대표 게임 ${FEATURED_GAMES.length}개`));
+ assert.match(libraryLead(false,false,0),new RegExp(`추천 활동 ${FEATURED_GAMES.length}개`));
  // 활동 목록 화면을 그려 본다: 찾은 활동 수를 보여 주고, 준비물 없는 놀이 칩은 보관함까지 센다고 알려 준다.
  const {createElement}=await import('react');
  const {ActivityPicker}=await import('../src/presentation/ActivityLibrary');

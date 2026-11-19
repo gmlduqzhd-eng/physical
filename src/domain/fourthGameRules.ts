@@ -1,6 +1,6 @@
 export function axisOccupied(axis:{claimed:boolean;mine:boolean;at:number},serverNow:number){return axis.claimed&&!axis.mine&&serverNow-axis.at<10000;}
 export const bossReflectionChoices=(games:readonly string[])=>[
- ...(games.includes('expedition-map')?['단서를 말·몸짓으로 전했어요']:[]),
+ ...(games.includes('expedition-map')?['힌트를 말·몸짓으로 전했어요']:[]),
  ...(games.includes('expedition-ship')?['조종 축과 역할을 바꾸었어요']:[]),
  ...(games.includes('expedition-rescue')?['바람을 보고 구조 작전을 조절했어요']:[]),
  ...(games.includes('expedition-shadow')?['움직임 경로를 기억하고 연결했어요']:[]),

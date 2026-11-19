@@ -110,9 +110,7 @@ export const PhysicalActivityLayout = ({
       {step === 'intro' && (
         <div className="max-w-xl w-full mx-auto my-auto py-8 animate-in fade-in duration-200">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-cyan-950 text-cyan-400 border border-cyan-800">
-              {achievementCode}
-            </span>
+            {/* 성취기준 코드는 학생 첫 화면에 내놓지 않고 아래 '선생님 정보'에 접어 둔다. */}
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-300">
               {domain} {sportType ? `· ${sportType}` : ''}
             </span>
@@ -164,6 +162,7 @@ export const PhysicalActivityLayout = ({
             </ol>
           </div>
 
+          {!!achievementCode&&<details className="text-xs text-slate-400 mb-4" data-teacher-info><summary className="cursor-pointer font-bold">선생님 정보 · 성취기준</summary><p className="mt-1 font-mono">{achievementCode}</p></details>}
         </div>
       )}
 

@@ -114,7 +114,7 @@ export const DailyStreakModal: React.FC<DailyStreakModalProps> = ({ isOpen, onCl
               onClick={onClose}
               className="hub-dialog-primary mt-4 w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black rounded-xl shadow-lg shadow-amber-500/20"
             >
-              내일 또 만나요!
+              닫기
             </button>
           </div>
         ) : (

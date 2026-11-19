@@ -3,6 +3,7 @@ export type Rng=()=>number;
 
 export const CLASS_TOOLS=[
  {id:'league',label:'리그 대진표',icon:'📋',summary:'모든 팀이 한 번씩 만나는 경기 순서와 순위표'},
+ {id:'timer',label:'카운트다운',icon:'⏳',summary:'30초·1분·3분·5분을 크게 세고 끝나면 소리로 알려요'},
  {id:'race',label:'레이스 시계',icon:'⏱️',summary:'여러 팀의 도착 시간을 한 화면에서 기록'},
  {id:'ladder',label:'사다리타기',icon:'🪜',summary:'역할·순서를 공정하게 정하기'},
  {id:'draw',label:'번호 뽑기',icon:'🎟️',summary:'발표자·시범 보일 번호를 겹치지 않게 뽑기'},
@@ -106,3 +107,42 @@ export function ladderLabels(text:string,columns:number):string[]{
  return [...given,...Array(columns-given.length).fill('통과')];
 }
 export const formatClock=(ms:number)=>{const t=Math.floor(ms/100),m=Math.floor(t/600),s=Math.floor(t/10)%60;return `${m}:${String(s).padStart(2,'0')}.${t%10}`;};
+
+/* ── 새로고침해도 이어지는 도구 상태(이 탭에만 저장) ── */
+const intIn=(v:unknown,min:number,max:number):v is number=>typeof v==='number'&&Number.isInteger(v)&&v>=min&&v<=max;
+const rec=(v:unknown):v is Record<string,unknown>=>typeof v==='object'&&v!==null&&!Array.isArray(v);
+export interface DrawSaved {total:number;drawn:number[]}
+/** 번호 뽑기: 인원 2~40, 뽑힌 번호는 1~인원 사이에서 겹치지 않아야 한다. 맞지 않으면 null. */
+export function parseDrawSaved(raw:unknown):DrawSaved|null{
+ if(!rec(raw)||!intIn(raw.total,2,40)||!Array.isArray(raw.drawn))return null;
+ const total=raw.total,drawn=raw.drawn as unknown[];
+ if(drawn.length>total||!drawn.every(n=>intIn(n,1,total))||new Set(drawn).size!==drawn.length)return null;
+ return {total,drawn:drawn as number[]};
+}
+export interface GroupsSaved {total:number;count:number;groups:number[][]}
+/** 모둠 나누기: 모든 번호가 정확히 한 번씩 들어 있어야 한다. */
+export function parseGroupsSaved(raw:unknown):GroupsSaved|null{
+ if(!rec(raw)||!intIn(raw.total,2,40)||!intIn(raw.count,2,10)||!Array.isArray(raw.groups))return null;
+ const total=raw.total,groups=raw.groups as unknown[];
+ if(!groups.every(g=>Array.isArray(g)&&g.every(n=>intIn(n,1,total))))return null;
+ const flat=(groups as number[][]).flat();
+ if(groups.length&&(flat.length!==total||new Set(flat).size!==total))return null;
+ return {total,count:raw.count,groups:groups as number[][]};
+}
+export interface RaceSaved {lanes:number;times:(number|null)[];ms:number;running:boolean;savedAt:number}
+const DAY_MS=24*60*60*1000;
+/** 레이스 시계: 달리는 중에 새로고침했으면 저장한 뒤 흐른 시간을 더해 이어 간다(하루를 넘긴 기록은 버린다). */
+export function parseRaceSaved(raw:unknown,now:number):RaceSaved|null{
+ if(!rec(raw)||!intIn(raw.lanes,2,8)||!Array.isArray(raw.times)||raw.times.length!==8)return null;
+ if(typeof raw.ms!=='number'||!Number.isFinite(raw.ms)||raw.ms<0||typeof raw.savedAt!=='number'||!Number.isFinite(raw.savedAt))return null;
+ const times=raw.times as unknown[];
+ if(!times.every(t=>t===null||(typeof t==='number'&&Number.isFinite(t)&&t>=0)))return null;
+ const gap=now-raw.savedAt;
+ if(gap<0||gap>DAY_MS)return null;
+ const running=raw.running===true,ms=raw.ms+(running?gap:0);
+ if(!running&&ms===0&&times.every(t=>t===null))return null;
+ return {lanes:raw.lanes,times:times as (number|null)[],ms,running,savedAt:raw.savedAt};
+}
+/** 카운트다운 표시: 90 → '1:30', 5 → '0:05'. */
+export const formatCountdown=(seconds:number)=>{const s=Math.max(0,Math.ceil(seconds));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
+export const COUNTDOWN_PRESETS=[{seconds:30,label:'30초'},{seconds:60,label:'1분'},{seconds:180,label:'3분'},{seconds:300,label:'5분'}] as const;
