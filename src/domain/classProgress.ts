@@ -213,6 +213,25 @@ export function newBadges(before:ClassProgress,after:ClassProgress):ClassBadge[]
  * 두 기록 합치기(같은 판·같은 반응은 한 번만). 저장에 실패한 탭이 다른 탭의 기록을 잃지 않게 쓴다.
  * 판 id가 있는 반응은 판마다 더 늦게 남긴 쪽을 남긴다.
  */
+const entryKey=(x:PlayEntry)=>x.play?`p:${x.play}`:`t:${x.id}:${x.at}`;
+/**
+ * other에만 있는 판 가운데 mine이 아직 세지 못한 판 수.
+ * mine이 오래된 판을 지운 적이 있으면(total이 남은 판보다 큼) 남은 판보다 오래된 것은 이미 센 판일 수 있어 빼고 센다.
+ */
+export function unseenPlays(mine:ClassProgress,other:ClassProgress):number{
+ const known=new Set(mine.plays.map(entryKey));
+ const trimmed=totalPlays(mine)>mine.plays.length,oldest=mine.plays[0]?.at??0;
+ return other.plays.filter(x=>!known.has(entryKey(x))&&(!trimmed||x.at>oldest)).length;
+}
+/**
+ * 저장소에서 읽은 값의 누적 판 수를 지킨다. 예전 버전이 열린 탭이 저장하면 total이 빠져 2000판(남기는 한도)으로 줄어드는데,
+ * 이 탭이 알던 누적 판 수에 새로 생긴 판을 더해 되살린다. '모두 지우기'(판이 한도보다 적음)는 그대로 따른다.
+ */
+export function keepTotal(stored:ClassProgress,memory:ClassProgress):ClassProgress{
+ if(stored.total!==undefined||stored.plays.length<MAX_ENTRIES)return stored;
+ const total=totalPlays(memory)+unseenPlays(memory,stored);
+ return total>stored.plays.length?{...stored,total}:stored;
+}
 export function mergeProgress(a:ClassProgress,b:ClassProgress):ClassProgress{
  const playKey=(x:PlayEntry)=>x.play?`p:${x.play}`:`t:${x.id}:${x.at}`;
  const plays=new Map<string,PlayEntry>();
@@ -224,8 +243,8 @@ export function mergeProgress(a:ClassProgress,b:ClassProgress):ClassProgress{
  const reasons=new Map<string,ReasonEntry>();
  for(const x of [...a.reasons,...b.reasons]){const old=reasons.get(x.play);if(!old||x.at>=old.at)reasons.set(x.play,x);}
  const merged=[...plays.values()].sort((x,y)=>x.at-y.at);
- // 누적 판 수: 두 쪽 가운데 큰 값에서 시작해, 한쪽에만 있는 판 수만큼은 적어도 더해진다.
- const total=Math.max(totalPlays(a),totalPlays(b),merged.length);
+ // 누적 판 수: 한쪽이 세지 못한 판(다른 쪽에만 있는 판)을 더한다. 두 탭이 저마다 판을 남겼을 때 큰 쪽만 고르면 덜 세어진다.
+ const total=Math.max(totalPlays(a)+unseenPlays(a,b),totalPlays(b)+unseenPlays(b,a),merged.length);
  return trimProgress({version:2,plays:merged,votes:byTime([...votes.values()]),reasons:byTime([...reasons.values()]),total});
 }
 

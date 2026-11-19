@@ -53,6 +53,9 @@ import { usePlayerProfile } from '../application/usePlayerProfile';
 import { ReadyCountdownOverlay } from './components/common/ReadyCountdownOverlay';
 import { readJsonStorage, readStorage, writeStorage, isRecord, nonnegativeNumber } from '../application/browserStorage';
 import { getPhysicalActivityPlan } from '../domain/physicalActivityPlans';
+import {MOTION_SENSOR_GAMES,countdownDeviceHint} from '../domain/countdownHint';
+import {useTodayRun,saveTodayRun} from '../application/todayLessonStore';
+import {advanceRun,currentStage,stagePath} from '../domain/todayLesson';
 
 interface GameMeta {
   name: string;
@@ -198,6 +201,15 @@ const GamePlaySession = () => {
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
   const catalogReturn=searchParams.get('returnTo');
+  // 오늘 수업 중에 그 단계의 활동을 하고 있으면, 결과 화면에서 바로 다음 단계로 이어 준다.
+  const todayRun=useTodayRun();
+  const lessonStage=todayRun&&!hasBattle&&!soloMode&&currentStage(todayRun)?.gameId===gameType?currentStage(todayRun):undefined;
+  const handleLessonNext=()=>{
+    if(!todayRun)return;
+    const next=advanceRun(todayRun,'done',Date.now());saveTodayRun(next);
+    const ns=currentStage(next);const path=ns&&stagePath(ns,next.plan.settings.teams);
+    navigate(path||'/today');
+  };
   const safeCatalogReturn=catalogReturn&&/^\/(solo|hub|today)(\?[^#]*)?$/.test(catalogReturn)?catalogReturn:null;
   const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : safeCatalogReturn||(soloMode?'/solo':'/hub');
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
@@ -466,7 +478,7 @@ const GamePlaySession = () => {
           })()}</div>
           {participationCues && <div className="game-prepare-info" aria-label="수업 참여 안내"><strong>오늘의 신체 놀이</strong><p>{participationCues.mission}</p><small>역할 바꾸기: {participationCues.roles}<br/>기다리는 동안: {participationCues.waiting}</small><p className="mt-2 text-xs">선생님이 공유한 안내를 확인하세요. 화면 조작은 실제 움직임의 증거가 아닙니다.</p></div>}
           {/* Permission guidance stays in preparation so it never covers game controls. */}
-          {!isMotionGranted && !isQuestId(gameType) && ['jump', 'squat', 'run', 'target', 'tilt_balance', 'tilt_race', 'shake', 'arm_raise', 'wave', 'one_leg', 'freeze', 'plank', 'punch', 'foot-center-balance', 'body_twist', 'head-shoulders-knees', 'kayak-paddle', 'badminton-smash-rhythm', 'seesaw-balance-tap'].includes(gameType) && (
+          {!isMotionGranted && !isQuestId(gameType) && MOTION_SENSOR_GAMES.includes(gameType) && (
             <div className="game-sensor-setup game-prepare-info">
               <div className="text-xs">
                 <span className="font-bold text-amber-400 block mb-0.5">움직임 센서 연결</span>
@@ -488,7 +500,7 @@ const GamePlaySession = () => {
       {isCountingDown && (
         <ReadyCountdownOverlay
           onComplete={handleCountdownComplete}
-          message={`${gameInfo.name} 시작 준비! ${typeof window!=='undefined'&&window.matchMedia('(min-width: 768px)').matches?'화면을 모두가 볼 수 있게 두어요.':'스마트폰을 거치하거나 손에 쥐세요.'}`}
+          message={`${gameInfo.name} 시작 준비! ${countdownDeviceHint(gameType||'',typeof window!=='undefined'&&window.matchMedia('(min-width: 768px)').matches)}`}
         />
       )}
 
@@ -612,6 +624,14 @@ const GamePlaySession = () => {
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
+            {lessonStage?<div className="w-full flex flex-col gap-3">
+              {/* 오늘 수업 중: 수업을 잇는 길이 가장 크게 보이게 한다('홈으로'를 눌러 수업에서 벗어나지 않게). */}
+              <button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button>
+              <div className="w-full flex gap-3">
+                <button onClick={handleReplay} className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors"><RotateCcw className="w-5 h-5" /> 한 번 더</button>
+                <button onClick={()=>navigate('/today')} className="result-return flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">오늘 수업으로</button>
+              </div>
+            </div>:
             <div className="w-full flex gap-3">
               <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
@@ -619,7 +639,7 @@ const GamePlaySession = () => {
               <button onClick={handleReturnToCatalog} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
                 <Home className="w-5 h-5" /> {soloMode ? '활동 목록으로' : guidedRequested ? '모둠으로' : '홈으로'}
               </button>
-            </div>
+            </div>}
           </div>
         </div>
       )}
