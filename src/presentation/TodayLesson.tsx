@@ -5,10 +5,10 @@ import {ClassFeedbackSlot,ClassMapLink} from './components/ClassFeedbackSlot';
 import {TeacherQuickGuide} from './components/TeacherQuickGuide';
 import {saveTodayRun,useStoredTodayRun} from '../application/todayLessonStore';
 import {useClassProgress} from '../application/classProgressStore';
-import {lessonPlayId} from '../domain/classProgress';
+import {lessonPlayId,type ClassProgress} from '../domain/classProgress';
 import {
  DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- addExtraMain,advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,
+ addExtraMain,advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
@@ -57,7 +57,8 @@ function StalePrompt({run}:{run:TodayRun}){
 
 const OUTCOME_TEXT:Record<StageOutcome,string>={played:'했어요',passed:'기록 없이 넘겼어요',skipped:'건너뛰었어요'};
 /** outcomes: 끝 화면에서만 넘긴다(활동을 실제로 했는지, 열지 않고 넘겼는지). */
-function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:StageOutcome[]}){
+/** shown(gameId): '한 판 더' 게임 가운데 실제로 한 것만 단계 이름에 넣는다(없으면 모두). */
+function StageList({plan,run,outcomes,shown}:{plan:TodayPlan;run?:TodayRun;outcomes?:StageOutcome[];shown?:(gameId:string)=>boolean}){
  return <ol className="today-stages" aria-label="오늘 수업 순서">
   {plan.stages.map((s,i)=>{
    const result=run?.results[i],outcome=outcomes?.[i];
@@ -65,7 +66,7 @@ function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:S
    const state=outcome?(outcome==='played'?'done':outcome):result?result.status:run&&i===run.index&&run.finishedAt===undefined?'now':'next';
    return <li key={i} data-state={state}>
     <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':state==='done'?'✓':state==='skipped'?'–':i+1}</span>
-    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {run?stageTitle(run,i):s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
+    <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {run?stageTitle(run,i,shown):s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
     <span className="today-stage-min">{result?<>{formatSeconds(result.seconds)}<small> · 계획 {s.minutes}분</small></>:stagePlanText(s)}</span>
     {!outcome&&<span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>}
    </li>;
@@ -117,10 +118,16 @@ function useNow(everyMs:number){
  return now;
 }
 
-function TodayStageView({run}:{run:TodayRun}){
+/** 이 수업 동안 그 게임을 실제로 했는지: 기록한 판이 있거나 반응을 남긴 판이 있으면 한 것으로 본다. */
+const didInLesson=(progress:ClassProgress,run:TodayRun,until:number)=>(gameId:string)=>!!lessonPlayId(progress,gameId,recordsSince(run),until);
+
+function TodayStageView({run:stored}:{run:TodayRun}){
  const navigate=useNavigate();
  const progress=useClassProgress();
  const now=useNow(15000);
+ // 활동 목록에서 직접 연 다른 대표 게임도 본게임 시간 안에 기록했으면 '한 판 더'로 센다(판 수와 끝 화면이 같은 판을 세게).
+ const run=withRecordedExtras(stored,progress.plays);
+ useEffect(()=>{if(run!==stored)saveTodayRun(run);},[run,stored]);
  const stage=currentStage(run);
  if(!stage)return null; // parseRun이 걸러 주지만, 혹시 모를 깨진 값에서도 화면이 멈추지 않게
  const total=run.plan.stages.length,teams=run.plan.settings.teams,path=stagePath(stage,teams);
@@ -154,7 +161,7 @@ function TodayStageView({run}:{run:TodayRun}){
       :<>{path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>{rounds>0?`🔁 ${again} · ${stage.title}`:`▶ ${stage.title} 열기`}</button>}
         <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button>{rounds===0&&<button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button>}</div></>}
      {stage.kind==='main'&&rounds>0&&!over&&others.length>0&&<div className="today-others"><p>다른 대표 게임으로 한 판 더</p><div className="today-choice">{others.map(g=><button key={g.id} type="button" onClick={()=>{saveTodayRun(addExtraMain(run,g.id));navigate(mainPath(g.id,teams));}}>{g.emoji} {g.name}</button>)}</div></div>}</>}
-  <StageList plan={run.plan} run={run}/>
+  <StageList plan={run.plan} run={run} shown={didInLesson(progress,run,Infinity)}/>
   <p className="today-more"><button type="button" className="today-link" onClick={quit}>오늘 수업 그만하고 새로 짜기</button></p>
  </section>;
 }
@@ -164,30 +171,35 @@ function TodayStageView({run}:{run:TodayRun}){
  * 게임 결과 화면에서 이미 누른 반응이 그대로 보이고, 다시 눌러도 같은 판의 반응을 바꿀 뿐이다.
  * 그런 판이 없으면 이 수업·이 단계로 정해지는 판 id를 써서 새로고침해도 같은 칸으로 이어진다.
  */
-function TodaySummary({run}:{run:TodayRun}){
+function TodaySummary({run:stored}:{run:TodayRun}){
  const progress=useClassProgress();
+ // 수업 중 활동 목록에서 직접 연 대표 게임도 본게임 시간 안에 기록했으면 본게임으로 센다(단계 화면의 판 수와 같게).
+ const run=withRecordedExtras(stored,progress.plays);
  const finished=run.finishedAt??Date.now();
  const since=recordsSince(run);
  const totalSec=runSeconds(run);
  // 단계마다 반응을 붙일 판을 한 번 정해 수업에 적어 둔다. 그 뒤에는 다시 누르거나 새로고침해도 같은 판의 반응만 바뀐다.
  const bound=bindStagePlays(run,gameId=>lessonPlayId(progress,gameId,since,finished));
- useEffect(()=>{if(bound!==run)saveTodayRun(bound);},[bound,run]);
+ useEffect(()=>{if(bound!==stored)saveTodayRun(bound);},[bound,stored]);
  const recorded=(gameId:string)=>progress.plays.some(x=>x.id===gameId&&x.at>=since&&x.at<=finished);
  const outcomes=stageOutcomes(run,recorded);
+ // '한 판 더' 링크를 눌렀다가 바로 나온 게임처럼 실제로 하지 않은 게임은 단계 이름과 반응 칸에서 뺀다.
+ const did=didInLesson(progress,run,finished);
  const count=(o:StageOutcome)=>outcomes.filter(x=>x===o).length;
  const parts=[`${count('played')}단계를 했어요`,count('passed')?`${count('passed')}단계는 기록 없이 넘겼어요`:'',count('skipped')?`${count('skipped')}단계는 건너뛰었어요`:''].filter(Boolean);
  return <section className="today-card" aria-labelledby="today-summary-title">
   <p className="eyebrow">오늘 수업 끝 · {formatSeconds(totalSec)} · 계획 {run.plan.settings.minutes}분</p>
   <h1 id="today-summary-title">🎉 오늘 수업을 마쳤어요</h1>
   <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
-  <StageList plan={run.plan} run={run} outcomes={outcomes}/>
+  <StageList plan={run.plan} run={run} outcomes={outcomes} shown={did}/>
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>
   <p className="today-hint">게임 결과 화면에서 이미 누른 반응은 그대로 보여요. 바꾸고 싶을 때만 다시 눌러요.</p>
-  {run.plan.stages.map((s,i)=>s.gameId&&<div key={`${i}-${s.gameId}`} className="today-feedback-group">
+  {/* 건너뛴 단계는 반응 칸을 두지 않는다(그 활동에 이미 남긴 반응이 있으면 그대로 보여 준다). */}
+  {run.plan.stages.map((s,i)=>s.gameId&&(outcomes[i]!=='skipped'||did(s.gameId))&&<div key={`${i}-${s.gameId}`} className="today-feedback-group">
    <div className="today-feedback"><p><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}</p><ClassFeedbackSlot gameId={s.gameId} playId={bound.stagePlays?.[i]} tone="light" showMap={false}/></div>
    {/* 본게임 중 '다른 대표 게임으로 한 판 더'로 한 게임도 칸을 따로 둔다(그 게임에 남긴 판에 붙는다). */}
-   {s.kind==='main'&&(run.extraMains??[]).map((id,k)=><div key={`x-${id}`} className="today-feedback"><p><b>{STAGE_LABEL.main}</b> · {mainGameLabel(id)} <small>(한 판 더)</small></p><ClassFeedbackSlot gameId={id} playId={bound.extraPlays?.[k]} tone="light" showMap={false}/></div>)}
+   {s.kind==='main'&&(run.extraMains??[]).map((id,k)=>did(id)&&<div key={`x-${id}`} className="today-feedback"><p><b>{STAGE_LABEL.main}</b> · {mainGameLabel(id)} <small>(한 판 더)</small></p><ClassFeedbackSlot gameId={id} playId={bound.extraPlays?.[k]} tone="light" showMap={false}/></div>)}
   </div>)}
   <ClassMapLink progress={progress}/>
   <button type="button" className="primary today-primary" onClick={()=>saveTodayRun(null)}>새 수업 짜기</button>

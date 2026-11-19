@@ -127,12 +127,43 @@ export function isStageGame(run:TodayRun,gameId:string):boolean{
  return stageGameIds(run,run.index).includes(gameId);
 }
 const SIG_NAME=new Map<string,SignatureGameDef>(READY_SIGNATURE_GAMES.map(g=>[g.id,g]));
-/** 단계 이름: 본게임에 다른 대표 게임을 더 했으면 '신호 대장 + 우리 반 보스전'처럼 함께 적는다. */
-export function stageTitle(run:TodayRun,i:number):string{
+/**
+ * 단계 이름: 본게임에 다른 대표 게임을 더 했으면 '신호 대장 + 우리 반 보스전'처럼 함께 적는다.
+ * shown(gameId): 실제로 한(기록했거나 반응을 남긴) 게임만 이름에 넣는다. '한 판 더' 링크를 눌렀다가 바로 나온 게임은 빼려고 쓴다.
+ */
+export function stageTitle(run:TodayRun,i:number,shown:(gameId:string)=>boolean=()=>true):string{
  const s=run.plan.stages[i];
  if(!s)return '';
- if(s.kind!=='main'||!run.extraMains?.length)return s.title;
- return [s.title,...run.extraMains.map(id=>SIG_NAME.get(id)?.name??id)].join(' + ');
+ const extras=s.kind==='main'?(run.extraMains??[]).filter(shown):[];
+ if(!extras.length)return s.title;
+ return [s.title,...extras.map(id=>SIG_NAME.get(id)?.name??id)].join(' + ');
+}
+/**
+ * i번째 단계의 시간 창(ms). 단계마다 남긴 걸린 시간을 지금 단계 시작 시각에서 거꾸로 빼서 구한다(1초 반올림 여유를 둔다).
+ * 지금 단계는 끝이 없다(Infinity). 아직 오지 않은 단계는 null.
+ * '이어 하기'로 하루를 넘긴 수업은 지난 단계의 창이 오늘로 옮겨져 잡히므로, 시작은 recordsSince보다 앞서지 않게만 맞춘다.
+ */
+export function stageWindow(run:TodayRun,i:number):{from:number;to:number}|null{
+ if(i<0||i>=run.plan.stages.length||i>run.index)return null;
+ const back=(k:number)=>run.results.slice(k,run.index).reduce((a,r)=>a+r.seconds,0)*1000;
+ const from=Math.max(recordsSince(run),run.stageStartedAt-back(i)-1000);
+ if(i===run.index)return {from,to:Infinity};
+ return {from,to:from+(run.results[i]?.seconds??0)*1000+2000};
+}
+/**
+ * 수업 중 활동 목록에서 직접 연 다른 대표 게임도, 본게임 단계 시간 안에 기록했으면 '한 판 더'로 한 게임처럼 센다.
+ * (그래야 단계 화면의 'N판 했어요'와 끝 화면의 단계 이름·반응 칸이 같은 판을 센다.) 새로 찾은 게임이 없으면 같은 객체를 돌려준다.
+ */
+export function withRecordedExtras(run:TodayRun,plays:readonly {id:string;at:number}[]):TodayRun{
+ const m=run.plan.stages.findIndex(s=>s.kind==='main');
+ const stage=run.plan.stages[m],win=stageWindow(run,m);
+ if(!stage||!win)return run;
+ const extras=[...(run.extraMains??[])],before=extras.length;
+ for(const x of [...plays].sort((a,b)=>a.at-b.at)){
+  if(x.at<win.from||x.at>win.to||x.id===stage.gameId||!isMainId(x.id)||extras.includes(x.id)||extras.length>=MAX_EXTRA_MAINS)continue;
+  extras.push(x.id);
+ }
+ return extras.length===before?run:{...run,extraMains:extras};
 }
 /** 게임 id의 이름과 그림(끝 화면 반응 칸 제목). */
 export const mainGameLabel=(id:string)=>{const g=SIG_NAME.get(id);return g?`${g.emoji} ${g.name}`:id;};
