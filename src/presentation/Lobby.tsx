@@ -3,9 +3,10 @@ import { StudentQrScanner } from './components/StudentQrScanner';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { joinStudentByPin, getMyClassroomProfile, completeStudentProfile, classroomError } from '../data/classroomRepository';
-import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
+import { readStorage, removeStorage } from '../application/browserStorage';
 import { rememberStudentIdentity, savedStudentIdentity, validateStudentIdentity } from '../application/studentIdentity';
 import { StudentIdentityFields } from './components/StudentIdentityFields';
+import { rememberLastEntry, resumeLabel } from '../application/lastStudentEntry';
 import { ArrowRight, BookOpen, Hash, QrCode, RotateCcw } from 'lucide-react';
 
 
@@ -32,6 +33,9 @@ export const Lobby = () => {
   const lastRoom = readStorage('physical_last_room');
   const lastGroup = readStorage('physical_last_group');
   const lastGroupName = readStorage('physical_last_group_name');
+  // 누구로 이어 가는지 단추에 함께 적는다(같은 기기를 쓰는 다른 학생이 잘못 누르지 않게).
+  const lastIdentity = savedStudentIdentity();
+  const lastWho = lastIdentity.number && lastIdentity.nickname ? resumeLabel(lastIdentity) : '';
 
   const handleResume = async () => {
     if (lastRoom && lastGroup) {
@@ -78,16 +82,14 @@ export const Lobby = () => {
       const identity=validateStudentIdentity(studentNumber,nickname);
       const entry = await joinStudentByPin(pinCode,identity);
       rememberStudentIdentity(identity);
-      writeStorage('physical_last_room', entry.room_id);
-      writeStorage('physical_last_group', entry.group_id);
-      writeStorage('physical_last_group_name', entry.group_name);
+      rememberLastEntry(entry);
       navigate(`/mobile/${entry.room_id}/${entry.group_id}`);
     } catch (cause) { setError(classroomError(cause, '입장에 실패했습니다. 다시 시도해주세요.')); }
     finally { setLoading(false); }
   };
 
   return <LessonShell audience="student"><section className="lesson-intro"><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요</h1><p>선생님이 보여주신 QR이나 코드로 참여해요.<br/>학생 번호와 별명을 적으면 준비 완료!</p></section>
-    {lastRoom&&lastGroup&&<p className="student-resume"><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName})</button></p>}
+    {lastRoom&&lastGroup&&<p className="student-resume"><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName}{lastWho?` · ${lastWho}`:''})</button></p>}
     {resumePending&&<form className="card" onSubmit={handleResumeProfile}><h2>이전 수업의 학생 정보를 입력해요</h2><p>입장 정보가 없는 기기입니다. 번호와 별명을 적으면 이어서 참여할 수 있어요.</p><StudentIdentityFields number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname}/><button className="primary button-wide" disabled={loading}>정보 저장하고 이어가기</button></form>}
     <div className="student-choices" role="group" aria-label="수업 참여 방법"><button type="button" className="student-choice" aria-pressed={mode==='qr'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('qr')}><span className="lesson-icon"><QrCode aria-hidden="true"/></span><strong>QR로 참여해요</strong><span>선생님 화면의 우리 모둠 QR을 비춰요.</span><span className="student-choice-action">QR 참여 선택 <ArrowRight aria-hidden="true"/></span></button><button type="button" className="student-choice" aria-pressed={mode==='code'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('code')}><span className="lesson-icon"><Hash aria-hidden="true"/></span><strong>코드로 참여해요</strong><span>선생님이 알려주신 코드를 입력해요.</span><span className="student-choice-action">코드 참여 선택 <ArrowRight aria-hidden="true"/></span></button></div><div id="student-entry-panel" className="student-entry-panel">
     {mode==='qr'&&<StudentQrScanner/>}

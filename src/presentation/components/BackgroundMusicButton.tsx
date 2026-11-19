@@ -4,7 +4,7 @@ import { useBackgroundMusic } from "../../application/BackgroundMusicContext";
 import "./BackgroundMusicButton.css";
 
 export function BackgroundMusicButton() {
-  const { enabled, volume, setVolume, toggle } = useBackgroundMusic();
+  const { enabled, blocked, volume, setVolume, toggle, resume } = useBackgroundMusic();
   const sliderId = useId();
   const percent = Math.round(volume * 1000) / 10;
   const label = enabled ? "배경음악 끄기" : "배경음악 켜기";
@@ -13,7 +13,7 @@ export function BackgroundMusicButton() {
       <div className="background-music-heading">
         <div className="background-music-title">
           <span className="background-music-icon"><Music2 aria-hidden="true" /></span>
-          <span><strong>배경음악</strong><small>{enabled ? "음악이 켜져 있어요" : "음악이 꺼져 있어요"}</small></span>
+          <span><strong>배경음악</strong><small>{blocked ? "소리가 멈춰 있어요 · 다시 켜기를 눌러요" : enabled ? "음악이 켜져 있어요" : "음악이 꺼져 있어요"}</small></span>
         </div>
         <button
       type="button"
@@ -26,6 +26,7 @@ export function BackgroundMusicButton() {
           <span className="background-music-switch-knob" />
         </button>
       </div>
+      {blocked && <button type="button" className="background-music-resume" onClick={resume}>▶ 음악 다시 켜기</button>}
       <label htmlFor={sliderId} className="background-music-volume">
         <span className="sr-only">배경음악 볼륨</span>
         <Volume2 aria-hidden="true" />
