@@ -1,0 +1,7 @@
+.display-btn{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:8px 14px;border:2px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer;opacity:.9}
+.display-btn[aria-pressed="true"]{background:#0e7490;border-color:#0e7490;color:#fff;opacity:1}
+.display-btn:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+
+/* 글씨 크기: rem 기준 글자를 함께 키운다. 진행 화면의 큰 신호는 각 화면이 clamp로 따로 잡는다. */
+html[data-text-scale="large"]{font-size:112.5%}
+html[data-text-scale="xlarge"]{font-size:125%}
