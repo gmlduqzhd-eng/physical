@@ -165,7 +165,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
             <div className="py-6 text-center">
               <p>표현자: {actor==='B'?'친구 B':'친구 A'} · 감상자: {actor==='B'?'친구 A':'친구 B'}</p><button onClick={()=>setReveal(v=>!v)}>{reveal?'표현자의 선택 다시 가리기':'표현자만 선택 확인하기'}</button>
               <div className="inline-block px-3 py-1 rounded-full bg-purple-950 border border-purple-800 text-xs font-bold text-purple-300 mb-2">
-                {reveal?`선택한 감정: ${selectedEmotion.name} (${temperature}단계 강도)`:'감상자에게는 선택을 가리고 몸 표현을 보여 주세요.'}
+                {reveal?`선택한 감정: ${selectedEmotion.name} (${temperature}단계 강도)`:'감상자에게는 선택을 가리고 신체 표현을 보여 주세요.'}
               </div>
               <h3 className="text-xl font-black text-white mb-2">
                 온몸으로 감정을 마음껏 펼쳐보세요!

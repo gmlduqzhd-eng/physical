@@ -11,7 +11,7 @@ interface SplitBattleGameProps {
 
 type BattleType = 'tug' | 'flag' | 'tap';
 type Player = 'p1' | 'p2';
-/** 화면을 빠르게 누르는 대신, 몸 동작을 하고 내 칸을 한 번 누른다. 누른 뒤 잠시 잠가 연타로는 이길 수 없다. */
+/** 화면을 빠르게 누르는 대신, 신체 동작을 하고 내 칸을 한 번 누른다. 누른 뒤 잠시 잠가 연타로는 이길 수 없다. */
 const MOVES = ['스쿼트 1번', '제자리 점프 2번', '팔 벌려 뛰기 1번', '무릎 올리기 4번', '옆으로 한 걸음 갔다 오기', '손뼉 머리 위·무릎 2번'] as const;
 const MOVE_LOCK_MS = 1800;
 const RACE_GOAL = 8;

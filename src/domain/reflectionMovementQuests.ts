@@ -17,7 +17,7 @@ export function makeReflectionQuest(id:ReflectionQuestId,round:number,s:QuestSet
   const p:QuestRound={title:['준비 살피기','방법 시도','느낌 비교'][round],goal:'내 몸의 느낌을 살펴요',hint:'느낌과 선택은 개인 관찰 기록이에요. 건강 상태나 체력을 진단하지 않아요.',choices:[{id:'own',label:'내 리듬으로 하기',detail:'편한 범위와 속도를 스스로 골라요.'},{id:'guided',label:'작은 신호 참고하기',detail:'안내를 참고하되 불편하면 내 속도로 바꿔요.'}],cues:[],cueMs:s.gentle?5000:4000,repeats:1,confirmation:'편한 방법을 시도하고 내 느낌을 살펴봤어요',reflection:{prompt:'지금 느낌은 어떤가요? (선택 사항)',options:['편했어요','범위를 줄였어요','잠깐 쉬었어요','기록 건너뛰기']}};
   if(id==='pulse-detective'){
     p.choices=[{id:'own',label:'호흡 느낌 살피기',detail:'숫자 없이 편안한 호흡의 느낌을 살펴요.'},{id:'guided',label:'손목 맥박 살피기',detail:'편하게 손목을 짚어 보고, 못 찾으면 호흡을 살펴도 돼요.'}];
-    p.title=['쉬는 몸 관찰','가벼운 움직임 후 관찰','다시 쉬며 비교'][round];p.goal=p.title;
+    p.title=['쉬는 신체 관찰','가벼운 움직임 후 관찰','다시 쉬며 비교'][round];p.goal=p.title;
     const observe=guided?'손목 안쪽에 두 손가락을 가볍게 대보기 · 목 누르지 않기':'호흡이 어떻게 느껴지는지 살피기';
     p.cues=round===0?['편한 자세로 앉아 쉬기',observe,'느낌을 말로 떠올리기']:round===1?[s.seated?'양팔을 번갈아 가볍게 움직이기':'편하게 제자리걸음하기',s.seated?'팔을 편한 범위로 움직이기':'속도를 올리지 않고 걸음 이어가기','편히 멈추기',observe]:['편하게 앉아 쉬기','팔을 내려놓고 평소 호흡하기',observe,'활동 전후 느낌을 비교하기'];
     p.reflection={prompt:round===0?'쉬는 지금, 숨이나 맥박은 어떤가요? (선택 사항)':'움직인 뒤 숨이나 맥박은 어떤가요? (선택 사항)',options:['🐢 느려요','🙂 보통이에요','🐇 빨라요','잘 모르겠어요','기록 건너뛰기']};

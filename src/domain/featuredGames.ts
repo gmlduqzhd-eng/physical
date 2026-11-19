@@ -10,7 +10,7 @@ export const FEATURED_GAME_IDS:readonly string[]=[
  // 대표 게임: 재미 뼈대(팀 점수·깜짝 이벤트·결과 발표)를 쓰는 새 게임
  'sig-signal-captain', // 신호 대장: 신호 규칙 카드로 바로 이해, 팀 점수로 긴장감
  'sig-boss-raid', // 우리 반 보스전: 반 전체가 한 목표, 보스 HP가 줄어드는 재미
- 'sig-move-bingo', // 몸 빙고: 칸 차지와 빙고 순간이 분명함
+ 'sig-move-bingo', // 신체 빙고: 칸 차지와 빙고 순간이 분명함
  'sig-mirror-pair', // 거울 짝꿍: 짝과 함께, '하나 바꾸기' 깜짝 찾기
  'sig-memory-relay', // 기억 릴레이: 하나씩 늘어나는 도전, 모둠 협동
  'sig-stage-show', // 표현 무대: 장면 카드 뽑기와 관객 반응
@@ -21,7 +21,7 @@ export const FEATURED_GAME_IDS:readonly string[]=[
  'phone-play-106', // 네 구석 운동 뽑기: 뽑기의 두근거림, 활동량 많음
  'phone-play-066', // 몸짓 전달 놀이: 몸으로 하는 말 전달, 끝에 비교하는 웃음
  'phone-play-010', // 얼음 자세 이어받기: 모둠이 이어 가는 얼음 자세, 규칙 한 줄
- 'phone-play-031', // 하나씩 더하는 몸 합주: 한 명씩 더해 커지는 합주, 끝이 분명함
+ 'phone-play-031', // 하나씩 더하는 신체 합주: 한 명씩 더해 커지는 합주, 끝이 분명함
  'phone-play-036', // 말 없는 지휘자: 지휘자를 따라 크게·작게, 역할 바꾸기
  'phone-play-035', // 보이지 않는 물건 돌려주기: 점검 4점, 짝 표현이 바로 이해됨
  'phone-play-093', // 점점 작아지는 팔 물결: 정리 운동으로 쓰기 좋은 반 전체 물결

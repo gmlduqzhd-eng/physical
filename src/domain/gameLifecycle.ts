@@ -377,14 +377,14 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "name": "댄스 포즈",
     "target": "seed_sprout",
     "stage": 2,
-    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음."
+    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 신체 모양 표현과 연결할 필요가 있음."
   },
   {
     "id": "animal",
     "name": "동물 체조",
     "target": "seed_sprout",
     "stage": 2,
-    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음."
+    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 신체 모양 표현과 연결할 필요가 있음."
   },
   {
     "id": "circle_draw",
@@ -475,7 +475,7 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "name": "동물 발자국 깡충 스텝",
     "target": "seed_sprout",
     "stage": 2,
-    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음."
+    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 신체 모양 표현과 연결할 필요가 있음."
   },
   {
     "id": "bicycle-pedal-crank",
@@ -699,7 +699,7 @@ export const MERGED_GAMES:{id:string;name:string;target:string;stage:number;reas
     "name": "신체 실루엣 섀도우 조형 매칭",
     "target": "seed_sprout",
     "stage": 2,
-    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음."
+    "reason": "자세·동물 버튼이나 슬라이더 조작을 실제 신체 모양 표현과 연결할 필요가 있음."
   },
   {
     "id": "ribbon-wave-stream",
@@ -765,7 +765,7 @@ export const REMOVED_GAMES:{id:string;name:string;reason:string;target?:string}[
   {"id": "phone-play-021", "name": "흔들림을 줄이는 사진사", "target": "phone-play-090", "reason": "같은 갈래(계획과 실행 비교)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-022", "name": "엇갈린 손의 인사", "target": "phone-play-020", "reason": "같은 갈래(손발 좌우 나누기)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-023", "name": "가상의 좁은 다리", "target": "phone-play-047", "reason": "같은 갈래(두 걸음 왕복)의 놀이가 여러 개라 하나로 모았어요."},
-  {"id": "phone-play-025", "name": "교차하지 않는 몸 통로", "target": "phone-play-020", "reason": "같은 갈래(손발 좌우 나누기)의 놀이가 여러 개라 하나로 모았어요."},
+  {"id": "phone-play-025", "name": "교차하지 않는 신체 통로", "target": "phone-play-020", "reason": "같은 갈래(손발 좌우 나누기)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-026", "name": "한쪽씩 켜지는 등대", "target": "phone-play-020", "reason": "같은 갈래(손발 좌우 나누기)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-040", "name": "동작의 색깔 통역사", "target": "phone-play-035", "reason": "같은 갈래(느낌 표현)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-041", "name": "짧고 긴 걸음의 거리 암호", "target": "phone-play-044", "reason": "같은 갈래(방향 순서 기억)의 놀이가 여러 개라 하나로 모았어요."},
@@ -794,9 +794,9 @@ export const REMOVED_GAMES:{id:string;name:string;reason:string;target?:string}[
   {"id": "phone-play-084", "name": "관찰자와 설계자의 한 가지 수정", "target": "phone-play-090", "reason": "같은 갈래(계획과 실행 비교)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-086", "name": "보폭 예산 계획서", "target": "phone-play-042", "reason": "같은 갈래(두 걸음 왕복)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "phone-play-088", "name": "접촉 없이 연결된 별자리", "target": "phone-play-099", "reason": "같은 갈래(이어받기 사슬)의 놀이가 여러 개라 하나로 모았어요."},
-  {"id": "phone-play-092", "name": "힘 주었다 놓는 손 정원", "target": "phone-play-094", "reason": "같은 갈래(몸 느낌 정리)의 놀이가 여러 개라 하나로 모았어요."},
-  {"id": "phone-play-095", "name": "오늘의 몸 느낌 번역", "target": "phone-play-035", "reason": "같은 갈래(느낌 표현)의 놀이가 여러 개라 하나로 모았어요."},
-  {"id": "phone-play-096", "name": "어깨의 작은 쉼표", "target": "phone-play-094", "reason": "같은 갈래(몸 느낌 정리)의 놀이가 여러 개라 하나로 모았어요."},
+  {"id": "phone-play-092", "name": "힘 주었다 놓는 손 정원", "target": "phone-play-094", "reason": "같은 갈래(신체 느낌 정리)의 놀이가 여러 개라 하나로 모았어요."},
+  {"id": "phone-play-095", "name": "오늘의 신체 느낌 번역", "target": "phone-play-035", "reason": "같은 갈래(느낌 표현)의 놀이가 여러 개라 하나로 모았어요."},
+  {"id": "phone-play-096", "name": "어깨의 작은 쉼표", "target": "phone-play-094", "reason": "같은 갈래(신체 느낌 정리)의 놀이가 여러 개라 하나로 모았어요."},
   {"id": "exp-tablet-03", "name": "빈칸 구조대", "target": "exp-tablet-02", "reason": "두 무리로 나뉘어 서는 것이 전부라 움직임이 적어 모양 만들기 원정에 합쳤어요."},
   {"id": "exp-tablet-36", "name": "암호 조각 동시 수송", "target": "exp-tablet-35", "reason": "가져와서 정해진 순서로 놓는 놀이가 두 개라 하나로 모았어요."},
   {"id": "exp-phone-39", "name": "공 굴림 회수 빙고", "target": "exp-phone-31", "reason": "표적 굴리기·던지기 놀이가 겹치고 학생마다 표적 9개가 필요해 정리했어요."},
@@ -815,7 +815,7 @@ export const REMOVED_GAMES:{id:string;name:string;reason:string;target?:string}[
   {"id": "expressive_critique", "name": "표현 페스티벌 쇼케이스", "target": "art_gallery_critic", "reason": "표현 감상 놀이가 두 개라 하나로 모았어요."},
   {"id": "body-rhythm-orchestrator", "name": "바디 모션 심포니", "target": "rhythm_clapping", "reason": "몸으로 박자 만드는 놀이를 바디 퍼커션 하나로 모았어요."},
   {"id": "tabletennis-spin-read", "name": "탁구 회전 관찰소", "target": "badminton-drop-clear", "reason": "회전 개념이 어렵고 몸을 쓰는 시간이 거의 없어 정리했어요."},
-  {"id": "expedition-ship", "name": "모둠 중력 우주선", "target": "expedition-map", "reason": "모둠마다 센서 기기 2대와 기울기 보정이 필요한데 몸 활동이 적어 정리했어요."},
+  {"id": "expedition-ship", "name": "모둠 중력 우주선", "target": "expedition-map", "reason": "모둠마다 센서 기기 2대와 기울기 보정이 필요한데 신체 활동이 적어 정리했어요."},
   {"id": "expedition-rescue", "name": "몸으로 조준하는 바람 구조대", "target": "target", "reason": "카메라 인식 대신 실제로 던지는 표적 놀이로 옮겼어요."},
   {"id": "expedition-shadow", "name": "시간차 그림자 연구소", "target": "shadow_puppeteer", "reason": "카메라 없이 짝과 하는 그림자 놀이로 옮겼어요."},
   {"id": "exp-tablet-27", "name": "굴림 표적 빙고", "target": "exp-phone-31", "reason": "정리한 활동에 딸린 코스였어요. 이어지는 활동으로 바로 안내해요."},

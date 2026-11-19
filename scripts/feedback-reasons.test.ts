@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {EMPTY_PROGRESS,MAX_NOTE,REASONS,REASON_EXPORT_HEADERS,addPlay,mergeProgress,parseProgress,reasonExportRows,reasonRows,reasonsOf,setReasons,setVote,shareSummary,topProblems,type ClassProgress} from '../src/domain/classProgress';
 
 const base=new Date(2026,10,18,10).getTime();
-const name=(id:string)=>({jump:'점프',bingo:'몸 빙고',fox:'여우야'} as Record<string,string>)[id]??id;
+const name=(id:string)=>({jump:'점프',bingo:'신체 빙고',fox:'여우야'} as Record<string,string>)[id]??id;
 /** 한 판: 기록 + 반응 + 이유. */
 function round(p:ClassProgress,id:string,n:number,vote:'up'|'down',reasons:Parameters<typeof setReasons>[3],note?:string){
  const play=`${id}-${n}`,at=base+n*1000;
@@ -72,12 +72,12 @@ test('export rows line up with the headers and the share summary names problems 
  const rows=reasonExportRows(p,name);
  assert.equal(rows.length,1);
  assert.equal(rows[0].length,REASON_EXPORT_HEADERS.length);
- assert.equal(rows[0][0],'몸 빙고');
+ assert.equal(rows[0][0],'신체 빙고');
  assert.equal(rows[0][REASON_EXPORT_HEADERS.indexOf('헷갈렸어요')],2);
  assert.equal(rows[0][REASON_EXPORT_HEADERS.length-1],'헷갈려했어요');
  const text=shareSummary(p,name,new Date(base));
- assert.match(text,/헷갈렸어요: 몸 빙고\(2\)/);
- assert.match(text,/최근 메모[\s\S]*몸 빙고: 헷갈려했어요/);
+ assert.match(text,/헷갈렸어요: 신체 빙고\(2\)/);
+ assert.match(text,/최근 메모[\s\S]*신체 빙고: 헷갈려했어요/);
  assert.doesNotMatch(text,/undefined|NaN/);
  assert.match(shareSummary(EMPTY_PROGRESS,name,new Date(base)),/아직 기록이 없어요/);
 });

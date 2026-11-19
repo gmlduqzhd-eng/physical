@@ -33,8 +33,8 @@ merge(['tilt_balance','tilt_race','seesaw-balance-tap','wind-surf-balance','foot
 merge(['shake','arm_raise','wave','eccentric-isom-push'], 'fitness', '흔들기·올리기·누르기 같은 단일 입력을 반복해 게이지를 채우는 구조임.', '안전한 맨손 동작을 선택하는 체력 코스의 변형으로 흡수. 기기 운반·연타와 운동 점수 연결 제거.');
 merge(['tug_of_war'], 'exp-tablet-31', '연타 대결이 실제 줄다리기나 협력을 표현하지 못함.', '천 위 화물 공동배송의 함께 힘 조절하기 활동으로 전환하고 연타 승패 구조 정리.');
 merge(['speed_circle','circle_draw','trace_shape','mobility-joint-circle','bicycle-pedal-crank'], 'magic_scarf', '손가락으로 화면 궤적을 그리거나 회전시키는 구현이 큰 신체 표현·관절 활동과 혼재함.', '팔과 도구로 직선·곡선·원을 그리는 변형으로 통합. 회전 수를 관절 능력으로 해석하지 않음.');
-merge(['dance_pose','animal','animal-hop-step','shadow-pose-sculpture'], 'seed_sprout', '자세·동물 버튼이나 슬라이더 조작을 실제 몸 모양 표현과 연결할 필요가 있음.', '자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.');
-merge(['body_twist','punch','taekwondo-counter-kick','kayak-paddle','cross-lateral-brain','head-shoulders-knees'], 'rhythm_clapping', '센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.', '몸 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.');
+merge(['dance_pose','animal','animal-hop-step','shadow-pose-sculpture'], 'seed_sprout', '자세·동물 버튼이나 슬라이더 조작을 실제 신체 모양 표현과 연결할 필요가 있음.', '자연·동물 표현의 시범과 학생 창작 변형으로 통합. 동물의 움직임 소재는 유지.');
+merge(['body_twist','punch','taekwondo-counter-kick','kayak-paddle','cross-lateral-brain','head-shoulders-knees'], 'rhythm_clapping', '센서·터치로 신체 부위와 교차 동작을 표현하지만 실제 전신 조합과 입력 판정이 섞임.', '신체 부위·좌우 교차·허공 동작을 4~8박자 움직임 조합으로 보존. 자세 자동 판정 문구 제거.');
 merge(['freeze'], 'red_green', '멈춤 신호라는 목적이 같은데 기기 흔들림으로 탈락을 판정하는 별도 게임으로 중복됨.', '움직임·정지 코스의 난이도 변형으로 통합하고 흔들림에 따른 자동 탈락 제거.');
 merge(['compass-azimuth'], 'exp-tablet-09', '나침반 다이얼 맞추기와 기준 방향 이동 학습을 한 활동에서 연결할 수 있음.', '기준 방향을 정하고 실제 방향 표식으로 이동하는 입문 코스에 통합.');
 merge(['tent-peg-hammer','crevasse-jump','wind-archery-pro','strike-zone-vision','baseball-bunt-defense'], 'target', '누르기 시간·게이지·조준 타이밍이 실제 종목 기술을 대신하는 화면 게임임.', '힘 조절·판단이라는 목표만 남겨 실제 표적 활동으로 통합. 종목별 소재는 별도 설명 카드로 유지.');
@@ -46,11 +46,11 @@ merge(['curling-weight-control'], 'rolling-curling', '버튼 누름 시간을 �
 merge(['posture-spine-align'], 'posture-guardian', '화면 슬라이더 정렬이 실제 자세 확인과 혼동될 수 있고 생활 자세 활동이 별도로 있음.', '실제 자세 시도 전 관찰 카드로 옮기고 슬라이더 완료를 자세 성공으로 표시하지 않음.');
 merge(['pulse-zone-target'], 'pulse-detective', '탭의 박자가 심박수처럼 보이는 별도 게임으로 실제 맥박 탐색과 중복됨.', '자기 몸 변화 관찰 자료에 통합하고 화면 탭을 실제 심박수로 표시하지 않음.');
 merge(['ribbon-wave-stream'], 'ribbon_gymnast', '손가락 원 회전과 실제 리본 표현 활동이 이중으로 존재함.', '실제 리본으로 직선·물결·나선을 연결하는 입문 단계로 통합.');
-merge(['emotion-freeze-mime'], 'emotion-thermometer', '감정 정지 포즈를 고르고 확인하는 내용이 기존 감정 표현 활동과 겹침.', '강도·속도·몸 모양을 바꾸는 감정 표현 변형으로 통합.');
+merge(['emotion-freeze-mime'], 'emotion-thermometer', '감정 정지 포즈를 고르고 확인하는 내용이 기존 감정 표현 활동과 겹침.', '강도·속도·신체 모양을 바꾸는 감정 표현 변형으로 통합.');
 merge(['partner-mirror-duet','mirror-motion-invert'], 'shadow_puppeteer', '거울 대칭 버튼·동기화 입력보다 실제 짝 동작 관찰이라는 공통 목표가 중요함.', '리더 교대·느린 시범·다른 팔 동작 변형으로 통합.');
 
 const expressionKeep = ['seed_sprout','weather_dance','magic_scarf','shadow_puppeteer','sound_painter','space_traveler','element_forces','body_sculpture','rhythm_clapping','kpop_easy_challenge','musical_freeze','ribbon_gymnast','story_drama_relay','art_gallery_critic','talchum_korea','ganggangsullae','world_folk_dance','musical_scene_maker','cheerleading_team','music_jumprope','taebo_fitness','flashmob_creator','expressive_critique'];
-groups.push(['유지',null,expressionKeep,'단계별 몸 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.','핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.']);
+groups.push(['유지',null,expressionKeep,'단계별 신체 표현·창작·감상과 활동별 평가 항목을 갖추어 안내형 활동으로 유지할 가치가 있음.','핵심 표현 소재를 유지하고 학년별 시범·동작 범위는 교사가 조절. 공통 평가 UI의 간소화는 별도 적용.']);
 merge(['popcorn_bounce','balloon_float','gravity_rebel'], 'seed_sprout', '자연·물체의 크기·힘·높낮이 변화를 몸으로 표현하는 활동군임.', '씨앗·팝콘·풍선·중력 소재를 선택하는 표현 주제로 통합하되 동작의 차이는 보존.');
 merge(['traffic_signal'], 'red_green', '신호에 따른 이동·정지·느리게 움직이기가 같은 핵심 규칙임.', '표현형 신호 코스로 남기고 별도 게임 탐색 부담 축소.');
 merge(['tempo_chameleon'], 'rhythm_clapping', '박자 속도 바꾸기는 신체 타악·리듬 모듈의 난이도 변형으로 제공 가능함.', '느림·기본 속도를 선택하는 변형으로 통합하고 급격한 속도 변화는 완화.');
@@ -58,7 +58,7 @@ merge(['mirror_sync_duo'], 'shadow_puppeteer', '짝과 거울 동작을 주고�
 merge(['kpop_dance_cover'], 'kpop_easy_challenge', '따라 하기에서 대형 창작으로 확장되는 동일 학습 흐름의 단계임.', '기초·연결·대형 창작 단계로 통합하고 외부 영상 없이도 시작할 시범 제공.');
 
 groups.push(['개편',null,['exp-phone-03','exp-phone-05','exp-phone-06','exp-phone-07','exp-phone-12','exp-phone-24','exp-phone-30','exp-phone-31','exp-phone-33','exp-phone-35','exp-phone-36','exp-phone-37','exp-phone-38','exp-phone-39','exp-tablet-01','exp-tablet-03','exp-tablet-06','exp-tablet-07','exp-tablet-09','exp-tablet-21','exp-tablet-24','exp-tablet-26','exp-tablet-32','exp-tablet-34','exp-tablet-35','exp-tablet-36','exp-tablet-37','exp-tablet-39','exp-tablet-42'],'실제 표식·도구·역할별 규칙은 있으나 지시문·횟수·번호·확인 항목 입력이 라운드마다 반복됨.','첫 시범, 한 화면 한 동작, 활동 뒤 간단 기록으로 개편. 활동별 기존 조건은 유지하고 학생이 선택할 수 있는 도전 수준 추가.']);
-groups.push(['유지',null,['exp-phone-10','exp-phone-19','exp-phone-32','exp-tablet-02','exp-tablet-31'], '실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 몸 활동의 목표가 분명함.', '핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.']);
+groups.push(['유지',null,['exp-phone-10','exp-phone-19','exp-phone-32','exp-tablet-02','exp-tablet-31'], '실제 보행·스카프·벽 반사·대형·공동 운반이라는 독립된 신체 활동의 목표가 분명함.', '핵심 규칙을 유지하고 공통 입력 부담만 점진적으로 줄임. 교실·체육관별 공간 배치를 확인.']);
 merge(['exp-phone-01','exp-phone-02','exp-phone-04','exp-phone-08','exp-phone-09','exp-tablet-04','exp-tablet-08','exp-tablet-43'], 'zigzag', '왕복·연속 이동·막힌 길·수집·경로 선택을 별도 게임으로 늘린 상태임.', '보급 작전의 코스 변형으로 통합. 귀환·연속·수집·모둠 통로 조건은 선택 모드로 보존.');
 merge(['exp-phone-11','exp-phone-13','exp-phone-15','exp-phone-16','exp-tablet-18'], 'exp-phone-12', '발 순서·팔 교차·동시 리듬을 안내하는 모듈과 박자 표시 구조가 유사함.', '네 칸 리듬발판의 발·팔·짝 조합 단계로 통합하고 동작 시범을 제공.');
 merge(['exp-phone-14'], 'music_jumprope', '줄 돌리는 팔과 발 스텝을 연결하는 동작이 음악 줄넘기 입문 단계에 해당함.', '줄 없이 딛기·낮은 뛰기·줄 사용의 선택 단계로 통합.');

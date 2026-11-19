@@ -1,4 +1,4 @@
-/* 몸 빙고: 판이 TV(1280×800) 첫 화면 안에 들어오도록 큰 지시 칸을 조금 줄인다. */
+/* 신체 빙고: 판이 TV(1280×800) 첫 화면 안에 들어오도록 큰 지시 칸을 조금 줄인다. */
 .fun-arena:has(.sig-bingo) .fun-signal{min-height:auto;padding:clamp(8px,1.6vw,18px)}
 .fun-arena:has(.sig-bingo) .fun-cue{font-size:clamp(28px,4.4vw,60px)}
 .sig-bingo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:clamp(8px,1.6vw,20px);align-items:start}
