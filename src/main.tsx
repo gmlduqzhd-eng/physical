@@ -5,16 +5,17 @@ import './presentation/fontFaces.css'
 import './presentation/ApplicationPalette.css'
 import './presentation/ForestTheme.css'
 import App from './App.tsx'
+import { claimReloadSlot, currentEntryScript, decideReloadAfterChunkError } from './application/deployCheck'
 
-// 새 버전이 배포된 뒤 열려 있던 탭이 예전 화면 파일을 찾지 못하면, 한 번만 새로고침해 새 버전을 받는다.
-window.addEventListener('vite:preloadError', event => {
-  try {
-    const key = 'physical_reloaded_for_update', last = Number(sessionStorage.getItem(key) || 0);
-    if (Date.now() - last < 60_000) return;
-    sessionStorage.setItem(key, String(Date.now()));
-  } catch { /* 저장소를 못 쓰면 그냥 새로고침한다. */ }
-  event.preventDefault();
-  window.location.reload();
+// 화면 파일을 못 받으면(vite:preloadError) 기본 동작대로 오류를 놀이 오류 화면에 넘긴다.
+// 새로 배포되어 예전 파일이 없어진 경우에만(서버의 index.html 시작 스크립트가 바뀜) 한 번 새로고침한다.
+// 인터넷이 끊겨 있으면 새로고침하지 않는다. 새로고침하면 브라우저의 '인터넷 없음' 페이지가 되어 버린다.
+window.addEventListener('vite:preloadError', () => {
+  void decideReloadAfterChunkError({
+    online: navigator.onLine !== false,
+    current: currentEntryScript(),
+    fetchIndex: () => fetch('/index.html', { cache: 'no-store' }).then(r => { if (!r.ok) throw Error(String(r.status)); return r.text(); }),
+  }).then(decision => { if (decision === 'reload' && claimReloadSlot()) window.location.reload(); });
 });
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { purgeLegacyPersonalData } from './application/browserStorage'
