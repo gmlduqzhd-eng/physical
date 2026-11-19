@@ -78,3 +78,7 @@
 :is(.hub-header, .intro-landing) .background-music-volume>svg { display:none; }
 :is(.hub-header, .intro-landing) .background-music-percent { min-width:35px; }
 .dark :is(.hub-header, .intro-landing) .background-music-icon { background:transparent; }
+
+/* 켜 두었지만 브라우저가 소리를 막았을 때만 보이는 단추 */
+.background-music-resume{display:block;width:100%;margin:8px 0 0;padding:10px 12px;border:0;border-radius:12px;background:var(--music-accent,#0e7490);color:#fff;font-weight:800;cursor:pointer}
+.background-music-resume:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}

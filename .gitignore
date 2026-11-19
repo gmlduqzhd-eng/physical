@@ -35,3 +35,7 @@ dist-ssr
 
 # Same-origin ML runtime/model, regenerated with pinned integrity checks
 /public/vision/
+
+# Python helpers (scripts/subset-fonts.py)
+__pycache__/
+.venv-fonts/
