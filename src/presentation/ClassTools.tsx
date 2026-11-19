@@ -6,7 +6,7 @@ import type {ExportTable} from '../application/documentExport';
 import {isRecord,readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxPop,sfxTimerTick,sfxWhistle,unlockAudio} from '../application/soundEffects';
 import {useRunningClock} from '../application/useRunningClock';
-import {CLASS_TOOLS,COUNTDOWN_PRESETS,formatCountdown,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
+import {CLASS_TOOLS,COUNTDOWN_PRESETS,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
@@ -14,7 +14,7 @@ import {PeQuizBingo} from './components/PeQuizBingo';
 
 const LEAGUE_KEY='physical_class_league_v1';
 // 번호 뽑기·모둠·레이스는 이 탭에만 적어 둔다(새로고침·자동 새로고침에도 이어지고, 탭을 닫으면 사라진다).
-const DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1';
+const DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1',COUNTDOWN_KEY='physical_tools_countdown_v1';
 const today=()=>new Date().toLocaleString('ko-KR');
 /** 엽쌤의 달리기 뽑기 앱. 달리기 경주로 순서를 정할 때 쓴다. */
 const RUNRUN_URL='https://gmlduqzhd123-lab.github.io/RunRun/';
@@ -77,6 +77,7 @@ function League(){
 /* ── 레이스 시계 ── */
 function Race(){
  // 새로고침 전에 달리던 레이스는 흐른 시간까지 더해 그대로 이어 간다(실제 경주는 멈추지 않으니까).
+ // 다만 달리는 채로 1시간 넘게 떠나 있었으면(다음 교시 등) 그때의 시간에서 멈춰 둔다.
  const [saved]=useState(()=>parseRaceSaved(readJsonStorage(RACE_KEY,'session'),Date.now()));
  const [lanes,setLanes]=useState(saved?.lanes??4),[running,setRunning]=useState(saved?.running??false),[times,setTimes]=useState<(number|null)[]>(()=>saved?.times??Array(8).fill(null)),[pendingLanes,setPendingLanes]=useState<number|null>(null),[announce,setAnnounce]=useState(''),[resumed,setResumed]=useState(!!saved);
  const clock=useRunningClock(running,saved?.ms??0),active=times.slice(0,lanes);
@@ -94,11 +95,13 @@ function Race(){
  const changeLanes=(n:number)=>{if(busy)setPendingLanes(n);else setLanes(n);};
  return <>
   <div className="tools-bar"><NumberSelect label="팀(레인) 수" value={lanes} min={2} max={8} unit="팀" onChange={changeLanes}/></div>
-  {resumed&&<Resume message={running?'달리던 레이스를 이어서 재고 있어요.':'하던 레이스 기록이 남아 있어요.'} onKeep={()=>setResumed(false)} onFresh={()=>{reset();setResumed(false);}}/>}
+  {resumed&&<Resume message={saved?.stale?'오래전에 달리던 레이스라 시계를 멈춰 두었어요. 이어서 하려면 ‘이어서 출발’을 눌러요.':running?'달리던 레이스를 이어서 재고 있어요.':'하던 레이스 기록이 남아 있어요.'} onKeep={()=>setResumed(false)} onFresh={()=>{reset();setResumed(false);}}/>}
   {pendingLanes!==null&&<Confirm message={`팀 수를 바꾸면 시계와 도착 기록이 처음으로 돌아가요. ${pendingLanes}팀으로 바꿀까요?`} yes="처음으로 하고 바꾸기" onNo={()=>setPendingLanes(null)} onYes={()=>{reset();setLanes(pendingLanes);setPendingLanes(null);}}/>}
   <div className="sports-timer"><strong aria-live="off">{formatClock(clock.ms)}</strong><div className="flagship-row">
-   <button className="primary" disabled={running||(clock.ms>0&&active.every(t=>t!==null))} onClick={()=>{unlockAudio();sfxWhistle();setRunning(true);}}>{clock.ms?'이어서 출발':'출발!'}</button>
-   <button disabled={!running} onClick={()=>setRunning(false)}>멈춤</button><button disabled={running||!clock.ms} onClick={reset}>처음으로</button></div></div>
+   {/* 달리는 중에는 출발 단추 대신 '달리는 중' 표시만 둔다(눌러도 되는 단추처럼 보이지 않게). */}
+   {running?<span className="tools-race-state" role="status">🏃 달리는 중</span>
+    :<button className="primary tools-go tools-start" disabled={clock.ms>0&&active.every(t=>t!==null)} onClick={()=>{unlockAudio();sfxWhistle();setRunning(true);}}>{clock.ms?'▶ 이어서 출발':'🏁 출발!'}</button>}
+   <button className="tools-go" disabled={!running} onClick={()=>setRunning(false)}>멈춤</button><button className="tools-go" disabled={running||!clock.ms} onClick={reset}>처음으로</button></div></div>
   <div className="tools-lanes" data-many={lanes>4?'yes':'no'} data-busy={busy?'yes':'no'}>{range(0,lanes-1).map(lane=><div key={lane} className="tools-lane" data-done={active[lane]!==null?'yes':'no'}><strong>{lane+1}팀</strong>
    <output>{active[lane]===null?(running?'달리는 중':'대기'):`${formatClock(active[lane]!)} · ${rank(lane)}위`}</output>
    <button className="primary tools-arrive" disabled={!running||active[lane]!==null} onClick={()=>finish(lane)} aria-label={`${lane+1}팀 도착`}>도착!</button>
@@ -178,9 +181,13 @@ function Groups(){
 
 /* ── 카운트다운 ── */
 function Countdown(){
- const [total,setTotal]=useState(60),[left,setLeft]=useState(60),[running,setRunning]=useState(false);
+ // 고른 시간·남은 시간·세는 중인지를 이 탭에 적어 두어, 새로고침해도 이어서 센다.
+ const [saved]=useState(()=>parseCountdownSaved(readJsonStorage(COUNTDOWN_KEY,'session'),Date.now()));
+ const [total,setTotal]=useState(saved?.total??60),[left,setLeft]=useState(saved?.left??60),[running,setRunning]=useState(saved?.running??false);
+ const [pending,setPending]=useState<number|null>(null),[resumed,setResumed]=useState(!!saved);
  // 끝나는 시각으로 세어, 다른 탭을 보고 와도 남은 시간이 맞는다.
- const endAt=useRef(0),lastBeep=useRef(-1);
+ const endAt=useRef(saved?.endAt??0),lastBeep=useRef(-1);
+ const startRef=useRef<HTMLButtonElement>(null),pauseRef=useRef<HTMLButtonElement>(null);
  useEffect(()=>{
   if(!running)return;
   const tick=()=>{const remain=Math.max(0,(endAt.current-Date.now())/1000),sec=Math.ceil(remain);setLeft(remain);
@@ -189,16 +196,30 @@ function Countdown(){
   const timer=setInterval(tick,100);document.addEventListener('visibilitychange',tick);
   return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};
  },[running]);
- const choose=(seconds:number)=>{setRunning(false);setTotal(seconds);setLeft(seconds);};
- const start=()=>{unlockAudio();const from=left>0?left:total;if(left<=0)setLeft(total);endAt.current=Date.now()+from*1000;lastBeep.current=-1;setRunning(true);};
- const done=!running&&left<=0,fresh=!running&&left===total;
+ // 시작·멈춤·시간 바꾸기 때마다 적어 둔다(1초마다 쓰지 않는다: 세는 중에는 끝나는 시각만 있으면 된다).
+ const fresh=!running&&left===total,done=!running&&left<=0;
+ useEffect(()=>{if(fresh)removeStorage(COUNTDOWN_KEY,'session');else writeStorage(COUNTDOWN_KEY,JSON.stringify({total,left,running,endAt:running?endAt.current:null,savedAt:Date.now()}),'session');
+ // left는 세는 동안 0.1초마다 바뀌므로 멈췄을 때·끝났을 때만 반영한다.
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[total,running,fresh,done]);
+ // 초점: 시작하면 '멈춤'으로, 멈추거나 끝나면 '시작'으로 옮겨 키보드로도 이어서 누를 수 있게 한다.
+ const focusNext=useRef<'start'|'pause'|null>(null);
+ useEffect(()=>{const want=focusNext.current;focusNext.current=null;if(want==='pause')pauseRef.current?.focus();else if(want==='start')startRef.current?.focus();},[running]);
+ const apply=(seconds:number)=>{setRunning(false);setTotal(seconds);setLeft(seconds);setPending(null);};
+ // 세는 중에 다른 시간을 누르면 바로 바꾸지 않고 먼저 묻는다.
+ const choose=(seconds:number)=>{if(running){if(seconds!==total)setPending(seconds);return;}apply(seconds);};
+ const start=()=>{unlockAudio();const from=left>0?left:total;if(left<=0)setLeft(total);endAt.current=Date.now()+from*1000;lastBeep.current=-1;focusNext.current='pause';setResumed(false);setRunning(true);};
+ const pause=()=>{setLeft(Math.max(0,(endAt.current-Date.now())/1000));focusNext.current='start';setRunning(false);};
+ const label=(seconds:number)=>COUNTDOWN_PRESETS.find(p=>p.seconds===seconds)?.label??formatCountdown(seconds);
  return <>
-  <div className="tools-bar"><div className="sports-filters" role="group" aria-label="시간 고르기">{COUNTDOWN_PRESETS.map(p=><button key={p.seconds} aria-pressed={total===p.seconds} onClick={()=>choose(p.seconds)}>{p.label}</button>)}</div></div>
+  <div className="tools-bar"><div className="sports-filters tools-presets" role="group" aria-label="시간 고르기">{COUNTDOWN_PRESETS.map(p=><button key={p.seconds} aria-pressed={total===p.seconds} onClick={()=>choose(p.seconds)}>{total===p.seconds&&<span aria-hidden="true">✓ </span>}{p.label}</button>)}</div>
+   <div className="flagship-row tools-countdown-controls"><button ref={startRef} className="primary tools-go" disabled={running} onClick={start}>{done?'▶ 다시 시작':fresh?'▶ 시작':'▶ 이어서'}</button>
+    <button ref={pauseRef} className="tools-go" disabled={!running} onClick={pause}>멈춤</button><button className="tools-go" disabled={fresh} onClick={()=>{focusNext.current='start';apply(total);}}>처음으로</button></div></div>
+  {resumed&&saved&&<Resume message={saved.running?`${label(total)} 카운트다운을 이어서 세고 있어요.`:saved.left<=0?'카운트다운이 끝나 있어요.':`멈춰 둔 ${label(total)} 카운트다운이 남아 있어요.`} onKeep={()=>setResumed(false)} onFresh={()=>{apply(total);setResumed(false);}}/>}
+  {pending!==null&&<Confirm message={`지금 세는 시간을 멈추고 ${label(pending)}로 바꿀까요?`} yes={`${label(pending)}로 바꾸기`} onNo={()=>setPending(null)} onYes={()=>apply(pending)}/>}
   <div className="tools-big tools-countdown" data-done={done?'yes':'no'} data-last={running&&left<=5?'yes':'no'}><strong role="timer" aria-live="off" aria-label={`남은 시간 ${formatCountdown(left)}`}>{formatCountdown(left)}</strong>
-   <span role="status">{done?'끝! 모두 멈춰요':running?'시간이 가고 있어요':fresh?'시작을 눌러요':'멈췄어요'}</span></div>
-  <div className="flagship-row tools-center"><button className="primary tools-go" disabled={running} onClick={start}>{done?'▶ 다시 시작':fresh?'▶ 시작':'▶ 이어서'}</button>
-   <button className="tools-go" disabled={!running} onClick={()=>{setLeft(Math.max(0,(endAt.current-Date.now())/1000));setRunning(false);}}>멈춤</button><button className="tools-go" disabled={fresh} onClick={()=>choose(total)}>처음으로</button></div>
-  <p className="sports-muted">마지막 5초는 소리로 세고, 끝나면 호루라기가 울려요. 소리가 안 나면 기기 소리를 켜요.</p>
+   <span role="status">{done?'끝! 모두 멈춰요':running?`${label(total)} · 시간이 가고 있어요`:fresh?`${label(total)} · 시작을 눌러요`:'멈췄어요'}</span></div>
+  <p className="sports-muted">마지막 5초는 소리로 세고, 끝나면 호루라기가 울려요. 소리가 안 나면 기기 소리를 켜요. 새로고침해도 이어서 세요.</p>
  </>;
 }
 
