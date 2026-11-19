@@ -49,7 +49,7 @@
       ]
     },
     {
-      "source": "/fonts/:name([^/]+\\.[0-9a-f]{8}\\.woff2)",
+      "source": "/fonts/:piece([^/]+\\.[0-9a-f]{8}\\.woff2)",
       "headers": [
         {
           "key": "Cache-Control",
