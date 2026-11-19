@@ -80,8 +80,10 @@ export interface TodayStageResult {status:'done'|'skipped';seconds:number}
 /**
  * recordsSince: 이 수업의 판·반응을 찾을 때 쓰는 시작 시각. '이어 하기'로 startedAt(표시용)을 당겨도 처음 시작한 때를 지킨다.
  * stagePlays: 끝 화면에서 단계마다 반응을 붙일 판 id. 한 번 정하면 그대로 두어, 다시 누르거나 새로고침해도 같은 판의 반응만 바뀐다.
+ * extraMains: 본게임 단계에서 '다른 대표 게임으로 한 판 더'로 연 대표 게임(연 순서대로, 겹치지 않게). 이 게임들도 본게임으로 친다.
+ * extraPlays: 끝 화면에서 extraMains마다 반응을 붙일 판 id(extraMains와 같은 순서·같은 길이).
  */
-export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number;recordsSince?:number;stagePlays?:string[]}
+export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number;recordsSince?:number;stagePlays?:string[];extraMains?:string[];extraPlays?:string[]}
 /** 이 수업의 판·반응을 찾는 시작 시각. */
 export const recordsSince=(run:TodayRun)=>run.recordsSince??run.startedAt;
 
@@ -103,6 +105,38 @@ export function stagePath(stage:TodayStage,teams:number):string|undefined{
  return `/play/${stage.gameId}?${q.toString()}`;
 }
 
+/** '한 판 더'로 열 수 있는 대표 게임 수의 상한(저장 값이 끝없이 길어지지 않게). */
+export const MAX_EXTRA_MAINS=6;
+const isMainId=(id:unknown):id is string=>typeof id==='string'&&READY_SIGNATURE_GAMES.some(g=>g.id===id);
+/** 본게임 단계에서 다른 대표 게임으로 한 판 더 할 때 그 게임을 수업에 적어 둔다(이미 있거나 본게임 단계가 아니면 그대로). */
+export function addExtraMain(run:TodayRun,gameId:string):TodayRun{
+ const stage=currentStage(run);
+ const extras=run.extraMains??[];
+ if(stage?.kind!=='main'||gameId===stage.gameId||!isMainId(gameId)||extras.includes(gameId)||extras.length>=MAX_EXTRA_MAINS)return run;
+ return {...run,extraMains:[...extras,gameId]};
+}
+/** i번째 단계에서 한 활동들: 본게임은 계획한 게임 + '한 판 더'로 연 다른 대표 게임. */
+export function stageGameIds(run:TodayRun,i:number):string[]{
+ const s=run.plan.stages[i];
+ if(!s?.gameId)return [];
+ return s.kind==='main'?[s.gameId,...(run.extraMains??[])]:[s.gameId];
+}
+/** 지금 단계의 활동인지(본게임 단계면 '한 판 더'로 연 다른 대표 게임도). */
+export function isStageGame(run:TodayRun,gameId:string):boolean{
+ if(run.finishedAt!==undefined)return false;
+ return stageGameIds(run,run.index).includes(gameId);
+}
+const SIG_NAME=new Map<string,SignatureGameDef>(READY_SIGNATURE_GAMES.map(g=>[g.id,g]));
+/** 단계 이름: 본게임에 다른 대표 게임을 더 했으면 '신호 대장 + 우리 반 보스전'처럼 함께 적는다. */
+export function stageTitle(run:TodayRun,i:number):string{
+ const s=run.plan.stages[i];
+ if(!s)return '';
+ if(s.kind!=='main'||!run.extraMains?.length)return s.title;
+ return [s.title,...run.extraMains.map(id=>SIG_NAME.get(id)?.name??id)].join(' + ');
+}
+/** 게임 id의 이름과 그림(끝 화면 반응 칸 제목). */
+export const mainGameLabel=(id:string)=>{const g=SIG_NAME.get(id);return g?`${g.emoji} ${g.name}`:id;};
+
 const isTime=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v)&&v>0;
 /** sessionStorage에서 읽은 값이 올바른 진행 상태인지 확인한다(새로고침 이어 하기). */
 export function parseRun(raw:unknown):TodayRun|null{
@@ -118,6 +152,8 @@ export function parseRun(raw:unknown):TodayRun|null{
  if(r.finishedAt!==undefined&&(!isTime(r.finishedAt)||r.finishedAt<r.startedAt))return null;
  if(r.recordsSince!==undefined&&(!isTime(r.recordsSince)||r.recordsSince>r.startedAt))return null;
  if(r.stagePlays!==undefined&&(!Array.isArray(r.stagePlays)||r.stagePlays.length!==p.stages.length||!r.stagePlays.every(x=>typeof x==='string'&&x.length<=64)))return null;
+ if(r.extraMains!==undefined&&(!Array.isArray(r.extraMains)||r.extraMains.length>MAX_EXTRA_MAINS||!r.extraMains.every(isMainId)||new Set(r.extraMains).size!==r.extraMains.length))return null;
+ if(r.extraPlays!==undefined&&(!Array.isArray(r.extraPlays)||r.extraPlays.length!==(r.extraMains?.length??0)||!r.extraPlays.every(x=>typeof x==='string'&&x.length>0&&x.length<=64)))return null;
  if((r.index===p.stages.length)!==(r.finishedAt!==undefined))return null;
  const st=p.settings as Partial<TodaySettings>;
  if(!TODAY_GRADES.some(g=>g.id===st.grade)||!TODAY_SPACES.includes(st.space as FitSpace)||!(TODAY_MINUTES as readonly number[]).includes(st.minutes as number))return null;
@@ -174,8 +210,8 @@ export type StageOutcome='played'|'passed'|'skipped';
 export function stageOutcomes(run:TodayRun,recorded:(gameId:string)=>boolean):StageOutcome[]{
  return run.plan.stages.map((s,i)=>{
   const r=run.results[i];
-  // 결과를 기록한 활동은 '건너뛰기'로 나갔어도 한 것으로 본다.
-  if(s.gameId&&recorded(s.gameId))return 'played';
+  // 결과를 기록한 활동은 '건너뛰기'로 나갔어도 한 것으로 본다(본게임은 '한 판 더'로 한 다른 대표 게임도).
+  if(stageGameIds(run,i).some(recorded))return 'played';
   if(!r||r.status==='skipped')return 'skipped';
   return s.gameId?'passed':'played';
  });
@@ -189,6 +225,13 @@ export const summaryPlayId=(run:TodayRun,index:number)=>`today-${recordsSince(ru
  * 돌아보기처럼 활동이 없는 단계는 빈 문자열.
  */
 export function bindStagePlays(run:TodayRun,lookup:(gameId:string)=>string|undefined):TodayRun{
- if(run.stagePlays?.length===run.plan.stages.length)return run;
- return {...run,stagePlays:run.plan.stages.map((s,i)=>s.gameId?lookup(s.gameId)??summaryPlayId(run,i):'')};
+ const extras=run.extraMains??[];
+ const stagesBound=run.stagePlays?.length===run.plan.stages.length;
+ const extrasBound=(run.extraPlays?.length??0)===extras.length;
+ if(stagesBound&&extrasBound)return run;
+ return {...run,
+  stagePlays:stagesBound?run.stagePlays:run.plan.stages.map((s,i)=>s.gameId?lookup(s.gameId)??summaryPlayId(run,i):''),
+  ...(extras.length?{extraPlays:extrasBound?run.extraPlays:extras.map((id,k)=>run.extraPlays?.[k]??lookup(id)??extraPlayId(run,k))}:{})};
 }
+/** '한 판 더'로 한 다른 대표 게임에 남긴 판이 없을 때 쓰는 반응 칸 id(같은 수업·같은 순서면 늘 같다). */
+export const extraPlayId=(run:TodayRun,k:number)=>`today-${recordsSince(run).toString(36)}-x${k}`;

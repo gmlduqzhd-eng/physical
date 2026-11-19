@@ -2,7 +2,7 @@ import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {useLocation,useNavigate} from 'react-router-dom';
 import {saveTodayRun,useTodayRun} from '../../application/todayLessonStore';
-import {STAGE_LABEL,advanceRun,currentStage,stagePath} from '../../domain/todayLesson';
+import {STAGE_LABEL,advanceRun,currentStage,isStageGame,mainGameLabel,stagePath} from '../../domain/todayLesson';
 import {isSignatureId} from '../../domain/signatureGames';
 import {TeacherQuickGuide} from './TeacherQuickGuide';
 import {getLessonActivity,setLessonConfirming,useLessonActivity} from './todayLessonActivity';
@@ -25,7 +25,9 @@ export function TodayLessonBar(){
  const [asking,setAsking]=useState<null|{status:'done'|'skipped';key:string}>(null);
  const playId=/^\/play\/([^/?#]+)/.exec(pathname)?.[1];
  const stage=run?currentStage(run):undefined;
- const onStage=!!playId&&!!stage&&stage.gameId===playId;
+ // 본게임 단계에서 '다른 대표 게임으로 한 판 더'로 연 게임도 지금 단계로 본다.
+ const onStage=!!playId&&!!run&&!!stage&&isStageGame(run,playId);
+ const extra=onStage&&stage?.gameId!==playId;
  const mine=onStage&&activity&&activity.gameId===playId?activity:null;
  const ask=asking&&mine&&asking.key===`${playId}:${mine.phase}`?asking:null;
  // 확인 창을 열며 게임 시간을 멈췄는지(이미 멈춰 있던 판은 취소해도 그대로 둔다).
@@ -73,18 +75,21 @@ export function TodayLessonBar(){
   setAsking({status,key:`${playId}:${mine.phase}`});
  };
  const finish=mine?.finish;
- const label=`오늘 수업 ${run.index+1}/${total} · ${STAGE_LABEL[stage.kind]} · ${stage.title}`;
+ const title=extra&&playId?mainGameLabel(playId):stage.title;
+ const label=`오늘 수업 ${run.index+1}/${total} · ${STAGE_LABEL[stage.kind]} · ${title}${extra?' (한 판 더)':''}`;
+ // 활동을 시작했으면 길은 하나(다음 활동으로 · 묻기)만 둔다. 시작 전이거나 기록을 마쳤으면 '다음 단계'와 '건너뛰기'를 묻지 않고 바로 한다.
+ const started=playing||unrecorded;
  const askText=!playing?'결과를 아직 기록하지 않았어요.':finish?'아직 게임 중이에요. 결과를 보고 갈까요?':'아직 활동 중이에요. 기록 없이 넘어갈까요?';
  const bar=<div className="today-bar" data-mode={playing?'playing':undefined} data-asking={ask?true:undefined} role="region" aria-label={label}>
-  <span className="today-bar-label" title={label}>📋 오늘 수업 {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}<span className="today-bar-title"> · {stage.title}</span></span>
+  <span className="today-bar-label" title={label}>📋 오늘 수업 {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}<span className="today-bar-title"> · {title}{extra?' · 한 판 더':''}</span></span>
   {ask?<div ref={dialogRef} tabIndex={-1} className="today-bar-ask" role="alertdialog" aria-modal="true" aria-label="다음 활동으로 갈까요?" aria-describedby="today-bar-ask-text">
    <span id="today-bar-ask-text" className="today-bar-ask-text">{askText}</span>
    {playing&&finish&&<button type="button" className="today-bar-next" onClick={()=>{held.current=false;setAsking(null);finish();}}>결과 발표 보기</button>}
    <button type="button" className="today-bar-skip" onClick={()=>go(ask.status)}>기록 없이 넘어가기</button>
    <button ref={cancelRef} type="button" className="today-bar-skip" onClick={cancel}>취소</button>
   </div>:<>
-   <button ref={nextRef} type="button" className="today-bar-next" onClick={()=>step('done')}>{playing?'이 활동 마치고 다음 활동':'다음 단계 ▶'}</button>
-   <button type="button" className="today-bar-skip" onClick={()=>step('skipped')}>건너뛰기</button>
+   <button ref={nextRef} type="button" className="today-bar-next" onClick={()=>step('done')}>{playing?'이 활동 마치고 다음 활동':unrecorded?'다음 활동으로':'다음 단계 ▶'}</button>
+   {!started&&<button type="button" className="today-bar-skip" onClick={()=>step('skipped')}>건너뛰기</button>}
   </>}
  </div>;
  return <>{guide}{portal(bar)}</>;

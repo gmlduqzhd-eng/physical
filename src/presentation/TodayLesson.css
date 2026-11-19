@@ -29,6 +29,7 @@ html .today-page .today-choice button[aria-pressed=true],html[data-design] .flow
 .today-reflection{padding:16px;border-radius:14px;background:#eff6ff;border:1px solid #bfdbfe}
 .today-reflection-label{margin:0 0 4px;font-weight:700;color:#1d4ed8}
 .today-sub{margin:8px 0 0;font-size:20px}
+.today-feedback-group{display:flex;flex-direction:column;gap:12px}
 .today-feedback{display:flex;flex-direction:column;gap:6px}
 .today-feedback>p{margin:0}
 :root.dark-theme .today-stages li{background:#1f2937;border-color:#374151}
