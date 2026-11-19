@@ -118,6 +118,8 @@ export function parseSnapshot(raw:unknown):FunRemoteSnapshot|null{
  };
  const label=cleanText(raw.phaseLabel,20);if(label)snap.phaseLabel=label;
  if(Array.isArray(raw.events))snap.events=EVENT_KINDS.filter(e=>(raw.events as unknown[]).includes(e));
+ // TV가 확인 창을 띄운 동안: 휴대폰이 누르기 전부터 'TV에서 확인 중'을 보여 줄 수 있게 넘긴다.
+ if(raw.busy===true)snap.busy=true;
  return snap;
 }
 

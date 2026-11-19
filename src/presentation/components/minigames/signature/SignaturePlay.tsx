@@ -8,7 +8,7 @@ import {GAMES} from '../../../../domain/gamesData';
 import {unlockAudio} from '../../../../application/soundEffects';
 import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,useFunEngine,type TeacherButton} from '../../fun';
 import {RemoteLink} from '../../fun/RemoteLink';
-import {useRemotePanelOpen} from '../../fun/remotePanelState';
+import {requestRemotePanelClose,useRemotePanelOpen} from '../../fun/remotePanelState';
 import {ClassFeedbackSlot} from '../../ClassFeedbackSlot';
 import {StartLabel} from '../../StartLabel';
 import {holdPlayId,newPlayId,releasePlayId} from '../../../../application/classProgressStore';
@@ -19,7 +19,8 @@ import type {SignatureModuleProps} from './moduleTypes';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {countdownSpeech,surpriseSpeech} from '../../../../application/speechAnnouncer';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
-import {useLessonConfirming,useReportLessonActivity} from '../../todayLessonActivity';
+import {getLessonActivity,setLessonConfirming,useLessonConfirming,useReportLessonActivity} from '../../todayLessonActivity';
+import {useModalDialog} from '../../../../application/useModalDialog';
 import '../../fun/fun.css';
 
 interface Props {gameId:string;groupId?:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;
@@ -63,20 +64,51 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  const disposeRound=()=>{const mod=game?SIGNATURE_MODULES[game.id]:undefined;if(seedRef.current!==null)mod?.dispose?.(seedRef.current);seedRef.current=null;};
  // '오늘 수업' 확인 창이 떠 있는 동안에는 리모컨 막대도 누를 수 없다(초점은 확인 창에).
  const lessonConfirming=useLessonConfirming();
+ // 게임 중 '← 목록'(수업 중에는 '← 오늘 수업')을 누르면 바로 나가지 않고 묻는다(진행 중인 판이 사라지지 않게).
+ const [leaveAsk,setLeaveAsk]=useState(false);
+ const leaveHeld=useRef(false);
+ const leaveCancelRef=useRef<HTMLButtonElement>(null);
+ const cancelLeave=()=>{if(leaveHeld.current){leaveHeld.current=false;getLessonActivity()?.release?.();}setLeaveAsk(false);};
+ const leaveDialogRef=useModalDialog(leaveAsk,cancelLeave);
+ // 묻는 동안은 '오늘 수업' 확인 창과 같은 상태로 둔다: 무대는 누를 수 없고, 휴대폰 리모컨 명령도 받지 않는다.
+ useEffect(()=>{if(!leaveAsk)return;setLessonConfirming(true);leaveCancelRef.current?.focus();return ()=>setLessonConfirming(false);},[leaveAsk]);
+ // 확인 창(이 창이든 '오늘 수업' 막대의 창이든)이 떠 있을 때 무대를 마우스로 눌러도 초점이 창 밖으로 빠지지 않게 한다.
+ useEffect(()=>{
+  if(!lessonConfirming)return;
+  const keep=(e:MouseEvent)=>{const t=e.target instanceof Element?e.target:null;if(!t?.closest('[role="alertdialog"],[aria-modal="true"]'))e.preventDefault();};
+  document.addEventListener('mousedown',keep,true);return ()=>document.removeEventListener('mousedown',keep,true);
+ },[lessonConfirming]);
  if(!game)return <div className="fun-arena"><p>이 대표 게임은 아직 준비 중이에요.</p><button type="button" className="fun-primary" onClick={onExit}>활동 목록으로</button></div>;
  // 목록으로 나가면 이어 할 판을 지운다(새로고침은 그대로 남는다).
  // '오늘 수업' 막대로 다음 단계에 가거나 목록으로 나가면 이어 할 판과 리모컨 방을 지운다(새로고침은 그대로 남는다).
  const leave=()=>{disposeRound();clearFunSession(game.id);clearRemoteRoom(game.id);};
  const exit=()=>{leave();onExit();};
+ const inLesson=fromTodayLesson();
+ const askLeave=()=>{
+  const act=getLessonActivity();
+  if(act?.gameId===game.id&&act.phase==='playing'){leaveHeld.current=!!act.hold?.();setLeaveAsk(true);}
+  else exit();
+ };
+ const leaveDialog=leaveAsk?arena(<div className="fun-leave-backdrop">
+  <div ref={leaveDialogRef} tabIndex={-1} className="fun-leave-ask" role="alertdialog" aria-modal="true" aria-labelledby="fun-leave-title" aria-describedby="fun-leave-text">
+   <h2 id="fun-leave-title">아직 게임 중이에요</h2>
+   <p id="fun-leave-text">{inLesson?'오늘 수업으로 돌아가기 전에 결과를 볼까요?':'목록으로 나가기 전에 결과를 볼까요?'} 기록 없이 나가면 이 판은 사라져요.</p>
+   <div className="fun-leave-actions">
+    <button type="button" className="fun-primary" onClick={()=>{leaveHeld.current=false;setLeaveAsk(false);getLessonActivity()?.finish?.();}}>결과 발표 보기</button>
+    <button type="button" className="fun-secondary" onClick={()=>{leaveHeld.current=false;setLeaveAsk(false);exit();}}>기록 없이 나가기</button>
+    <button ref={leaveCancelRef} type="button" className="fun-secondary" onClick={cancelLeave}>취소</button>
+   </div>
+  </div>
+ </div>):null;
  // 리모컨 막대는 시작 화면(이어 할 판이 있을 때)과 게임 화면에서 같은 자리에 하나만 둔다.
  // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
  // 방 코드가 있는 동안은 시작 화면에서도 막대를 둔다('새로 시작'으로 남은 판을 지워도 휴대폰 연결이 이어진다).
  const dock=(setup||room)?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'} inert={lessonConfirming||undefined}>
   <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>{saveRemoteRoom(game.id,code);setRoom(code);}} announceStop={()=>!loadRemoteRoom(game.id)}/>
   {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
-  {setup&&<button type="button" className="fun-exit" aria-label="활동 목록으로" onClick={exit}>← 목록</button>}
+  {setup&&<button type="button" className="fun-exit" aria-label={inLesson?'오늘 수업으로':'활동 목록으로'} onClick={askLeave}>{inLesson?'← 오늘 수업':'← 목록'}</button>}
  </div>):null;
- if(setup)return <>{dock}
+ if(setup)return <>{dock}{leaveDialog}
   <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit} onLeave={leave}
    onSeed={seed=>{seedRef.current=seed;}}
    onReplay={()=>{disposeRound();onRoundReset?.();setResume(null);setSetup(s=>s&&{...s,skipDemo:true,round:s.round+1});}}/>
@@ -157,23 +189,31 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  const panelOpen=useRemotePanelOpen();
  const phaseRef=useRef(state.phase);phaseRef.current=state.phase;
  const panelHeld=useRef(false);
+ const panelSawPaused=useRef(state.paused);
  useEffect(()=>{
-  if(panelOpen){
-   if(isCuePhase(phaseRef.current)&&!pausedRef.current){panelHeld.current=true;quietPause.current=true;dispatchRef.current({type:'pause'});}
-  }else if(panelHeld.current){
-   panelHeld.current=false;
-   if(pausedRef.current){quietPause.current=true;dispatchRef.current({type:'resume'});}
+  const resumed=panelSawPaused.current&&!state.paused;panelSawPaused.current=state.paused;
+  if(!panelOpen){
+   // 창 때문에 멈춘 것만 다시 움직인다(선생님이 직접 멈춘 판은 그대로).
+   if(panelHeld.current){panelHeld.current=false;if(state.paused){quietPause.current=true;dispatch({type:'resume'});}}
+   return;
   }
- },[panelOpen]);
+  // 창이 열린 채 판이 다시 움직였다(P·휴대폰 '다시 시작'·확인 창 취소): 선생님이 진행을 원하니 창을 닫아 신호를 보이게 한다.
+  if(resumed){panelHeld.current=false;requestRemotePanelClose();return;}
+  // 창을 열었거나, 창이 열린 채 시범에서 연습 판으로 넘어갔다: 창 뒤에서 판이 흐르지 않게 멈춘다.
+  if(isCuePhase(state.phase)&&!state.paused){panelHeld.current=true;quietPause.current=true;dispatch({type:'pause'});}
+ },[panelOpen,state.paused,state.phase,dispatch]);
  // '■ 끝내기'는 한 번 누르면 알리고, 3초 안에 한 번 더 눌러야 끝난다(잘못 눌러 판이 끝나지 않게). 리모컨은 휴대폰에서 따로 묻는다.
- const [endArmed,setEndArmed]=useState(false);
+ // 마지막 승부의 '▶ 결과 발표'도 판을 끝내는 버튼이라 같은 규칙을 쓴다('마지막 승부로'는 한 번에 넘어간다).
+ const [armed,setArmed]=useState<'end'|'result'|null>(null);
+ const endArmed=armed==='end',resultArmed=armed==='result';
  const endTimer=useRef<number|undefined>(undefined);
- const disarmEnd=()=>{window.clearTimeout(endTimer.current);setEndArmed(false);};
+ const disarmEnd=()=>{window.clearTimeout(endTimer.current);setArmed(null);};
  useEffect(()=>()=>window.clearTimeout(endTimer.current),[]);
- useEffect(()=>{window.clearTimeout(endTimer.current);setEndArmed(false);},[state.phase,state.paused]);
+ useEffect(()=>{window.clearTimeout(endTimer.current);setArmed(null);},[state.phase,state.paused]);
  const controlDispatch=(cmd:Parameters<typeof dispatch>[0])=>{
-  if(cmd.type==='end'){
-   if(!endArmed){window.clearTimeout(endTimer.current);setEndArmed(true);endTimer.current=window.setTimeout(()=>setEndArmed(false),END_CONFIRM_MS);return;}
+  const kind=cmd.type==='end'?'end':cmd.type==='next'&&state.phase==='climax'?'result':null;
+  if(kind){
+   if(armed!==kind){window.clearTimeout(endTimer.current);setArmed(kind);endTimer.current=window.setTimeout(()=>setArmed(null),END_CONFIRM_MS);return;}
    disarmEnd();
   }
   dispatch(cmd);
@@ -264,7 +304,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  const surpriseKind=allowedEvents[Math.floor(seededRandom(state.seed+state.eventSeq*17)()*allowedEvents.length)]??'golden';
  const buttons:TeacherButton[]=[
   // 본게임 중 '마지막 승부로'는 일찍 끝내는 버튼이라 눈에 띄는 노란색으로 두지 않는다(시간이 되면 저절로 넘어간다).
-  {label:`${state.phase==='play'?'⏭':'▶'} ${NEXT_LABEL[state.phase]}`,command:{type:'next'},hint:'Space',tone:state.phase==='play'?undefined:'primary'},
+  {label:resultArmed?'▶ 한 번 더 누르면 결과 발표':`${state.phase==='play'?'⏭':'▶'} ${NEXT_LABEL[state.phase]}`,command:{type:'next'},hint:'Space',tone:state.phase==='play'?undefined:'primary'},
   {label:state.paused?'▶ 다시 시작':'⏸ 일시정지',command:{type:'pause'},hint:'P'},
   // 점수판 ± 없이 판에서만 점수를 주는 놀이(빙고)는 '모든 팀 +1'도 두지 않는다.
   ...(mod.scoreButtons===false||mod.scoreAllButton===false?[]:[{label:'👍 모든 팀 +1',command:{type:'scoreAll',delta:1},hint:'A',disabled:!scoring||!allows({type:'scoreAll',delta:1})} satisfies TeacherButton]),
@@ -303,13 +343,16 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
    </div>
   </>}
   {endArmed&&<p className="fun-skip-hint" data-kind="end" role="status">‘끝내기’를 한 번 더 누르면 판이 끝나요</p>}
+  {resultArmed&&<p className="fun-skip-hint" data-kind="end" role="status">‘결과 발표’를 한 번 더 누르면 판이 끝나요</p>}
   {engine.skipArmed&&<p className="fun-skip-hint" role="status">Space를 한 번 더 누르면 {state.phase==='climax'?'결과 발표로':'마지막 승부로'} 넘어가요</p>}
   <TeacherControls buttons={state.phase==='demo'?buttons.filter(b=>b.command.type!=='scoreAll'&&b.command.type!=='event'&&b.tone!=='gold'):buttons} dispatch={controlDispatch}/>
   </div>
   {/* 이벤트 번호(seq)로 구분한다: 필살기처럼 다른 기록이 늘어도 같은 알림을 두 번 읽지 않는다. */}
   <SurpriseBanner key={state.event?`${state.event.kind}-${state.event.seq}`:'none'} event={state.event?.kind??null}/>
   <FinalCountdown seconds={left} active={engine.finalCountdown}/>
-  {state.paused&&<div className="fun-paused" role="status"><strong>⏸ 일시정지</strong>{panelOpen&&<p className="fun-paused-note">📱 리모컨 창을 연 동안 멈춰요 · 창을 닫으면 다시 움직여요</p>}<button ref={resumeRef} type="button" className="fun-primary" onClick={()=>dispatch({type:'pause'})}>▶ 다시 시작 (P)</button></div>}
+  {/* 확인 창이 떠 있는 동안은 '다시 시작'을 숨기고, 위 창에서 고르라고 크게 알린다(누를 수 없는 버튼처럼 보이지 않게). */}
+  {confirming?<div className="fun-paused" data-confirming="true" role="status"><strong>⏸ 잠깐 멈췄어요</strong><p className="fun-paused-note">확인 창에서 골라 주세요</p></div>
+  :state.paused&&<div className="fun-paused" role="status"><strong>⏸ 일시정지</strong>{panelOpen&&<p className="fun-paused-note">📱 리모컨 창을 연 동안 멈춰요 · 창을 닫으면 다시 움직여요</p>}<button ref={resumeRef} type="button" className="fun-primary" onClick={()=>dispatch({type:'pause'})}>▶ 다시 시작 (P)</button></div>}
   {engine.completeNow&&<div className="fun-victory" role="alert"><strong>🎉 해냈어요!</strong></div>}
  </div>);
 }

@@ -10,3 +10,8 @@ const subscribe=(l:()=>void)=>{listeners.add(l);return ()=>{listeners.delete(l);
 export const isRemotePanelOpen=()=>open;
 export function setRemotePanelOpen(next:boolean){if(open===next)return;open=next;listeners.forEach(l=>l());}
 export const useRemotePanelOpen=()=>useSyncExternalStore(subscribe,isRemotePanelOpen,()=>false);
+
+// 게임이 창 뒤에서 다시 움직이게 되면(선생님이 P·휴대폰으로 '다시 시작') 창을 닫아 큰 신호를 다시 보이게 한다.
+const closeListeners=new Set<()=>void>();
+export function requestRemotePanelClose(){closeListeners.forEach(l=>l());}
+export function onRemotePanelCloseRequest(l:()=>void){closeListeners.add(l);return ()=>{closeListeners.delete(l);};}
