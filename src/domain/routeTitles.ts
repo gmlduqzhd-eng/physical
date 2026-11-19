@@ -22,9 +22,20 @@ const TITLES:readonly (readonly [RegExp,string])[]=[
  [/^\/records/,'내 기록'],
  [/^\/privacy/,'개인정보 안내'],
  [/^\/about/,'소개'],
+ [/^\/try/,'놀이 체험'],
+ [/^\/together/,'함께 보는 화면 수업'],
+ [/^\/journey/,'우리 반 원정 지도'],
+ [/^\/more/,'다른 앱'],
+ [/^\/lab\/angle/,'각도 실험실'],
+ [/^\/demo/,'체험 수업'],
+ [/^\/device-check/,'기기 확인'],
+ [/^\/board/,'점수판'],
+ [/^\/(remote|mobile)/,'모둠 기기'],
+ [/^\/kiosk/,'전시 화면'],
 ];
 export const playIdOf=(pathname:string)=>pathname.match(/^\/(?:solo\/)?play\/([^/]+)/)?.[1]??null;
+/** gameName: 놀이 화면이면 그 놀이 이름. 목록에 없는 놀이 주소면 null을 넘겨 '찾을 수 없는 놀이'로 보인다(undefined면 아직 모름). */
 export function routeTitle(pathname:string,gameName?:string|null){
- const page=playIdOf(pathname)?(gameName||'놀이'):TITLES.find(([pattern])=>pattern.test(pathname))?.[1]??'';
+ const page=playIdOf(pathname)?(gameName||(gameName===null?'찾을 수 없는 놀이':'놀이')):TITLES.find(([pattern])=>pattern.test(pathname))?.[1]??'';
  return page?`${page} · ${SITE_NAME}`:SITE_NAME;
 }

@@ -70,6 +70,16 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
   const playHref=(id:string)=>`${solo?'/solo/play/':'/play/'}${id}?${new URLSearchParams({returnTo:location.pathname+location.search})}`;
   const moreCount=[phoneOnly,domain!=='전체',!!purpose,grade!=='전체',device!=='전체'].filter(Boolean).length;
   const [moreOpen,setMoreOpen]=useState(moreCount>0);
+  // 학년·기기 조건을 갖고 들어왔으면(예: ?grade=) 안쪽 칸도 펼쳐서 무엇을 골랐는지 보이게 한다.
+  const [gradeOpen,setGradeOpen]=useState(grade!=='전체'||device!=='전체');
+  // 접어 두었을 때도 무엇을 골랐는지 보이도록, 고른 조건을 하나씩 지울 수 있는 칩으로 보여 준다.
+  const chosenFilters:{key:string;label:string;clear:()=>void}[]=[
+    ...(phoneOnly?[{key:'phone',label:'📱 준비물 없는 놀이',clear:togglePhone}]:[]),
+    ...(purpose?[{key:'purpose',label:purpose,clear:()=>{setPurpose('');updateFilter('purpose','');}}]:[]),
+    ...(domain!=='전체'?[{key:'domain',label:`영역: ${domain}`,clear:()=>{setDomain('전체');updateFilter('domain','전체');}}]:[]),
+    ...(grade!=='전체'?[{key:'grade',label:`학년: ${gradeLabel(grade)}`,clear:()=>{setGrade('전체');updateFilter('grade','전체');}}]:[]),
+    ...(device!=='전체'?[{key:'device',label:`기기: ${device}`,clear:()=>{setDevice('전체');updateFilter('device','전체');}}]:[]),
+  ];
   const isFiltered = phoneOnly || fitActive || domain !== '전체' || !!purpose || !!query || grade !== '전체' || device !== '전체';
   // 검색어나 '준비물 없는 놀이' 모음은 보관함까지 모두 찾고, 대표 게임을 앞에 둔다.
   const archiveIncluded = !solo && includesArchive({viewAll,query,phoneOnly});
@@ -98,8 +108,9 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
       ['category','놀이 분류',phoneCategory,['전체',...PHONE_CATEGORIES]],['intensity','활동 강도',intensity,['전체','낮음','보통']],['space','필요 공간',space,['전체',...SPACE_ORDER.filter(v=>PHONE_PLAYS.some(p=>p.space===v))]],
     ] as const).map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}<p>폰은 내려놓고 움직여요. 스마트폰 1대를 함께 쓰거나, TV에 띄워 반 전체가 해요.</p></fieldset>}
     <div className="activity-more-filters"><label>활동 영역<select aria-label="활동 영역" value={domain} onChange={e => { setDomain(e.target.value);updateFilter('domain',e.target.value); }}>{['전체','운동','스포츠','표현'].map(v => <option key={v}>{v}</option>)}</select></label>
-    <details><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체','1~2학년','3~4학년군','5~6학년군'].map(v => <option key={v} value={v}>{gradeLabel(v)}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체','스마트폰','태블릿 PC','데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label></div></details></div>
+    <details open={gradeOpen} onToggle={e=>setGradeOpen(e.currentTarget.open)}><summary>학년·기기로 좁혀 보기</summary><div className="grid" style={{marginTop:16}}><label>학년<select value={grade} onChange={e => {setGrade(e.target.value);updateFilter('grade',e.target.value);}}>{['전체','1~2학년','3~4학년군','5~6학년군'].map(v => <option key={v} value={v}>{gradeLabel(v)}</option>)}</select></label><label>사용 기기<select value={device} onChange={e => {setDevice(e.target.value);updateFilter('device',e.target.value);}}>{['전체','스마트폰','태블릿 PC','데스크톱 PC'].map(v => <option key={v}>{v}</option>)}</select></label></div></details></div>
     </details>
+    {!moreOpen&&chosenFilters.length>0&&<ul className="activity-filter-chosen" aria-label="고른 조건">{chosenFilters.map(f=><li key={f.key}><button type="button" onClick={f.clear} aria-label={`${f.label} 조건 지우기`}>{f.label} <span aria-hidden="true">✕</span></button></li>)}</ul>}
     {isFiltered&&<button style={{marginTop:4}} onClick={clearFilters}>검색·조건 초기화</button>}
     <div className="inline-title" style={{margin:'14px 0 12px'}}><h2>{solo ? '혼자 할 수 있는 활동' : !archiveIncluded ? (isFiltered ? '조건에 맞는 추천 활동' : `먼저 해 보기 좋은 추천 활동 ${source.length}개`) : query ? '찾은 활동 · 추천 활동 먼저' : phoneOnly ? `준비물 없는 놀이 ${matched.length}개 · 보관함까지 모두` : isFiltered ? `조건에 맞는 활동 ${matched.length}개` : `보관함까지 모든 활동 ${matched.length}개`}</h2>{games.length>0&&<span className="muted small" data-list-count role="status" aria-live="polite">{displayed.length<games.length?`${games.length}개 중 ${displayed.length}개 표시`:`${games.length}개 모두 표시`}</span>}</div>
     <div className="grid three">{displayed.map(g => {const group=activityGroup(g);return <article className="card catalog-card" data-game-card={g.type} key={g.type}>

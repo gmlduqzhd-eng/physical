@@ -9,7 +9,7 @@
 .sig-poster-eyebrow,.sig-card-eyebrow{margin:0 0 6px;font-weight:800;color:#b45309;font-size:16px}
 .sig-poster .sig-poster-eyebrow{color:#fbbf24}
 .sig-poster h2{margin:0 0 14px;font-size:clamp(30px,5vw,52px);line-height:1.25}
-.sig-poster ol{margin:0;padding-left:1.4em;font-size:clamp(18px,2.4vw,26px);line-height:1.6}
+.sig-poster ol{margin:0;padding-left:1.6em;list-style:decimal outside;font-size:clamp(18px,2.4vw,26px);line-height:1.6}
 .sig-poster-note{margin:14px 0 0;font-size:16px;color:#cbd5e1}
 /* 1분 안내: 화면에서도 밝은 바탕(안내 그림이 잘 보이게) */
 .sig-poster.sig-poster-light{background:#fff;color:#1c1917;border-color:#1c1917}
@@ -47,3 +47,6 @@
  .sig-card{min-height:125mm;margin:0 0 8mm}
  .sig-card:nth-of-type(2n){break-after:page}
 }
+
+/* 리모컨 안내 4단계는 번호가 보여야 순서대로 따라 할 수 있다(공통 목록 규칙이 번호를 지우므로 되살린다). */
+.sig-poster ol>li{display:list-item;list-style:decimal outside}.sig-poster ol>li::marker{font-weight:900}

@@ -11,7 +11,8 @@ export function RouteTitle(){
   const id=playIdOf(pathname);if(!id)return;
   let live=true;
   // 놀이 이름표는 놀이 화면이 어차피 받는 묶음에 있다. 여기서는 제목에만 쓴다.
-  void import('../../domain/gamesData').then(m=>{const name=m.GAMES.find(game=>game.type===id)?.name;if(live&&name)document.title=routeTitle(pathname,name);}).catch(()=>{});
+  // 놀이 화면이 여는 놀이는 모두 GAMES에 있으므로, 없으면 '찾을 수 없는 놀이'로 둔다.
+  void import('../../domain/gamesData').then(m=>{const name=m.GAMES.find(game=>game.type===id)?.name??null;if(live)document.title=routeTitle(pathname,name);}).catch(()=>{});
   return()=>{live=false;};
  },[pathname]);
  const skip=(event:React.MouseEvent)=>{

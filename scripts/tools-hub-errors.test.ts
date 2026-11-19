@@ -95,3 +95,74 @@ test('target cues read naturally and still differ by distance',()=>{
  assert.doesNotMatch(near.join(' '),/가까운 가운데|회수/);
  assert.match(near[0],/가까이 있는 가운데 표적/);assert.match(near[1],/주워 와요/);
 });
+
+/* ── round 103: 오래 떠난 레이스·카운트다운 이어 하기·탭 제목·도구 수 ── */
+test('a race left running for over an hour comes back stopped at its saved time, and absurd times are rejected',async()=>{
+ const {RACE_MAX_MS,STALE_RACE_MS}=await import('../src/domain/classTools');
+ const savedAt=1_000_000,times=[3_000,null,null,null,null,null,null,null];
+ const stale=parseRaceSaved({lanes:6,times,ms:65_000,running:true,savedAt},savedAt+STALE_RACE_MS+1)!;
+ assert.equal(stale.running,false,'stopped');assert.equal(stale.ms,65_000,'gap is not added');assert.equal(stale.stale,true);
+ const fresh=parseRaceSaved({lanes:6,times,ms:65_000,running:true,savedAt},savedAt+30_000)!;
+ assert.equal(fresh.running,true);assert.equal(fresh.ms,95_000);assert.equal(fresh.stale,undefined);
+ assert.equal(parseRaceSaved({lanes:4,times,ms:1e99,running:false,savedAt},savedAt),null,'1e99 ms');
+ assert.equal(parseRaceSaved({lanes:4,times:[1e99,null,null,null,null,null,null,null],ms:1000,running:false,savedAt},savedAt),null,'1e99 arrival');
+ assert.equal(parseRaceSaved({lanes:4,times,ms:RACE_MAX_MS+1,running:false,savedAt},savedAt),null,'over 6 hours');
+});
+
+test('countdown resumes from its end time, finishes if it ended while away, and drops bad or old records',async()=>{
+ const {parseCountdownSaved}=await import('../src/domain/classTools');
+ const savedAt=5_000_000;
+ const running=parseCountdownSaved({total:60,left:60,running:true,endAt:savedAt+60_000,savedAt},savedAt+20_000)!;
+ assert.equal(running.running,true);assert.ok(Math.abs(running.left-40)<0.01);
+ const ended=parseCountdownSaved({total:60,left:60,running:true,endAt:savedAt+60_000,savedAt},savedAt+90_000)!;
+ assert.deepEqual([ended.running,ended.left],[false,0],'ended while away → done, no whistle replay');
+ const paused=parseCountdownSaved({total:180,left:42.5,running:false,endAt:null,savedAt},savedAt+1_000)!;
+ assert.deepEqual([paused.total,paused.left,paused.running],[180,42.5,false]);
+ assert.equal(parseCountdownSaved({total:60,left:60,running:false,endAt:null,savedAt},savedAt),null,'untouched preset: nothing to resume');
+ assert.equal(parseCountdownSaved({total:77,left:10,running:false,endAt:null,savedAt},savedAt),null,'not a preset');
+ assert.equal(parseCountdownSaved({total:60,left:90,running:false,endAt:null,savedAt},savedAt),null,'left over total');
+ assert.equal(parseCountdownSaved({total:60,left:10,running:false,endAt:null,savedAt},savedAt+2*60*60*1000),null,'older than an hour');
+ assert.equal(parseCountdownSaved({total:60,left:60,running:true,endAt:savedAt+10*60_000,savedAt},savedAt),null,'end time further than the preset');
+ for(const bad of [null,'x',[],{total:60}])assert.equal(parseCountdownSaved(bad,savedAt),null);
+});
+
+test('every route has a tab title and an unknown game says so',async()=>{
+ const {routeTitle,SITE_NAME}=await import('../src/domain/routeTitles');
+ for(const path of ['/try','/try/map','/together','/journey','/more','/lab/angle','/demo','/device-check','/board','/board/ab12'])
+  assert.notEqual(routeTitle(path),SITE_NAME,`${path} has its own title`);
+ assert.equal(routeTitle('/play/nope',null),`찾을 수 없는 놀이 · ${SITE_NAME}`);
+ assert.equal(routeTitle('/play/sig-boss-raid','우리 반 보스전'),`우리 반 보스전 · ${SITE_NAME}`);
+ assert.equal(routeTitle('/play/sig-boss-raid'),`놀이 · ${SITE_NAME}`,'name not loaded yet');
+});
+
+test('the home 수업 도구 card counts the real tools',async()=>{
+ const {ENCYCLOPEDIA}=await import('../src/domain/encyclopedia');
+ const tools=ENCYCLOPEDIA.find(e=>e.id==='tools')!;
+ assert.match(tools.summary,new RegExp(`${CLASS_TOOLS.length}가지`));
+});
+
+test('countdown controls sit above the digits and race shows a running state instead of a disabled start',()=>{
+ const src=read('src/presentation/ClassTools.tsx'),css=read('src/presentation/ClassTools.css');
+ // 렌더 없이 확인할 수 있는 배치 약속만 본다(실제 위치는 Playwright로 확인).
+ assert.ok(src.indexOf('tools-countdown-controls')<src.indexOf('className="tools-big tools-countdown"'),'controls before digits');
+ assert.match(css,/tools-countdown strong\{font-size:clamp\([^)]*vh/,'digit size bound to viewport height');
+ assert.match(src,/🏃 달리는 중/);assert.doesNotMatch(src,/\{clock\.ms\?'이어서 출발':'출발!'\}/);
+ assert.match(read('src/presentation/SignatureCardsPrint.css'),/list-style:decimal/);
+});
+
+test('hub shows chosen filters as removable chips when collapsed and opens the grade box for ?grade=',()=>{
+ const src=read('src/presentation/ActivityLibrary.tsx');
+ assert.match(src,/activity-filter-chosen/);assert.match(src,/조건 지우기/);
+ assert.match(src,/useState\(grade!=='전체'\|\|device!=='전체'\)/);
+});
+
+test('expedition wording no longer says 관문 or awkward 문 phrases on screen',()=>{
+ for(const [path,bad] of [
+  ['src/presentation/flagship/WorkshopPanels.tsx',/아래 문에 참여/],
+  ['src/domain/playRecipes.ts',/지금 문을 함께 해결/],
+  ['src/presentation/flagship/FlagshipActivity.tsx',/문 열기 참여 확인|함께 여는 문 개방/],
+  ['src/domain/expeditionGuidance.ts',/아래 문에서/],
+  ['src/domain/expeditionWorkshop.ts',/공동 관문/],
+  ['src/presentation/GuidedClassroom.tsx',/관문이 이어지는/],
+ ] as const)assert.doesNotMatch(read(path),bad,path);
+});

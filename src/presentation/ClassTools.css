@@ -23,6 +23,9 @@
 @media(min-width:900px){.tools-lanes[data-many=yes]{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.tools-lane{grid-template-columns:44px minmax(0,1fr) minmax(96px,auto) auto;gap:6px;padding:6px 8px}.tools-lane strong{font-size:17px}.tools-lane output{font-size:15px}.play-experiences .tools-lane .tools-arrive{min-height:52px!important;padding:6px 12px;font-size:18px}}
 .tools-resume{margin:0 0 14px}
+/* 레이스: 출발 단추는 크게, 달리는 중에는 단추 대신 상태만 보여 준다. */
+.play-experiences .sports-timer .tools-start{min-height:68px;padding:14px 36px;font-size:24px;font-weight:850}
+.tools-race-state{display:inline-flex;align-items:center;min-height:60px;padding:0 18px;font-size:20px;font-weight:800;color:var(--forest-accent,#447565)}
 /* '다른 도구' 고르기 상자는 휴대폰에서만(넓은 화면에는 탭이 있다). */
 .class-tools>.tools-switch{display:none!important}@media(max-width:700px){.class-tools>.tools-switch{display:block!important}}
 /* 레이스 중에는 제목·설명·탭·팀 수 고르기를 숨겨, 8팀도 TV 첫 화면에 들어오게 한다('처음으로'를 누르면 다시 보인다). */
@@ -30,7 +33,14 @@
 [data-tool-panel=race]:has(.tools-lanes[data-busy=yes]) .tools-bar{display:none}
 .tools-lanes[data-busy=yes]{margin-top:8px}[data-tool-panel=race]:has(.tools-lanes[data-busy=yes]) .sports-timer>strong{font-size:clamp(44px,8vw,84px)}
 @media(min-width:900px){.tools-lanes[data-many=yes] .tools-lane{padding:6px 12px}}
-.tools-countdown strong{font-size:clamp(96px,26vw,340px);letter-spacing:-.02em;animation:none}.tools-countdown[data-last=yes] strong{color:#c2410c}.tools-countdown[data-done=yes] strong{color:#b91c1c}
+.tools-countdown strong{font-size:clamp(84px,min(26vw,30vh),340px);line-height:1;letter-spacing:-.02em;animation:none}
+/* 카운트다운: 시간 고르기와 시작·멈춤 단추를 숫자 위 한 줄에 두어, TV(1280×800·1366×768) 첫 화면에서 숫자와 단추가 함께 보이게 한다. */
+.tools-countdown-controls{margin-left:auto;gap:10px}
+.tools-countdown{margin:4px 0 10px}
+/* 고른 시간은 색을 채우고 ✓를 붙여 멀리서도 알아보게 한다(숲 테마 공통 단추 규칙보다 세게). */
+html .play-experiences .tools-presets button[aria-pressed=true]{background:var(--forest-accent,#447565)!important;border-color:var(--forest-accent,#447565)!important;color:#fff!important;font-weight:850}
+/* 세는 중에는 제목·설명·탭을 숨겨 숫자를 더 크게 둔다('처음으로'를 누르면 다시 보인다). */
+.class-tools[data-tool=timer]:has(.tools-countdown-controls button.primary:disabled)>:is(.eyebrow,h1,h1+p,.tools-tabs){display:none!important}.tools-countdown[data-last=yes] strong{color:#c2410c}.tools-countdown[data-done=yes] strong{color:#b91c1c}
 html.dark-theme .tools-countdown[data-last=yes] strong{color:#fdba74}html.dark-theme .tools-countdown[data-done=yes] strong{color:#fca5a5}
 @media(prefers-reduced-motion:reduce){.tools-trace{animation:none;stroke-dashoffset:0}.tools-big strong{animation:none}}
 @media print{.tools-bar,.tools-tabs,.tools-side button,.tools-draw{display:none}}
@@ -43,3 +53,13 @@ html.dark-theme .tools-countdown[data-last=yes] strong{color:#fdba74}html.dark-t
 /* 빙고 게임 중에는 제목·설명·탭을 숨겨 판이 첫 화면에 보이게 한다(뒤로 가기는 위쪽 링크). */
 .class-tools[data-tool=quiz-bingo]:has(.qb-turn)>:is(.eyebrow,h1,h1+p,.tools-tabs,.tools-select){display:none!important}
 .tools-progress-link{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}.tools-progress-link a{font-weight:800}.tools-progress-link span{opacity:.8;font-size:.9rem}
+/* 레이스 5팀 이상, 넓은 화면: 출발 전에도 8팀이 TV 첫 화면에 들어오게 팀 수 고르기와 시계·단추를 한 줄에 놓고 설명 줄은 숨긴다. */
+@media(min-width:900px){
+ .class-tools[data-tool=race]:has(.tools-lanes[data-many=yes])>h1+p{display:none}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes]){display:grid;grid-template-columns:auto 1fr;column-gap:24px;align-items:center}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes])>*{grid-column:1/-1}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes])>.tools-bar{grid-row:1;grid-column:1;margin:0}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes])>.sports-timer{grid-row:1;grid-column:2;display:flex;align-items:center;justify-content:flex-end;gap:20px;margin:0}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes])>.sports-timer>strong{font-size:clamp(44px,6vw,80px)}
+ [data-tool-panel=race]:has(.tools-lanes[data-many=yes]) .tools-lanes{margin:12px 0}
+}
