@@ -55,7 +55,7 @@
 .flow.activity-tools-scope .activity-header-actions { display:flex; align-items:center; flex-wrap:wrap; gap:20px; }
 .flow.activity-tools-scope .activity-header-actions>a { display:inline-flex; align-items:center; min-height:44px; }
 .game-tools-scope { --ink:var(--forest-ink, #303d35); --line:var(--forest-line, #ced1c3); --accent:var(--forest-accent, #566d4d); --muted:var(--forest-muted, #626b60); }
-.game-utilities-bar { position:fixed; inset:0 0 auto; height:68px; padding:10px 18px; box-sizing:border-box; z-index:11000; display:flex; align-items:center; justify-content:flex-end; background:var(--forest-bg, #fbf8f2); color:var(--forest-ink, #333f37); border-bottom:1px solid var(--forest-line, #e0dfd3); font-family:GamePretendard,system-ui,sans-serif; }
+.game-utilities-bar { position:fixed; inset:0 0 auto; height:68px; padding:10px 18px; box-sizing:border-box; z-index:11000; display:flex; align-items:center; justify-content:flex-end; background:var(--forest-bg, #fbf8f2); color:var(--forest-ink, #333f37); border-bottom:1px solid var(--forest-line, #e0dfd3); font-family:ForestSans,system-ui,sans-serif; }
 .game-utilities-bar>.header-tools { max-width:1100px; }
 .game-tools-scope .header-tools :is(button,summary):focus-visible { outline:3px solid var(--forest-accent, #576c50); outline-offset:4px; }
 .game-tools-scope .header-tools .install-dialog h2 { line-height:1.4; font-weight:700; }
@@ -64,6 +64,4 @@
   .game-tools-scope.game-tools-layout .game-utilities-bar .header-tools .tools-panel { top:80px; max-height:calc(100dvh - 100px); }
   .game-utilities-bar { padding:10px 12px; }
 }
-@font-face{font-family:HeaderPretendard;src:url('/fonts/Pretendard-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:HeaderPretendard;src:url('/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700 900;font-display:swap}
-:is(.unified-home,.flow.lesson-shell,.flow.activity-tools-scope,.game-tools-scope,.teacher-ai.studio-tools-scope,.header-icon-scope) .header-tools { font-family:HeaderPretendard,system-ui,sans-serif; }
+:is(.unified-home,.flow.lesson-shell,.flow.activity-tools-scope,.game-tools-scope,.teacher-ai.studio-tools-scope,.header-icon-scope) .header-tools { font-family:ForestSans,HeaderPretendard,system-ui,sans-serif; }

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
 import { KakaoInAppNotice } from './presentation/components/KakaoInAppNotice';
+import { RouteTitle } from './presentation/components/RouteTitle';
 import { BackgroundMusicProvider } from './application/BackgroundMusicContext';
 
 // 교사 인증·구글 로그인 화면은 필요할 때만 받는다(Supabase·zod가 첫 화면 묶음에 들어가지 않게).
@@ -83,6 +84,7 @@ function App() {
     <ThemeProvider>
     <BrowserRouter>
       <RouteScrollReset />
+      <RouteTitle />
       <BackgroundMusicProvider>
       <KakaoInAppNotice />
       <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>

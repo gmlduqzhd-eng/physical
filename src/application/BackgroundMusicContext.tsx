@@ -34,8 +34,10 @@ const BackgroundMusicContext = createContext<{
 
 export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  // Off until someone turns it on: a classroom TV must not start playing on the first click.
+  // The audio file is fetched only when playback starts.
   const [enabled, setEnabled] = useState(
-    () => readStorage(preferenceKey) !== "off",
+    () => readStorage(preferenceKey) === "on",
   );
   const audioRef = useRef<HTMLAudioElement>(null);
   const [volume, updateVolume] = useState(loadVolume);

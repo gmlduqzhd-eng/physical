@@ -1,6 +1,3 @@
-@font-face{font-family:ForestSans;src:url('/fonts/ForestSans.woff2') format('woff2');font-weight:45 920;font-style:normal;font-display:swap}
-@font-face{font-family:ForestSerif;src:url('/fonts/ForestSerif.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
-
 /* Palette tokens are supplied by ApplicationPalette.css in both applications. */
 html[data-design=forest] :is(body,#root){background:var(--forest-bg);color:var(--forest-ink);font-family:var(--forest-sans);-webkit-font-smoothing:antialiased;font-synthesis:none}
 html[data-design=forest] :is(body,button,input,select,textarea,p,span,a,label,h1,h2,h3,h4,h5,h6,li,small,strong,summary,.font-sans,.font-mono){font-family:var(--forest-sans)!important}

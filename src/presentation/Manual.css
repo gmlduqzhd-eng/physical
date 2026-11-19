@@ -9,7 +9,7 @@
 .manual-page .manual-content :is(p,li){line-height:1.85}
 .manual-page .manual-content :is(h2,h3,h4){line-height:1.5;letter-spacing:-.5px;font-weight:700}
 .manual-page .manual-content .font-black{font-weight:700}
-.manual-page .manual-content :is(.font-sans,.font-mono){font-family:ActivityPretendard,sans-serif}
+.manual-page .manual-content :is(.font-sans,.font-mono){font-family:ForestSans,sans-serif}
 .manual-page .manual-content [class*="bg-slate-"],.manual-page .manual-content [class*="bg-white"]{background:var(--forest-paper, #fffefa)!important;background-image:none!important}
 .manual-page .manual-content [class*="border-slate-"]{border-color:var(--forest-line, #e0dfd3)!important}
 .manual-page .manual-content [class*="text-slate-"],.manual-page .manual-content [class*="text-white"]{color:var(--forest-ink, #354239)!important}

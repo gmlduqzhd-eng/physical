@@ -17,9 +17,14 @@ const ThemeContext = createContext<ThemeContextType>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => useContext(ThemeContext);
 
+const themeKey = 'physical_theme_tab_v1';
+function readTabTheme(): Theme {
+  try { return window.sessionStorage.getItem(themeKey) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+}
+
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Every fresh visit starts in daylight; manual changes last for this visit.
-  const [theme, setTheme] = useState<Theme>('light');
+  // Every fresh visit starts in daylight; a manual change lasts for this tab, including reloads.
+  const [theme, setTheme] = useState<Theme>(readTabTheme);
 
   // 첫 페인트 전에 .dark 클래스를 적용해 dark: 변형의 깜빡임을 방지
   useLayoutEffect(() => {
@@ -33,6 +38,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
     const background = getComputedStyle(root).getPropertyValue('--forest-bg').trim();
     if (background) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
+    try { window.sessionStorage.setItem(themeKey, theme); } catch { /* 저장소를 못 쓰면 이번 화면에서만 유지한다. */ }
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
