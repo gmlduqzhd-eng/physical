@@ -81,6 +81,8 @@ export function FunRemotePage(){
  };
  const teams=snap?.teams??2;
  const paused=!!snap?.paused;
+ // TV가 '오늘 수업' 확인 창을 띄운 동안: 눌러도 반영되지 않으니 미리 알린다.
+ const tvBusy=!!snap?.busy;
  const result=snap?.phase==='result';
  const scoring=!!snap&&snap.phase!=='demo'&&!result&&!paused;
  const ready=status==='connected'&&access==='approved';
@@ -100,7 +102,7 @@ export function FunRemotePage(){
   {params.get('room')&&<p role="alert">방 코드가 맞지 않아요. 다시 확인해 주세요.</p>}
  </main>;
  const idleNow=ready&&tvIdle;
- const statusText=status!=='connected'?STATUS[status]:access==='stale'&&tvHidden?'TV 화면이 잠시 가려졌어요 · TV에서 게임 화면을 다시 보여 주세요':idleNow?'TV와 연결됐어요 · TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요':ACCESS[access];
+ const statusText=status!=='connected'?STATUS[status]:ready&&tvBusy?'TV에서 확인 중이에요 · 선생님이 TV에서 고르면 다시 보낼 수 있어요':access==='stale'&&tvHidden?'TV 화면이 잠시 가려졌어요 · TV에서 게임 화면을 다시 보여 주세요':idleNow?'TV와 연결됐어요 · TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요':ACCESS[access];
  const codeText=formatConfirmCode(code),tvCodeText=formatConfirmCode(tvCode);
  return <main className="fun-remote-page" data-status={status}>
   <header>
@@ -133,7 +135,8 @@ export function FunRemotePage(){
    {!result&&snap.cue&&<p className="frp-cue">{snap.cue}</p>}
    {result&&<p className="frp-cue">{teams===1?`우리 반 ${snap.scores[0]}점`:snap.scores.map((n,i)=>`${TEAM_NAMES[i]} ${n}`).join(' · ')}</p>}
   </section>:<p className="frp-note">{ready?(tvIdle?'TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요.':'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.'):''}</p>}
-  {paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
+  {ready&&tvBusy?<p className="frp-paused" role="status">⏳ TV에서 확인 중이에요 · 지금은 버튼을 눌러도 반영되지 않아요</p>
+   :paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
   <div className="frp-main">
    {/* 본게임 중 '다음'은 마지막 승부로 일찍 건너뛰는 버튼이라, TV처럼 작게 두고 한 번 더 확인한다. */}
    {inPlay?<button type="button" className="frp-skip" disabled={!live||result||paused} onClick={()=>setConfirmSkip(true)}>⏭ 마지막 승부로</button>

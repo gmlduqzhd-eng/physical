@@ -2,6 +2,7 @@ import {useCallback,useEffect,useMemo,useReducer,useRef,useState} from 'react';
 import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,comboFull,type FunCommand,type FunCommandGate,type FunHooks,type FunState,type FunTiming,type SurpriseAllowance} from '../../../domain/funLoop';
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {isLessonConfirming} from '../todayLessonActivity';
+import {isRemotePanelOpen} from './remotePanelState';
 import {sfxCountdown,sfxSuccess,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
 export interface FunEngineOptions {
@@ -22,7 +23,8 @@ export interface FunEngineOptions {
 export const SKIP_CONFIRM_MS=3000;
 const isSkipPhase=(p:FunState['phase'])=>p==='play'||p==='climax';
 /** 이 안의 버튼은 Space가 버튼 자체를 누른다. 그 밖(무대의 선생님 버튼 등)에서는 Space가 늘 '다음'이다. */
-const NATIVE_SPACE_ZONES='.tv-voice,.fun-remote-panel,.fun-paused';
+/** 음성 설정·리모컨 창·리모컨 막대(📱 휴대폰 리모컨·← 목록)·일시정지 덮개 */
+const NATIVE_SPACE_ZONES='.tv-voice,.fun-remote-panel,.fun-dock,.fun-paused';
 type Action={kind:'cmd';cmd:FunCommand}|{kind:'reset';state:FunState};
 /** 움직임 줄이기 설정이면 시범을 저절로 넘기지 않는다. */
 export const prefersReducedMotion=()=>typeof window!=='undefined'&&!!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -86,6 +88,8 @@ export function useFunEngine(opts:FunEngineOptions){
    if(e.key===' '&&target?.closest(NATIVE_SPACE_ZONES)?.contains(target.closest('button,a,summary')))return;
    const cmd=keyToFunCommand({key:e.key,shiftKey:e.shiftKey,target});
    if(!cmd)return;
+   // 휴대폰 리모컨 창이 큰 신호를 가리는 동안에는 일시정지(P)만 받는다(창을 닫고 진행한다).
+   if(isRemotePanelOpen()&&cmd.type!=='pause')return;
    e.preventDefault();
    // 본게임·마지막 승부에서 '다음'은 판을 일찍 끝내는 키다: 한 번 누르면 알리고, 3초 안에 한 번 더 눌러야 넘어간다(리모컨의 '넘어갈까요?'와 같은 뜻).
    if(cmd.type==='next'&&isSkipPhase(stateRef.current.phase)){

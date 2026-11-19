@@ -254,3 +254,49 @@
 /* 리모컨 창이 화면보다 길어도(코드만 넣어 연결할 때 등) '닫기'는 창 아래에 붙어 늘 보인다. */
 .fun-remote-panel>*{flex-shrink:0}
 .fun-remote-panel>.fun-secondary:last-child{position:sticky;bottom:0;z-index:1;background:var(--fun-bg);box-shadow:0 -10px 0 var(--fun-bg),0 20px 0 var(--fun-bg)}
+
+/* '오늘 수업' 확인 창이 떠 있는 동안: 게임 무대는 누를 수 없고(inert), 일시정지 덮개는 흐리게 해 확인 창에 눈이 가게 한다. */
+.fun-arena[data-confirming] .fun-paused{background:rgba(15,23,42,.55)}
+.fun-arena[data-confirming] .fun-paused>*{opacity:.35}
+.fun-paused-note{margin:0;font-weight:800;color:var(--fun-muted);font-size:clamp(15px,1.8vw,22px)}
+/* '■ 끝내기'를 한 번 누르면 '한 번 더' 알림이 뜬다. */
+.fun-skip-hint[data-kind=end]{background:#fecaca;color:#450a0a}
+
+/* 낮은 휴대폰(360×640 등)에서 3·4팀: 점수판을 한 줄로 줄여(−1은 숨기고 +1만) 큰 신호가 가려지지 않게 한다. */
+@media (max-width:640px) and (max-height:720px){
+ .fun-scoreboard[data-teams="3"]{--cols:3}.fun-scoreboard[data-teams="4"]{--cols:4}
+ .fun-scoreboard[data-teams="3"] li,.fun-scoreboard[data-teams="4"] li{grid-template-columns:1fr auto;grid-template-areas:"name score" "buttons buttons";padding:4px 6px;gap:2px 4px}
+ .fun-scoreboard[data-teams="3"] li[data-readonly],.fun-scoreboard[data-teams="4"] li[data-readonly]{grid-template-areas:"name score"}
+ .fun-scoreboard[data-teams="3"] .fun-team-name,.fun-scoreboard[data-teams="4"] .fun-team-name{font-size:13px}
+ .fun-scoreboard[data-teams="3"] .fun-team-score,.fun-scoreboard[data-teams="4"] .fun-team-score{font-size:22px;line-height:1.1}
+ .fun-scoreboard[data-teams="3"] .fun-team-buttons,.fun-scoreboard[data-teams="4"] .fun-team-buttons{grid-template-columns:1fr}
+ .fun-scoreboard[data-teams="3"] .fun-team-buttons button:not(.fun-plus),.fun-scoreboard[data-teams="4"] .fun-team-buttons button:not(.fun-plus){display:none}
+ .fun-scoreboard[data-teams="3"] .fun-team-buttons .fun-plus,.fun-scoreboard[data-teams="4"] .fun-team-buttons .fun-plus{min-height:38px;min-width:0}
+ .fun-arena:not([data-phase=result]){padding-bottom:0}
+ .fun-controls{gap:4px}
+ .fun-controls button{min-height:40px}
+ .fun-arena .fun-signal-figure svg{width:56px;height:68px}
+}
+
+/* 가로로 든 휴대폰(844×390 등): 머리줄은 위에 붙이고, 점수판은 선생님 버튼 줄 바로 위에 붙이고, 버튼 줄은 한 줄로. */
+@media (orientation:landscape) and (max-height:480px){
+ .fun-arena{padding-top:0;padding-bottom:0;gap:6px}
+ .fun-head{position:sticky;top:0;z-index:3;background:var(--fun-bg);padding-top:8px;padding-bottom:4px;min-height:52px;box-sizing:border-box}
+ .fun-head h1{font-size:18px}
+ .fun-dock{top:8px}
+ .fun-dock .fun-remote-btn,.fun-dock .fun-exit{min-height:36px;padding:2px 10px;font-size:14px}
+ .fun-signal-figure svg{width:56px;height:68px}
+ .fun-meta .fun-hint{display:none}
+ .fun-controls{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-columns:none;gap:4px;padding-bottom:4px}
+ .fun-controls button{min-height:40px;padding:2px 6px;font-size:13px;line-height:1.15;white-space:normal;text-align:center}
+ .fun-controls kbd{display:none}
+ .fun-arena .fun-scoreboard{position:sticky;bottom:var(--fun-controls-h,48px);z-index:2;background:var(--fun-bg);padding:4px 0 2px;box-shadow:0 -10px 12px -10px rgba(0,0,0,.6);gap:6px}
+ .fun-scoreboard[data-teams="3"]{--cols:3}.fun-scoreboard[data-teams="4"]{--cols:4}
+ .fun-scoreboard li{grid-template-columns:auto 1fr auto;grid-template-areas:"name score buttons";padding:4px 8px;gap:4px 6px;border-width:2px;border-radius:12px}
+ .fun-scoreboard li[data-readonly]{grid-template-columns:auto 1fr;grid-template-areas:"name score"}
+ .fun-team-name{font-size:14px;white-space:nowrap}
+ .fun-team-score{font-size:24px;line-height:1.1;text-align:center}
+ .fun-team-buttons{grid-template-columns:auto auto;gap:4px}
+ .fun-team-buttons button{min-height:40px;min-width:36px;padding:0 6px;font-size:15px}
+ .fun-skip-hint{bottom:calc(var(--fun-controls-h,48px) + 64px);font-size:14px;width:max-content}
+}
