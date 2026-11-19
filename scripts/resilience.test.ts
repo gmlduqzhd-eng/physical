@@ -86,7 +86,7 @@ test('resume names the student, and is offered only for the same class within 4 
 test('music that the browser blocked says so instead of claiming it plays', () => {
   const music = read('src/application/BackgroundMusicContext.tsx');
   assert.match(music, /NotAllowedError"\) setBlocked\(true\)/);
-  assert.match(music, /blocked: enabled && blocked/);
+  assert.match(music, /blocked: enabled && eligible && blocked/);
   const header = read('src/presentation/components/HeaderUtilities.tsx');
   assert.match(header, /music\.blocked \? '음악 다시 켜기'/);
   assert.match(header, /if \(music\.blocked\) \{ music\.resume\(\); return; \}/);

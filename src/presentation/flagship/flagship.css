@@ -70,3 +70,6 @@
 .role-swap-banner strong{display:block;font-size:clamp(20px,2.6vw,30px)}
 .role-swap-banner p{margin:4px 0 8px}
 .role-swap-banner button{font-weight:800}
+/* 다크 모드: 숲·강·탑 칸의 테두리와 '다녀온 곳' 표시가 바탕과 거의 같아 보이지 않던 것을 또렷하게 한다(글자 대비 4.5:1 이상). */
+html.dark-theme .cooperative-map .map-route span{border-color:#a3acb4;color:#f2f1ec}
+html.dark-theme .cooperative-map .map-route [data-visited=true]{background:#1f4d36;border-color:#7fd1a1;color:#f2f1ec}

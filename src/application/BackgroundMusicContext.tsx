@@ -54,15 +54,13 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
 
   const attemptPlay = useCallback(() => {
     const audio = audioRef.current;
-    if (
-      !audio ||
-      !enabledRef.current ||
-      !eligibleRef.current ||
-      suppressedRef.current ||
-      lessonPausedRef.current ||
-      document.hidden
-    )
+    if (!audio || !enabledRef.current) return;
+    // 음악을 틀지 않는 화면·멈춘 수업·숨은 탭에서는 '막힘'도 아니다: 남아 있던 막힘 표시를 지워
+    // '음악 다시 켜기'가 아무 일도 하지 않는 단추로 남지 않게 한다.
+    if (!eligibleRef.current || suppressedRef.current || lessonPausedRef.current || document.hidden) {
+      setBlocked(false);
       return;
+    }
     if (!audio.src) audio.src = musicSource;
     // Audible autoplay can be denied; retry only on a real user interaction.
     // Remember the refusal so the button can say "음악 다시 켜기" instead of claiming music is playing.
@@ -74,12 +72,12 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const suppress = useCallback(
     (value: boolean) => {
       suppressedRef.current = value;
-      if (value) audioRef.current?.pause();
+      if (value) { audioRef.current?.pause(); setBlocked(false); }
       else attemptPlay();
     },
     [attemptPlay],
   );
-  const suspendLesson=useCallback((value:boolean)=>{lessonPausedRef.current=value;if(value)audioRef.current?.pause();else attemptPlay();},[attemptPlay]);
+  const suspendLesson=useCallback((value:boolean)=>{lessonPausedRef.current=value;if(value){audioRef.current?.pause();setBlocked(false);}else attemptPlay();},[attemptPlay]);
 
   const toggle = useCallback(() => {
     const next = !enabledRef.current;
@@ -106,7 +104,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
     const audio = audioRef.current;
     eligibleRef.current = eligible;
     if (eligible) attemptPlay();
-    else audio?.pause();
+    else { audio?.pause(); setBlocked(false); }
     return () => {
       eligibleRef.current = false;
       audio?.pause();
@@ -134,7 +132,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   }, [attemptPlay]);
 
   return (
-    <BackgroundMusicContext.Provider value={{ enabled, blocked: enabled && blocked, volume, setVolume, toggle, suppress,suspendLesson, resume: attemptPlay }}>
+    <BackgroundMusicContext.Provider value={{ enabled, blocked: enabled && eligible && blocked, volume, setVolume, toggle, suppress,suspendLesson, resume: attemptPlay }}>
       <audio
         ref={audioRef}
         data-background-music="expedition"

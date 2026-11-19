@@ -149,10 +149,21 @@ export function parseRaceSaved(raw:unknown,now:number):RaceSaved|null{
  if(!times.every(t=>t===null||(typeof t==='number'&&Number.isFinite(t)&&t>=0&&t<=RACE_MAX_MS)))return null;
  const gap=now-raw.savedAt;
  if(gap<0||gap>DAY_MS)return null;
- const wasRunning=raw.running===true,stale=wasRunning&&gap>STALE_RACE_MS;
+ // 오래 떠나 있어 멈춰 둔 레이스는, 선생님이 손대기 전까지 다시 열어도 같은 안내(stale)를 보여 준다.
+ const wasRunning=raw.running===true,stale=(wasRunning&&gap>STALE_RACE_MS)||(!wasRunning&&raw.stale===true);
  const running=wasRunning&&!stale,ms=Math.min(RACE_MAX_MS,raw.ms+(running?gap:0));
  if(!running&&ms===0&&times.every(t=>t===null))return null;
  return {lanes:raw.lanes,times:times as (number|null)[],ms,running,savedAt:raw.savedAt,...(stale?{stale:true}:{})};
+}
+/**
+ * 받침에 맞는 '로/으로': 받침이 없거나 ㄹ받침이면 '로', 그 밖의 받침이면 '으로'.
+ * 30초 → '30초로', 1분 → '1분으로'. 한글로 끝나지 않으면 '로'.
+ */
+export function withRo(word:string):string{
+ const last=word.trim().slice(-1),code=last.charCodeAt(0)-0xac00;
+ if(!(code>=0&&code<=11171))return `${word}로`;
+ const jong=code%28;
+ return `${word}${jong===0||jong===8?'로':'으로'}`;
 }
 /** 카운트다운 표시: 90 → '1:30', 5 → '0:05'. */
 export const formatCountdown=(seconds:number)=>{const s=Math.max(0,Math.ceil(seconds));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
