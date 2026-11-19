@@ -24,7 +24,8 @@ html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.ex
 /* 2026-11 직관성 개선: 활동 중에는 지금 할 동작을 맨 위에 크게 보여 준다. */
 .min-h-\[100dvh\]:has(> .expression-activity){justify-content:flex-start;padding-top:8px}
 [data-consolidated]:has(.expression-activity){display:flex;flex-direction:column}
-[data-consolidated]:has(.expression-activity) > .movement-quest:first-child{order:2;margin-top:12px}
+/* '다른 놀이 방법 고르기' 막대를 놀이 아래로 내리는 것은 휴대폰 폭에서만(넓은 화면은 MovementQuest.css의 맨 위 한 줄을 따른다). */
+@media (max-width:640px){[data-consolidated]:has(.expression-activity) > .movement-quest:first-child{order:2;margin-top:12px}}
 .expression-now-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .expression-now-head h3{flex:1 1 auto;min-width:0}
 .expression-now-timer{font-family:ui-monospace,monospace;font-weight:900;font-size:clamp(18px,2.2vw,26px);color:#67e8f9;padding:2px 12px;border-radius:12px;border:1px solid rgba(168,85,247,.35);background:rgba(2,6,23,.6)}

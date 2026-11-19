@@ -115,6 +115,14 @@ async function lessonConfirm(browser) {
     assert.equal(await arena.getAttribute('data-paused'), 'true', 'lessonConfirm: P does not resume behind the dialog');
     assert.equal(await page.locator('.fun-team-score').first().innerText(), scoreBefore, 'lessonConfirm: 1 does not score behind the dialog');
     assert.equal(await ask.count(), 1, 'lessonConfirm: the dialog stays open');
+    // 마우스로 덮개의 '다시 시작'을 눌러도(무대 전체가 inert) 게임은 멈춘 채, 확인 창은 그대로입니다.
+    const resumeBox = await page.locator('.fun-paused button').boundingBox();
+    assert.ok(resumeBox, 'lessonConfirm: the pause cover is shown behind the dialog');
+    await page.mouse.click(resumeBox.x + resumeBox.width / 2, resumeBox.y + resumeBox.height / 2);
+    await page.waitForTimeout(300);
+    assert.equal(await arena.getAttribute('data-paused'), 'true', 'lessonConfirm: a mouse click on the cover does not resume behind the dialog');
+    assert.equal(await arena.getAttribute('inert'), '', 'lessonConfirm: the arena is inert while the dialog is open');
+    assert.equal(await ask.count(), 1, 'lessonConfirm: the dialog stays open after the click');
     await page.keyboard.press('Escape');
     await ask.waitFor({ state: 'detached', timeout: 3000 });
     assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'lessonConfirm: Esc resumes the game');
@@ -150,9 +158,64 @@ async function lessonConfirm(browser) {
     // 연습 판에서 끝냈으므로 기록 버튼이 없습니다.
     assert.equal(await page.locator('.fun-result[data-practice]').count(), 1, 'lessonConfirm: practice-only result');
     assert.equal(await page.locator('.fun-result button', { hasText: /기록하기/ }).count(), 0, 'lessonConfirm: a practice-only round cannot be recorded');
+    // 오늘 수업에서 연 게임의 결과 화면은 '오늘 수업으로' 돌아갑니다(‘활동 목록으로’가 아님).
+    assert.equal(await page.locator('.fun-result button', { hasText: /^오늘 수업으로$/ }).count(), 1, 'lessonConfirm: the result goes back to 오늘 수업');
+    assert.equal(await page.locator('.fun-result button', { hasText: /^활동 목록으로$/ }).count(), 0, 'lessonConfirm: no 활동 목록으로 inside a lesson');
     assert.deepEqual(errors, [], 'lessonConfirm: no page errors');
   } catch (error) {
     await page.screenshot({ path: path.join(out, 'lesson-confirm-failure.png'), fullPage: true }).catch(() => {});
+    throw error;
+  } finally {
+    await context.close();
+  }
+}
+
+// '■ 끝내기'는 두 번 눌러야 끝나고, 휴대폰 리모컨 창을 연 동안에는 판이 멈추고 Space로 게임이 넘어가지 않습니다.
+async function controlGuards(browser) {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
+  await context.addInitScript(key => { try { localStorage.setItem(key, '1'); } catch { /* 무시 */ } }, GUIDE_KEY);
+  await context.route('**/*', route => /\.supabase\.co\//.test(route.request().url()) ? route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }) : route.continue());
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  try {
+    await page.goto(`${base}/play/sig-signal-captain`, { waitUntil: 'networkidle' });
+    await page.locator('.fun-intro .fun-secondary', { hasText: /시범 건너뛰고/ }).click();
+    const arena = page.locator('.fun-arena');
+    assert.ok(await poll(async () => await arena.getAttribute('data-phase') === 'tutorial', 5000), 'controlGuards: tutorial started');
+    // 끝내기: 한 번 누르면 알리기만, 3초 안에 한 번 더 누르면 결과.
+    const end = page.locator('.fun-controls button[data-command="end"]');
+    await end.click();
+    await page.waitForTimeout(300);
+    assert.equal(await arena.getAttribute('data-phase'), 'tutorial', 'controlGuards: one press of 끝내기 does not end the round');
+    assert.match(await end.innerText(), /한 번 더 누르면 끝나요/, 'controlGuards: the button asks for a second press');
+    assert.equal(await page.locator('.fun-skip-hint[data-kind="end"]').count(), 1, 'controlGuards: the end hint is shown');
+    assert.ok(await poll(async () => /^■ 끝내기$/.test((await end.innerText()).trim()), 4500), 'controlGuards: the second press expires after 3 seconds');
+    // 리모컨 창: 본게임에서 열면 판이 멈추고, Space(초점 없음)로 넘어가지 않고, 닫으면 다시 움직입니다.
+    await page.locator('.fun-controls button[data-command="next"]').click();
+    assert.ok(await poll(async () => await arena.getAttribute('data-phase') === 'play', 3000), 'controlGuards: main round');
+    await page.locator('.fun-remote-btn').click();
+    await page.locator('.fun-remote-panel').waitFor({ timeout: 3000 });
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === 'true', 3000), 'controlGuards: the round pauses while the remote panel is open');
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.keyboard.press('Space');
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(300);
+    assert.equal(await arena.getAttribute('data-phase'), 'play', 'controlGuards: Space does not skip while the remote panel is open');
+    // Space on the 📱 button presses the button itself (closes the panel) instead of moving the game.
+    await page.locator('.fun-remote-btn').focus();
+    await page.keyboard.press('Space');
+    await page.locator('.fun-remote-panel').waitFor({ state: 'detached', timeout: 3000 });
+    assert.equal(await arena.getAttribute('data-phase'), 'play', 'controlGuards: Space on the remote button does not skip');
+    assert.ok(await poll(async () => await arena.getAttribute('data-paused') === null, 3000), 'controlGuards: closing the panel resumes the round');
+    // 끝내기 두 번이면 결과 발표.
+    await end.click();
+    await end.click();
+    await page.locator('.fun-result').waitFor({ timeout: 5000 });
+    assert.equal(await page.locator('.fun-result button', { hasText: /^활동 목록으로$/ }).count(), 1, 'controlGuards: outside a lesson the result still says 활동 목록으로');
+    assert.deepEqual(errors, [], 'controlGuards: no page errors');
+  } catch (error) {
+    await page.screenshot({ path: path.join(out, 'control-guards-failure.png'), fullPage: true }).catch(() => {});
     throw error;
   } finally {
     await context.close();
@@ -288,6 +351,7 @@ async function playOne(browser, run, id) {
   try {
     if (!only) { await guideOnce(browser); console.log('PASS guide-once'); }
     if (!only) { await lessonConfirm(browser); console.log('PASS lesson-confirm'); }
+    if (!only) { await controlGuards(browser); console.log('PASS control-guards'); }
     for (const run of RUNS) for (const id of GAMES) {
       if (only && !only.includes(id)) continue;
       const r = await playOne(browser, run, id);
