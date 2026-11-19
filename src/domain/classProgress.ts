@@ -156,9 +156,9 @@ export const MIN_UP_FOR_FEATURED=3;
 export const ARCHIVE_RATIO=0.4,FEATURED_RATIO=0.8;
 /** 화면에 그대로 보여 줄 규칙(숫자는 위 상수와 같다). */
 export const SUGGESTION_RULES={
- archive:`대표 게임 가운데 ${MIN_PLAYS_FOR_SUGGESTION}판 이상 했고, 👎가 ${MIN_DOWN_FOR_ARCHIVE}번 이상이며, 👍가 반응의 ${ARCHIVE_RATIO*100}%보다 적은 게임`,
+ archive:`추천 활동 가운데 ${MIN_PLAYS_FOR_SUGGESTION}판 이상 했고, 👎가 ${MIN_DOWN_FOR_ARCHIVE}번 이상이며, 👍가 반응의 ${ARCHIVE_RATIO*100}%보다 적은 게임`,
  featured:`보관함 활동 가운데 ${MIN_PLAYS_FOR_SUGGESTION}판 이상 했고, 👍가 ${MIN_UP_FOR_FEATURED}번 이상이며, 👍가 반응의 ${FEATURED_RATIO*100}% 이상인 활동`,
- note:'추천일 뿐이에요. 실제로 대표 게임을 바꾸는 것은 선생님이 정해요.',
+ note:'추천일 뿐이에요. 실제로 추천 활동을 바꾸는 것은 선생님이 정해요.',
 } as const;
 /** 보관함으로 보낼 후보: 대표 게임 중 충분히 해 봤고 👎가 분명한 것. */
 export function archiveCandidates(rows:ReactionRow[],isFeatured:(id:string)=>boolean):ReactionRow[]{
@@ -263,8 +263,8 @@ export const REASON_HINTS:readonly {reason:ReasonId;hint:string}[]=[
  {reason:'long',hint:'시간 줄이기 (라운드를 짧게)'},
  {reason:'easy',hint:'어려운 단계 필요 (속도·규칙 카드 늘리기)'},
  {reason:'boring',hint:'변형 필요 (새 규칙 카드) · 계속 지루하면 보관함 후보'},
- {reason:'loved',hint:'좋아했어요 · 대표로 두거나 올리기'},
- {reason:'again',hint:'또 하고 싶어해요 · 대표로 두거나 올리기'},
+ {reason:'loved',hint:'좋아했어요 · 추천 활동으로 두거나 올리기'},
+ {reason:'again',hint:'또 하고 싶어해요 · 추천 활동으로 두거나 올리기'},
 ];
 export function reasonHint(counts:Record<ReasonId,number>):string|null{
  return REASON_HINTS.find(h=>counts[h.reason]>=MIN_REASON_COUNT)?.hint??null;

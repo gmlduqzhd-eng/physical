@@ -114,7 +114,7 @@ const GAME_TITLES: Record<string, GameMeta> = {
   'dribble-rhythm': { name: QUEST_META['dribble-rhythm'].name, emoji: '🥁', domain: '스포츠', code: '[4체02-03]', target: '리듬 조작 움직임' },
   'open-space-tactician': { name: QUEST_META['open-space-tactician'].name, emoji: '🗺️', domain: '스포츠', code: '[6체02-05]', target: '공간 침투 전술' },
   'emotion-thermometer': { name: '감정 온도계', emoji: '🌡️', domain: '표현', code: '[4체03-04]', target: '감정 신체 표현' },
-  'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '몸으로 하는 코딩 · 순차·반복·선택' },
+  'partner-robot-lab': { name: '파트너 로봇 연구소', emoji: '🤖', domain: '표현', code: '[4체03-02]', target: '몸으로 하는 코딩 · 차례대로·되풀이·골라서' },
   // 신규 21종 차별화 미니게임 메타 등록
   'compass-azimuth': { name: '나침반 방위각 마스터', emoji: '🧭', domain: '스포츠', code: '[4체02-08]', target: '생태형 오리엔티어링' },
   'kayak-paddle': { name: '급류 탈출 카약', emoji: '🛶', domain: '스포츠', code: '[4체02-07]', target: '생태형 수상 모험' },
