@@ -54,7 +54,12 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const waitForTeacher=!!p.setup&&!seated&&!rolesReady;
  const [phase,setPhase]=useState<Phase>('rules'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
  // '오늘 수업' 막대가 활동 중인지 알 수 있게 알린다(활동 중에 다음 단계로 가려 하면 한 번 묻는다).
- useReportLessonActivity({gameId:play.id,phase:phase==='done'?'recorded':'playing'});
+ // 규칙 화면(시작 전)에는 알리지 않아 묻지 않고, 기록 화면은 '아직 기록 전'으로 알린다. 확인 창이 떠 있는 동안에는 시간을 멈춘다.
+ const pausedRef=useRef(paused);pausedRef.current=paused;
+ const stopVoiceRef=useRef<()=>void>(()=>{});
+ useReportLessonActivity(phase==='rules'?null:{gameId:play.id,phase:phase==='done'?'recorded':phase==='record'?'result':'playing',
+  hold:()=>{if(pausedRef.current)return false;setPaused(true);stopVoiceRef.current();return true;},
+  release:()=>setPaused(false)});
  const [bingo,setBingo]=useState<boolean[]>(()=>Array(9).fill(false));
  const moved=useRef(0),submitted=useRef(false);
  // 무작위 신호(숫자·구석·여우)는 진행마다 새 순서로 나오되, 화면이 다시 그려져도 바뀌지 않게 한 번 정한 씨앗을 쓴다.
@@ -72,6 +77,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 음성 안내는 대표 게임과 같은 TV 음성 설정(🔊 단추)을 따른다. 멈춤 중에는 읽지 않는다.
  const voice=useTvVoice({paused:stopped});
  const sayRaw=voice.say,stopVoice=voice.stop;
+ stopVoiceRef.current=stopVoice;
  const say=useCallback((text:string,long=false)=>{sayRaw(text,long?{long:true}:undefined);},[sayRaw]);
 
  useEffect(()=>{const hide=()=>{if(document.hidden){setPaused(true);stopVoice();}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[stopVoice]);

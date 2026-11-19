@@ -63,3 +63,36 @@ test('a practice-only round is not recorded, and the remote panel shows the TV n
  assert.match(remote,/open=\{pending\.some\(d=>!d\.trusted\)\|\|undefined\}/);
  assert.match(remote,/return \(\)=>\{window\.clearTimeout\(id\);setJustLinked\(false\);\};/,'the "linked" line is cleared when the panel closes early');
 });
+
+test('the lesson confirm opens on 취소, and the game ignores the remote while it is open',async()=>{
+ const bar=read('src/presentation/components/TodayLessonBar.tsx');
+ // 처음 초점이 '취소'여야 Space·Enter가 게임을 끝내지 않는다(브라우저 흐름은 signature-e2e의 lessonConfirm이 확인).
+ assert.match(bar,/cancelRef\.current\?\.focus\(\)/);
+ assert.match(bar,/<button ref=\{cancelRef\}[^>]*onClick=\{cancel\}>취소<\/button>/);
+ const {isLessonConfirming,setLessonConfirming}=await import('../src/presentation/components/todayLessonActivity');
+ assert.equal(isLessonConfirming(),false);
+ setLessonConfirming(true);assert.equal(isLessonConfirming(),true);
+ setLessonConfirming(false);assert.equal(isLessonConfirming(),false);
+ const engine=read('src/presentation/components/fun/useFunEngine.ts');
+ assert.match(engine,/source==='remote'&&isLessonConfirming\(\)/);
+ // 리모컨에는 'TV에서 확인 중이라'로 알린다(기존 '반영되지 않았어요' 응답 길을 그대로 쓴다).
+ assert.match(read('src/application/funRemote.ts'),/if\(latest\.busy\)return 'busy'/);
+ assert.match(read('src/presentation/FunRemotePage.tsx'),/busy:'TV에서 확인 중이라'/);
+});
+
+test('Space presses the focused button inside the voice panel, the remote panel and the pause cover',()=>{
+ const engine=read('src/presentation/components/fun/useFunEngine.ts');
+ assert.match(engine,/NATIVE_SPACE_ZONES='\.tv-voice,\.fun-remote-panel,\.fun-paused'/);
+ assert.match(engine,/e\.key===' '&&target\?\.closest\(NATIVE_SPACE_ZONES\)/);
+});
+
+test('whole-class and device play tell the lesson bar when they are really running, and can be held',()=>{
+ const cls=read('src/presentation/components/minigames/common/PhonePlayClass.tsx');
+ assert.match(cls,/useReportLessonActivity\(phase==='rules'\?null:/,'the rules screen (not started) does not ask');
+ assert.match(cls,/phase==='record'\?'result':'playing'/,'the record step is "not recorded yet", not "playing"');
+ assert.match(cls,/hold:\(\)=>\{if\(pausedRef\.current\)return false;setPaused\(true\)/);
+ assert.match(cls,/release:\(\)=>setPaused\(false\)/);
+ const dev=read('src/presentation/components/minigames/common/PhonePlay.tsx');
+ assert.match(dev,/phase==='intro'\|\|phase==='plan'\|\|\(phase==='record'&&practice\)\?null:/);
+ assert.match(dev,/hold:\(\)=>\{if\(pausedRef\.current\)return false;setPaused\(true\)/);
+});

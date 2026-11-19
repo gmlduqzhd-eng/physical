@@ -18,7 +18,7 @@ import type {SignatureModuleProps} from './moduleTypes';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {countdownSpeech,surpriseSpeech} from '../../../../application/speechAnnouncer';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
-import {useReportLessonActivity} from '../../todayLessonActivity';
+import {useLessonConfirming,useReportLessonActivity} from '../../todayLessonActivity';
 import '../../fun/fun.css';
 
 interface Props {gameId:string;groupId?:string;enqueueAction?:(a:unknown)=>void;onExit:()=>void;
@@ -145,6 +145,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  useReportLessonActivity({gameId:game.id,phase:state.phase!=='result'?'playing':recorded||practiceOnly?'recorded':'result',finish:()=>{quietPause.current=false;dispatchRef.current({type:'end'});},cleanup:onLeave,
   hold:()=>{if(pausedRef.current)return false;quietPause.current=true;dispatchRef.current({type:'pause'});return true;},
   release:()=>{if(pausedRef.current){quietPause.current=true;dispatchRef.current({type:'resume'});}}});
+ const confirming=useLessonConfirming();
  const skipped=useRef(false);
  useEffect(()=>{if(skipDemo&&!skipped.current&&state.phase==='demo'){skipped.current=true;dispatch({type:'next'});}},[skipDemo,state.phase,dispatch]);
  const cue=cueOf(game,state,seated);
@@ -157,8 +158,16 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  const shown:SignatureCue=override??cue;
  // 리모컨이 붙으면 TV 상태를 알린다(3단계).
  // 결과 단계에는 지난 신호 대신 결과 제목을 보낸다.
- useEffect(()=>{engine.bus.publishState({gameId:game.id,gameName:game.name,phase:state.phase,phaseLabel:FUN_PHASE_LABEL[state.phase],events:surprisesNow(state),paused:state.paused,secondsLeft:engine.secondsLeft,teams:state.teams,scores:state.scores,scoreLabel:game.scoreLabel,cue:state.phase==='result'?resultHeadlineOf(game,state):cue.text,combo:mod.special?state.combo:0,comboFull:!!mod.special&&comboFull(state)});});
+ useEffect(()=>{engine.bus.publishState({gameId:game.id,gameName:game.name,phase:state.phase,phaseLabel:FUN_PHASE_LABEL[state.phase],events:surprisesNow(state),paused:state.paused,secondsLeft:engine.secondsLeft,teams:state.teams,scores:state.scores,scoreLabel:game.scoreLabel,cue:state.phase==='result'?resultHeadlineOf(game,state):cue.text,combo:mod.special?state.combo:0,comboFull:!!mod.special&&comboFull(state),busy:confirming||undefined});});
  const titleRef=useRef<HTMLHeadingElement>(null);
+ // 휴대폰 폭: 아래에 붙은 선생님 버튼 줄의 높이를 알려, 점수판이 그 바로 위에 붙어 늘 보이게 한다(판이 길어 화면을 넘는 놀이).
+ const arenaRef=useRef<HTMLDivElement>(null);
+ useEffect(()=>{
+  const root=arenaRef.current,controls=root?.querySelector<HTMLElement>('.fun-controls');
+  if(!root||!controls||typeof ResizeObserver==='undefined')return;
+  const set=()=>root.style.setProperty('--fun-controls-h',`${controls.offsetHeight}px`);
+  set();const ro=new ResizeObserver(set);ro.observe(controls);return ()=>ro.disconnect();
+ },[state.phase]);
  useEffect(()=>{if(state.phase!=='result')titleRef.current?.focus({preventScroll:true});},[state.phase]);
  // 일시정지하면 덮개의 '다시 시작'으로 초점을 옮긴다(덮개 뒤 버튼은 inert라 누를 수 없다).
  const resumeRef=useRef<HTMLButtonElement>(null);
@@ -232,7 +241,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
   {label:'■ 끝내기',command:{type:'end'},tone:'danger'},
  ];
  const Panel=mod.Panel;
- return arena(<div className="fun-arena" data-phase={state.phase} data-tone={shown.tone} data-paused={state.paused||undefined} data-final={engine.finalCountdown||undefined}>
+ return arena(<div ref={arenaRef} className="fun-arena" data-phase={state.phase} data-tone={shown.tone} data-paused={state.paused||undefined} data-final={engine.finalCountdown||undefined}>
   <header className="fun-head">
    <h1 ref={titleRef} tabIndex={-1}><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
    <span className="fun-phase" data-phase={state.phase}>{PHASE_LABEL[state.phase]}</span>
