@@ -44,10 +44,10 @@ test('solo mode does not link to team TV games, and every hub count matches the 
  // 보관함 보기의 머리말·제목·버튼이 같은 수를 말한다.
  const {libraryLead,FEATURED_GAMES}=await import('../src/domain/featuredGames');
  const total=AVAILABLE_GAMES.length,featured=FEATURED_GAMES.length;
- assert.match(libraryLead(false,false,10),new RegExp(`대표 게임 ${featured}개를 보여 줘요. 나머지 ${total-featured}개는 보관함`));
+ assert.match(libraryLead(false,false,10),new RegExp(`추천 활동 ${featured}개를 보여 줘요. 나머지 ${total-featured}개는 보관함`));
  const all=libraryLead(false,true,10);
  assert.match(all,new RegExp(`모든 활동 ${total}개를 보여 줘요`));
- assert.doesNotMatch(all,/대표 게임 \d+개를 보여 줘요/);
+ assert.doesNotMatch(all,/추천 활동 \d+개를 보여 줘요/);
  assert.match(lib,/`보관함까지 모든 활동 \$\{matched\.length\}개`/);
  assert.match(lib,/보관함까지 모두 보기 \(\$\{exclude \? GAMES\.filter\(g => !exclude\(g\)\)\.length : GAMES\.length\}개\)/);
  assert.equal(libraryLead(true,true,7),'학생 정보 입력 없이, 혼자 할 수 있는 7개 활동이에요.');

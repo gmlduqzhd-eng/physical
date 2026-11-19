@@ -116,13 +116,13 @@ function buildQuestRound(id: QuestId, round: number, settings: QuestSettings, ch
   const practice = settings.practice;
   const spacing = choiceId === 'space' ? '모두 편한 범위에서 표식 간격을 조금 넓히고, 더 먼 표적까지 공을 보내요.' : '공이 다음 표식에 멈추도록 가까운 거리에서 천천히 조절해요.';
   return { title: ['구조 연결 시작', '출발 역할 교대', '함께 돌아오기'][round],
-    goal: practice ? '공을 표적으로 굴리고 회수한 뒤 빈 표식으로 이동하기' : '모두 한 번 이상 보내고 받고, 보낸 뒤 빈자리로 이동하기',
+    goal: practice ? '공을 표적으로 굴리고 주워 온 뒤 빈 표식으로 이동하기' : '모두 한 번 이상 보내고 받고, 보낸 뒤 빈자리로 이동하기',
     hint: spacing + (practice ? ' 혼자서는 굴리기와 이동 규칙을 연습해요. 모둠 참여 기록으로 표시하지 않아요.' : ` 아래 순서로 원을 따라 서고 마지막 표식은 비워요. ${starter}번부터 다음 친구에게 보내요. 보낸 사람은 한 칸 뒤의 빈자리로 이동하고, 그 뒤 다음 친구가 보내요.`),
-    choices, roles: practice ? ['혼자 굴리기 → 회수하기 → 빈자리로 이동'] : order.map((n, i) => `시계 방향 ${i + 1}번째 표식: ${n}번 친구`),
-    cues: practice ? ['표적으로 굴려요', '공을 회수해요', seated ? '손을 빈 표식으로' : '빈 표식으로 걸어요'] :
+    choices, roles: practice ? ['혼자 굴리기 → 주워 오기 → 빈자리로 이동'] : order.map((n, i) => `시계 방향 ${i + 1}번째 표식: ${n}번 친구`),
+    cues: practice ? ['표적으로 굴려요', '공을 주워 와요', seated ? '손을 빈 표식으로' : '빈 표식으로 걸어요'] :
       order.flatMap(n => [`${n}번 · 다음 친구에게 굴려요`, seated ? `${n}번 · 손을 빈 표식으로` : `${n}번 · 빈자리로 걸어요`]),
     cueMs: settings.gentle ? 6500 : 5000, repeats: 1,
-    confirmation: practice ? '굴리기·회수·자리 바꾸기를 연습했어요' : '모두 보내고 받았고, 보낸 뒤 빈자리로 이동했어요' };
+    confirmation: practice ? '굴리기·주워 오기·자리 바꾸기를 연습했어요' : '모두 보내고 받았고, 보낸 뒤 빈자리로 이동했어요' };
 }
 
 export function questDuration(plan: QuestRound): number { return plan.timing ? 60000 : plan.cues.length * plan.repeats * plan.cueMs; }

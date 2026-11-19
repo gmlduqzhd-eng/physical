@@ -48,7 +48,7 @@ const GROUPS: ThemeGroup[] = [
 ];
 
 const MODES: ThemeMode[] = [
-  { id: 'streak', group: 'solo', emoji: '🔥', title: '3분 땀방울 챌린지', desc: '매일 루틴 & 불꽃 스탬프' },
+  { id: 'streak', group: 'solo', emoji: '🔥', title: '3분 땀방울 챌린지', desc: '몸 풀기 세 가지를 3분 동안 따라 해요' },
   { id: 'tamagotchi', group: 'solo', emoji: '💧', title: '내 땀방이 키우기', desc: '캐릭터 육성 & 아이템 룸' },
   { id: 'mbti', group: 'solo', emoji: '🦁', title: '나의 체육 MBTI', desc: '1분 동물 페르소나 찾기' },
   { id: 'cooldown', group: 'solo', emoji: '🫀', title: '쿨다운 루틴', desc: '편한 호흡 · 맥박 느끼기 · 정리 스트레칭' },

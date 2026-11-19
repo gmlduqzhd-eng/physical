@@ -1,4 +1,5 @@
 import {FlowShell} from './presentation/FlowShell';
+import {PlayErrorBoundary} from './components/PlayErrorBoundary';
 import { cleanClassroomStorage } from './application/storageRetention';
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
@@ -53,10 +54,10 @@ const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').th
 const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
 const TodayLessonBar = lazy(() => loadTodayLessonBar().then(m=>({default:m.TodayLessonBar})));
-/** 활동 화면(/play/…)과 활동 목록(/hub)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
+/** 활동 화면(/play/…)과 활동 목록(/hub, /games)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
 function TodayBarGate(){
   const {pathname}=useLocation();
-  const shown=pathname.startsWith('/play/')||pathname==='/hub'||pathname.startsWith('/hub/');
+  const shown=pathname.startsWith('/play/')||pathname==='/hub'||pathname.startsWith('/hub/')||pathname==='/games';
   useEffect(()=>{if(shown||pathname.startsWith('/today'))void loadTodayLessonBar().catch(()=>{});},[shown,pathname]);
   return shown?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;
 }
@@ -128,8 +129,8 @@ function App() {
         <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />
         <Route path="/records" element={<PlayerRecords />} />
-        <Route path="/solo/play/:gameType" element={<GamePlayPage />} />
-        <Route path="/play/:gameType" element={<GamePlayPage />} />
+        <Route path="/solo/play/:gameType" element={<PlayErrorBoundary><GamePlayPage /></PlayErrorBoundary>} />
+        <Route path="/play/:gameType" element={<PlayErrorBoundary><GamePlayPage /></PlayErrorBoundary>} />
 
         {/* 교사 관리 & 수업용 (Supabase 필요 & 교사 PIN 인증) */}
         <Route path="/lobby" element={hasSupabase ? <Lobby /> : <SupabaseRequired />} />

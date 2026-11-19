@@ -37,5 +37,5 @@ export const STUDENT_ACTIONS:Record<FlagshipId,{icon:string;title:string;text:st
  'expedition-loop':{icon:'♫',title:'몸으로 박자를 맞추고 연결해요',text:'불빛에서 작은 동작을 하고 한 사람은 박자를 눌러요. 다음 시도에는 역할을 바꿔요.'},
  'expedition-rescue':{icon:'↗',title:'작게 조준하고 타이밍을 맞춰요',text:'편안한 팔 각도로 가상 캡슐을 조준해요. 실제 물건을 던지지 않아요.'},
  'expedition-shadow':{icon:'〰',title:'길을 보고 천천히 따라가요',text:'손목이 갈 길을 먼저 보고 따라가요. 불편하면 작은 동작이나 터치 연습을 선택해요.'},
- 'expedition-boss':{icon:'◇',title:'관문마다 서로의 신호를 이어요',text:'현재 관문을 함께 해결해요. 막히면 단서를 나누고 역할을 바꿔요.'},
+ 'expedition-boss':{icon:'◇',title:'문마다 서로의 신호를 이어요',text:'지금 문을 함께 해결해요. 막히면 힌트를 나누고 역할을 바꿔요.'},
 };

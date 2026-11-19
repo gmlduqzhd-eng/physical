@@ -1,5 +1,7 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { isChunkLoadError } from './chunkLoadError';
+import './ErrorBoundary.css';
 
 interface Props {
   children?: ReactNode;
@@ -10,6 +12,7 @@ interface State {
   error?: Error;
 }
 
+/** 앱 전체를 감싸는 마지막 안전망. 놀이 화면은 PlayErrorBoundary가 먼저 받아 머리말과 수업 막대를 남긴다. */
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false
@@ -26,21 +29,17 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      const chunk = isChunkLoadError(this.state.error);
       return (
-        <div className="flex flex-col items-center justify-center w-full h-full min-h-screen bg-slate-900 text-white p-4">
-          <h1 className="text-3xl font-bold text-red-500 mb-4">앗! 시스템 오류 발생 🚨</h1>
-          <p className="text-gray-300 mb-6 text-center max-w-md">
-            예기치 않은 오류가 발생하여 안전하게 화면을 보호했습니다.
-            잠시 후 새로고침하거나 홈으로 돌아가 다시 시도해 주세요.
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors"
-          >
-            화면 새로고침
-          </button>
-          <a href="/" className="mt-4 px-6 py-3 text-cyan-300 underline">홈으로 돌아가기</a>
-        </div>
+        <main className="app-error" role="alert">
+          <p className="app-error-icon" aria-hidden="true">🌧️</p>
+          <h1>화면을 열다가 멈췄어요</h1>
+          <p>{chunk ? '화면 파일을 받지 못했어요. 인터넷이 잠깐 끊겼거나 앱이 새로 바뀌었을 수 있어요.' : '잠깐 문제가 생겼어요. 기록은 그대로예요.'} 아래 단추를 눌러 다시 열어 봐요.</p>
+          <div className="app-error-actions">
+            <button type="button" className="app-error-primary" onClick={() => window.location.reload()}>다시 열기</button>
+            <a href="/">처음 화면으로</a>
+          </div>
+        </main>
       );
     }
 

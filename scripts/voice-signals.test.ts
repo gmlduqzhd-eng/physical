@@ -241,3 +241,17 @@ test('TV screens wire voice: signature arena and class mode share the toggle',()
  assert.match(toggle,/목소리 확인/);
  assert.match(toggle,/aria-pressed/);
 });
+
+test('the silent wake-up line alone never promotes a device with no voice list',()=>{
+ const spoken:SpeechUtteranceLike[]=[];let t=0;let heard=0;
+ const a=createAnnouncer({synth:{speak(u){spoken.push(u);},cancel(){},getVoices:()=>[]},utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,onHeard:()=>{heard++;}});
+ t=VOICE_WAIT_MS;
+ a.unlock();
+ assert.equal(spoken.length,1);assert.equal(spoken[0].volume,0);
+ (spoken[0].onstart as ()=>void)();
+ assert.equal(a.status(),'no-voices','a silent line starting says nothing about audible speech');
+ assert.equal(heard,0);assert.equal(a.unlocked(),true);
+ assert.equal(a.say('목소리 확인',{force:true,priority:true}),true);
+ (spoken[1].onstart as ()=>void)();
+ assert.equal(a.status(),'ok');assert.equal(heard,1);
+});

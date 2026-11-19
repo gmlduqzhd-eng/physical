@@ -26,5 +26,5 @@ export function easyMapWords(text:string){
   .replace(/(\d)관문/g,'$1번 문').replaceAll('관문마다','문마다').replaceAll('운반 약속','몸짓 약속').replaceAll('단서','힌트').replaceAll('몸짓으로 전해요','몸짓으로 알려 줘요');
 }
 export function mapAgreement(station:Station,gesture:string,phase:number,seed:number,override='auto'){return station===cooperativeMapOrder(seed,override)[phase]&&gesture===mapGestures(seed)[phase];}
-export const SUPPORT_CHOICES=[{id:'need-clue',label:'단서를 연결해 주세요'},{id:'need-partner',label:'역할·조작을 같이 맞춰요'},{id:'need-rhythm',label:'박자를 함께 연습해요'},{id:'offering',label:'도움을 줄 준비가 됐어요'},{id:'none',label:'지금은 괜찮아요'}] as const;
+export const SUPPORT_CHOICES=[{id:'need-clue',label:'힌트를 이어 주세요'},{id:'need-partner',label:'역할·조작을 같이 맞춰요'},{id:'need-rhythm',label:'박자를 함께 연습해요'},{id:'offering',label:'도움을 줄 준비가 됐어요'},{id:'none',label:'지금은 괜찮아요'}] as const;
 export type SupportKind=typeof SUPPORT_CHOICES[number]['id'];

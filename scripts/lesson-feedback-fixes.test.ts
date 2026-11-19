@@ -210,7 +210,7 @@ test('공유용 요약에 고른 이유가 이름과 수로 들어간다',()=>{
 test('반응 칸: 같은 반응을 다시 눌러도 바뀌지 않고, 👍↔👎를 오가도 앞서 고른 이유가 돌아온다',()=>{
  const slot=readFileSync('src/presentation/components/ClassFeedbackSlot.tsx','utf8');
  assert.match(slot,/if\(v===vote\)return;/);
- assert.match(slot,/remembered\.current\[vote\]=saved\.reasons/);
+ assert.match(slot,/if\(vote\)remembered\.current\[vote\]=saved\?\.reasons\?\?\[\]/);
  assert.match(slot,/\.\.\.remembered\.current\[v\]/);
  assert.match(slot,/REASONS\.filter\(r=>r\.vote!==vote&&picked\.has\(r\.id\)\)/,'예전 기록의 다른 쪽 이유도 보이고 뺄 수 있다');
 });
@@ -261,6 +261,6 @@ test('저장이 막힌 동안 지운 이유와 모두 지우기는 저장소의 
 
 test('오늘 수업의 본게임 시간은 여러 판을 하는 시간임을 알려 준다',()=>{
  const page=readFileSync('src/presentation/TodayLesson.tsx','utf8');
- assert.match(page,/여러 판 · 약 \$\{s\.minutes\}분/);
- assert.match(page,/한 판은 5~6분쯤이에요/);
+ assert.match(readFileSync('src/domain/todayLesson.ts','utf8'),/여러 판 · 약 \$\{stage\.minutes\}분/);
+ assert.match(page,/한 판은 4~6분쯤이에요/);
 });

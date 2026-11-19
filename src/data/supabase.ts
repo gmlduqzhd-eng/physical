@@ -26,7 +26,9 @@ export function ensureClassroomUser(): Promise<string> {
 export async function ensureClassroomTeacher() {
   const accessToken = await ensureClassroomUser();
   const res = await fetch('/api/teacher?action=classroom-authorize', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({accessToken}) });
-  const data = await res.json(); if (!res.ok) throw new Error(data.error ?? '교사 수업방 권한 확인에 실패했습니다.');
+  // 서버가 JSON이 아닌 답(예: 점검 화면, 프록시 오류)을 주면 영어 원문 오류가 그대로 보이지 않게 우리말 안내로 바꾼다.
+  const data = await res.json().catch(() => null) as { error?: unknown } | null;
+  if (!res.ok || !data) throw new Error(typeof data?.error === 'string' && data.error ? data.error : '선생님 수업방 권한을 확인하지 못했어요. 인터넷 연결을 확인하고 잠시 뒤 다시 해 주세요.');
 }
 export async function endClassroomSession() {
   const current = await supabase.auth.getSession();
