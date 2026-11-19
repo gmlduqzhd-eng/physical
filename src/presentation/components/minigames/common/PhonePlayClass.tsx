@@ -4,15 +4,17 @@ import {sfxPop,sfxWhistle,sfxCountdown,unlockAudio} from '../../../../applicatio
 import {useWakeLock} from '../../../../application/useWakeLock';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
+import {useTheme} from '../../../../application/ThemeContext';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
 import {classCueIntervalMs,classCueMs,classOutcomeResult,classPhaseMs,classRoundView,type ClassOutcome} from '../../../../domain/phoneClassMode';
 import {useReportLessonActivity} from '../../todayLessonActivity';
+import {classBriefChangesRule,classBriefMs,QUICK_BRIEF_MS} from '../../../../domain/phonePlayBriefs';
+import {SPEECH_RATE} from '../../../../application/speechAnnouncer';
 import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
-/** 2·3번 과제 앞 짧은 안내 시간. */
-export const QUICK_BRIEF_MS=2000;
+export {QUICK_BRIEF_MS};
 interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void;
  /** 시작 화면에서 역할 정하기를 이미 안내했으면 true: 규칙 카드에서 '준비됐어요'를 기다리지 않고 저절로 넘어간다. */ rolesReady?:boolean}
 
@@ -48,6 +50,8 @@ function EvolutionLadder({top}:{top:number}){
  */
 export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave,enqueueAction,rolesReady=false}:Props){
  const classroomPaused=useActivityPause();
+ // 반 전체 진행 화면에는 머리글 도구 막대가 없어, 음성 단추 옆에 밝기 바꾸기 단추를 작게 둔다.
+ const {isDark,toggleTheme}=useTheme();
  useWakeLock();
  // 숫자 모둠 만들기는 쉬운 방법이면 과제 제목도 쉬운 신호(둘 모둠)에 맞춘다.
  const p=adaptClassicPlay(play,level==='쉬운 방법',Infinity);
@@ -71,9 +75,9 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const cueMs=classCueIntervalMs(baseCueMs,taskSeconds,view.cues.length,view.memory),cueIndex=Math.floor(elapsed/cueMs);
  const waiting=phase==='rules'&&waitForTeacher;
  // 첫 과제만 안내를 길게 보여 주고, 2·3번 과제는 짧은 신호(2초) 뒤 바로 시작한다('바로 시작'을 과제마다 누르지 않게).
- // 순서를 외우거나 좋은 방법을 읽어야 하는 과제는 안내 시간을 그대로 둔다.
- const quickBrief=phase==='brief'&&round>0&&!view.memory&&!view.plan;
- const duration=quickBrief?QUICK_BRIEF_MS:classPhaseMs(phase,taskSeconds,view.memory||!!view.plan),cue=view.cues[cueIndex%view.cues.length];
+ // 순서를 외우거나 좋은 방법을 읽어야 하는 과제, 역할·규칙이 바뀌는 과제(CLASS_RULE_CHANGE_ROUNDS)는 안내 시간을 그대로 둔다.
+ const quickBrief=phase==='brief'&&round>0&&!view.memory&&!view.plan&&!classBriefChangesRule(play.id,round);
+ const cue=view.cues[cueIndex%view.cues.length];
  const step=view.steps.length?view.steps[cueIndex%view.steps.length]:-1,ruleLine=view.rules[cueIndex%Math.max(1,view.rules.length)]??p.rule3[1];
  const together=p.players!=='혼자';
  const stopped=paused||classroomPaused;
@@ -83,6 +87,11 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const voice=useTvVoice({paused:stopped});
  const sayRaw=voice.say,stopVoice=voice.stop;
  stopVoiceRef.current=stopVoice;
+ const briefLine=`${round+1}번 과제. ${p.rounds[round]}${view.memory?`. 순서는 ${view.brief}`:''}${view.plan?`. 좋은 방법은 ${view.plan}`:''}`;
+ // 음성을 켰으면 안내 문장을 다 읽을 때까지 과제를 시작하지 않는다(첫 신호가 읽던 안내를 끊지 않게).
+ const voiceOn=voice.prefs.on&&(voice.status==='ok'||voice.status==='unknown');
+ const baseMs=quickBrief?QUICK_BRIEF_MS:classPhaseMs(phase,taskSeconds,view.memory||!!view.plan);
+ const duration=phase==='brief'?classBriefMs(baseMs,briefLine,voiceOn?{on:true,rate:SPEECH_RATE[voice.prefs.rate]}:null):baseMs;
  const say=useCallback((text:string,long=false)=>{sayRaw(text,long?{long:true}:undefined);},[sayRaw]);
 
  useEffect(()=>{const hide=()=>{if(document.hidden){setPaused(true);stopVoice();}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[stopVoice]);
@@ -102,7 +111,6 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  },[phase,elapsed,duration,stopped,waiting,round,sound,say]);
  // Sound and voice: the rules once, countdown tick, task announcement, whistle at start, a pop and the spoken cue at every change.
  useEffect(()=>{if(phase==='rules')say(`${p.name}. ${p.rule3.join('. ')}${waitForTeacher&&p.setup?`. ${p.setup}`:''}`,true);},[phase,say,p.name,p.rule3,p.setup,waitForTeacher]);
- const briefLine=`${round+1}번 과제. ${p.rounds[round]}${view.memory?`. 순서는 ${view.brief}`:''}${view.plan?`. 좋은 방법은 ${view.plan}`:''}`;
  useEffect(()=>{if(stopped)return;if(phase==='countdown'&&sound)sfxCountdown();if(phase==='brief')say(briefLine,true);if(phase==='active'&&sound)sfxWhistle();},[phase,stopped,sound,say,briefLine]);
  useEffect(()=>{if(phase!=='active'||stopped||document.hidden)return;if(sound&&cueIndex>0)sfxPop();say(cue);},[phase,stopped,cueIndex,cue,sound,say]);
 
@@ -120,7 +128,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
  const shownSequence=phase==='active'?view.sequence:view.reveal;
  return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><TvVoiceToggle voice={voice} className="pc-voice"/>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
    <p className="pc-task">{stopped?'잠깐 멈췄어요':'이렇게 놀아요'}</p>
    <PhoneRuleCard rule3={p.rule3} className="pc-rule-card"/>
