@@ -7,7 +7,7 @@ import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
 import './sig-move-bingo.css';
 
 /**
- * 몸 빙고 화면. 칸 주인 기록은 판(seed·연습/본판)마다 이 파일의 작은 저장소(메모리)에 둔다.
+ * 신체 빙고 화면. 칸 주인 기록은 판(seed·연습/본판)마다 이 파일의 작은 저장소(메모리)에 둔다.
  * 점수는 ‘성공’을 누를 때 엔진의 score 명령으로만 준다(빙고 줄 보너스도 같은 명령에 더해서 준다).
  * 한 판 안에서 화면이 다시 그려져도 판이 이어지고, '한 판 더'·목록으로 나가면 그 판 기록을 지운다(dispose).
  * 새로고침하면 새 판(새 seed)으로 시작한다.
@@ -131,7 +131,7 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
  };
  const willBingo=cell?newLinesIfClaimed(rec.owners,cell.index,team):0;
  return <div className="sig-bingo" data-practice={phase==='tutorial'||undefined}>
-  <div className="sig-bingo-board" data-size={size} role="grid" aria-label={`몸 빙고 판 ${size}×${size}${phase==='tutorial'?' (연습)':` · ${rec.boardNo+1}번째 판`}`}>
+  <div className="sig-bingo-board" data-size={size} role="grid" aria-label={`신체 빙고 판 ${size}×${size}${phase==='tutorial'?' (연습)':` · ${rec.boardNo+1}번째 판`}`}>
    {Array.from({length:size},(_,r)=>r).map(r=><div role="row" key={r} className="sig-bingo-row" style={{gridTemplateColumns:`repeat(${size},minmax(0,1fr))`}}>{board.slice(r*size,r*size+size).map(c=>{
     const owner=rec.owners[c.index];
     return <div role="gridcell" key={c.index}>

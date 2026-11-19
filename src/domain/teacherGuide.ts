@@ -15,7 +15,7 @@ export interface GuideStandards {grade:'3~4학년군'|'5~6학년군';source:'dat
 export interface TeacherGuide {standards:GuideStandards[];lowGradeTheme:string|null;questions:string[];tips:string[]}
 
 const QUESTIONS:Record<GameDef['domain'],string[]>={
- 운동:['어떤 방법으로 하니 몸에 무리가 덜 갔나요?','처음과 마지막에 몸 느낌이 어떻게 달랐나요?'],
+ 운동:['어떤 방법으로 하니 몸에 무리가 덜 갔나요?','처음과 마지막에 신체 느낌이 어떻게 달랐나요?'],
  스포츠:['우리 모둠이 다음에 바꿔 볼 작전은 무엇인가요?','규칙을 지키려고 어떤 약속이 필요했나요?'],
  표현:['친구의 움직임에서 어떤 느낌을 받았나요?','움직임의 크기나 빠르기를 바꾸니 느낌이 어떻게 달라졌나요?'],
 };

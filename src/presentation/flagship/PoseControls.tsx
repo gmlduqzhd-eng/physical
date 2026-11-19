@@ -7,7 +7,7 @@ export function PoseControls({pose,assisted,setAssisted,disabled}:{pose:ReturnTy
  const previous=useRef(pose.status),gaps=useRef(0),[intermittent,setIntermittent]=useState(false);
  useEffect(()=>{if(pose.status==='off'||assisted){gaps.current=0;setIntermittent(false);}else if(previous.current==='tracking'&&pose.status==='lost'){gaps.current++;if(gaps.current>=3)setIntermittent(true);}previous.current=pose.status;},[pose.status,assisted]);
  useEffect(()=>{if(!active)setPreview(false);},[active]);
- const status=assisted?'터치 연습 · 몸 동작 자동 측정 아님':pose.status==='tracking'?'오른팔·손목 인식 중':pose.status==='loading'?'카메라와 로컬 모델 준비 중…':pose.status==='error'?'카메라 오류로 판정을 멈췄어요.':pose.status==='lost'?'팔 위치를 맞춰 주세요. 인식되기 전에는 판정하지 않아요.':'카메라 인식이 꺼져 있어요.';
+ const status=assisted?'터치 연습 · 신체 동작 자동 측정 아님':pose.status==='tracking'?'오른팔·손목 인식 중':pose.status==='loading'?'카메라와 로컬 모델 준비 중…':pose.status==='error'?'카메라 오류로 판정을 멈췄어요.':pose.status==='lost'?'팔 위치를 맞춰 주세요. 인식되기 전에는 판정하지 않아요.':'카메라 인식이 꺼져 있어요.';
  const mirrored=(pose.cameraFacing==='unknown'||!pose.cameraFacing?pose.facingMode:pose.cameraFacing)==='user';
  return <div className="pose-controls flagship-note">
   <p>카메라 영상과 추정은 이 기기 안에서만 처리해요. 영상·얼굴·움직임 좌표를 서버나 외부 AI에 보내거나 파일로 저장하지 않아요.</p>

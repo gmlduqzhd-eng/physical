@@ -20,7 +20,7 @@ interface RouletteSection {
   games: RouletteGame[];
 }
 
-// 몸 부위마다 지금 쓰는 활동만 넣는다. 이름과 그림은 활동 목록에서 가져온다.
+// 신체 부위마다 지금 쓰는 활동만 넣는다. 이름과 그림은 활동 목록에서 가져온다.
 const ORIGINAL_SECTIONS: RouletteSection[] = [
   {
     label: '상체',

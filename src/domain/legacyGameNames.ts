@@ -179,7 +179,7 @@ export const LEGACY_GAME_NAMES:Record<string,string>={
   "exp-phone-42": "시간 늘리기 액션배우",
   "exp-phone-43": "높낮이 엘리베이터",
   "exp-phone-44": "직선·곡선 발자국 화가",
-  "exp-phone-45": "몸동작 암호 3·4·5",
+  "exp-phone-45": "신체 동작 암호 3·4·5",
   "exp-phone-46": "상하체 다른 로봇",
   "exp-phone-47": "감정 바꾸기 행진",
   "exp-phone-48": "동작 수선공",

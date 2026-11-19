@@ -4,7 +4,7 @@ import {defineSignatureGame} from './define.js';
 import type {Pose,SignatureCue,SignatureCueContext} from './types.js';
 
 /**
- * 몸 빙고: 3×3 동작판에서 팀이 차례로 칸을 고르고, 동작(또는 체육 지식 문제)을 해내면 그 칸을 차지한다.
+ * 신체 빙고: 3×3 동작판에서 팀이 차례로 칸을 고르고, 동작(또는 체육 지식 문제)을 해내면 그 칸을 차지한다.
  * 가로·세로·대각선 한 줄을 한 팀이 모두 차지하면 빙고(보너스 +2). 판이 다 차면 새 판으로 이어서 한다.
  * 움직임 빙고(105)와 체육 지식 빙고의 문제를 한 판으로 합쳤다.
  *
@@ -141,7 +141,7 @@ export function moveBingoCue(ctx:SignatureCueContext):SignatureCue{
 
 export const moveBingo=defineSignatureGame({
  id:'sig-move-bingo',ready:true,
- name:'몸 빙고',emoji:'🎯',
+ name:'신체 빙고',emoji:'🎯',
  oneLine:'동작판(2팀 3×3, 3~4팀 4×4)에서 팀이 차례로 칸을 골라 동작을 해내면 그 칸을 차지해요. 세 칸을 이으면 빙고예요!',
  rules:['차례인 팀이 판에서 칸 하나를 골라요(동작 칸 또는 ❓ 체육 지식 칸).','동작을 모두 해내거나 문제를 맞히면 선생님이 ‘성공’을 눌러 그 칸을 차지해요.','가로·세로·대각선으로 세 칸을 이으면 빙고 +2! 시간이 끝나면 점수가 많은 팀이 우승.'],
  concept:'빠르게 방향을 바꾸는 힘',

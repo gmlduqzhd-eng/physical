@@ -16,7 +16,7 @@ export const JOURNEY_ISLANDS:JourneyIsland[]=[
  {id:'together',name:'협동의 섬',icon:'🤝',value:'혼자보다 함께할 때 더 멀리 가요',quest:'모둠이 둥글게 모여 손바닥을 가운데로 모으고 “하나, 둘, 셋, 협동!”을 함께 외쳐요.'},
  {id:'rules',name:'규칙의 섬',icon:'⚖️',value:'규칙을 지키면 모두가 즐거워요',quest:'선생님의 “멈춰!” 신호에 얼음처럼 세 번 멈춰 봐요.'},
  {id:'safety',name:'안전의 섬',icon:'🛟',value:'내 몸과 친구의 몸을 함께 지켜요',quest:'팔을 벌려 내 자리를 넓게 잡고, 주변을 한 바퀴 둘러봐요.'},
- {id:'express',name:'표현의 섬',icon:'🎭',value:'몸으로 생각과 느낌을 나타내요',quest:'오늘 기분을 몸동작 하나로 만들어 짝에게 보여 줘요.'},
+ {id:'express',name:'표현의 섬',icon:'🎭',value:'몸으로 생각과 느낌을 나타내요',quest:'오늘 기분을 신체 동작 하나로 만들어 짝에게 보여 줘요.'},
  {id:'grit',name:'끈기의 섬',icon:'🔥',value:'힘들어도 끝까지 해 봐요',quest:'벽에 등을 대고 투명 의자 자세로 열을 세요.'},
  {id:'friend',name:'우정의 항구',icon:'⚓',value:'함께 땀 흘린 친구에게 고마움을 전해요',quest:'옆 친구에게 “함께해서 고마워”라고 말하고 다 같이 만세를 해요.'},
 ];

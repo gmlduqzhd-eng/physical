@@ -39,7 +39,7 @@ test('memory plays keep the order on screen and point at the current step',()=>{
  assert.deepEqual(reverse.steps,[0,1,2,2,1,0]);
  // 빠진 동작 찾기는 빠진 자리를 ?로 보여 준다.
  assert(classRoundView(play(6),1,'기본 방법',false).sequence.includes('?'));
- // 모둠 몸 암호는 동작의 뜻을 신호 아래에 보여 준다.
+ // 모둠 신체 암호는 동작의 뜻을 신호 아래에 보여 준다.
  assert(classRoundView(play(77),0,'기본 방법',false).rules.some(r=>r.startsWith('뜻:')));
 });
 

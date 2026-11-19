@@ -186,7 +186,7 @@
 /* 이어 하기 */
 .fun-resume{display:grid;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid var(--fun-accent);background:var(--fun-panel)}
 .fun-resume p{margin:0;font-weight:750}
-/* 몸 빙고 힌트 · 기억 릴레이 변형 */
+/* 신체 빙고 힌트 · 기억 릴레이 변형 */
 .sig-bingo-cell[data-hint=win]{box-shadow:0 0 0 4px #fde68a inset}
 .sig-bingo-cell[data-hint=block]{box-shadow:0 0 0 4px #93c5fd inset}
 .sig-bingo-hint{display:block;font-style:normal;font-size:.8em;font-weight:900;margin-top:2px}

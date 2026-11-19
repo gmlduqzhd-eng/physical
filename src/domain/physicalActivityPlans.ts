@@ -72,7 +72,7 @@ const plans: PhysicalActivityPlan[] = [
     safety: '어깨가 아프면 작은 동작으로 줄이고 몸을 억지로 회전하지 않습니다.', secondsPerTurn: 18,
   },
   {
-    idea: 9, title: '활동 전후 몸 상태 살피기',
+    idea: 9, title: '활동 전후 신체 상태 살피기',
     activity: '편안한 강도의 제자리 움직임 뒤 실제 맥박이나 스스로 느낀 운동 강도를 비교해 짝에게 이야기하세요. 역할을 바꿉니다.',
     alternative: '호흡을 고르며 앉은 자세에서 팔을 움직이고 느낌의 변화를 기록하세요.',
     setup: '개인 공간 · 타이머 · 선택 사항: 맥박 기록지',
