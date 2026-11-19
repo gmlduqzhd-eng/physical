@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {EMPTY_PROGRESS,MAX_ENTRIES,addPlay,keepTotal,mergeProgress,parseProgress,totalPlays,unseenPlays,type ClassProgress} from '../src/domain/classProgress';
 import {COOLDOWN_IDS,DEFAULT_TODAY,TODAY_GRADES,TODAY_SPACES,advanceRun,buildTodayPlan,mainPath,otherMains,stageCandidates,stageMinute,stagePlanText,startRun} from '../src/domain/todayLesson';
 import {MOTION_SENSOR_GAMES,countdownDeviceHint} from '../src/domain/countdownHint';
+import {AVAILABLE_GAMES} from '../src/domain/gamesData';
+import {isQuestId} from '../src/domain/movementQuests';
 
 const day=new Date(2026,10,19,9).getTime();
 const read=(p:string)=>readFileSync(p,'utf8');
@@ -51,17 +53,22 @@ test('끝 화면(밝은 바탕)에서 누른 반응이 눈에 보인다',()=>{
  assert.match(css,/\[data-tone=light\] \.class-feedback-votes button\[aria-pressed=true\]\{[^}]*background:#0e7490;color:#fff/);
 });
 
-test('수업 중 결과 화면: 다음 단계로가 가장 크고, 홈으로 대신 오늘 수업으로',()=>{
+test('수업 중 결과 화면: 다음 단계로가 카드 맨 위에 크게, 홈으로 대신 오늘 수업으로',()=>{
  const page=read('src/presentation/GamePlayPage.tsx');
- assert.match(page,/lessonStage\?<div[\s\S]{0,900}다음 단계로 ▶/);
+ // '다음 단계로 ▶'는 결과 카드 맨 위(마쳤어요 줄 바로 아래)에 있어 TV에서 스크롤하지 않아도 보인다.
+ assert.match(page,/활동을 마쳤어요!'\}<\/p>\s*\{\/\*[^*]*\*\/\}\s*\{lessonStage&&<div className="lesson-next-top[\s\S]{0,500}다음 단계로 ▶/);
+ assert.equal((page.match(/다음 단계로 ▶/g)||[]).length,1,'다음 단계 버튼은 하나만');
  assert.match(page,/navigate\('\/today'\)[^>]*>오늘 수업으로/);
  assert.match(page,/currentStage\(todayRun\)\?\.gameId===gameType/);
 });
 
 test('준비 카운트다운 안내: 센서 놀이는 큰 화면에서도 손에 쥐고, 나머지는 화면 크기를 따른다',()=>{
- assert.ok(MOTION_SENSOR_GAMES.includes('tilt_balance'));
- assert.match(countdownDeviceHint('tilt_balance',true),/손에 꼭 쥐어요/);
- assert.match(countdownDeviceHint('shake',false),/손에 꼭 쥐어요/);
+ // 목록에는 지금 열 수 있고 카운트다운을 쓰는 활동만 남는다(합쳐진 예전 놀이나 움직임 미션 id는 넣지 않는다).
+ const available=new Set(AVAILABLE_GAMES.map(g=>g.type));
+ for(const id of MOTION_SENSOR_GAMES){assert.ok(available.has(id),`${id}: 지금 열 수 있는 활동`);assert.ok(!isQuestId(id),`${id}: 카운트다운이 뜨는 활동`);}
+ for(const id of MOTION_SENSOR_GAMES)assert.match(countdownDeviceHint(id,true),/손에 꼭 쥐어요/);
+ // 합쳐진 예전 센서 놀이(새 주소로 옮겨 감)는 목록에 없다.
+ assert.ok(!MOTION_SENSOR_GAMES.includes('tilt_balance'));
  assert.match(countdownDeviceHint('ganggangsullae',true),/모두가 볼 수 있게/);
  assert.doesNotMatch(countdownDeviceHint('ganggangsullae',false),/쥐/,'기기를 놓고 하는 표현 놀이에 손에 쥐라고 하지 않는다');
 });

@@ -11,6 +11,8 @@ import {useReportLessonActivity} from '../../todayLessonActivity';
 import {adaptClassicPlay,BINGO_BOARD,BINGO_ROWS_TO_WIN,bingoRows,CLASSIC_CLASS_BRIEF,CLASSIC_LADDER,groupSizeOf,ladderTop} from '../../../../domain/phonePlayClassicsMode';
 
 type Phase='rules'|'countdown'|'brief'|'active'|'record'|'done';
+/** 2·3번 과제 앞 짧은 안내 시간. */
+export const QUICK_BRIEF_MS=2000;
 interface Props {play:Play;taskSeconds:number;seated:boolean;level:string;sound:boolean;pace:number;onLeave:()=>void;enqueueAction:(action:{payload:{amount:number;details:GameResultDetails}})=>void;
  /** 시작 화면에서 역할 정하기를 이미 안내했으면 true: 규칙 카드에서 '준비됐어요'를 기다리지 않고 저절로 넘어간다. */ rolesReady?:boolean}
 
@@ -68,7 +70,10 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 기억 놀이는 순서의 모든 신호가 과제 시간 안에 나와야 하므로, 느린 속도여도 간격을 과제 시간에 맞춘다.
  const cueMs=classCueIntervalMs(baseCueMs,taskSeconds,view.cues.length,view.memory),cueIndex=Math.floor(elapsed/cueMs);
  const waiting=phase==='rules'&&waitForTeacher;
- const duration=classPhaseMs(phase,taskSeconds,view.memory||!!view.plan),cue=view.cues[cueIndex%view.cues.length];
+ // 첫 과제만 안내를 길게 보여 주고, 2·3번 과제는 짧은 신호(2초) 뒤 바로 시작한다('바로 시작'을 과제마다 누르지 않게).
+ // 순서를 외우거나 좋은 방법을 읽어야 하는 과제는 안내 시간을 그대로 둔다.
+ const quickBrief=phase==='brief'&&round>0&&!view.memory&&!view.plan;
+ const duration=quickBrief?QUICK_BRIEF_MS:classPhaseMs(phase,taskSeconds,view.memory||!!view.plan),cue=view.cues[cueIndex%view.cues.length];
  const step=view.steps.length?view.steps[cueIndex%view.steps.length]:-1,ruleLine=view.rules[cueIndex%Math.max(1,view.rules.length)]??p.rule3[1];
  const together=p.players!=='혼자';
  const stopped=paused||classroomPaused;
@@ -111,7 +116,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 판·사다리·큰 숫자처럼 그림이 함께 나오는 놀이는 큰 글씨를 줄여 한 화면에 다 들어가게 한다.
  const board=['phone-play-101','phone-play-104','phone-play-105'].includes(p.id);
  // 남은 시간은 머리글의 같은 자리에 늘 보인다(신호 칸이 길어져도 가려지지 않게).
- const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'곧 시작해요':phase==='brief'?`${left}초 뒤 시작`:phase==='active'?`${left}초 남음`:'';
+ const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'곧 시작해요':phase==='brief'?(quickBrief?'곧 다음 과제':`${left}초 뒤 시작`):phase==='active'?`${left}초 남음`:'';
  // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
  const shownSequence=phase==='active'?view.sequence:view.reveal;
  return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
@@ -135,7 +140,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
   </div>}
   {['rules','countdown','brief','active'].includes(phase)&&<div className="pc-controls">
    {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className={paused?'pp-primary':'pc-pause'} aria-pressed={paused} onClick={()=>{if(paused)unlockAudio();setPaused(!paused);voice.stop();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
-   {phase!=='countdown'&&!waiting&&<button className="pp-primary" onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
+   {phase!=='countdown'&&!waiting&&!quickBrief&&<button className="pp-primary" onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
   </div>}
   {phase==='record'&&<div className="pp-panel pc-record"><h2>우리 반은 어떻게 참여했나요?</h2><p>한 번만 고르면 기록돼요. 기기가 동작이나 체력을 판정하지 않아요.</p>
    <button className="pp-primary" onClick={()=>record('all')}>모두 함께 했어요</button>

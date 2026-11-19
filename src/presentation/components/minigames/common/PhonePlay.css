@@ -59,3 +59,6 @@
 /* 선생님 버튼: '잠깐 멈추기'는 보조, 진행(바로 시작·다음)이 주 버튼 */
 .pc-controls .pc-pause{background:var(--forest-paper,#fffef7);color:var(--forest-ink,#24342c);border:2px solid var(--forest-line,#9bb2a6)}
 .pc-controls .pc-pause[aria-pressed=true]{background:var(--forest-accent,#4f6f4b);color:var(--forest-on,#fff)}
+
+/* TV(1024px 이상)에서는 아래 진행 버튼 글씨를 키워 멀리서도 읽히게 한다. */
+@media (min-width:1024px){.phone-class .pc-controls button,.phone-class .pp-exit{min-height:64px;font-size:clamp(20px,1.9vw,28px)}}
