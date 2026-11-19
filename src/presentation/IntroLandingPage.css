@@ -1,21 +1,9 @@
-@font-face {
-  font-family: LandingPretendard;
-  src: url(/fonts/Pretendard-Regular.woff2) format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
-@font-face {
-  font-family: LandingPretendard;
-  src: url(/fonts/Pretendard-Bold.woff2) format("woff2");
-  font-weight: 700 900;
-  font-display: swap;
-}
 .intro-landing * {
   box-sizing: border-box;
 }
 .intro-landing {
   margin: 0;
-  font-family: LandingPretendard, sans-serif;
+  font-family: ForestSans, sans-serif;
   color: var(--forest-ink, #1c3037);
   background: var(--forest-paper, #fafbf9);
   word-break: keep-all;

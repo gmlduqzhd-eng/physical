@@ -1,6 +1,4 @@
-@font-face{font-family:ActivityPretendard;src:url('/fonts/Pretendard-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
-@font-face{font-family:ActivityPretendard;src:url('/fonts/Pretendard-Bold.woff2') format('woff2');font-weight:700 900;font-display:swap}
-.flow.activity-tools-scope{padding:0;background:var(--forest-bg, #fbf8f2);color:var(--forest-ink, #354239);font-family:ActivityPretendard,sans-serif;-webkit-font-smoothing:antialiased}
+.flow.activity-tools-scope{padding:0;background:var(--forest-bg, #fbf8f2);color:var(--forest-ink, #354239);font-family:ForestSans,sans-serif;-webkit-font-smoothing:antialiased}
 .activity-tools-scope .flow-wrap{max-width:1240px;padding:0 38px 28px}
 .activity-tools-scope .flow-wrap>header{padding:25px 0;border-color:var(--forest-line, #e0dfd3);margin-bottom:32px;gap:20px}
 .activity-brand{display:flex;align-items:center;gap:11px;font-size:21px;font-weight:700;letter-spacing:-.6px}

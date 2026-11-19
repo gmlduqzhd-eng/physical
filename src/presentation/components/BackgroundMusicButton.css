@@ -7,7 +7,7 @@
   border:1px solid var(--forest-line, #dbe6de); border-radius:17px;
   background:var(--forest-paper, #fff); color:var(--forest-ink, #1c3037);
   box-shadow:0 6px 22px #1c4d3d09;
-  font-family:LandingPretendard,system-ui,sans-serif;
+  font-family:ForestSans,system-ui,sans-serif;
 }
 .background-music-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .background-music-title { display:flex; align-items:center; gap:10px; }

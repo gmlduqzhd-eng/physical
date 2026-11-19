@@ -3,14 +3,6 @@
 /* ThemeContext가 <html>에 .dark 클래스를 토글하므로 dark: 변형을 OS 설정이 아닌 앱 테마에 연결 */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@font-face {
-  font-family: 'Maplestory';
-  src: url('/fonts/MaplestoryB.ttf') format('truetype');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-
 @theme {
   --font-sans: 'ForestSans', sans-serif;
 }

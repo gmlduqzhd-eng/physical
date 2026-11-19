@@ -1,15 +1,9 @@
-@font-face {
-  font-family: AccessQrSans;
-  src: url("/fonts/Pretendard-Regular.woff2") format("woff2");
-  font-weight: 400;
-  font-display: swap;
-}
 #access-qr-dialog {
   border: 0;
   color: var(--forest-ink, #1c3037);
   color-scheme: light;
   text-align: center;
-  font-family: AccessQrSans, sans-serif;
+  font-family: ForestSans, sans-serif;
 }
 #access-qr-dialog:not([open]) {
   display: none;

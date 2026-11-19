@@ -7,11 +7,12 @@ const MANIFEST_URL = '/__sw-precache.json';
 
 const assetDependencies = (source, parentUrl) => {
   const references = [
-    ...[...source.matchAll(/["']((?:\.{1,2}\/|\/?assets\/|\/fonts\/)[^"'<>]+?\.(?:js|css|woff2?|ttf|otf))["']/g)].map(match => match[1]),
+    // Pictures named in the scripts (the home picture, for one) are kept too, so the first screen is whole offline.
+    ...[...source.matchAll(/["'`]((?:\.{1,2}\/|\/?assets\/|\/fonts\/|\/images\/)[^"'`<>]+?\.(?:js|css|woff2?|ttf|otf|webp|png|svg))["'`]/g)].map(match => match[1]),
     ...[...source.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map(match => match[1].trim()),
   ];
   return references.map(reference => new URL(reference.startsWith('assets/') ? `/${reference}` : reference, parentUrl))
-    .filter(url => url.origin === self.location.origin && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/fonts/')));
+    .filter(url => url.origin === self.location.origin && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/fonts/') || url.pathname.startsWith('/images/')));
 };
 
 self.addEventListener('install', (event) => {
