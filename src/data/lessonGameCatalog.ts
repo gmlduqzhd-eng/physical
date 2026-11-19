@@ -1319,7 +1319,7 @@ const BASE_LESSON_GAME_CATALOG: LessonGameMeta[] = [
   },
   {
     id: 'partner-robot-lab', title: '파트너 로봇 연구소', emoji: '🤖', route: '/play/partner-robot-lab',
-    description: '몸으로 하는 코딩: 순차·반복·선택 블록으로 짠 프로그램을 짝이 로봇이 되어 몸으로 실행',
+    description: '몸으로 하는 코딩: 차례대로·되풀이·골라서 블록으로 짠 프로그램을 짝이 로봇이 되어 몸으로 실행',
     domain: '표현', subCategory: '신체 부위별 창의 표현 (짝)',
     achievementCode: '[4체03-02]',
     grades: ['3~4학년군', '5~6학년군'],

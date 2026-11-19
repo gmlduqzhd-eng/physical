@@ -979,7 +979,7 @@ const BASE_GAMES: GameDef[] = [
     type: 'partner-robot-lab',
     name: '파트너 로봇 연구소',
     emoji: '🤖',
-    desc: '몸으로 하는 코딩: 순차·반복·선택 블록으로 프로그램을 짜면 짝이 로봇이 되어 몸으로 실행해요. 미션마다 역할을 바꿔요.',
+    desc: '몸으로 하는 코딩: 차례대로·되풀이·골라서 블록으로 프로그램을 짜면 짝이 로봇이 되어 몸으로 실행해요. 미션마다 역할을 바꿔요.',
     color: 'from-fuchsia-500 to-purple-600',
     border: 'border-fuchsia-400/40',
     glow: 'hover:shadow-fuchsia-500/30',
