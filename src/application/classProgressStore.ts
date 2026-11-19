@@ -1,5 +1,5 @@
 import {useEffect,useState} from 'react';
-import {EMPTY_PROGRESS,addPlay,mergeProgress,parseProgress,reasonsOf,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
+import {EMPTY_PROGRESS,addPlay,keepTotal,mergeProgress,parseProgress,reasonsOf,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
 
 /**
  * 이 기기에만 남는 우리 반 반응·원정 지도 기록. 저장이 막힌 브라우저에서도 화면은 그대로 쓸 수 있다.
@@ -30,7 +30,7 @@ export function withoutRemoved(stored:ClassProgress,cleared:number,removed:Reado
 export function readProgress():ClassProgress{
  try{
   const raw=window.localStorage.getItem(CLASS_PROGRESS_KEY);
-  if(raw){const stored=parseProgress(JSON.parse(raw));memory=saveFailed?mergeProgress(memory,withoutRemoved(stored,clearedAt,removedReasons)):stored;}
+  if(raw){const stored=parseProgress(JSON.parse(raw));memory=saveFailed?mergeProgress(memory,withoutRemoved(stored,clearedAt,removedReasons)):keepTotal(stored,memory);}
  }catch{/* 저장소를 못 쓰면 메모리 값 */}
  return memory;
 }

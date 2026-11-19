@@ -27,7 +27,8 @@ export function ClassFeedbackSlot({gameId,playId,tone='dark',showMap=true}:{game
   if(remembered.current.play!==play)remembered.current={play,up:[],down:[]};
   recordVote(gameId,v,Date.now(),play);
   const saved=reasonsOf(progress,play);
-  if(vote&&saved)remembered.current[vote]=saved.reasons;
+  // 이유를 모두 빼서 기록이 지워진 뒤(saved 없음)에도 '고른 이유 없음'을 기억해, 뺀 이유가 되살아나지 않게 한다.
+  if(vote)remembered.current[vote]=saved?.reasons??[];
   // 👍↔👎를 바꾸면 다른 쪽 이유는 빼고, 이 반응에서 앞서 골랐던 이유를 되살린다(메모는 남긴다).
   const next=[...new Set([...(saved?.reasons??[]).filter(r=>VOTE_OF.get(r)===v),...remembered.current[v]])];
   if(saved||next.length)recordReasons(gameId,play,next,saved?.note);

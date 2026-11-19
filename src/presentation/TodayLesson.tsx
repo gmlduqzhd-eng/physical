@@ -8,7 +8,7 @@ import {useClassProgress} from '../application/classProgressStore';
 import {lessonPlayId} from '../domain/classProgress';
 import {
  DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,recordsSince,resumeRun,runSeconds,stageOutcomes,startRun,stagePath,
+ advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,startRun,stagePath,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
@@ -66,7 +66,7 @@ function StageList({plan,run,outcomes}:{plan:TodayPlan;run?:TodayRun;outcomes?:S
    return <li key={i} data-state={state}>
     <span className="today-stage-no" aria-hidden="true">{state==='passed'?'→':state==='done'?'✓':state==='skipped'?'–':i+1}</span>
     <span className="today-stage-text"><b>{STAGE_LABEL[s.kind]}</b> · {s.emoji} {s.title}{outcome&&<small className="today-stage-outcome"> · {OUTCOME_TEXT[outcome]}</small>}</span>
-    <span className="today-stage-min">{result?formatSeconds(result.seconds):s.kind==='main'?`여러 판 · 약 ${s.minutes}분`:`약 ${s.minutes}분`}</span>
+    <span className="today-stage-min">{result?<>{formatSeconds(result.seconds)}<small> · 계획 {s.minutes}분</small></>:stagePlanText(s)}</span>
     {!outcome&&<span className="sr-only">{state==='now'?'지금 단계':state==='done'?'마침':state==='skipped'?'건너뜀':'다음 단계'}</span>}
    </li>;
   })}
@@ -110,26 +110,50 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
  </section>;
 }
 
+/** 일정 간격으로 지금 시각을 다시 읽는다('지금 N분째' 표시용). */
+function useNow(everyMs:number){
+ const [now,setNow]=useState(()=>Date.now());
+ useEffect(()=>{const t=window.setInterval(()=>setNow(Date.now()),everyMs);return ()=>window.clearInterval(t);},[everyMs]);
+ return now;
+}
+
 function TodayStageView({run}:{run:TodayRun}){
  const navigate=useNavigate();
+ const progress=useClassProgress();
+ const now=useNow(15000);
  const stage=currentStage(run);
  if(!stage)return null; // parseRun이 걸러 주지만, 혹시 모를 깨진 값에서도 화면이 멈추지 않게
- const total=run.plan.stages.length,path=stagePath(stage,run.plan.settings.teams);
+ const total=run.plan.stages.length,teams=run.plan.settings.teams,path=stagePath(stage,teams);
  const step=(status:'done'|'skipped')=>{
   const next=advanceRun(run,status,Date.now());saveTodayRun(next);
   const ns=currentStage(next);const p=ns&&stagePath(ns,next.plan.settings.teams);
   if(p)navigate(p);else window.scrollTo(0,0);
  };
  const quit=()=>saveTodayRun(null);
+ // 이 단계에서 기록한 판 수(본게임은 다른 대표 게임으로 한 판도 함께 센다)와 지난 시간으로, 한 판 더 할지 넘어갈지를 알려 준다.
+ const others=otherMains(run);
+ const stageIds=new Set(stage.kind==='main'?[stage.gameId,...mainCandidates(run.plan.settings.grade,run.plan.settings.space).map(g=>g.id)]:[stage.gameId]);
+ const rounds=progress.plays.filter(x=>stageIds.has(x.id)&&x.at>=run.stageStartedAt).length;
+ const minute=stageMinute(run,now),over=minute>stage.minutes;
+ const unit=stage.kind==='main'?'판':'번';
+ const again=stage.kind==='main'?'한 판 더':'한 번 더';
+ const nextFirst=rounds>0&&(over||stage.kind!=='main');
  return <section className="today-card" aria-labelledby="today-stage-title">
   <p className="eyebrow">오늘 수업 · {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}</p>
   <h1 id="today-stage-title"><span aria-hidden="true">{stage.emoji}</span> {stage.kind==='reflect'?'돌아보기':stage.title}</h1>
   {stage.kind==='reflect'
    ?<><p className="today-question">{stage.note}</p><p className="today-lead">손을 들어 두세 명이 말해 봐요. 약 {stage.minutes}분이면 충분해요.</p>
      <button type="button" className="primary today-primary today-big" onClick={()=>step('done')}>✅ 오늘 수업 마치기</button></>
-   :<><p className="today-lead">{stage.note} {stage.kind==='main'?`한 판은 5~6분쯤이에요. 약 ${stage.minutes}분 동안 여러 판을 해요.`:`약 ${stage.minutes}분.`}</p>
-     {path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>▶ {stage.title} 열기</button>}
-     <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button><button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button></div></>}
+   :<><p className="today-clock" role="status">⏱ 지금 {minute}분째 · 계획 {stage.minutes}분{rounds>0?` · ${rounds}${unit} 했어요`:''}</p>
+     <p className="today-lead">{rounds===0?<>{stage.note} {stage.kind==='main'?`한 판은 4~6분쯤이에요. 약 ${stage.minutes}분 동안 여러 판을 해요.`:`한 번은 2~3분쯤이에요. 약 ${stage.minutes}분 동안 2~3번 되풀이해요.`}</>
+      :over?'계획한 시간을 다 썼어요. 다음 단계로 넘어가요.'
+      :stage.kind==='main'?`시간이 남았어요. ${again} 하거나 다른 대표 게임으로 바꿔 봐요.`:`시간이 남으면 ${again} 해요. 충분하면 다음 단계로 가요.`}</p>
+     {nextFirst
+      ?<><button type="button" className="primary today-primary today-big" onClick={()=>step('done')}>다음 단계 ▶</button>
+        <div className="today-row">{path&&<button type="button" className="today-secondary" onClick={()=>navigate(path)}>🔁 {again} · {stage.title}</button>}</div></>
+      :<>{path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>{rounds>0?`🔁 ${again} · ${stage.title}`:`▶ ${stage.title} 열기`}</button>}
+        <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button>{rounds===0&&<button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button>}</div></>}
+     {stage.kind==='main'&&rounds>0&&!over&&others.length>0&&<div className="today-others"><p>다른 대표 게임으로 한 판 더</p><div className="today-choice">{others.map(g=><button key={g.id} type="button" onClick={()=>navigate(mainPath(g.id,teams))}>{g.emoji} {g.name}</button>)}</div></div>}</>}
   <StageList plan={run.plan} run={run}/>
   <p className="today-more"><button type="button" className="today-link" onClick={quit}>오늘 수업 그만하고 새로 짜기</button></p>
  </section>;
@@ -153,7 +177,7 @@ function TodaySummary({run}:{run:TodayRun}){
  const count=(o:StageOutcome)=>outcomes.filter(x=>x===o).length;
  const parts=[`${count('played')}단계를 했어요`,count('passed')?`${count('passed')}단계는 기록 없이 넘겼어요`:'',count('skipped')?`${count('skipped')}단계는 건너뛰었어요`:''].filter(Boolean);
  return <section className="today-card" aria-labelledby="today-summary-title">
-  <p className="eyebrow">오늘 수업 끝 · {formatSeconds(totalSec)}</p>
+  <p className="eyebrow">오늘 수업 끝 · {formatSeconds(totalSec)} · 계획 {run.plan.settings.minutes}분</p>
   <h1 id="today-summary-title">🎉 오늘 수업을 마쳤어요</h1>
   <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
   <StageList plan={run.plan} run={run} outcomes={outcomes}/>

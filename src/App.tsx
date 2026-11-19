@@ -52,10 +52,10 @@ const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').th
 const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
 const TodayLessonBar = lazy(() => loadTodayLessonBar().then(m=>({default:m.TodayLessonBar})));
-/** 활동 화면(/play/…)과 활동 목록(/hub)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
+/** 활동 화면(/play/…)과 활동 목록(/hub, /games)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
 function TodayBarGate(){
   const {pathname}=useLocation();
-  const shown=pathname.startsWith('/play/')||pathname==='/hub'||pathname.startsWith('/hub/');
+  const shown=pathname.startsWith('/play/')||pathname==='/hub'||pathname.startsWith('/hub/')||pathname==='/games';
   useEffect(()=>{if(shown||pathname.startsWith('/today'))void loadTodayLessonBar().catch(()=>{});},[shown,pathname]);
   return shown?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;
 }

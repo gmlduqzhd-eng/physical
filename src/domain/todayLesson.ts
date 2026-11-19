@@ -33,7 +33,7 @@ export const STAGE_MINUTES:Record<TodayMinutes,Record<TodayStageKind,number>>={
 /** 준비운동 후보: 반 전체가 TV 한 대로 바로 할 수 있는 짧은 신체 놀이. */
 export const WARMUP_IDS=['phone-play-010','phone-play-031','phone-play-066','phone-play-104','phone-play-102','weather_dance','seed_sprout'] as const;
 /** 정리운동 후보: 숨을 고르고 몸을 천천히 푸는 활동. */
-export const COOLDOWN_IDS=['phone-play-093','phone-play-094','phone-play-097','phone-play-099','breath-pacer-478','stretch'] as const;
+export const COOLDOWN_IDS=['phone-play-093','phone-play-094','phone-play-097','phone-play-099','stretch'] as const;
 
 const SIG_SPACE:Record<FitSpace,readonly string[]>={[FIT_SPACES[0]]:['교실'],[FIT_SPACES[1]]:['체육관','다목적실'],[FIT_SPACES[2]]:['운동장']};
 
@@ -127,6 +127,23 @@ export function parseRun(raw:unknown):TodayRun|null{
  for(const s of p.stages){if(!s||!kinds.includes(s.kind as TodayStageKind)||typeof s.minutes!=='number'||!Number.isFinite(s.minutes)||s.minutes<=0||typeof s.title!=='string')return null;if(s.gameId!==undefined&&!BY_ID.has(s.gameId)&&!READY_SIGNATURE_GAMES.some(g=>g.id===s.gameId))return null;}
  return r as TodayRun;
 }
+/** 수업 순서 줄에 적는 계획 시간. 준비·정리운동은 한 번이 2~3분이라 되풀이해야 계획 시간이 찬다는 것을 함께 알린다. */
+export function stagePlanText(stage:TodayStage):string{
+ if(stage.kind==='main')return `여러 판 · 약 ${stage.minutes}분`;
+ if(stage.kind==='reflect')return `약 ${stage.minutes}분`;
+ return `2~3번 되풀이 · 약 ${stage.minutes}분`;
+}
+/** 지금 단계를 시작한 지 몇 분째인지(1분째부터 센다). */
+export const stageMinute=(run:TodayRun,now:number)=>Math.max(1,Math.floor(Math.max(0,now-run.stageStartedAt)/60000)+1);
+/** 본게임 단계에서 '다른 대표 게임으로 한 판 더'에 보여 줄 게임(지금 게임 빼고, 학년·공간이 맞는 것). */
+export function otherMains(run:TodayRun,limit=3):SignatureGameDef[]{
+ const stage=currentStage(run);
+ if(stage?.kind!=='main')return [];
+ const {grade,space}=run.plan.settings;
+ return mainCandidates(grade,space).filter(g=>g.id!==stage.gameId).slice(0,limit);
+}
+/** 수업 중에 여는 대표 게임 주소(끝나면 '오늘 수업'으로 돌아온다). */
+export const mainPath=(gameId:string,teams:number)=>`/play/${gameId}?${new URLSearchParams({returnTo:'/today',teams:String(teams)}).toString()}`;
 export const formatSeconds=(sec:number)=>sec<60?`${sec}초`:`${Math.floor(sec/60)}분${sec%60?` ${sec%60}초`:''}`;
 
 /** 두 시각이 같은 날(이 기기의 지역 날짜)인지. */

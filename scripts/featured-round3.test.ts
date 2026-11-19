@@ -49,7 +49,7 @@ test('merging records from another tab keeps both sides (used after a failed sav
  assert.equal(merged.plays.length,2);
  assert.equal(merged.votes.length,1);assert.equal(merged.votes[0].vote,'down','the later vote for the same play wins');
  const store=readFileSync('src/application/classProgressStore.ts','utf8');
- assert.match(store,/saveFailed\?mergeProgress\(memory,withoutRemoved\(stored,clearedAt,removedReasons\)\):stored/);
+ assert.match(store,/saveFailed\?mergeProgress\(memory,withoutRemoved\(stored,clearedAt,removedReasons\)\):keepTotal\(stored,memory\)/);
  assert.doesNotMatch(store,/if\(saveFailed\)return memory;/);
  assert.doesNotMatch(store,/&&!saveFailed\)on\(\)/);
 });
