@@ -2,6 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {sfxPop,sfxWhistle,sfxCountdown,unlockAudio} from '../../../../application/soundEffects';
 import {useWakeLock} from '../../../../application/useWakeLock';
+import type {SpeechTone} from '../../../../application/speechText';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
 import {useTheme} from '../../../../application/ThemeContext';
@@ -92,7 +93,8 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const voiceOn=voice.prefs.on&&(voice.status==='ok'||voice.status==='unknown');
  const baseMs=quickBrief?QUICK_BRIEF_MS:classPhaseMs(phase,taskSeconds,view.memory||!!view.plan);
  const duration=phase==='brief'?classBriefMs(baseMs,briefLine,voiceOn?{on:true,rate:SPEECH_RATE[voice.prefs.rate]}:null):baseMs;
- const say=useCallback((text:string,long=false)=>{sayRaw(text,long?{long:true}:undefined);},[sayRaw]);
+ // 규칙·과제 안내(긴 문장)는 차분하게, 신호는 보통으로, 다 끝났을 때는 신나게 읽는다.
+ const say=useCallback((text:string,long=false,tone?:SpeechTone)=>{sayRaw(text,{...(long?{long:true}:{}),tone:tone??(long?'calm':'normal')});},[sayRaw]);
 
  useEffect(()=>{const hide=()=>{if(document.hidden){setPaused(true);stopVoice();}};document.addEventListener('visibilitychange',hide);return()=>document.removeEventListener('visibilitychange',hide);},[stopVoice]);
  useEffect(()=>{

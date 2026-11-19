@@ -50,6 +50,8 @@ export function TvVoiceToggle({voice,className}:{voice:TvVoice;className?:string
      {(['normal','soft'] as const).map(v=><label key={v}><input type="radio" name="tv-voice-volume" checked={prefs.volume===v} onChange={()=>voice.setPrefs({...prefs,volume:v})}/>{v==='normal'?'보통':'작게'}</label>)}
     </fieldset>
     <button type="button" className="tv-voice-test" onClick={()=>voice.test()}>🔈 목소리 확인</button>
+    <p className="tv-voice-name">목소리: {voice.voiceName??'이 기기의 기본 목소리'}</p>
+    <a className="tv-voice-link" href="/sound-check" target="_blank" rel="noopener noreferrer">소리 미리듣기(새 창) ↗</a>
     <p className="tv-voice-note">신호·깜짝 이벤트·마지막 10초·결과를 읽어 줘요. 일시정지하면 멈춰요. 닫으려면 Esc나 바깥을 눌러요.</p>
    </>}
   </div>}

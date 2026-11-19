@@ -12,6 +12,7 @@ const TITLES:readonly (readonly [RegExp,string])[]=[
  [/^\/sports/,'종목 교실'],
  [/^\/class-progress/,'우리 반 반응'],
  [/^\/guide/,'1분 안내'],
+ [/^\/sound-check/,'소리 미리듣기'],
  [/^\/manual/,'이용 안내'],
  [/^\/print\/signature-cards/,'대표 게임 규칙 카드 인쇄'],
  [/^\/print/,'인쇄 자료'],

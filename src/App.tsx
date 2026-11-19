@@ -53,6 +53,7 @@ const AngleLab = lazy(() => import('./presentation/AngleLab').then(m=>({default:
 const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:m.MoreApps})));
 const TodayLesson = lazy(() => import('./presentation/TodayLesson').then(m=>({default:m.TodayLesson})));
 const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').then(m=>({default:m.TeacherGuidePage})));
+const SoundCheckPage = lazy(() => import('./presentation/SoundCheckPage').then(m=>({default:m.SoundCheckPage})));
 const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
 const TodayLessonBar = lazy(() => loadTodayLessonBar().then(m=>({default:m.TodayLessonBar})));
@@ -111,6 +112,7 @@ function App() {
         <Route path="/print/signature-cards" element={<SignatureCardsPrint/>} />
         <Route path="/today" element={<TodayLesson/>} />
         <Route path="/guide" element={<TeacherGuidePage/>} />
+        <Route path="/sound-check" element={<SoundCheckPage/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />

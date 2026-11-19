@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useSyncExternalStore} from 'react';
 import {useActivityPause} from './ActivityPauseContext';
 import {readStorage,writeStorage} from './browserStorage';
+import {duckForSpeech,sfxEarcon} from './soundEffects';
 import {createAnnouncer,parseSpeechPrefs,SPEECH_PREFS_KEY,VOICE_WAIT_MS,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
 
 /**
@@ -20,7 +21,8 @@ function readPrefs():SpeechPrefs{
 export function tvAnnouncer():Announcer{
  if(!announcer){
   const synth=browserSynth();
-  announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs(),onHeard:notify});
+  // 말하는 동안 배경음악을 줄이고(duckForSpeech), 한동안 조용했다가 말할 때는 짧은 알림음을 먼저 낸다.
+  announcer=createAnnouncer({synth,utterance:synth?text=>new window.SpeechSynthesisUtterance(text):null,prefs:readPrefs(),onHeard:notify,onSpeaking:duckForSpeech,earcon:sfxEarcon});
   // 목소리 목록은 늦게 온다: 오면 지원 상태 표시를 다시 그린다.
   try{synth?.addEventListener?.('voiceschanged',notify);}catch{/* 무시 */}
   // 끝내 목록이 오지 않으면(목소리가 없는 기기) '안 돼요' 표시로 바꾼다.
@@ -57,6 +59,7 @@ export interface TvVoice {
  say:(text:string,opts?:SayOptions)=>boolean;
  setPrefs:(next:SpeechPrefs)=>void;
  /** '목소리 확인' 단추. */ test:()=>boolean;
+ /** 고른 목소리 이름(없으면 null: 브라우저 기본 목소리). */ voiceName:string|null;
  stop:()=>void;
 }
 
@@ -64,6 +67,7 @@ export interface TvVoice {
 export function useTvVoice({paused=false}:{paused?:boolean}={}):TvVoice{
  const prefs=useSyncExternalStore(subscribe,readPrefs,readPrefs);
  const status=useSyncExternalStore(subscribe,()=>tvAnnouncer().status(),()=>'unknown' as SpeechStatus);
+ const voiceName=useSyncExternalStore(subscribe,()=>tvAnnouncer().voiceName(),()=>null);
  const classroomPaused=useActivityPause();
  const stopped=paused||classroomPaused;
  useEffect(()=>{bindUnlock();},[]);
@@ -73,5 +77,5 @@ export function useTvVoice({paused=false}:{paused?:boolean}={}):TvVoice{
  const say=useCallback((text:string,opts?:SayOptions)=>tvAnnouncer().say(text,opts),[]);
  const test=useCallback(()=>{tvAnnouncer().unlock();return tvAnnouncer().say('목소리 확인. 신호를 이렇게 읽어 줘요.',{priority:true,force:true});},[]);
  const stop=useCallback(()=>tvAnnouncer().cancel(),[]);
- return {prefs,status,say,setPrefs,test,stop};
+ return {prefs,status,say,setPrefs,test,stop,voiceName};
 }

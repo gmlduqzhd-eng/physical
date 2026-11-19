@@ -25,3 +25,6 @@
 @media (max-width:640px){.tv-voice[data-open]{flex-wrap:wrap;flex-basis:100%}.tv-voice-panel{position:static;flex-basis:100%;max-width:none;box-sizing:border-box}}
 .tv-voice-more{display:inline-flex;align-items:center;justify-content:center}
 .tv-voice-gear{display:block;width:20px;height:20px}
+.tv-voice-name{margin:0;color:#e2e8f0;font-size:13px;font-weight:700}
+.tv-voice-link{color:#93c5fd;font-size:13px;font-weight:700;text-decoration:underline;align-self:flex-start}
+.tv-voice-link:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
