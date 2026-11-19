@@ -1,7 +1,7 @@
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {useNavigate,useSearchParams} from 'react-router-dom';
 import {joinStudentByQr,classroomError,getMyClassroomProfile} from '../data/classroomRepository';
-import {forgetLastEntry,lastEntryFor,rememberLastEntry,resumeLabel} from '../application/lastStudentEntry';
+import {lastEntryFor,rememberLastEntry,resumeLabel,switchToAnotherStudent} from '../application/lastStudentEntry';
 import {rememberStudentIdentity,savedStudentIdentity,validateStudentIdentity} from '../application/studentIdentity';
 import {StudentIdentityFields} from './components/StudentIdentityFields';
 import {FlowShell} from './FlowShell';
@@ -15,7 +15,7 @@ export const QuickJoin=()=>{
  // 누구로 이어 가는지 단추에 적고, 같은 기기를 쓰는 다른 학생은 '다른 학생으로 들어가기'로 빈 칸부터 적는다.
  const [last,setLast]=useState(()=>lastEntryFor(roomId,groupName));
  const lastGroup=last?.group??null;
- const otherStudent=()=>{forgetLastEntry();setLast(null);setStudentNumber('');setNickname('');setError('');};
+ const otherStudent=()=>{setLast(null);setStudentNumber('');setNickname('');setError('');void switchToAnotherStudent();};
  const resume=async()=>{if(loading||!lastGroup)return;setLoading(true);setError('');try{const profile=await getMyClassroomProfile(roomId);if(!profile||profile.group_id!==lastGroup||!profile.student_number||!profile.nickname)throw new Error('이어 갈 기록을 찾지 못했어요. 아래에 번호와 별명을 적고 들어와요.');rememberStudentIdentity({number:profile.student_number,nickname:profile.nickname});navigate('/mobile/'+roomId+'/'+lastGroup);}catch(cause){setError(classroomError(cause,'이어 가지 못했어요. 아래에 번호와 별명을 적고 들어와요.'));}finally{setLoading(false);}};
  useEffect(()=>{
    if(!error)return;
