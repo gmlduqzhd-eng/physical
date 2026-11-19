@@ -375,7 +375,7 @@ export const GameHub = () => {
               className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-purple-600 to-pink-600 text-white border border-purple-400/30 hover:from-purple-500 hover:to-pink-500 transition-all disabled:opacity-60 shrink-0"
             >
               <Shuffle className={`w-3.5 h-3.5 shrink-0 ${isSpinning ? 'animate-spin' : ''}`} />
-              <span>{favoriteGames.length ? '즐겨찾기에서 뽑기' : '대표 게임에서 뽑기'}</span>
+              <span>{favoriteGames.length ? '즐겨찾기에서 뽑기' : '추천 활동에서 뽑기'}</span>
             </button>
             <button
               onClick={() => setShowWarmupRoulette(true)}
