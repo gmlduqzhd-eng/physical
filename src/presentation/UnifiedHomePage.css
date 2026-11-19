@@ -68,3 +68,20 @@ html[data-design=forest] .unified-home .home-main-actions a:not(:first-child){bo
 html[data-design=forest] .unified-home .welcome.home-hero :is(.home-hero-more,.home-side-actions){color:#24382b}
 html[data-design=forest].dark-theme .unified-home .welcome.home-hero :is(.home-hero-more,.home-side-actions){color:#f2f1ec}
 @media(max-width:700px){html[data-design=forest] .unified-home .welcome.home-hero :is(.home-hero-more,.home-side-actions){color:var(--forest-ink)}}
+
+/* 홈 줄이기: 첫 화면에는 큰 버튼 둘 + 지난번에 한 활동·즐겨찾기 + 빠른 추천만. 나머지는 '더 보기'에 접는다. */
+.unified-home .home-featured{margin:16px 0 8px;padding:16px 22px}
+.unified-home .home-featured-list{margin-top:10px}
+.unified-home .home-shelf-sub{margin:14px 0 0;font-size:16px;font-weight:700;color:var(--forest-ink,#3b463d)}
+.unified-home .home-more{margin:16px 0 8px;border:1px solid var(--forest-line,#e4ded2);border-radius:20px;background:var(--forest-paper,#fffefa);padding:0 22px}
+.unified-home .home-more>summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;min-height:60px;padding:14px 0;cursor:pointer;font-weight:700;font-size:18px;color:var(--forest-ink,#3b463d)}
+.unified-home .home-more>summary small{font-weight:400;font-size:14px;color:var(--forest-muted,#5f6155)}
+.unified-home .home-more>summary:focus-visible{outline:3px solid #f59e0b;outline-offset:4px;border-radius:8px}
+.unified-home .home-more[open]{padding-bottom:22px}
+html.dark-theme .unified-home .home-more{background:#1d2a23;border-color:#3b4c41}
+html.dark-theme .unified-home .home-more>summary{color:#eef3ea}
+html.dark-theme .unified-home .home-more>summary small{color:#c3cfc5}
+html.dark-theme .unified-home .home-shelf-sub{color:#eef3ea}
+/* TV에서는 큰 그림 칸을 낮춰, 큰 버튼 둘과 지난번에 한 활동이 첫 화면에 함께 들어오게 한다. */
+@media(min-width:900px){html[data-design=forest] .unified-home .welcome.home-hero{min-height:0;padding-top:26px;padding-bottom:22px}html[data-design=forest] .unified-home .welcome.home-hero h1{margin-bottom:10px}.unified-home .home-featured{margin-top:12px}}
+@media(max-width:650px){.unified-home .home-featured{padding:14px}.unified-home .home-more{padding:0 14px}}

@@ -1,6 +1,6 @@
-/* Shared icon row: six reachable actions, including at 320px viewport width. */
+/* Shared icon row: up to seven reachable actions (the seventh is 화면 보기); on very narrow screens the row wraps instead of overflowing. */
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] {
-  display:grid; grid-template-columns:repeat(6,44px); align-items:center;
+  display:grid; grid-template-columns:repeat(7,44px); align-items:center;
   justify-items:center; justify-content:end; gap:8px; flex:none; margin:0;
   color:var(--forest-ink); font-family:var(--forest-sans); width:auto;
 }
@@ -25,7 +25,7 @@ html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(bu
 html[data-design=forest] body .icon-toolbar .icon-toolbar-action[aria-pressed=true] { background:var(--forest-tint); border-color:var(--forest-accent); }
 @media(max-width:760px) {
   html[data-design=forest] body :is(header,.hub-header-row):has(>.icon-toolbar) { flex-wrap:wrap; gap:16px; }
-  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { width:100%; grid-template-columns:repeat(6,minmax(44px,1fr)); gap:2px; }
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { width:100%; grid-template-columns:repeat(auto-fit,minmax(44px,1fr)); gap:2px; }
 }
 @media(max-width:360px) {
   html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { gap:1px; }
