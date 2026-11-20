@@ -140,7 +140,7 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
       disabled={owner!==null} style={owner!==null?{background:TEAM_COLORS[owner]}:undefined}
       aria-label={`${c.index+1}번 칸 · ${c.kind==='quiz'?'체육 지식 문제':(seated?c.seated:c.label)}${owner!==null?` · ${teamName(owner)} 차지`:hints[c.index]==='win'?' · 차지하면 빙고':hints[c.index]==='block'?' · 상대 팀 빙고를 막는 칸':''}`}
       onClick={()=>setPick(key,{turn:turnId,cell:c.index,reveal:false})}>
-      {owner!==null?<span className="sig-bingo-owner"><i aria-hidden="true">{TEAM_SHAPES[owner]} </i>{teamName(owner)}</span>:<span>{c.kind==='quiz'?'❓ 체육 지식':(seated?c.seated:c.label)}</span>}
+      {owner!==null?<span className="sig-bingo-owner"><i aria-hidden="true">{TEAM_SHAPES[owner]} </i>{teamName(owner)}</span>:<span>{c.kind==='quiz'?<><i className="sig-bingo-quiz-badge" aria-hidden="true">❓</i>체육 지식</>:(seated?c.seated:c.label)}</span>}
       {owner===null&&hints[c.index]&&<em className="sig-bingo-hint" aria-hidden="true">{hints[c.index]==='win'?'🎯 빙고!':'🛡️ 막기'}</em>}
      </button>
     </div>;

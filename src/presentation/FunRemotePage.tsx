@@ -3,6 +3,7 @@ import {useSearchParams} from 'react-router-dom';
 import type {ExternalFunCommand,FunRemoteSnapshot} from '../application/funCommandBus';
 import {ACK_GIVE_UP_MS,ACK_RETRY_MS,createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,readRoomSecret,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
 import {TEAM_COLORS,TEAM_NAMES,type FunPhase,type SurpriseKind} from '../domain/funLoop';
+import {isSendLocked,lockAfterSend,SEND_LOCK_MS,type SendLock} from '../application/remoteSendLock';
 import './FunRemotePage.css';
 
 const PHASE:Record<FunPhase,string>={demo:'시범',tutorial:'연습 판',play:'본게임',climax:'마지막 승부',result:'결과 발표'};
@@ -48,6 +49,9 @@ export function FunRemotePage(){
  const [confirmEnd,setConfirmEnd]=useState(false);
  /** 가끔 쓰는 버튼(깜짝 이벤트·마지막 승부로·끝내기) 펼침. */
  const [more,setMore]=useState(false);
+ /** 단계를 바꾸는 명령(다음·마지막 승부로·끝내기)을 보낸 뒤 잠깐 잠근다(두 번 탭해 한 단계를 건너뛰지 않게). */
+ const [stepLock,setStepLock]=useState<SendLock|null>(null);
+ const confirmRef=useRef<HTMLDivElement>(null);
  const sender=useRef<ReturnType<typeof createRemoteSender>|null>(null);
  const waiting=useRef(new Map<number,{label:string;timers:ReturnType<typeof setTimeout>[]}>());
  useEffect(()=>{
@@ -85,6 +89,22 @@ export function FunRemotePage(){
   waiting.current.set(seq,{label,timers:[checking,giveUp]});
   try{navigator.vibrate?.(30);}catch{/* 진동 없음 */}
  };
+ // 잠금이 시간으로 풀릴 때 화면을 다시 그린다.
+ useEffect(()=>{if(!stepLock)return;const t=setTimeout(()=>setStepLock(null),Math.max(0,stepLock.until-Date.now())+20);return ()=>clearTimeout(t);},[stepLock]);
+ const stepLocked=isSendLocked(stepLock,snap?.phase,Date.now());
+ /** 단계를 바꾸는 명령: 잠겨 있으면 무시하고, 보내면 잠근다. */
+ const sendStep=(cmd:ExternalFunCommand,label:string)=>{
+  if(isSendLocked(stepLock,snap?.phase,Date.now()))return;
+  setStepLock(lockAfterSend(snap?.phase,Date.now(),SEND_LOCK_MS));
+  send(cmd,label);
+ };
+ // 확인 창이 열리면 첫 버튼(취소)에 초점을 두고, Esc로 닫는다.
+ useEffect(()=>{
+  if(!confirmSkip&&!confirmEnd)return;
+  confirmRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'){setConfirmSkip(false);setConfirmEnd(false);}};
+  window.addEventListener('keydown',key);return ()=>window.removeEventListener('keydown',key);
+ },[confirmSkip,confirmEnd]);
  const teams=snap?.teams??2;
  const paused=!!snap?.paused;
  // TV가 '오늘 수업' 확인 창을 띄운 동안: 눌러도 반영되지 않으니 미리 알린다.
@@ -97,6 +117,9 @@ export function FunRemotePage(){
  const inPlay=snap?.phase==='play';
  const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone'||access==='conflict';
  const events=snap?.events??DEFAULT_EVENTS;
+ // '한 방 공격'은 우리 반 보스전에만 있다(다른 게임에서는 감춘다).
+ const hasSpecial=snap?.gameId==='sig-boss-raid'||!!snap?.comboFull;
+ const teamName=(i:number)=>teams===1?'우리 반':TEAM_NAMES[i];
  const teamRows=useMemo(()=>Array.from({length:teams},(_,i)=>i),[teams]);
  if(!valid)return <main className="fun-remote-page">
   <h1>📱 대표 게임 리모컨</h1>
@@ -144,43 +167,43 @@ export function FunRemotePage(){
   {ready&&tvBusy?<p className="frp-paused" role="status">⏳ TV에서 확인 중이에요 · 지금은 버튼을 눌러도 반영되지 않아요</p>
    :paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
   {/* 수업 중에는 화면을 보지 않고 누른다: 가장 자주 쓰는 '다음'과 '일시정지'를 화면 절반 크기로 둔다. */}
-  <div className="frp-big" role="group" aria-label="자주 쓰는 버튼">
-   <button type="button" className="frp-next" disabled={!live||result||paused||inPlay} onClick={()=>send({type:'next'},'다음')}>
-    <span className="frp-big-icon" aria-hidden="true">▶</span><span className="frp-big-label">다음</span>
-    {inPlay&&<small>본게임이 끝나면 저절로 넘어가요</small>}
-   </button>
+  <div className="frp-big" role="group" aria-label="자주 쓰는 버튼" data-play={inPlay||undefined}>
+   {/* 본게임 중에는 '다음'을 누를 일이 없다: 죽은 큰 버튼 대신 지금 상태를 보여 주고 '일시정지'를 크게 위로 둔다. */}
+   {inPlay?<div className="frp-next frp-next-wait" role="status"><span className="frp-big-icon" aria-hidden="true">⏳</span><span className="frp-big-label">본게임 중이에요</span><small>끝나면 저절로 넘어가요</small></div>
+   :<button type="button" className="frp-next" disabled={!live||result||paused||stepLocked} aria-busy={stepLocked||undefined} onClick={()=>sendStep({type:'next'},'다음')}>
+    <span className="frp-big-icon" aria-hidden="true">{stepLocked?'✓':'▶'}</span><span className="frp-big-label">{stepLocked?'보냈어요…':'다음'}</span>
+   </button>}
    <button type="button" className="frp-pause" data-paused={paused||undefined} disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>
     <span className="frp-big-icon" aria-hidden="true">{paused?'▶':'⏸'}</span><span className="frp-big-label">{paused?'다시 시작':'일시정지'}</span>
    </button>
   </div>
   <section className="frp-teams" aria-label="팀 점수" data-count={teams}>
    {teamRows.map(i=><div key={i} className="frp-team" style={{'--team':TEAM_COLORS[i]} as React.CSSProperties}>
-    <b><span className="frp-shape" aria-hidden="true">{TEAM_SHAPES[i]}</span> {teams===1?'우리 반':TEAM_NAMES[i]} <span className="frp-score">{snap?.scores[i]??0}</span></b>
-    <button type="button" className="frp-minus" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${TEAM_NAMES[i]} −1`)}>−1</button>
-    <button type="button" className="frp-plus" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${TEAM_NAMES[i]} +1`)}>+1</button>
+    <b><span className="frp-shape" aria-hidden="true">{TEAM_SHAPES[i]}</span> {teamName(i)} <span className="frp-score">{snap?.scores[i]??0}</span></b>
+    <button type="button" className="frp-minus" disabled={!live||!scoring} aria-label={`${teamName(i)} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${teamName(i)} −1`)}>−1</button>
+    <button type="button" className="frp-plus" disabled={!live||!scoring} aria-label={`${teamName(i)} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${teamName(i)} +1`)}>+1</button>
    </div>)}
   </section>
-  <div className="frp-extra">
-   <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
-   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'한 방 공격')}>💥 한 방 공격</button>
+  <div className="frp-extra" data-count={hasSpecial?2:1}>
+   <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},teams===1?'우리 반 +1':'모든 팀 +1')}>👍 {teams===1?'우리 반 +1':'모든 팀 +1'}</button>
+   {hasSpecial&&<button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'한 방 공격')}>💥 한 방 공격</button>}
   </div>
   {/* 가끔 쓰는 버튼은 접어 둔다. 잘못 누르면 판이 바뀌는 버튼은 한 번 더 묻는다. */}
   <button type="button" className="frp-more-toggle" aria-expanded={more} aria-controls="frp-more" onClick={()=>setMore(m=>!m)}>{more?'▲ 접기':'▼ 더 보기 · 깜짝 이벤트 · 끝내기'}</button>
   {more&&<div className="frp-more" id="frp-more" role="group" aria-label="가끔 쓰는 버튼">
    {events.map(e=><button key={e} type="button" disabled={!live||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
-   {inPlay&&<button type="button" className="frp-skip" disabled={!live||result||paused} onClick={()=>{setConfirmEnd(false);setConfirmSkip(true);}}>⏭ 마지막 승부로</button>}
-   <button type="button" className="frp-danger" disabled={!live||result} onClick={()=>{setConfirmSkip(false);setConfirmEnd(true);}}>■ 끝내기</button>
+   {inPlay&&<button type="button" className="frp-skip" disabled={!live||result||paused||stepLocked} onClick={()=>{setConfirmEnd(false);setConfirmSkip(true);}}>⏭ 마지막 승부로</button>}
+   <button type="button" className="frp-danger" disabled={!live||result||stepLocked} onClick={()=>{setConfirmSkip(false);setConfirmEnd(true);}}>■ 끝내기</button>
   </div>}
-  {confirmSkip&&inPlay&&live&&!paused&&<section className="frp-confirm" role="alertdialog" aria-label="마지막 승부로 건너뛰기">
-   <p>본게임을 끝내고 마지막 승부로 넘어갈까요? 시간이 되면 저절로 넘어가요.</p>
-   <button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);send({type:'next'},'마지막 승부로');}}>넘어가기</button>
-   <button type="button" onClick={()=>setConfirmSkip(false)}>취소</button>
-  </section>}
-  {confirmEnd&&live&&!result&&<section className="frp-confirm" role="alertdialog" aria-label="게임 끝내기">
-   <p>게임을 지금 끝내고 결과 발표로 갈까요?</p>
-   <button type="button" className="frp-danger" onClick={()=>{setConfirmEnd(false);send({type:'end'},'끝내기');}}>끝내기</button>
-   <button type="button" onClick={()=>setConfirmEnd(false)}>취소</button>
-  </section>}
+  {/* 확인 창은 화면 아래에 붙는 판으로 띄운다(작은 휴대폰에서 화면 밖으로 나가지 않게). 첫 버튼은 '취소'. */}
+  {((confirmSkip&&inPlay&&live&&!paused)||(confirmEnd&&live&&!result))&&<div className="frp-sheet-backdrop" onClick={()=>{setConfirmSkip(false);setConfirmEnd(false);}}>
+   <div ref={confirmRef} className="frp-confirm" role="alertdialog" aria-modal="true" aria-labelledby="frp-confirm-text" onClick={e=>e.stopPropagation()}>
+    <p id="frp-confirm-text">{confirmEnd?'게임을 지금 끝내고 결과 발표로 갈까요?':'본게임을 끝내고 마지막 승부로 넘어갈까요? 시간이 되면 저절로 넘어가요.'}</p>
+    <button type="button" onClick={()=>{setConfirmSkip(false);setConfirmEnd(false);}}>취소</button>
+    {confirmEnd?<button type="button" className="frp-danger frp-danger-solid" onClick={()=>{setConfirmEnd(false);sendStep({type:'end'},'끝내기');}}>끝내기</button>
+    :<button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);sendStep({type:'next'},'마지막 승부로');}}>넘어가기</button>}
+   </div>
+  </div>}
   <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>
  </main>;
 }

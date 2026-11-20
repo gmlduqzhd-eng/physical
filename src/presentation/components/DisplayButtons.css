@@ -2,6 +2,10 @@
 .display-btn[aria-pressed="true"]{background:#0e7490;border-color:#0e7490;color:#fff;opacity:1}
 .display-btn:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 
-/* 글씨 크기: rem 기준 글자를 함께 키운다. 진행 화면의 큰 신호는 각 화면이 clamp로 따로 잡는다. */
-html[data-text-scale="large"]{font-size:112.5%}
-html[data-text-scale="xlarge"]{font-size:125%}
+/* 글씨 크기: 화면 CSS 대부분이 px라서 html 글꼴 크기만 바꾸면 거의 커지지 않는다.
+   그래서 본문(<main>)을 통째로 확대(zoom)한다. rem도 함께 커지므로 html 글꼴 크기는 바꾸지 않는다(두 번 커지지 않게).
+   대표 게임·반 전체 진행·놀이 화면은 각자 clamp로 크기를 잡으므로 확대하지 않는다. */
+html[data-text-scale="large"] main:not(.fun-intro,.fun-arena,.phone-class):not(:has(.fun-intro,.fun-arena,.phone-class,.gameplay-content)){zoom:1.125}
+html[data-text-scale="xlarge"] main:not(.fun-intro,.fun-arena,.phone-class):not(:has(.fun-intro,.fun-arena,.phone-class,.gameplay-content)){zoom:1.25}
+/* 확대하면 화면 폭이 상대적으로 좁아지니, 칸이 내용 폭을 고집하다 옆으로 넘치지 않게 한다. */
+html:is([data-text-scale="large"],[data-text-scale="xlarge"]) main :is(section,article){min-width:0}

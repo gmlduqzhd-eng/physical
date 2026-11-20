@@ -4,10 +4,11 @@ import type {ExternalFunCommand} from '../../../application/funCommandBus';
 import type {DemoFrame} from '../../../domain/signature/types';
 import {StickFigure} from './StickFigure';
 import {TEAM_SHAPES} from './teamShapes';
+import {timeLevel} from './timeLevel';
 
 /** 팀 모양 표식(색은 --team). 이름 앞에 붙인다. 화면 낭독기는 팀 이름을 읽으므로 숨긴다. */
 export function TeamShape({team}:{team:number}){
- return <i className="fun-team-shape" aria-hidden="true" style={{'--shape':TEAM_COLORS[team]} as React.CSSProperties}>{TEAM_SHAPES[team]??'●'}</i>;
+ return <i className="fun-team-shape" data-team={team} aria-hidden="true" style={{'--shape':TEAM_COLORS[team]} as React.CSSProperties}>{TEAM_SHAPES[team]??'●'}</i>;
 }
 /**
  * 팀 점수판: TV에서 멀리서도 보이게 크게. 점수 버튼(+1·−1)이 팀 칸 안에 있다.
@@ -63,11 +64,12 @@ export function FinalCountdown({seconds,active}:{seconds:number;active:boolean})
 
 /**
  * 남은 시간 막대: 숫자와 함께, 줄어드는 막대로도 보여 준다(글을 못 읽는 학생도 알 수 있게).
- * 넉넉하면 초록, 20초 아래는 노랑, 마지막 10초는 빨강. 숫자 쪽(fun-timer)이 화면 낭독기용이라 막대는 숨긴다.
+ * 넉넉하면 초록, 노랑, 빨강 순서. 기준은 단계 길이에 비례한다(짧은 시범·연습 판이 처음부터 노랑·빨강으로 시작하지 않게).
+ * 숫자 쪽(fun-timer)도 같은 기준으로 색이 바뀐다. 숫자 쪽이 화면 낭독기용이라 막대는 숨긴다.
  */
 export function TimeBar({left,total}:{left:number;total:number}){
  const ratio=total>0?Math.min(1,Math.max(0,left/total)):0;
- const level=left<=10?'danger':left<=20?'warn':'ok';
+ const level=timeLevel(left,total);
  return <div className="fun-timebar" data-level={level} aria-hidden="true"><i style={{width:`${(ratio*100).toFixed(1)}%`}}/></div>;
 }
 

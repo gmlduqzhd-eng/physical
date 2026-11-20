@@ -51,6 +51,13 @@ export function setTextScale(scale: TextScale) { update({ ...getDisplayPrefs(), 
 /** 보통 → 크게 → 더 크게 → 보통 순서로 바꾼다. */
 export function nextTextScale(scale: TextScale): TextScale { return SCALES[(SCALES.indexOf(scale) + 1) % SCALES.length]; }
 
+// '기기 정보 지우기'를 누르면 저장값과 함께 지금 화면의 TV 모드·글씨 크기도 바로 기본값으로 돌린다.
+if (typeof window !== 'undefined') window.addEventListener?.('physical-device-cleared', () => {
+  current = { tvMode: false, textScale: 'normal' };
+  apply(current);
+  listeners.forEach(listener => listener());
+});
+
 function subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; }
 const serverPrefs: DisplayPrefs = { tvMode: false, textScale: 'normal' };
 

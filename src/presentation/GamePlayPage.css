@@ -46,3 +46,13 @@ html[data-tv-mode="on"] .gameplay-toolbar .game-toolbar-title strong{font-size:c
 
 /* 대표 게임은 화면 안에 TV 모드 단추가 따로 있어, 위쪽 놀이 막대의 단추는 숨긴다(단추가 둘로 보이지 않게). */
 body:has(.fun-intro,.fun-arena) .gameplay-toolbar .display-btn{display:none}
+
+/* 오늘 수업 막대(48px)가 있으면 결과 카드 덮개도 그만큼 내린다(카드 맨 위가 막대 밑으로 가려지지 않게). */
+body:has(.today-bar) .game-result-overlay{top:48px}
+
+/* 결과 카드 안 '선생님, 이 활동 우리 반에 잘 맞았나요?' 칸: 어두운 반투명 바탕이 밝은 카드 위에서 회색(꺼진 것처럼)으로 보이지 않게 카드 색 체계를 따른다. */
+.game-result-card .class-feedback[data-tone=dark]{background:var(--forest-tint,#eef3ea);color:var(--forest-ink,#163e42);border:1px solid var(--forest-line,rgba(15,23,42,.18))}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button{background:var(--forest-paper,#fff);border-color:var(--forest-control-line,#64748b)}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button[aria-pressed=true]{background:var(--forest-accent,#0e7490);border-color:var(--forest-accent,#0e7490);color:var(--forest-on,#fff)}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-done{color:var(--forest-accent,#0e7490)}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-map{background:var(--forest-paper,#fff)}

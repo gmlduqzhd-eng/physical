@@ -24,3 +24,5 @@
 .today-bar-dots i[data-state="done"]{color:#5eead4}
 .today-bar-dots i[data-state="now"]{color:#fbbf24;font-size:20px}
 @media (max-width:520px){.today-bar-dots{gap:2px}.today-bar-dots i{font-size:11px}.today-bar-dots i[data-state="now"]{font-size:15px}.today-bar:has(.today-bar-ask) .today-bar-dots{display:none}}
+/* 결과를 기록한 뒤: 결과 카드의 버튼이 주 버튼이므로 막대의 '다음 단계'는 보조 모양으로 둔다(주 버튼이 하나만 보이게). */
+.today-bar[data-quiet] .today-bar-next{background:transparent;color:#f8fafc;border:1px solid #94a3b8;font-weight:700}

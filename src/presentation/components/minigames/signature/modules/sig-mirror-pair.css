@@ -14,6 +14,6 @@
 .sig-mirror-quick{display:flex;flex-wrap:wrap;gap:8px;padding:6px;border-radius:14px}
 .sig-mirror-quick[data-find]{box-shadow:0 0 0 3px #4ade80 inset}
 .sig-mirror-team{display:flex;align-items:center;gap:6px;font-weight:850;font-size:clamp(14px,1.6vw,19px);color:#fff}
-.sig-mirror-team span::before{content:'';display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--team);margin-right:6px}
+/* 팀은 이름 앞의 모양 표식(청 ●·홍 ▲·황 ■·녹 ◆)으로 보인다. 예전 색 점은 모양과 겹쳐 보여 없앤다. */
 .fun-arena .sig-mirror-team button{min-width:48px;min-height:44px;border-radius:12px;border:2px solid var(--team);background:#0b1220;color:#fff;font-weight:900;font-size:clamp(15px,1.7vw,20px)}
 @media (max-width:640px){.sig-mirror{padding:8px}.sig-mirror-pair figure svg{width:64px;height:auto}}

@@ -3,6 +3,7 @@ import {createFunState,cueIntervalMs,isFinalCountdown,reduceGated,secondsLeft,co
 import {createFunCommandBus,keyToFunCommand,type ExternalFunCommand,type FunCommandBus} from '../../../application/funCommandBus';
 import {isLessonConfirming} from '../todayLessonActivity';
 import {isRemotePanelOpen} from './remotePanelState';
+import {shouldIgnoreRemoteNext} from './remoteNextGuard';
 import {sfxCountdown,sfxFanfare,sfxTimerTick,sfxWhistle,sfxWhoosh} from '../../../application/soundEffects';
 
 export interface FunEngineOptions {
@@ -53,7 +54,19 @@ export function useFunEngine(opts:FunEngineOptions){
 
  // 명령 버스: TV 버튼·키보드·리모컨이 모두 여기로 들어온다.
  // '다음 활동으로 갈까요?' 확인 창이 떠 있는 동안에는 리모컨 명령을 받지 않는다(창 뒤에서 게임이 다시 움직이지 않게).
- useEffect(()=>bus.subscribe((cmd,source)=>{if(source==='remote'&&isLessonConfirming())return;dispatch(cmd);}),[bus,dispatch]);
+ // 휴대폰 '다음'은 단계가 바뀐 직후·바로 앞 '다음' 직후(REMOTE_NEXT_GUARD_MS)에 오면 버린다: 두 번 눌러 한 단계를 건너뛰지 않게.
+ // 리모컨 '다음'은 TV 쪽 '한 번 더 누르면' 확인과 섞이지 않는다(리모컨은 휴대폰에서 따로 묻는다).
+ const phaseChangedAt=useRef(-Infinity),lastRemoteNext=useRef(-Infinity),seenPhase=useRef(state.phase);
+ if(seenPhase.current!==state.phase){seenPhase.current=state.phase;phaseChangedAt.current=performance.now();}
+ useEffect(()=>bus.subscribe((cmd,source)=>{
+  if(source==='remote'&&isLessonConfirming())return;
+  if(source==='remote'&&cmd.type==='next'){
+   const now=performance.now();
+   if(shouldIgnoreRemoteNext(now,lastRemoteNext.current,phaseChangedAt.current))return;
+   lastRemoteNext.current=now;
+  }
+  dispatch(cmd);
+ }),[bus,dispatch]);
 
  // 시간: 250ms마다 실제 흐른 시간만큼 tick.
  useEffect(()=>{

@@ -164,7 +164,11 @@ function readGameInventory() {
         else {
         const finishedHome = page.getByRole('button', { name: '활동 목록으로' }).or(page.getByRole('button', { name: '홈으로', exact: true }));
         try {
-          await activate(finishedHome.last(), 2000);
+          // Signature games draw their own leave button in a dock at the start of <body> (#fun-dock-host); it sits
+          // over the app toolbar's back button, so use it when it is there, as a teacher would.
+          const dockLeave = page.locator('#fun-dock-host').getByRole('button', { name: /활동 목록으로|오늘 수업/ });
+          if (await dockLeave.first().isVisible().catch(() => false)) await activate(dockLeave.first(), 2000);
+          else await activate(finishedHome.last(), 2000);
         } catch (error) {
           // A game can finish while the toolbar tap is in flight. Select the new
           // result screen's home button instead of the now-covered toolbar.

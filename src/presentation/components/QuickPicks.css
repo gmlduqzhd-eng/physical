@@ -2,7 +2,8 @@
 .quick-picks h2{margin:0 0 10px;font-size:17px;line-height:1.4;font-weight:700}
 .quick-picks-situations{display:flex;flex-wrap:wrap;gap:8px}
 .quick-picks-situations button{min-height:44px;padding:8px 16px;border:2px solid var(--forest-line,#cfd6c4);border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
-.quick-picks-situations button[aria-pressed="true"]{background:#0e7490;border-color:#0e7490;color:#fff}
+/* 숲 테마의 공통 버튼 규칙(html[data-design] …)이 배경을 덮어써서, 눌린 상태만은 확실히 보이게 한다. */
+.quick-picks .quick-picks-situations button[aria-pressed="true"]{background:#0e7490 !important;border-color:#0e7490 !important;color:#fff !important}
 .quick-picks :is(button,a):focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 .quick-picks-result{margin-top:12px}
 .quick-picks-note{margin:0 0 10px;font-size:15px;line-height:1.6}
@@ -15,8 +16,9 @@
 .quick-picks-more{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:10px 0 0;font-size:14px}
 .quick-picks-more button{min-height:44px;padding:6px 14px;border:2px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
 .quick-picks-more a{color:inherit;text-underline-offset:4px}
-html.dark-theme .quick-picks{background:#1d2a23;border-color:#3b4c41;color:#eef3ea}
-html.dark-theme .quick-picks-situations button,html.dark-theme .quick-picks-result li a{border-color:#52675a}
-html.dark-theme .quick-picks-result li a{background:#26362d;color:#eef3ea}
-html.dark-theme .quick-picks-situations button[aria-pressed="true"]{background:#0e7490;border-color:#67c7dd;color:#fff}
+/* 다크 모드는 홈의 다른 카드와 같은 무채색 면을 쓴다(초록 기운이 섞이지 않게). */
+html.dark-theme .quick-picks{background:#202224;border-color:#3e4145;color:#f2f1ec}
+html.dark-theme .quick-picks-situations button,html.dark-theme .quick-picks-result li a{border-color:#5a5e64}
+html.dark-theme .quick-picks-result li a{background:#30343a;color:#f2f1ec}
+html.dark-theme .quick-picks .quick-picks-situations button[aria-pressed="true"]{background:#0e7490 !important;border-color:#67c7dd !important;color:#fff !important}
 @media(max-width:700px){.quick-picks-result ul{grid-template-columns:1fr}.quick-picks{padding:12px}}

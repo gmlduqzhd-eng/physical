@@ -82,7 +82,9 @@ export function TodayLessonBar(){
  // 활동을 시작했으면 길은 하나(다음 활동으로 · 묻기)만 둔다. 시작 전이거나 기록을 마쳤으면 '다음 단계'와 '건너뛰기'를 묻지 않고 바로 한다.
  const started=playing||unrecorded;
  const askText=!playing?'결과를 아직 기록하지 않았어요.':finish?'아직 게임 중이에요. 결과를 보고 갈까요?':'아직 활동 중이에요. 기록 없이 넘어갈까요?';
- const bar=<div className="today-bar" data-mode={playing?'playing':undefined} data-asking={ask?true:undefined} role="region" aria-label={label}>
+ // 결과를 기록한 뒤에는 화면 안 결과 카드가 주 버튼(다음 단계로·오늘 수업으로)을 가진다. 막대의 '다음 단계'는 보조 모양으로 낮춘다.
+ const quiet=mine?.phase==='recorded';
+ const bar=<div className="today-bar" data-mode={playing?'playing':undefined} data-quiet={quiet||undefined} data-asking={ask?true:undefined} role="region" aria-label={label}>
   {dots}<span className="today-bar-label" title={label}>📋 오늘 수업 {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}<span className="today-bar-title"> · {title}{extra?' · 한 판 더':''}</span></span>
   {ask?<div ref={dialogRef} tabIndex={-1} className="today-bar-ask" role="alertdialog" aria-modal="true" aria-label="다음 활동으로 갈까요?" aria-describedby="today-bar-ask-text">
    <span id="today-bar-ask-text" className="today-bar-ask-text">{askText}</span>

@@ -27,3 +27,24 @@
 .sig-bingo-toast{margin:0;min-height:1.5em;font-weight:850;color:#fde68a;font-size:clamp(15px,1.8vw,22px)}
 .sig-bingo-result{margin:0;font-size:clamp(16px,2vw,24px);font-weight:800}
 @media (max-width:640px){.sig-bingo{grid-template-columns:1fr}.sig-bingo-cell{min-height:64px}}
+
+/* 4×4(3~4팀) 판: 줄이 하나 더 있어 칸 높이를 화면 높이에 맞춰 줄인다. 글씨는 px·vw·vh로만 잡아 '글씨 크기' 배율에 판이 밀려 잘리지 않게 한다. */
+.sig-bingo-board[data-size="4"] .sig-bingo-cell{min-height:clamp(52px,9vh,96px);font-size:clamp(12px,min(1.35vw,2vh),18px)}
+.sig-bingo-cell .sig-bingo-quiz-badge{display:inline-block;margin-right:.35em}
+/* 넓은 화면: 판이 자기 칸(fun-panel) 높이를 꽉 채우고, 칸 높이는 줄 수로 나눈다. 그래서 4×4·글씨 크게에서도 마지막 줄이 칸 밖으로 잘리지 않는다. */
+@media (min-width:961px){
+ .fun-panel:has(.sig-bingo){justify-content:stretch}
+ .sig-bingo{height:100%;min-height:0;align-items:stretch}
+ .sig-bingo-board{grid-auto-rows:minmax(0,1fr);min-height:0;height:100%}
+ .sig-bingo-row{min-height:0}
+ .sig-bingo-board .sig-bingo-cell,.sig-bingo-board[data-size="4"] .sig-bingo-cell{min-height:0;height:100%}
+ .sig-bingo-side{align-content:start}
+}
+/* TV 모드: 교실 뒤에서도 칸 글씨가 읽히게 칸과 글씨를 크게(약 1.6~2배). 판 쪽을 넓히고 큰 신호 칸은 조금 좁힌다. */
+html[data-tv-mode="on"] .fun-arena:has(.sig-bingo) .fun-stage[data-wide]{grid-template-columns:minmax(0,.75fr) minmax(0,1.7fr)}
+html[data-tv-mode="on"] .sig-bingo{grid-template-columns:minmax(0,2.1fr) minmax(0,1fr)}
+html[data-tv-mode="on"] .sig-bingo-cell{font-size:clamp(18px,min(2.4vw,3.6vh),40px);border-width:4px;padding:4px}
+html[data-tv-mode="on"] .sig-bingo-board[data-size="4"] .sig-bingo-cell{font-size:clamp(16px,min(1.9vw,2.9vh),34px)}
+html[data-tv-mode="on"] .sig-bingo-owner{font-size:clamp(20px,min(2.4vw,3.6vh),40px)}
+html[data-tv-mode="on"] .fun-arena:has(.sig-bingo) .fun-cue{font-size:clamp(28px,min(3.6vw,5.4vh),68px)}
+@media (max-width:960px){html[data-tv-mode="on"] .sig-bingo-cell{min-height:clamp(70px,14vh,170px)}html[data-tv-mode="on"] .sig-bingo-board[data-size="4"] .sig-bingo-cell{min-height:clamp(58px,11.5vh,150px)}}

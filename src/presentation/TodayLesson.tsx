@@ -174,20 +174,19 @@ function TodayStageView({run:stored}:{run:TodayRun}){
  * 그런 판이 없으면 이 수업·이 단계로 정해지는 판 id를 써서 새로고침해도 같은 칸으로 이어진다.
  */
 /**
- * 수업 끝: 반 원정 지도 칸이 열리는 장면. 3초쯤 보여 주고 저절로 닫힌다(건너뛰기 단추로 바로 닫을 수 있다).
+ * 수업 끝: 반 원정 지도 칸이 열리는 장면. 칸이 차례로 튀어나온 뒤에도 선생님이 '닫기'를 누를 때까지 그대로 둔다.
+ * 저절로 접히면 아래 내용(👍/👎 반응 칸)이 갑자기 위로 올라와 잘못 누르기 쉽기 때문이다.
+ * 소리로 읽는 것은 제목 한 줄뿐이고(30칸을 다 읽지 않게), 닫은 뒤에는 한 줄 안내로 초점을 옮긴다.
  * 움직임 줄이기를 켠 기기에서는 칸이 움직이지 않고 그대로 보인다(CSS).
  */
 function MapMoment({moment,onClose}:{moment:LessonMapMoment;onClose:()=>void}){
- // 부모가 다시 그려져도 3초 타이머가 처음부터 다시 돌지 않게, 닫기 함수는 ref로 본다.
- const close=useRef(onClose);
- useEffect(()=>{close.current=onClose;});
- useEffect(()=>{const t=window.setTimeout(()=>close.current(),MAP_MOMENT_MS);return ()=>window.clearTimeout(t);},[]);
  const fresh=new Set(moment.fresh);
- return <div className="today-map-moment" role="status" aria-live="polite">
-  <p className="today-map-moment-title"><span aria-hidden="true">🗺️</span> {moment.line}</p>
-  <ol className="today-map-moment-tiles" aria-label={`반 원정 지도 ${moment.view.opened}/${moment.view.tiles.length}칸`}>{moment.view.tiles.map(t=><li key={t.index} data-open={t.open||undefined} data-fresh={fresh.has(t.index)||undefined} style={fresh.has(t.index)?{animationDelay:`${Math.min(1200,(t.index-moment.fresh[0])*160)}ms`}:undefined}><span aria-hidden="true">{t.open?t.icon:'·'}</span></li>)}</ol>
-  <p className="today-map-moment-sub">지금 {moment.view.current.icon} {moment.view.current.name}{moment.view.nextRegion?` · ${moment.view.nextRegion.icon} ${moment.view.nextRegion.name}까지 ${moment.view.nextRegion.left}칸`:''}</p>
-  <div className="today-map-moment-actions"><Link className="today-map-moment-link" to="/class-progress?tab=map">반 원정 지도 보기</Link><button type="button" className="today-map-moment-skip" onClick={onClose}>건너뛰기</button></div>
+ const first=moment.fresh[0]??0;
+ return <div className="today-map-moment" data-full={moment.full||undefined}>
+  <p className="today-map-moment-title" role="status" aria-live="polite"><span aria-hidden="true">🗺️</span> {moment.line}</p>
+  <ol className="today-map-moment-tiles" aria-label={`반 원정 지도 ${moment.view.opened}/${moment.view.tiles.length}칸`}>{moment.view.tiles.map(t=><li key={t.index} data-open={t.open||undefined} data-fresh={fresh.has(t.index)||undefined} style={fresh.has(t.index)?{animationDelay:`${Math.min(MAP_MOMENT_MS-600,(t.index-first)*160)}ms`}:undefined}><span aria-hidden="true">{t.open?t.icon:'·'}</span></li>)}</ol>
+  <p className="today-map-moment-sub">{moment.full?`${moment.view.current.icon} ${moment.view.current.name}까지 모두 다녀왔어요. 다음 수업부터 새 지도를 열어요.`:<>지금 {moment.view.current.icon} {moment.view.current.name}{moment.view.nextRegion?` · ${moment.view.nextRegion.icon} ${moment.view.nextRegion.name}까지 ${moment.view.nextRegion.left}칸`:''}</>}</p>
+  <div className="today-map-moment-actions"><Link className="today-map-moment-link" to="/class-progress?tab=map">반 원정 지도 보기</Link><button type="button" className="today-map-moment-skip" onClick={onClose}>닫기</button></div>
  </div>;
 }
 
@@ -210,13 +209,17 @@ function TodaySummary({run:stored}:{run:TodayRun}){
  const moment=lessonMapMoment(progress,since,finished);
  const momentKey=`physical_today_map_moment_${finished}`;
  const [momentOpen,setMomentOpen]=useState(()=>readStorage(momentKey,'session')!=='seen');
- const closeMoment=()=>{writeStorage(momentKey,'seen','session');setMomentOpen(false);};
+ // 닫으면 한 줄 안내로 초점을 옮긴다(닫기 단추가 사라지며 초점이 페이지 맨 처음으로 빠지지 않게).
+ const mapLineRef=useRef<HTMLParagraphElement>(null);
+ const focusLine=useRef(false);
+ const closeMoment=()=>{writeStorage(momentKey,'seen','session');focusLine.current=true;setMomentOpen(false);};
+ useEffect(()=>{if(!momentOpen&&focusLine.current){focusLine.current=false;mapLineRef.current?.focus();}},[momentOpen]);
  const parts=[`${count('played')}단계를 했어요`,count('passed')?`${count('passed')}단계는 기록 없이 넘겼어요`:'',count('skipped')?`${count('skipped')}단계는 건너뛰었어요`:''].filter(Boolean);
  return <section className="today-card" aria-labelledby="today-summary-title">
   <p className="eyebrow">오늘 수업 끝 · {formatSeconds(totalSec)} · 계획 {run.plan.settings.minutes}분</p>
   <h1 id="today-summary-title">🎉 오늘 수업을 마쳤어요</h1>
   {moment&&momentOpen&&<MapMoment moment={moment} onClose={closeMoment}/>}
-  {moment&&!momentOpen&&<p className="today-map-line" role="status">🗺️ {moment.line} <Link to="/class-progress?tab=map">반 원정 지도 보기</Link></p>}
+  {moment&&!momentOpen&&<p ref={mapLineRef} tabIndex={-1} className="today-map-line">🗺️ {moment.line} <Link to="/class-progress?tab=map">반 원정 지도 보기</Link></p>}
   <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
   <StageList plan={run.plan} run={run} outcomes={outcomes} shown={did}/>
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>

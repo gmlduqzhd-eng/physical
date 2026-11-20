@@ -3,6 +3,21 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { PAD_KEYS, cleanStudentNumber, padKeyLabel, pressPadKey } from '../src/application/studentNumberPad';
 import { validateStudentIdentity } from '../src/application/studentIdentity';
+import { isSendLocked, lockAfterSend, SEND_LOCK_MIN_MS, SEND_LOCK_MS } from '../src/application/remoteSendLock';
+
+test('the phone remote sends one phase-changing command per phase (no double-tap skip)', () => {
+  const lock = lockAfterSend('tutorial', 1000);
+  assert.equal(isSendLocked(lock, 'tutorial', 1100), true, 'a second tap right after is ignored');
+  assert.equal(isSendLocked(lock, 'play', 1150), true, 'even if the TV already moved on, a quick second tap is ignored');
+  assert.equal(isSendLocked(lock, 'play', 1000 + SEND_LOCK_MIN_MS), false, 'after the minimum hold, the new phase unlocks it');
+  assert.equal(isSendLocked(lock, 'tutorial', 1000 + SEND_LOCK_MS), false, 'unlocks after the timeout even if no snapshot came');
+  assert.equal(isSendLocked(null, 'play', 0), false);
+  assert.equal(isSendLocked(lockAfterSend(undefined, 0), undefined, 10), true, 'unknown phase still locks by time');
+  const page = readFileSync('src/presentation/FunRemotePage.tsx', 'utf8');
+  assert.match(page, /sendStep\(\{type:'next'\},'다음'\)/);
+  assert.match(page, /sendStep\(\{type:'end'\},'끝내기'\)/);
+  assert.match(page, /role="alertdialog" aria-modal="true"/, 'confirm opens as a modal sheet');
+});
 
 const read = (file: string) => readFileSync(file, 'utf8');
 
@@ -15,8 +30,10 @@ test('number pad builds only student numbers 1 to 99', () => {
   assert.equal(pressPadKey('1', 'back'), '');
   assert.equal(pressPadKey('', 'back'), '');
   assert.equal(pressPadKey('45', 'clear'), '');
-  // After two digits, another digit starts a new number so the child need not find the erase key.
-  assert.equal(pressPadKey('12', '3'), '3');
+  // After two digits, more digits are ignored: a double press must not turn 12 into 2 (another child's number).
+  assert.equal(pressPadKey('12', '3'), '12', 'a third digit is ignored so a double press cannot become another student number');
+  assert.equal(pressPadKey('11', '1'), '11');
+  assert.equal(cleanStudentNumber('１２'), '12', 'full-width digits are accepted');
   assert.equal(pressPadKey('12', '0'), '12');
   // Whatever sequence is pressed, the result is empty or passes the same validation the join uses.
   let value = '';
@@ -65,22 +82,26 @@ test('phone remote puts next and pause first, teams in a shape-coded grid, and r
   const teams = page.indexOf('className="frp-teams"');
   const more = page.indexOf('className="frp-more-toggle"');
   assert.ok(big > 0 && teams > big && more > teams, 'order: big buttons, teams, more');
-  assert.match(page, /className="frp-next"[^>]*onClick=\{\(\)=>send\(\{type:'next'\},'다음'\)\}/);
+  assert.match(page, /className="frp-next"[^>]*onClick=\{\(\)=>sendStep\(\{type:'next'\},'다음'\)\}/);
   assert.match(page, /className="frp-pause"/);
   assert.match(page, /TEAM_SHAPES=\['●','▲','■','◆'\]/);
-  assert.match(page, /aria-label=\{`\$\{TEAM_NAMES\[i\]\} 1점 더하기`\}/);
-  assert.match(page, /aria-label=\{`\$\{TEAM_NAMES\[i\]\} 1점 빼기`\}/);
+  assert.match(page, /aria-label=\{`\$\{teamName\(i\)\} 1점 더하기`\}/);
+  assert.match(page, /aria-label=\{`\$\{teamName\(i\)\} 1점 빼기`\}/);
+  assert.match(page, /teamName=\(i:number\)=>teams===1\?'우리 반':TEAM_NAMES\[i\]/, 'a single team is read as 우리 반');
   // Rare actions live in the collapsed group; skip and end both ask once more before sending.
-  const moreBlock = page.slice(page.indexOf('{more&&<div className="frp-more"'), page.indexOf('{confirmSkip&&'));
+  const moreBlock = page.slice(page.indexOf('{more&&<div className="frp-more"'), page.indexOf('className="frp-sheet-backdrop"'));
   assert.match(moreBlock, /events\.map/);
   assert.match(moreBlock, /마지막 승부로/);
   assert.match(moreBlock, /끝내기/);
-  assert.doesNotMatch(moreBlock, /send\(\{type:'end'\}/, 'end is only sent from its confirm');
-  assert.doesNotMatch(moreBlock, /send\(\{type:'next'\}/, 'skip is only sent from its confirm');
-  assert.match(page, /aria-label="게임 끝내기"[\s\S]*send\(\{type:'end'\},'끝내기'\)/);
-  assert.match(page, /aria-label="마지막 승부로 건너뛰기"[\s\S]*send\(\{type:'next'\},'마지막 승부로'\)/);
-  // In main play the big next button rests: the round moves on by itself and skipping needs the confirm.
-  assert.match(page, /disabled=\{!live\|\|result\|\|paused\|\|inPlay\}/);
+  assert.doesNotMatch(moreBlock, /send(Step)?\(\{type:'end'\}/, 'end is only sent from its confirm');
+  assert.doesNotMatch(moreBlock, /send(Step)?\(\{type:'next'\}/, 'skip is only sent from its confirm');
+  assert.match(page, /게임을 지금 끝내고 결과 발표로 갈까요\?[\s\S]*sendStep\(\{type:'end'\},'끝내기'\)/);
+  assert.match(page, /마지막 승부로 넘어갈까요\?[\s\S]*sendStep\(\{type:'next'\},'마지막 승부로'\)/);
+  // In main play there is no dead giant next button: a calm status takes its place and pause comes first.
+  assert.match(page, /inPlay\?<div className="frp-next frp-next-wait" role="status">/);
+  assert.match(css, /\.frp-big\[data-play\] \.frp-pause\{order:-1\}/);
+  // Boss-raid-only special attack is hidden in other games.
+  assert.match(page, /hasSpecial&&<button/);
   // Status and feedback lines are kept.
   assert.match(page, /TV에서 확인 중이에요/);
   assert.match(page, /className="frp-sent"/);
