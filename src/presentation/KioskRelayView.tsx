@@ -21,6 +21,8 @@ export const KioskRelayView = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [error, setError] = useState('');
   const submitting = useRef(false);
+  // 응답만 끊긴 뒤 다시 누르면 같은 제출로 보내 점수가 두 번 들어가지 않게 한다(서버는 actionId로 한 번만 반영).
+  const pendingAction = useRef<{ groupId: string; amount: number; id: string } | null>(null);
   const navigate = useNavigate();
 
   const handleEnterRoom = async (e: React.FormEvent) => {
@@ -37,8 +39,16 @@ export const KioskRelayView = () => {
     if (!selectedGroup || !isActive || submitting.current) return;
     submitting.current = true; setLoading(true); setError('');
     try {
-      if (!await ScoreRepository.incrementScore(selectedGroup.id, amount)) throw new Error('점수를 저장하지 못했습니다. 다시 시도해주세요.');
-      setSuccessMsg(`🎉 [${selectedGroup.group_name}] 조에 ${amount}점이 지급되었습니다! 다음 주자에게 패드를 넘기세요!`);
+      const prior = pendingAction.current;
+      const action = prior && prior.groupId === selectedGroup.id && prior.amount === amount ? prior : { groupId: selectedGroup.id, amount, id: crypto.randomUUID() };
+      pendingAction.current = action;
+      const result = await ScoreRepository.saveScoreAction(selectedGroup.id, amount, action.id);
+      if (result === 'retry') throw new Error('점수를 저장하지 못했습니다. 다시 시도해주세요.');
+      pendingAction.current = null;
+      if (result === 'obsolete') throw new Error('이 수업방에는 더 이상 점수를 줄 수 없어요. 수업 상태를 확인해 주세요.');
+      setSuccessMsg(result === 'pending'
+        ? `[${selectedGroup.group_name}] 조의 ${amount}점은 선생님이 확인하면 반영돼요. 다음 주자에게 패드를 넘기세요!`
+        : `🎉 [${selectedGroup.group_name}] 조에 ${amount}점이 지급되었습니다! 다음 주자에게 패드를 넘기세요!`);
       setSelectedGroup(null); refresh();
       setTimeout(() => setSuccessMsg(''), 5000);
     } catch (cause) { setError(classroomError(cause, '미션 저장에 실패했습니다.')); }

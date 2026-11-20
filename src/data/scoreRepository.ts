@@ -1,26 +1,7 @@
 import { supabase, ensureClassroomUser } from './supabase';
-import type { RoomGroup } from '../domain/types';
 
 export const ScoreRepository = {
-  // 특정 방의 점수 보드 가져오기
-  async getScoresByRoomId(roomId: string): Promise<RoomGroup[]> {
-    const { data, error } = await supabase
-      .from('room_groups')
-      .select('*')
-      .eq('room_id', roomId)
-      .order('score', { ascending: false });
-    
-    if (error) {
-      console.error('Error fetching scores:', error);
-      return [];
-    }
-    return data || [];
-  },
-
-  async incrementScore(id: string, amount: number, actionId?: string): Promise<boolean> {
-    return (await ScoreRepository.saveScoreAction(id, amount, actionId)) === 'saved';
-  },
-
+  /** 같은 점수 제출을 다시 보낼 때는 같은 actionId를 넘겨야 서버가 한 번만 반영한다. */
   async saveScoreAction(id: string, amount: number, actionId?: string, activityId = 'classroom-extra'): Promise<'saved' | 'pending' | 'obsolete' | 'retry'> {
     await ensureClassroomUser().catch(() => {});
     // 오로지 RPC 호출에만 의존하여 동시성(Race Condition)을 방지합니다.
