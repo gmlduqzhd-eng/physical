@@ -56,3 +56,5 @@ body:has(.today-bar) .game-result-overlay{top:48px}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button[aria-pressed=true]{background:var(--forest-accent,#0e7490);border-color:var(--forest-accent,#0e7490);color:var(--forest-on,#fff)}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-done{color:var(--forest-accent,#0e7490)}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-map{background:var(--forest-paper,#fff)}
+/* 놀이 화면에서는 제목 줄의 ←가 같은 일을 하므로, 위쪽 아이콘 줄의 '활동 목록으로'는 숨겨 뒤로 단추를 하나만 둔다. */
+.game-tools-layout:has(.gameplay-toolbar) .game-utilities-bar .icon-toolbar-action[title="활동 목록으로"]{display:none!important}

@@ -5,3 +5,6 @@
   .flow details>summary{min-height:44px;padding-block:10px;line-height:1.5}
 }
 .student-entry-error{scroll-margin-block:16px;overflow-wrap:anywhere}
+/* 아래쪽 안내 링크도 손가락으로 누르기 쉽게 44px 높이로 둔다. */
+.flow footer a{display:inline-flex;align-items:center;min-height:44px}
+.flow .quiet-links a{display:inline-flex;align-items:center;min-height:44px}

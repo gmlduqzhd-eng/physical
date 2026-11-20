@@ -30,3 +30,7 @@ export function rememberStudentIdentity(identity: StudentIdentity) {
   writeStorage('physical_student_name', identity.nickname);
   writeStorage('physical_student_role', 'novice');
 }
+
+/** 번호판 위에 띄우는 안내. 이 기기에 '이전 수업 이어가기' 단추가 있을 때만 그 단추를 알려 준다. */
+export const takenNumberNotice = (number: number, canResume: boolean) =>
+  `${number}번은 벌써 누가 들어왔어요. 다른 번호를 누르거나 선생님께 말해요.${canResume ? ' 내가 먼저 들어왔다면 위의 ‘이전 수업 이어가기’를 눌러요.' : ''}`;
