@@ -26,16 +26,16 @@ function MemoryPanel({state,seated}:SignatureModuleProps){
   {variation!=='normal'&&<p className="sig-mem-variation">{VARIATION_TEXT[variation]}</p>}
   <p className="sig-mem-stage"><span role="status">{stage==='show'?'👀 외워요!':`🙈 가려졌어요 → ${turnTeamNameAt(state,state.phase==='climax'?'climax':state.phase==='play'?'play':'tutorial',index)}이 ${reversed?'마지막 모양부터 거꾸로':'차례대로'} 해요`}</span>{stage==='show'&&<span aria-hidden="true"> {left}초 뒤에 가려져요</span>}</p>
   <ol className="sig-mem-tiles" aria-label={`${len}개 순서`} data-count={len}>
-   {seq.map((t,i)=><li key={i} className="sig-mem-tile" style={visible?{borderColor:t.color}:undefined} data-hidden={!visible||undefined}>
+   {seq.map((t,i)=><li key={i} className="sig-mem-tile" data-hidden={!visible||undefined}>
     <span className="sig-mem-no">{i+1}</span>
-    {visible?<><span className="sig-mem-shape" style={{color:t.color}} aria-hidden="true">{t.shape}</span><b>{seated?t.seated:t.action}</b><span className="sr-only">{t.name}</span></>:<span className="sig-mem-shape" aria-label="가려진 모양">?</span>}
+    {visible?<><span className="sig-mem-shape" aria-hidden="true">{t.shape}</span><b>{seated?t.seated:t.action}</b><span className="sr-only">{t.name}</span></>:<span className="sig-mem-shape" aria-label="가려진 모양">?</span>}
    </li>)}
   </ol>
   <div className="sig-mem-foot">
    <span>길이 {len}/{MAX_LENGTH} · {longestSuccess(state)?`가장 긴 성공 ${longestSuccess(state)}개`:'아직 성공 기록이 없어요'}</span>
    {stage==='perform'&&<button type="button" onClick={()=>setPeek(peek===turnId?'':turnId)} aria-pressed={peek===turnId}>{peek===turnId?'🙈 다시 가리기':'👀 한 번 더 보기'}</button>}
   </div>
-  <ul className="sig-mem-legend" aria-label="모양 뜻">{MEMORY_TILES.map(t=><li key={t.id}><span style={{color:t.color}} aria-hidden="true">{t.shape}</span> {seated?t.seated:t.action}</li>)}</ul>
+  <ul className="sig-mem-legend" aria-label="모양 뜻">{MEMORY_TILES.map(t=><li key={t.id}><span className="sig-mem-shape" aria-hidden="true">{t.shape}</span> {seated?t.seated:t.action}</li>)}</ul>
  </div>;
 }
 

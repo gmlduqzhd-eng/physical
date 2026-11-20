@@ -180,12 +180,12 @@ test('teams are told apart by shape as well as colour, in the agreed order',asyn
 });
 test('the remaining time is also a bar that turns amber then red, and the readout is a timer',()=>{
  const parts=read('src/presentation/components/fun/FunParts.tsx');
- assert.match(parts,/const level=left<=10\?'danger':left<=20\?'warn':'ok'/);
+ assert.match(parts,/const level=timeLevel\(left,total\)/,'the bar uses the phase-proportional levels');
  const css=read('src/presentation/components/fun/fun.css');
  assert.match(css,/\.fun-timebar\[data-level=warn\] i\{background:#f59e0b\}\.fun-timebar\[data-level=danger\] i\{background:#ef4444\}/);
  assert.match(css,/@media \(prefers-reduced-motion:reduce\)\{\.fun-timebar i,\.fun-timer\{transition:none\}\}/);
  const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
- assert.match(play,/className="fun-timer" role="timer" aria-label=\{`남은 시간 \$\{left\}초`\}/);
+ assert.match(play,/className="fun-timer" role="timer" data-level=\{timeLevel\([^}]*\]\)\} aria-label=\{`남은 시간 \$\{left\}초`\}/);
  assert.match(play,/<TimeBar left=\{left\} total=\{game\.timing\[/);
 });
 test('controls keep their places: 다음 bottom-right, leave top-left, one primary button',()=>{
@@ -217,9 +217,39 @@ test('TV mode enlarges the signal, hides small print and leaves with Esc or by e
  assert.match(css,/html\[data-tv-mode="on"\] \.fun-intro\{position:fixed;inset:0/);
  const exit=read('src/presentation/components/fun/useTvModeExit.ts');
  assert.match(exit,/e\.key!=='Escape'\|\|e\.defaultPrevented\|\|fullscreenEl\(\)\|\|document\.querySelector\(OPEN_LAYERS\)/,'Esc is left to an open dialog');
- assert.match(exit,/if\(was&&!now\)setTvMode\(false\)/);
+ assert.match(exit,/if\(was&&!now&&!document\.querySelector\(OPEN_LAYERS\)\)setTvMode\(false\)/,'ending fullscreen turns TV mode off unless a dialog is open');
  const control=read('src/presentation/components/fun/TvMode.tsx');
  assert.match(control,/requestFullscreen\?\.\(\)\.catch\(\(\)=>\{\}\)/,'a refused fullscreen is ignored');
  const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
  assert.equal((play.match(/<TvModeControl className="fun-tv-btn"\/>/g)??[]).length,2,'on the start screen and in the dock');
+});
+
+test('a double tap on the phone remote next no longer skips a whole phase',async()=>{
+ const {shouldIgnoreRemoteNext,REMOTE_NEXT_GUARD_MS}=await import('../src/presentation/components/fun/remoteNextGuard');
+ assert.equal(REMOTE_NEXT_GUARD_MS,800);
+ assert.equal(shouldIgnoreRemoteNext(10_000,-Infinity,-Infinity),false,'a first remote next goes through');
+ assert.equal(shouldIgnoreRemoteNext(10_150,10_000,-Infinity),true,'a second tap 150ms later is dropped');
+ assert.equal(shouldIgnoreRemoteNext(11_000,10_000,10_020),false,'a deliberate next a second later goes through');
+ assert.equal(shouldIgnoreRemoteNext(10_300,-Infinity,10_000),true,'a remote next right after the phase changed on its own is dropped');
+ const engine=read('src/presentation/components/fun/useFunEngine.ts');
+ assert.match(engine,/source==='remote'&&cmd\.type==='next'/,'only remote next is guarded (TV buttons and keys unchanged)');
+});
+
+test('time colors follow the phase length so short phases do not start yellow or red',async()=>{
+ const {timeLevel}=await import('../src/presentation/components/fun/timeLevel');
+ assert.equal(timeLevel(12,12),'ok','a 12s demo starts green');
+ assert.equal(timeLevel(3,12),'warn');assert.equal(timeLevel(1,12),'danger');
+ assert.equal(timeLevel(30,30),'ok','a 30s practice starts green');
+ assert.equal(timeLevel(25,120),'ok');assert.equal(timeLevel(20,120),'warn');assert.equal(timeLevel(10,120),'danger','long phases keep the 20s/10s marks');
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/className="fun-timer" role="timer" data-level=\{timeLevel\(/,'the number turns red with the bar');
+});
+
+test('module button sizes are not overridden by the arena font reset',()=>{
+ const css=read('src/presentation/components/fun/fun.css');
+ assert.match(css,/:where\(\.fun-arena,\.fun-intro\) button\{font:inherit/);
+ assert.doesNotMatch(css,/^\.fun-arena button,\.fun-intro button\{font:inherit/m);
+ const bingo=read('src/presentation/components/minigames/signature/modules/sig-move-bingo.css');
+ assert.match(bingo,/html\[data-tv-mode="on"\] \.sig-bingo-cell\{[^}]*font-size:clamp\(18px/,'bingo cells grow in TV mode');
+ assert.match(bingo,/grid-auto-rows:minmax\(0,1fr\)/,'the board fills its panel row by row');
 });

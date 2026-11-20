@@ -4,10 +4,11 @@ import type {ExternalFunCommand} from '../../../application/funCommandBus';
 import type {DemoFrame} from '../../../domain/signature/types';
 import {StickFigure} from './StickFigure';
 import {TEAM_SHAPES} from './teamShapes';
+import {timeLevel} from './timeLevel';
 
 /** 팀 모양 표식(색은 --team). 이름 앞에 붙인다. 화면 낭독기는 팀 이름을 읽으므로 숨긴다. */
 export function TeamShape({team}:{team:number}){
- return <i className="fun-team-shape" aria-hidden="true" style={{'--shape':TEAM_COLORS[team]} as React.CSSProperties}>{TEAM_SHAPES[team]??'●'}</i>;
+ return <i className="fun-team-shape" data-team={team} aria-hidden="true" style={{'--shape':TEAM_COLORS[team]} as React.CSSProperties}>{TEAM_SHAPES[team]??'●'}</i>;
 }
 /**
  * 팀 점수판: TV에서 멀리서도 보이게 크게. 점수 버튼(+1·−1)이 팀 칸 안에 있다.
@@ -66,13 +67,6 @@ export function FinalCountdown({seconds,active}:{seconds:number;active:boolean})
  * 넉넉하면 초록, 노랑, 빨강 순서. 기준은 단계 길이에 비례한다(짧은 시범·연습 판이 처음부터 노랑·빨강으로 시작하지 않게).
  * 숫자 쪽(fun-timer)도 같은 기준으로 색이 바뀐다. 숫자 쪽이 화면 낭독기용이라 막대는 숨긴다.
  */
-export type TimeLevel='ok'|'warn'|'danger';
-/** 노랑: 남은 시간이 min(20초, 단계의 30%) 이하. 빨강: min(10초, 단계의 15%) 이하. */
-export function timeLevel(left:number,total:number):TimeLevel{
- if(!(total>0))return 'ok';
- const danger=Math.min(10,total*0.15),warn=Math.min(20,total*0.3);
- return left<=danger?'danger':left<=warn?'warn':'ok';
-}
 export function TimeBar({left,total}:{left:number;total:number}){
  const ratio=total>0?Math.min(1,Math.max(0,left/total)):0;
  const level=timeLevel(left,total);

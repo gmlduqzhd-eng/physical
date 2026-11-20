@@ -8,6 +8,7 @@ import {GAMES} from '../../../../domain/gamesData';
 import {unlockAudio} from '../../../../application/soundEffects';
 import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,TeamShape,TimeBar,timeLevel,TvModeControl,useFunEngine,useTvModeExit,type TeacherButton} from '../../fun';
 import {RemoteLink} from '../../fun/RemoteLink';
+import {funDockHost,useDockInsets} from '../../fun/dockLayout';
 import {requestRemotePanelClose,useRemotePanelOpen} from '../../fun/remotePanelState';
 import {ClassFeedbackSlot} from '../../ClassFeedbackSlot';
 import {StartLabel} from '../../StartLabel';
@@ -65,6 +66,9 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  const [room,setRoom]=useState<string|undefined>(()=>game?loadRemoteRoom(game.id):undefined);
  // 지금 판의 seed. 모듈이 따로 모은 기록(빙고판·응원 수)은 '한 판 더'·목록으로 나갈 때 지운다(화면 정리 때 지우면 개발 모드에서 이어 하기가 깨진다).
  const seedRef=useRef<number|null>(null);
+ // 리모컨 막대가 실제로 차지한 너비만큼 머리줄을 비켜 세운다(글씨 크기·긴 이름에도 겹치지 않게).
+ const dockRef=useRef<HTMLDivElement>(null);
+ useDockInsets(dockRef,!!(setup||room));
  const disposeRound=()=>{const mod=game?SIGNATURE_MODULES[game.id]:undefined;if(seedRef.current!==null)mod?.dispose?.(seedRef.current);seedRef.current=null;};
  // '오늘 수업' 확인 창이 떠 있는 동안에는 리모컨 막대도 누를 수 없다(초점은 확인 창에).
  const lessonConfirming=useLessonConfirming();
@@ -107,7 +111,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  // 리모컨 막대는 시작 화면(이어 할 판이 있을 때)과 게임 화면에서 같은 자리에 하나만 둔다.
  // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
  // 방 코드가 있는 동안은 시작 화면에서도 막대를 둔다('새로 시작'으로 남은 판을 지워도 휴대폰 연결이 이어진다).
- const dock=(setup||room)?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'} inert={lessonConfirming||undefined}>
+ const dock=(setup||room)?dockPortal(<div ref={dockRef} className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'} inert={lessonConfirming||undefined}>
   {/* 나가는 버튼은 늘 왼쪽 위(시작·진행·결과 화면 모두 같은 자리). 게임 화면이 앱 도구 막대를 덮으므로 여기에 둔다. */}
   {setup&&<button type="button" className="fun-exit" aria-label={inLesson?'오늘 수업으로':'활동 목록으로'} onClick={askLeave}>{inLesson?'← 오늘 수업':'← 목록'}</button>}
   {setup&&<TvModeControl className="fun-tv-btn"/>}
@@ -375,3 +379,5 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
 }
 /** 게임 무대는 화면 전체(앱 도구 막대 위)를 덮으므로 body 끝에 그린다. 무대 안에 '← 목록' 버튼이 있다. */
 const arena=(node:ReactNode)=>typeof document==='undefined'?node:createPortal(node,document.body);
+/** 리모컨 막대는 body 맨 앞 자리에 그린다(Tab이 왼쪽 위 나가기·TV 모드 단추에 먼저 닿게). */
+const dockPortal=(node:ReactNode)=>typeof document==='undefined'?node:createPortal(node,funDockHost());

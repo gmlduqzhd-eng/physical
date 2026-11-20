@@ -436,3 +436,35 @@ html[data-tv-mode="on"] .fun-arena .fun-meta{grid-template-columns:1fr}
  html[data-tv-mode="on"] .fun-controls button{min-height:44px;font-size:clamp(13px,1.3vw,17px);flex-basis:120px}
  html[data-tv-mode="on"] .fun-team-buttons button{min-height:40px}
 }
+
+/* ── 라운드 110 다듬기 ── */
+/* 황팀 모양: 밝은 노랑 바탕 위 흰 모양은 대비가 약해(약 3:1) 어두운 모양으로 그린다. */
+.fun-team-shape[data-team="2"]{color:#1f1300}
+/* 'Space/끝내기/결과 발표를 한 번 더…' 안내: 점수판을 가리지 않게 머리줄 아래(큰 신호 칸 위쪽)에 띄운다. */
+.fun-skip-hint{top:calc(env(safe-area-inset-top) + clamp(92px,13vh,150px));bottom:auto}
+body:has(.today-bar) .fun-skip-hint{top:calc(env(safe-area-inset-top) + 48px + clamp(92px,13vh,150px))}
+@media (max-width:640px){.fun-skip-hint{top:calc(env(safe-area-inset-top) + 132px);bottom:auto}}
+/* TV 모드 일시정지: '다시 시작 (P)'를 멀리서도 읽히게. */
+html[data-tv-mode="on"] .fun-paused button{min-height:clamp(72px,10vh,110px);padding:0 clamp(28px,3vw,56px);font-size:clamp(24px,2.8vw,44px)}
+html[data-tv-mode="on"] .fun-paused-note{font-size:clamp(20px,2.4vw,36px)}
+/* TV 모드 결과 화면: 가운데에 크게(우승 팀·버튼). 1920×1080에서 위쪽에 작게 몰리지 않게 높이를 채운다. */
+@media (min-width:961px){
+ html[data-tv-mode="on"] .fun-arena[data-phase=result]{justify-content:center}
+ html[data-tv-mode="on"] .fun-arena[data-phase=result] .fun-result{max-width:min(1640px,94vw);gap:clamp(18px,3vw,48px);align-items:center;margin:auto}
+ html[data-tv-mode="on"] .fun-result h2{font-size:clamp(44px,5.6vw,110px)}
+ html[data-tv-mode="on"] .fun-result .fun-eyebrow{font-size:clamp(18px,1.8vw,30px)}
+ html[data-tv-mode="on"] .fun-result .fun-podium li{font-size:clamp(22px,2.2vw,40px);padding:clamp(10px,1.4vh,18px) clamp(14px,1.6vw,26px)}
+ html[data-tv-mode="on"] .fun-result .fun-takeaways li{font-size:clamp(18px,1.6vw,30px);padding:clamp(8px,1.2vh,14px) clamp(12px,1.4vw,22px)}
+ html[data-tv-mode="on"] .fun-result-actions{gap:clamp(10px,1.4vh,18px)}
+ html[data-tv-mode="on"] .fun-result-actions button{min-height:clamp(64px,8.5vh,96px);font-size:clamp(24px,2.2vw,38px);padding:0 clamp(16px,1.6vw,28px)}
+ html[data-tv-mode="on"] .fun-result .fun-note{font-size:clamp(16px,1.5vw,26px)}
+}
+/* 머리줄은 리모컨 막대가 실제로 차지한 너비만큼만 비켜 선다(useDockInsets가 잰 값). 글씨 크기를 키워도 TV 모드 단추가 음성 ⚙를 덮지 않는다. */
+@media (min-width:641px){
+ html[style*="--fun-dock-right"] .fun-head{padding-left:max(0px,calc(var(--fun-dock-left) - clamp(10px,2vw,28px) + 12px));padding-right:max(0px,calc(var(--fun-dock-right) - clamp(10px,2vw,28px) + 12px))}
+}
+/* 차례 표시가 있어 머리줄이 좁으면 게임 이름은 그림만 남기지 않고 다음 줄로 내려 보여 준다. */
+@media (min-width:641px) and (max-width:1199px){
+ .fun-head:has(.fun-turn-chip){flex-wrap:wrap;row-gap:4px}
+ .fun-head:has(.fun-turn-chip) h1{flex:1 0 100%;order:-1}
+}
