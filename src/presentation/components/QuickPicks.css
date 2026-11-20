@@ -1,0 +1,22 @@
+.quick-picks{margin:14px 0 6px;padding:14px 16px;border:1px solid var(--forest-line,#e4ded2);border-radius:18px;background:var(--forest-paper,#fffefa);color:var(--forest-ink,#354239)}
+.quick-picks h2{margin:0 0 10px;font-size:17px;line-height:1.4;font-weight:700}
+.quick-picks-situations{display:flex;flex-wrap:wrap;gap:8px}
+.quick-picks-situations button{min-height:44px;padding:8px 16px;border:2px solid var(--forest-line,#cfd6c4);border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.quick-picks-situations button[aria-pressed="true"]{background:#0e7490;border-color:#0e7490;color:#fff}
+.quick-picks :is(button,a):focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.quick-picks-result{margin-top:12px}
+.quick-picks-note{margin:0 0 10px;font-size:15px;line-height:1.6}
+.quick-picks-result ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.quick-picks-result li a{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center;min-height:64px;padding:10px 14px;border:2px solid var(--forest-line,#cfd6c4);border-radius:14px;background:var(--forest-tint,#f4f6ee);color:inherit;text-decoration:none}
+.quick-picks-result li a:is(:hover,:focus-visible){border-color:#0e7490}
+.quick-picks-emoji{grid-row:span 2;font-size:28px}
+.quick-picks-result li strong{font-size:16px;line-height:1.35;word-break:keep-all}
+.quick-picks-result li small{font-size:13px;opacity:.85}
+.quick-picks-more{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:10px 0 0;font-size:14px}
+.quick-picks-more button{min-height:44px;padding:6px 14px;border:2px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.quick-picks-more a{color:inherit;text-underline-offset:4px}
+html.dark-theme .quick-picks{background:#1d2a23;border-color:#3b4c41;color:#eef3ea}
+html.dark-theme .quick-picks-situations button,html.dark-theme .quick-picks-result li a{border-color:#52675a}
+html.dark-theme .quick-picks-result li a{background:#26362d;color:#eef3ea}
+html.dark-theme .quick-picks-situations button[aria-pressed="true"]{background:#0e7490;border-color:#67c7dd;color:#fff}
+@media(max-width:700px){.quick-picks-result ul{grid-template-columns:1fr}.quick-picks{padding:12px}}

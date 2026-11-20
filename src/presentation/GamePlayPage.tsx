@@ -1,3 +1,4 @@
+import {recordRecentActivity} from '../application/recentActivities';
 import {ActivityPauseBoundary} from '../application/ActivityPauseContext';
 import {classroomResultMessage} from '../domain/fourthGameRules';
 import {StartLabel} from './components/StartLabel';
@@ -200,6 +201,7 @@ const GamePlaySession = () => {
   const guidedMode = hasBattle && !!missionId;
   const classroomActivity=useClassroomActivityStatus(hasBattle?battleRoomId:null);
   const variantId=searchParams.get('variant');
+  useEffect(()=>{if(!soloMode&&!hasBattle)recordRecentActivity(gameType);},[gameType,soloMode,hasBattle]); // 홈의 '지난번에 한 활동'
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
   const catalogReturn=searchParams.get('returnTo');
