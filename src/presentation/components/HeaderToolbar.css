@@ -4,6 +4,8 @@ html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] {
   justify-items:center; justify-content:end; gap:8px; flex:none; margin:0;
   color:var(--forest-ink); font-family:var(--forest-sans); width:auto;
 }
+/* 선생님 로그인 표시가 붙으면 한 칸 더 둔다. */
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label]:has(.teacher-status-chip) { grid-template-columns:repeat(8,44px); }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] .header-utilities.header-tools { display:contents; }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.home-tools,.share-control) { width:44px; min-width:0; }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action) {
