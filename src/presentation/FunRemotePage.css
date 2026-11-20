@@ -17,6 +17,7 @@
 .frp-snap{padding:12px;border-radius:14px;background:var(--frp-card);border:1px solid var(--frp-line)}
 .frp-cue{margin-top:6px!important;font-size:1.3rem;font-weight:900}
 .frp-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frp-extra[data-count="1"]{grid-template-columns:1fr}
 .frp-sent{min-height:1.5em;font-size:.9rem;opacity:.85}
 .frp-status[data-status=pending],.frp-status[data-status=asking]{color:#d97706}
 .frp-status[data-status=approved]{color:#16a34a}
@@ -32,8 +33,17 @@
 .frp-sent[data-tone=no]{color:#dc2626;font-weight:800;opacity:1}
 .frp-status[data-status=busy],.frp-status[data-status=gone]{color:#dc2626}
 .frp-warn{font-size:.9rem;padding:8px 10px;border-radius:10px;border:2px solid #f59e0b;background:rgba(245,158,11,.12);font-weight:700;line-height:1.4}
-.fun-remote-page .frp-confirm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding:12px;border:2px solid #f59e0b;border-radius:14px}
-.fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.05rem}
+/* 확인 창: 화면 아래에 붙는 판(작은 휴대폰에서도 보이게). 뒤는 어둡게 덮어 다른 버튼을 누르지 않게 한다. */
+.frp-sheet-backdrop{position:fixed;inset:0;z-index:50;background:rgba(2,6,23,.55);display:flex;align-items:flex-end;justify-content:center}
+.fun-remote-page .frp-confirm{width:min(560px,100%);box-sizing:border-box;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px 16px calc(16px + env(safe-area-inset-bottom));border:2px solid #f59e0b;border-bottom:0;border-radius:20px 20px 0 0;background:var(--frp-card);color:var(--frp-ink);box-shadow:0 -8px 24px rgba(0,0,0,.35)}
+.fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.1rem;font-weight:800;line-height:1.4}
+.fun-remote-page .frp-danger-solid{background:#dc2626;color:#fff}
+/* 본게임 중 '다음' 자리: 누르는 버튼이 아니라 지금 상태. 대신 '일시정지'가 크게 위로 온다. */
+.fun-remote-page .frp-next-wait{min-height:auto;padding:12px;border-radius:18px;background:transparent;border:2px dashed var(--frp-line);color:var(--frp-ink);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;text-align:center}
+.fun-remote-page .frp-next-wait .frp-big-icon{font-size:1.6rem}
+.fun-remote-page .frp-next-wait .frp-big-label{font-size:1.25rem}
+.frp-big[data-play] .frp-pause{order:-1}
+.fun-remote-page .frp-next[aria-busy]{opacity:.85}
 /* 자주 쓰는 두 버튼: 세로 화면에서 위아래로 쌓아 화면 절반쯤을 채운다(보지 않고 엄지로 누른다). */
 .frp-big{display:grid;grid-template-columns:1fr;gap:10px}
 .fun-remote-page .frp-big button{min-height:clamp(104px,21dvh,200px);border-radius:22px;border-width:0;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.1}
@@ -71,3 +81,28 @@
  .frp-extra,.frp-more{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 .frp-sent:empty{position:static;padding:0;min-height:0;background:none}
+/* 낮은 휴대폰(360×640 등): 큰 버튼을 조금 낮춰 팀 점수 버튼이 첫 화면에 들어오게 한다. */
+@media (orientation:portrait) and (max-height:700px){
+ .fun-remote-page{gap:8px;padding:10px}
+ .fun-remote-page h1{font-size:1.15rem}
+ .fun-remote-page .frp-big button{min-height:clamp(84px,14dvh,120px)}
+ .frp-big-icon{font-size:1.8rem}
+ .frp-snap{padding:8px}
+ .frp-cue{font-size:1.1rem}
+ .fun-remote-page .frp-team button{min-height:48px}
+}
+/* 가로 휴대폰: 머리말과 상태를 한 줄로 줄여 점수 버튼이 첫 화면에 보이게 한다. */
+@media (orientation:landscape) and (max-height:520px){
+ .fun-remote-page header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+ .fun-remote-page h1{font-size:1rem}
+ .frp-status{font-size:.9rem}
+ .frp-snap{padding:6px 10px}
+ .frp-snap p{display:inline}
+ .frp-cue{font-size:1rem;margin-left:8px!important}
+ .fun-remote-page .frp-big button{min-height:clamp(64px,22dvh,110px)}
+ .frp-big-icon{font-size:1.5rem}
+ .frp-big-label{font-size:1.3rem}
+ .fun-remote-page .frp-team{padding:4px 6px;border-top-width:5px}
+ .fun-remote-page .frp-team button{min-height:44px}
+ .frp-paused{padding:6px}
+}

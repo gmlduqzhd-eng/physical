@@ -55,7 +55,10 @@ export function speechText(raw:string|undefined|null,maxChars=MAX_SPEECH_CHARS):
  let t=String(raw);
  t=t.replace(PICTOGRAPH,' ');
  // 점수·배수: '×2'·'x2' → '두 배', '+1점'·'+1' → '1점 더'
- t=t.replace(/\s*[×xX]\s*2(?!\d)/g,' 두 배').replace(/\s*[×xX]\s*3(?!\d)/g,' 세 배');
+ // 영어 낱말 안의 x는 배수가 아니다('Max 3회'). 앞이 영문자가 아닐 때만 '두 배·세 배'로 읽는다.
+ t=t.replace(/(?<![A-Za-z])\s*[×xX]\s*2(?!\d)/g,' 두 배').replace(/(?<![A-Za-z])\s*[×xX]\s*3(?!\d)/g,' 세 배');
+ // 범위 '3~5명' → '3에서 5명'(뒤쪽 수를 고유어로 바꾸지 않는다)
+ t=t.replace(/(\d+)\s*[~～]\s*(?=\d)/g,'$1에서 ');
  t=t.replace(/(^|\s)\+(\d+)\s*점?/g,(_m,pre:string,n:string)=>`${pre}${n}점 더`);
  t=t.replace(/(^|\s)[-−](\d+)\s*점?/g,(_m,pre:string,n:string)=>`${pre}${n}점 빼기`);
  // '3-2-1' → '3, 2, 1'
@@ -67,6 +70,8 @@ export function speechText(raw:string|undefined|null,maxChars=MAX_SPEECH_CHARS):
  t=nativeCounts(t);
  // 괄호 안 짧은 설명은 쉼표로 붙여 읽는다
  t=t.replace(/[()（）]/g,', ');
+ // 소수 '1.5' → '1 점 5'(문장 끝 점으로 끊지 않게)
+ t=t.replace(/(\d)\.(\d)/g,'$1 점 $2');
  t=t.replace(/\s*,(\s*,)+/g,',').replace(/\s+([,.!?])/g,'$1').replace(/([,.!?])(?=[^\s,.!?])/g,'$1 ').replace(/\s{2,}/g,' ').trim();
  t=t.replace(/^[,.!?\s]+/,'').replace(/,\s*$/,'');
  if(t.length>maxChars){
@@ -159,6 +164,8 @@ export interface AnnouncerEnv {
  /** 바꿔 쓸 말 고르기에 쓰는 난수(테스트에서 바꿀 수 있게). */ random?:()=>number;
 }
 /** 이만큼 조용했다가 말할 때만 알림음을 낸다(신호가 빠르게 이어질 때는 내지 않는다). */ export const EARCON_QUIET_MS=4000;
+/** 알림음(약 0.18초)이 끝난 뒤 말을 시작한다(첫 음절과 겹치지 않게). */ export const EARCON_LEAD_MS=200;
+/** 온라인 목소리가 이 시간 안에 말을 시작하지 않으면(오프라인 등) 다음부터는 기기 안의 목소리를 쓴다. */ export const REMOTE_VOICE_WAIT_MS=1500;
 export function createAnnouncer(env:AnnouncerEnv):Announcer{
  const now=env.now??(()=>Date.now());
  const later=env.later??((fn,ms)=>setTimeout(fn,ms));
@@ -175,7 +182,16 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
  let lastText:string|null=null,lastAt=-Infinity,priorityAt=-Infinity;
  let current:SpeechUtteranceLike|null=null;
  const synth=env.synth,make=env.utterance;
- const korean=()=>{try{return synth?bestKoreanVoice(synth.getVoices()):null;}catch{return null;}};
+ // 온라인 목소리가 오류를 냈거나 말을 시작하지 못했으면(오프라인) 기기 안의 목소리를 먼저 고른다.
+ let avoidRemote=false;
+ const korean=()=>{try{
+  if(!synth)return null;
+  const voices=synth.getVoices();
+  if(avoidRemote){const local=bestKoreanVoice(voices.filter(v=>v.localService!==false));if(local)return local;}
+  return bestKoreanVoice(voices);
+ }catch{return null;}};
+ let leadTimer:unknown=null;
+ const dropLead=()=>{if(leadTimer!==null){clearLater(leadTimer);leadTimer=null;}};
  const picker=createPhrasePicker(env.random);
  let speakingNow=false;
  const setSpeaking=(on:boolean)=>{if(on===speakingNow)return;speakingNow=on;try{env.onSpeaking?.(on);}catch{/* 무시 */}};
@@ -187,7 +203,7 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
   return korean()?'ok':'no-korean';
  };
  const dropWaiting=()=>{if(waiting!==null){clearLater(waiting);waiting=null;}};
- const cancel=()=>{dropWaiting();warming=false;try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}setSpeaking(false);};
+ const cancel=()=>{dropWaiting();dropLead();warming=false;try{synth?.cancel();}catch{/* 일부 브라우저 예외 무시 */}setSpeaking(false);};
  const speakNow=(text:string,tone:SpeechTone='normal')=>{
   if(!synth||!make)return false;
   try{
@@ -195,9 +211,13 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
    const pro=TONE_PROSODY[tone]??TONE_PROSODY.normal;
    u.lang='ko-KR';u.rate=SPEECH_RATE[prefs.rate]*pro.rate;u.volume=SPEECH_VOLUME[prefs.volume];u.pitch=pro.pitch;
    const voice=korean();if(voice)u.voice=voice;
-   u.onstart=()=>{markHeard();setSpeaking(true);};
+   const remote=(voice as VoiceLike|null)?.localService===false;
+   let started=false;
+   u.onstart=()=>{started=true;markHeard();setSpeaking(true);};
    u.onend=()=>{if(u===current)setSpeaking(false);};
-   u.onerror=()=>{if(u===current)setSpeaking(false);};
+   u.onerror=()=>{if(remote)avoidRemote=true;if(u===current)setSpeaking(false);};
+   // 온라인 목소리가 끝내 시작하지 않으면 다음 문장부터 기기 목소리로 바꾼다.
+   if(remote)later(()=>{if(!started)avoidRemote=true;},REMOTE_VOICE_WAIT_MS);
    current=u;
    // 깨우기용 빈 문장만 줄에 있으면 끊지 않고 바로 뒤에 붙인다(끊고 쉬면 손동작 밖에서 읽게 되어 iOS에서 소리가 안 난다).
    if(warming){warming=false;dropWaiting();synth.speak(u);return true;}
@@ -226,9 +246,14 @@ export function createAnnouncer(env:AnnouncerEnv):Announcer{
     if(text===lastText&&t-lastAt<REPEAT_GAP_MS)return false;
     if(!opts.priority&&t-priorityAt<PRIORITY_HOLD_MS)return false;
    }
-   // 한동안 조용했으면 짧은 알림음(띵)으로 먼저 알린다.
-   if(!opts.noEarcon&&env.earcon&&t-lastAt>=EARCON_QUIET_MS){try{env.earcon();}catch{/* 무시 */}}
-   if(!speakNow(picker.vary(text),opts.tone))return false;
+   // 한동안 조용했으면 짧은 알림음(띵)으로 먼저 알리고, 알림음이 끝난 뒤 말한다.
+   // (사용자 동작 안에서 깨우는 중이면 기다리지 않는다: iOS는 같은 손동작 안에서만 소리를 낸다.)
+   const spoken=picker.vary(text);
+   if(!opts.noEarcon&&env.earcon&&t-lastAt>=EARCON_QUIET_MS&&!warming&&synth&&make){
+    try{env.earcon();}catch{/* 무시 */}
+    dropLead();
+    leadTimer=later(()=>{leadTimer=null;speakNow(spoken,opts.tone);},EARCON_LEAD_MS);
+   }else if(!speakNow(spoken,opts.tone))return false;
    lastText=text;lastAt=t;if(opts.priority)priorityAt=t;
    return true;
   },
