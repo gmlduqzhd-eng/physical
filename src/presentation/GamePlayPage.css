@@ -43,3 +43,6 @@ html[data-tv-mode="on"] .game-tools-layout:has(.has-game-toolbar) .game-utilitie
 html[data-tv-mode="on"] .gameplay-toolbar{min-height:48px}
 html[data-tv-mode="on"] .gameplay-toolbar .game-toolbar-title small{display:none}
 html[data-tv-mode="on"] .gameplay-toolbar .game-toolbar-title strong{font-size:clamp(18px,2.2vw,30px)}
+
+/* 대표 게임은 화면 안에 TV 모드 단추가 따로 있어, 위쪽 놀이 막대의 단추는 숨긴다(단추가 둘로 보이지 않게). */
+body:has(.fun-intro,.fun-arena) .gameplay-toolbar .display-btn{display:none}
