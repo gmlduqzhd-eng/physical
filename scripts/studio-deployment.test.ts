@@ -30,6 +30,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   let limiterMode: 'allow' | 'deny' | 'offline' = 'allow';
   globalThis.fetch = async (request, init) => {
     if (String(request).includes('/rpc/check_shared_teacher_access')||String(request).includes('/rpc/check_shared_teacher_login'))return new Response('true');
+    if (String(request).includes('/rpc/check_teacher_account')) return new Response(JSON.stringify({ enabled: true }));
     if (String(request).startsWith('https://synthetic-limiter.example/')) {
       if (limiterMode === 'offline') throw new Error('synthetic-private-error');
       return new Response(JSON.stringify(limiterMode === 'deny' ? { allowed: false, retrySeconds: 37, reason: 'minute' } : { allowed: true, retrySeconds: 0, reason: JSON.parse(String(init?.body)).request_kind === 'release' ? 'released' : 'accepted' }));
@@ -38,17 +39,17 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   };
   try {
     const status = await fetch(url + '/api/studio?action=status');
-    assert.deepEqual(await status.json(), { authenticated: false, configured: true, legacyLoginEnabled: true, aiReady: true, model: 'synthetic-model', localSetup: false });
+    assert.deepEqual(await status.json(), { authenticated: false, configured: true, legacyLoginEnabled: false, aiReady: true, model: 'synthetic-model', localSetup: false });
     assert.equal(status.headers.get('cache-control'), 'no-store');
+    const account = 'acct:11111111-2222-4333-8444-555555555555:1:' + 'a'.repeat(36);
     assert.equal((await post('generate', {})).status, 401);
     assert.equal((await post('generate', {}, newSession())).status, 401);
-    assert.equal((await post('generate', {}, newSession('physical_studio'), 'https://untrusted.example')).status, 403);
-    assert.equal((await post('login', { code: 'synthetic-teacher-code', adultTeacher: false })).status, 422);
-    assert.equal((await post('login', { code: 'incorrect-test-code', adultTeacher: true })).status, 401);
-    const login = await post('login', { code: 'synthetic-teacher-code', adultTeacher: true });
-    assert.equal(login.status, 200);
-    assert.match(login.headers.get('set-cookie')!, /HttpOnly; SameSite=Strict; Path=\/api; Max-Age=7200; Secure/);
-    const token = newSession('physical_studio');
+    assert.equal((await post('generate', {}, newSession('physical_teacher', account))).status, 401);
+    assert.equal((await post('generate', {}, newSession('physical_studio', account), 'https://untrusted.example')).status, 403);
+    // 예전 공유 코드 로그인은 맞는 코드여도 끝났고, 그 코드로 받은 세션도 더는 통하지 않는다.
+    assert.equal((await post('login', { code: 'synthetic-teacher-code', adultTeacher: true })).status, 410);
+    assert.equal((await post('generate', {}, newSession('physical_studio'))).status, 401);
+    const token = newSession('physical_studio', account);
     assert.equal((await post('configure', { apiKey: 'must-never-be-saved' }, token)).status, 404);
     assert.equal((await post('generate', { studentName: 'synthetic-private-field' }, token)).status, 422);
     assert.equal((await post('generate', { notes: 'x'.repeat(9000) }, token)).status, 413);
