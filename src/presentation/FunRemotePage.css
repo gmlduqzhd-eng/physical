@@ -16,11 +16,6 @@
 .frp-note{font-size:.9rem;opacity:.8}
 .frp-snap{padding:12px;border-radius:14px;background:var(--frp-card);border:1px solid var(--frp-line)}
 .frp-cue{margin-top:6px!important;font-size:1.3rem;font-weight:900}
-.frp-main{display:grid;grid-template-columns:2fr 1fr;gap:10px}
-.frp-main .frp-primary{min-height:96px}
-.frp-teams{display:flex;flex-direction:column;gap:8px}
-.frp-team{display:grid;grid-template-columns:1fr 88px 88px;gap:8px;align-items:center;padding:8px 10px;border-radius:14px;border-left:8px solid var(--team);background:var(--frp-card)}
-.frp-team b{font-size:1.2rem}
 .frp-extra{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .frp-sent{min-height:1.5em;font-size:.9rem;opacity:.85}
 .frp-status[data-status=pending],.frp-status[data-status=asking]{color:#d97706}
@@ -37,7 +32,42 @@
 .frp-sent[data-tone=no]{color:#dc2626;font-weight:800;opacity:1}
 .frp-status[data-status=busy],.frp-status[data-status=gone]{color:#dc2626}
 .frp-warn{font-size:.9rem;padding:8px 10px;border-radius:10px;border:2px solid #f59e0b;background:rgba(245,158,11,.12);font-weight:700;line-height:1.4}
-/* 본게임 중 '마지막 승부로'는 보조 버튼(작게)이고, 누르면 한 번 더 확인한다. */
-.frp-main .frp-skip{min-height:96px;font-size:1.05rem;background:transparent;border-style:dashed}
 .fun-remote-page .frp-confirm{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding:12px;border:2px solid #f59e0b;border-radius:14px}
 .fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.05rem}
+/* 자주 쓰는 두 버튼: 세로 화면에서 위아래로 쌓아 화면 절반쯤을 채운다(보지 않고 엄지로 누른다). */
+.frp-big{display:grid;grid-template-columns:1fr;gap:10px}
+.fun-remote-page .frp-big button{min-height:clamp(104px,21dvh,200px);border-radius:22px;border-width:0;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.1}
+.fun-remote-page .frp-next{background:#0e7490}
+.fun-remote-page .frp-pause{background:#b45309}
+.fun-remote-page .frp-pause[data-paused]{background:#15803d}
+.frp-big-icon{font-size:clamp(2rem,7dvh,3.4rem)}
+.frp-big-label{font-size:clamp(1.5rem,4.2dvh,2.2rem);font-weight:900}
+.frp-big small{font-size:.85rem;font-weight:700;opacity:.95}
+/* 팀 점수: 2칸 격자. 색 띠와 모양(● ▲ ■ ◆)으로 함께 구분한다. */
+.frp-teams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.frp-teams[data-count="1"]{grid-template-columns:1fr}
+.frp-team{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:6px;align-items:center;padding:8px;border-radius:14px;border-top:8px solid var(--team);background:var(--frp-card);min-width:0}
+.frp-team b{grid-column:1/-1;font-size:1.05rem;display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap}
+.frp-shape{color:var(--team);font-size:1.2rem}
+.frp-score{margin-left:auto;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.fun-remote-page .frp-team button{min-height:56px;padding:0}
+.fun-remote-page .frp-plus{font-size:1.4rem;border-color:var(--team)}
+.fun-remote-page .frp-minus{font-size:1rem;opacity:.9}
+.fun-remote-page .frp-extra button{min-height:56px;font-size:1rem}
+.fun-remote-page .frp-more-toggle{min-height:48px;font-size:.95rem;background:transparent;border-style:dashed}
+.frp-more{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fun-remote-page .frp-more button{min-height:56px;font-size:1rem}
+.fun-remote-page .frp-more .frp-skip{background:transparent;border-style:dashed}
+/* 보낸 결과는 화면 아래에 붙여, 스크롤해도 보인다. */
+.frp-sent{position:sticky;bottom:0;padding:6px 0;background:var(--frp-bg);z-index:1}
+/* 가로로 든 휴대폰: 두 큰 버튼을 나란히, 팀은 한 줄로. */
+@media (orientation:landscape) and (max-height:520px){
+ .fun-remote-page{max-width:none;gap:8px;padding:10px}
+ .frp-big{grid-template-columns:1fr 1fr}
+ .fun-remote-page .frp-big button{min-height:clamp(88px,34dvh,150px)}
+ .frp-teams{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .frp-teams[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .frp-teams[data-count="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .frp-extra,.frp-more{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+.frp-sent:empty{position:static;padding:0;min-height:0;background:none}

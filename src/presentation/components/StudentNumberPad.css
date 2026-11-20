@@ -1,0 +1,19 @@
+/* 학생 입장 숫자판: 손가락으로 누르기 쉬운 큰 키. 좁은 휴대폰(360px)에서도 넘치지 않는다.
+   크기·글자 규칙의 !important는 화면 테마(ForestTheme 등)의 공통 input·button 규칙에 밀리지 않게 하려는 것이다. */
+.snp{display:grid;gap:12px;margin:16px 0;max-width:420px;margin-inline:auto;color:#0f172a}
+.snp label{display:grid;gap:6px;font-weight:800;text-align:left}
+.snp input{width:100%;box-sizing:border-box;border:2px solid #94a3b8;border-radius:14px;background:#fff;color:#0f172a;padding:12px;font:inherit;font-size:1.15rem}
+.snp .snp-display{font-size:clamp(2.6rem,12vw,3.6rem)!important;font-weight:900!important;text-align:center;letter-spacing:.08em;line-height:1.1!important;padding:8px!important;min-height:76px!important;font-variant-numeric:tabular-nums;border-color:#0e7490}
+.snp .snp-display::placeholder{font-size:1.4rem;letter-spacing:0;font-weight:700;color:#64748b}
+.snp-keys{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.snp .snp-key{min-height:clamp(56px,9dvh,72px)!important;border-radius:16px!important;border:2px solid #94a3b8;background:#f8fafc;color:#0f172a;font:inherit;font-size:1.7rem!important;font-weight:900;cursor:pointer;touch-action:manipulation;padding:0}
+.snp .snp-key[data-key="clear"]{font-size:1.05rem!important}
+.snp .snp-key:active{background:#cffafe;border-color:#0e7490}
+.snp .snp-key:disabled{opacity:.45;cursor:not-allowed}
+.snp .snp-key:focus-visible,.snp input:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+@media (orientation:landscape) and (max-height:520px){
+ .snp{max-width:none;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);align-items:start}
+ .snp-keys{grid-row:1/3;grid-column:2}
+ .snp .snp-key{min-height:44px!important;font-size:1.3rem!important}
+ .snp .snp-display{min-height:56px!important;font-size:2.2rem!important}
+}
