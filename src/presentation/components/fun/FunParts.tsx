@@ -63,11 +63,19 @@ export function FinalCountdown({seconds,active}:{seconds:number;active:boolean})
 
 /**
  * 남은 시간 막대: 숫자와 함께, 줄어드는 막대로도 보여 준다(글을 못 읽는 학생도 알 수 있게).
- * 넉넉하면 초록, 20초 아래는 노랑, 마지막 10초는 빨강. 숫자 쪽(fun-timer)이 화면 낭독기용이라 막대는 숨긴다.
+ * 넉넉하면 초록, 노랑, 빨강 순서. 기준은 단계 길이에 비례한다(짧은 시범·연습 판이 처음부터 노랑·빨강으로 시작하지 않게).
+ * 숫자 쪽(fun-timer)도 같은 기준으로 색이 바뀐다. 숫자 쪽이 화면 낭독기용이라 막대는 숨긴다.
  */
+export type TimeLevel='ok'|'warn'|'danger';
+/** 노랑: 남은 시간이 min(20초, 단계의 30%) 이하. 빨강: min(10초, 단계의 15%) 이하. */
+export function timeLevel(left:number,total:number):TimeLevel{
+ if(!(total>0))return 'ok';
+ const danger=Math.min(10,total*0.15),warn=Math.min(20,total*0.3);
+ return left<=danger?'danger':left<=warn?'warn':'ok';
+}
 export function TimeBar({left,total}:{left:number;total:number}){
  const ratio=total>0?Math.min(1,Math.max(0,left/total)):0;
- const level=left<=10?'danger':left<=20?'warn':'ok';
+ const level=timeLevel(left,total);
  return <div className="fun-timebar" data-level={level} aria-hidden="true"><i style={{width:`${(ratio*100).toFixed(1)}%`}}/></div>;
 }
 

@@ -22,6 +22,14 @@ export interface FunEngineOptions {
 /** Space를 한 번 누른 뒤 이 시간 안에 한 번 더 눌러야 본게임·마지막 승부를 넘긴다. */
 export const SKIP_CONFIRM_MS=3000;
 const isSkipPhase=(p:FunState['phase'])=>p==='play'||p==='climax';
+/**
+ * 휴대폰 리모컨의 '다음'을 빠르게 두 번 누르면 한 단계를 통째로 건너뛰었다(시범→본게임, 연습 판→마지막 승부).
+ * 단계가 바뀐 직후나 바로 앞 '다음' 직후 이 시간 안에 온 리모컨 '다음'은 버린다. TV 버튼·키보드는 그대로.
+ */
+export const REMOTE_NEXT_GUARD_MS=800;
+export function shouldIgnoreRemoteNext(now:number,lastRemoteNextAt:number,phaseChangedAt:number):boolean{
+ return now-lastRemoteNextAt<REMOTE_NEXT_GUARD_MS||now-phaseChangedAt<REMOTE_NEXT_GUARD_MS;
+}
 /** 이 안의 버튼은 Space가 버튼 자체를 누른다. 그 밖(무대의 선생님 버튼 등)에서는 Space가 늘 '다음'이다. */
 /** 음성 설정·리모컨 창·리모컨 막대(📱 휴대폰 리모컨·← 목록)·일시정지 덮개 */
 const NATIVE_SPACE_ZONES='.tv-voice,.fun-remote-panel,.fun-dock,.fun-paused';
@@ -53,7 +61,19 @@ export function useFunEngine(opts:FunEngineOptions){
 
  // 명령 버스: TV 버튼·키보드·리모컨이 모두 여기로 들어온다.
  // '다음 활동으로 갈까요?' 확인 창이 떠 있는 동안에는 리모컨 명령을 받지 않는다(창 뒤에서 게임이 다시 움직이지 않게).
- useEffect(()=>bus.subscribe((cmd,source)=>{if(source==='remote'&&isLessonConfirming())return;dispatch(cmd);}),[bus,dispatch]);
+ // 휴대폰 '다음'은 단계가 바뀐 직후·바로 앞 '다음' 직후(REMOTE_NEXT_GUARD_MS)에 오면 버린다: 두 번 눌러 한 단계를 건너뛰지 않게.
+ // 리모컨 '다음'은 TV 쪽 '한 번 더 누르면' 확인과 섞이지 않는다(리모컨은 휴대폰에서 따로 묻는다).
+ const phaseChangedAt=useRef(-Infinity),lastRemoteNext=useRef(-Infinity),seenPhase=useRef(state.phase);
+ if(seenPhase.current!==state.phase){seenPhase.current=state.phase;phaseChangedAt.current=performance.now();}
+ useEffect(()=>bus.subscribe((cmd,source)=>{
+  if(source==='remote'&&isLessonConfirming())return;
+  if(source==='remote'&&cmd.type==='next'){
+   const now=performance.now();
+   if(shouldIgnoreRemoteNext(now,lastRemoteNext.current,phaseChangedAt.current))return;
+   lastRemoteNext.current=now;
+  }
+  dispatch(cmd);
+ }),[bus,dispatch]);
 
  // 시간: 250ms마다 실제 흐른 시간만큼 tick.
  useEffect(()=>{

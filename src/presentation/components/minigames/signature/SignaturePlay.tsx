@@ -6,7 +6,7 @@ import {createFunCommandBus,type FunCommandBus} from '../../../../application/fu
 import {clearFunSession,clearRemoteRoom,loadFunSession,loadRemoteRoom,saveFunSession,saveRemoteRoom,type FunSession,type FunSetup} from '../../../../application/funSession';
 import {GAMES} from '../../../../domain/gamesData';
 import {unlockAudio} from '../../../../application/soundEffects';
-import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,TeamShape,TimeBar,TvModeControl,useFunEngine,useTvModeExit,type TeacherButton} from '../../fun';
+import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,TeamShape,TimeBar,timeLevel,TvModeControl,useFunEngine,useTvModeExit,type TeacherButton} from '../../fun';
 import {RemoteLink} from '../../fun/RemoteLink';
 import {requestRemotePanelClose,useRemotePanelOpen} from '../../fun/remotePanelState';
 import {ClassFeedbackSlot} from '../../ClassFeedbackSlot';
@@ -334,7 +334,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
    <h1 ref={titleRef} tabIndex={-1}><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
    <span className="fun-phase" data-phase={state.phase}>{PHASE_LABEL[state.phase]}</span>
    {turnTeam!==null&&<span className="fun-turn-chip" style={{'--team':TEAM_COLORS[turnTeam]} as React.CSSProperties}><TeamShape team={turnTeam}/>{TEAM_NAMES[turnTeam]} 차례</span>}
-   <span className="fun-timer" role="timer" aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
+   <span className="fun-timer" role="timer" data-level={timeLevel(left,game.timing[state.phase as 'demo'|'tutorial'|'play'|'climax'])} aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
    <TvVoiceToggle voice={voice} className="fun-voice"/>
    {/* 휴대폰 리모컨·'← 목록' 버튼은 판이 바뀌어도 남도록 바깥(fun-dock)에 있다. */}
   </header>
