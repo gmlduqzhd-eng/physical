@@ -48,7 +48,7 @@ export function lastEntryFor(room?: string, groupName?: string, now = Date.now()
 }
 
 /** '3번 바람으로 이어가기'처럼 누구로 들어가는지 보이는 이름. */
-export const resumeLabel = (entry: Pick<LastStudentEntry, 'number' | 'nickname'>) => `${entry.number}번 ${entry.nickname}`;
+export const resumeLabel = (entry: Pick<LastStudentEntry, 'number' | 'nickname'>) => entry.nickname === `${entry.number}번` ? entry.nickname : `${entry.number}번 ${entry.nickname}`;
 
 /**
  * 같은 기기에서 다른 학생이 들어갈 때: 앞 학생의 입장 기록·번호·별명을 지우고, 이 창의 익명 수업 연결도 끊는다.

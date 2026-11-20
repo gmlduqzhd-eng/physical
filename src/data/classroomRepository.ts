@@ -8,7 +8,7 @@ export const classroomError = (error: unknown, fallback: string) =>
 export interface StudentClassroomEntry { room_id:string; group_id:string; group_name:string }
 export interface MyClassroomProfile { group_id:string; student_number:number|null; nickname:string|null }
 const studentJoinErrors: Record<string,string> = {
-  invalid_profile:'학생 번호(1~99)와 별명(2~12자)을 확인해주세요.',
+  invalid_profile:'번호(1~99)와 별명(2~12자)을 확인해 주세요.',
   invalid_pin:'PIN이 맞지 않거나 종료된 수업입니다. 선생님에게 확인해주세요.',
   invalid_invite:'QR 참여 코드가 맞지 않거나 만료되었습니다. 선생님에게 새 QR을 요청하세요.',
   // 번호는 먼저 들어온 기기가 최대 4시간 잡고 있다. 선생님 화면에는 번호를 푸는 단추가 없으므로, 할 수 있는 일만 안내한다.
@@ -17,6 +17,8 @@ const studentJoinErrors: Record<string,string> = {
   room_closed:'종료된 수업입니다. 선생님에게 확인해주세요.',
   rate_limited:'이 기기에서 잘못된 참여 코드를 여러 번 입력했어요. 이미 참여한 수업은 ‘이전 수업 이어가기’를 이용하고, 새 입장은 15분 후 다시 시도해주세요.',
 };
+/** 고른 번호를 이미 다른 기기가 쓰고 있다는 오류인지(번호판에서 그 번호를 막는 데 쓴다). */
+export const isNumberTakenError = (error: unknown) => error instanceof Error && error.message === studentJoinErrors.number_taken;
 function studentJoinResult(data: unknown, error: unknown): StudentClassroomEntry {
   if (error || !data || typeof data !== 'object') throw new Error('입장 정보를 확인할 수 없습니다. 연결 상태를 확인해주세요.');
   const result=data as StudentClassroomEntry & {error?:string};

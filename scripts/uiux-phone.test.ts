@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { PAD_KEYS, cleanStudentNumber, padKeyLabel, pressPadKey } from '../src/application/studentNumberPad';
-import { validateStudentIdentity } from '../src/application/studentIdentity';
+import { autoNickname, isAutoNickname, validateStudentIdentity } from '../src/application/studentIdentity';
+import { resumeLabel } from '../src/application/lastStudentEntry';
 import { isSendLocked, lockAfterSend, SEND_LOCK_MIN_MS, SEND_LOCK_MS } from '../src/application/remoteSendLock';
 
 test('the phone remote sends one phase-changing command per phase (no double-tap skip)', () => {
@@ -21,58 +21,43 @@ test('the phone remote sends one phase-changing command per phase (no double-tap
 
 const read = (file: string) => readFileSync(file, 'utf8');
 
-test('number pad builds only student numbers 1 to 99', () => {
-  assert.equal(pressPadKey('', '0'), '', 'a leading zero is ignored');
-  assert.equal(pressPadKey('', '7'), '7');
-  assert.equal(pressPadKey('7', '0'), '70');
-  assert.equal(pressPadKey('1', '2'), '12');
-  assert.equal(pressPadKey('12', 'back'), '1');
-  assert.equal(pressPadKey('1', 'back'), '');
-  assert.equal(pressPadKey('', 'back'), '');
-  assert.equal(pressPadKey('45', 'clear'), '');
-  // After two digits, more digits are ignored: a double press must not turn 12 into 2 (another child's number).
-  assert.equal(pressPadKey('12', '3'), '12', 'a third digit is ignored so a double press cannot become another student number');
-  assert.equal(pressPadKey('11', '1'), '11');
-  assert.equal(cleanStudentNumber('１２'), '12', 'full-width digits are accepted');
-  assert.equal(pressPadKey('12', '0'), '12');
-  // Whatever sequence is pressed, the result is empty or passes the same validation the join uses.
-  let value = '';
-  for (const key of ['0', '0', '9', '9', '9', '0', 'back', '5', 'clear', '3', '0'] as const) {
-    value = pressPadKey(value, key);
-    assert.match(value, /^(?:|[1-9]|[1-9]\d)$/);
-    if (value) assert.equal(validateStudentIdentity(value, '바람').number, Number(value));
-  }
-});
-
-test('typed numbers are cleaned the same way and every key has a spoken name', () => {
-  assert.equal(cleanStudentNumber('012'), '12');
-  assert.equal(cleanStudentNumber('a3b'), '3');
-  assert.equal(cleanStudentNumber('1234'), '12');
-  assert.equal(cleanStudentNumber('00'), '');
-  assert.equal(PAD_KEYS.length, 12);
-  assert.deepEqual([...PAD_KEYS].filter(key => /^\d$/.test(key)).sort(), ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-  assert.equal(padKeyLabel('back'), '한 글자 지우기');
-  assert.equal(padKeyLabel('clear'), '모두 지우기');
-  assert.equal(padKeyLabel('5'), '5');
-});
-
-test('student join shows the number pad on one screen and keeps resume and switch-student', () => {
+test('student join: tap a number and enter, nickname is optional and defaults to the number', () => {
+  assert.equal(autoNickname(12), '12번');
+  assert.deepEqual(validateStudentIdentity('12', ''), { number: 12, nickname: '12번' }, 'no nickname needed');
+  assert.deepEqual(validateStudentIdentity('7', '3번'), { number: 7, nickname: '7번' }, 'an auto nickname follows the new number');
+  assert.deepEqual(validateStudentIdentity('7', ' 바람 '), { number: 7, nickname: '바람' }, 'a chosen nickname is kept');
+  assert.throws(() => validateStudentIdentity('', ''), /번호를 눌러/);
+  assert.throws(() => validateStudentIdentity('100', ''));
+  assert.throws(() => validateStudentIdentity('3', '바'), /2~12자/);
+  assert.equal(isAutoNickname(''), true);
+  assert.equal(isAutoNickname('99번'), true);
+  assert.equal(isAutoNickname('바람'), false);
+  assert.equal(resumeLabel({ number: '12', nickname: '12번' }), '12번', 'no "12번 12번"');
+  assert.equal(resumeLabel({ number: '12', nickname: '바람' }), '12번 바람');
   const pad = read('src/presentation/components/StudentNumberPad.tsx');
-  // The labels stay the same so existing journeys can still find the fields.
-  assert.match(pad, /학생 번호 \(1~99\)/);
+  assert.match(pad, /내 번호를 눌러요/);
+  assert.match(pad, /aria-pressed=\{picked === value\}/);
+  assert.match(pad, /disabled=\{isTaken\}/, 'numbers another device holds cannot be tapped');
+  assert.match(pad, /31번부터 더 보기/);
+  assert.match(pad, /별명 바꾸기/);
   assert.match(pad, /별명 \(2~12자\)/);
-  assert.match(pad, /aria-label="번호 숫자판"/);
-  assert.match(pad, /inputMode="none"/, 'the on-screen pad replaces the system keyboard for the number');
+  assert.doesNotMatch(pad, /required/, 'no field has to be typed');
+  const css = read('src/presentation/components/StudentNumberPad.css');
+  assert.match(css, /\.snp-num\{[^}]*min-height:clamp\(56px/, 'number buttons are at least 56px');
   const join = read('src/presentation/QuickJoin.tsx');
-  assert.match(join, /<StudentNumberPad /);
+  assert.match(join, /<StudentNumberPad [^>]*taken=\{taken\}/);
+  assert.match(join, /isNumberTakenError/);
   assert.match(join, /학생으로 이어가기/);
   assert.match(join, /다른 학생으로 들어가기/);
   assert.match(join, /우리 모둠으로 입장/);
   assert.equal((join.match(/bg-cyan-700 text-white rounded-xl p-4 font-bold my-4/g) ?? []).length, 1, 'one primary enter button in the form');
   const lobby = read('src/presentation/Lobby.tsx');
-  assert.equal((lobby.match(/<StudentNumberPad /g) ?? []).length, 2, 'PIN join and resume-profile forms both use the pad');
+  assert.equal((lobby.match(/<StudentNumberPad [^>]*taken=\{taken\}/g) ?? []).length, 2, 'PIN join and resume-profile forms both use the pad');
   assert.match(lobby, /다른 학생으로 들어가기/);
-  assert.doesNotMatch(join + lobby, /StudentIdentityFields/);
+  const battle = read('src/presentation/components/QuickPinClassroom.tsx');
+  assert.match(battle, /<StudentNumberPad /);
+  assert.match(read('src/data/classroomRepository.ts'), /export const isNumberTakenError/);
+  assert.match(read('src/presentation/PrivacyPage.tsx'), /번호\(1~99\)를 누릅니다/);
 });
 
 test('phone remote puts next and pause first, teams in a shape-coded grid, and rare actions behind more', () => {

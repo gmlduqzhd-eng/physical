@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../data/supabase';
-import { createClassroom, findRoomByPin, joinStudentByPin, getMyClassroomProfile, classroomError } from '../../data/classroomRepository';
+import { createClassroom, findRoomByPin, joinStudentByPin, getMyClassroomProfile, classroomError, isNumberTakenError } from '../../data/classroomRepository';
 import { rememberStudentIdentity, savedStudentIdentity, validateStudentIdentity } from '../../application/studentIdentity';
-import { StudentIdentityFields } from './StudentIdentityFields';
+import { StudentNumberPad } from './StudentNumberPad';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
 import { useAudio } from '../../application/useAudio';
@@ -33,6 +33,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   const [inputPin, setInputPin] = useState('');
   const [studentNumber,setStudentNumber]=useState(()=>savedStudentIdentity().number);
   const [nickname,setNickname]=useState(()=>savedStudentIdentity().nickname);
+  const [taken,setTaken]=useState<ReadonlySet<number>>(()=>new Set());
   const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<'blue' | 'white'>('blue');
@@ -148,7 +149,10 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
       writeStorage('pin_battle_current_room', entry.room_id, 'session');
       writeStorage('pin_battle_current_pin', inputPin, 'session');
       setCurrentRoom(battle); setInRoom(true); playBeep();
-    } catch (cause) { setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.')); }
+    } catch (cause) {
+      if (isNumberTakenError(cause) && studentNumber) { const n = Number(studentNumber); setTaken(prev => new Set(prev).add(n)); setStudentNumber(''); }
+      setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.'));
+    }
     finally { busyRef.current = false; setBusy(false); }
   };
 
@@ -212,7 +216,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <Users className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-black mb-1">4자리 PIN 학급 배틀룸</h2>
-            <p className="text-xs text-slate-400 mb-5">선생님이 알려준 팀 4자리 PIN과 번호·별명을 입력해요.</p>
+            <p className="text-xs text-slate-400 mb-5">선생님이 알려준 팀 4자리 PIN을 적고, 내 번호를 눌러요.</p>
 
             {/* 에러 메시지 배너 */}
             {errorMsg && (
@@ -239,7 +243,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                 placeholder="4자리 팀 PIN"
                 className="w-full py-3 text-center text-3xl font-mono font-black tracking-widest bg-slate-950 border border-slate-700 rounded-xl text-cyan-400 focus:outline-none focus:border-cyan-400 mb-3"
               />
-              <div className="text-slate-900 bg-white rounded-xl p-2 text-left mb-3"><StudentIdentityFields number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname}/></div>
+              <div className="text-slate-900 bg-white rounded-xl p-2 text-left mb-3"><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname} taken={taken}/></div>
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}
