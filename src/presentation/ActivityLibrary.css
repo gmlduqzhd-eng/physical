@@ -15,7 +15,7 @@
 .flow.activity-tools-scope :is(input:not([type=checkbox]):not([type=radio]),select){background:var(--forest-paper, #fffefa);color:var(--forest-ink, #354239);border:1px solid var(--forest-line, #cbd1bf);border-radius:13px;font-size:16px;min-height:50px}
 .flow.activity-tools-scope details{border:1px solid var(--forest-line, #e0dfd3);background:var(--forest-paper, #fffefa);border-radius:15px;padding:16px 18px}
 .flow.activity-tools-scope summary{font-size:14px;line-height:1.6;color:var(--forest-accent, #52634a);min-height:24px}
-.flow.activity-tools-scope .grid.three{gap:22px}
+.flow.activity-tools-scope .grid.three{gap:22px;align-items:start}
 .flow.activity-tools-scope .catalog-card{background:var(--forest-paper, #fffefa);border:1px solid var(--forest-line, #e4ded2);border-radius:23px;padding:25px;gap:0;box-shadow:0 5px 20px #35423904}
 .flow.activity-tools-scope .catalog-card:hover{border-color:var(--forest-line, #aab89d);box-shadow:0 8px 28px #3542390a}
 .activity-card-icon{font-size:30px}.activity-tools-scope .activity-card-icon{display:flex;align-items:center;justify-content:center;align-self:flex-start;width:54px;height:54px;font-size:28px;border-radius:17px;background:#f0f3e7;margin-bottom:20px}
@@ -97,11 +97,11 @@ html[data-design] .flow.activity-tools-scope details.activity-filter-more{margin
 .flow.activity-tools-scope .catalog-card-compact .activity-meta-featured{color:#6b4b00;font-weight:700}
 .flow.activity-tools-scope .catalog-card-compact .activity-card-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:auto}
 .flow.activity-tools-scope .catalog-card-compact .card-action{margin:0;flex:1 1 150px}
-.flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more[open]{flex:1 1 100%}
+/* '자세히'는 열어도 그 자리에 머문다(버튼 옆 칸 안에서 아래로 펼침). 다른 카드는 늘어나지 않게 줄 높이를 따로 잡는다. */
+.flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more{flex:1 1 10rem;min-width:0}
 .flow.activity-tools-scope .catalog-card-compact .card-action .button-wide{min-height:44px;padding-block:8px}
 .flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more{margin:0;padding:0;background:transparent;border:0}
 .flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more>summary{display:inline-flex;align-items:center;min-height:44px;padding:2px 10px;font-size:.9rem;font-weight:700;cursor:pointer;color:var(--forest-accent,#576c50)}
-.flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more[open]{padding-top:4px}
 .flow.activity-tools-scope .catalog-card-compact .activity-card-foot>details.activity-card-more[open]>summary{margin-bottom:8px}
 .flow.activity-tools-scope .catalog-card-compact details.activity-card-more>.muted{font-size:14px;line-height:1.7;margin:0 0 10px}
 .flow.activity-tools-scope .catalog-card-compact details.activity-card-more>.small{font-size:12px;line-height:1.7;margin:0 0 10px}
@@ -144,3 +144,5 @@ html.dark-theme .flow.activity-tools-scope .catalog-card-compact .activity-card-
  .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
  .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations button{flex:none}
 }
+/* 글씨를 크게·더 크게 하면 카드 폭이 상대적으로 좁아지니, 한 줄 규칙을 3줄까지 보여 준다. */
+html:is([data-text-scale="large"],[data-text-scale="xlarge"]) .flow.activity-tools-scope .catalog-card-compact .activity-oneline{-webkit-line-clamp:3}

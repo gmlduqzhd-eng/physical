@@ -43,11 +43,12 @@ test('home shows two big starts, a recent-or-featured shelf, quick picks, and fo
  const home=read('src/presentation/UnifiedHomePage.tsx');
  assert.match(home,/data-today-link/);assert.match(home,/data-home-hub/);
  assert.match(home,/지난번에 한 활동/);assert.match(home,/★ 즐겨찾기/);
- assert.match(home,/<QuickPicks returnTo="\/"\/>/);
+ assert.match(home,/<QuickPicks returnTo="\/"[^>]*\/>/);
  // 나머지 입구는 '더 보기' 안에 그대로 있다(자리표 id도 그대로).
  const more=home.slice(home.indexOf('<details className="home-more"'),home.indexOf('</details>'));
  for(const part of ['더 보기','id="library-title"','className="roles"','id="encyclopedia-title"','<FeaturedExperiences/>'])assert.ok(more.includes(part),part);
- assert.match(home,/window\.location\.hash\.length > 1/);
+ // 주소의 #자리표가 '더 보기' 안에 있을 때만 펼친다(round 110).
+ assert.match(home,/window\.location\.hash\.slice\(1\)/);
  // 첫 화면 선반은 4개까지만
  assert.match(home,/FEATURED_GAMES\.slice\(0, 4\)/);assert.match(home,/readRecentActivities\(\)\)\.slice\(0, 4\)/);
 });
