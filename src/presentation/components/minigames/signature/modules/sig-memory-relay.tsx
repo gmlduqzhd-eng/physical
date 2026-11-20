@@ -45,6 +45,7 @@ function MemoryResult({state}:SignatureModuleProps){
 
 const memoryRelayModule:SignatureModule={
  Panel:MemoryPanel,Result:MemoryResult,hideFigure:true,wide:true,
+ useTurnTeam:({state})=>state.teams>1&&(state.phase==='tutorial'||state.phase==='play'||state.phase==='climax')?currentTurnTeam(state):null,
  // '모든 팀 +1' 대신 차례 팀의 성공 버튼(아래 controls)만 둔다. A 키도 차례 팀 성공으로 바뀐다.
  scoreAllLabel:'차례 팀 성공',scoreAllButton:false,teamKeysLabel:'1~4 차례 팀 성공 (Shift −1 정정)',
  controls:({state})=>{
@@ -52,7 +53,7 @@ const memoryRelayModule:SignatureModule={
   const team=currentTurnTeam(state),points=state.phase==='climax'?CLIMAX_POINTS:1;
   // 버튼도 키보드·리모컨과 같은 규칙(memoryRelayGate)으로 켜고 끈다.
   const allowed=!state.paused&&!!memoryRelayGate(state,{type:'score',team,delta:1});
-  return [{label:`✔ ${turnTeamNameAt(state,state.phase==='climax'?'climax':state.phase==='play'?'play':'tutorial',state.cueIndex)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:!allowed,hint:String(team+1),tone:'primary'}];
+  return [{label:`✔ ${turnTeamNameAt(state,state.phase==='climax'?'climax':state.phase==='play'?'play':'tutorial',state.cueIndex)} 성공 +${points}`,command:{type:'score',team,delta:points},disabled:!allowed,hint:String(team+1),tone:'gold'}];
  },
 };
 export default memoryRelayModule;

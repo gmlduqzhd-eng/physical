@@ -36,6 +36,8 @@ export interface SignatureModule {
  scoreAllLabel?:string;
  /** 단축키 안내에서 1~4 키의 뜻(기본 '1~4 팀 +1 (Shift −1)'). */ teamKeysLabel?:string;
  useSignalCue?:(p:SignatureModuleProps)=>SignatureCue|null;
+ /** 팀이 차례로 하는 놀이: 지금 차례인 팀 번호(없으면 null)를 돌려주는 훅. 화면 테두리와 점수판에 그 팀을 표시한다. */
+ useTurnTeam?:(p:SignatureModuleProps)=>number|null;
  snapshot?(seed:number):unknown;
  restore?(seed:number,data:unknown):void;
  dispose?(seed:number):void;

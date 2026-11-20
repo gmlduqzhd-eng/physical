@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
+import {TeamShape} from '../../../fun';
 import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput,reversed} from '../../../../../domain/funLoop';
 import {followerOf,leaderFor,mirrorRound,mirrorStep,type MirrorStep} from '../../../../../domain/signature/sig-mirror-pair';
 import {StickFigure} from '../../../fun';
@@ -29,7 +30,7 @@ function MirrorPanel({state,cue,seated,dispatch}:SignatureModuleProps){
    {!tutorial&&<p className="sig-mirror-round">{round+1}라운드 · 다음 라운드는 {followerOf(leader0)}이 리더{state.phase==='climax'?' · 두 군데 바꾸기!':''}</p>}
    <div className="sig-mirror-quick" role="group" aria-label="찾은 짝 빠른 셈" data-find={step==='find'||undefined}>
     {Array.from({length:state.teams},(_,t)=><div key={t} className="sig-mirror-team" style={{'--team':TEAM_COLORS[t]} as React.CSSProperties}>
-     <span>{state.teams===1?'우리 반':TEAM_NAMES[t]}</span>
+     <span>{state.teams>1&&<TeamShape team={t}/>}{state.teams===1?'우리 반':TEAM_NAMES[t]}</span>
      {QUICK.map(n=><button key={n} type="button" aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[t]} 찾은 짝 ${n}쌍 더하기`} disabled={!acceptsPlayInput(state)} onClick={()=>dispatch({type:'score',team:t,delta:n})}>+{n}</button>)}
     </div>)}
    </div>

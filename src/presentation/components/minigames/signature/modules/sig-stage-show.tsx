@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useEffect,useState} from 'react';
+import {TeamShape} from '../../../fun';
 import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput} from '../../../../../domain/funLoop';
 import {REACTIONS,addReaction,bestByScore,curtainGroup,emptyReactions,reactionTarget,scenesFor,stageSlot,stageTally,type Reaction,type ReactionCounts} from '../../../../../domain/signature/sig-stage-show';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
@@ -37,13 +38,13 @@ function StagePanel({state,dispatch}:SignatureModuleProps){
  return <div className="sig-stage" data-mode={prep?'prep':'show'}>
   {prep?<ol className="sig-stage-cards" aria-label="모둠별 장면 카드">
    {scenes.map((sc,g)=><li key={sc.id} style={{'--team':TEAM_COLORS[g]} as React.CSSProperties}>
-    <span className="sig-stage-team">{teamName(state.teams,g)}</span>
+    <span className="sig-stage-team">{state.teams>1&&<TeamShape team={g}/>}{teamName(state.teams,g)}</span>
     <span className="sig-stage-emoji" aria-hidden="true">{phase==='tutorial'?'🎴':sc.emoji}</span>
     <b>{phase==='tutorial'?'장면 카드는 본게임에서 받아요':sc.title}</b>
     {phase!=='tutorial'&&<small>{sc.hint}</small>}
    </li>)}
   </ol>:<div className="sig-stage-now" style={onStage!==null?{'--team':TEAM_COLORS[onStage]} as React.CSSProperties:undefined}>
-   {onStage!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[onStage].emoji}</span><div><span className="sig-stage-team">{teamName(state.teams,onStage)} {phase==='climax'?'마지막 인사':'무대'}</span><b>{scenes[onStage].title}</b></div></>:<b>{phase==='climax'?'🎉 다 같이 인사해요':'🎬 다 같이 무대 인사를 준비해요'}</b>}
+   {onStage!==null?<><span className="sig-stage-emoji" aria-hidden="true">{scenes[onStage].emoji}</span><div><span className="sig-stage-team">{state.teams>1&&<TeamShape team={onStage}/>}{teamName(state.teams,onStage)} {phase==='climax'?'마지막 인사':'무대'}</span><b>{scenes[onStage].title}</b></div></>:<b>{phase==='climax'?'🎉 다 같이 인사해요':'🎬 다 같이 무대 인사를 준비해요'}</b>}
   </div>}
   <div className="sig-stage-react" role="group" aria-label="관객 반응 버튼">
    {REACTIONS.map((r,k)=><button key={r.id} type="button" disabled={target===null||!live} onClick={()=>react(r.id)} aria-label={`${r.label}${target!==null?` · ${teamName(state.teams,target)}에게`:''}`}>
@@ -70,6 +71,8 @@ function StageResult({state}:SignatureModuleProps){
 }
 const isCounts=(v:unknown):v is ReactionCounts=>Array.isArray(v)&&v.length<=4&&v.every(row=>Array.isArray(row)&&row.length===REACTIONS.length&&row.every(x=>Number.isInteger(x)&&x>=0));
 const stageShowModule:SignatureModule={Panel:StagePanel,Result:StageResult,hideFigure:true,wide:true,
+ // 무대에 선 모둠(발표 중이거나 마지막 인사하는 모둠).
+ useTurnTeam:({state})=>state.teams<2?null:state.phase==='climax'?curtainGroup(state.cueIndex,state.teams):state.phase==='tutorial'||state.phase==='play'?reactionTarget({phase:state.phase,index:state.cueIndex,teams:state.teams}):null,
  dispose:seed=>{store.delete(seed);},
  snapshot:seed=>store.get(seed)??null,
  restore:(seed,data)=>{if(isCounts(data))store.set(seed,data);},

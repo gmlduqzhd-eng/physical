@@ -3,17 +3,23 @@ import {COMBO_MAX,SURPRISE_INFO,TEAM_COLORS,TEAM_NAMES,type FunState,type Surpri
 import type {ExternalFunCommand} from '../../../application/funCommandBus';
 import type {DemoFrame} from '../../../domain/signature/types';
 import {StickFigure} from './StickFigure';
+import {TEAM_SHAPES} from './teamShapes';
 
+/** 팀 모양 표식(색은 --team). 이름 앞에 붙인다. 화면 낭독기는 팀 이름을 읽으므로 숨긴다. */
+export function TeamShape({team}:{team:number}){
+ return <i className="fun-team-shape" aria-hidden="true" style={{'--shape':TEAM_COLORS[team]} as React.CSSProperties}>{TEAM_SHAPES[team]??'●'}</i>;
+}
 /**
  * 팀 점수판: TV에서 멀리서도 보이게 크게. 점수 버튼(+1·−1)이 팀 칸 안에 있다.
  * canScore(team, delta)가 false면 그 버튼을 끈다(게임 규칙·일시정지와 같은 판정).
  */
-export function TeamScoreboard({state,label,dispatch,disabled,canScore,readOnly}:{state:FunState;label:string;dispatch:(c:ExternalFunCommand)=>void;disabled?:boolean;canScore?:(team:number,delta:number)=>boolean;
- /** true면 ± 버튼 없이 점수만 보여 준다(점수를 게임 판에서만 주는 놀이). */ readOnly?:boolean}){
+export function TeamScoreboard({state,label,dispatch,disabled,canScore,readOnly,turnTeam}:{state:FunState;label:string;dispatch:(c:ExternalFunCommand)=>void;disabled?:boolean;canScore?:(team:number,delta:number)=>boolean;
+ /** true면 ± 버튼 없이 점수만 보여 준다(점수를 게임 판에서만 주는 놀이). */ readOnly?:boolean;
+ /** 지금 차례인 팀(없으면 null). 그 팀 칸을 도드라지게 하고 '차례'라고 적는다. */ turnTeam?:number|null}){
  const max=Math.max(...state.scores),lead=state.teams>1&&max>0;
  return <ol className="fun-scoreboard" aria-label={`팀 ${label}`} data-teams={state.teams}>
-  {state.scores.map((score,team)=><li key={team} style={{'--team':TEAM_COLORS[team]} as React.CSSProperties} data-lead={lead&&score===max||undefined} data-readonly={readOnly||undefined}>
-   <span className="fun-team-name">{state.teams===1?'우리 반':TEAM_NAMES[team]}</span>
+  {state.scores.map((score,team)=><li key={team} style={{'--team':TEAM_COLORS[team]} as React.CSSProperties} data-lead={lead&&score===max||undefined} data-readonly={readOnly||undefined} data-turn={turnTeam===team||undefined}>
+   <span className="fun-team-name">{state.teams>1&&<TeamShape team={team}/>}{state.teams===1?'우리 반':TEAM_NAMES[team]}{turnTeam===team&&<em className="fun-team-turn"> 차례</em>}</span>
    <strong className="fun-team-score" aria-live="polite" aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} ${score}`}>{score}</strong>
    {!readOnly&&<span className="fun-team-buttons">
     <button type="button" disabled={disabled||canScore?.(team,-1)===false} onClick={()=>dispatch({type:'score',team,delta:-1})} aria-label={`${state.teams===1?'우리 반':TEAM_NAMES[team]} ${label} 1 빼기`}>−1</button>
@@ -55,6 +61,16 @@ export function FinalCountdown({seconds,active}:{seconds:number;active:boolean})
  return <div className="fun-final" aria-hidden="true"><b>{seconds}</b></div>;
 }
 
+/**
+ * 남은 시간 막대: 숫자와 함께, 줄어드는 막대로도 보여 준다(글을 못 읽는 학생도 알 수 있게).
+ * 넉넉하면 초록, 20초 아래는 노랑, 마지막 10초는 빨강. 숫자 쪽(fun-timer)이 화면 낭독기용이라 막대는 숨긴다.
+ */
+export function TimeBar({left,total}:{left:number;total:number}){
+ const ratio=total>0?Math.min(1,Math.max(0,left/total)):0;
+ const level=left<=10?'danger':left<=20?'warn':'ok';
+ return <div className="fun-timebar" data-level={level} aria-hidden="true"><i style={{width:`${(ratio*100).toFixed(1)}%`}}/></div>;
+}
+
 /** 시범 애니메이션: 자세 그림과 설명이 2.4초마다 넘어간다. 움직임 줄이기 설정이면 버튼으로 넘긴다(시범도 저절로 끝나지 않음). */
 export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly DemoFrame[];onSkip:()=>void;skipLabel:string;seated?:boolean}){
  const [i,setI]=useState(0);
@@ -67,7 +83,8 @@ export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly
   <p className="fun-demo-caption" aria-live="polite">{f.caption}</p>
   <div className="fun-demo-dots" aria-hidden="true">{frames.map((_,k)=><i key={k} data-now={k===i%frames.length||undefined}/>)}</div>
   {reduced&&frames.length>1&&<button type="button" className="fun-secondary" onClick={()=>setI(x=>(x+1)%frames.length)}>다음 시범 보기</button>}
-  <button type="button" className="fun-primary" onClick={onSkip}>{skipLabel}</button>
+  {/* 화면의 주 버튼은 오른쪽 아래 '다음' 하나다. 시범 안의 버튼은 보조 버튼으로 둔다. */}
+  <button type="button" className="fun-secondary fun-demo-skip" onClick={onSkip}>{skipLabel}</button>
  </section>;
 }
 

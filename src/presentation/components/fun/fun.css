@@ -312,3 +312,122 @@
  .fun-team-buttons button{min-height:40px;min-width:36px;padding:0 6px;font-size:15px}
  .fun-skip-hint{bottom:calc(var(--fun-controls-h,48px) + 64px);font-size:14px;width:max-content}
 }
+
+/* ═══ UI·UX: 버튼 자리 통일 · 팀 모양 · 남은 시간 막대 · 차례 표시 · TV 모드 ═══ */
+/* 팀은 색과 모양으로 함께 구분한다(청 ● 홍 ▲ 황 ■ 녹 ◆). 팀 색 칸 안에 흰 모양. */
+.fun-team-name::before{content:none}
+.fun-team-shape{display:inline-grid;place-items:center;width:1.5em;height:1.5em;margin-right:.35em;border-radius:.4em;background:var(--shape,var(--team,#475569));color:#fff;font-style:normal;font-size:.78em;line-height:1;vertical-align:.08em;flex:none;text-shadow:0 0 2px rgba(0,0,0,.55);box-shadow:0 0 0 1.5px rgba(255,255,255,.55) inset}
+.fun-podium b{display:inline-flex;align-items:center}
+/* 지금 차례인 팀: 화면 테두리(팀 색) + 머리줄의 '○팀 차례' + 점수판 칸 강조. 색만으로 알리지 않는다. */
+.fun-arena[data-turn]{box-shadow:inset 0 0 0 clamp(5px,.7vw,10px) var(--fun-turn)}
+.fun-turn-chip{display:inline-flex;align-items:center;padding:5px 14px 5px 8px;border-radius:999px;background:var(--team);color:#fff;font-weight:900;font-size:clamp(14px,1.8vw,22px);white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7)}
+.fun-turn-chip .fun-team-shape{background:rgba(0,0,0,.28)}
+.fun-scoreboard li[data-turn]{box-shadow:0 0 0 3px #fff inset}
+.fun-scoreboard li[data-turn][data-lead]{box-shadow:0 0 0 3px #fff inset,0 0 0 6px #fde68a inset}
+.fun-team-turn{font-style:normal;color:#fde68a;font-weight:900}
+.fun-team-name{white-space:nowrap}
+/* 3·4팀은 칸이 좁아 '차례' 글자는 머리줄 표시(○팀 차례)에 맡기고, 칸은 흰 테두리로 도드라지게 한다. */
+.fun-scoreboard[data-teams="3"] .fun-team-turn,.fun-scoreboard[data-teams="4"] .fun-team-turn{display:none}
+/* 남은 시간 막대: 초록 → 노랑(20초 아래) → 빨강(마지막 10초). */
+.fun-timebar{flex:0 0 auto;height:clamp(8px,1.2vh,14px);border-radius:999px;background:#0b1220;border:1px solid var(--fun-line);overflow:hidden}
+.fun-timebar i{display:block;height:100%;border-radius:inherit;background:#22c55e;transition:width .3s linear,background-color .3s}
+.fun-timebar[data-level=warn] i{background:#f59e0b}.fun-timebar[data-level=danger] i{background:#ef4444}
+.fun-timer{transition:background-color .3s}
+.fun-arena[data-final] .fun-timer{background:#ef4444;color:#fff}
+@media (prefers-reduced-motion:reduce){.fun-timebar i,.fun-timer{transition:none}}
+/* 버튼 자리 통일 ①: 나가는 버튼은 늘 왼쪽 위. 고정 막대(fun-dock)를 화면 너비로 펴고, 나가기는 왼쪽 끝·나머지는 오른쪽 끝에 둔다. */
+.fun-dock{left:clamp(10px,2vw,28px);pointer-events:none}
+.fun-dock>*{pointer-events:auto}
+.fun-dock .fun-exit{margin-right:auto;order:-1}
+.fun-tv-control{display:inline-flex}
+.fun-dock .fun-tv-btn,.fun-intro .fun-tv-btn{min-height:44px;padding:4px 14px;border-color:var(--fun-line);background:var(--fun-bg);color:var(--fun-ink);font-size:clamp(14px,1.6vw,18px);font-weight:800;opacity:1}
+.fun-dock .fun-tv-btn[aria-pressed=true],.fun-intro .fun-tv-btn[aria-pressed=true]{background:#0e7490;border-color:#67e8f9;color:#fff}
+.fun-head{padding-left:clamp(110px,12vw,170px);padding-right:clamp(300px,26.5vw,345px);flex-shrink:0}
+/* 머리줄은 한 줄: 게임 이름이 줄어들고(말줄임), 단계·차례·남은 시간은 늘 다 보인다. 차례 표시가 있으면 음성 단추는 그림만. */
+@media (min-width:641px){
+ .fun-head{flex-wrap:nowrap}
+ .fun-arena .fun-head h1{flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .fun-head>:not(h1){flex-shrink:0}
+}
+.fun-head:has(.fun-turn-chip) .tv-voice:not([data-open]) .tv-voice-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.fun-intro-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fun-intro-top .fun-eyebrow{flex:1 1 auto;min-width:0}
+.fun-intro-top .fun-exit{display:none}
+.fun-intro .fun-tv-btn{min-height:40px;white-space:nowrap}
+/* 윗줄(TV 모드 단추)이 생긴 만큼 위 여백을 줄여, 시작 버튼이 전처럼 첫 화면에 들어오게 한다. */
+.fun-intro{margin-top:56px}
+@media (max-width:640px){.fun-intro{margin-top:48px}.fun-intro .fun-tv-btn{font-size:0;gap:0;padding:2px 10px}.fun-intro .fun-tv-btn span{font-size:18px}}
+html[data-tv-mode="on"] .fun-intro-top .fun-exit{display:inline-block}
+/* 버튼 자리 통일 ②: 선생님 버튼 줄은 오른쪽 아래에서 시작한다 — '다음'이 늘 오른쪽 아래, 그 왼쪽이 '일시정지', '끝내기'는 가장 멀리. */
+.fun-controls{display:flex;flex-direction:row-reverse;flex-wrap:wrap-reverse}
+.fun-controls button{flex:1 1 170px;min-width:0}
+.fun-demo .fun-demo-skip{border-color:#38bdf8}
+@media (min-width:961px){
+ /* 결과 화면: 왼쪽 위 나가기 버튼이 왼쪽 칸 첫 줄을 덮지 않게 오른쪽 칸과 같은 만큼 내린다. */
+ .fun-arena[data-phase=result] .fun-result-main{padding-top:max(0px,calc(clamp(10px,2vw,28px) + 60px - clamp(56px,7vh,68px)))}
+}
+@media (max-width:640px){
+ .fun-head{padding-left:0;padding-right:0}
+ .fun-dock{left:0}
+ .fun-controls{display:flex}
+ .fun-controls button{flex:1 1 80px}
+ /* 좁은 화면: TV 모드 단추는 그림만(이름은 화면 낭독기에 그대로). */
+ .fun-dock .fun-tv-btn{font-size:0;gap:0;padding:2px 10px;min-height:40px}
+ .fun-dock .fun-tv-btn span{font-size:18px}
+ .fun-team-turn{display:none}
+ .fun-turn-chip{font-size:13px;padding:3px 10px 3px 6px}
+ /* '끝내기'가 혼자 한 줄을 다 차지해 크게 보이지 않게: 한 칸 크기로 왼쪽 끝에 둔다. */
+ .fun-controls button[data-command=end]{flex-grow:0;flex-basis:calc(25% - 5px);margin-right:auto}
+}
+@media (orientation:landscape) and (max-height:480px){
+ .fun-head{padding-left:clamp(96px,12vw,150px);padding-right:clamp(190px,26vw,240px)}
+ .fun-dock{left:clamp(10px,2vw,28px)}
+ .fun-controls{display:flex;flex-wrap:nowrap}
+ .fun-controls button{flex:1 1 0}
+ .fun-dock .fun-tv-btn{font-size:0;gap:0;padding:2px 10px;min-height:36px}
+ .fun-dock .fun-tv-btn span{font-size:16px}
+ .fun-team-turn{display:none}
+ .fun-timebar{height:6px}
+ .fun-turn-chip{font-size:13px;padding:3px 10px 3px 6px}
+ .fun-head .tv-voice:not([data-open]) .tv-voice-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+ .fun-head .tv-voice:not([data-open]) .tv-voice-toggle{padding:4px 10px}
+}
+/* ── TV 모드(html[data-tv-mode="on"]): 설명·작은 안내는 숨기고 큰 신호·점수판·남은 시간을 키운다. 선생님 버튼은 낮은 한 줄로 남는다. ── */
+html[data-tv-mode="on"] .fun-intro{position:fixed;inset:0;z-index:19990;width:auto;margin:0;border-radius:0;overflow:auto;padding:clamp(18px,3vw,48px);box-sizing:border-box}
+html[data-tv-mode="on"] body:has(.today-bar) .fun-intro{top:48px}
+html[data-tv-mode="on"] .fun-intro .fun-eyebrow,html[data-tv-mode="on"] .fun-intro .fun-more{display:none}
+html[data-tv-mode="on"] .fun-intro{margin:0}
+html[data-tv-mode="on"] .fun-arena .fun-hint,html[data-tv-mode="on"] .fun-arena .fun-controls kbd,html[data-tv-mode="on"] .fun-arena .fun-demo-step{display:none}
+html[data-tv-mode="on"] .fun-arena .fun-meta:not(:has(.fun-combo)){display:none}
+html[data-tv-mode="on"] .fun-arena .fun-meta{grid-template-columns:1fr}
+@media (min-width:961px){
+ html[data-tv-mode="on"] .fun-intro{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:14px clamp(18px,3vw,48px);align-content:start}
+ html[data-tv-mode="on"] .fun-intro>.fun-intro-top,html[data-tv-mode="on"] .fun-intro>h1,html[data-tv-mode="on"] .fun-intro>.fun-resume,html[data-tv-mode="on"] .fun-intro>.fun-oneline{grid-column:1/-1}
+ html[data-tv-mode="on"] .fun-intro h1{font-size:clamp(40px,5.6vw,84px)}
+ html[data-tv-mode="on"] .fun-oneline{font-size:clamp(22px,2.6vw,38px)}
+ html[data-tv-mode="on"] .fun-rule-card{grid-row:span 3}
+ html[data-tv-mode="on"] .fun-rule-card li{font-size:clamp(19px,2vw,30px);padding:14px 18px}
+ html[data-tv-mode="on"] .fun-big{min-height:84px;font-size:clamp(22px,2.6vw,34px)}
+ html[data-tv-mode="on"] .fun-head h1{font-size:clamp(18px,2vw,26px)}
+ /* 머리줄이 한 줄에 들어오게 음성 단추는 그림만(이름은 화면 낭독기에 그대로). */
+ html[data-tv-mode="on"] .fun-head .tv-voice:not([data-open]) .tv-voice-label{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+ html[data-tv-mode="on"] .fun-phase{font-size:clamp(16px,1.9vw,26px)}
+ html[data-tv-mode="on"] .fun-timer{font-size:clamp(24px,3vw,46px);padding:4px 18px}
+ html[data-tv-mode="on"] .fun-timebar{height:clamp(12px,2vh,22px)}
+ html[data-tv-mode="on"] .fun-turn-chip{font-size:clamp(16px,1.9vw,26px)}
+ html[data-tv-mode="on"] .fun-cue{font-size:clamp(60px,11.5vw,176px)}
+ html[data-tv-mode="on"] .fun-cue[data-length=medium]{font-size:clamp(48px,8.4vw,128px)}
+ html[data-tv-mode="on"] .fun-cue[data-length=long]{font-size:clamp(38px,6vw,92px)}
+ html[data-tv-mode="on"] .fun-cue-sub{font-size:clamp(20px,2.8vw,40px)}
+ html[data-tv-mode="on"] .fun-stage[data-wide] .fun-cue{font-size:clamp(42px,5.6vw,96px)}
+ html[data-tv-mode="on"] .fun-stage[data-wide] .fun-cue[data-length=medium]{font-size:clamp(36px,4.6vw,78px)}
+ html[data-tv-mode="on"] .fun-stage[data-wide] .fun-cue[data-length=long]{font-size:clamp(30px,3.6vw,60px)}
+ html[data-tv-mode="on"] .fun-stage[data-wide] .fun-cue-sub{font-size:clamp(18px,2vw,30px)}
+ html[data-tv-mode="on"] .fun-team-name{font-size:clamp(18px,2.2vw,30px)}
+ html[data-tv-mode="on"] .fun-team-score{font-size:clamp(40px,4.6vw,76px)}
+ html[data-tv-mode="on"] .fun-demo-caption{font-size:clamp(32px,5.2vw,76px)}
+ /* 선생님 버튼: 낮은 한 줄 */
+ html[data-tv-mode="on"] .fun-controls{gap:8px;padding-top:4px}
+ html[data-tv-mode="on"] .fun-controls button{min-height:44px;font-size:clamp(13px,1.3vw,17px);flex-basis:120px}
+ html[data-tv-mode="on"] .fun-team-buttons button{min-height:40px}
+}
