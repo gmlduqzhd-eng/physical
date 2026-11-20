@@ -5,6 +5,7 @@ import {useWakeLock} from '../../../../application/useWakeLock';
 import type {SpeechTone} from '../../../../application/speechText';
 import {useTvVoice} from '../../../../application/useTvVoice';
 import {TvVoiceToggle} from '../../TvVoiceToggle';
+import {TvModeButton} from '../../DisplayButtons';
 import {useTheme} from '../../../../application/ThemeContext';
 import type {GameResultDetails} from '../../../../domain/gameResultDetails';
 import type {PhonePlay as Play} from '../../../../domain/phonePlayCatalog';
@@ -129,8 +130,14 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'곧 시작해요':phase==='brief'?(quickBrief?'곧 다음 과제':`${left}초 뒤 시작`):phase==='active'?`${left}초 남음`:'';
  // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
  const shownSequence=phase==='active'?view.sequence:view.reveal;
+ // 남은 시간 막대: 과제를 하는 동안(그리고 긴 안내 동안) 줄어든다. 글을 못 읽어도 남은 시간을 알 수 있다.
+ const barShown=phase==='active'||(phase==='brief'&&!quickBrief);
+ const barRatio=duration>0?Math.max(0,Math.min(1,1-elapsed/duration)):0;
+ const barState=phase==='active'?(left<=10?'urgent':left<=20?'soon':'ok'):'brief';
  return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p><h1>{p.name}</h1><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol></header>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p>{phase!=='done'&&<button type="button" className="pc-leave" aria-label="닫기 · 반 전체 진행 그만두기" onClick={onLeave}><span aria-hidden="true">←</span> 그만두기</button>}<h1>{p.name}</h1><TvModeButton className="pc-tv"/><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol>
+   {barShown&&<div className="pc-timebar" data-state={barState} data-stopped={stopped||undefined} role="progressbar" aria-label="남은 시간" aria-valuemin={0} aria-valuemax={Math.round(duration/1000)} aria-valuenow={left} aria-valuetext={`${left}초 남음`}><i style={{width:`${(barRatio*100).toFixed(1)}%`}}/></div>}
+  </header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
    <p className="pc-task">{stopped?'잠깐 멈췄어요':'이렇게 놀아요'}</p>
    <PhoneRuleCard rule3={p.rule3} className="pc-rule-card"/>
@@ -150,7 +157,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
   </div>}
   {['rules','countdown','brief','active'].includes(phase)&&<div className="pc-controls">
    {waiting?<button className="pp-primary" onClick={()=>{unlockAudio();setElapsed(0);setPaused(false);setPhase('countdown');}}>준비됐어요 · 시작</button>:<button className={paused?'pp-primary':'pc-pause'} aria-pressed={paused} onClick={()=>{if(paused)unlockAudio();setPaused(!paused);voice.stop();}}>{paused?'이어서 하기':'잠깐 멈추기'}</button>}
-   {phase!=='countdown'&&!waiting&&!quickBrief&&<button className="pp-primary" onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
+   {phase!=='countdown'&&!waiting&&!quickBrief&&<button className={paused?'pc-pause':'pp-primary'} onClick={()=>{setElapsed(duration);}} disabled={stopped}>{phase==='rules'||phase==='brief'?'바로 시작':round<2?'다음 과제로':'마치고 기록하기'}</button>}
   </div>}
   {phase==='record'&&<div className="pp-panel pc-record"><h2>우리 반은 어떻게 참여했나요?</h2><p>한 번만 고르면 기록돼요. 기기가 동작이나 체력을 판정하지 않아요.</p>
    <button className="pp-primary" onClick={()=>record('all')}>모두 함께 했어요</button>
@@ -158,6 +165,5 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
    <button onClick={()=>record('rest')}>쉬거나 지켜봤어요</button>
   </div>}
   {phase==='done'&&<p role="status">반 전체 참여 기록을 저장했어요.</p>}
-  {phase!=='done'&&<button className="pp-exit" onClick={onLeave}>닫기 · 반 전체 진행 그만두기</button>}
  </section>;
 }

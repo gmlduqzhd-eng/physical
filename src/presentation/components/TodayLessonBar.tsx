@@ -49,11 +49,13 @@ export function TodayLessonBar(){
  if(!run||!stage)return guide;
  const portal=(node:ReactNode)=>typeof document==='undefined'?node:createPortal(node,document.body);
  const total=run.plan.stages.length;
+ // 진행 표시: 단계마다 점 하나(지난 단계 ●, 지금 단계는 강조한 ●, 남은 단계 ○). 뜻은 막대의 이름(aria-label)이 읽어 준다.
+ const dots=<span className="today-bar-dots" aria-hidden="true">{run.plan.stages.map((s,i)=><i key={i} data-state={i<run.index?'done':i===run.index?'now':'next'} title={`${i+1}단계 · ${STAGE_LABEL[s.kind]}`}>{i<=run.index?'●':'○'}</i>)}</span>;
  if(!onStage){
   // 다른 활동 화면이나 활동 목록에 가 있는 경우: 수업 중이라는 것과 돌아갈 길만 보여 준다.
   const now=`오늘 수업 ${run.index+1}/${total} 진행 중 · 지금 단계는 ${stage.title}`;
   return <>{guide}{portal(<div className="today-bar" data-mode="away" role="region" aria-label={now}>
-   <span className="today-bar-label" title={now}>📋 오늘 수업 {run.index+1}/{total} 진행 중<span className="today-bar-title"> · 지금 단계: {stage.title}</span></span>
+   {dots}<span className="today-bar-label" title={now}>📋 오늘 수업 {run.index+1}/{total} 진행 중<span className="today-bar-title"> · 지금 단계: {stage.title}</span></span>
    <button type="button" className="today-bar-next" onClick={()=>{const p=stagePath(stage,run.plan.settings.teams);navigate(p??'/today');}}>지금 단계로 돌아가기</button>
    <button type="button" className="today-bar-skip" onClick={()=>navigate('/today')}>오늘 수업 보기</button>
   </div>)}</>;
@@ -81,7 +83,7 @@ export function TodayLessonBar(){
  const started=playing||unrecorded;
  const askText=!playing?'결과를 아직 기록하지 않았어요.':finish?'아직 게임 중이에요. 결과를 보고 갈까요?':'아직 활동 중이에요. 기록 없이 넘어갈까요?';
  const bar=<div className="today-bar" data-mode={playing?'playing':undefined} data-asking={ask?true:undefined} role="region" aria-label={label}>
-  <span className="today-bar-label" title={label}>📋 오늘 수업 {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}<span className="today-bar-title"> · {title}{extra?' · 한 판 더':''}</span></span>
+  {dots}<span className="today-bar-label" title={label}>📋 오늘 수업 {run.index+1}/{total} · {STAGE_LABEL[stage.kind]}<span className="today-bar-title"> · {title}{extra?' · 한 판 더':''}</span></span>
   {ask?<div ref={dialogRef} tabIndex={-1} className="today-bar-ask" role="alertdialog" aria-modal="true" aria-label="다음 활동으로 갈까요?" aria-describedby="today-bar-ask-text">
    <span id="today-bar-ask-text" className="today-bar-ask-text">{askText}</span>
    {playing&&finish&&<button type="button" className="today-bar-next" onClick={()=>{held.current=false;setAsking(null);finish();}}>결과 발표 보기</button>}
