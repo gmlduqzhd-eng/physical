@@ -134,7 +134,7 @@ test('SDK request uses direct OpenAI Responses, store false and the strict non-p
 });
 test('server cookie authenticates, rejects forged/expired sessions, CSRF, weak code and missing key', async () => {
   const salt = randomBytes(16).toString('hex'); const code = 'test-code-for-unit-tests-only';
-  process.env.TEACHER_ACCESS_HASH = salt + ':' + scryptSync(code, salt, 64).toString('hex'); process.env.TEACHER_SESSION_SECRET = randomBytes(48).toString('hex'); process.env.APP_ORIGIN = 'http://127.0.0.1:5173';
+  process.env.TEACHER_ACCESS_HASH = salt + ':' + scryptSync(code, salt, 64).toString('hex'); process.env.TEACHER_SESSION_SECRET = randomBytes(48).toString('hex'); process.env.APP_ORIGIN = 'http://127.0.0.1:5173'; process.env.LOCAL_TEACHER_SETUP = 'true'; // local development keeps the code path; production returns 410
   assert.ok(authConfigured()); assert.equal(verifyCode('1234'), false); assert.ok(verifyCode(code));
   const token = newSession(); assert.ok(session({ headers: { cookie: cookie(token) } } as never)); assert.equal(session({ headers: { cookie: cookie(token + 'forged') } } as never), null);
   const server = createServer((req, res) => { void handler(req, res); }); await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
@@ -148,7 +148,7 @@ test('server cookie authenticates, rejects forged/expired sessions, CSRF, weak c
     res = await fetch(url + 'status', { headers: { cookie: cookies } }); assert.equal((await res.json()).authenticated, true);
     res = await fetch(url + 'generate', { method: 'POST', headers: { ...headers, cookie: cookies }, body: JSON.stringify(base) }); assert.equal(res.status, 503);
     const text = await res.text(); assert.equal(text.includes('test-only'), false);
-  } finally { await new Promise<void>(resolve => server.close(() => resolve())); delete process.env.TEACHER_ACCESS_HASH; delete process.env.TEACHER_SESSION_SECRET; }
+  } finally { await new Promise<void>(resolve => server.close(() => resolve())); delete process.env.TEACHER_ACCESS_HASH; delete process.env.TEACHER_SESSION_SECRET; delete process.env.LOCAL_TEACHER_SETUP; }
 });
 test('private browser fields remove legacy persistent values and expire after eight hours', () => {
   const store = () => { const map = new Map<string, string>(); return { getItem: (k: string) => map.get(k) ?? null, setItem: (k: string, v: string) => map.set(k, v), removeItem: (k: string) => map.delete(k), key: (i: number) => [...map.keys()][i], get length() { return map.size; } }; };
