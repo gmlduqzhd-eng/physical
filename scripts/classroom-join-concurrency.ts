@@ -87,7 +87,7 @@ try{
   page.on('response',async response=>{if(response.url().endsWith('/auth/v1/signup')&&response.ok()){const body=await response.json();if(body.user?.id){ids.push(body.user.id);saveFixture();}}});
   const invite=invites[index];const base=process.env.AUDIT_URL||'https://physical-pi.vercel.app';
   await page.goto(index?base+'/join?'+new URLSearchParams({room:room.id,group:invite.group_name})+'#'+new URLSearchParams({code:invite.code}):base+'/lobby?pin='+invite.short_pin);
-  await page.getByLabel('학생 번호 (1~99)',{exact:true}).fill(String(71+index));await page.getByLabel('별명 (2~12자)',{exact:true}).fill('화면검증'+index);
+  {const n=String(String(71+index));if(Number(n)>30)await page.getByRole('button',{name:'31번부터 더 보기'}).click();await page.getByRole('button',{name:n+'번',exact:true}).click();}await page.getByRole('button',{name:/별명 바꾸기/}).click();await page.getByLabel('별명 (2~12자)',{exact:true}).fill('화면검증'+index);
   await page.getByRole('button',{name:/우리 모둠으로 입장|참여하기/}).click();await page.waitForURL('**/mobile/**');await page.getByText('화면검증'+index,{exact:false}).first().waitFor();
   await page.screenshot({path:out+'/student-'+width+'.png',fullPage:true});assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));record('real production student UI join',{width,method:index?'QR':'PIN'});await context.close();
  }

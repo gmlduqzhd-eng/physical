@@ -1,4 +1,5 @@
-import { PAD_KEYS, cleanStudentNumber, isNumberFull, padKeyLabel, pressPadKey } from '../../application/studentNumberPad';
+import { useId, useState } from 'react';
+import { autoNickname, isAutoNickname } from '../../application/studentIdentity';
 import './StudentNumberPad.css';
 
 interface Props {
@@ -6,26 +7,45 @@ interface Props {
   nickname: string;
   onNumberChange: (value: string) => void;
   onNicknameChange: (value: string) => void;
+  /** 이미 다른 기기가 쓰고 있다고 확인된 번호. 누를 수 없게 막는다. */
+  taken?: ReadonlySet<number>;
 }
 
+const FIRST = 30;
+const LAST = 99;
+const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, index) => from + index);
+
 /**
- * 학생 입장: 번호와 별명을 한 화면에서 적는다. 번호는 큰 숫자판으로 누르고(자판을 띄우지 않아도 된다),
- * 고른 번호를 크게 보여 준다. 번호 칸은 그대로 글자 칸이라 자판으로 적어도 된다.
+ * 학생 입장: 큰 번호판에서 내 번호를 한 번 누르면 끝. 글자를 적지 않아도 된다.
+ * 별명은 따로 정하지 않으면 '12번'처럼 번호로 보인다. 원하면 '별명 바꾸기'를 눌러 적는다(실명은 쓰지 않는다).
+ * 1~30번을 먼저 보여 주고, 더 큰 번호는 '더 보기'로 연다.
  */
-export function StudentNumberPad({ number, nickname, onNumberChange, onNicknameChange }: Props) {
-  const full = isNumberFull(number);
+export function StudentNumberPad({ number, nickname, onNumberChange, onNicknameChange, taken }: Props) {
+  const picked = /^(?:[1-9]|[1-9]\d)$/.test(number) ? Number(number) : 0;
+  const custom = !isAutoNickname(nickname);
+  const [more, setMore] = useState(() => picked > FIRST);
+  const [editName, setEditName] = useState(false);
+  const titleId = useId();
+  const shown = range(1, more ? LAST : FIRST);
   return <div className="snp">
-    <label className="snp-number">학생 번호 (1~99)
-      <input className="snp-display" type="text" inputMode="none" autoComplete="off" required maxLength={2} pattern="(?:[1-9]|[1-9][0-9])" placeholder="번호" value={number} onChange={event => onNumberChange(cleanStudentNumber(event.target.value))} />
-    </label>
-    <p className="snp-hint" aria-live="polite">{full ? `${number}번이 맞나요? 바꾸려면 ⌫를 눌러요.` : ''}</p>
-    <div className="snp-keys" role="group" aria-label="번호 숫자판">
-      {PAD_KEYS.map(key => <button key={key} type="button" className="snp-key" data-key={key} aria-label={padKeyLabel(key)} disabled={(key === 'back' || key === 'clear') ? !number : full} onClick={() => onNumberChange(pressPadKey(number, key))}>
-        {key === 'back' ? '⌫' : key === 'clear' ? '지우기' : key}
-      </button>)}
+    <p className="snp-title" id={titleId}>내 번호를 눌러요</p>
+    <p className="snp-hint" aria-live="polite">{picked ? `${picked}번을 골랐어요.${custom ? ` 별명: ${nickname.trim()}` : ''}` : '번호를 한 번만 누르면 돼요.'}</p>
+    <div className="snp-grid" role="group" aria-labelledby={titleId}>
+      {shown.map(value => {
+        const isTaken = taken?.has(value) ?? false;
+        return <button key={value} type="button" className="snp-num" data-number={value} aria-pressed={picked === value} disabled={isTaken}
+          aria-label={isTaken ? `${value}번 (이미 있어요)` : `${value}번`} onClick={() => onNumberChange(String(value))}>
+          {value}{isTaken && <small aria-hidden="true">이미 있어요</small>}
+        </button>;
+      })}
     </div>
-    <label className="snp-nickname">별명 (2~12자)
-      <input type="text" autoComplete="off" required minLength={2} maxLength={12} placeholder="친구에게 보일 별명" value={nickname} onChange={event => onNicknameChange(event.target.value)} />
-    </label>
+    <div className="snp-tools">
+      {!more && <button type="button" className="snp-more" onClick={() => setMore(true)}>31번부터 더 보기</button>}
+      {editName || custom
+        ? <label className="snp-nickname">별명 (2~12자)
+            <input type="text" autoComplete="off" minLength={2} maxLength={12} placeholder={picked ? `비우면 ${autoNickname(picked)}으로 보여요` : '실명은 쓰지 않아요'} value={custom ? nickname : ''} onChange={event => { setEditName(true); onNicknameChange(event.target.value); }} />
+          </label>
+        : <button type="button" className="snp-rename" onClick={() => setEditName(true)}>별명 바꾸기 (안 해도 돼요)</button>}
+    </div>
   </div>;
 }
