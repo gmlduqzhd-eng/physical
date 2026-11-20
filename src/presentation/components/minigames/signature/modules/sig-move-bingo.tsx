@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- 모듈 파일은 화면 부품 묶음(SignatureModule)을 내보낸다. */
 import {useEffect,useState,useSyncExternalStore} from 'react';
 import type {SignatureCue} from '../../../../../domain/signatureGames';
+import {TEAM_SHAPES,TeamShape} from '../../../fun';
 import {TEAM_COLORS,TEAM_NAMES,acceptsPlayInput,frozen} from '../../../../../domain/funLoop';
 import {BINGO_BONUS,boardFull,boardSizeFor,buildMoveBoard,cellHints,claimPoints,emptyOwners,linesForCells,newLinesIfClaimed,turnTeam,type MoveBingoCell} from '../../../../../domain/signature/sig-move-bingo';
 import type {SignatureModule,SignatureModuleProps} from '../moduleTypes';
@@ -139,14 +140,14 @@ function BingoPanel({state,seated,dispatch}:SignatureModuleProps){
       disabled={owner!==null} style={owner!==null?{background:TEAM_COLORS[owner]}:undefined}
       aria-label={`${c.index+1}번 칸 · ${c.kind==='quiz'?'체육 지식 문제':(seated?c.seated:c.label)}${owner!==null?` · ${teamName(owner)} 차지`:hints[c.index]==='win'?' · 차지하면 빙고':hints[c.index]==='block'?' · 상대 팀 빙고를 막는 칸':''}`}
       onClick={()=>setPick(key,{turn:turnId,cell:c.index,reveal:false})}>
-      {owner!==null?<span className="sig-bingo-owner">{teamName(owner)}</span>:<span>{c.kind==='quiz'?'❓ 체육 지식':(seated?c.seated:c.label)}</span>}
+      {owner!==null?<span className="sig-bingo-owner"><i aria-hidden="true">{TEAM_SHAPES[owner]} </i>{teamName(owner)}</span>:<span>{c.kind==='quiz'?'❓ 체육 지식':(seated?c.seated:c.label)}</span>}
       {owner===null&&hints[c.index]&&<em className="sig-bingo-hint" aria-hidden="true">{hints[c.index]==='win'?'🎯 빙고!':'🛡️ 막기'}</em>}
      </button>
     </div>;
    })}</div>)}
   </div>
   <div className="sig-bingo-side">
-   <p className="sig-bingo-turn" style={{borderColor:TEAM_COLORS[team]}}><span className="sig-bingo-dot" style={{background:TEAM_COLORS[team]}} aria-hidden="true"/><b>{teamName(team)} 차례</b>{state.event?.kind==='reverse'?' · 상대 팀이 칸을 골라 줘요':''}</p>
+   <p className="sig-bingo-turn" style={{borderColor:TEAM_COLORS[team]}}><TeamShape team={team}/><b>{teamName(team)} 차례</b>{state.event?.kind==='reverse'?' · 상대 팀이 칸을 골라 줘요':''}</p>
    {!cell?<p className="sig-bingo-help">{phase==='tutorial'?'연습 판: 칸 하나를 눌러 보세요.':'팀이 고른 칸을 눌러요.'}</p>
     :cell.kind==='move'?<div className="sig-bingo-task"><span>큰 화면의 동작을 팀이 모두 해내면 ‘성공’</span></div>
     :<div className="sig-bingo-task" data-kind="quiz">
@@ -169,5 +170,11 @@ function BingoResult({state}:SignatureModuleProps){
  return <p className="sig-bingo-result">{teams.map(t=>`${teamName(t)} 칸 ${rec.claims[t]??0}개 · 빙고 ${rec.lines[t]??0}줄`).join(' / ')}{rec.boardsDone?` · 다 채운 판 ${rec.boardsDone}개`:''}</p>;
 }
 
-const moveBingoModule:SignatureModule={Panel:BingoPanel,useSignalCue:useBingoSignal,Result:BingoResult,hideFigure:true,wide:true,scoreButtons:false,dispose:disposeBingo,snapshot:snapshotBingo,restore:restoreBingo};
+/** 지금 칸을 고를 차례인 팀. */
+function useBingoTurnTeam({state}:SignatureModuleProps):number|null{
+ const phase=state.phase,rec=useBoard(state.seed,phase,boardSizeFor(state.teams));
+ if(state.teams<2||(phase!=='tutorial'&&phase!=='play'&&phase!=='climax'))return null;
+ return turnTeam(rec.turns,state.teams);
+}
+const moveBingoModule:SignatureModule={Panel:BingoPanel,useSignalCue:useBingoSignal,useTurnTeam:useBingoTurnTeam,Result:BingoResult,hideFigure:true,wide:true,scoreButtons:false,dispose:disposeBingo,snapshot:snapshotBingo,restore:restoreBingo};
 export default moveBingoModule;

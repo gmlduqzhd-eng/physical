@@ -65,3 +65,10 @@
   .game-utilities-bar { padding:10px 12px; }
 }
 :is(.unified-home,.flow.lesson-shell,.flow.activity-tools-scope,.game-tools-scope,.teacher-ai.studio-tools-scope,.header-icon-scope) .header-tools { font-family:ForestSans,HeaderPretendard,system-ui,sans-serif; }
+
+/* 화면 보기(글씨 크기 · TV 모드) 팝오버 */
+.header-display-popover .header-display-panel{display:grid;gap:10px;min-width:220px}
+.header-display-popover .header-display-panel p{margin:0;font-size:14px;line-height:1.6}
+.header-display-popover .header-display-panel .display-btn{justify-content:center;width:100%}
+.header-display-popover .header-display-panel a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:inherit;text-underline-offset:4px}
+html[data-design=forest] body .icon-toolbar .display-trigger[data-display=on]{background:var(--forest-tint);border-color:var(--forest-accent)}

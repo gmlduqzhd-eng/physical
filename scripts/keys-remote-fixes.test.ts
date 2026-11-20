@@ -167,3 +167,59 @@ test('short phones keep a small −1 next to +1 for 3–4 teams',()=>{
  assert.doesNotMatch(css,/\.fun-team-buttons button:not\(\.fun-plus\)\{display:none\}/);
  assert.match(css,/\.fun-scoreboard\[data-teams="4"\] \.fun-team-buttons\{grid-template-columns:minmax\(0,2fr\) minmax\(0,3fr\)/);
 });
+
+// ── UI·UX: 버튼 자리 통일 · 팀 모양 · 남은 시간 막대 · 차례 표시 · TV 모드 ──
+test('teams are told apart by shape as well as colour, in the agreed order',async()=>{
+ const {TEAM_SHAPES}=await import('../src/presentation/components/fun/teamShapes');
+ assert.deepEqual([...TEAM_SHAPES],['●','▲','■','◆']);
+ const parts=read('src/presentation/components/fun/FunParts.tsx');
+ assert.match(parts,/<TeamShape team=\{team\}\/>/,'scoreboard shows the shape');
+ assert.match(read('src/presentation/components/fun/ResultCeremony.tsx'),/<TeamShape team=\{r\.team\}\/>/,'podium shows the shape');
+ // 예전의 색 점(::before)은 쓰지 않는다.
+ assert.match(read('src/presentation/components/fun/fun.css'),/\.fun-team-name::before\{content:none\}/);
+});
+test('the remaining time is also a bar that turns amber then red, and the readout is a timer',()=>{
+ const parts=read('src/presentation/components/fun/FunParts.tsx');
+ assert.match(parts,/const level=left<=10\?'danger':left<=20\?'warn':'ok'/);
+ const css=read('src/presentation/components/fun/fun.css');
+ assert.match(css,/\.fun-timebar\[data-level=warn\] i\{background:#f59e0b\}\.fun-timebar\[data-level=danger\] i\{background:#ef4444\}/);
+ assert.match(css,/@media \(prefers-reduced-motion:reduce\)\{\.fun-timebar i,\.fun-timer\{transition:none\}\}/);
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/className="fun-timer" role="timer" aria-label=\{`남은 시간 \$\{left\}초`\}/);
+ assert.match(play,/<TimeBar left=\{left\} total=\{game\.timing\[/);
+});
+test('controls keep their places: 다음 bottom-right, leave top-left, one primary button',()=>{
+ const css=read('src/presentation/components/fun/fun.css');
+ // 버튼 줄은 오른쪽 아래에서 시작해 위로 감긴다: 첫 버튼('다음')이 늘 오른쪽 아래.
+ assert.match(css,/\.fun-controls\{display:flex;flex-direction:row-reverse;flex-wrap:wrap-reverse\}/);
+ assert.match(css,/\.fun-dock \.fun-exit\{margin-right:auto;order:-1\}/);
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ // '다음'이 버튼 목록의 첫째, '일시정지'가 둘째(화면에서는 오른쪽 아래와 그 왼쪽).
+ assert.match(play,/const buttons:TeacherButton\[\]=\[[\s\S]{0,400}command:\{type:'next'\}[\s\S]{0,200}command:\{type:'pause'\}/);
+ // 이어 할 판이 있으면 '이어 하기'만 주 버튼.
+ assert.match(play,/className=\{saved\?'fun-secondary fun-big':'fun-primary fun-big'\}/);
+ const result=read('src/presentation/components/fun/ResultCeremony.tsx');
+ assert.match(result,/className=\{summary\.practiceOnly\?'fun-primary':'fun-secondary'\} onClick=\{onReplay\}/);
+ assert.match(result,/className=\{recorded&&!summary\.practiceOnly\?'fun-primary':'fun-secondary'\} onClick=\{onExit\}/);
+ assert.match(read('src/presentation/components/fun/FunParts.tsx'),/className="fun-secondary fun-demo-skip"/,'the demo button is not a second primary');
+});
+test('turn-taking games name the team whose turn it is, not only colour it',()=>{
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.match(play,/data-turn=\{turnTeam\?\?undefined\}/);
+ assert.match(play,/className="fun-turn-chip"[\s\S]{0,160}\{TEAM_NAMES\[turnTeam\]\} 차례/);
+ for(const m of ['sig-move-bingo','sig-memory-relay','sig-stage-show'])
+  assert.match(read(`src/presentation/components/minigames/signature/modules/${m}.tsx`),/useTurnTeam/,`${m} reports its turn team`);
+});
+test('TV mode enlarges the signal, hides small print and leaves with Esc or by ending fullscreen',()=>{
+ const css=read('src/presentation/components/fun/fun.css');
+ assert.match(css,/html\[data-tv-mode="on"\] \.fun-arena \.fun-hint,html\[data-tv-mode="on"\] \.fun-arena \.fun-controls kbd/);
+ assert.match(css,/html\[data-tv-mode="on"\] \.fun-cue\{font-size:clamp\(60px,11\.5vw,176px\)\}/);
+ assert.match(css,/html\[data-tv-mode="on"\] \.fun-intro\{position:fixed;inset:0/);
+ const exit=read('src/presentation/components/fun/useTvModeExit.ts');
+ assert.match(exit,/e\.key!=='Escape'\|\|e\.defaultPrevented\|\|fullscreenEl\(\)\|\|document\.querySelector\(OPEN_LAYERS\)/,'Esc is left to an open dialog');
+ assert.match(exit,/if\(was&&!now\)setTvMode\(false\)/);
+ const control=read('src/presentation/components/fun/TvMode.tsx');
+ assert.match(control,/requestFullscreen\?\.\(\)\.catch\(\(\)=>\{\}\)/,'a refused fullscreen is ignored');
+ const play=read('src/presentation/components/minigames/signature/SignaturePlay.tsx');
+ assert.equal((play.match(/<TvModeControl className="fun-tv-btn"\/>/g)??[]).length,2,'on the start screen and in the dock');
+});

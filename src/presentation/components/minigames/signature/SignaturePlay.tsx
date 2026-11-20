@@ -1,12 +1,12 @@
 import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {createPortal} from 'react-dom';
 import {getSignatureGame,type SignatureGameDef} from '../../../../domain/signatureGames';
-import {FUN_PHASE_LABEL,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState,type SurpriseKind} from '../../../../domain/funLoop';
+import {FUN_PHASE_LABEL,TEAM_COLORS,TEAM_NAMES,acceptsPlayInput,comboFull,resultSummary,seededRandom,surprisesNow,type FunCommandGate,type FunState,type SurpriseKind} from '../../../../domain/funLoop';
 import {createFunCommandBus,type FunCommandBus} from '../../../../application/funCommandBus';
 import {clearFunSession,clearRemoteRoom,loadFunSession,loadRemoteRoom,saveFunSession,saveRemoteRoom,type FunSession,type FunSetup} from '../../../../application/funSession';
 import {GAMES} from '../../../../domain/gamesData';
 import {unlockAudio} from '../../../../application/soundEffects';
-import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,useFunEngine,type TeacherButton} from '../../fun';
+import {ComboGauge,DemoLoop,FinalCountdown,ResultCeremony,StickFigure,SurpriseBanner,TeacherControls,TeamScoreboard,TeamShape,TimeBar,TvModeControl,useFunEngine,useTvModeExit,type TeacherButton} from '../../fun';
 import {RemoteLink} from '../../fun/RemoteLink';
 import {requestRemotePanelClose,useRemotePanelOpen} from '../../fun/remotePanelState';
 import {ClassFeedbackSlot} from '../../ClassFeedbackSlot';
@@ -30,6 +30,8 @@ const PHASE_LABEL:Record<FunState['phase'],string>=FUN_PHASE_LABEL;
 const NEXT_LABEL:Record<FunState['phase'],string>={demo:'연습 판 시작',tutorial:'본게임 시작',play:'마지막 승부로 건너뛰기',climax:'결과 발표',result:''};
 /** 모듈이 큰 신호 칸을 바꾸지 않을 때 쓰는 빈 훅(훅 호출 순서를 늘 같게). */
 const noSignalOverride=():SignatureCue|null=>null;
+/** 차례가 없는 놀이용 빈 훅. */
+const noTurnTeam=():number|null=>null;
 
 /** '오늘 수업'에서 연 게임이면 결과 화면의 나가는 버튼을 '오늘 수업으로'라고 쓴다(실제로 /today로 돌아간다). */
 const fromTodayLesson=()=>typeof window!=='undefined'&&new URLSearchParams(window.location.search).get('returnTo')==='/today';
@@ -52,6 +54,8 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  // '오늘 수업'에서 고른 팀 수(?teams=1~4)가 있으면 처음 값으로 쓴다. 없거나 맞지 않으면 게임 기본값.
  const [teams,setTeams]=useState<number>(()=>{const q=Number(typeof window==='undefined'?NaN:new URLSearchParams(window.location.search).get('teams'));return game&&Number.isInteger(q)&&q>=game.teamsMin&&q<=4?q:game?.teamsDefault??2;});
  const [seated,setSeated]=useState(false);
+ // TV 모드: Esc(열린 창이 없을 때)나 전체 화면 끝내기로 나간다.
+ useTvModeExit();
  // 명령 버스와 리모컨 연결은 판(round)보다 오래 산다: 결과 화면·'한 판 더'에서도 휴대폰 리모컨이 끊기지 않는다.
  const bus=useMemo(()=>createFunCommandBus(),[]);
  // 새로고침 이어 하기: 이 탭에 남은 판이 있으면 시작 화면에서 '이어 하기'를 고를 수 있다.
@@ -104,9 +108,10 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  // 화면이 바뀌어도 다시 만들어지지 않아야 휴대폰 연결이 끊기지 않는다(새로고침 → 이어 하기).
  // 방 코드가 있는 동안은 시작 화면에서도 막대를 둔다('새로 시작'으로 남은 판을 지워도 휴대폰 연결이 이어진다).
  const dock=(setup||room)?arena(<div className="fun-dock" role="group" aria-label={setup?'리모컨·나가기':'리모컨'} inert={lessonConfirming||undefined}>
-  <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>{saveRemoteRoom(game.id,code);setRoom(code);}} announceStop={()=>!loadRemoteRoom(game.id)}/>
-  {/* 게임 화면이 앱 도구 막대를 덮으므로 여기에도 나가는 버튼을 둔다. */}
+  {/* 나가는 버튼은 늘 왼쪽 위(시작·진행·결과 화면 모두 같은 자리). 게임 화면이 앱 도구 막대를 덮으므로 여기에 둔다. */}
   {setup&&<button type="button" className="fun-exit" aria-label={inLesson?'오늘 수업으로':'활동 목록으로'} onClick={askLeave}>{inLesson?'← 오늘 수업':'← 목록'}</button>}
+  {setup&&<TvModeControl className="fun-tv-btn"/>}
+  <RemoteLink bus={bus} initialCode={room} onCodeChange={code=>{saveRemoteRoom(game.id,code);setRoom(code);}} announceStop={()=>!loadRemoteRoom(game.id)}/>
  </div>):null;
  if(setup)return <>{dock}{leaveDialog}
   <SignatureArena key={setup.round} game={game} bus={bus} setup={setup} restore={resume&&resume.setup.round===setup.round?resume:null} groupId={groupId} enqueueAction={enqueueAction} onExit={exit} onLeave={leave}
@@ -117,7 +122,12 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
  const start=(skipDemo:boolean)=>{unlockAudio();clearFunSession(game.id);setSaved(null);setResume(null);setSetup({teams,seated,skipDemo,round:0});};
  const resumeSaved=()=>{if(!saved)return;unlockAudio();setResume(saved);setSetup(saved.setup);};
  return <>{dock}<main className="fun-intro" data-game={game.id}>
-  <p className="fun-eyebrow">대표 게임 · TV 하나로 반 전체가 함께</p>
+  {/* 나가는 버튼은 늘 왼쪽 위, TV 모드는 오른쪽 위. 보통 화면에서는 앱 도구 막대의 ←가 왼쪽 위에 있어, 이 버튼은 그 막대를 덮는 TV 모드에서만 보인다. */}
+  <div className="fun-intro-top">
+   <button type="button" className="fun-exit" aria-label={inLesson?'오늘 수업으로':'활동 목록으로'} onClick={onExit}>{inLesson?'← 오늘 수업':'← 목록'}</button>
+   <p className="fun-eyebrow">대표 게임 · TV 하나로 반 전체가 함께</p>
+   <TvModeControl className="fun-tv-btn"/>
+  </div>
   <h1><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
   {saved&&<section className="fun-resume" aria-label="이어 하기">
    <p><b>하던 판이 남아 있어요</b> · {FUN_PHASE_LABEL[saved.state.phase]} · {saved.state.scores.map((v,i)=>`${saved.setup.teams===1?'우리 반':TEAM_NAMES[i]} ${v}`).join(' · ')}</p>
@@ -129,7 +139,8 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
   <p className="fun-oneline">{game.oneLine}</p>
   <ol className="fun-rule-card">{(['무엇을','어떻게','언제 끝'] as const).map((h,i)=><li key={h}><b>{h}</b>{game.rules[i]}</li>)}</ol>
   <div className="fun-start">
-   <button type="button" className="fun-primary fun-big" onClick={()=>start(false)}><StartLabel sub="시범 보고 연습 판"/></button>
+   {/* 주 버튼은 하나만: 이어 할 판이 있으면 '이어 하기'가 주 버튼이고, 새로 시작은 보조 버튼이 된다. */}
+   <button type="button" className={saved?'fun-secondary fun-big':'fun-primary fun-big'} onClick={()=>start(false)}><StartLabel sub="시범 보고 연습 판"/></button>
    <button type="button" className="fun-secondary" onClick={()=>start(true)}>시범 건너뛰고 연습 판부터</button>
   </div>
   <fieldset className="fun-setup">
@@ -146,7 +157,6 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
     {merged.length>0&&<li>이 게임은 {merged.join(', ')} 놀이를 한 판으로 합쳤어요.</li>}
    </ul>
   </details>
-  <button type="button" className="fun-link" onClick={onExit}>활동 목록으로</button>
  </main></>;
 }
 
@@ -228,6 +238,10 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  const useOverride=mod.useSignalCue??noSignalOverride;
  const override=useOverride(props);
  const shown:SignatureCue=override??cue;
+ // 팀이 차례로 하는 놀이: 지금 차례인 팀을 화면 테두리·머리줄·점수판에 색과 모양, 글로 함께 알린다.
+ const useTurn=mod.useTurnTeam??noTurnTeam;
+ const turnRaw=useTurn(props);
+ const turnTeam=isCuePhase(state.phase)&&turnRaw!==null&&turnRaw>=0&&turnRaw<teams?turnRaw:null;
  // 리모컨이 붙으면 TV 상태를 알린다(3단계).
  // 결과 단계에는 지난 신호 대신 결과 제목을 보낸다.
  useEffect(()=>{engine.bus.publishState({gameId:game.id,gameName:game.name,phase:state.phase,phaseLabel:FUN_PHASE_LABEL[state.phase],events:surprisesNow(state),paused:state.paused,secondsLeft:engine.secondsLeft,teams:state.teams,scores:state.scores,scoreLabel:game.scoreLabel,cue:state.phase==='result'?resultHeadlineOf(game,state):cue.text,combo:mod.special?state.combo:0,comboFull:!!mod.special&&comboFull(state),busy:confirming||undefined});});
@@ -315,14 +329,16 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
  ];
  const Panel=mod.Panel;
  return arena(<div ref={arenaRef} className="fun-arena" data-phase={state.phase} data-tone={shown.tone} data-paused={state.paused||undefined} data-final={engine.finalCountdown||undefined}
-  data-confirming={confirming||undefined} inert={confirming||undefined}>
+  data-confirming={confirming||undefined} inert={confirming||undefined} data-turn={turnTeam??undefined} style={turnTeam!==null?{'--fun-turn':TEAM_COLORS[turnTeam]} as React.CSSProperties:undefined}>
   <header className="fun-head">
    <h1 ref={titleRef} tabIndex={-1}><span aria-hidden="true">{game.emoji}</span> {game.name}</h1>
    <span className="fun-phase" data-phase={state.phase}>{PHASE_LABEL[state.phase]}</span>
-   <span className="fun-timer" aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
+   {turnTeam!==null&&<span className="fun-turn-chip" style={{'--team':TEAM_COLORS[turnTeam]} as React.CSSProperties}><TeamShape team={turnTeam}/>{TEAM_NAMES[turnTeam]} 차례</span>}
+   <span className="fun-timer" role="timer" aria-label={`남은 시간 ${left}초`}>⏱ {left}초</span>
    <TvVoiceToggle voice={voice} className="fun-voice"/>
    {/* 휴대폰 리모컨·'← 목록' 버튼은 판이 바뀌어도 남도록 바깥(fun-dock)에 있다. */}
   </header>
+  <TimeBar left={left} total={game.timing[state.phase as 'demo'|'tutorial'|'play'|'climax']}/>
   <div className="fun-body" inert={state.paused||undefined}>
   {state.phase==='demo'?<DemoLoop frames={game.demo} seated={seated} onSkip={()=>dispatch({type:'next'})} skipLabel="▶ 연습 판 시작"/>:<>
    <div className="fun-stage" data-wide={(mod.wide&&!!Panel)||undefined}>
@@ -337,7 +353,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
     </section>
     {Panel&&<div className="fun-panel"><Panel {...props}/></div>}
    </div>
-   <TeamScoreboard state={state} label={game.scoreLabel} dispatch={dispatch} readOnly={mod.scoreButtons===false} canScore={(team,delta)=>allows({type:'score',team,delta})}/>
+   <TeamScoreboard state={state} label={game.scoreLabel} dispatch={dispatch} readOnly={mod.scoreButtons===false} turnTeam={turnTeam} canScore={(team,delta)=>allows({type:'score',team,delta})}/>
    <div className="fun-meta">
     <p className="fun-hint">{state.phase==='tutorial'?'연습 판이에요. 점수 버튼을 눌러 보세요 · 본게임에서 0점부터 다시 시작해요':`점수 기준: ${game.scoringHint}`}</p>
     {mod.special&&<ComboGauge combo={state.combo}/>}

@@ -66,3 +66,29 @@
 /* 반 전체 진행: 음성 단추 옆 밝기 바꾸기 단추(작게, 진행을 가리지 않게). */
 .phone-class .pc-theme{min-width:44px;min-height:44px;border-radius:999px;border:1px solid var(--forest-line,rgba(0,0,0,.15));background:var(--forest-card,#fff);color:inherit;font-size:20px;line-height:1;cursor:pointer}
 .phone-class .pc-theme:focus-visible{outline:3px solid var(--forest-focus,#0e7490);outline-offset:2px}
+/* 나가기는 늘 왼쪽 위, 주 버튼은 늘 오른쪽 아래(휴대폰은 아래 한 줄). */
+.phone-play.phone-class .pc-leave{flex:none;width:auto;min-height:44px;margin:0;padding:6px 14px;border-radius:999px;border:1px solid var(--forest-control-line,#9aa79c);background:var(--forest-paper,#fffef7);color:var(--forest-ink,#24342c);font:inherit;font-size:clamp(14px,1.5vw,20px);font-weight:750;cursor:pointer;white-space:nowrap}
+.phone-class .pc-leave:focus-visible{outline:3px solid var(--forest-focus,#0e7490);outline-offset:2px}
+.phone-play.phone-class .pc-tv{flex:none;width:auto;margin:0;min-height:44px;padding:6px 12px;font-size:clamp(13px,1.3vw,18px);white-space:nowrap}
+@media (min-width:700px){.phone-class .pc-controls{grid-template-columns:minmax(180px,1fr) minmax(220px,2fr)}.phone-class .pc-controls>button:only-child{grid-column:2}}
+/* 남은 시간 막대: 줄어들며 색이 바뀐다(넉넉함 → 곧 끝 → 마지막 10초). */
+.phone-class .pc-timebar{flex:1 0 100%;height:clamp(10px,1.6vh,18px);border-radius:999px;background:var(--forest-tint,#e8efe3);border:1px solid var(--forest-line,rgba(0,0,0,.15));overflow:hidden}
+.phone-class .pc-timebar i{display:block;height:100%;border-radius:999px;background:#0f766e;transition:width .12s linear,background-color .4s}
+.phone-class .pc-timebar[data-state=brief] i{background:#64748b}
+.phone-class .pc-timebar[data-state=soon] i{background:#d97706}
+.phone-class .pc-timebar[data-state=urgent] i{background:#dc2626}
+.phone-class .pc-timebar[data-stopped] i{opacity:.5}
+@media(prefers-reduced-motion:reduce){.phone-class .pc-timebar i{transition:none}}
+/* 교실 TV 모드: 작은 설명과 보조 단추를 숨기고 지금 할 일과 남은 시간을 키운다. */
+html[data-tv-mode="on"] .phone-class .pc-head .pp-eyebrow,html[data-tv-mode="on"] .phone-class .pc-theme,html[data-tv-mode="on"] .phone-class .pc-hint,html[data-tv-mode="on"] .phone-class .pc-left{display:none}
+html[data-tv-mode="on"] .phone-play.phone-class{padding:clamp(8px,1.4vw,20px);gap:clamp(6px,1.2vh,12px)}
+html[data-tv-mode="on"] .phone-class .pc-head h1{font-size:clamp(20px,2.4vw,34px)}
+html[data-tv-mode="on"] .phone-class .pc-timer{font-size:clamp(22px,3.2vw,48px);padding:8px 20px}
+html[data-tv-mode="on"] .phone-class .pc-timebar{height:clamp(14px,2.4vh,28px)}
+html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-cue{font-size:clamp(40px,9vw,150px);line-height:1.18}
+html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-cue[data-length=medium]{font-size:clamp(32px,6.2vw,100px)}
+html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-cue[data-length=long]{font-size:clamp(24px,4.2vw,66px);line-height:1.32}
+html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-signal[data-memory-brief] .pc-cue{font-size:clamp(24px,min(5vw,7vh),72px)}
+html[data-tv-mode="on"] .phone-class .pc-task{font-size:clamp(20px,3vw,40px)}
+.phone-play.phone-class .pc-theme{flex:none;width:44px;margin:0;padding:0}
+.phone-play.phone-class .pc-tv[aria-pressed="true"]{background:var(--forest-accent,#0e7490);color:var(--forest-on,#fff);border-color:var(--forest-accent,#0e7490)}

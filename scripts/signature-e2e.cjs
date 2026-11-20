@@ -256,6 +256,73 @@ async function controlGuards(browser) {
   }
 }
 
+// 화면 자리 약속: 나가기는 왼쪽 위, '다음'은 오른쪽 아래(그 왼쪽이 일시정지), 남은 시간 막대, 팀 모양, 차례 표시, TV 모드.
+async function layoutRules(browser) {
+  for (const viewport of [{ width: 1280, height: 800 }, { width: 390, height: 844 }, { width: 360, height: 640 }, { width: 844, height: 390 }]) {
+    const context = await browser.newContext({ viewport, serviceWorkers: 'block' });
+    await context.addInitScript(key => { try { localStorage.setItem(key, '1'); } catch { /* 무시 */ } }, GUIDE_KEY);
+    await context.route('**/*', route => /\.supabase\.co\//.test(route.request().url()) ? route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }) : route.continue());
+    const page = await context.newPage();
+    const errors = [];
+    page.on('pageerror', e => errors.push(e.message));
+    const tag = `layoutRules ${viewport.width}x${viewport.height}`;
+    try {
+      await page.goto(`${base}/play/sig-memory-relay?teams=4`, { waitUntil: 'networkidle' });
+      assert.equal(await page.locator('.fun-intro .fun-primary').count(), 1, `${tag}: one primary button on the start screen`);
+      await page.locator('.fun-intro .fun-secondary', { hasText: /시범 건너뛰고/ }).click();
+      const arena = page.locator('.fun-arena');
+      assert.ok(await poll(async () => await arena.getAttribute('data-phase') === 'tutorial', 5000), `${tag}: tutorial started`);
+      const measure = () => page.evaluate(() => {
+        const box = sel => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return { l: b.left, t: b.top, r: b.right, b: b.bottom }; };
+        const a = document.querySelector('.fun-arena');
+        const buttons = [...document.querySelectorAll('.fun-controls button')].map(e => { const b = e.getBoundingClientRect(); return { c: e.dataset.command, l: b.left, t: b.top, r: b.right, b: b.bottom }; });
+        return { exit: box('.fun-dock .fun-exit'), bar: box('.fun-timebar i'), barLevel: document.querySelector('.fun-timebar')?.dataset.level, buttons, overflow: a.scrollWidth - a.clientWidth,
+          shapes: [...document.querySelectorAll('.fun-scoreboard .fun-team-shape')].map(e => e.textContent), turn: a.dataset.turn ?? null, chip: document.querySelector('.fun-turn-chip')?.textContent ?? '',
+          turnCells: document.querySelectorAll('.fun-scoreboard li[data-turn]').length, timerRole: document.querySelector('.fun-timer')?.getAttribute('role'), primaries: document.querySelectorAll('.fun-body .fun-primary, .fun-controls button[data-tone="primary"]').length };
+      });
+      const check = async label => {
+        const m = await measure();
+        assert.ok(m.overflow <= 1, `${tag} ${label}: no horizontal overflow`);
+        assert.ok(m.exit && m.exit.l < viewport.width / 3 && m.exit.t < 130, `${tag} ${label}: the leave button is top-left`);
+        const next = m.buttons.find(b => b.c === 'next'), pause = m.buttons.find(b => b.c === 'pause');
+        const maxRight = Math.max(...m.buttons.map(b => b.r)), maxBottom = Math.max(...m.buttons.map(b => b.b));
+        assert.ok(next && next.r >= maxRight - 1 && next.b >= maxBottom - 1, `${tag} ${label}: 다음 is the bottom-right control`);
+        assert.ok(pause && Math.abs(pause.t - next.t) <= 2 && pause.r <= next.l + 1 && next.l - pause.r <= 14, `${tag} ${label}: 일시정지 sits just left of 다음`);
+        assert.ok(m.bar && m.bar.r - m.bar.l > 4 && m.barLevel, `${tag} ${label}: the time bar is drawn`);
+        assert.equal(m.timerRole, 'timer', `${tag} ${label}: the time readout is a timer`);
+        assert.deepEqual(m.shapes, ['●', '▲', '■', '◆'], `${tag} ${label}: each team has its shape`);
+        assert.ok(m.turn !== null && /팀 차례/.test(m.chip) && m.turnCells === 1, `${tag} ${label}: the team whose turn it is is named and marked`);
+        assert.ok(m.primaries <= 1, `${tag} ${label}: at most one primary button`);
+      };
+      await check('standard');
+      // TV 모드: 켜면 설명 줄이 숨고, Esc로 꺼진다(열린 창이 없을 때).
+      const tvButton = page.locator('.fun-dock .fun-tv-btn');
+      await tvButton.click();
+      assert.ok(await poll(async () => await page.evaluate(() => document.documentElement.dataset.tvMode) === 'on', 3000), `${tag}: TV mode turns on`);
+      assert.equal(await tvButton.getAttribute('aria-pressed'), 'true', `${tag}: the TV mode button shows it is on`);
+      assert.equal(await page.locator('.fun-arena .fun-hint').evaluateAll(list => list.filter(e => e.getClientRects().length).length), 0, `${tag}: TV mode hides the small hint line`);
+      await check('tv mode');
+      if (await page.evaluate(() => !!document.fullscreenElement)) await page.evaluate(() => document.exitFullscreen());
+      else await page.keyboard.press('Escape');
+      assert.ok(await poll(async () => await page.evaluate(() => document.documentElement.dataset.tvMode) !== 'on', 3000), `${tag}: Esc (or leaving fullscreen) turns TV mode off`);
+      assert.equal(await arena.getAttribute('data-phase'), 'tutorial', `${tag}: leaving TV mode does not change the round`);
+      // 결과: 주 버튼 하나, 팀 모양, 나가기는 그대로 왼쪽 위.
+      const end = page.locator('.fun-controls button[data-command="end"]');
+      await end.click(); await end.click();
+      await page.locator('.fun-result').waitFor({ timeout: 5000 });
+      assert.equal(await page.locator('.fun-result .fun-primary').count(), 1, `${tag}: one primary button on the result screen`);
+      const exitBox = await page.locator('.fun-dock .fun-exit').boundingBox();
+      assert.ok(exitBox && exitBox.x < viewport.width / 3 && exitBox.y < 130, `${tag}: the leave button stays top-left on the result screen`);
+      assert.deepEqual(errors, [], `${tag}: no page errors`);
+    } catch (error) {
+      await page.screenshot({ path: path.join(out, `layout-rules-${viewport.width}-failure.png`), fullPage: true }).catch(() => {});
+      throw error;
+    } finally {
+      await context.close();
+    }
+  }
+}
+
 async function playOne(browser, run, id) {
   const context = await browser.newContext({ viewport: run.viewport, serviceWorkers: 'block' });
   // 첫 방문 1분 안내는 guideOnce에서 따로 확인하고, 게임 진행 검사에서는 이미 본 것으로 둡니다.
@@ -386,6 +453,7 @@ async function playOne(browser, run, id) {
     if (!only) { await guideOnce(browser); console.log('PASS guide-once'); }
     if (!only) { await lessonConfirm(browser); console.log('PASS lesson-confirm'); }
     if (!only) { await controlGuards(browser); console.log('PASS control-guards'); }
+    if (!only) { await layoutRules(browser); console.log('PASS layout-rules'); }
     for (const run of RUNS) for (const id of GAMES) {
       if (only && !only.includes(id)) continue;
       const r = await playOne(browser, run, id);

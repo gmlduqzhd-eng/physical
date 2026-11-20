@@ -76,3 +76,25 @@ html .today-page .class-feedback[data-tone=light] .class-feedback-votes button,h
 html .today-page .class-feedback[data-tone=light] .class-feedback-votes button[aria-pressed=true],html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-votes button[aria-pressed=true]{border-color:#0e7490;background:#0e7490;color:#fff}
 html .today-page .class-feedback[data-tone=light] .class-feedback-chips button,html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-chips button{border:1.5px solid #64748b;background:#fff;color:#0f172a}
 html .today-page .class-feedback[data-tone=light] .class-feedback-chips button[aria-pressed=true],html[data-design] .flow.today-page .class-feedback[data-tone=light] .class-feedback-chips button[aria-pressed=true]{border-color:#a16207;background:#fde68a;color:#0f172a}
+/* 수업 끝: 반 원정 지도 칸이 열리는 장면(3초쯤). */
+.today-map-moment{margin:12px 0 18px;padding:clamp(14px,2.4vw,28px);border-radius:24px;border:3px solid #f59e0b;background:linear-gradient(160deg,#fffbeb,#ecfeff);color:#1c1917;text-align:center;animation:today-map-in .35s ease-out both}
+.today-map-moment-title{margin:0 0 12px;font-size:clamp(22px,3.4vw,44px);font-weight:900;line-height:1.25}
+.today-map-moment-tiles{list-style:none!important;padding:0!important;margin:0 auto 10px;display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:clamp(3px,.6vw,8px);max-width:780px}
+.today-map-moment-tiles li{margin:0;aspect-ratio:1;display:grid;place-items:center;border-radius:10px;border:2px dashed #94a3b8;background:#f1f5f9;color:#64748b;font-size:clamp(14px,2.2vw,28px);line-height:1}
+.today-map-moment-tiles li[data-open]{border:2px solid #0f766e;background:#ccfbf1;color:#134e4a}
+.today-map-moment-tiles li[data-fresh]{border-color:#d97706;background:#fde68a;animation:today-map-pop .6s cubic-bezier(.2,1.6,.4,1) both}
+.today-map-moment-sub{margin:0 0 12px;font-size:clamp(15px,1.8vw,22px);font-weight:700}
+.today-map-moment-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.today-map-moment-link,.today-map-moment-skip{min-height:44px;padding:8px 18px;border-radius:999px;font:inherit;font-weight:800;cursor:pointer;display:inline-flex;align-items:center}
+.today-map-moment a.today-map-moment-link{background:#0e7490;color:#fff;text-decoration:none;border:0}
+.today-map-moment-skip{background:#fff;color:#1c1917;border:2px solid #57534e}
+.today-map-line{margin:8px 0 14px;font-weight:800}
+.today-map-line a{margin-left:6px}
+@keyframes today-map-in{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+@keyframes today-map-pop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.today-map-moment,.today-map-moment-tiles li[data-fresh]{animation:none}}
+html.dark-theme .today-map-moment{background:linear-gradient(160deg,#422006,#083344);color:#fefce8;border-color:#fbbf24}
+html.dark-theme .today-map-moment-tiles li{background:#1e293b;border-color:#475569;color:#94a3b8}
+html.dark-theme .today-map-moment-tiles li[data-open]{background:#134e4a;border-color:#5eead4;color:#ccfbf1}
+html.dark-theme .today-map-moment-tiles li[data-fresh]{background:#92400e;border-color:#fbbf24;color:#fff}
+html.dark-theme .today-map-moment-skip{background:#1c1917;color:#fefce8;border-color:#a8a29e}

@@ -18,6 +18,7 @@ import { useActivityFavorites } from '../application/useActivityFavorites';
 import { activityDetail, finishLine } from './activityDetail';
 import { FlowShell } from './FlowShell';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
+import {QuickPicks} from './components/QuickPicks';
 
 const GRADE_OPTIONS=['1~2학년','3~4학년군','5~6학년군'] as const;
 const DEVICE_OPTIONS=['스마트폰','태블릿 PC','데스크톱 PC'] as const;
@@ -100,6 +101,7 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
   const displayed = games.slice(0, limit);
   const fitOptions=[['where','어디서',fit.space,FIT_SPACES],['who','몇 명이',fit.people,solo?(['혼자'] as const):FIT_PEOPLE],['minutes','몇 분',fit.time,FIT_TIMES]] as const;
   return <>
+    {!solo&&!onSelect&&<QuickPicks returnTo={location.pathname+location.search} className="hub-quick-picks"/>}
     <fieldset className="activity-fit" aria-label="어디서 · 몇 명 · 몇 분">
       <legend>어디서 · 몇 명 · 몇 분</legend>
       {fitOptions.map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}><option>전체</option>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}
@@ -117,18 +119,23 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
     {!moreOpen&&chosenFilters.length>0&&<ul className="activity-filter-chosen" aria-label="고른 조건">{chosenFilters.map(f=><li key={f.key}><button type="button" onClick={f.clear} aria-label={`${f.label} 조건 지우기`}>{f.label} <span aria-hidden="true">✕</span></button></li>)}</ul>}
     {isFiltered&&<button style={{marginTop:4}} onClick={clearFilters}>검색·조건 초기화</button>}
     <div className="inline-title" style={{margin:'14px 0 12px'}}><h2>{solo ? '혼자 할 수 있는 활동' : !archiveIncluded ? (isFiltered ? '조건에 맞는 추천 활동' : `먼저 해 보기 좋은 추천 활동 ${source.length}개`) : query ? '찾은 활동 · 추천 활동 먼저' : phoneOnly ? `준비물 없는 놀이 ${matched.length}개 · 보관함까지 모두` : isFiltered ? `조건에 맞는 활동 ${matched.length}개` : `보관함까지 모든 활동 ${matched.length}개`}</h2>{games.length>0&&<span className="muted small" data-list-count role="status" aria-live="polite">{displayed.length<games.length?`${games.length}개 중 ${displayed.length}개 표시`:`${games.length}개 모두 표시`}</span>}</div>
-    <div className="grid three">{displayed.map(g => {const group=activityGroup(g);return <article className="card catalog-card" data-game-card={g.type} key={g.type}>
+    <div className="grid three">{displayed.map(g => {const group=activityGroup(g),cardFit=activityFit(g);return <article className="card catalog-card catalog-card-compact" data-game-card={g.type} key={g.type}>
+      {/* 카드는 이름 · 한 줄 규칙 · 인원·시간만. TV 첫 화면에 두 줄이 보이게 하고, 나머지는 '자세히'에 접는다. */}
       <div className="activity-card-top"><span className="activity-card-icon" aria-hidden="true">{PHONE_PLAY_BY_ID.has(g.type)?<PhonePlayIcon gameType={g.type}/>:activityIcon(g)}</span>
+       {/* 이름을 눌러도 열린다. */}
+       <h3>{onSelect?g.name:<Link className="activity-name-link" to={playHref(g.type)}>{g.name}<span aria-hidden="true"> ›</span></Link>}</h3>
        <button type="button" className="activity-fav" aria-pressed={isFavorite(g.type)} aria-label={`${g.name} 즐겨찾기`} onClick={()=>toggleFavorite(g.type)}>{isFavorite(g.type)?'★':'☆'}</button></div>
+      <p className="activity-oneline" data-card-rule>{g.desc}</p>
+      <p className="activity-meta" data-card-meta><span><span aria-hidden="true">👥</span><span className="sr-only">인원 </span> {cardFit.wholeClass?'반 전체':cardFit.people.join(' · ')||'모둠'}</span><span><span aria-hidden="true">⏱</span><span className="sr-only">시간 </span> {cardFit.minutes}분</span>{!solo&&!isFeatured(g.type)&&<span className="activity-meta-archive" data-archive>🗄 보관함</span>}{!solo&&isFeatured(g.type)&&archiveIncluded&&<span className="activity-meta-featured" data-featured>⭐ 추천 활동</span>}</p>
+      <div className="activity-card-foot"><div className="card-action">{onSelect ? <button className="primary button-wide" onClick={() => onSelect(g)}>이 활동 선택</button> : <Link className="secondary button-wide card-open" to={playHref(g.type)}>{solo ? '체험하기' : '활동 열기'}</Link>}</div>
+      <details className="activity-card-more" data-card-more><summary aria-label={`${g.name} 자세히`}>자세히</summary>
       <p className="activity-situation" data-situation>{situationBadges(g,fit).map(b=><span key={b}>{b}</span>)}</p>
-      {/* 이름을 눌러도 열린다: TV 첫 화면에서 카드 아래 '활동 열기'까지 내려가지 않아도 된다. */}
-      <h3>{onSelect?g.name:<Link className="activity-name-link" to={playHref(g.type)}>{g.name}<span aria-hidden="true"> ›</span></Link>}</h3>
       <p className="activity-finish"><strong>이렇게 하면 끝나요</strong> · {finishLine(g)}</p>
-      <p className="muted">{g.desc}</p>
-      <p className="activity-tags"><span className="pill">{group.icon} {group.label}</span>{isQuestId(g.type) && <span className="pill">연습부터 차근차근</span>}{!solo&&!isFeatured(g.type)&&<span className="pill activity-archive" data-archive>🗄 보관함</span>}{!solo&&isFeatured(g.type)&&archiveIncluded&&<span className="pill activity-featured" data-featured>⭐ 추천 활동</span>}{!solo&&shelfLabel(g.type)&&<span className="pill" data-shelf-note>{shelfLabel(g.type)}</span>}{variantsFor(g.type).length>0&&<span className="pill">다른 놀이 방법 {variantsFor(g.type).length}개</span>}</p>
-      {g.recommendedDevice&&<p className="small">{activityFit(g).wholeClass?'화면: TV·전자칠판 1대에 띄워 반 전체가 봐요(없으면 '+g.recommendedDevice+' 1대를 모두가 보이게 세워 둬요)':`기기: ${g.recommendedDevice} 1대를 세워 두고 해요`}</p>}
+      <p className="activity-tags"><span className="pill">{group.icon} {group.label}</span>{isQuestId(g.type) && <span className="pill">연습부터 차근차근</span>}{!solo&&shelfLabel(g.type)&&<span className="pill" data-shelf-note>{shelfLabel(g.type)}</span>}{variantsFor(g.type).length>0&&<span className="pill">다른 놀이 방법 {variantsFor(g.type).length}개</span>}</p>
+      {g.recommendedDevice&&<p className="small">{cardFit.wholeClass?'화면: TV·전자칠판 1대에 띄워 반 전체가 봐요(없으면 '+g.recommendedDevice+' 1대를 모두가 보이게 세워 둬요)':`기기: ${g.recommendedDevice} 1대를 세워 두고 해요`}</p>}
       <ActivityDetails game={g} solo={solo}/>
-      <div className="card-action">{onSelect ? <button className="primary button-wide" onClick={() => onSelect(g)}>이 활동 선택</button> : <><Link className="primary button-wide" to={playHref(g.type)}>{solo ? '체험하기' : '활동 열기'}</Link>{!solo&&!isSignatureId(g.type)&&<Link className="secondary button-wide" style={{marginTop:8}} to={`/teacher/setup?game=${g.type}`}>이 활동으로 수업 준비</Link>}{!solo&&isSignatureId(g.type)&&<p className="small muted" data-tv-only style={{marginTop:8}}>📺 학생 기기 없이 TV 한 대로 반 전체가 해요</p>}</>}</div></article>;})}</div>
+      {!onSelect&&!solo&&!isSignatureId(g.type)&&<Link className="secondary button-wide" to={`/teacher/setup?game=${g.type}`}>이 활동으로 수업 준비</Link>}{!onSelect&&!solo&&isSignatureId(g.type)&&<p className="small muted" data-tv-only>📺 학생 기기 없이 TV 한 대로 반 전체가 해요</p>}
+      </details></div></article>;})}</div>
     {!games.length && <div role="status" className="notice"><p>{archiveMore>0?'추천 활동 가운데 맞는 활동이 없어요.':'맞는 활동이 없어요.'} {fitActive?'‘어디서 · 몇 명 · 몇 분’ 가운데 하나를 ‘전체’로 바꿔 보세요.':'검색어나 조건을 바꿔 보세요.'}</p>
       {query&&<><p>{suggestions.reason}</p>{suggestions.length>0&&<ul className="activity-suggestions" aria-label="비슷한 활동">{suggestions.games.map(s=><li key={s.type}><Link to={playHref(s.type)}>{s.name}</Link></li>)}{!solo&&suggestions.sports.map(s=><li key={s.id}><Link to={`/sports/${s.id}`}>{s.name}</Link></li>)}</ul>}</>}
       {isFiltered&&<button type="button" onClick={clearFilters}>조건 모두 지우기</button>}</div>}

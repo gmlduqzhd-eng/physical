@@ -17,10 +17,12 @@ const ACCESS:Record<RemoteAccess,string>={
 };
 const EVENT_BUTTON:Record<SurpriseKind,string>={golden:'✨ 황금 신호',reverse:'🔄 거꾸로',freeze:'🧊 얼음',speed:'⚡ 빨리빨리'};
 const EVENT_LABEL:Record<SurpriseKind,string>={golden:'황금 신호',reverse:'거꾸로',freeze:'얼음',speed:'빨리빨리'};
+/** 팀은 색과 함께 모양으로도 구분한다(색을 가리기 어려운 사람도 알 수 있게). */
+const TEAM_SHAPES=['●','▲','■','◆'] as const;
 const DEFAULT_EVENTS:SurpriseKind[]=['golden','reverse','freeze'];
 const ACK_REASON:Record<string,string>={paused:'일시정지 중이라',event:'이 게임에서는 쓰지 않는 이벤트라',rate:'너무 빨리 눌러서',jump:'순서가 맞지 않아서',invalid:'알 수 없는 명령이라',idle:'TV에서 아직 게임을 시작하지 않아서',busy:'TV에서 확인 중이라'};
 
-/** 선생님 휴대폰 리모컨: 큰 버튼만. 명령은 서명해서 TV의 대표 게임 화면으로 간다. */
+/** 선생님 휴대폰 리모컨: '다음'·'일시정지'를 화면 절반 크기로, 팀 점수는 그 아래 작은 격자로. 명령은 서명해서 TV의 대표 게임 화면으로 간다. */
 export function FunRemotePage(){
  const [params,setParams]=useSearchParams();
  const room=normalizeRoomCode(params.get('room'));
@@ -42,6 +44,10 @@ export function FunRemotePage(){
  const [sent,setSent]=useState<{text:string;tone:'wait'|'ok'|'no'}|null>(null);
  /** 본게임 중 '마지막 승부로 건너뛰기'를 한 번 더 확인하는 중. */
  const [confirmSkip,setConfirmSkip]=useState(false);
+ /** '끝내기'도 한 번 더 확인한다(보지 않고 누르다 잘못 눌러도 판이 끝나지 않게). */
+ const [confirmEnd,setConfirmEnd]=useState(false);
+ /** 가끔 쓰는 버튼(깜짝 이벤트·마지막 승부로·끝내기) 펼침. */
+ const [more,setMore]=useState(false);
  const sender=useRef<ReturnType<typeof createRemoteSender>|null>(null);
  const waiting=useRef(new Map<number,{label:string;timers:ReturnType<typeof setTimeout>[]}>());
  useEffect(()=>{
@@ -137,30 +143,44 @@ export function FunRemotePage(){
   </section>:<p className="frp-note">{ready?(tvIdle?'TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요.':'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.'):''}</p>}
   {ready&&tvBusy?<p className="frp-paused" role="status">⏳ TV에서 확인 중이에요 · 지금은 버튼을 눌러도 반영되지 않아요</p>
    :paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
-  <div className="frp-main">
-   {/* 본게임 중 '다음'은 마지막 승부로 일찍 건너뛰는 버튼이라, TV처럼 작게 두고 한 번 더 확인한다. */}
-   {inPlay?<button type="button" className="frp-skip" disabled={!live||result||paused} onClick={()=>setConfirmSkip(true)}>⏭ 마지막 승부로</button>
-    :<button type="button" className="frp-primary" disabled={!live||result||paused} onClick={()=>send({type:'next'},'다음')}>▶ 다음</button>}
-   <button type="button" disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>{paused?'▶ 다시 시작':'⏸ 일시정지'}</button>
+  {/* 수업 중에는 화면을 보지 않고 누른다: 가장 자주 쓰는 '다음'과 '일시정지'를 화면 절반 크기로 둔다. */}
+  <div className="frp-big" role="group" aria-label="자주 쓰는 버튼">
+   <button type="button" className="frp-next" disabled={!live||result||paused||inPlay} onClick={()=>send({type:'next'},'다음')}>
+    <span className="frp-big-icon" aria-hidden="true">▶</span><span className="frp-big-label">다음</span>
+    {inPlay&&<small>본게임이 끝나면 저절로 넘어가요</small>}
+   </button>
+   <button type="button" className="frp-pause" data-paused={paused||undefined} disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>
+    <span className="frp-big-icon" aria-hidden="true">{paused?'▶':'⏸'}</span><span className="frp-big-label">{paused?'다시 시작':'일시정지'}</span>
+   </button>
   </div>
+  <section className="frp-teams" aria-label="팀 점수" data-count={teams}>
+   {teamRows.map(i=><div key={i} className="frp-team" style={{'--team':TEAM_COLORS[i]} as React.CSSProperties}>
+    <b><span className="frp-shape" aria-hidden="true">{TEAM_SHAPES[i]}</span> {teams===1?'우리 반':TEAM_NAMES[i]} <span className="frp-score">{snap?.scores[i]??0}</span></b>
+    <button type="button" className="frp-minus" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${TEAM_NAMES[i]} −1`)}>−1</button>
+    <button type="button" className="frp-plus" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${TEAM_NAMES[i]} +1`)}>+1</button>
+   </div>)}
+  </section>
+  <div className="frp-extra">
+   <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
+   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'한 방 공격')}>💥 한 방 공격</button>
+  </div>
+  {/* 가끔 쓰는 버튼은 접어 둔다. 잘못 누르면 판이 바뀌는 버튼은 한 번 더 묻는다. */}
+  <button type="button" className="frp-more-toggle" aria-expanded={more} aria-controls="frp-more" onClick={()=>setMore(m=>!m)}>{more?'▲ 접기':'▼ 더 보기 · 깜짝 이벤트 · 끝내기'}</button>
+  {more&&<div className="frp-more" id="frp-more" role="group" aria-label="가끔 쓰는 버튼">
+   {events.map(e=><button key={e} type="button" disabled={!live||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
+   {inPlay&&<button type="button" className="frp-skip" disabled={!live||result||paused} onClick={()=>{setConfirmEnd(false);setConfirmSkip(true);}}>⏭ 마지막 승부로</button>}
+   <button type="button" className="frp-danger" disabled={!live||result} onClick={()=>{setConfirmSkip(false);setConfirmEnd(true);}}>■ 끝내기</button>
+  </div>}
   {confirmSkip&&inPlay&&live&&!paused&&<section className="frp-confirm" role="alertdialog" aria-label="마지막 승부로 건너뛰기">
    <p>본게임을 끝내고 마지막 승부로 넘어갈까요? 시간이 되면 저절로 넘어가요.</p>
    <button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);send({type:'next'},'마지막 승부로');}}>넘어가기</button>
    <button type="button" onClick={()=>setConfirmSkip(false)}>취소</button>
   </section>}
-  <section className="frp-teams" aria-label="팀 점수">
-   {teamRows.map(i=><div key={i} className="frp-team" style={{'--team':TEAM_COLORS[i]} as React.CSSProperties}>
-    <b>{teams===1?'우리 반':TEAM_NAMES[i]} {snap?.scores[i]??0}</b>
-    <button type="button" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 빼기`} onClick={()=>send({type:'score',team:i,delta:-1},`${TEAM_NAMES[i]} −1`)}>−1</button>
-    <button type="button" disabled={!live||!scoring} aria-label={`${TEAM_NAMES[i]} 1점 더하기`} onClick={()=>send({type:'score',team:i,delta:1},`${TEAM_NAMES[i]} +1`)}>+1</button>
-   </div>)}
-  </section>
-  <div className="frp-extra">
-   <button type="button" disabled={!live||!scoring} onClick={()=>send({type:'scoreAll',delta:1},'모든 팀 +1')}>👍 모든 팀 +1</button>
-   {events.map(e=><button key={e} type="button" disabled={!live||!scoring} onClick={()=>send({type:'event',event:e},EVENT_LABEL[e])}>{EVENT_BUTTON[e]}</button>)}
-   <button type="button" disabled={!live||!scoring||!snap?.comboFull} onClick={()=>send({type:'special'},'한 방 공격')}>💥 한 방 공격</button>
-   <button type="button" className="frp-danger" disabled={!live||result} onClick={()=>send({type:'end'},'끝내기')}>■ 끝내기</button>
-  </div>
+  {confirmEnd&&live&&!result&&<section className="frp-confirm" role="alertdialog" aria-label="게임 끝내기">
+   <p>게임을 지금 끝내고 결과 발표로 갈까요?</p>
+   <button type="button" className="frp-danger" onClick={()=>{setConfirmEnd(false);send({type:'end'},'끝내기');}}>끝내기</button>
+   <button type="button" onClick={()=>setConfirmEnd(false)}>취소</button>
+  </section>}
   <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>
  </main>;
 }

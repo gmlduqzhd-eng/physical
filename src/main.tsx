@@ -19,9 +19,12 @@ window.addEventListener('vite:preloadError', () => {
 });
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { purgeLegacyPersonalData } from './application/browserStorage'
+import { getDisplayPrefs } from './application/displayPrefs'
+import './presentation/components/DisplayButtons.css'
 
 purgeLegacyPersonalData();
 
+getDisplayPrefs(); // TV 모드·글씨 크기를 첫 그리기 전에 맞춘다
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

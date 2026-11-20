@@ -34,3 +34,15 @@
   .expression-rubric>.space-y-4>div { padding:10px; }
   .expression-rubric button { max-width:100%; white-space:normal; }
 }
+/* 교실 TV 모드: 놀이가 시작되면 위쪽 도구 막대와 작은 설명을 숨기고 무대를 넓게 쓴다. 끄는 단추는 놀이 막대에 남는다. */
+.gameplay-toolbar .game-toolbar-tv{pointer-events:auto;flex:none;margin-left:auto;min-height:40px;padding:6px 12px;font-size:14px;white-space:nowrap}
+.gameplay-toolbar .game-toolbar-result + .game-toolbar-tv{margin-left:8px}
+@media (max-width:480px){.gameplay-toolbar .game-toolbar-tv{font-size:12px;padding:4px 8px}}
+html[data-tv-mode="on"] .game-tools-layout:has(.has-game-toolbar){--game-utility-height:0px}
+html[data-tv-mode="on"] .game-tools-layout:has(.has-game-toolbar) .game-utilities-bar{display:none}
+html[data-tv-mode="on"] .gameplay-toolbar{min-height:48px}
+html[data-tv-mode="on"] .gameplay-toolbar .game-toolbar-title small{display:none}
+html[data-tv-mode="on"] .gameplay-toolbar .game-toolbar-title strong{font-size:clamp(18px,2.2vw,30px)}
+
+/* 대표 게임은 화면 안에 TV 모드 단추가 따로 있어, 위쪽 놀이 막대의 단추는 숨긴다(단추가 둘로 보이지 않게). */
+body:has(.fun-intro,.fun-arena) .gameplay-toolbar .display-btn{display:none}

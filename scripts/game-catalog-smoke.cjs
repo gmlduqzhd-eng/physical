@@ -129,7 +129,8 @@ function readGameInventory() {
         const controls = page.locator('.gameplay-content button:visible:not(:disabled)');
         for (const control of await controls.all()) {
           const name = (await control.innerText()).trim() || await control.getAttribute('aria-label') || '';
-          if (/^\[|홈으로|나가기|돌아가기|다시|초기화|마이크|영상|유튜브|센서 권한/.test(name)) continue;
+          // Display toggles (TV 모드, 글씨 크기) change the whole layout and persist on the device; they are not game controls.
+          if (/^\[|홈으로|나가기|돌아가기|다시|초기화|마이크|영상|유튜브|센서 권한|TV 모드|글씨/.test(name)) continue;
           await touchGameControl(control);
           active.touch = { target: name || 'unlabelled game button', outcome: 'activated' };
           await page.waitForTimeout(150);

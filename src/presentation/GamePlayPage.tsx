@@ -1,3 +1,4 @@
+import {recordRecentActivity} from '../application/recentActivities';
 import {ActivityPauseBoundary} from '../application/ActivityPauseContext';
 import {classroomResultMessage} from '../domain/fourthGameRules';
 import {StartLabel} from './components/StartLabel';
@@ -44,6 +45,8 @@ import {useReportLessonActivity} from './components/todayLessonActivity';
 import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
 import {newPlayId,openPlayId,recordPlay} from '../application/classProgressStore';
 import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
+import {TvModeButton} from './components/DisplayButtons';
+import {useDisplayPrefs} from '../application/displayPrefs';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
 import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
@@ -198,6 +201,7 @@ const GamePlaySession = () => {
   const guidedMode = hasBattle && !!missionId;
   const classroomActivity=useClassroomActivityStatus(hasBattle?battleRoomId:null);
   const variantId=searchParams.get('variant');
+  useEffect(()=>{if(!soloMode&&!hasBattle)recordRecentActivity(gameType);},[gameType,soloMode,hasBattle]); // 홈의 '지난번에 한 활동'
   const selectedVariant=useMemo(()=>variantsFor(gameType||'').find(v=>v.id===variantId),[gameType,variantId]);
   const scoreKey=selectedVariant?`${gameType}::variant::${selectedVariant.id}`:undefined;
   const catalogReturn=searchParams.get('returnTo');
@@ -234,6 +238,8 @@ const GamePlaySession = () => {
   const [rpeSelected, setRpeSelected] = useState<number | null>(null);
   const [showCooldownModal, setShowCooldownModal] = useState<boolean>(false);
   const completionRef = useRef(false);
+  // TV 모드에서는 위쪽 도구 막대를 숨기므로, 무대 위치를 다시 잰다.
+  const {tvMode} = useDisplayPrefs();
   const gameLayoutRef = useRef<HTMLDivElement>(null);
   const gameToolbarRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
@@ -242,7 +248,8 @@ const GamePlaySession = () => {
     if (!hasStarted || !layout || !toolbar) return;
     // Reserve the actual wrapped heading height, including after fonts or viewport changes.
     const measure = () => {
-      const utilities = parseFloat(getComputedStyle(layout).getPropertyValue('--game-utility-height')) || 68;
+      const declared = parseFloat(getComputedStyle(layout).getPropertyValue('--game-utility-height'));
+      const utilities = Number.isFinite(declared) ? declared : 68;
       layout.style.setProperty('--game-stage-offset', `${utilities + Math.ceil(toolbar.getBoundingClientRect().height)}px`);
     };
     measure();
@@ -252,7 +259,7 @@ const GamePlaySession = () => {
       observer.disconnect();
       layout.style.removeProperty('--game-stage-offset');
     };
-  }, [hasStarted]);
+  }, [hasStarted, tvMode]);
   const badgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => { if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current); }, []);
 
@@ -529,6 +536,8 @@ const GamePlaySession = () => {
           <button onClick={handleReturnToCatalog} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
           <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
           {showDetailedResult && <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button>}
+          {/* 교실 TV 모드: 위쪽 도구 막대와 작은 설명을 숨기고 놀이 화면을 넓게 쓴다. */}
+          {!showDetailedResult && <TvModeButton className="game-toolbar-tv"/>}
         </div>
       )}
 
@@ -568,6 +577,8 @@ const GamePlaySession = () => {
               <div className="flex items-center gap-2 text-yellow-500"><Trophy className="w-4 h-4" /><span className="text-sm font-bold">{gameType==='rolling-curling'?'참여 확인 점수':'최고 기록'}</span></div>
               <span className="text-yellow-400 font-black">{bestScore}점</span>
             </div>}
+            {/* 결과 → 반응(👍/👎) → 다음 순서(대표 게임 결과 발표와 같게). 힘든 정도·쿨다운·자세한 결과는 그 아래에 둔다. */}
+            {gameType&&<ClassFeedbackSlot gameId={gameType} playId={sessionPlayId}/>}
             {lastEarnedScore > 300 && (
               <div className="w-full bg-orange-950/50 border border-orange-500/30 rounded-xl px-4 py-2.5 mb-4 text-center">
                 <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 자신의 기록을 넘어 보세요!</p>
@@ -622,7 +633,6 @@ const GamePlaySession = () => {
               <span>🫀 운동 후 쿨다운 루틴</span>
             </button>}
 
-            {gameType&&<ClassFeedbackSlot gameId={gameType} playId={sessionPlayId}/>}
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
             <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
