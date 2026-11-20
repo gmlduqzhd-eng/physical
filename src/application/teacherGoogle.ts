@@ -45,6 +45,8 @@ export function finishTeacherGoogle(endpoint:Endpoint):Promise<void>{
   const result=await fetch(`/api/${endpoint}?action=google-login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accessToken:data.session.access_token,adultTeacher:true,...(remember?{remember:true}:{})})});
   const response=await result.json();
   if(!result.ok){if(endpoint==='teacher')await client.auth.signOut({scope:'local'});throw Error(response.error??'Google 로그인을 완료하지 못했습니다.');}
+  // 서버가 30일 로그인을 받아 줬으면 이 기기의 Google 연결도 30일 둔다. 아니면 이 탭에만 둔다.
+  if(endpoint==='teacher')(await import('../data/supabase')).keepTeacherConnection(remember);
   rememberGoogleUsed();
  })();
  return callbacks[endpoint]!;

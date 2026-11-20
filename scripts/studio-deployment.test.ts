@@ -39,7 +39,7 @@ test('online studio enforces adult auth, scoped sessions, origin, size and serve
   };
   try {
     const status = await fetch(url + '/api/studio?action=status');
-    assert.deepEqual(await status.json(), { authenticated: false, configured: true, legacyLoginEnabled: false, aiReady: true, model: 'synthetic-model', localSetup: false });
+    assert.deepEqual(await status.json(), { authenticated: false, configured: true, aiReady: true, model: 'synthetic-model', localSetup: false });
     assert.equal(status.headers.get('cache-control'), 'no-store');
     const account = 'acct:11111111-2222-4333-8444-555555555555:1:' + 'a'.repeat(36);
     assert.equal((await post('generate', {})).status, 401);

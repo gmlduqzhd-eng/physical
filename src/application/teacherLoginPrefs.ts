@@ -11,8 +11,8 @@ const GOOGLE_USED_KEY = 'physical_google_used_v1';
 const RETURN_KEY = 'physical_teacher_login_return_v1';
 const STAY_KEY = 'physical_teacher_stay_signed_in_v1';
 
-/** '이 기기에서 30일 동안 로그인 유지'의 마지막 선택. 처음에는 켜져 있다(공용 컴퓨터라면 선생님이 끈다). */
-export function staySignedInPreferred(): boolean { return readStorage(STAY_KEY) !== '0'; }
+/** '이 기기에서 30일 동안 로그인 유지'의 마지막 선택. 처음에는 꺼져 있다(학교 공용 컴퓨터가 많아서). 개인 기기라면 선생님이 켠다. */
+export function staySignedInPreferred(): boolean { return readStorage(STAY_KEY) === '1'; }
 export function rememberStaySignedIn(on: boolean) { writeStorage(STAY_KEY, on ? '1' : '0'); }
 
 export function teacherConfirmedOnDevice(): boolean { return readStorage(CONFIRMED_KEY) === '1'; }

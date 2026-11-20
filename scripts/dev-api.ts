@@ -4,7 +4,7 @@ import { parse } from 'dotenv';
 import handler from '../api/teacher';
 import { readFile, writeFile } from 'node:fs/promises';
 import { randomBytes, scryptSync } from 'node:crypto';
-import { authConfigured, cookie, newSession, session } from '../server/teacherSession';
+import { codeConfigured, cookie, newSession, session } from '../server/teacherSession';
 let configuring = false;
 // Reload only server settings for each local request so editing .env.local takes effect.
 // Production uses Vercel environment configuration and has no file-based reload.
@@ -36,7 +36,7 @@ const server = createServer(async (req, res) => {
   if (new URL(req.url ?? '/', 'http://localhost').searchParams.get('action') === 'setup') {
     res.setHeader('Cache-Control', 'no-store'); res.setHeader('Content-Type', 'application/json');
     const fail = (status: number, message: string) => { res.statusCode = status; res.end(JSON.stringify({ error: message })); };
-    if (req.method !== 'POST' || req.headers.origin !== 'http://127.0.0.1:5173' || authConfigured() || configuring) return fail(403, '초기 설정을 허용하지 않습니다.');
+    if (req.method !== 'POST' || req.headers.origin !== 'http://127.0.0.1:5173' || codeConfigured() || configuring) return fail(403, '초기 설정을 허용하지 않습니다.');
     if (!(req.headers['content-type'] ?? '').startsWith('application/json')) return fail(415, 'JSON만 허용합니다.');
     configuring = true;
     try {

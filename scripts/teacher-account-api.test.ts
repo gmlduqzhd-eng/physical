@@ -32,7 +32,7 @@ test('Google login uses verified identities, scoped cookies, revocation and no t
  const post=(base:string,service:string,action:string,origin=base)=>actual(base+`/api/${service}?action=`+action,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify(body)});
  try{
   for(const [base,service] of [[mainUrl,'teacher'],[aiUrl,'studio']]){
-   const status=await actual(base+`/api/${service}?action=status`);assert.equal((await status.json()).legacyLoginEnabled,false);
+   const status=await actual(base+`/api/${service}?action=status`);assert.equal('legacyLoginEnabled' in (await status.json()),false);
    const shared=await actual(base+`/api/${service}?action=login`,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({code:'synthetic-shared-teacher',adultTeacher:true})});assert.ok([401,410].includes(shared.status));
   }
   assert.equal((await post(mainUrl,'teacher','google-login','https://foreign.example')).status,403);

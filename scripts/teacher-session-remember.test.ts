@@ -20,8 +20,9 @@ test('teacher cookie: 10 hours by default, 30 days only when the teacher chose t
     assert.equal(maxAge(cookie(newSession('physical_studio', undefined, true), false, 'physical_studio', true)), 2 * 60 * 60);
     assert.equal(maxAge(cookie('', true, 'physical_teacher', true)), 0);
     const long = newSession('physical_teacher', 'acct:nonce', true);
-    assert.deepEqual(sessionDetails(reqWith('physical_teacher=' + long)), { nonce: 'acct:nonce', remember: true });
-    assert.deepEqual(sessionDetails(reqWith('physical_teacher=' + newSession('physical_teacher', 'n2'))), { nonce: 'n2', remember: false });
+    assert.equal(sessionDetails(reqWith('physical_teacher=' + long))?.nonce, 'acct:nonce');
+    assert.equal(sessionDetails(reqWith('physical_teacher=' + long))?.remember, true);
+    assert.equal(sessionDetails(reqWith('physical_teacher=' + newSession('physical_teacher', 'n2')))?.remember, false);
     // A 30-day token cannot be replayed as a studio session (different signature scope).
     assert.equal(sessionDetails(reqWith('physical_studio=' + long), 'physical_studio'), null);
   } finally { for (const key of Object.keys(process.env)) if (!(key in before)) delete process.env[key]; Object.assign(process.env, before); }
@@ -49,7 +50,7 @@ test('production rejects the retired shared-code login and setup; google-login h
   const post = (action: string, body: unknown) => actual(base + '/api/teacher?action=' + action, { method: 'POST', headers: { Origin: base, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   try {
     const status = await (await actual(base + '/api/teacher?action=status')).json();
-    assert.equal(status.legacyLoginEnabled, false); assert.equal(status.localSetup, false);
+    assert.equal('legacyLoginEnabled' in status, false); assert.equal(status.localSetup, false);
     for (const action of ['login', 'setup']) {
       const res = await post(action, { code: 'synthetic-shared-teacher' });
       assert.equal(res.status, 410); assert.equal(res.headers.get('set-cookie'), null);

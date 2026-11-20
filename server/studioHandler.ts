@@ -45,7 +45,7 @@ export default async function handler(req: Request, res: ServerResponse) {
   if (nonce && !nonce.startsWith('acct:')) nonce = null;
   try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
   if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
-  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled: false, aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });
+  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });
   if (req.method === 'GET' && action === 'usage') {
     if(!nonce)return send(401,{error:'교사 인증이 필요합니다.'});
     try{return send(200,await studioUsage());}catch{return send(503,{error:'사용량 정보를 확인하지 못했습니다.'});}

@@ -2,16 +2,20 @@ import {parseLoginConditions} from '../teacher-studio/loginConditions';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isFreshClassroomRecord,CLASSROOM_STORAGE_TTL,cleanClassroomStorage } from '../src/application/storageRetention';
-import { activeTeacherSession,googleTeacherLogin,TeacherAccountError,sharedTeacherLoginAttempt,legacyTeacherLoginEnabled } from '../server/teacherAccounts';
+import { activeTeacherSession,googleTeacherLogin,TeacherAccountError,sharedTeacherLoginAttempt } from '../server/teacherAccounts';
 import { requestStudio,StudioRequestError } from '../teacher-studio/studioRequest';
 import { activityFingerprint } from '../src/domain/activityReview';
 import { AVAILABLE_GAMES } from '../src/domain/gamesData';
 
-test('shared-code cutover rejects new logins without revoking unexpired existing sessions',async()=>{
+test('retired shared-code sessions are no longer accepted in production; only local development keeps its code session',async()=>{
  const original=globalThis.fetch,before={...process.env};
- Object.assign(process.env,{NODE_ENV:'production',VITE_SUPABASE_URL:'https://synthetic-accounts.example',VITE_SUPABASE_ANON_KEY:'synthetic-key',CLASSROOM_TEACHER_BOOTSTRAP:'synthetic-bootstrap-not-real-123456789'});
- globalThis.fetch=async input=>{const path=new URL(String(input)).pathname;if(path.endsWith('/check_shared_teacher_login'))return new Response('false');if(path.endsWith('/check_shared_teacher_access'))return new Response('true');throw Error('Unexpected request');};
- try{assert.equal(await legacyTeacherLoginEnabled(),false);assert.equal(await activeTeacherSession('synthetic-existing-session'),true);}
+ Object.assign(process.env,{NODE_ENV:'production',VITE_SUPABASE_URL:'https://synthetic-accounts.example',VITE_SUPABASE_ANON_KEY:'synthetic-key',CLASSROOM_TEACHER_BOOTSTRAP:'synthetic-bootstrap-not-real-123456789',LOCAL_TEACHER_SETUP:'true'});
+ globalThis.fetch=async()=>{throw Error('A retired session must not need a server check');};
+ try{
+  assert.equal(await activeTeacherSession('synthetic-existing-session'),false);
+  process.env.NODE_ENV='development';assert.equal(await activeTeacherSession('synthetic-local-session'),true);
+  delete process.env.LOCAL_TEACHER_SETUP;assert.equal(await activeTeacherSession('synthetic-local-session'),false);
+ }
  finally{globalThis.fetch=original;for(const key of Object.keys(process.env))if(!(key in before))delete process.env[key];Object.assign(process.env,before);}
 });
 
