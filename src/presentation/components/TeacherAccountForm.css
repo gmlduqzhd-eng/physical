@@ -6,4 +6,6 @@
 .teacher-account-form .taf-notes summary{cursor:pointer;min-height:44px;display:flex;align-items:center}
 .teacher-account-form .taf-notes p{margin:6px 0}
 /* 숲 테마의 '.teacher-login button{… !important}'보다 앞서도록 글자 링크 모양을 지킨다. */
-html body .teacher-login :is(button.taf-link,button.teacher-legacy-link){width:auto!important;min-height:44px!important;border:0!important;background:none!important;color:var(--forest-muted,#4b5563)!important;box-shadow:none!important;text-decoration:underline;font-weight:600}
+html body .teacher-login button.taf-link{width:auto!important;min-height:44px!important;border:0!important;background:none!important;color:var(--forest-muted,#4b5563)!important;box-shadow:none!important;text-decoration:underline;font-weight:600}
+.teacher-account-form .taf-stay{margin-top:14px}
+.teacher-account-form .taf-stay small{display:block;font-size:13px;opacity:.8;font-weight:400}

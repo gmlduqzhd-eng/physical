@@ -9,23 +9,24 @@ import { removeStorage } from '../../application/browserStorage';
 import { teacherStatus } from '../../application/teacherSession';
 import { ensureClassroomTeacher } from '../../data/supabase';
 setMainTeacherGoogleClient(supabase);
+/**
+ * 선생님 로그인. Google 로그인 하나만 쓴다(예전 공유 코드 로그인은 없어졌다).
+ * 개발용 로컬 서버(scripts/dev-api.ts)에서만 처음 한 번 로컬 접근 코드를 정하거나 그 코드로 들어갈 수 있다.
+ */
 export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
   const [code, setCode] = useState(''); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
-  const [setup, setSetup] = useState(false);
-  const [sharedLogin, setSharedLogin] = useState(false);
-  useEffect(() => { let active = true; teacherStatus().then(s => { if (active) {setSetup(!s.configured && s.localSetup);setSharedLogin(s.legacyLoginEnabled===true);} }).catch(() => {}); return () => { active = false; }; }, []);
-  const [showLegacy,setShowLegacy]=useState(false);
+  const [local, setLocal] = useState<'none' | 'setup' | 'login'>('none');
+  useEffect(() => { let active = true; teacherStatus().then(s => { if (active && s.localSetup) setLocal(s.configured ? 'login' : 'setup'); }).catch(() => {}); return () => { active = false; }; }, []);
+  const setup = local === 'setup';
   return <section className="teacher-login rounded-2xl border border-slate-300 bg-white p-5 text-slate-900 max-w-xl mx-auto">
     <h2 className="text-xl font-bold">{setup ? '교사 접근 코드 처음 설정' : '선생님 로그인'}</h2>
     <p className="text-sm my-3">{setup ? '선생님만 알 수 있는 12자 이상의 접근 코드를 정해 주세요. API 키와는 다른 비밀번호입니다.' : '반 만들기·관리처럼 저장이 필요한 화면은 선생님 로그인 뒤에 쓸 수 있어요.'}</p>
     {!setup&&<TeacherAccountForm endpoint="teacher"/>}
-    {sharedLogin&&!setup&&!showLegacy&&<button type="button" className="teacher-legacy-link" onClick={()=>setShowLegacy(true)}>예전 공유 코드로 들어가기</button>}
-    {(setup||(sharedLogin&&showLegacy))&&<div className="teacher-legacy">{!setup&&<h3>예전 공유 코드로 들어가기</h3>}<form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try {
+    {local!=='none'&&<div className="teacher-legacy">{!setup&&<h3>개발용 로컬 접근 코드</h3>}<form onSubmit={async e => { e.preventDefault(); setBusy(true); setError(''); try {
       const res = await fetch(`/api/teacher?action=${setup ? 'setup' : 'login'}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code }) });
       const body = await res.json(); if (!res.ok) throw new Error(body.error ?? '인증 실패'); setCode(''); onLogin();
     } catch (cause) { setError(cause instanceof Error ? cause.message : '인증 서버에 연결할 수 없습니다.'); } finally { setBusy(false); } }}>
-      <label className="block font-bold">교사 접근 코드<input className="block w-full border rounded-xl p-3 mt-2" type="password" autoComplete="current-password" aria-describedby="teacher-code-help" minLength={12} maxLength={128} value={code} onChange={e => setCode(e.target.value)} required /></label>
-      <p id="teacher-code-help" className="mt-2 text-sm text-slate-600">코드는 엽쌤에게 문의하세요</p>
+      <label className="block font-bold">교사 접근 코드<input className="block w-full border rounded-xl p-3 mt-2" type="password" autoComplete="current-password" minLength={12} maxLength={128} value={code} onChange={e => setCode(e.target.value)} required /></label>
       <button disabled={busy} className="mt-3 rounded-xl bg-cyan-700 text-white px-5 py-3 font-bold">{busy ? '확인 중…' : setup ? '접근 코드 설정하고 시작' : '교사 인증하기'}</button>
     </form></div>}{error && <p role="alert" className="text-red-700 mt-3">{error}</p>}
   </section>;

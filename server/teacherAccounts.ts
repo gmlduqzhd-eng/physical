@@ -26,7 +26,7 @@ export async function googleOAuthConfiguration(){
   catch{throw new TeacherAccountError(503,'Google 로그인 설정을 확인하지 못했습니다.');}
 }
 export async function googleTeacherLogin(body:unknown){
-  const checked=z.object({accessToken:z.string().min(20).max(8192),adultTeacher:z.literal(true)}).strict().safeParse(body);
+  const checked=z.object({accessToken:z.string().min(20).max(8192),adultTeacher:z.literal(true),remember:z.boolean().optional()}).strict().safeParse(body);
   if(!checked.success)throw new TeacherAccountError(422,'Google 로그인과 교사 이용 확인이 필요합니다.');
   const {url,key}=settings();
   let response:Response;
@@ -39,7 +39,7 @@ export async function googleTeacherLogin(body:unknown){
   const account=z.object({id:z.uuid(),enabled:z.boolean(),version:z.number().int().positive(),role:z.enum(['teacher','admin'])}).parse(await approval.json());
   if(account.id!==identity.data.id)throw new TeacherAccountError(401,'Google 계정 확인 정보가 일치하지 않습니다.');
   if(!account.enabled)throw new TeacherAccountError(403,'관리자에 의해 이 계정의 사용이 제한되었습니다.');
-  return {nonce:`acct:${account.id}:${account.version}:${randomBytes(18).toString('hex')}`,role:account.role};
+  return {nonce:`acct:${account.id}:${account.version}:${randomBytes(18).toString('hex')}`,role:account.role,remember:checked.data.remember===true};
 }
 
 export function teacherAccountId(nonce: string) { return /^acct:([a-f0-9-]{36}):\d+:[a-f0-9]{36}$/.exec(nonce)?.[1] ?? null; }

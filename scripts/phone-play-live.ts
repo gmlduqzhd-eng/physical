@@ -29,7 +29,7 @@ try{
   const invite=must(await teacher.rpc('get_classroom_invites',{room_uuid:room.id}))[0],group=must(await teacher.from('room_groups').select('*').eq('room_id',room.id).single());
   const template=must(await teacher.from('mission_templates').select('buttons').eq('id',room.template_id).single()),mission=template.buttons[0].id;
   await page.goto(index?base+'/join?'+new URLSearchParams({room:room.id,group:group.group_name})+'#'+new URLSearchParams({code:invite.code}):base+'/lobby?pin='+invite.short_pin);
-  await page.getByLabel('학생 번호 (1~99)',{exact:true}).fill('91');await page.getByLabel('별명 (2~12자)',{exact:true}).fill('놀이검증');await page.getByRole('button',{name:/우리 모둠으로 입장|참여하기/}).click();await page.waitForURL('**/mobile/**');
+  {const n=String('91');if(Number(n)>30)await page.getByRole('button',{name:'31번부터 더 보기'}).click();await page.getByRole('button',{name:n+'번',exact:true}).click();}await page.getByRole('button',{name:/별명 바꾸기/}).click();await page.getByLabel('별명 (2~12자)',{exact:true}).fill('놀이검증');await page.getByRole('button',{name:/우리 모둠으로 입장|참여하기/}).click();await page.waitForURL('**/mobile/**');
   must(await teacher.from('game_rooms').update({status:'playing',started_at:new Date().toISOString()}).eq('id',room.id));await page.reload();await page.getByRole('button',{name:'게임 시작 →',exact:true}).click();
   await page.getByRole('button',{name:'시작 · 바로 시작',exact:true}).click();await page.locator('[data-phone-play]').waitFor();
   const button=(name:string)=>page.getByRole('button',{name,exact:true}),phase=(p:string)=>page.locator(`[data-phone-play][data-phase="${p}"]`).waitFor();

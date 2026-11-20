@@ -1,6 +1,6 @@
-import { activeTeacherSession, legacyTeacherLoginEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError, teacherAccountId, sharedTeacherLoginAttempt } from '../server/teacherAccounts.js';
+import { activeTeacherSession, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError, teacherAccountId, sharedTeacherLoginAttempt } from '../server/teacherAccounts.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from '../server/teacherSession.js';
+import { authConfigured, cookie, newSession, rateLimit, session, sessionDetails, verifyCode } from '../server/teacherSession.js';
 import { generateAdvice } from '../server/aiService.js';
 import { publicAiError } from '../server/aiErrors.js';
 import { authorizeClassroomTeacher } from '../server/classroomBridge.js';
@@ -15,7 +15,7 @@ export default async function handler(req: Request, res: ServerResponse) {
   let nonce = session(req) ?? session(req, 'physical_studio');
   try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
   if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
-  if (req.method === 'GET' && action === 'status') {try{return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled:await legacyTeacherLoginEnabled(), localSetup: process.env.NODE_ENV !== 'production' && process.env.LOCAL_TEACHER_SETUP === 'true', aiReady: !!process.env.OPENAI_API_KEY && !!process.env.OPENAI_MODEL && process.env.AI_PRIVACY_REVIEWED === 'true' });}catch{return send(503,{error:'교사 로그인 전환 상태를 확인하지 못했습니다.'});}}
+  if (req.method === 'GET' && action === 'status') {try{return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled:false, localSetup: process.env.NODE_ENV !== 'production' && process.env.LOCAL_TEACHER_SETUP === 'true', aiReady: !!process.env.OPENAI_API_KEY && !!process.env.OPENAI_MODEL && process.env.AI_PRIVACY_REVIEWED === 'true' });}catch{return send(503,{error:'교사 로그인 전환 상태를 확인하지 못했습니다.'});}}
   if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return send(405, { error: '허용하지 않는 요청입니다.' }); }
   const origin = req.headers.origin;
   const allowed = process.env.APP_ORIGIN ?? (process.env.NODE_ENV === 'production' ? undefined : 'http://127.0.0.1:5173');
@@ -36,14 +36,17 @@ export default async function handler(req: Request, res: ServerResponse) {
       const admission=await sharedTeacherLoginAttempt(String(address));
       if(!admission.allowed){res.setHeader('Retry-After',String(admission.retrySeconds));return send(429,{error:'시도가 많습니다. 15분 후 다시 시도하세요.'});}
       const account = await googleTeacherLogin(body);
-      res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', account.nonce)));return send(200,{authenticated:true});
+      // "이 기기에서 30일 동안 로그인 유지": the cookie and the signed expiry both last 30 days.
+      res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', account.nonce, account.remember), false, 'physical_teacher', account.remember));return send(200,{authenticated:true});
     }
-    if (action === 'login') {
-      if(!await legacyTeacherLoginEnabled())return send(401,{error:'새 공유 코드 로그인이 종료되었습니다. Google 계정으로 로그인하고 기존 수업은 복구키로 가져오세요.'});
+    // The old shared teacher code is retired. Only the loopback development server (scripts/dev-api.ts)
+    // keeps a local code for developers without a Google project.
+    if (action === 'login' || action === 'setup') {
+      const localDev = process.env.NODE_ENV !== 'production' && process.env.LOCAL_TEACHER_SETUP === 'true';
+      if (action === 'setup' || !localDev) return send(410, { error: '예전 공유 코드 로그인은 없어졌어요. Google 계정으로 로그인해 주세요. 공유 코드로 만든 수업은 복구키로 가져올 수 있어요.' });
       if (!authConfigured()) return send(503, { error: '교사 인증을 먼저 설정하세요. 서버에서 npm run teacher:setup을 실행하세요.' });
       const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
       if (!rateLimit('login:' + address, 8, 15 * 60 * 1000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
-      if(process.env.NODE_ENV==='production'){const admission=await sharedTeacherLoginAttempt(String(address));if(!admission.allowed){res.setHeader('Retry-After',String(admission.retrySeconds));return send(429,{error:'시도가 많습니다. 15분 후 다시 시도하세요.'});}}
       const code = typeof body === 'object' && body !== null && 'code' in body ? body.code : undefined;
       if (typeof code !== 'string' || !verifyCode(code)) return send(401, { error: '교사 접근 코드가 일치하지 않습니다.' });
       res.setHeader('Set-Cookie', cookie(newSession())); return send(200, { authenticated: true });
@@ -55,7 +58,9 @@ export default async function handler(req: Request, res: ServerResponse) {
       const authorized = await authorizeClassroomTeacher((body as { accessToken?: unknown })?.accessToken, teacherAccountId(nonce));
       // Sliding renewal: an active classroom keeps the same signed identity for another full period.
       // Google accounts only: already-issued shared-code sessions keep their original expiry.
-      if (session(req) === nonce && teacherAccountId(nonce)) res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', nonce)));
+      // A teacher who chose 30-day login keeps the 30-day period on renewal.
+      const current = sessionDetails(req);
+      if (current?.nonce === nonce && teacherAccountId(nonce)) res.setHeader('Set-Cookie', cookie(newSession('physical_teacher', nonce, current.remember), false, 'physical_teacher', current.remember));
       return send(200, authorized);
     }
     if (action !== 'generate') return send(404, { error: '없는 기능입니다.' });
