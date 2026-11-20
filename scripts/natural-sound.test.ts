@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {bestKoreanVoice,createAnnouncer,EARCON_QUIET_MS,speechText,type SpeechUtteranceLike,type VoiceLike} from '../src/application/speechAnnouncer';
+import {bestKoreanVoice,createAnnouncer,EARCON_LEAD_MS,EARCON_QUIET_MS,REMOTE_VOICE_WAIT_MS,speechText,type SpeechUtteranceLike,type VoiceLike} from '../src/application/speechAnnouncer';
 import {createPhrasePicker,nativeCounts,PHRASE_VARIANTS,TONE_PROSODY} from '../src/application/speechText';
 
 const read=(path:string)=>readFileSync(new URL(`../${path}`,import.meta.url),'utf8');
@@ -22,6 +22,31 @@ test('small counts are read with native Korean numbers, labels stay as numbers',
  assert.equal(nativeCounts('20명'),'20명');
  assert.equal(nativeCounts('10초 남았어요'),'10초 남았어요');
  assert.equal(speechText('▶ 3명이 모여요 ✓'),'세 명이 모여요');
+});
+
+test('number labels, decimals, ranges and loanwords are not turned into native counts', () => {
+ // a sentence with two or more "N번" uses them as labels (phone-play-008)
+ assert.equal(speechText('1번 걷기 · 2번 팔 펴기 · 3번 손 모으기'),'1번 걷기, 2번 팔 펴기, 3번 손 모으기');
+ assert.equal(nativeCounts('2번 주자'),'2번 주자');
+ assert.equal(nativeCounts('1번 보기'),'1번 보기');
+ assert.equal(speechText('1.5바퀴'),'1 점 5바퀴');
+ assert.equal(speechText('3~5명'),'3에서 5명');
+ assert.equal(nativeCounts('3개월'),'3개월');
+ assert.equal(speechText('Max 3회'),'Max 3회');
+ assert.equal(speechText('×2 점수'),'두 배 점수');
+ assert.equal(nativeCounts('10번'),'10번');
+ assert.equal(nativeCounts('20명'),'20명');
+ assert.equal(nativeCounts('1번 과제'),'1번 과제');
+ assert.equal(nativeCounts('2분 30초'),'2분 30초');
+ assert.equal(nativeCounts('3번 하기'),'세 번 하기');
+});
+
+test('phrase variants are pure synonyms (no meaning-changing additions)', () => {
+ for(const [key,pool] of Object.entries(PHRASE_VARIANTS)){
+  assert.equal(pool[0],key);
+  for(const v of pool)assert.doesNotMatch(v,/그대로|얼음|여기까지/,`${key}: ${v}`);
+ }
+ assert.equal(PHRASE_VARIANTS['멈춰요'],undefined,'stop commands are never reworded');
 });
 
 test('the best Korean voice is chosen by quality, robotic desktop voices go last', () => {
@@ -50,15 +75,15 @@ test('frequent lines rotate between natural variants without repeating, other se
 
 function setup(voices:VoiceLike[]=[{lang:'ko-KR',name:'Google 한국의',localService:false}]){
  let t=100_000;
- const spoken:SpeechUtteranceLike[]=[];const speakingLog:boolean[]=[];let earcons=0;
+ const spoken:SpeechUtteranceLike[]=[];const speakingLog:boolean[]=[];let earcons=0;const leads:{fn:()=>void;ms:number}[]=[];
  const synth={speak(u:SpeechUtteranceLike){spoken.push(u);},cancel(){},getVoices:()=>voices};
- const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,random:()=>0,onSpeaking:s=>speakingLog.push(s),earcon:()=>{earcons++;}});
- return {a,spoken,speakingLog,earcons:()=>earcons,advance:(ms:number)=>{t+=ms;}};
+ const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,random:()=>0,onSpeaking:s=>speakingLog.push(s),earcon:()=>{earcons++;},later:(fn,ms)=>{leads.push({fn,ms});return leads.length;},clearLater:()=>{}});
+ return {a,spoken,speakingLog,earcons:()=>earcons,advance:(ms:number)=>{t+=ms;},flush:()=>{const fns=leads.splice(0);fns.forEach(l=>l.fn());return fns.map(l=>l.ms);}};
 }
 
 test('tone changes rate and pitch; the chosen voice is used and reported', () => {
- const {a,spoken,advance}=setup();
- a.say('차분하게 숨 쉬어요',{tone:'calm'});advance(3000);
+ const {a,spoken,advance,flush}=setup();
+ a.say('차분하게 숨 쉬어요',{tone:'calm'});flush();advance(3000);
  a.say('마지막 승부!',{tone:'excited'});advance(3000);
  a.say('신호를 봐요');
  assert.equal(spoken[0].rate,TONE_PROSODY.calm.rate);assert.equal(spoken[0].pitch,TONE_PROSODY.calm.pitch);
@@ -68,10 +93,25 @@ test('tone changes rate and pitch; the chosen voice is used and reported', () =>
  assert.equal(a.voiceName(),'Google 한국의');
 });
 
+test('an online voice that never starts (offline) gives way to an on-device voice', () => {
+ const timers:{fn:()=>void;ms:number}[]=[];const spoken:SpeechUtteranceLike[]=[];
+ const voices:VoiceLike[]=[{lang:'ko-KR',name:'Google 한국의',localService:false},{lang:'ko-KR',name:'Yuna',localService:true}];
+ const synth={speak(u:SpeechUtteranceLike){spoken.push(u);},cancel(){},getVoices:()=>voices,speaking:false,pending:false};
+ let t=0;
+ const a=createAnnouncer({synth,utterance:text=>({text,lang:'',rate:1,volume:1,pitch:1}),now:()=>t,later:(fn,ms)=>{timers.push({fn,ms});return timers.length;},clearLater:()=>{}});
+ a.say('하나');
+ assert.equal((spoken[0].voice as VoiceLike).name,'Google 한국의');
+ const watch=timers.find(x=>x.ms===REMOTE_VOICE_WAIT_MS);assert.ok(watch);watch.fn();
+ t+=5000;a.say('둘');
+ assert.equal((spoken[1].voice as VoiceLike).name,'Yuna','next line uses the on-device voice');
+});
+
 test('speaking start and end are reported for music ducking, and the earcon only plays after a quiet spell', () => {
- const {a,spoken,speakingLog,earcons,advance}=setup();
+ const {a,spoken,speakingLog,earcons,advance,flush}=setup();
  assert.ok(a.say('시작해요'));
  assert.equal(earcons(),1,'first line after silence gets the soft chime');
+ assert.equal(spoken.length,0,'speech waits until the chime has finished');
+ assert.deepEqual(flush(),[EARCON_LEAD_MS]);
  (spoken[0].onstart as ()=>void)();(spoken[0].onend as ()=>void)();
  assert.deepEqual(speakingLog,[true,false]);
  advance(2000);a.say('다음 신호');

@@ -19,12 +19,26 @@ function getCtx() {
     const AudioContextConstructor = window.AudioContext || audioWindow.webkitAudioContext;
     if (!AudioContextConstructor) return null;
     if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContextConstructor();
-    if (audioCtx.state === 'suspended') {
+    // iOS는 전화·알림 뒤에 'interrupted'가 되고, 다른 브라우저는 'suspended'가 된다. 둘 다 다시 깨운다.
+    const state = audioCtx.state as AudioContextState | 'interrupted';
+    if (state === 'suspended' || state === 'interrupted') {
       void audioCtx.resume?.()?.catch?.(() => {});
     }
     return audioCtx;
   } catch { return null; }
 }
+
+/** 멈춰 있던 오디오가 이만큼 넘게 멈춰 있었으면, 그동안 부른 소리는 내지 않는다(깨어날 때 한꺼번에 터지지 않게). */
+export const SUSPENDED_DROP_MS = 2000;
+let suspendedSince: number | null = null;
+/** 지금 소리를 예약해도 되는지: 돌고 있으면 늘 된다. 멈춘 지 오래면 버린다(첫 손짓으로 깨우는 짧은 순간은 허용). */
+function playable(ctx: AudioContext, now = Date.now()): boolean {
+  if (ctx.state === 'running' || ctx.state === undefined) { suspendedSince = null; return true; }
+  if (suspendedSince === null) suspendedSince = now;
+  return now - suspendedSince < SUSPENDED_DROP_MS;
+}
+/** 테스트용: 멈춤 기록을 지운다. */
+export function resetAudioSuspension() { suspendedSince = null; }
 
 export function unlockAudio() {
   const ctx = getCtx();
@@ -89,8 +103,16 @@ function glideTo(param: AudioParam | undefined, value: number, ctx: AudioContext
 }
 
 let speaking = false;
-/** 음성 안내가 시작·끝날 때 부른다: 말하는 동안 배경음악과 효과음을 줄인다. */
-export function duckForSpeech(active: boolean) {
+let duckWatchdog: ReturnType<typeof setTimeout> | null = null;
+/** 말이 끝났다는 알림이 오지 않아도 이 시간 뒤에는 배경음악을 되돌린다(기본값). */
+export const DUCK_WATCHDOG_MS = 12000;
+/**
+ * 음성 안내가 시작·끝날 때 부른다: 말하는 동안 배경음악과 효과음을 줄인다.
+ * maxMs: 말이 끝났다는 알림(onend)이 끝내 오지 않을 때 대비해 이 시간 뒤 저절로 되돌린다.
+ */
+export function duckForSpeech(active: boolean, maxMs = DUCK_WATCHDOG_MS) {
+  if (duckWatchdog) { clearTimeout(duckWatchdog); duckWatchdog = null; }
+  if (active) duckWatchdog = setTimeout(() => { duckWatchdog = null; if (speaking) duckForSpeech(false); }, Math.max(1000, maxMs));
   speaking = active;
   const ctx = audioCtx;
   if (!ctx || ctx.state === 'closed') return;
@@ -137,7 +159,7 @@ interface ToneOptions {
 /** 둥근 소리 하나: 짧게 커졌다 지수로 사라진다. */
 function tone(freq: number, duration: number, opts: ToneOptions = {}) {
   const ctx = getCtx();
-  if (!ctx) return;
+  if (!ctx || !playable(ctx)) return;
   try {
     const { type = 'sine', volume = 0.15, delay = 0, attack = 0.008, overtone = { ratio: 2, level: 0.18 }, bend = 0, steady = false, pan } = opts;
     const f = steady ? freq : vary(freq, 0.025);
@@ -174,7 +196,7 @@ interface NoiseOptions { volume?: number; delay?: number; filter?: BiquadFilterT
 /** 걸러 낸 잡음: 나무 블록 째깍·바람 휙 같은 소리. */
 function noise(duration: number, opts: NoiseOptions = {}) {
   const ctx = getCtx();
-  if (!ctx) return;
+  if (!ctx || !playable(ctx)) return;
   try {
     const { volume = 0.12, delay = 0, filter = 'bandpass', from = 1800, to, q = 1.2 } = opts;
     const d = Math.max(0.02, vary(duration, 0.05));
@@ -292,7 +314,7 @@ export function sfxWhistle() {
   if (!allow('whistle')) return;
   try {
     const ctx = getCtx();
-    if (!ctx) return;
+    if (!ctx || !playable(ctx)) return;
     const now = ctx.currentTime;
     const length = vary(0.82, 0.04);
     const osc1 = ctx.createOscillator();
@@ -331,6 +353,8 @@ export function sfxWhistle() {
 
     lfo.start(now); osc1.start(now); osc2.start(now);
     lfo.stop(now + length); osc1.stop(now + length); osc2.stop(now + length);
+    // 끝나면 연결을 끊어 소리 장치가 쌓이지 않게 한다.
+    osc1.onended = () => { for (const n of [lfo, lfoGain, osc1, osc2, gain, tail]) { try { n.disconnect(); } catch { /* 무시 */ } } };
   } catch {
     /* ignore audio errors */
   }
@@ -403,6 +427,8 @@ export function startBgm(volume = 0.175) {
   bgmInterval = setInterval(() => {
     // A queued note may run after stop/replay; it belongs only to this loop.
     if (bgmGain !== loopGain) return;
+    // 오디오가 오래 멈춰 있으면 음을 쌓지 않는다(깨어날 때 한꺼번에 울리지 않게).
+    if (!playable(ctx)) { step++; return; }
     try {
       const t = ctx.currentTime, len = tempo / 1000;
       const note = (freq: number, length: number, level: number, kind: OscillatorType) => {
@@ -417,6 +443,7 @@ export function startBgm(volume = 0.175) {
         noteGain.connect(loopGain);
         osc.start(t);
         osc.stop(t + length + 0.02);
+        osc.onended = () => { try { osc.disconnect(); noteGain.disconnect(); } catch { /* 무시 */ } };
       };
       const freq = BGM_NOTES[step % BGM_NOTES.length];
       if (freq > 0) note(freq, len * 0.95, 0.06, 'triangle');
