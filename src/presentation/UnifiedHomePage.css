@@ -78,10 +78,16 @@ html[data-design=forest].dark-theme .unified-home .welcome.home-hero :is(.home-h
 .unified-home .home-more>summary small{font-weight:400;font-size:14px;color:var(--forest-muted,#5f6155)}
 .unified-home .home-more>summary:focus-visible{outline:3px solid #f59e0b;outline-offset:4px;border-radius:8px}
 .unified-home .home-more[open]{padding-bottom:22px}
-html.dark-theme .unified-home .home-more{background:#1d2a23;border-color:#3b4c41}
-html.dark-theme .unified-home .home-more>summary{color:#eef3ea}
-html.dark-theme .unified-home .home-more>summary small{color:#c3cfc5}
+html.dark-theme .unified-home .home-more{background:#202224;border-color:#3e4145}
+html.dark-theme .unified-home .home-more>summary{color:#f2f1ec}
+html.dark-theme .unified-home .home-more>summary small{color:#c9cbc6}
 html.dark-theme .unified-home .home-shelf-sub{color:#eef3ea}
 /* TV에서는 큰 그림 칸을 낮춰, 큰 버튼 둘과 지난번에 한 활동이 첫 화면에 함께 들어오게 한다. */
 @media(min-width:900px){html[data-design=forest] .unified-home .welcome.home-hero{min-height:0;padding-top:26px;padding-bottom:22px}html[data-design=forest] .unified-home .welcome.home-hero h1{margin-bottom:10px}.unified-home .home-featured{margin-top:12px}}
 @media(max-width:650px){.unified-home .home-featured{padding:14px}.unified-home .home-more{padding:0 14px}}
+/* 빠른 추천을 큰 그림 바로 아래 한 줄로 둬서 TV(1280×800) 첫 화면 안에 들어오게 한다. */
+@media (min-width:701px){
+ .unified-home .home-quick-picks{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:12px 0 4px;padding:10px 16px}
+ .unified-home .home-quick-picks h2{margin:0;font-size:16px}
+ .unified-home .home-quick-picks .quick-picks-result{flex:1 1 100%;margin-top:2px}
+}

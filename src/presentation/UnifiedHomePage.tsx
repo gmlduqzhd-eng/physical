@@ -1,6 +1,6 @@
 import {ENCYCLOPEDIA} from '../domain/encyclopedia';
 import {HomeAccountTabs} from './components/HomeAccountTabs';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CircleHelp, ClipboardCheck, QrCode, UserRound } from 'lucide-react';
 import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
@@ -27,19 +27,33 @@ export function UnifiedHomePage() {
   const byId = (ids: readonly string[]) => ids.flatMap(id => { const game = GAMES.find(g => g.type === id); return game ? [game] : []; });
   const [recent] = useState(() => byId(readRecentActivities()).slice(0, 4));
   const [favorites] = useState(() => byId([...readFavorites()]).slice(0, 4));
-  // 주소에 #자리표가 있으면(예: /#library-title) 접힌 칸을 펼쳐 그 자리가 보이게 한다.
-  const [moreOpen, setMoreOpen] = useState(() => typeof window !== 'undefined' && window.location.hash.length > 1);
+  const [moreOpen, setMoreOpen] = useState(false);
+  // 주소에 #자리표가 있고(예: /#library-title) 그 자리가 '더 보기' 안에 있으면, 접힌 칸을 펼치고 그 자리로 내려간다.
+  // 모르는 자리표면 아무것도 펼치지 않는다.
+  useEffect(() => {
+    const reveal = () => {
+      let id: string;
+      try { id = decodeURIComponent(window.location.hash.slice(1)); } catch { return; }
+      const target = id ? document.getElementById(id) : null;
+      if (!target?.closest('[data-home-more]')) return;
+      setMoreOpen(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => target.scrollIntoView({ block: 'start' })));
+    };
+    reveal();
+    window.addEventListener('hashchange', reveal);
+    return () => window.removeEventListener('hashchange', reveal);
+  }, []);
   const shelf = recent.length ? recent : FEATURED_GAMES.slice(0, 4);
   return <div className="unified-home"><div className="shell">
     <header><Link className="brand" to="/" aria-label="땀방울 원정대 홈"><ForestBrand/></Link>
       <HeaderToolbar label="상단 메뉴"><button className="icon-toolbar-action" type="button" title="접속 QR" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/><span>접속 QR</span></button><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
     </header><HomeAccountTabs/>
     <main><section className="welcome forest-hero home-hero" aria-labelledby="home-title"><div><p className="eyebrow">땀방울 원정대 · 초등 체육 활동 {GAMES.length}개</p><h1 id="home-title">오늘 체육,<br/>세 번 눌러 시작해요</h1><p className="forest-lead">어디서 · 몇 명 · 몇 분을 고르면 맞는 활동이 나와요.<br/>TV에 띄우거나 기기 한 대로 바로 해요.</p><nav className="forest-hero-actions home-main-actions" aria-label="바로 시작"><Link to="/today" data-today-link>📋 오늘 수업 시작 (40분) <ArrowRight aria-hidden="true"/></Link><Link to="/hub" data-home-hub>🔎 활동 고르기 <ArrowRight aria-hidden="true"/></Link></nav><nav className="home-side-actions" aria-label="다른 시작"><Link to="/lobby">🙋 학생 수업 참여</Link><Link to="/tools">🧰 수업 도구</Link></nav><p className="home-hero-more"><Link to="/try/map">로그인 없이 원리 체험</Link> · <Link to="/together">공용 화면 한 대로 시작</Link></p></div><picture className="home-hero-art"><source media="(max-width: 700px)" srcSet="/images/home-hero-900.webp"/><img src="/images/home-hero-1600.webp" width={1600} height={900} alt="운동장에서 공을 들고 달리고 뛰어오르는 땀방울 친구들" fetchPriority="high" decoding="async"/></picture></section>
+      <QuickPicks returnTo="/" className="home-quick-picks"/>
       <section className="home-featured" aria-labelledby="home-featured-title" data-home-shelf={recent.length ? 'recent' : 'featured'}><div className="library-title"><div className="library-heading"><p className="eyebrow">{recent.length ? '이 기기에서 최근에 연 활동' : <>추천 활동 {FEATURED_GAMES.length}개</>}</p><h2 id="home-featured-title">{recent.length ? '지난번에 한 활동' : '먼저 이것부터 해 보세요'}</h2></div><Link to="/hub">추천 활동 모두 보기 →</Link></div>
         <ul className="home-featured-list">{shelf.map(g=><li key={g.type}><Link to={`/play/${g.type}`} data-featured-link={g.type}><span aria-hidden="true">{g.emoji}</span><strong>{g.name}</strong></Link></li>)}</ul>
         {favorites.length>0&&<><h3 className="home-shelf-sub" id="home-favorites-title">★ 즐겨찾기</h3><ul className="home-featured-list" aria-labelledby="home-favorites-title">{favorites.map(g=><li key={g.type}><Link to={`/play/${g.type}`} data-favorite-link={g.type}><span aria-hidden="true">{g.emoji}</span><strong>{g.name}</strong></Link></li>)}</ul></>}
       </section>
-      <QuickPicks returnTo="/"/>
       <details className="home-more" open={moreOpen} onToggle={e=>setMoreOpen(e.currentTarget.open)} data-home-more><summary><span>더 보기</span><small>영역별로 찾기 · 교사 수업 준비 · 혼자 하기 · 체육수업 대백과</small></summary>
       <section className="library home-find" aria-labelledby="library-title"><div className="library-title"><div className="library-heading"><h2 id="library-title">다른 방법으로 찾기</h2><span className="catalog-note">활동 <b>{GAMES.length}</b>개</span></div></div><div className="categories">{domains.map(domain => <Link className="category" key={domain.name} to={`/hub?domain=${encodeURIComponent(domain.name)}`}><div><h3>{domain.name}</h3><p>{domain.description}</p></div><strong>{GAMES.filter(game => game.domain === domain.name).length}<small>개</small></strong></Link>)}<Link className="category" to="/hub?collection=phone"><div><h3>준비물 없는 놀이</h3><p>TV에 띄워 반 전체가 함께</p></div><strong>{PHONE_PLAYS.length}<small>개</small></strong></Link><Link className="category" to="/expeditions"><div><h3>대표 원정</h3><p>비밀지도 · 바디루프 · 학급 보스</p></div><strong>3<small>개</small></strong></Link></div></section>
       <nav className="roles" aria-label="역할 선택">
