@@ -73,8 +73,9 @@
 @media (min-width:700px){.phone-class .pc-controls{grid-template-columns:minmax(180px,1fr) minmax(220px,2fr)}.phone-class .pc-controls>button:only-child{grid-column:2}}
 /* 남은 시간 막대: 줄어들며 색이 바뀐다(넉넉함 → 곧 끝 → 마지막 10초). */
 .phone-class .pc-timebar{flex:1 0 100%;height:clamp(10px,1.6vh,18px);border-radius:999px;background:var(--forest-tint,#e8efe3);border:1px solid var(--forest-line,rgba(0,0,0,.15));overflow:hidden}
-.phone-class .pc-timebar i{display:block;height:100%;border-radius:999px;background:#0f766e;transition:width .12s linear,background-color .4s}
-.phone-class .pc-timebar[data-state=brief] i{background:#64748b}
+/* 색은 대표 게임 시간 막대와 같게: 초록 → 노랑(주황) → 빨강. 안내 시간도 같은 초록을 조금 옅게 쓴다. */
+.phone-class .pc-timebar i{display:block;height:100%;border-radius:999px;background:#16a34a;transition:width .12s linear,background-color .4s}
+.phone-class .pc-timebar[data-state=brief] i{background:#16a34a;opacity:.6}
 .phone-class .pc-timebar[data-state=soon] i{background:#d97706}
 .phone-class .pc-timebar[data-state=urgent] i{background:#dc2626}
 .phone-class .pc-timebar[data-stopped] i{opacity:.5}
@@ -90,5 +91,16 @@ html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-cue[data-length=mediu
 html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-cue[data-length=long]{font-size:clamp(24px,4.2vw,66px);line-height:1.32}
 html[data-tv-mode="on"] .phone-class:not([data-board]) .pc-signal[data-memory-brief] .pc-cue{font-size:clamp(24px,min(5vw,7vh),72px)}
 html[data-tv-mode="on"] .phone-class .pc-task{font-size:clamp(20px,3vw,40px)}
+/* TV 모드·넓은 화면: 규칙 화면의 지금 할 일과 규칙 글씨도 뒤에서 읽히게 키운다(시간 표시만 커지지 않게). */
+@media (min-width:961px){
+ html[data-tv-mode="on"] .phone-class .pc-rule{font-size:clamp(26px,3.6vw,56px)}
+ html[data-tv-mode="on"] .phone-class .pc-rule-card li{font-size:clamp(28px,3.8vw,60px);line-height:1.35}
+ html[data-tv-mode="on"] .phone-class .pc-setup{font-size:clamp(26px,3.4vw,52px)}
+ html[data-tv-mode="on"] .phone-class .pc-task{font-size:clamp(26px,3.6vw,54px)}
+ html[data-tv-mode="on"] .phone-class .pc-rules .pc-cue{font-size:clamp(40px,6vw,96px)}
+}
 .phone-play.phone-class .pc-theme{flex:none;width:44px;margin:0;padding:0}
 .phone-play.phone-class .pc-tv[aria-pressed="true"]{background:var(--forest-accent,#0e7490);color:var(--forest-on,#fff);border-color:var(--forest-accent,#0e7490)}
+
+/* 오늘 수업 막대(48px)가 있으면 반 전체 진행 화면을 그만큼 내린다: 화면 전체를 덮는(fixed) 화면이라 막대 밑으로 머리줄이 들어가지 않게. */
+body:has(.today-bar) .phone-play.phone-class{top:48px}
