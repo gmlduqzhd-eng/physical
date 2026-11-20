@@ -146,3 +146,9 @@ html.dark-theme .flow.activity-tools-scope .catalog-card-compact .activity-card-
 }
 /* 글씨를 크게·더 크게 하면 카드 폭이 상대적으로 좁아지니, 한 줄 규칙을 3줄까지 보여 준다. */
 html:is([data-text-scale="large"],[data-text-scale="xlarge"]) .flow.activity-tools-scope .catalog-card-compact .activity-oneline{-webkit-line-clamp:3}
+/* 제목이 위쪽 구분선에 바로 붙지 않게 띄운다. */
+.flow.activity-tools-scope .activity-library-head{margin-top:16px}
+/* 누르는 칸은 44px 이상: 카드 제목 링크, 규칙 펼치기, 위쪽 바로가기. */
+.flow.activity-tools-scope .catalog-card h3 .activity-name-link{display:inline-flex;align-items:center;min-height:44px}
+.flow.activity-tools-scope .catalog-card details details>summary,.flow.activity-tools-scope .catalog-card>details>summary{min-height:44px;box-sizing:border-box;padding-block:10px;cursor:pointer}
+@media(max-width:700px){.activity-library-head nav a{min-height:44px}}

@@ -20,9 +20,11 @@ window.addEventListener('vite:preloadError', () => {
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { purgeLegacyPersonalData } from './application/browserStorage'
 import { getDisplayPrefs } from './application/displayPrefs'
+import { startAppRuntime } from './application/appRuntime'
 import './presentation/components/DisplayButtons.css'
 
 purgeLegacyPersonalData();
+startAppRuntime(); // 잡히지 않은 오류를 콘솔에 남기고, 처음 받은 화면 파일을 서비스워커에 알려 준다
 
 getDisplayPrefs(); // TV 모드·글씨 크기를 첫 그리기 전에 맞춘다
 createRoot(document.getElementById('root')!).render(

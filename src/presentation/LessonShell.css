@@ -25,3 +25,5 @@ html[data-design=forest] .flow.lesson-shell .student-choice,
 @media(max-width:700px){
   html[data-design=forest] .flow.lesson-shell .student-choice{border-radius:20px}
 }
+/* 입장 오류 상자는 입장 카드와 같은 폭·같은 왼쪽 끝에 둔다(TV에서 카드 밖 전체 폭으로 나오지 않게). */
+.flow.lesson-shell .student-entry-error{max-width:650px;box-sizing:border-box}

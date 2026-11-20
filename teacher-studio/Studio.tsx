@@ -16,14 +16,14 @@ import { Home, CircleHelp } from 'lucide-react';
 import { HeaderToolbar } from '../src/presentation/components/HeaderToolbar';
 
 import { requestStudio as request, studioSessionExpired, StudioRequestError } from './studioRequest';
-import { takeStudioHandoff } from './studioHandoff';
+import { receiveStudioHandoff } from './studioHandoff';
 export type StudioForm = Omit<StudioInput, 'task'> & { task: TeacherTask };
 
-// 학생 앱에서 넘겨준 Google 로그인(#handoff=…)은 한 번만 쓴다. 개발 모드에서 화면이 두 번 그려져도 다시 보내지 않는다.
+// 학생 앱에서 넘겨준 Google 로그인(#from-app + postMessage)은 한 번만 쓴다. 개발 모드에서 화면이 두 번 그려져도 다시 보내지 않는다.
 let handoffOnce: Promise<boolean> | undefined;
 function loginFromHandoff(): Promise<boolean> {
   return handoffOnce ??= (async () => {
-    const accessToken = takeStudioHandoff();
+    const accessToken = await receiveStudioHandoff();
     if (!accessToken) return false;
     try { await request('google-login', { accessToken, adultTeacher: true }); return false; } catch { return true; }
   })();
@@ -32,7 +32,7 @@ function loginFromHandoff(): Promise<boolean> {
 const initial: StudioForm = { activityMinutes: 10, weather: '제약 없음', observations: [], aggregate: null, task: 'recommend', activityId: null, grade: '3~4학년군', goal: '협동과 소통', place: '체육관', device: '태블릿 PC', deviceCount: '모둠별 1대', minutes: 40, groupSize: 6, classSize: 24, consent: true, adultTeacher: true };
 export function Studio() {
 
-  const [status, setStatus] = useState({ authenticated: false, configured: false, aiReady: false, model: '', localSetup: false, legacyLoginEnabled: false });
+  const [status, setStatus] = useState({ authenticated: false, configured: false, aiReady: false, model: '', localSetup: false });
   const [statusLoaded,setStatusLoaded] = useState(false);
   const [reauthRequired, setReauthRequired] = useState(false);
   const [key, setKey] = useState(''); const [publicData, setPublicData] = useState(false); const [freeProject, setFreeProject] = useState(false);

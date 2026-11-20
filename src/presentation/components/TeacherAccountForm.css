@@ -9,3 +9,7 @@
 html body .teacher-login button.taf-link{width:auto!important;min-height:44px!important;border:0!important;background:none!important;color:var(--forest-muted,#4b5563)!important;box-shadow:none!important;text-decoration:underline;font-weight:600}
 .teacher-account-form .taf-stay{margin-top:14px}
 .teacher-account-form .taf-stay small{display:block;font-size:13px;opacity:.8;font-weight:400}
+/* 체크 칸: 글자까지 눌러도 체크되고, 눌리는 영역이 44px 이상이 되게 한다. */
+.teacher-account-form .ai-check{min-height:48px;padding:8px 10px;border-radius:12px;cursor:pointer;align-items:center}
+.teacher-account-form .ai-check input[type=checkbox]{width:24px;height:24px;min-height:24px;flex:0 0 24px;margin:0;cursor:pointer}
+.teacher-account-form .taf-why{margin:8px 0 0;font-size:14px;font-weight:600}

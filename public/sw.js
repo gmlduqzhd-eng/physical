@@ -6,6 +6,8 @@ const SHELL_URL = '/';
 const MANIFEST_URL = '/__sw-precache.json';
 // Every font piece the current CSS names, whether or not it was fetched. Used to drop pieces of older builds.
 const FONTS_URL = '/__sw-fonts.json';
+// Written by the build (vite.config.ts): the first screen and the student screens, with their imports and CSS.
+const PRECACHE_LIST_URL = '/sw-precache.json';
 // Font pieces carry a content hash in their name, so a cached copy never goes stale.
 const HASHED_FONT = /^\/fonts\/[^/]+\.[0-9a-f]{8}\.woff2$/;
 // The rare-letter pieces (-rest, -ks) are fetched only when a page draws one of their letters.
@@ -28,12 +30,19 @@ self.addEventListener('install', (event) => {
     const shell = await fetch(SHELL_URL, { cache: 'no-cache' });
     if (!shell.ok) throw new Error('Unable to cache the application shell.');
     await cache.put(SHELL_URL, shell.clone());
-    // First-load assets and lazy routes are requested before this worker controls
-    // the page, so follow their build dependencies as well as the HTML entry.
+    // Precache only the first screen and the student screens (join, lobby, group phone). The build writes
+    // that list to /sw-precache.json. Other screens are cached the first time they are opened, so the first
+    // visit on a phone does not pull the whole app (about 4 MB) over a shared classroom Wi-Fi.
     const html = await shell.text();
     const assets = [...html.matchAll(/(?:src|href)=["']([^"']+)["']/g)]
       .map(match => new URL(match[1], self.location.origin))
       .filter(url => url.origin === self.location.origin && (url.pathname.startsWith('/assets/') || /\.(?:svg|png|webmanifest|json)$/.test(url.pathname)));
+    try {
+      const list = await fetch(PRECACHE_LIST_URL, { cache: 'no-cache' });
+      if (list.ok && list.headers.get('Content-Type')?.includes('json')) {
+        for (const file of await list.json()) if (typeof file === 'string') assets.push(new URL(file, self.location.origin));
+      }
+    } catch { /* Without the list, the HTML entry files are still cached. */ }
     const visited = new Set();
     const fonts = new Set();
     const cacheAsset = async (url) => {
@@ -44,8 +53,10 @@ self.addEventListener('install', (event) => {
       const response = await fetch(url.href);
       if (!response.ok || response.headers.get('Content-Type')?.includes('text/html')) return;
       await cache.put(url.href, response.clone());
+      // Follow fonts and pictures a stylesheet or script names, but not other scripts: an entry script names
+      // every lazy screen, and following those is what used to download the whole app.
       if (/\.(?:js|css)$/.test(url.pathname)) {
-        const dependencies = assetDependencies(await response.text(), url.href);
+        const dependencies = assetDependencies(await response.text(), url.href).filter(dep => !/\.(?:js|css)$/.test(dep.pathname));
         await Promise.all(dependencies.map(cacheAsset));
       }
     };
@@ -80,6 +91,34 @@ self.addEventListener('activate', (event) => {
     await pruneOldAssets().catch(() => {});
     await self.clients.claim();
   })());
+});
+
+// The page that registered this worker loaded its files before the worker was in control. The page sends
+// their names once the worker is ready, so the screen the teacher or student opened first also works offline.
+self.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'cache-loaded' || !Array.isArray(data.urls)) return;
+  const task = (async () => {
+    const cache = await caches.open(CACHE_NAME);
+    const manifest = await cache.match(MANIFEST_URL);
+    const known = new Set(manifest ? await manifest.json() : []);
+    let added = false;
+    for (const value of data.urls.slice(0, 300)) {
+      if (typeof value !== 'string') continue;
+      let url;
+      try { url = new URL(value, self.location.origin); } catch { continue; }
+      if (url.origin !== self.location.origin || url.search || !(url.pathname.startsWith('/assets/') || url.pathname.startsWith('/images/'))) continue;
+      if (known.has(url.href) || await cache.match(url.href)) { if (!known.has(url.href)) { known.add(url.href); added = true; } continue; }
+      try {
+        const response = await fetch(url.href);
+        if (!response.ok || response.headers.get('Content-Type')?.includes('text/html')) continue;
+        await cache.put(url.href, response);
+        known.add(url.href); added = true;
+      } catch { /* Offline or the file is gone: it is fetched again on next use. */ }
+    }
+    if (added) await cache.put(MANIFEST_URL, new Response(JSON.stringify([...known]), { headers: { 'Content-Type': 'application/json' } }));
+  })().catch(() => {});
+  if (typeof event.waitUntil === 'function') event.waitUntil(task);
 });
 
 self.addEventListener('fetch', (event) => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../data/supabase';
 import { createClassroom, findRoomByPin, joinStudentByPin, getMyClassroomProfile, classroomError, isNumberTakenError } from '../../data/classroomRepository';
-import { rememberStudentIdentity, savedStudentIdentity, validateStudentIdentity } from '../../application/studentIdentity';
+import { rememberStudentIdentity, savedStudentIdentity, takenNumberNotice, validateStudentIdentity } from '../../application/studentIdentity';
 import { StudentNumberPad } from './StudentNumberPad';
 import { readStorage, writeStorage, removeStorage } from '../../application/browserStorage';
 import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-react';
@@ -34,6 +34,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
   const [studentNumber,setStudentNumber]=useState(()=>savedStudentIdentity().number);
   const [nickname,setNickname]=useState(()=>savedStudentIdentity().nickname);
   const [taken,setTaken]=useState<ReadonlySet<number>>(()=>new Set());
+  const [padNotice,setPadNotice]=useState('');
   const [inRoom, setInRoom] = useState(false);
   const [currentRoom, setCurrentRoom] = useState<PinRoom | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<'blue' | 'white'>('blue');
@@ -138,7 +139,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
   const handleJoinRoom = async () => {
     if (busyRef.current) return;
-    busyRef.current = true; setBusy(true); setErrorMsg(null);
+    busyRef.current = true; setBusy(true); setErrorMsg(null); setPadNotice('');
     try {
       const identity=validateStudentIdentity(studentNumber,nickname);
       const entry = await joinStudentByPin(inputPin,identity);
@@ -150,8 +151,9 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
       writeStorage('pin_battle_current_pin', inputPin, 'session');
       setCurrentRoom(battle); setInRoom(true); playBeep();
     } catch (cause) {
-      if (isNumberTakenError(cause) && studentNumber) { const n = Number(studentNumber); setTaken(prev => new Set(prev).add(n)); setStudentNumber(''); }
-      setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.'));
+      // 번호가 이미 있으면 번호판 바로 위에 알린다(막힌 번호가 그대로 보이게).
+      if (isNumberTakenError(cause) && studentNumber) { const n = Number(studentNumber); setTaken(prev => new Set(prev).add(n)); setStudentNumber(''); setPadNotice(takenNumberNotice(n, false)); }
+      else setErrorMsg(classroomError(cause, '방 입장에 실패했습니다.'));
     }
     finally { busyRef.current = false; setBusy(false); }
   };
@@ -235,6 +237,8 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                 value={inputPin}
                 onChange={e => {
                   setErrorMsg(null);
+                  // 다른 수업(PIN)에서 막힌 번호는 이 수업과 관계없으니 지운다.
+                  setTaken(new Set()); setPadNotice('');
                   setInputPin(e.target.value.replace(/[^0-9]/g, '').slice(0,4));
                 }}
                 onKeyDown={e => {
@@ -243,7 +247,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                 placeholder="4자리 팀 PIN"
                 className="w-full py-3 text-center text-3xl font-mono font-black tracking-widest bg-slate-950 border border-slate-700 rounded-xl text-cyan-400 focus:outline-none focus:border-cyan-400 mb-3"
               />
-              <div className="text-slate-900 bg-white rounded-xl p-2 text-left mb-3"><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={setStudentNumber} onNicknameChange={setNickname} taken={taken}/></div>
+              <div className="text-slate-900 bg-white rounded-xl p-2 text-left mb-3"><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={value => { setStudentNumber(value); setPadNotice(''); }} onNicknameChange={setNickname} taken={taken} notice={padNotice}/></div>
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}

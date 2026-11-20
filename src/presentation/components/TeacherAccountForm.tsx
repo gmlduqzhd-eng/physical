@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useId,useState} from 'react';
 import {beginTeacherGoogle} from '../../application/teacherGoogle';
 import {rememberStaySignedIn, rememberTeacherConfirmed, staySignedInPreferred, teacherConfirmedOnDevice} from '../../application/teacherLoginPrefs';
 import './TeacherAccountForm.css';
@@ -16,6 +16,7 @@ export function TeacherAccountForm({endpoint}:{endpoint:'teacher'|'studio'}){
  const [confirmedBefore]=useState(teacherConfirmedOnDevice);
  const [teacher,setTeacher]=useState(confirmedBefore);
  const [busy,setBusy]=useState(false);const [error,setError]=useState('');
+ const whyId=useId();
  // 30일 유지는 교사 화면(반 만들기·관리)에만 있다. AI 수업 준비실은 지금처럼 짧게 유지한다.
  const canStay=endpoint==='teacher';
  const [stay,setStay]=useState(staySignedInPreferred);
@@ -23,8 +24,9 @@ export function TeacherAccountForm({endpoint}:{endpoint:'teacher'|'studio'}){
  const notes=<><p>Google 계정 하나로 가입과 로그인을 한 번에 해요. 따로 교사 승인이나 앱 비밀번호는 필요 없어요.</p><p>예전 공유 코드로 만든 수업은 교사 관리 화면의 복구키로 가져올 수 있어요. Google 이메일은 회원 관리에만 쓰고 AI로 보내지 않아요.</p></>;
  return <section className="teacher-account-form" aria-label="Google 교사 로그인">
   {!confirmedBefore&&<label className="ai-check"><input type="checkbox" checked={teacher} onChange={e=>setTeacher(e.target.checked)}/><span>{CONFIRM_TEXT}</span></label>}
-  {canStay&&<label className="ai-check taf-stay"><input type="checkbox" checked={stay} onChange={e=>setStay(e.target.checked)}/><span>이 기기에서 30일 동안 로그인 유지<small>여러 사람이 같이 쓰는 컴퓨터라면 체크를 꺼 주세요.</small></span></label>}
-  <button type="button" className="taf-google" disabled={busy||!teacher} onClick={()=>void go(false)}><GMark/>{busy?'Google 로그인으로 이동 중…':'Google로 계속하기'}</button>
+  {canStay&&<label className="ai-check taf-stay"><input type="checkbox" checked={stay} onChange={e=>setStay(e.target.checked)}/><span>이 기기에서 30일 동안 로그인 유지<small>선생님 혼자 쓰는 기기에서만 켜 주세요. 여러 사람이 같이 쓰는 컴퓨터라면 끈 채로 두세요.</small></span></label>}
+  <button type="button" className="taf-google" disabled={busy||!teacher} aria-describedby={!teacher?whyId:undefined} onClick={()=>void go(false)}><GMark/>{busy?'Google 로그인으로 이동 중…':'Google로 계속하기'}</button>
+  {!teacher&&<p id={whyId} className="taf-why">위 칸에 체크하면 ‘Google로 계속하기’를 누를 수 있어요.</p>}
   {confirmedBefore&&<button type="button" className="taf-link" disabled={busy} onClick={()=>void go(true)}>다른 Google 계정으로 로그인</button>}
   <details className="taf-notes"><summary>{confirmedBefore?'확인한 내용 보기':'로그인 안내 더 보기'}</summary>{confirmedBefore&&<p><b>확인한 내용:</b> {CONFIRM_TEXT}</p>}{notes}</details>
   {error&&<p role="alert">{error}</p>}

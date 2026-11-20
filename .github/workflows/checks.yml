@@ -44,3 +44,10 @@ jobs:
           for attempt in $(seq 1 30); do curl --silent --fail --output /dev/null http://127.0.0.1:4173/ && break; sleep 1; done
           npm run test:catalog:ci
           npm run test:signature:e2e
+      - name: Teacher and student classroom journey (isolated API fixtures)
+        # Supabase and /api/teacher are answered by in-script fixtures; nothing reaches a real database.
+        run: |
+          VITE_SUPABASE_URL=https://fixture.supabase.co VITE_SUPABASE_ANON_KEY=fixture-anon npx vite build --outDir dist-journeys
+          npx vite preview --outDir dist-journeys --host 127.0.0.1 --port 4174 --strictPort > preview-journeys.log 2>&1 &
+          for attempt in $(seq 1 30); do curl --silent --fail --output /dev/null http://127.0.0.1:4174/ && break; sleep 1; done
+          npm run test:journeys -- http://127.0.0.1:4174
