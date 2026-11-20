@@ -1,7 +1,7 @@
-import { activeTeacherSession, legacyTeacherLoginEnabled, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError } from './teacherAccounts.js';
+import { activeTeacherSession, googleTeacherLogin, googleOAuthConfiguration, TeacherAccountError } from './teacherAccounts.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { z } from 'zod';
-import { authConfigured, cookie, newSession, rateLimit, session, verifyCode } from './teacherSession.js';
+import { authConfigured, cookie, newSession, session } from './teacherSession.js';
 import { defaultGeminiModel, geminiReady, generateStudioAdvice, studioProviderCategory } from './geminiStudio.js';
 import { studioLimit, studioUsage, StudioLimiterUnavailable } from './studioRateLimit.js';
 
@@ -40,10 +40,12 @@ export default async function handler(req: Request, res: ServerResponse) {
   const started=Date.now();
   const send = (status: number, data: unknown) => { console.info(JSON.stringify({event:'studio_request',status,durationMs:Date.now()-started})); res.statusCode = status; res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); };
   const action = new URL(req.url ?? '/', 'http://localhost').searchParams.get('action');
+  // 예전 공유 코드로 받은 세션(acct:로 시작하지 않는 것)은 더 이상 받지 않는다.
   let nonce = session(req, scope);
+  if (nonce && !nonce.startsWith('acct:')) nonce = null;
   try { if (!await activeTeacherSession(nonce)) nonce=null; } catch { return send(503, { error: '교사 계정 서버에 연결하지 못했습니다.' }); }
   if(req.method==='GET'&&action==='oauth-config'){try{return send(200,await googleOAuthConfiguration());}catch{return send(503,{error:'Google 로그인 연결 설정을 확인하지 못했습니다.'});}}
-  if (req.method === 'GET' && action === 'status') {try{return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled:await legacyTeacherLoginEnabled(), aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });}catch{return send(503,{error:'교사 로그인 전환 상태를 확인하지 못했습니다.'});}}
+  if (req.method === 'GET' && action === 'status') return send(200, { authenticated: !!nonce, configured: authConfigured(), legacyLoginEnabled: false, aiReady: geminiReady(), model: process.env.GEMINI_MODEL ?? defaultGeminiModel, localSetup: false });
   if (req.method === 'GET' && action === 'usage') {
     if(!nonce)return send(401,{error:'교사 인증이 필요합니다.'});
     try{return send(200,await studioUsage());}catch{return send(503,{error:'사용량 정보를 확인하지 못했습니다.'});}
@@ -70,17 +72,8 @@ export default async function handler(req: Request, res: ServerResponse) {
       const account = await googleTeacherLogin(body);
       res.setHeader('Set-Cookie', cookie(newSession(scope, account.nonce), false, scope));return send(200,{authenticated:true});
     }
-    if (action === 'login') {
-      if(!await legacyTeacherLoginEnabled())return send(401,{error:'새 공유 코드 로그인이 종료되었습니다. Google 계정으로 로그인해 주세요.'});
-      if (!authConfigured()) return send(503, { error: '서버의 교사 인증 설정이 필요합니다.' });
-      const address = req.headers['x-real-ip'] ?? req.socket.remoteAddress ?? 'unknown';
-      if (!rateLimit('studio-login:' + address, 8, 900000)) return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' });
-      const login = z.object({ code: z.string().min(12).max(128), adultTeacher: z.literal(true) }).strict().parse(body);
-      const admission = await studioLimit('login', String(address));
-      if (!admission.allowed) { res.setHeader('Retry-After', String(admission.retrySeconds)); return send(429, { error: '시도가 많습니다. 15분 후 다시 시도하세요.' }); }
-      if (!verifyCode(login.code)) return send(401, { error: '기존에 설정한 교사 접근 코드를 확인하세요.' });
-      res.setHeader('Set-Cookie', cookie(newSession(scope), false, scope)); return send(200, { authenticated: true });
-    }
+    // 예전 공유 접근 코드 로그인은 없앴다. Google 계정(또는 학생 앱에서 넘겨받은 Google 로그인)만 쓴다.
+    if (action === 'login') return send(410, { error: '예전 공유 코드 로그인은 끝났어요. Google 계정으로 로그인해 주세요.' });
     if (action === 'logout') { res.setHeader('Set-Cookie', cookie('', true, scope)); return send(200, { authenticated: false }); }
     if (!nonce) return send(401, { error: '성인 교사 인증이 필요합니다.' });
     if (action !== 'generate') return send(404, { error: '없는 기능입니다. 키 설정은 서버에서만 관리합니다.' });
