@@ -344,7 +344,7 @@ function SignatureArena({game,bus,setup,restore,groupId,enqueueAction,onExit,onL
   </header>
   <TimeBar left={left} total={game.timing[state.phase as 'demo'|'tutorial'|'play'|'climax']}/>
   <div className="fun-body" inert={state.paused||undefined}>
-  {state.phase==='demo'?<DemoLoop frames={game.demo} seated={seated} onSkip={()=>dispatch({type:'next'})} skipLabel="▶ 연습 판 시작"/>:<>
+  {state.phase==='demo'?<DemoLoop frames={game.demo} seated={seated}/>:<>
    <div className="fun-stage" data-wide={(mod.wide&&!!Panel)||undefined}>
     <section className="fun-signal" data-tone={shown.tone} data-accent={shown.accent?true:undefined} style={shown.accent?{'--fun-signal-accent':shown.accent} as React.CSSProperties:undefined} aria-live="polite" aria-atomic="true">
      {!mod.hideFigure&&shown.pose&&<div className="fun-signal-figure"><StickFigure pose={shown.pose} size={120} seated={seated}/></div>}

@@ -84,7 +84,8 @@ test('chunk-load failures are told apart from other errors, and error screens us
 test('join and teacher errors never show raw English and only promise what exists',()=>{
  const repo=read('src/data/classroomRepository.ts'),sb=read('src/data/supabase.ts');
  const taken=repo.match(/number_taken:'([^']+)'/)![1];
- assert.match(taken,/이전 수업 이어가기/);assert.match(taken,/다른 번호/);assert.doesNotMatch(taken,/번호 해제/,'there is no release button on the teacher screen');
+ assert.doesNotMatch(taken,/이전 수업 이어가기/,'only mentioned when that button is on screen');assert.match(taken,/다른 번호/);assert.ok(taken.length<=45,'short for grade 1-2');
+ assert.match(read('src/application/studentIdentity.ts'),/canResume \? ' 내가 먼저 들어왔다면 위의 ‘이전 수업 이어가기’/);assert.doesNotMatch(taken,/번호 해제/,'there is no release button on the teacher screen');
  assert.match(sb,/res\.json\(\)\.catch\(\(\) => null\)/);
 });
 

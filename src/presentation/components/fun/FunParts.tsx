@@ -74,7 +74,7 @@ export function TimeBar({left,total}:{left:number;total:number}){
 }
 
 /** 시범 애니메이션: 자세 그림과 설명이 2.4초마다 넘어간다. 움직임 줄이기 설정이면 버튼으로 넘긴다(시범도 저절로 끝나지 않음). */
-export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly DemoFrame[];onSkip:()=>void;skipLabel:string;seated?:boolean}){
+export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly DemoFrame[];onSkip?:()=>void;skipLabel?:string;seated?:boolean}){
  const [i,setI]=useState(0);
  const reduced=typeof window!=='undefined'&&window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
  useEffect(()=>{if(reduced||frames.length<2)return;const id=window.setInterval(()=>setI(x=>(x+1)%frames.length),2400);return ()=>window.clearInterval(id);},[frames.length,reduced]);
@@ -85,8 +85,8 @@ export function DemoLoop({frames,onSkip,skipLabel,seated=false}:{frames:readonly
   <p className="fun-demo-caption" aria-live="polite">{f.caption}</p>
   <div className="fun-demo-dots" aria-hidden="true">{frames.map((_,k)=><i key={k} data-now={k===i%frames.length||undefined}/>)}</div>
   {reduced&&frames.length>1&&<button type="button" className="fun-secondary" onClick={()=>setI(x=>(x+1)%frames.length)}>다음 시범 보기</button>}
-  {/* 화면의 주 버튼은 오른쪽 아래 '다음' 하나다. 시범 안의 버튼은 보조 버튼으로 둔다. */}
-  <button type="button" className="fun-secondary fun-demo-skip" onClick={onSkip}>{skipLabel}</button>
+  {/* 화면의 주 버튼은 오른쪽 아래 '다음' 하나다. 선생님 버튼 줄이 없는 화면에서만 시범 안에 보조 버튼을 둔다(같은 버튼이 두 번 보이지 않게). */}
+  {onSkip&&skipLabel&&<button type="button" className="fun-secondary fun-demo-skip" onClick={onSkip}>{skipLabel}</button>}
  </section>;
 }
 
