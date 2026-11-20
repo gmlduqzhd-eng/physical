@@ -72,3 +72,11 @@
 .header-display-popover .header-display-panel .display-btn{justify-content:center;width:100%}
 .header-display-popover .header-display-panel a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:inherit;text-underline-offset:4px}
 html[data-design=forest] body .icon-toolbar .display-trigger[data-display=on]{background:var(--forest-tint);border-color:var(--forest-accent)}
+/* 선생님 로그인 표시(로그인했을 때만 보인다) */
+.teacher-status-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:0 10px;border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.teacher-status-chip>svg{width:20px;height:20px;flex:none}
+.teacher-status-chip:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.header-teacher-panel{display:grid;gap:10px;max-width:280px}
+.header-teacher-panel p{margin:0;line-height:1.6}
+.header-teacher-panel button{min-height:44px;padding:8px 14px;border-radius:999px;font-weight:800;cursor:pointer}
+.header-teacher-panel button{border:1px solid var(--forest-line,#d1d5db);background:var(--forest-tint,#f3f4f6);color:inherit}

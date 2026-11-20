@@ -7,6 +7,7 @@ import { HeaderPopover } from './HeaderPopover';
 import { BackgroundMusicButton } from './BackgroundMusicButton';
 import { useBackgroundMusic } from '../../application/BackgroundMusicContext';
 import { LinkShareButton } from './LinkShareButton';
+import { TeacherStatusChip } from './TeacherStatusChip';
 import './HeaderUtilities.css';
 
 export function HeaderUtilities() {
@@ -36,5 +37,6 @@ export function HeaderUtilities() {
       </HeaderPopover>
     </div>
     <LinkShareButton/>
+    <TeacherStatusChip/>
   </div>;
 }
