@@ -4,21 +4,17 @@ import {classroomResultMessage} from '../domain/fourthGameRules';
 import {StartLabel} from './components/StartLabel';
 import {useClassroomActivityStatus} from '../application/useClassroomActivityStatus';
 import {FLAGSHIP_GAMES,isFlagship} from '../domain/flagship';
-import {FlagshipActivity} from './flagship/FlagshipActivity';
-import {RetiredGameNotice} from './components/minigames/common/RetiredGameNotice';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
 import {mergedMovementMeta} from '../domain/mergedMovementVariants';
 import {getRemovedGame,mergedGameUrl,variantsFor} from '../domain/gameLifecycle';
-import {ConsolidatedActivity} from './components/minigames/common/ConsolidatedActivity';
 import {Navigate} from 'react-router-dom';
 import {isSafetyLessonId,SAFETY_LESSONS,SAFETY_LESSON_IDS} from '../domain/safetyLessons';
-import {SafetyLesson} from './components/minigames/common/SafetyLesson';
 import { EXPEDITION_BY_ID } from '../domain/expeditionGames';
-import { ExpeditionActivity } from './components/minigames/expedition/ExpeditionActivity';
-import { useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import { Suspense, useState, useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+// 활동 화면은 지금 여는 것 하나만 받는다(놀이 화면 첫 묶음을 가볍게).
+import {ActivityLoading,ConsolidatedActivity,EmotionThermometer,ExpeditionActivity,ExpressionGameViewer,FlagshipActivity,MovementQuest,PartnerRobotLab,PhonePlay,RetiredGameNotice,SafetyLesson,SignaturePlay,StretchTimer} from './components/minigames/lazyActivities';
 import { GAMES } from '../domain/gamesData';
 import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
-import { MovementQuest } from './components/minigames/common/MovementQuest';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { earnsParticipationReward, classroomResultScore,canReportCompletion,normalizeGameResultDetails, type GameResultDetails } from '../domain/gameResultDetails';
@@ -37,10 +33,6 @@ import { useWakeLock } from '../application/useWakeLock';
 import { useMotionPermission } from '../application/useMotionPermission';
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 import { Heart } from 'lucide-react';
-import { StretchTimer } from './components/minigames/StretchTimer';
-import { EmotionThermometer } from './components/minigames/EmotionThermometer';
-import { PartnerRobotLab } from './components/minigames/PartnerRobotLab';
-import {SignaturePlay} from './components/minigames/signature/SignaturePlay';
 import {useReportLessonActivity} from './components/todayLessonActivity';
 import {READY_SIGNATURE_GAMES,isSignatureId} from '../domain/signatureGames';
 import {newPlayId,openPlayId,recordPlay} from '../application/classProgressStore';
@@ -48,7 +40,6 @@ import {ClassFeedbackSlot} from './components/ClassFeedbackSlot';
 import {TvModeButton} from './components/DisplayButtons';
 import {useDisplayPrefs} from '../application/displayPrefs';
 import { EXPRESSION_GAMES } from './components/minigames/expression/expressionGamesData';
-import { ExpressionGameViewer } from './components/minigames/expression/ExpressionGameViewer';
 import { CURRICULUM_GAMES_META } from './components/minigames/curriculum/curriculumGamesMeta';
 import { ArrowLeft, Home, RotateCcw, Trophy } from 'lucide-react';
 import { startBgm, stopBgm, sfxSuccess, sfxTap } from '../application/soundEffects';
@@ -182,7 +173,7 @@ export const GamePlayPage = () => {
   const { pathname,search,hash } = useLocation();
   const moved=mergedGameUrl(pathname,gameType||'',search,hash);
   if(moved)return <Navigate replace to={moved}/>;
-  if(getRemovedGame(gameType||''))return <RetiredGameNotice id={gameType!}/>;
+  if(getRemovedGame(gameType||''))return <Suspense fallback={<ActivityLoading/>}><RetiredGameNotice id={gameType!}/></Suspense>;
   return <GamePlaySession key={`${pathname}:${gameType}:${searchParams.get('room')}:${searchParams.get('group')}:${searchParams.get('guided')}:${searchParams.get('mission')}:${searchParams.get('variant')}`} />;
 };
 
@@ -521,7 +512,7 @@ const GamePlaySession = () => {
           event.stopPropagation();
           handleReplay();
         }
-      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 이 점수가 활동 기록에 반영됩니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 신체 놀이 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{renderGame()}</div>}
+      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 이 점수가 활동 기록에 반영됩니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 신체 놀이 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{<Suspense fallback={<ActivityLoading/>}>{renderGame()}</Suspense>}</div>}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -667,4 +658,3 @@ const GamePlaySession = () => {
 };
 
 import {PHONE_PLAY_BY_ID,ALL_PHONE_PLAYS,isPhonePlay} from '../domain/phonePlayCatalog';
-import {PhonePlay} from './components/minigames/common/PhonePlay';

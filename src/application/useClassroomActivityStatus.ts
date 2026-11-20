@@ -5,6 +5,8 @@ export type ActivityRoomStatus='checking'|'playing'|'waiting'|'paused'|'finished
 
 // Realtime delivers teacher pause/finish at once; the poll is only a backstop.
 export const ACTIVITY_STATUS_POLL_MS=5000;
+// While realtime is connected the teacher's pause arrives at once, so the backstop read can wait longer.
+export const ACTIVITY_STATUS_POLL_LIVE_MS=15000;
 // A gym Wi-Fi blip must not stop children mid-activity. While the last confirmed state
 // was "playing", keep going for this many missed checks (about 30 seconds). The server
 // still rejects submissions that are not allowed, and results wait in the sync queue.
@@ -29,10 +31,15 @@ export function useClassroomActivityStatus(roomId:string|null){
   };
   const offline=()=>{revision++;controller?.abort();missed();};
   const visibility=()=>{if(!document.hidden)void refresh();};
-  void refresh();const timer=setInterval(()=>{if(!navigator.onLine)offline();else void refresh();},ACTIVITY_STATUS_POLL_MS);
-  const channel=supabase.channel(`activity-status-${roomId}`).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:`id=eq.${roomId}`},()=>void refresh()).subscribe();
+  let live=false,timer:ReturnType<typeof setTimeout>|null=null;
+  const schedule=()=>{if(!alive)return;timer=setTimeout(()=>{if(!navigator.onLine)offline();else void refresh();schedule();},live?ACTIVITY_STATUS_POLL_LIVE_MS:ACTIVITY_STATUS_POLL_MS);};
+  void refresh();schedule();
+  const channel=supabase.channel(`activity-status-${roomId}`).on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:`id=eq.${roomId}`},()=>void refresh()).subscribe(status=>{
+   // A dropped channel goes back to the 5-second check at once.
+   const next=status==='SUBSCRIBED';if(next===live)return;live=next;if(timer!==null)clearTimeout(timer);schedule();if(!live)void refresh();
+  });
   window.addEventListener('offline',offline);window.addEventListener('online',refresh);document.addEventListener('visibilitychange',visibility);
-  return()=>{alive=false;controller?.abort();clearInterval(timer);void supabase.removeChannel(channel);window.removeEventListener('offline',offline);window.removeEventListener('online',refresh);document.removeEventListener('visibilitychange',visibility);};
+  return()=>{alive=false;controller?.abort();if(timer!==null)clearTimeout(timer);void supabase.removeChannel(channel);window.removeEventListener('offline',offline);window.removeEventListener('online',refresh);document.removeEventListener('visibilitychange',visibility);};
  },[roomId]);
  const status=!roomId?'playing':state.room===roomId?state.status:'checking';
  return {status,paused:activityRoomPaused(status),message:status==='paused'?'선생님이 수업을 잠시 멈췄어요.':status==='finished'?'수업이 종료되었어요.':status==='waiting'?'선생님의 수업 시작을 기다려요.':status==='checking'?'수업 연결을 확인하고 있어요.':'연결 확인 중에는 활동을 멈춰요.'};

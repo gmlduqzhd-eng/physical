@@ -1,19 +1,11 @@
-import {isFlagship} from '../../../domain/flagship';
-import {FlagshipActivity} from '../../flagship/FlagshipActivity';
-import {RetiredGameNotice} from './common/RetiredGameNotice';
-import {EXPEDITION_BY_ID} from '../../../domain/expeditionGames';
-import {ExpeditionActivity} from './expedition/ExpeditionActivity';
-import {getMergedGame,getRemovedGame} from '../../../domain/gameLifecycle';
-import {ConsolidatedActivity} from './common/ConsolidatedActivity';
-import {isSafetyLessonId} from '../../../domain/safetyLessons';
-import {SafetyLesson} from './common/SafetyLesson';
-import { useState } from 'react';
-import { isQuestId } from '../../../domain/movementQuests';
-import { MovementQuest } from './common/MovementQuest';
+import { Suspense, useState } from 'react';
 import '../../GameTheme.css';
 import type { GameRoom } from '../../../domain/types';
-import { LegacyBombGame } from './LegacyBombGame';
-import { LegacyQuizGame } from './LegacyQuizGame';
+import { lazyWithRetry } from '../../../application/lazyWithRetry';
+import { ActivityLoading } from './lazyActivities';
+
+// 어떤 활동을 띄울지 고르는 부분과 활동 화면은 활동이 시작될 때만 받는다(학생 폰 첫 화면을 가볍게).
+const MiniGameContent = lazyWithRetry(() => import('./MiniGameContent'), m => m.MiniGameContent);
 
 interface Props {
   gameRoom: GameRoom;
@@ -41,32 +33,6 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
 
   const sessionKey = `${gameRoom.id}:${groupId}:${JSON.stringify(minigame)}`;
 
-  const renderContent = () => {
-    const eventType=minigame.type==='team_battle'?(minigame.subType||'volcano'):minigame.type;
-    if(getRemovedGame(eventType))return <RetiredGameNotice id={eventType} roomId={gameRoom.id} groupId={groupId} onBack={()=>setDismissedRunId(runId)}/>;
-    const complete=(action:{payload:{id:string;amount:number;details?:import('../../../domain/gameResultDetails').GameResultDetails}})=>enqueueAction({id:crypto.randomUUID(),type:'INCREMENT_SCORE',payload:{...action.payload,id:groupId},timestamp:Date.now()});
-    if(isFlagship(eventType))return <FlagshipActivity key={sessionKey} game={eventType} room={gameRoom.id} group={groupId} onFinish={details=>complete({payload:{id:groupId,amount:100,details}})}/>;
-    const native=EXPEDITION_BY_ID.get(eventType);if(native?.kind==='B'&&!getMergedGame(eventType))return <ExpeditionActivity game={native} groupId={groupId} solo={false} enqueueAction={complete}/>;
-    const merged=getMergedGame(eventType);if(merged)return <ConsolidatedActivity key={sessionKey} targetId={merged.target} selected={merged.id} solo={false} groupId={groupId} enqueueAction={complete}>{null}</ConsolidatedActivity>;
-    if(isSafetyLessonId(minigame.type))return <SafetyLesson key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
-    if(isQuestId(minigame.type)) return <MovementQuest key={sessionKey} gameId={minigame.type} groupId={groupId} enqueueAction={enqueueAction}/>;
-    // 합쳐진 활동·신체 놀이는 위에서 먼저 처리된다. 여기에는 예전 수업 방식(폭탄·퀴즈)과 정리 안내만 남는다.
-    switch (minigame.type) {
-      case 'bomb':
-        return <LegacyBombGame key={sessionKey} bomb={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} />;
-      case 'quiz':
-        return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
-      case 'team_battle':
-        return <RetiredGameNotice id="volcano" roomId={gameRoom.id} groupId={groupId} onBack={()=>setDismissedRunId(runId)}/>;
-      default:
-        // Fallback for quiz if type is undefined (legacy compatibility)
-        if (minigame.question) {
-          return <LegacyQuizGame key={sessionKey} quiz={minigame} gameRoomId={gameRoom.id} groupId={groupId} enqueueAction={enqueueAction} playVictory={playVictory} />;
-        }
-        return null;
-    }
-  };
-
   return (
     <div className="warm-game relative z-[9999]">
       {minigame.type !== 'bomb' && (
@@ -77,7 +43,7 @@ export const MiniGameOverlay = ({ gameRoom, groupId, template, handleMissionComp
           ✕ 닫기
         </button>
       )}
-      {renderContent()}
+      <Suspense fallback={<ActivityLoading/>}><MiniGameContent gameRoom={gameRoom} minigame={minigame} groupId={groupId} template={template} handleMissionComplete={handleMissionComplete} setShowScanner={setShowScanner} playVictory={playVictory} sessionKey={sessionKey} enqueueAction={enqueueAction} onDismiss={() => setDismissedRunId(runId)}/></Suspense>
     </div>
   );
 };

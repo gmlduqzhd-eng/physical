@@ -1,5 +1,6 @@
 import {FlowShell} from './presentation/FlowShell';
 import {PlayErrorBoundary} from './components/PlayErrorBoundary';
+import {ClassroomErrorBoundary} from './components/ClassroomErrorBoundary';
 import {lazyWithRetry} from './application/lazyWithRetry';
 import { cleanClassroomStorage } from './application/storageRetention';
 import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
@@ -13,19 +14,20 @@ import { BackgroundMusicProvider } from './application/BackgroundMusicContext';
 // 교사 인증·구글 로그인 화면은 필요할 때만 받는다(Supabase·zod가 첫 화면 묶음에 들어가지 않게).
 const TeacherAuthGuard = lazy(() => import('./presentation/components/TeacherAuthGuard').then(m => ({ default: m.TeacherAuthGuard })));
 const GoogleTeacherCallback = lazy(() => import('./presentation/components/GoogleTeacherCallback').then(m => ({ default: m.GoogleTeacherCallback })));
-const ScoreBoard = lazy(() => import('./presentation/ScoreBoard').then(m => ({ default: m.ScoreBoard })));
-const MobileMissionView = lazy(() => import('./presentation/MobileMissionView').then(m => ({ default: m.MobileMissionView })));
-const AdminControlPanel = lazy(() => import('./presentation/AdminControlPanel').then(m => ({ default: m.AdminControlPanel })));
-const Lobby = lazy(() => import('./presentation/Lobby').then(m => ({ default: m.Lobby })));
+// 수업 화면(입장·점수판·모둠 폰·리모컨·관리)은 한 번 못 받아도 '다시 시도'로 새로 받는다.
+const ScoreBoard = lazyWithRetry(() => import('./presentation/ScoreBoard'), m => m.ScoreBoard);
+const MobileMissionView = lazyWithRetry(() => import('./presentation/MobileMissionView'), m => m.MobileMissionView);
+const AdminControlPanel = lazyWithRetry(() => import('./presentation/AdminControlPanel'), m => m.AdminControlPanel);
+const Lobby = lazyWithRetry(() => import('./presentation/Lobby'), m => m.Lobby);
 const Manual = lazy(() => import('./presentation/Manual').then(m => ({ default: m.Manual })));
-const KioskRelayView = lazy(() => import('./presentation/KioskRelayView').then(m => ({ default: m.KioskRelayView })));
-const QuickJoin = lazy(() => import('./presentation/QuickJoin').then(m => ({ default: m.QuickJoin })));
-const BoardEntry = lazy(() => import('./presentation/BoardEntry').then(m => ({ default: m.BoardEntry })));
+const KioskRelayView = lazyWithRetry(() => import('./presentation/KioskRelayView'), m => m.KioskRelayView);
+const QuickJoin = lazyWithRetry(() => import('./presentation/QuickJoin'), m => m.QuickJoin);
+const BoardEntry = lazyWithRetry(() => import('./presentation/BoardEntry'), m => m.BoardEntry);
 const IntroLandingPage = lazy(() => import('./presentation/IntroLandingPage').then(m => ({ default: m.IntroLandingPage })));
 const GameHub = lazy(() => import('./presentation/GameHub').then(m => ({ default: m.GameHub })));
 // 놀이 화면 파일을 한 번 못 받아도, 다른 놀이를 열거나 '다시 열기'를 누르면 새로 받는다.
 const GamePlayPage = lazyWithRetry(() => import('./presentation/GamePlayPage'), m => m.GamePlayPage);
-const TeacherRemote = lazy(() => import('./presentation/TeacherRemote').then(m => ({ default: m.TeacherRemote })));
+const TeacherRemote = lazyWithRetry(() => import('./presentation/TeacherRemote'), m => m.TeacherRemote);
 const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry').then(m => ({ default: m.TeacherStudioEntry })));
 const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
 const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
@@ -143,12 +145,12 @@ function App() {
         <Route path="/join" element={hasSupabase ? <QuickJoin /> : <SupabaseRequired />} />
         <Route path="/manual" element={<Manual />} />
         <Route path="/board" element={hasSupabase ? <BoardEntry /> : <SupabaseRequired />} />
-        <Route path="/board/:roomId" element={hasSupabase ? <ScoreBoard /> : <SupabaseRequired />} />
-        <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <MobileMissionView /> : <SupabaseRequired />} />
-        <Route path="/admin" element={hasSupabase ? <TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard> : <SupabaseRequired />} />
-        <Route path="/remote" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
-        <Route path="/remote/:roomId" element={hasSupabase ? <TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard> : <SupabaseRequired />} />
-        <Route path="/kiosk" element={hasSupabase ? <TeacherAuthGuard><KioskRelayView /></TeacherAuthGuard> : <SupabaseRequired />} />
+        <Route path="/board/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/board" backLabel="전광판 연결" title="점수판을 못 열었어요"><ScoreBoard /></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <ClassroomErrorBoundary back="/lobby" backLabel="학생 입장" title="모둠 화면을 못 열었어요"><MobileMissionView /></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/admin" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="관리 화면을 못 열었어요"><TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/remote" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="리모컨을 못 열었어요"><TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/remote/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="리모컨을 못 열었어요"><TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/kiosk" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="공용 패드 화면을 못 열었어요"><TeacherAuthGuard><KioskRelayView /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>

@@ -249,6 +249,9 @@ async function main() {
     const url = cacheKey(request);
     if (url === origin + '/' || /\/games/.test(url)) return new Response(`<html><head><link rel="stylesheet" href="/assets/index-v${shellVersion}.css"></head><body>shell ${shellVersion}<script src="/assets/index-v${shellVersion}.js"></script></body></html>`, { headers: { 'Content-Type': 'text/html' } });
     if (url === origin + '/assets/index-v1.js') return new Response('import("./hub-v1.js"); const dependencies = ["assets/play-v1.js"];');
+    // The build's list of files to keep from the start: the first screen and the student screens.
+    if (url === origin + '/sw-precache.json') return new Response(JSON.stringify(['/assets/index-v1.js', '/assets/Lobby-v1.js', '/assets/Lobby-v1.css']), { headers: { 'Content-Type': 'application/json' } });
+    if (url === origin + '/assets/Lobby-v1.css') return new Response('.x{background:url("/images/lobby.webp")}');
     if (url === origin + '/assets/index-v1.css') return new Response('@font-face { src: url("/fonts/MapleStory.ttf"); }');
     return new Response('asset ' + url);
   };
@@ -267,12 +270,22 @@ async function main() {
     const cache = cachesByName.get('physical-v3');
     assert(!cache.has(origin + '/assets/index-v0.js')); assert(cache.has(origin + '/assets/index-v1.js')); assert(cache.has(origin + '/fonts/MapleStory.ttf'));
   });
-  check('install follows lazy route dependencies and CSS fonts before going offline', () => {
+  check('install keeps the build list (student screens) and CSS fonts, but not every lazy screen', () => {
+    const cache = cachesByName.get('physical-v3');
+    assert(cache.has(origin + '/assets/Lobby-v1.js')); assert(cache.has(origin + '/assets/Lobby-v1.css'));
+    assert(cache.has(origin + '/images/lobby.webp'), 'pictures a precached stylesheet names are kept');
+    assert(cache.has(origin + '/fonts/MapleStory.ttf'));
+    assert(!cache.has(origin + '/assets/hub-v1.js'), 'a lazy screen named in the entry is not downloaded at install');
+    assert(!cache.has(origin + '/assets/play-v1.js'));
+  });
+  {
+    // The page tells the worker which files it already loaded; they are kept for offline use.
+    let task; listeners.message({ data: { type: 'cache-loaded', urls: [origin + '/assets/hub-v1.js', origin + '/assets/hub-v1.js?retry=1', 'https://external.test/x.js', origin + '/api/private'] }, waitUntil(p) { task = p; } }); await task;
     const cache = cachesByName.get('physical-v3');
     assert(cache.has(origin + '/assets/hub-v1.js'));
-    assert(cache.has(origin + '/assets/play-v1.js'));
-    assert(cache.has(origin + '/fonts/MapleStory.ttf'));
-  });
+    assert(![...cache.keys()].some(k => k.includes('retry=') || k.includes('external.test') || k.includes('/api/')));
+    checks++; console.log('PASS the first opened screen is kept for offline after the worker is ready');
+  }
   offline = true;
   assert.match(await (await fetchWorker({ url: origin + '/games/reaction', method: 'GET', mode: 'navigate' })).text(), /shell 1/);
   assert.equal((await fetchWorker({ url: origin + '/assets/index-v1.js', method: 'GET', destination: 'script' })).status, 200);

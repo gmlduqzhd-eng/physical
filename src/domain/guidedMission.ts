@@ -1,5 +1,7 @@
 import {LEGACY_GAME_NAMES} from './legacyGameNames';
-import { GAMES } from './gamesData';
+// 학생 폰 화면도 이 파일을 쓰므로 큰 gamesData 대신 종류·이름만 담은 목록을 쓴다.
+import { GAME_INDEX } from './gameIndex.generated';
+const GAMES = GAME_INDEX.map(([type, name]) => ({ type, name }));
 import type { MissionButton } from './types';
 
 /** Recognize guided lessons created before gameType was stored in the template. */
