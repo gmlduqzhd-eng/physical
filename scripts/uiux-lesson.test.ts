@@ -21,7 +21,20 @@ test('수업 끝 지도 장면: 이번 수업에 기록한 판만큼 칸이 열�
  assert.equal(m.view.opened,8);
  // 수업 시간 밖의 판은 세지 않는다.
  assert.equal(lessonMapMoment(p,t0+10000,t0+60000),null);
- assert.ok(MAP_MOMENT_MS>=2500&&MAP_MOMENT_MS<=4000,'3초쯤 보여 준다');
+ assert.ok(MAP_MOMENT_MS>=2500&&MAP_MOMENT_MS<=4000,'칸이 튀어나오는 연출은 3초쯤');
+ assert.equal(m.full,false);
+});
+
+test('수업 끝 지도 장면: 이번 수업으로 한 바퀴를 딱 채우면 빈 새 지도 대신 가득 찬 지도를 보여 준다',()=>{
+ let p=plays(MAP_TILES-3,t0-86400000);
+ for(let i=0;i<3;i++)p=addPlay(p,'sig-boss-raid',t0+i*1000,`full-${i}`);
+ const m=lessonMapMoment(p,t0,t0+60000)!;
+ assert.equal(m.full,true);
+ assert.equal(m.view.opened,MAP_TILES);
+ assert.ok(m.view.tiles.every(t=>t.open),'모든 칸이 열린 지도');
+ assert.deepEqual(m.fresh,[MAP_TILES-3,MAP_TILES-2,MAP_TILES-1]);
+ assert.equal(m.line,'지도를 한 바퀴 다 채웠어요!');
+ assert.equal(m.view.nextRegion,null);
 });
 
 test('수업 끝 지도 장면: 수업 중 한 바퀴를 다 돌면 새 지도에서 다시 센다',()=>{
@@ -34,11 +47,19 @@ test('수업 끝 지도 장면: 수업 중 한 바퀴를 다 돌면 새 지도�
  assert.match(m.line,/한 바퀴 다 돌았어요/);
 });
 
-test('끝 화면: 지도 장면은 건너뛸 수 있고, 같은 수업에서는 한 번만 뜨고, 움직임 줄이기를 지킨다',()=>{
+test('끝 화면: 지도 장면은 선생님이 닫을 때까지 남고(저절로 접혀 반응 칸이 튀지 않게), 한 번만 뜨고, 움직임 줄이기를 지킨다',()=>{
  const page=read('src/presentation/TodayLesson.tsx'),css=read('src/presentation/TodayLesson.css');
  assert.match(page,/moment&&momentOpen&&<MapMoment moment=\{moment\} onClose=\{closeMoment\}\/>/);
  assert.match(page,/writeStorage\(momentKey,'seen','session'\)/);
- assert.match(page,/className="today-map-moment-skip" onClick=\{onClose\}>건너뛰기/);
+ assert.match(page,/className="today-map-moment-skip" onClick=\{onClose\}>닫기/);
+ // 저절로 닫는 타이머가 없다.
+ const moment=page.slice(page.indexOf('function MapMoment'),page.indexOf('function TodaySummary'));
+ assert.doesNotMatch(moment,/setTimeout/);
+ // 소리로 읽는 곳은 제목 한 줄 하나뿐이다(닫힌 뒤 한 줄 안내는 다시 읽지 않는다).
+ assert.match(moment,/className="today-map-moment-title" role="status"/);
+ assert.doesNotMatch(page,/className="today-map-line" role="status"/);
+ // 닫으면 한 줄 안내로 초점을 옮긴다.
+ assert.match(page,/mapLineRef\.current\?\.focus\(\)/);
  assert.match(page,/to="\/class-progress\?tab=map"/);
  assert.match(css,/prefers-reduced-motion:reduce\)\{\.today-map-moment,\.today-map-moment-tiles li\[data-fresh\]\{animation:none\}/);
 });
@@ -80,4 +101,26 @@ test('놀이 화면 틀: TV 모드에서 위쪽 도구 막대를 숨기고, 결�
  assert.ok(slot>page.indexOf('result-score-value'),'반응 칸은 점수 뒤');
  assert.ok(slot<page.indexOf('오늘의 활동은 얼마나 힘들었나요?'),'반응 칸은 힘든 정도 앞');
  assert.equal((page.match(/<ClassFeedbackSlot /g)||[]).length,1);
+});
+
+test('오늘 수업 막대가 있으면 반 전체 진행 화면과 결과 덮개를 막대 높이만큼 내리고, 기록 뒤 막대의 다음 단계는 보조 모양이다',()=>{
+ const pp=read('src/presentation/components/minigames/common/PhonePlay.css'),gp=read('src/presentation/GamePlayPage.css');
+ const bar=read('src/presentation/components/TodayLessonBar.tsx'),barCss=read('src/presentation/components/TodayLessonBar.css');
+ assert.match(pp,/body:has\(\.today-bar\) \.phone-play\.phone-class\{top:48px\}/);
+ assert.match(gp,/body:has\(\.today-bar\) \.game-result-overlay\{top:48px\}/);
+ assert.match(bar,/const quiet=mine\?\.phase==='recorded';/);
+ assert.match(bar,/data-quiet=\{quiet\|\|undefined\}/);
+ assert.match(barCss,/\.today-bar\[data-quiet\] \.today-bar-next\{background:transparent/);
+});
+
+test('반 전체 진행: 시간 막대 색은 대표 게임과 같은 초록→주황→빨강, TV 모드 넓은 화면에서 규칙 글씨도 커진다',()=>{
+ const css=read('src/presentation/components/minigames/common/PhonePlay.css');
+ assert.match(css,/\.phone-class \.pc-timebar i\{[^}]*background:#16a34a/);
+ assert.doesNotMatch(css,/\.pc-timebar\[data-state=brief\] i\{background:#64748b\}/);
+ assert.match(css,/@media \(min-width:961px\)\{\s*html\[data-tv-mode="on"\] \.phone-class \.pc-rule\{font-size:clamp\(26px/);
+});
+
+test('결과 카드 안 반응 칸은 카드 색 체계를 따른다(회색 덮개처럼 보이지 않게)',()=>{
+ const gp=read('src/presentation/GamePlayPage.css');
+ assert.match(gp,/\.game-result-card \.class-feedback\[data-tone=dark\]\{background:var\(--forest-tint/);
 });
