@@ -96,7 +96,7 @@ export function ClassroomSetup() {
           return;
         }
       }
-      navigate('/teacher/room/'+room.id,policyNotice?{state:{setupNotice:policyNotice}}:undefined);
+      navigate('/teacher/room/'+room.id,{state:policyNotice?{setupNotice:policyNotice,justCreated:true}:{justCreated:true}});
     } catch (cause) {setError(classroomError(cause,'수업을 만들지 못했습니다.'));} finally {creating.current=false;setBusy(false);}
   };
   return <FlowShell utilities className="classroom-setup" back="/teacher" backLabel="교사 시작 화면"><p className="eyebrow">선생님 수업 준비실</p><h1>새 수업 준비</h1><ol className="steps" aria-label="수업 준비 단계">{['활동 선택','모둠·시간','학생 참여'].map((s,i)=><li key={s} aria-current={step===i+1?'step':undefined}>{i+1}. {s}</li>)}</ol>

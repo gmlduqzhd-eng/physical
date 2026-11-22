@@ -34,3 +34,60 @@
   .classroom-presentation .classroom-presentation-head{padding:0;margin-bottom:16px}
   .classroom-roster ul{padding-left:0;list-style:none}
 }
+
+/* 학생 입장 화면을 크게 보여 줄 때(전체화면 또는 화면 덮기). 교실 뒤(약 5m)에서도 QR·비밀번호·주소가 읽히게 키운다.
+   수업 화면(.guided-classroom)의 작은 카드 규칙보다 앞서도록 ':root body'로 시작한다. */
+.classroom-presentation-guide{font-size:clamp(1.05rem,1.6vw,1.25rem);font-weight:700;margin:4px 0}
+.classroom-join-address{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere}
+.classroom-presentation-actions .classroom-presentation-start{background:var(--forest-accent,#08787a);color:var(--forest-on,#fff);border-color:transparent;font-size:1.15rem;min-height:52px}
+.classroom-presentation-actions .classroom-presentation-start:disabled{opacity:.6}
+.classroom-presentation-actions button{min-height:48px}
+:root body .classroom-presentation.is-overlay{position:fixed;inset:0;z-index:1000;width:100vw;height:100dvh;overflow:auto;border:0;border-radius:0;margin:0}
+:root body .classroom-presentation.is-presenting{padding:clamp(14px,2.2vw,36px)}
+:root body .classroom-presentation.is-presenting .classroom-presentation-head{margin-bottom:14px;gap:12px 24px}
+:root body .classroom-presentation.is-presenting .classroom-presentation-head h2{font-size:clamp(1.3rem,2.2vw,2.2rem);margin:2px 0}
+:root body .classroom-presentation.is-presenting .classroom-presentation-guide{font-size:clamp(1.25rem,3.5vw,1.75rem);line-height:1.3;margin:4px 0 0}
+:root body .classroom-presentation.is-presenting .classroom-presentation-guide.is-sub{font-size:clamp(1.05rem,2.4vw,1.5rem)}
+:root body .classroom-presentation.is-presenting .classroom-join-address{display:block;font-size:clamp(1.6rem,3.6vw,2.75rem);line-height:1.2;font-weight:900;color:var(--forest-accent,#08787a)}
+:root body .classroom-presentation.is-presenting .classroom-qr-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:clamp(10px,1.6vw,24px);margin-top:0}
+:root body .classroom-presentation.is-presenting .classroom-qr-card{padding:clamp(10px,1.4vw,20px)}
+:root body .classroom-presentation.is-presenting .classroom-group-pin{font-size:clamp(3.5rem,8vw,6.5rem);line-height:1;margin:6px 0 10px}
+:root body .classroom-presentation.is-presenting .classroom-qr-card img{width:min(100%,24vh);margin:0 auto}
+/* 모둠 하나: 왼쪽에 비밀번호, 오른쪽에 화면 높이 절반 크기의 QR */
+:root body .classroom-presentation.is-presenting[data-size="one"] .classroom-group-pin{font-size:clamp(4rem,13vh,8rem)}
+:root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card img{width:min(100%,50vh)}
+/* 모둠 둘: 나란히, QR은 화면 높이의 약 40% */
+:root body .classroom-presentation.is-presenting[data-size="few"] .classroom-group-pin{font-size:clamp(4rem,13vh,7rem)}
+:root body .classroom-presentation.is-presenting[data-size="few"] .classroom-qr-card img{width:min(100%,38vh)}
+/* 모둠 셋·넷: 한 줄에 나란히 */
+:root body .classroom-presentation.is-presenting[data-size="some"] .classroom-group-pin{font-size:clamp(3.5rem,13vh,6.5rem)}
+:root body .classroom-presentation.is-presenting[data-size="some"] .classroom-qr-card img{width:min(100%,30vh)}
+@media(min-width:900px){
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card{display:grid;grid-template-columns:auto auto;justify-content:center;align-items:center;column-gap:clamp(24px,4vw,64px)}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>:not(img){grid-column:1}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>img{grid-column:2;grid-row:1/span 3}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>.classroom-roster{grid-column:1/-1}
+  :root body .classroom-presentation.is-presenting[data-size="few"] .classroom-qr-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  :root body .classroom-presentation.is-presenting[data-size="some"] .classroom-qr-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  :root body .classroom-presentation.is-presenting[data-size] .classroom-group-pin{font-size:56px}
+  :root body .classroom-presentation.is-presenting[data-size] .classroom-qr-card img{width:min(100%,260px)}
+  :root body .classroom-presentation.is-presenting .classroom-presentation-actions{width:100%}
+  :root body .classroom-presentation.is-presenting .classroom-presentation-actions>*{flex:1 1 auto}
+}
+/* 모둠 이름과 입장 수는 한 줄에 두어 QR이 들어갈 높이를 남긴다. 모둠이 셋 이상이면 칸이 좁아 비밀번호 글자 사이를 줄인다. */
+:root body .classroom-presentation.is-presenting .classroom-qr-card h3{display:inline;margin:0 8px 0 0}
+:root body .classroom-presentation.is-presenting .classroom-qr-card .classroom-group-count{display:inline;margin:0}
+:root body .classroom-presentation.is-presenting:is([data-size="some"],[data-size="many"]) .classroom-group-pin{letter-spacing:.04em;font-size:clamp(3.5rem,7.6vw,6.5rem);white-space:nowrap}
+:root body .classroom-presentation.is-presenting[data-size="some"] .classroom-qr-card img{width:min(100%,30vh)}
+@media(max-width:640px){:root body .classroom-presentation.is-presenting[data-size] .classroom-group-pin{font-size:56px}}
+:root body .classroom-presentation.is-presenting[data-size="many"] .classroom-group-pin{font-size:clamp(3rem,5.4vw,5rem)}
+@media(min-width:900px){
+  /* 모둠 하나일 때 왼쪽 글자(모둠 이름 → 입장 수 → 비밀번호)를 QR 높이의 가운데에 모은다. */
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card{grid-template-rows:1fr auto auto auto 1fr}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>h3{grid-row:2;display:block}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>.classroom-group-count{grid-row:3;display:block}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>.classroom-group-pin{grid-row:4}
+  :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>img{grid-row:1/span 5}
+}
