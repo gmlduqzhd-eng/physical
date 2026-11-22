@@ -99,7 +99,7 @@
   padding: 24px;
   background: var(--forest-tint, #f0f4e8);
   border: 1px solid var(--forest-line, #d6e0cb);
-  border-radius: 18px;
+  border-radius: 20px;
 }
 
 .flow.lesson-shell.guided-classroom .classroom-qr-panel>h2 {
@@ -138,7 +138,7 @@
 }
 
 .flow.lesson-shell.guided-classroom .classroom-qr-card p:not(.classroom-group-pin) {
-  font-size: 13px;
+  font-size: 14px;
   margin: 0;
 }
 
@@ -178,9 +178,9 @@
 .guided-classroom .guided-closeout-numbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .guided-classroom .guided-closeout-numbers p { margin: 0; padding: 14px; border-radius: 14px; background: var(--forest-tint, #f0f4e8); display: flex; flex-direction: column; }
 .guided-classroom .guided-closeout-numbers strong { font-size: 27px; color: var(--forest-ink, #354239); }
-.guided-classroom .guided-closeout-numbers span { color: var(--forest-accent, #52634a); font-size: 13px; }
+.guided-classroom .guided-closeout-numbers span { color: var(--forest-accent, #52634a); font-size: 14px; }
 .guided-classroom .guided-reflection-counts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
-.guided-classroom .guided-reflection-counts p { margin: 0; padding: 8px 12px; border: 1px solid var(--forest-line, #d6e0cb); border-radius: 12px; }
+.guided-classroom .guided-reflection-counts p { margin: 0; padding: 8px 12px; border: 1px solid var(--forest-line, #d6e0cb); border-radius: 14px; }
 .guided-classroom .guided-reflection-list p { display: flex; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--forest-line, #e6e8de); padding: 10px 0; }
 .guided-classroom .guided-reflection-list span { text-align: right; }
 

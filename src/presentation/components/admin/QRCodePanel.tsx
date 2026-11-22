@@ -119,7 +119,7 @@ export const QRCodePanel = ({currentRoom,roomGroups,appUrl,autoPresent=false,onS
     finally{setReleasing(false);}
   };
 
-  return <section className="classroom-qr-panel bg-cyan-50 border border-cyan-200 rounded-xl p-4">
+  return <section className="classroom-qr-panel bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] border border-[var(--ui-line,var(--forest-line,#d8d6cc))] rounded-xl p-4">
     <div className="flex flex-wrap items-center justify-between gap-3 mb-3 print:hidden">
       <div><h2 className="font-bold text-lg">모둠별 입장 비밀번호 · QR</h2><p className="text-sm">학생에게 자기 모둠의 비밀번호(숫자 4개) 또는 QR을 보여 주세요.</p></div>
       <div className="classroom-qr-toolbar flex gap-2"><button type="button" onClick={()=>void enterFullscreen()} className="border rounded-lg p-3 bg-white font-bold">크게 보여 주기</button><button type="button" onClick={()=>window.print()} className="border rounded-lg p-3 bg-white">인쇄하기</button></div>

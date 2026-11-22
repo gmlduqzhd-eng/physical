@@ -33,7 +33,7 @@ export function TeacherStudioEntry() {
     <section className="ai-form" aria-labelledby="studio-entry-title">
       <h2 id="studio-entry-title">Gemini 교사 수업 준비실</h2>
       <p className="ai-notice">여기서 Google로 로그인했다면 수업 준비실에서 다시 로그인하지 않아도 돼요. 수업 준비실은 새 탭으로 열려요. 새 화면에서 수업 조건을 고르고 개인정보 전송 안내를 확인하면 만들 수 있어요.</p>
-      <a className="inline-flex items-center justify-center rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold min-h-12" href={STUDIO_ORIGIN + '/'} target="_blank" rel="noreferrer" aria-busy={opening} onClick={open}>{opening ? '수업 준비실 여는 중…' : '수업 준비실 열기 →'}</a>
+      <a className="inline-flex items-center justify-center rounded-xl bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-5 py-4 font-bold min-h-12" href={STUDIO_ORIGIN + '/'} target="_blank" rel="noreferrer" aria-busy={opening} onClick={open}>{opening ? '수업 준비실 여는 중…' : '수업 준비실 열기 →'}</a>
       <p className="ai-notice">학생 앱의 기록·메모와 여기서 선택했던 조건은 자동 전송하지 않습니다. 학생에게 교사 도구 주소나 교사 계정을 공유하지 마세요.</p>
     </section>
   </main>;
