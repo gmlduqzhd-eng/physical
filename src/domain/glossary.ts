@@ -19,7 +19,7 @@ export const placeLabels=(places:readonly string[])=>[...new Set(places.map(plac
 export const SCREEN={
  home:'처음 화면',today:'오늘 수업',hub:'활동 고르기',tools:'수업 도구',
  teacher:'수업 준비',teacherAi:'수업 준비실',lessons:'수업 꾸러미',join:'수업 참여',
- board:'TV 점수판',remote:'모둠 수업 리모컨',funRemote:'TV 리모컨',kiosk:'공용 패드 화면',
+ board:'TV 점수판',remote:'모둠 수업 리모컨',funRemote:'휴대폰 리모컨',kiosk:'공용 패드 화면',
  mobile:'모둠 기기',admin:'교사 제어 패널',manual:'이용 안내',
 } as const;
 const SCREEN_BY_PATH:Readonly<Record<string,string>>={

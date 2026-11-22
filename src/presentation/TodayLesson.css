@@ -106,3 +106,7 @@ html.dark-theme .today-map-moment-skip{background:#1c1917;color:#fefce8;border-c
 .today-plan-note{color:var(--muted,#57534e);font-size:15px}
 .today-settings summary small{font-weight:600;margin-left:6px;color:var(--muted,#57534e)}
 @media (max-width:480px){.today-page .today-quick .today-choice{gap:6px}.today-page .today-quick .today-choice button{padding:0 11px}}
+
+/* 작은 글씨 올리기: 눈썹 글·접힌 칸의 요약. */
+.today-page .eyebrow{font-size:15px}
+.today-page .today-settings summary small{font-size:15px}

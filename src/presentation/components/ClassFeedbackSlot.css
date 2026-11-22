@@ -19,7 +19,7 @@
 .class-feedback-reasons summary{cursor:pointer;font-weight:700;font-size:.9rem}
 .class-feedback-reasons small{font-weight:400;opacity:.8}
 .class-feedback-chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.class-feedback-chips button{min-height:40px;padding:4px 12px;border-radius:999px;border:1.5px solid rgba(148,163,184,.6);background:transparent;color:inherit;font-weight:700;font-size:.9rem;cursor:pointer}
+.class-feedback-chips button{min-height:44px;padding:4px 12px;border-radius:999px;border:1.5px solid rgba(148,163,184,.6);background:transparent;color:inherit;font-weight:700;font-size:.9rem;cursor:pointer}
 .class-feedback-chips button[aria-pressed=true]{border-color:#facc15;background:rgba(250,204,21,.2)}
 .class-feedback-note{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:700}
 .class-feedback-note input{min-height:40px;padding:6px 10px;border-radius:10px;border:1.5px solid rgba(148,163,184,.6);background:rgba(15,23,42,.35);color:inherit;font-size:.95rem}

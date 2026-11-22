@@ -39,13 +39,14 @@
 .fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.1rem;font-weight:800;line-height:1.4}
 .fun-remote-page .frp-danger-solid{background:#dc2626;color:#fff}
 /* 본게임 중 '다음' 자리: 누르는 버튼이 아니라 지금 상태. 대신 '일시정지'가 크게 위로 온다. */
-.fun-remote-page .frp-next-wait{min-height:clamp(104px,21dvh,200px);padding:12px;border-radius:18px;background:transparent;border:2px dashed var(--frp-line);color:var(--frp-ink);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;text-align:center}
+.fun-remote-page .frp-next-wait{padding:12px;box-sizing:border-box;border-radius:18px;background:transparent;border:2px dashed var(--frp-line);color:var(--frp-ink);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;text-align:center}
 .fun-remote-page .frp-next-wait .frp-big-icon{font-size:1.6rem}
 .fun-remote-page .frp-next-wait .frp-big-label{font-size:1.25rem}
 .fun-remote-page .frp-next[aria-busy]{opacity:.85}
 /* 자주 쓰는 두 버튼: 세로 화면에서 위아래로 쌓아 화면 절반쯤을 채운다(보지 않고 엄지로 누른다). */
 .frp-big{display:grid;grid-template-columns:1fr;gap:10px}
-.fun-remote-page .frp-big button{min-height:clamp(104px,21dvh,200px);border-radius:22px;border-width:0;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.1}
+.fun-remote-page .frp-big :is(button,.frp-next-wait){min-height:clamp(104px,21dvh,200px);box-sizing:border-box}
+.fun-remote-page .frp-big button{border-radius:22px;border-width:0;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;line-height:1.1}
 .fun-remote-page .frp-next{background:#0e7490}
 .fun-remote-page .frp-pause{background:#b45309}
 .fun-remote-page .frp-pause[data-paused]{background:#15803d}
@@ -73,7 +74,7 @@
 @media (orientation:landscape) and (max-height:520px){
  .fun-remote-page{max-width:none;gap:8px;padding:10px}
  .frp-big{grid-template-columns:1fr 1fr}
- .fun-remote-page .frp-big button{min-height:clamp(88px,34dvh,150px)}
+ .fun-remote-page .frp-big :is(button,.frp-next-wait){min-height:clamp(88px,34dvh,150px)}
  .frp-teams{grid-template-columns:repeat(4,minmax(0,1fr))}
  .frp-teams[data-count="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
  .frp-teams[data-count="3"]{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -84,7 +85,7 @@
 @media (orientation:portrait) and (max-height:700px){
  .fun-remote-page{gap:8px;padding:10px}
  .fun-remote-page h1{font-size:1.15rem}
- .fun-remote-page .frp-big button{min-height:clamp(84px,14dvh,120px)}
+ .fun-remote-page .frp-big :is(button,.frp-next-wait){min-height:clamp(84px,14dvh,120px)}
  .frp-big-icon{font-size:1.8rem}
  .frp-snap{padding:8px}
  .frp-cue{font-size:1.1rem}
@@ -98,7 +99,7 @@
  .frp-snap{padding:6px 10px}
  .frp-snap p{display:inline}
  .frp-cue{font-size:1rem;margin-left:8px!important}
- .fun-remote-page .frp-big button{min-height:clamp(64px,22dvh,110px)}
+ .fun-remote-page .frp-big :is(button,.frp-next-wait){min-height:clamp(64px,22dvh,110px)}
  .frp-big-icon{font-size:1.5rem}
  .frp-big-label{font-size:1.3rem}
  .fun-remote-page .frp-team{padding:4px 6px;border-top-width:5px}
@@ -111,3 +112,13 @@
 .frp-sent[data-tone=ok]:not(:empty){background:#dcfce7;color:#14532d}
 .frp-sent[data-tone=no]:not(:empty){background:#fee2e2;color:#7f1d1d}
 .frp-sent[data-tone=wait]:not(:empty){background:#e0f2fe;color:#0c4a6e}
+
+/* 상태 칸(본게임 중·게임 끝)은 버튼과 높이가 같아야 아래 '일시정지' 자리가 밀리지 않는다: 글자가 넘쳐 칸이 커지지 않게 줄인다. */
+.fun-remote-page .frp-next-wait{overflow:hidden;align-content:center}
+.fun-remote-page .frp-next-wait small{flex-basis:100%;font-size:.85rem;font-weight:700}
+@media (orientation:portrait) and (max-height:700px){.fun-remote-page .frp-next-wait{padding:6px}.fun-remote-page .frp-next-wait .frp-big-label{font-size:1.1rem}.fun-remote-page .frp-next-wait small{display:none}}
+/* TV 상태 칸: 단계마다 줄 수가 달라도 큰 버튼 자리가 움직이지 않게 두 줄 높이를 미리 잡아 둔다. */
+.fun-remote-page .frp-snap{min-height:4.6em;box-sizing:border-box}
+/* 보낸 결과 알림: 화면 맨 아래에 잠깐 떠 있다 사라진다. 떠 있는 동안에도 아래 버튼을 누를 수 있다. */
+.fun-remote-page .frp-sent:not(:empty){position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(528px,calc(100% - 32px));box-sizing:border-box;pointer-events:none;z-index:40}
+.fun-remote-page{padding-bottom:calc(72px + env(safe-area-inset-bottom))}

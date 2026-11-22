@@ -91,3 +91,6 @@
 /* 시작 화면에 첫 작전 지도·순서를 함께 보일 때는 규칙 줄 간격을 조금 줄여 시작 버튼이 첫 화면에 남게 한다. */
 .movement-quest:has(.mq-start-area[data-with-brief]) .mq-rules-three li{padding:3px 0}
 .movement-quest:has(.mq-start-area[data-with-brief]) .mq-rules-three{margin:6px 0}
+
+/* 작은 지도 글씨도 TV에서 읽히게. */
+.movement-quest .mq-map-mini small{font-size:13px}

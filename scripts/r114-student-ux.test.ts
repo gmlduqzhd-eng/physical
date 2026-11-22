@@ -60,7 +60,8 @@ test('lobby uses plain words and a big number-only password box',()=>{
 test('class progress: countdown ring, one step label, lone button spans the row',()=>{
  const cls=read('src/presentation/components/minigames/common/PhonePlayClass.tsx');
  assert.match(cls,/className="pc-countdown"[\s\S]*초 뒤 시작/);
- assert.match(cls,/\/\$\{p\.rounds\.length\}단계/);
+ assert.match(cls,/과제 \$\{Math\.min\(round\+1,p\.rounds\.length\)\}\/\$\{p\.rounds\.length\}/);
+ assert.doesNotMatch(cls,/\}단계`/);
  assert.doesNotMatch(cls,/'곧 시작해요'/);
  assert.match(read('src/presentation/components/minigames/common/PhonePlay.css'),/\.pc-controls>button:only-child\{grid-column:1\/-1\}/);
 });

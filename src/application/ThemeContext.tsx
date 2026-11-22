@@ -19,12 +19,12 @@ export const useTheme = () => useContext(ThemeContext);
 
 /** 직접 고른 밝기. 이 기기에 남는다(새 탭·다음 방문에도). */
 const themeKey = 'physical_theme_v1';
-/** 예전에는 탭마다만 기억했다. 그 값이 있으면 한 번 이어받는다. */
+/** 예전에는 탭마다만 기억했고 처음 열 때 'light'를 저절로 적었다. 직접 고른 게 분명한 'dark'만 이어받는다. */
 const legacyTabKey = 'physical_theme_tab_v1';
 const darkQuery = '(prefers-color-scheme: dark)';
 const asTheme = (value: string | null): Theme | null => value === 'dark' || value === 'light' ? value : null;
 function readSaved(): Theme | null {
-  try { return asTheme(window.localStorage.getItem(themeKey)) ?? asTheme(window.sessionStorage.getItem(legacyTabKey)); } catch { return null; }
+  try { return asTheme(window.localStorage.getItem(themeKey)) ?? (window.sessionStorage.getItem(legacyTabKey) === 'dark' ? 'dark' : null); } catch { return null; }
 }
 const systemTheme = (): Theme => { try { return window.matchMedia?.(darkQuery).matches ? 'dark' : 'light'; } catch { return 'light'; } };
 
@@ -48,6 +48,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const cleared = () => setChosen(null);
     window.addEventListener?.('physical-device-cleared', cleared);
     return () => window.removeEventListener?.('physical-device-cleared', cleared);
+  }, []);
+
+  // 다른 탭에서 밝기를 바꾸면 이 탭도 따라간다.
+  useEffect(() => {
+    const synced = (event: StorageEvent) => { if (event.key === null || event.key === themeKey) setChosen(readSaved()); };
+    window.addEventListener?.('storage', synced);
+    return () => window.removeEventListener?.('storage', synced);
   }, []);
 
   // 첫 페인트 전에 .dark 클래스를 적용해 dark: 변형의 깜빡임을 방지

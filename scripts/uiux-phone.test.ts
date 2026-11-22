@@ -83,7 +83,7 @@ test('phone remote puts next and pause first, teams in a shape-coded grid, and r
   assert.match(page, /게임을 지금 끝내고 결과 발표로 갈까요\?[\s\S]*sendStep\(\{type:'end'\},'끝내기'\)/);
   assert.match(page, /마지막 승부로 넘어갈까요\?[\s\S]*sendStep\(\{type:'next'\},'마지막 승부로'\)/);
   // In main play there is no dead giant next button: a calm status keeps the same first slot (pause never moves up).
-  assert.match(page, /inPlay\?<div className="frp-next frp-next-wait" role="status">/);
+  assert.match(page, /inPlay\|\|result\?<div className="frp-next frp-next-wait" role="status">/);
   assert.doesNotMatch(css, /\.frp-pause\{order:-1\}/);
   // Boss-raid-only special attack is hidden in other games.
   assert.match(page, /hasSpecial&&<button/);
@@ -92,6 +92,6 @@ test('phone remote puts next and pause first, teams in a shape-coded grid, and r
   assert.match(page, /className="frp-sent"/);
   assert.match(page, /navigator\.vibrate\?\.\(30\)/);
   // The two big buttons fill about half of a tall phone and sit side by side when the phone is turned.
-  assert.match(css, /\.frp-big button\{min-height:clamp\(104px,21dvh,200px\)/);
+  assert.match(css, /\.frp-big :is\(button,\.frp-next-wait\)\{min-height:clamp\(104px,21dvh,200px\)/);
   assert.match(css, /@media \(orientation:landscape\) and \(max-height:520px\)\{[\s\S]*\.frp-big\{grid-template-columns:1fr 1fr\}/);
 });

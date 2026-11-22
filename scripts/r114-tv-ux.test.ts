@@ -21,7 +21,7 @@ test('리모컨: 진행 칸은 늘 첫 자리이고, 이름은 TV의 진행 버�
   assert.doesNotMatch(css, /\.frp-pause\{order:-1\}/);
   assert.ok(page.indexOf('className="frp-next frp-next-wait"') < page.indexOf('className="frp-pause"'));
   // 본게임 중 상태 칸도 버튼과 같은 높이를 지켜 아래 버튼이 움직이지 않는다.
-  assert.match(css, /\.frp-next-wait\{min-height:clamp\(104px,21dvh,200px\)/);
+  assert.match(css, /\.frp-big :is\(button,\.frp-next-wait\)\{min-height:clamp\(104px,21dvh,200px\)/);
   // 보낸 명령은 큰 알림으로 보여 준다.
   assert.match(css, /\.frp-sent:not\(:empty\)\{font-size:1\.15rem;font-weight:900/);
   assert.match(page, /className="frp-sent-icon"/);

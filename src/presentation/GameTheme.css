@@ -63,3 +63,7 @@ html[data-design=forest] body .warm-game .result-rpe-choice[aria-pressed=true]{b
 html[data-design=forest] body .warm-game .result-rpe-choice[aria-pressed=true] *{color:inherit!important}
 /* Keep classroom pause outside game palettes and retain mounted activity state. */
 .activity-classroom-pause{position:fixed;inset:144px 12px auto;z-index:12000;margin:auto;max-width:620px;padding:28px;border:2px solid #687d5b;border-radius:24px;background:#fffdf6;color:#243d32;box-shadow:0 0 0 200vmax #f4f2e9e8;font:700 18px/1.7 system-ui;overflow-wrap:anywhere}
+
+/* 놀이 머리말의 작은 설명 글씨: 13px 이상. */
+.gameplay-toolbar .game-toolbar-title small,.game-toolbar-title small{font-size:13px}
+@media(max-width:480px){.gameplay-toolbar .game-toolbar-title small{font-size:13px}}

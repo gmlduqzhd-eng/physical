@@ -504,3 +504,13 @@ html[data-tv-mode="on"] .fun-paused-note{font-size:clamp(20px,2.4vw,36px)}
  .fun-rule-card li{padding:6px 12px}
  .fun-big{min-height:60px}
 }
+
+/* 수업 중 누르는 칸은 낮은 화면에서도 44px 이상: 보이는 크기는 그대로 두고 누르는 칸만 넓히거나(도크), 버튼을 키운다(팀 점수). */
+.fun-dock :is(.fun-remote-btn,.fun-exit,.fun-tv-btn){position:relative}
+.fun-dock :is(.fun-remote-btn,.fun-exit,.fun-tv-btn)::after{content:"";position:absolute;inset:-5px -2px}
+@media (max-width:640px) and (max-height:720px){.fun-scoreboard[data-teams="3"] .fun-team-buttons button,.fun-scoreboard[data-teams="4"] .fun-team-buttons button{min-height:44px}}
+@media (orientation:landscape) and (max-height:480px){.fun-team-buttons button{min-height:44px;min-width:44px}}
+/* TV 모드 시작 화면의 고르기 단추(팀 수 등): 한 줄에 들어가게 칸을 좁히고 글씨는 키운다. */
+html[data-tv-mode="on"] .fun-intro .fun-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,96px),1fr))}
+html[data-tv-mode="on"] .fun-intro .fun-choice button{font-size:clamp(18px,1.7vw,28px);min-height:clamp(52px,7vh,76px);white-space:nowrap}
+html[data-tv-mode="on"] .fun-intro .fun-setup legend{font-size:clamp(17px,1.5vw,24px)}

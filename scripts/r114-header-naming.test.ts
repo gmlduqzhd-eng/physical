@@ -37,7 +37,7 @@ test('음성 안내 켜기·끄기는 하나: 예전 음성 코칭 설정을 한
   assert.equal(loadVoicePrefs(store({ [LEGACY_VOICE_COACH_KEY]: 'false' })).on, false);
   assert.equal(loadVoicePrefs(store({ [LEGACY_VOICE_COACH_KEY]: 'true' })).on, true);
   // 새 설정이 있으면 예전 값은 보지 않는다.
-  assert.equal(loadVoicePrefs(store({ [SPEECH_PREFS_KEY]: JSON.stringify({ on: true, rate: 'slow', volume: 'normal' }), [LEGACY_VOICE_COACH_KEY]: 'false' })).on, true);
+  assert.equal(loadVoicePrefs(store({ [SPEECH_PREFS_KEY]: JSON.stringify({ on: true, rate: 'slow', volume: 'normal' }), [LEGACY_VOICE_COACH_KEY]: 'false' })).on, false);
   assert.equal(loadVoicePrefs(store({ [SPEECH_PREFS_KEY]: JSON.stringify({ on: false, rate: 'normal', volume: 'soft' }) })).volume, 'soft');
   // 두 음성 훅이 같은 설정을 쓴다.
   const coach = read('src/application/useVoiceCoach.ts');

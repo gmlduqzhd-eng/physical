@@ -204,7 +204,7 @@ export const PhysicalActivityLayout = ({
 
             {completionSummary && (
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 mb-5 text-left">
-                <span className="text-[10px] font-bold text-slate-500 block mb-1">활동 요약</span>
+                <span className="text-[13px] font-bold text-slate-500 block mb-1">활동 요약</span>
                 <p className="text-xs text-slate-300 font-medium leading-relaxed">{completionSummary}</p>
               </div>
             )}
@@ -232,7 +232,7 @@ export const PhysicalActivityLayout = ({
                     }`}
                   >
                     <span className="text-2xl mb-1">{r.icon}</span>
-                    <span className="text-[10px] font-bold">{r.label}</span>
+                    <span className="text-[13px] font-bold">{r.label}</span>
                   </button>
                 ))}
               </div>
