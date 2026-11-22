@@ -263,19 +263,19 @@ export const AdminControlPanel = () => {
     <div className="teacher-admin min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         <HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로 돌아가기" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>홈으로 돌아가기</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar>
-        <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
+        <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
         {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 mb-8">
-          <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-600">
-            <ShieldAlert className="w-10 h-10 text-cyan-500" /> 땀방울 원정대 - 교사 제어 패널
+          <h1 className="text-3xl font-black flex items-center gap-3 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]">
+            <ShieldAlert className="w-10 h-10 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]" /> 땀방울 원정대 - 교사 제어 패널
           </h1>
         </div>
 
         {activeTab !== 'create_template' && (
           <div className="flex gap-4 border-b border-slate-300 pb-2 mb-6 overflow-x-auto">
-            <button onClick={() => setActiveTab('rooms')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'rooms' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>방 관리 (Rooms)</button>
-            <button onClick={() => setActiveTab('templates')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'templates' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>템플릿 관리</button>
-            <button onClick={() => setActiveTab('treasures')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'treasures' ? 'text-cyan-600 border-b-2 border-cyan-600' : 'text-slate-500 hover:text-slate-700'}`}>보물 QR 생성</button>
+            <button onClick={() => setActiveTab('rooms')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'rooms' ? 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))] border-b-2 border-[var(--ui-action,var(--forest-accent,#566d4d))]' : 'text-slate-500 hover:text-slate-700'}`}>방 관리 (Rooms)</button>
+            <button onClick={() => setActiveTab('templates')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'templates' ? 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))] border-b-2 border-[var(--ui-action,var(--forest-accent,#566d4d))]' : 'text-slate-500 hover:text-slate-700'}`}>템플릿 관리</button>
+            <button onClick={() => setActiveTab('treasures')} className={`shrink-0 font-bold px-4 py-2 ${activeTab === 'treasures' ? 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))] border-b-2 border-[var(--ui-action,var(--forest-accent,#566d4d))]' : 'text-slate-500 hover:text-slate-700'}`}>보물 QR 생성</button>
           </div>
         )}
 
@@ -298,7 +298,7 @@ export const AdminControlPanel = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <p className="text-slate-600">등록된 템플릿 목록입니다. 이 템플릿들을 기반으로 새로운 방을 만들 수 있습니다.</p>
-              <button onClick={() => { setEditingTemplate(null); setActiveTab('create_template'); }} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold flex items-center gap-2">
+              <button onClick={() => { setEditingTemplate(null); setActiveTab('create_template'); }} className="px-4 py-2 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-lg font-bold flex items-center gap-2">
                 <Plus className="w-4 h-4"/> 새 템플릿 만들기
               </button>
             </div>
@@ -313,12 +313,12 @@ export const AdminControlPanel = () => {
                     </div>
                     <button 
                       onClick={() => { setEditingTemplate(t); setActiveTab('create_template'); }} 
-                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-300 transition-colors"
+                      className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-300 transition-colors"
                     >
                       수정
                     </button>
                   </div>
-                  <button onClick={() => createRoom(t.id)} className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold flex items-center justify-center gap-2">
+                  <button onClick={() => createRoom(t.id)} className="w-full py-2 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-lg font-bold flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4"/> 이 템플릿으로 새 방 파기
                   </button>
                 </div>
@@ -342,15 +342,15 @@ export const AdminControlPanel = () => {
               {[
                 { id: 'TREASURE_SCORE_500', name: '보물상자 (500점)', color: 'text-yellow-600' },
                 { id: 'TREASURE_SCORE_1000', name: '대박 보물 (1000점)', color: 'text-orange-600' },
-                { id: 'TREASURE_ITEM_DOUBLE', name: '점수 2배 물약', color: 'text-purple-600' },
-                { id: 'TREASURE_ITEM_COOLDOWN', name: '쿨다운 감소', color: 'text-blue-600' },
+                { id: 'TREASURE_ITEM_DOUBLE', name: '점수 2배 물약', color: 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))]' },
+                { id: 'TREASURE_ITEM_COOLDOWN', name: '쿨다운 감소', color: 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))]' },
                 { id: 'TREASURE_ITEM_BONUS', name: '보너스 요정', color: 'text-pink-600' },
-                { id: 'TREASURE_BOMB_DEFUSE', name: '해킹 복구 킷', color: 'text-emerald-600' },
+                { id: 'TREASURE_BOMB_DEFUSE', name: '해킹 복구 킷', color: 'text-[color:var(--ui-action,var(--forest-accent,#566d4d))]' },
               ].map(treasure => (
                 <div key={treasure.id} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center">
                   <h3 className={`font-black text-lg mb-2 ${treasure.color}`}>{treasure.name}</h3>
                   <LocalQRCode value={treasure.id} alt={treasure.name} className="w-32 h-32 mb-2"/>
-                  <p className="text-xs text-slate-400 break-all">{treasure.id}</p>
+                  <p className="text-sm text-slate-400 break-all">{treasure.id}</p>
                 </div>
               ))}
             </div>
@@ -366,7 +366,7 @@ export const AdminControlPanel = () => {
               {rooms.map(r => (
                 <div key={r.id} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 transition-colors">
                   {/* 키보드로도 고를 수 있게 방 정보 전체를 단추로 둔다. */}
-                  <button type="button" onClick={() => setSelectedRoomId(r.id)} className="block w-full text-left rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-600" aria-label={`${r.name} 방 열기`}>
+                  <button type="button" onClick={() => setSelectedRoomId(r.id)} className="block w-full text-left rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ui-action,var(--forest-accent,#566d4d))]" aria-label={`${r.name} 방 열기`}>
                     <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500" aria-hidden="true"/> {r.name}</h3>
                     <p className="text-slate-700 font-bold">모둠별 4자리 PIN은 방 상세에서 확인</p>
                     <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
@@ -393,18 +393,18 @@ export const AdminControlPanel = () => {
         {selectedRoomId&&currentRoom&&<ClassroomScoreReview roomId={currentRoom.id} finished={currentRoom.status==='finished'}/>}
         {activeTab === 'rooms' && selectedRoomId && currentRoom && (
           <div className="space-y-6">
-            <button onClick={() => setSelectedRoomId(null)} className="text-cyan-600 font-bold hover:underline mb-4 inline-block">&larr; 방 목록으로 돌아가기</button>
+            <button onClick={() => setSelectedRoomId(null)} className="text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold hover:underline mb-4 inline-block">&larr; 방 목록으로 돌아가기</button>
             
             <div className="bg-white shadow-sm p-4 rounded-xl flex flex-wrap justify-between items-center gap-3 border border-slate-200">
               <div>
                 <h2 className="text-2xl font-black text-slate-900">{currentRoom.name}</h2>
-                <p className="text-cyan-600 font-bold mt-1">학생 입장: 아래 모둠별 4자리 PIN 또는 QR</p>
+                <p className="text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold mt-1">학생 입장: 아래 모둠별 4자리 PIN 또는 QR</p>
               </div>
               <div className="flex gap-2 flex-wrap">
-                <button onClick={() => setShowReportModal(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
+                <button onClick={() => setShowReportModal(true)} className="px-4 py-2 bg-gradient-to-r from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] hover:from-indigo-500 hover:to-indigo-600 text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-all active:scale-95">
                   <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" /> 📝 NEIS 세특 & 리포트
                 </button>
-                <button onClick={() => window.open(`/remote/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
+                <button onClick={() => window.open(`/remote/${currentRoom.id}`, '_blank')} className="px-4 py-2 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
                   <Smartphone className="w-4 h-4" /> 📱 모바일 리모컨
                 </button>
                 <button onClick={() => void openClassroomBoard(currentRoom.id)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
@@ -433,11 +433,11 @@ export const AdminControlPanel = () => {
 
             {/* #5 수업 리포트 & NEIS 세특 & #8 모둠 대전 버튼 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button onClick={() => setShowReportModal(true)} className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95">
+              <button onClick={() => setShowReportModal(true)} className="py-3 px-4 bg-gradient-to-r from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] hover:from-indigo-500 hover:to-indigo-600 text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all active:scale-95">
                 <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
                 <span>📝 NEIS 세특 자동 완성 열기</span>
               </button>
-              <button onClick={generateReport} className="py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
+              <button onClick={generateReport} className="py-3 px-4 bg-gradient-to-r from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] hover:from-emerald-500 hover:to-teal-500 text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all">
                 📋 리포트 텍스트 다운로드
               </button>
               <button onClick={triggerTeamBattle} disabled={currentRoom.status !== 'playing'} className="py-3 px-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 text-white rounded-xl font-bold flex items-center justify-center gap-2 shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed">
@@ -453,12 +453,12 @@ export const AdminControlPanel = () => {
                   value={announcementText}
                   onChange={e => setAnnouncementText(e.target.value)}
                   placeholder="학생들 기기 상단에 띄울 공지사항을 입력하세요..."
-                  className="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-500"
+                  className="flex-1 border border-slate-300 rounded-lg px-4 py-2 focus:outline-none focus:border-[var(--ui-action,var(--forest-accent,#566d4d))]"
                   onKeyDown={e => e.key === 'Enter' && sendAnnouncement()}
                 />
                 <button 
                   onClick={sendAnnouncement}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white px-6 py-2 rounded-lg font-bold transition-colors"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-6 py-2 rounded-lg font-bold transition-colors"
                 >
                   공지 띄우기
                 </button>
@@ -470,8 +470,8 @@ export const AdminControlPanel = () => {
                 </button>
               </div>
               {currentRoom.announcement && (
-                <div className="mt-3 p-3 bg-cyan-50 border border-cyan-200 rounded-lg flex items-center justify-between">
-                  <p className="text-sm text-cyan-800 font-bold">
+                <div className="mt-3 p-3 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] border border-[var(--ui-line,var(--forest-line,#d8d6cc))] rounded-lg flex items-center justify-between">
+                  <p className="text-sm text-[color:var(--ui-ink,var(--forest-ink,#303d35))] font-bold">
                     📢 현재 공지 중: <span className="font-normal">{currentRoom.announcement}</span>
                   </p>
                 </div>
@@ -479,18 +479,18 @@ export const AdminControlPanel = () => {
             </div>
 
             {/* Phase 1 Minigames Panel */}
-            <div className="bg-emerald-50 shadow-sm p-4 rounded-xl border border-emerald-200 mb-6">
+            <div className="bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] shadow-sm p-4 rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-bold text-emerald-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[color:var(--ui-ink,var(--forest-ink,#303d35))] flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 단체 숏폼 미니게임 (Phase 1)
                 </h2>
                 {currentRoom.active_minigame && ['red_green','one_leg','exp-tablet-31'].includes(currentRoom.active_minigame.type) && (
-                  <span className="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-emerald-200 text-[color:var(--ui-ink,var(--forest-ink,#303d35))] text-sm font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-emerald-700 mb-4">준비·연습부터 진행하는 신체 놀이를 열어요. 기기는 거치하고, 종료는 직접 확인해요.</p>
+              <p className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] mb-4">준비·연습부터 진행하는 신체 놀이를 열어요. 기기는 거치하고, 종료는 직접 확인해요.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'red_green', expires_at: Date.now() + 600000 } })}
@@ -500,7 +500,7 @@ export const AdminControlPanel = () => {
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'one_leg', expires_at: Date.now() + 600000 } })}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1"
                 >
                   <LucideIcons.Footprints className="w-5 h-5" /> 한 발 등대 서기
                 </button>
@@ -514,7 +514,7 @@ export const AdminControlPanel = () => {
               <div className="flex justify-end mt-2">
                 <button 
                   onClick={clearMinigame}
-                  className="bg-white hover:bg-emerald-100 text-emerald-600 px-4 py-2 rounded-lg font-bold border border-emerald-200 transition-colors text-sm"
+                  className="bg-white hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] px-4 py-2 rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] transition-colors text-sm"
                 >
                   미니게임 강제 종료
                 </button>
@@ -522,18 +522,18 @@ export const AdminControlPanel = () => {
             </div>
 
             {/* Phase 2 Minigames Panel */}
-            <div className="bg-cyan-50 shadow-sm p-4 rounded-xl border border-cyan-200 mb-6">
+            <div className="bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] shadow-sm p-4 rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-bold text-cyan-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[color:var(--ui-ink,var(--forest-ink,#303d35))] flex items-center gap-2">
                   <LucideIcons.Brain className="w-5 h-5" /> 집중력 및 감각 미니게임 (Phase 2)
                 </h2>
                 {currentRoom.active_minigame && ['shake', 'number_grid', 'memory', 'stopwatch'].includes(currentRoom.active_minigame.type) && (
-                  <span className="px-3 py-1 bg-cyan-200 text-cyan-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-cyan-200 text-[color:var(--ui-ink,var(--forest-ink,#303d35))] text-sm font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-cyan-700 mb-4">기억·시간 감각과 실제 이동을 연결하는 신체 놀이예요. 준비와 연습을 마친 뒤 진행해요.</p>
+              <p className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] mb-4">기억·시간 감각과 실제 이동을 연결하는 신체 놀이예요. 준비와 연습을 마친 뒤 진행해요.</p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-2">
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'fitness', expires_at: Date.now() + 600000 } })}
@@ -549,13 +549,13 @@ export const AdminControlPanel = () => {
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'memory', expires_at: Date.now() + 600000 } })}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Brain className="w-5 h-5" /> 모양 순서 기억해 걷기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'stopwatch', expires_at: Date.now() + 600000 } })}
-                  className="bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-3 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Timer className="w-5 h-5" /> 시간 느끼며 걷기
                 </button>
@@ -563,7 +563,7 @@ export const AdminControlPanel = () => {
               <div className="flex justify-end mt-2">
                 <button 
                   onClick={clearMinigame}
-                  className="bg-white hover:bg-cyan-100 text-cyan-600 px-4 py-2 rounded-lg font-bold border border-cyan-200 transition-colors text-sm"
+                  className="bg-white hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] px-4 py-2 rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] transition-colors text-sm"
                 >
                   미니게임 강제 종료
                 </button>
@@ -571,18 +571,18 @@ export const AdminControlPanel = () => {
             </div>
 
             {/* Phase 3 Minigames Panel */}
-            <div className="bg-purple-50 shadow-sm p-4 rounded-xl border border-purple-200 mb-6">
+            <div className="bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] shadow-sm p-4 rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-bold text-purple-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[color:var(--ui-ink,var(--forest-ink,#303d35))] flex items-center gap-2">
                   <LucideIcons.Sparkles className="w-5 h-5" /> 마무리 신체 놀이 (Phase 3)
                 </h2>
                 {currentRoom.active_minigame && ['fate_card','whack_a_mole','scream','target','red_green','campfire-breath','breath-pacer-478'].includes(currentRoom.active_minigame.type) && (
-                  <span className="px-3 py-1 bg-purple-200 text-purple-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-purple-200 text-[color:var(--ui-ink,var(--forest-ink,#303d35))] text-sm font-bold rounded-full animate-pulse">
                     미니게임 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-purple-700 mb-4">도구와 몸으로 참여하고 실제 수행 뒤 결과를 직접 확인하는 미션이에요.</p>
+              <p className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] mb-4">도구와 몸으로 참여하고 실제 수행 뒤 결과를 직접 확인하는 미션이에요.</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-2">
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'target', expires_at: Date.now() + 600000 } })}
@@ -592,13 +592,13 @@ export const AdminControlPanel = () => {
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'plank', expires_at: Date.now() + 600000 } })}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Shield className="w-5 h-5" /> 벽 짚고 버티기
                 </button>
                 <button 
                   onClick={async () => await updateRoom({ active_minigame: { type: 'breath-pacer-478', expires_at: Date.now() + 600000 } })}
-                  className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-4 py-3 rounded-xl font-black transition-colors shadow-sm flex flex-col items-center gap-1 text-sm"
                 >
                   <LucideIcons.Wind className="w-5 h-5" /> 편한 숨 쉼터
                 </button>
@@ -606,35 +606,35 @@ export const AdminControlPanel = () => {
               <div className="flex justify-end mt-2">
                 <button 
                   onClick={clearMinigame}
-                  className="bg-white hover:bg-purple-100 text-purple-600 px-4 py-2 rounded-lg font-bold border border-purple-200 transition-colors text-sm"
+                  className="bg-white hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] px-4 py-2 rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] transition-colors text-sm"
                 >
                   미니게임 강제 종료
                 </button>
               </div>
             </div>
 
-            <div className="bg-indigo-50 shadow-sm p-4 rounded-xl border border-indigo-200 mb-6">
+            <div className="bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] shadow-sm p-4 rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] mb-6">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-lg font-bold text-indigo-900 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-[color:var(--ui-ink,var(--forest-ink,#303d35))] flex items-center gap-2">
                   <LucideIcons.Gamepad2 className="w-5 h-5" /> 돌발 팝업 게임 (퀴즈) 발송
                 </h2>
                 {currentRoom.active_minigame && (currentRoom.active_minigame.type === 'quiz' || (!currentRoom.active_minigame.type && currentRoom.active_minigame.question)) && (
-                  <span className="px-3 py-1 bg-indigo-200 text-indigo-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-indigo-200 text-[color:var(--ui-ink,var(--forest-ink,#303d35))] text-sm font-bold rounded-full animate-pulse">
                     퀴즈 진행 중!
                   </span>
                 )}
               </div>
-              <p className="text-sm text-indigo-700 mb-4">버튼을 누르면 학생들 화면을 덮는 객관식 퀴즈 팝업이 나타납니다. (정답 모둠 300점 획득)</p>
+              <p className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] mb-4">버튼을 누르면 학생들 화면을 덮는 객관식 퀴즈 팝업이 나타납니다. (정답 모둠 300점 획득)</p>
               <div className="flex gap-2">
                 <button 
                   onClick={sendMinigame}
-                  className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
+                  className="bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-6 py-3 rounded-xl font-black transition-colors shadow-sm flex items-center gap-2"
                 >
                   <LucideIcons.Send className="w-5 h-5" /> 랜덤 체육 퀴즈 발송
                 </button>
                 <button 
                   onClick={clearMinigame}
-                  className="bg-white hover:bg-indigo-100 text-indigo-600 px-4 py-3 rounded-xl font-bold border border-indigo-200 transition-colors"
+                  className="bg-white hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] px-4 py-3 rounded-xl font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] transition-colors"
                 >
                   강제 종료 / 내리기
                 </button>
@@ -647,7 +647,7 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Bomb className="w-5 h-5" /> 스마트폰 릴레이 폭탄 돌리기
                 </h2>
                 {currentRoom.active_minigame?.type === 'bomb' && (
-                  <span className="px-3 py-1 bg-red-200 text-red-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-red-200 text-red-800 text-sm font-bold rounded-full animate-pulse">
                     폭탄 돌아가는 중!
                   </span>
                 )}
@@ -684,7 +684,7 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Swords className="w-5 h-5" /> 보스 레이드 (학급 전체 협동)
                 </h2>
                 {currentRoom.status === 'boss_raid' && (
-                  <span className="px-3 py-1 bg-orange-200 text-orange-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-orange-200 text-orange-800 text-sm font-bold rounded-full animate-pulse">
                     레이드 진행 중! (HP: {currentRoom.boss_hp}/{currentRoom.boss_max_hp})
                   </span>
                 )}
@@ -720,7 +720,7 @@ export const AdminControlPanel = () => {
                   <LucideIcons.Tags className="w-5 h-5" /> 상점 플래시 세일 (50% 할인)
                 </h2>
                 {currentRoom.flash_sale && (
-                  <span className="px-3 py-1 bg-yellow-200 text-yellow-800 text-xs font-bold rounded-full animate-pulse">
+                  <span className="px-3 py-1 bg-yellow-200 text-yellow-800 text-sm font-bold rounded-full animate-pulse">
                     세일 진행 중!
                   </span>
                 )}
@@ -750,10 +750,10 @@ export const AdminControlPanel = () => {
                   </div>
                   <div className="flex gap-4">
                     <div className="flex-1 flex flex-col gap-2">
-                      <button onClick={triggerTsunami} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'tsunami' ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                      <button onClick={triggerTsunami} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'tsunami' ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <Waves className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'tsunami' ? '모두 멈춤 해제' : '모두 멈춤'}</span>
-                        {currentRoom.status !== 'tsunami' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">학생 기기 조작 잠금<br/>(집중/통제용)</span>}
+                        {currentRoom.status !== 'tsunami' && <span className="text-sm font-normal opacity-70 mt-0.5 text-center leading-tight">학생 기기 조작 잠금<br/>(집중/통제용)</span>}
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'boss_raid') {
@@ -761,10 +761,10 @@ export const AdminControlPanel = () => {
                         } else {
                           await updateRoom({ status: 'boss_raid', boss_hp: 10000, boss_max_hp: 10000 });
                         }
-                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'boss_raid' ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'boss_raid' ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-[0_0_20px_rgba(147,51,234,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.Swords className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'boss_raid' ? '보스 레이드 종료' : '보스 레이드 시작!'}</span>
-                        {currentRoom.status !== 'boss_raid' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">반 전체가 협동하여<br/>거대 보스 처치</span>}
+                        {currentRoom.status !== 'boss_raid' && <span className="text-sm font-normal opacity-70 mt-0.5 text-center leading-tight">반 전체가 협동하여<br/>거대 보스 처치</span>}
                       </button>
                       <button onClick={async () => {
                         if (currentRoom.status === 'mafia') {
@@ -776,7 +776,7 @@ export const AdminControlPanel = () => {
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'mafia' ? 'bg-red-900 text-red-100 shadow-[0_0_20px_rgba(153,27,27,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <LucideIcons.UserX className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'mafia' ? '마피아 게임 종료' : '스파이/마피아 발동'}</span>
-                        {currentRoom.status !== 'mafia' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">조별 1명씩 남몰래<br/>점수를 깎는 스파이 지정</span>}
+                        {currentRoom.status !== 'mafia' && <span className="text-sm font-normal opacity-70 mt-0.5 text-center leading-tight">조별 1명씩 남몰래<br/>점수를 깎는 스파이 지정</span>}
                       </button>
                     </div>
                     
@@ -784,10 +784,10 @@ export const AdminControlPanel = () => {
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'time_attack' ? 'playing' : 'time_attack';
                         await updateRoom({ status: newStatus });
-                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
+                      }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'time_attack' ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-[0_0_20px_rgba(16,185,129,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <Clock className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'time_attack' ? '타임어택 종료' : '타임어택 모드'}</span>
-                        {currentRoom.status !== 'time_attack' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">제한시간 내<br/>최고 점수 도달 경쟁</span>}
+                        {currentRoom.status !== 'time_attack' && <span className="text-sm font-normal opacity-70 mt-0.5 text-center leading-tight">제한시간 내<br/>최고 점수 도달 경쟁</span>}
                       </button>
                       <button onClick={async () => {
                         const newStatus = currentRoom.status === 'defense' ? 'playing' : 'defense';
@@ -795,11 +795,11 @@ export const AdminControlPanel = () => {
                       }} className={`flex-1 py-3 px-2 flex flex-col items-center justify-center gap-1 rounded-xl font-bold transition-all ${currentRoom.status === 'defense' ? 'bg-orange-600 text-white shadow-[0_0_20px_rgba(234,88,12,0.4)] animate-pulse' : 'bg-slate-100 border border-slate-300 text-slate-600 hover:bg-slate-200'}`}>
                         <ShieldAlert className="w-6 h-6 mb-1" />
                         <span className="text-sm">{currentRoom.status === 'defense' ? '방어전 종료' : '진지 방어전 시작'}</span>
-                        {currentRoom.status !== 'defense' && <span className="text-[10px] font-normal opacity-70 mt-0.5 text-center leading-tight">1초마다 조 점수가<br/>자동으로 깎임 (생존)</span>}
+                        {currentRoom.status !== 'defense' && <span className="text-sm font-normal opacity-70 mt-0.5 text-center leading-tight">1초마다 조 점수가<br/>자동으로 깎임 (생존)</span>}
                       </button>
                     </div>
                     <div className="flex-1 flex flex-col justify-center gap-2">
-                      <button onClick={() => handleStatusChange('playing')} className={`py-3 flex items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'playing' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                      <button onClick={() => handleStatusChange('playing')} className={`py-3 flex items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'playing' ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
                         <Play className="w-5 h-5" /> 타이머 시작
                       </button>
                       <button onClick={() => handleStatusChange('paused')} className={`py-3 flex items-center justify-center gap-2 rounded-xl font-bold transition-all ${currentRoom.status === 'paused' ? 'bg-yellow-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
@@ -810,13 +810,13 @@ export const AdminControlPanel = () => {
                 </div>
                 
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <p className="text-xs text-slate-500 font-bold mb-2">타이머 시간 조절 (현재 시간에 추가/차감)</p>
+                  <p className="text-sm text-slate-500 font-bold mb-2">타이머 시간 조절 (현재 시간에 추가/차감)</p>
                   <div className="grid grid-cols-5 gap-2 w-full">
                     <button onClick={() => handleTimeModifier(-60)} className="py-2.5 bg-red-50 text-red-600 rounded-lg font-bold border border-red-200 text-sm hover:bg-red-100 transition-colors">-1분</button>
                     <button onClick={() => handleTimeModifier(-30)} className="py-2.5 bg-red-50 text-red-600 rounded-lg font-bold border border-red-200 text-sm hover:bg-red-100 transition-colors">-30초</button>
-                    <button onClick={() => handleTimeModifier(30)} className="py-2.5 bg-cyan-50 text-cyan-600 rounded-lg font-bold border border-cyan-200 text-sm hover:bg-cyan-100 transition-colors">+30초</button>
-                    <button onClick={() => handleTimeModifier(60)} className="py-2.5 bg-cyan-50 text-cyan-600 rounded-lg font-bold border border-cyan-200 text-sm hover:bg-cyan-100 transition-colors">+1분</button>
-                    <button onClick={() => handleTimeModifier(300)} className="py-2.5 bg-cyan-50 text-cyan-600 rounded-lg font-bold border border-cyan-200 text-sm hover:bg-cyan-100 transition-colors">+5분</button>
+                    <button onClick={() => handleTimeModifier(30)} className="py-2.5 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] text-sm hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] transition-colors">+30초</button>
+                    <button onClick={() => handleTimeModifier(60)} className="py-2.5 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] text-sm hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] transition-colors">+1분</button>
+                    <button onClick={() => handleTimeModifier(300)} className="py-2.5 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] rounded-lg font-bold border border-[var(--ui-line,var(--forest-line,#d8d6cc))] text-sm hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] transition-colors">+5분</button>
                   </div>
                 </div>
               </div>
@@ -830,7 +830,7 @@ export const AdminControlPanel = () => {
                       <div className="flex justify-between w-full items-center">
                         <span className="font-bold text-slate-900">{s.group_name}</span>
                       </div>
-                      <div className="text-2xl font-mono font-black text-cyan-600">{s.score}</div>
+                      <div className="text-2xl font-mono font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))]">{s.score}</div>
                       <div className="flex gap-2 w-full mt-2">
                         <button onClick={() => toggleHack(s.id, !!s.is_hacked)} className={`flex-1 py-1.5 rounded text-sm font-bold flex items-center justify-center gap-1 ${s.is_hacked ? 'bg-red-500 text-white' : 'bg-slate-200 text-slate-600 hover:bg-slate-300'}`}>
                           <Bug className="w-4 h-4" /> {s.is_hacked ? '해킹 해제' : '해킹 침투'}

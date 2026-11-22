@@ -1,0 +1,61 @@
+/* 입구 카드(홈 · 수업 시작 · 더 찾기)가 함께 쓰는 모양. 색·글씨·모서리는 공용 토큰(--ui-*)을 쓰고, 없으면 숲 테마 값으로 보인다. */
+.entry-scope{--e-bg:var(--ui-bg,var(--forest-bg,#faf8f2));--e-paper:var(--ui-paper,var(--forest-elevated,#fffefa));--e-tint:var(--ui-tint,var(--forest-tint,#e9efe3));--e-line:var(--ui-line,var(--forest-line,#d8d6cc));--e-ink:var(--ui-ink,var(--forest-ink,#303d35));--e-muted:var(--ui-muted,var(--forest-muted,#5d675f));--e-action:var(--ui-action,var(--forest-action,#566d4d));--e-on-action:var(--ui-on-action,var(--forest-on,#fff));color:var(--e-ink)}
+.entry-scope *{box-sizing:border-box}
+.entry-head{display:grid;gap:8px;margin:0 0 28px}
+.entry-head h1{margin:0;font-family:var(--forest-serif,ForestSerif),serif;font-size:var(--ui-text-6,40px);font-weight:900;line-height:1.25;letter-spacing:0}
+.entry-head p{margin:0;font-size:var(--ui-text-3,18px);color:var(--e-muted)}
+.entry-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;margin:0;padding:0;list-style:none}
+.entry-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.entry-card{display:flex;flex-direction:column;gap:16px;padding:32px;background:var(--e-paper);border:1px solid var(--e-line);border-radius:var(--ui-radius-3,20px);min-width:0}
+.entry-card>svg{width:48px;height:48px;color:var(--e-action);flex:none}
+.entry-card h2{margin:0;font-size:var(--ui-text-5,28px);font-weight:900;line-height:1.25;letter-spacing:0}
+.entry-card-title{display:flex;align-items:center;gap:16px}
+.entry-card-title svg{width:56px;height:56px;color:var(--e-action);flex:none}
+.entry-card>p{margin:0;font-size:var(--ui-text-2,16px);line-height:1.55;color:var(--e-muted)}
+.entry-card>p.entry-lead{font-size:var(--ui-text-3,18px);color:var(--e-ink)}
+.entry-card>p.entry-note{font-size:var(--ui-text-1,14px);text-align:center}
+.entry-card>p.entry-note a{color:var(--e-ink);font-weight:700;display:inline-flex;align-items:center;min-height:44px}
+.entry-steps{display:grid;gap:8px;margin:0;padding:16px 20px;list-style:none;counter-reset:entry-step;background:var(--e-tint);border-radius:var(--ui-radius-2,14px);font-size:var(--ui-text-2,16px)}
+.entry-steps li{counter-increment:entry-step}
+.entry-steps li::before{content:counter(entry-step) ". "}
+.entry-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:auto;min-height:64px;padding:8px 24px;border:2px solid var(--e-action);border-radius:var(--ui-radius-pill,999px);background:var(--e-paper);color:var(--e-ink);font-family:inherit;font-size:var(--ui-text-4,22px);font-weight:700;line-height:1.2;text-decoration:none;text-align:center;cursor:pointer}
+.entry-btn:hover{background:var(--e-tint)}
+.entry-btn:focus-visible,.entry-chip:focus-visible,.lesson-method-link a:focus-visible{outline:3px solid var(--ui-signal,#f59e0b);outline-offset:3px}
+/* 주 버튼은 화면에 하나: 강조 카드(.is-focus) 안의 버튼만 채운다. */
+.entry-card.is-focus{border:2px solid var(--e-action)}
+.entry-card.is-focus .entry-btn{background:var(--e-action);color:var(--e-on-action)}
+.entry-card.is-focus .entry-btn:hover{filter:brightness(.92)}
+.entry-badge{align-self:flex-start;margin:0;padding:4px 12px;border-radius:var(--ui-radius-pill,999px);background:var(--e-tint);color:var(--e-ink);font-size:var(--ui-text-1,14px);font-weight:700}
+.entry-strip{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px;margin:32px 0 0;padding:20px 24px;background:var(--e-tint);border-radius:var(--ui-radius-2,14px)}
+.entry-strip h2,.entry-strip>p{margin:0;font-size:var(--ui-text-2,16px);font-weight:700;letter-spacing:0}
+.entry-strip ul{display:flex;flex-wrap:wrap;gap:12px;margin:0;padding:0;list-style:none}
+.entry-strip.plain{background:none;padding:0}
+.entry-chip{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:6px 20px;border:2px solid var(--e-action);border-radius:var(--ui-radius-pill,999px);background:var(--e-paper);color:var(--e-ink);font-size:var(--ui-text-2,16px);font-weight:700;text-decoration:none}
+.entry-chip:hover{background:var(--e-bg)}
+.entry-strip-more{margin-left:auto;font-size:var(--ui-text-2,16px);font-weight:700;color:var(--e-ink);min-height:44px;display:inline-flex;align-items:center}
+.lesson-method-link{margin:8px 0 0;font-size:var(--ui-text-1,14px)}
+.lesson-method-link a{display:inline-flex;align-items:center;min-height:44px;color:var(--ui-ink,var(--forest-ink,#303d35));font-weight:700}
+@media(max-width:900px){.entry-grid,.entry-grid.two{grid-template-columns:1fr;gap:16px}.entry-card{padding:20px;gap:12px}.entry-card>svg{width:36px;height:36px}.entry-card h2{font-size:var(--ui-text-4,22px)}.entry-head{margin-bottom:16px}.entry-head h1{font-size:var(--ui-text-5,28px)}.entry-head p{font-size:var(--ui-text-2,16px)}.entry-btn{min-height:56px;font-size:var(--ui-text-3,18px)}.entry-card.is-focus .entry-btn{min-height:64px;font-size:var(--ui-text-4,22px)}.entry-strip{margin-top:20px;padding:16px}.entry-strip-more{margin-left:0}.entry-card-title svg{width:40px;height:40px}}
+/* 홈: 넓은 화면에서는 수업 시작이 맨 앞 강조 카드, 폰에서는 학생 참여가 맨 위 강조 카드(주 버튼은 늘 하나). */
+.home-entries .entry-card[data-entry="lesson"]{border:2px solid var(--e-action)}
+.home-entries .entry-card[data-entry="lesson"] .entry-btn{background:var(--e-action);color:var(--e-on-action)}
+@media(max-width:900px){
+.home-entries .entry-card[data-entry="student"]{order:-1;border:2px solid var(--e-action)}
+.home-entries .entry-card[data-entry="student"] .entry-btn{background:var(--e-action);color:var(--e-on-action);min-height:64px;font-size:var(--ui-text-4,22px)}
+.home-entries .entry-card[data-entry="lesson"]{border:1px solid var(--e-line)}
+.home-entries .entry-card[data-entry="lesson"] .entry-btn{background:var(--e-paper);color:var(--e-ink)}
+.home-entries .entry-card{display:grid;grid-template-columns:36px minmax(0,1fr);column-gap:12px;row-gap:4px;align-items:center}
+.home-entries .entry-card>svg{grid-row:1 / span 2}
+.home-entries .entry-card .entry-btn{grid-column:1 / -1;margin-top:8px}
+}
+/* 더 찾기(활동 고르기 아래) */
+.hub-more{margin:40px 0 0;padding:28px 0 0;border-top:1px solid var(--e-line);display:grid;gap:28px}
+.hub-more h2{margin:0;font-size:var(--ui-text-5,28px);font-weight:900;letter-spacing:0}
+.hub-more h3{margin:0 0 12px;font-size:var(--ui-text-4,22px);font-weight:900;letter-spacing:0}
+.hub-more-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.hub-more-grid a{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;align-items:center;min-height:72px;padding:14px 16px;background:var(--e-paper);border:1px solid var(--e-line);border-radius:var(--ui-radius-2,14px);color:var(--e-ink);text-decoration:none}
+.hub-more-grid a:hover{border-color:var(--e-action)}
+.hub-more-grid a>span{grid-row:1 / span 2;font-size:28px}
+.hub-more-grid a strong{font-size:var(--ui-text-3,18px)}
+.hub-more-grid a small{grid-column:2;font-size:var(--ui-text-1,14px);line-height:1.45;color:var(--e-muted)}
+@media(max-width:900px){.hub-more-grid{grid-template-columns:1fr}}

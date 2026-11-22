@@ -1,12 +1,12 @@
-.flow.teacher-auth .teacher-login{max-width:620px;margin:42px auto 24px;padding:30px;border:1px solid var(--forest-line, #e0dfd3);border-radius:23px;background:var(--forest-paper, #fffefa);color:var(--forest-ink, #354239)}
+.flow.teacher-auth .teacher-login{max-width:620px;margin:42px auto 24px;padding:30px;border:1px solid var(--forest-line, #e0dfd3);border-radius:20px;background:var(--forest-paper, #fffefa);color:var(--forest-ink, #354239)}
 .flow.teacher-auth .teacher-login h2{margin:0 0 18px;font-size:25px}
 .flow.teacher-auth .teacher-login p{font-size:14px;line-height:1.85}
 .flow.teacher-auth .teacher-login label{margin:24px 0 0}
 .flow.teacher-auth .teacher-login button{background:var(--forest-accent, #576c50);color:var(--forest-on, #fffefa);border-color:var(--forest-line, #576c50);min-height:48px}
-.flow.teacher-auth .teacher-auth-note{max-width:620px;margin:0 auto 32px;color:var(--forest-muted, #687163);font-size:13px;line-height:1.85}
+.flow.teacher-auth .teacher-auth-note{max-width:620px;margin:0 auto 32px;color:var(--forest-muted, #687163);font-size:14px;line-height:1.85}
 @media(max-width:700px){.flow.teacher-auth .teacher-login{margin-top:26px;padding:24px}.flow.teacher-auth .teacher-login button{width:100%}}
 
-.teacher-account-form form{display:grid;gap:14px}.teacher-account-form label{display:grid;gap:6px}.teacher-account-form .ai-check{display:flex;flex-direction:row;align-items:flex-start;gap:10px}.teacher-account-form input:not([type=checkbox]){width:100%;min-width:0;border:1px solid #b9c8c2;border-radius:12px;padding:12px;background:var(--app-surface,#fff);color:inherit}.teacher-account-form button{min-height:46px;border:1px solid #b9c8c2;border-radius:12px;padding:10px 14px}.teacher-account-form p{overflow-wrap:anywhere}
+.teacher-account-form form{display:grid;gap:14px}.teacher-account-form label{display:grid;gap:6px}.teacher-account-form .ai-check{display:flex;flex-direction:row;align-items:flex-start;gap:10px}.teacher-account-form input:not([type=checkbox]){width:100%;min-width:0;border:1px solid #b9c8c2;border-radius:14px;padding:12px;background:var(--app-surface,#fff);color:inherit}.teacher-account-form button{min-height:46px;border:1px solid #b9c8c2;border-radius:14px;padding:10px 14px}.teacher-account-form p{overflow-wrap:anywhere}
 .teacher-account-form .ai-check input[type=checkbox]{width:20px;height:20px;min-height:20px;flex:0 0 20px;margin:2px 0 0;align-self:flex-start}
 .teacher-account-form .ai-check>span{min-width:0;line-height:1.6}
 .teacher-account-form .ai-check+button{margin-top:14px}

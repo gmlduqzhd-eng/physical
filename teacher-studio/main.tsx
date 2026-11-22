@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { setHeaderCheckLinkBase } from '../src/presentation/components/HeaderUtilities';
 import { BackgroundMusicProvider } from '../src/application/BackgroundMusicContext';
 import { ThemeProvider } from '../src/application/ThemeContext';
+import '../src/presentation/ui.css';
 import '../src/presentation/ApplicationPalette.css';
 // 화면·소리 확인 화면은 학생 앱에만 있으니 그쪽 주소로 연다.
 setHeaderCheckLinkBase(import.meta.env.DEV ? 'http://127.0.0.1:5173' : 'https://physical-pi.vercel.app');

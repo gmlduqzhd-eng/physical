@@ -31,7 +31,7 @@ export const Manual = () => {
           
           {/* 타이틀 및 개요 */}
           <div className="text-center pb-6 border-b border-slate-800">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-xs font-bold mb-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-sm font-bold mb-3">
               <Sparkles className="w-3.5 h-3.5" /> 2022 개정 초등 체육과 교육과정 연계
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white">
@@ -49,7 +49,7 @@ export const Manual = () => {
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">1</span>
               2022 개정 체육과 3대 영역 (총 {GAMES.length}종 게임)
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-sm text-slate-300 leading-relaxed">
               2022 개정 교육과정 기준에 맞추어 <strong className="text-emerald-400">운동 ({GAMES.filter(game => game.domain === '운동').length}종)</strong>, <strong className="text-blue-400">스포츠 ({GAMES.filter(game => game.domain === '스포츠').length}종)</strong>, <strong className="text-purple-400">표현 ({GAMES.filter(game => game.domain === '표현').length}종)</strong>의 3개 대영역으로 체계적으로 분류되어 있으며, 모든 활동 카드에서 학년군별 성취기준 코드와 세부 목표를 열람할 수 있습니다.
             </p>
 
@@ -57,12 +57,12 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-emerald-500/30">
                 <div className="font-black text-emerald-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">🏃 운동 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">{GAMES.filter(game => game.domain === '운동').length}종</span>
+                  <span className="text-sm px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-300 border border-emerald-800">{GAMES.filter(game => game.domain === '운동').length}종</span>
                 </div>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed">
                   자신의 체력 수준을 이해하고 건강 체력(근력, 유연성, 심폐지구력) 및 운동 체력(순발력, 민첩성, 평형성)을 기르는 활동
                 </p>
-                <div className="mt-2 text-[11px] text-slate-400">
+                <div className="mt-2 text-sm text-slate-400">
                   대표: {representatives('운동').map(game => game.name).join(', ')} 등
                 </div>
               </div>
@@ -70,12 +70,12 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-blue-500/30">
                 <div className="font-black text-blue-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">⚽ 스포츠 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">{GAMES.filter(game => game.domain === '스포츠').length}종</span>
+                  <span className="text-sm px-2 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">{GAMES.filter(game => game.domain === '스포츠').length}종</span>
                 </div>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed">
                   기술형(표적·기록·투기), 전략형(영역·필드·네트), 생태형(민속·놀이) 스포츠 기능과 공간 전술, 규칙과 협동심 실천
                 </p>
-                <div className="mt-2 text-[11px] text-slate-400">
+                <div className="mt-2 text-sm text-slate-400">
                   대표: {representatives('스포츠').map(game => game.name).join(', ')} 등
                 </div>
               </div>
@@ -83,12 +83,12 @@ export const Manual = () => {
               <div className="bg-slate-950/80 p-4 rounded-2xl border border-purple-500/30">
                 <div className="font-black text-purple-400 text-sm mb-1.5 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">🎭 표현 영역</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">{GAMES.filter(game => game.domain === '표현').length}종</span>
+                  <span className="text-sm px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">{GAMES.filter(game => game.domain === '표현').length}종</span>
                 </div>
-                <p className="text-slate-400 text-xs leading-relaxed">
+                <p className="text-slate-400 text-sm leading-relaxed">
                   신체 움직임을 통해 생각과 정서를 창의적으로 나타내고, 유튜브 영상 연계 댄스·탈춤·치어리딩 및 심미적 가치를 감상하는 활동
                 </p>
-                <div className="mt-2 text-[11px] text-slate-400">
+                <div className="mt-2 text-sm text-slate-400">
                   대표: {representatives('표현').map(game => game.name).join(', ')} 등
                 </div>
               </div>
@@ -101,7 +101,7 @@ export const Manual = () => {
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">2</span>
               스마트 기기 지원 &amp; 개인/협동 활동 분류
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-sm text-slate-300 leading-relaxed">
               학교 교실과 체육관의 다양한 ICT 인프라(학생 스마트폰, 학교 태블릿 PC, 교탁 데스크톱 PC 등)에 맞춰 수업에 활용할 수 있도록 필터를 지원합니다.
             </p>
 
@@ -111,7 +111,7 @@ export const Manual = () => {
                 <h4 className="font-bold text-sm text-emerald-400 flex items-center gap-2">
                   <Smartphone className="w-4 h-4" /> 지원 기기별 안내
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                <ul className="text-sm text-slate-300 space-y-1.5 leading-relaxed">
                   <li>
                     <strong className="text-white">📱 스마트폰 ({GAMES.filter(game => game.devices.includes('스마트폰')).length}종):</strong> 화면·소리·센서 등을 활용합니다. 활동별 안내에 따라 기기를 안전하게 내려놓거나 거치하고 참여하세요.
                   </li>
@@ -129,7 +129,7 @@ export const Manual = () => {
                 <h4 className="font-bold text-sm text-amber-400 flex items-center gap-2">
                   <Users className="w-4 h-4" /> 활동 형태별 안내
                 </h4>
-                <ul className="text-xs text-slate-300 space-y-1.5 leading-relaxed">
+                <ul className="text-sm text-slate-300 space-y-1.5 leading-relaxed">
                   <li>
                     <strong className="text-white"><User className="inline w-3.5 h-3.5 mr-1 text-slate-400" />개인 게임 ({GAMES.filter(game => game.playMode === '개인').length}종):</strong> 움직임·반응·균형 등 나에게 맞는 목표로 참여하는 도전 과제
                   </li>
@@ -153,7 +153,7 @@ export const Manual = () => {
                 <div className="font-bold text-sm text-cyan-400 flex items-center gap-2">
                   <Timer className="w-4 h-4" /> 경쾌한 3초 준비 카운트다운
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-sm text-slate-400 leading-relaxed">
                   기존의 긴 대기시간(5초)을 <strong>3초</strong>로 단축하여 학생들의 집중력이 흐트러지지 않고 경쾌하게 실제 신체활동으로 바로 진입할 수 있도록 개선하였습니다.
                 </p>
               </div>
@@ -162,7 +162,7 @@ export const Manual = () => {
                 <div className="font-bold text-sm text-teal-400 flex items-center gap-2">
                   <Monitor className="w-4 h-4" /> 센서 없이도 같은 활동
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-sm text-slate-400 leading-relaxed">
                   지금 활동은 기기 센서로 움직임을 재지 않아요. 화면 안내를 보고 몸으로 움직인 뒤, 완료는 학생이나 선생님이 버튼으로 확인해요. 그래서 스마트폰·태블릿·PC 어디서나 같은 방법으로 쓸 수 있어요.
                 </p>
               </div>
@@ -175,10 +175,10 @@ export const Manual = () => {
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">4</span>
               <h3 className="text-lg sm:text-xl font-black text-white">🏃 영역별 대표 활동 수업 팁</h3>
             </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               수업에 바로 쓰기 좋은 핵심 활동 {CORE_ACTIVITIES.length}개 가운데 영역마다 몇 가지를 골라 보여 줘요. 전체 목록과 준비물·안전 안내는 활동 고르기에서 확인해요.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               {(['운동', '스포츠', '표현'] as const).flatMap(domain => representatives(domain, 3)).map(game => (
                 <div key={game.type} className="p-3.5 bg-slate-900 rounded-xl border border-emerald-500/20 space-y-1">
                   <div className="font-black text-emerald-400 flex items-center gap-1.5"><span aria-hidden="true">{game.emoji}</span> {game.name} ({game.domain})</div>
@@ -186,7 +186,7 @@ export const Manual = () => {
                 </div>
               ))}
             </div>
-            <button type="button" className="text-xs font-bold text-cyan-300 underline" onClick={() => navigate('/hub')}>활동 전체 둘러보기 →</button>
+            <button type="button" className="text-sm font-bold text-cyan-300 underline" onClick={() => navigate('/hub')}>활동 전체 둘러보기 →</button>
           </section>
 
           {/* 5. 표현 활동과 유튜브 영상 연계 수업 */}
@@ -198,7 +198,7 @@ export const Manual = () => {
               </h3>
             </div>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-sm text-slate-300 leading-relaxed">
               표현 영역 활동은 학년군마다 고를 수 있어요. 특히 K-POP 안무, 전통 탈춤, 세계 민속 춤, 치어리딩, 음악 줄넘기, 태보 등은 <strong>유튜브 시연 영상을 직접 보며</strong> 따라 할 수 있습니다.
             </p>
 
@@ -207,22 +207,22 @@ export const Manual = () => {
               <h4 className="text-sm font-black text-purple-300 flex items-center gap-2">
                 <span>📺</span> 영상 연계 플레이어 핵심 기능
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-sm">
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
                   <div className="font-bold text-white mb-1">🪞 거울 모드 (좌우 반전)</div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                  <p className="text-slate-400 text-sm leading-relaxed">
                     강사의 왼손/오른손이 거울처럼 마주 보여 학생들이 헷갈리지 않고 쉽게 동작을 따라 합니다.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
                   <div className="font-bold text-white mb-1">🔗 맞춤 영상 URL 변경</div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                  <p className="text-slate-400 text-sm leading-relaxed">
                     선생님이 수업에 사용할 유튜브 링크(URL)를 직접 붙여넣어 원하는 교육 영상으로 즉시 교체 가능합니다.
                   </p>
                 </div>
                 <div className="bg-slate-900/80 p-3 rounded-xl border border-purple-500/20">
                   <div className="font-bold text-white mb-1">🎵 비트 메트로놈</div>
-                  <p className="text-slate-400 text-[11px] leading-relaxed">
+                  <p className="text-slate-400 text-sm leading-relaxed">
                     8박자(1-2-3-4 / 5-6-7-8) 시각·청각 가이드를 통해 음악의 빠르기와 강약을 체득합니다.
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export const Manual = () => {
               {GRADE_BANDS.map(([grade, label]) => {
                 const list = GAMES.filter(game => game.domain === '표현' && game.grades.includes(grade));
                 return (
-                  <div key={grade} className="p-3.5 bg-slate-900 rounded-xl border border-purple-500/20 text-xs space-y-1">
+                  <div key={grade} className="p-3.5 bg-slate-900 rounded-xl border border-purple-500/20 text-sm space-y-1">
                     <div className="font-black text-purple-300">{label} · {list.length}종</div>
                     <p className="text-slate-300 leading-relaxed">{list.slice(0, 10).map(game => `${game.emoji} ${game.name}`).join(' · ')}{list.length > 10 ? ' 외' : ''}</p>
                     <button type="button" className="font-bold text-cyan-300 underline" onClick={() => navigate(`/hub?domain=${encodeURIComponent('표현')}&grade=${encodeURIComponent(grade)}`)}>{label} 표현 활동 모두 보기 →</button>
@@ -250,7 +250,7 @@ export const Manual = () => {
             <h3 className="text-amber-400 font-black flex items-center gap-2 text-sm sm:text-base">
               <ShieldCheck className="w-5 h-5 text-amber-400" /> 교사 및 학생 필수 안전 수칙
             </h3>
-            <ul className="space-y-2 text-xs text-slate-300 leading-relaxed list-disc list-inside">
+            <ul className="space-y-2 text-sm text-slate-300 leading-relaxed list-disc list-inside">
               {FLAGSHIP_SAFETY.map(rule => <li key={rule}>{rule}</li>)}
               <li><strong className="text-amber-300">무리한 신체 접촉 금지:</strong> 짝·모둠 활동에서 친구의 몸을 강제로 잡아당기지 않고 신호와 구령으로 협력해요.</li>
               <li><strong className="text-amber-300">몸의 변화 관찰:</strong> 맥박은 손목에서 가볍게 느끼고 목은 누르지 않아요. 숫자를 재거나 친구와 비교하지 않아요. 숨은 참지 않아요.</li>
@@ -264,11 +264,11 @@ export const Manual = () => {
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">7</span>
               🏆 별명과 내 활동 기록
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-sm text-slate-300 leading-relaxed">
               개인 게임 결과는 현재 탭에서 임시로 확인할 수 있습니다. 별명과 개인 활동 기록은 이 탭의 세션 저장소에 최대 8시간 보관하며, 다음 접근 때 만료된 정보를 삭제합니다. 장기 저장하거나 다른 기기로 동기화하는 기록은 아닙니다.
             </p>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
-              <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <ul className="text-sm text-slate-300 space-y-2 leading-relaxed">
                 <li>
                   <strong className="text-white">✏️ 닉네임 설정:</strong> 개인 활동 기록을 사용할 때는 실명이나 학번 대신 개인을 알아볼 수 없는 별명을 사용하세요. (예: "튼튼구름")
                 </li>
@@ -291,11 +291,11 @@ export const Manual = () => {
               <span className="w-7 h-7 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-sm font-bold border border-cyan-500/30">8</span>
               상단 이용 설정
             </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm sm:text-sm text-slate-300 leading-relaxed">
               화면 위쪽의 음악·링크 공유·앱 설치 버튼으로 이용 환경을 설정할 수 있습니다.
             </p>
             <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 space-y-3">
-              <ul className="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <ul className="text-sm text-slate-300 space-y-2 leading-relaxed">
                 <li>
                   <strong className="text-white">음악:</strong> 배경음악을 켜거나 끄고 음량을 조절합니다.
                 </li>
@@ -313,7 +313,7 @@ export const Manual = () => {
 
           {/* 하단 푸터 안내 */}
           <div className="pt-6 border-t border-slate-800 text-center">
-            <p className="text-slate-400 text-xs font-medium">
+            <p className="text-slate-400 text-sm font-medium">
               땀방울 원정대 ⓒ2026. 엽쌤 All rights reserved.
             </p>
           </div>
@@ -327,7 +327,7 @@ export const Manual = () => {
           <div className="text-center pb-4 border-b border-slate-800">
             <h2 className="text-xl sm:text-2xl font-black text-white">📝 수업 지도안 생성기</h2>
             <p className="text-sm text-slate-400 mt-2">2022 개정 교육과정 연계 · 땀방울 원정대 게임 활용 · 실전형 수업 설계</p>
-            <p className="text-xs text-slate-500 mt-1">학년군·영역·조건을 입력하면 교육과정 연계 수업 지도안을 자동으로 생성합니다.</p>
+            <p className="text-sm text-slate-500 mt-1">학년군·영역·조건을 입력하면 교육과정 연계 수업 지도안을 자동으로 생성합니다.</p>
           </div>
           <LessonPlanGeneratorV2 />
         </div>

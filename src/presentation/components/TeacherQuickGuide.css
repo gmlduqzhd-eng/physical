@@ -6,10 +6,10 @@
 .tqg-step{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center;padding:12px;border-radius:14px;background:#1e293b;border:1px solid #334155}
 .tqg-step h3{margin:0 0 4px;font-size:clamp(17px,2vw,21px)}
 .tqg-step p{margin:0;color:#cbd5e1;line-height:1.55}
-.tqg-step .tqg-step-no{color:#fbbf24;font-weight:800;font-size:13px;margin:0 0 2px}
+.tqg-step .tqg-step-no{color:#fbbf24;font-weight:800;font-size:14px;margin:0 0 2px}
 .tqg-art{width:120px;height:80px}
 .tqg-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px}
-.tqg-primary{min-height:48px;padding:0 20px;border-radius:12px;border:0;background:#f59e0b;color:#1c1917;font:inherit;font-weight:800;cursor:pointer}
+.tqg-primary{min-height:48px;padding:0 24px;border-radius:var(--ui-radius-pill,999px);border:0;background:var(--ui-action,#566d4d);color:var(--ui-on-action,#fff);font:inherit;font-size:var(--ui-text-3,18px);font-weight:700;cursor:pointer}
 .tqg-actions a{color:#fde68a;font-weight:700}
 @media (max-width:520px){.tqg-step{grid-template-columns:84px 1fr;gap:10px}.tqg-art{width:84px;height:56px}}
 @media (prefers-reduced-motion:reduce){.tqg-dialog{transition:none}}

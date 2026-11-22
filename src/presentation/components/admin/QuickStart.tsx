@@ -64,7 +64,7 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
       <button
         onClick={handleQuickStart}
         disabled={loading}
-        className="w-full py-5 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-2xl font-black text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mb-6 border-2 border-cyan-400/30"
+        className="w-full py-5 bg-gradient-to-r from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] hover:from-cyan-500 hover:to-blue-500 text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-2xl font-black text-lg transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed mb-6 border-2 border-cyan-400/30"
       >
         {loading ? (
           <><Loader2 className="w-6 h-6 animate-spin" /> 방 생성 중...</>
@@ -83,36 +83,36 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
 
             {/* 성공 헤더 */}
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Check className="w-8 h-8 text-emerald-600" />
+              <div className="w-16 h-16 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] rounded-full flex items-center justify-center mx-auto mb-3">
+                <Check className="w-8 h-8 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]" />
               </div>
               <h2 className="text-2xl font-black text-slate-900">수업 준비 완료! 🎉</h2>
               <p className="text-sm text-slate-500 mt-1">{createdRoom.name}</p>
             </div>
 
             {/* PIN 코드 대형 표시 */}
-            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-2xl p-6 mb-5 text-center">
-              <p className="text-xs font-bold text-cyan-600 uppercase tracking-widest mb-2">모둠별 입장 비밀번호 (숫자 4개)</p>
+            <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-[var(--ui-line,var(--forest-line,#d8d6cc))] rounded-2xl p-6 mb-5 text-center">
+              <p className="text-sm font-bold text-[color:var(--ui-action,var(--forest-accent,#566d4d))] uppercase tracking-widest mb-2">모둠별 입장 비밀번호 (숫자 4개)</p>
               <div className="grid grid-cols-2 gap-2 text-left">{createdRoom.groupPins.map(item=><p key={item.group_name} className="rounded-lg bg-white p-2 font-bold">{item.group_name}: <span className="font-mono text-2xl">{item.short_pin}</span></p>)}</div>
-              <details className="mt-3 text-sm"><summary>교사 복구용 8자리 PIN</summary><p>{createdRoom.pin}</p><button onClick={handleCopyPin} className="p-2 bg-white border border-cyan-200 rounded-lg" title="복구 PIN 복사">{copied ? <Check className="w-5 h-5 text-emerald-600"/> : <Copy className="w-5 h-5 text-cyan-500"/>}</button></details>
-              <p className="text-xs text-cyan-500 mt-2">학생에게 자기 모둠 비밀번호만 알려 주세요.</p>
+              <details className="mt-3 text-sm"><summary>교사 복구용 8자리 PIN</summary><p>{createdRoom.pin}</p><button onClick={handleCopyPin} className="p-2 bg-white border border-[var(--ui-line,var(--forest-line,#d8d6cc))] rounded-lg" title="복구 PIN 복사">{copied ? <Check className="w-5 h-5 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]"/> : <Copy className="w-5 h-5 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]"/>}</button></details>
+              <p className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] mt-2">학생에게 자기 모둠 비밀번호만 알려 주세요.</p>
             </div>
 
             {/* 전체 입장 QR 코드 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-5 text-center">
-              <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">📱 전체 입장 QR 코드</p>
+              <p className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-3">📱 전체 입장 QR 코드</p>
               <LocalQRCode value={baseUrl+'/lobby'} alt="학생 입장 QR" className="w-36 h-36 mx-auto"/>
-              <p className="text-xs text-slate-400">QR을 찍거나 비밀번호를 누르면 바로 참여해요!</p>
+              <p className="text-sm text-slate-400">QR을 찍거나 비밀번호를 누르면 바로 참여해요!</p>
             </div>
 
             {/* 방 정보 요약 */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-                <p className="text-xs text-slate-400 font-bold">템플릿</p>
+                <p className="text-sm text-slate-400 font-bold">템플릿</p>
                 <p className="text-sm font-bold text-slate-700 truncate">{createdRoom.templateName}</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
-                <p className="text-xs text-slate-400 font-bold">모둠 수</p>
+                <p className="text-sm text-slate-400 font-bold">모둠 수</p>
                 <p className="text-sm font-bold text-slate-700">{createdRoom.groupCount}개 모둠</p>
               </div>
             </div>

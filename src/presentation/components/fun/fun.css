@@ -1,5 +1,5 @@
 /* 대표 게임 · 재미 뼈대. TV(교사 화면 1대)에서 반 전체가 멀리서 읽는 무대. 밝은/어두운 테마 모두 같은 어두운 무대를 쓴다. */
-.fun-arena,.fun-intro,.fun-dock,.fun-leave-backdrop{--fun-bg:#0f172a;--fun-panel:#1e293b;--fun-line:#334155;--fun-ink:#f8fafc;--fun-muted:#cbd5e1;--fun-accent:#f59e0b;--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
+.fun-arena,.fun-intro,.fun-dock,.fun-leave-backdrop{--fun-bg:var(--ui-stage,#171819);--fun-panel:var(--ui-stage-card,#2b2d30);--fun-line:#55585d;--fun-ink:var(--ui-on-stage,#f2f1ec);--fun-muted:#cfd0d2;--fun-primary:var(--ui-on-stage,#f2f1ec);--fun-primary-ink:var(--ui-stage,#171819);--fun-hi:var(--ui-on-stage,#f2f1ec);--fun-danger:var(--ui-stage-danger,#f1aba4);--fun-accent:var(--ui-signal,#f59e0b);--fun-accent-ink:#1c1917;--fun-go:#15803d;--fun-stop:#b91c1c;--fun-warn:#a16207;--fun-gold:#b45309;--fun-calm:#0369a1;--fun-rest:#475569}
 .fun-arena{position:fixed;inset:0;z-index:20000;overflow:auto;background:var(--fun-bg);color:var(--fun-ink);display:flex;flex-direction:column;gap:clamp(8px,1.4vh,16px);padding:clamp(10px,2vw,28px);font-family:inherit;line-height:1.5}
 /* :where로 낮춘 기본값: 각 놀이 모듈의 버튼 글씨(빙고 칸 등)가 이 규칙에 덮이지 않게 한다. */
 :where(.fun-arena,.fun-intro) button{font:inherit;touch-action:manipulation;cursor:pointer}
@@ -10,10 +10,10 @@
 .fun-head h1:focus{outline:none}
 .fun-exit{min-height:44px;padding:4px 14px;border-radius:999px;border:2px solid var(--fun-line);background:transparent;color:var(--fun-muted);font-weight:800;font-size:clamp(14px,1.6vw,18px)}
 .fun-phase{padding:6px 14px;border-radius:999px;background:var(--fun-panel);border:2px solid var(--fun-line);font-weight:850;font-size:clamp(14px,1.8vw,22px)}
-.fun-phase[data-phase=tutorial]{border-color:#38bdf8}.fun-phase[data-phase=climax]{border-color:var(--fun-accent);color:#fde68a}
-.fun-timer{padding:6px 16px;border-radius:999px;background:var(--fun-accent);color:var(--fun-accent-ink);font-weight:900;font-size:clamp(18px,2.6vw,34px);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fun-phase[data-phase=tutorial]{border-color:var(--fun-muted)}.fun-phase[data-phase=climax]{border-color:var(--fun-hi);color:var(--fun-hi,#f2f1ec)}
+.fun-timer{padding:6px 16px;border-radius:999px;background:transparent;color:var(--fun-ink);border:2px solid var(--fun-line);font-weight:900;font-size:clamp(18px,2.6vw,34px);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* 큰 지시 */
-.fun-signal{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,40px);min-height:clamp(120px,24vh,320px);padding:clamp(14px,3vw,40px);border-radius:24px;background:var(--fun-panel);border:3px solid var(--fun-line);text-align:center;transition:background-color .25s}
+.fun-signal{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,40px);min-height:clamp(120px,24vh,320px);padding:clamp(14px,3vw,40px);border-radius:24px;background:var(--fun-panel);border:3px solid var(--fun-accent);text-align:center;transition:background-color .25s}
 .fun-signal[data-tone=go]{background:var(--fun-go);border-color:#4ade80}.fun-signal[data-tone=stop]{background:var(--fun-stop);border-color:#fca5a5}.fun-signal[data-tone=warn]{background:var(--fun-warn);border-color:#fde047}
 .fun-signal[data-tone=gold]{background:var(--fun-gold);border-color:#fde68a}.fun-signal[data-tone=calm]{background:var(--fun-calm);border-color:#7dd3fc}.fun-signal[data-tone=rest]{background:var(--fun-rest);border-color:#94a3b8}
 .fun-signal-figure{color:#fff;flex:0 0 auto}
@@ -33,28 +33,28 @@
 .fun-scoreboard{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(var(--cols,2),minmax(0,1fr));gap:clamp(8px,1.2vw,16px)}
 .fun-scoreboard[data-teams="1"]{--cols:1}.fun-scoreboard[data-teams="3"]{--cols:3}.fun-scoreboard[data-teams="4"]{--cols:4}
 .fun-scoreboard li{display:grid;grid-template-columns:1fr auto;grid-template-areas:"name score" "buttons buttons";align-items:center;gap:6px 10px;padding:10px 14px;border-radius:18px;background:var(--fun-panel);border:3px solid var(--team);min-width:0}
-.fun-scoreboard li[data-lead]{box-shadow:0 0 0 3px #fde68a inset}
+.fun-scoreboard li[data-lead]{box-shadow:0 0 0 3px var(--fun-hi,#f2f1ec) inset}
 .fun-team-name{grid-area:name;font-weight:850;font-size:clamp(16px,2vw,26px);color:#fff}
 .fun-team-name::before{content:'';display:inline-block;width:.7em;height:.7em;border-radius:50%;background:var(--team);margin-right:8px;vertical-align:baseline}
 .fun-team-score{grid-area:score;font-size:clamp(34px,5vw,72px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1}
 .fun-team-buttons{grid-area:buttons;display:grid;grid-template-columns:1fr 2fr;gap:8px}
-.fun-team-buttons button{min-height:48px;border-radius:12px;border:2px solid var(--fun-line);background:#0b1220;color:var(--fun-ink);font-weight:850;font-size:clamp(16px,1.8vw,22px)}
+.fun-team-buttons button{min-height:48px;border-radius:12px;border:2px solid var(--fun-line);background:var(--fun-bg);color:var(--fun-ink);font-weight:850;font-size:clamp(16px,1.8vw,22px)}
 .fun-team-buttons .fun-plus{background:var(--team);border-color:var(--team);color:#fff}
 /* 콤보 */
 .fun-combo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:clamp(14px,1.6vw,20px)}
 .fun-combo-bar{flex:1;height:16px;border-radius:999px;background:#0b1220;border:2px solid var(--fun-line);overflow:hidden}
-.fun-combo-bar i{display:block;height:100%;background:linear-gradient(90deg,#38bdf8,#f59e0b);transition:width .3s}
-.fun-combo[data-full] b{color:#fde68a}
+.fun-combo-bar i{display:block;height:100%;background:var(--fun-hi);transition:width .3s}
+.fun-combo[data-full] b{color:var(--fun-hi,#f2f1ec)}
 /* 선생님 버튼 */
 .fun-controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px}
-.fun-controls button{min-height:56px;border-radius:14px;border:2px solid var(--fun-line);background:var(--fun-panel);color:var(--fun-ink);font-weight:850;font-size:clamp(15px,1.7vw,20px);display:flex;align-items:center;justify-content:center;gap:8px}
-.fun-controls button[data-tone=primary]{background:var(--fun-accent);border-color:var(--fun-accent);color:var(--fun-accent-ink)}
-.fun-controls button[data-tone=gold]{border-color:#fde68a;color:#fde68a}.fun-controls button[data-tone=danger]{border-color:#fca5a5;color:#fecaca}
+.fun-controls button{min-height:56px;border-radius:999px;border:2px solid var(--fun-line);background:var(--fun-panel);color:var(--fun-ink);font-weight:850;font-size:clamp(15px,1.7vw,20px);display:flex;align-items:center;justify-content:center;gap:8px}
+.fun-controls button[data-tone=primary]{background:var(--fun-primary);border-color:var(--fun-primary);color:var(--fun-primary-ink)}
+.fun-controls button[data-tone=gold]{border-color:var(--fun-hi,#f2f1ec);color:var(--fun-hi,#f2f1ec)}.fun-controls button[data-tone=danger]{border:2px dashed var(--fun-danger);background:transparent;color:var(--fun-danger)}
 .fun-controls kbd{font:inherit;font-size:.72em;padding:1px 6px;border-radius:6px;border:1px solid currentColor;opacity:.75}
 /* 깜짝 이벤트 · 마지막 10초 · 일시정지 · 승리 */
 .fun-surprise,.fun-paused,.fun-victory{position:fixed;inset:0;z-index:20002;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;background:rgba(15,23,42,.88)}
 .fun-surprise span{font-size:clamp(64px,12vw,160px);line-height:1}
-.fun-surprise strong,.fun-paused strong,.fun-victory strong{font-size:clamp(48px,9vw,128px);font-weight:900;color:#fde68a}
+.fun-surprise strong,.fun-paused strong,.fun-victory strong{font-size:clamp(48px,9vw,128px);font-weight:900;color:var(--fun-hi,#f2f1ec)}
 .fun-surprise p{margin:0;font-size:clamp(20px,3vw,40px);font-weight:800}
 .fun-surprise{animation:fun-pop .5s ease-out;pointer-events:none}.fun-victory{animation:fun-pop .6s ease-out}
 .fun-surprise[data-kind=freeze] strong{color:#bae6fd}
@@ -72,14 +72,14 @@
 .fun-demo button{min-height:60px;padding:0 28px;width:min(100%,420px)}
 @keyframes fun-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 /* 공용 버튼 */
-.fun-primary,.fun-secondary,.fun-link{border-radius:14px;font-weight:850;min-height:52px;padding:10px 20px;font-size:clamp(17px,2vw,22px)}
-.fun-primary{background:var(--fun-accent);color:var(--fun-accent-ink);border:2px solid var(--fun-accent)}
-.fun-secondary{background:transparent;color:var(--fun-ink);border:2px solid var(--fun-line)}
+.fun-primary,.fun-secondary,.fun-link{border-radius:999px;font-weight:850;min-height:48px;padding:10px 20px;font-size:clamp(17px,2vw,22px)}
+.fun-primary{background:var(--fun-primary);color:var(--fun-primary-ink);border:2px solid var(--fun-primary)}
+.fun-secondary{background:transparent;color:var(--fun-ink);border:2px solid var(--fun-ink)}
 .fun-link{background:transparent;border:0;color:var(--fun-muted);text-decoration:underline}
 /* 결과 */
 .fun-result{max-width:980px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;text-align:center}
-.fun-result h2{margin:0;font-size:clamp(34px,6vw,80px);font-weight:900;color:#fde68a;line-height:1.2}.fun-result h2:focus{outline:none}
-.fun-eyebrow{margin:0;font-weight:850;letter-spacing:.04em;color:#7dd3fc;font-size:clamp(14px,1.6vw,18px)}
+.fun-result h2{margin:0;font-size:clamp(34px,6vw,80px);font-weight:900;color:var(--fun-hi,#f2f1ec);line-height:1.2}.fun-result h2:focus{outline:none}
+.fun-eyebrow{margin:0;font-weight:850;letter-spacing:.04em;color:var(--fun-muted);font-size:clamp(14px,1.6vw,18px)}
 .fun-podium{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
 .fun-podium li{display:flex;align-items:center;gap:10px;padding:10px 18px;border-radius:16px;background:var(--fun-panel);border:3px solid var(--team);font-size:clamp(18px,2.4vw,30px);font-weight:800}
 .fun-podium li[data-rank="1"]{transform:scale(1.08)}
@@ -94,13 +94,13 @@
 .fun-oneline{margin:0;font-size:clamp(19px,2.6vw,26px);font-weight:750}
 .fun-rule-card{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .fun-rule-card li{display:grid;grid-template-columns:5em 1fr;gap:10px;padding:10px 14px;border-radius:14px;background:var(--fun-panel);font-size:clamp(17px,2.2vw,21px);font-weight:700}
-.fun-rule-card b{color:#fde68a}
+.fun-rule-card b{color:var(--fun-hi,#f2f1ec)}
 .fun-start{display:grid;gap:10px}.fun-big{min-height:68px;font-size:clamp(20px,2.8vw,26px)}
 .fun-setup{border:2px solid var(--fun-line);border-radius:16px;padding:12px 14px;margin:0}.fun-setup legend{font-weight:850;padding:0 6px}
 .fun-choice{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:8px}
 .fun-choice button{min-height:52px;border-radius:12px;border:2px solid var(--fun-line);background:var(--fun-panel);color:var(--fun-ink);font-weight:800}
-.fun-choice button[aria-pressed=true]{border-color:var(--fun-accent);box-shadow:0 0 0 3px var(--fun-accent) inset}
-.fun-check{display:flex;gap:12px;align-items:flex-start;font-weight:700}.fun-check input{width:24px;height:24px;flex-shrink:0;accent-color:var(--fun-accent)}
+.fun-choice button[aria-pressed=true]{border-color:var(--fun-primary);box-shadow:0 0 0 3px var(--fun-primary) inset}
+.fun-check{display:flex;gap:12px;align-items:flex-start;font-weight:700}.fun-check input{width:24px;height:24px;flex-shrink:0;accent-color:var(--fun-primary)}
 .fun-more summary{cursor:pointer;min-height:44px;font-weight:800}.fun-more li{margin:6px 0}
 .fun-figure{display:block}
 /* 대표 게임 부품 */
@@ -109,8 +109,8 @@
 .sig-cards li{padding:6px 12px;border-radius:999px;background:var(--fun-panel);border:2px solid var(--fun-line);font-weight:800;font-size:clamp(14px,1.6vw,20px);display:flex;gap:6px}
 .sig-cards li[data-now]{border-color:var(--fun-accent);color:#fde68a;transform:scale(1.06)}
 .sig-cards p{margin:0;font-size:clamp(15px,1.8vw,22px);font-weight:700;color:var(--fun-muted);text-align:center}
-.sig-boss{display:flex;align-items:center;gap:clamp(10px,2vw,24px);padding:10px 16px;border-radius:18px;background:var(--fun-panel);border:3px solid #a855f7}
-.sig-boss[data-practice]{border-color:#38bdf8}.sig-boss[data-done]{border-color:#fde68a}
+.sig-boss{display:flex;align-items:center;gap:clamp(10px,2vw,24px);padding:10px 16px;border-radius:18px;background:var(--fun-panel);border:3px solid var(--fun-line)}
+.sig-boss[data-practice]{border-color:var(--fun-muted)}.sig-boss[data-done]{border-color:var(--fun-hi,#f2f1ec)}
 .sig-boss-emoji{font-size:clamp(44px,7vw,96px);line-height:1}
 .sig-boss-body{flex:1;display:grid;gap:6px;min-width:0;font-weight:800;font-size:clamp(15px,1.8vw,22px)}
 .sig-boss-body b{font-size:clamp(18px,2.4vw,30px)}
@@ -175,7 +175,7 @@
  .fun-result h2{font-size:clamp(30px,4vw,60px)}
  .fun-result .fun-podium{justify-content:flex-start}
  .fun-podium li{padding:6px 14px;font-size:clamp(16px,1.8vw,24px)}
- .fun-podium li[data-rank="1"]{transform:none;box-shadow:0 0 0 3px #fde68a}
+ .fun-podium li[data-rank="1"]{transform:none;box-shadow:0 0 0 3px var(--fun-hi,#f2f1ec)}
  .fun-takeaways li{font-size:clamp(16px,1.6vw,22px);padding:9px 14px;grid-template-columns:7.5em 1fr}
 }
 .fun-result-main,.fun-result-side{display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -188,13 +188,13 @@
  .fun-meta .fun-hint{text-align:center}
 }
 /* 이어 하기 */
-.fun-resume{display:grid;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid var(--fun-accent);background:var(--fun-panel)}
+.fun-resume{display:grid;gap:10px;padding:12px 14px;border-radius:16px;border:2px solid var(--fun-ink);background:var(--fun-panel)}
 .fun-resume p{margin:0;font-weight:750}
 /* 신체 빙고 힌트 · 기억 릴레이 변형 */
-.sig-bingo-cell[data-hint=win]{box-shadow:0 0 0 4px #fde68a inset}
+.sig-bingo-cell[data-hint=win]{box-shadow:0 0 0 4px var(--fun-hi,#f2f1ec) inset}
 .sig-bingo-cell[data-hint=block]{box-shadow:0 0 0 4px #93c5fd inset}
 .sig-bingo-hint{display:block;font-style:normal;font-size:.8em;font-weight:900;margin-top:2px}
-.sig-mem-variation{margin:0;text-align:center;font-weight:900;color:#fde68a;font-size:clamp(16px,1.8vw,22px)}
+.sig-mem-variation{margin:0;text-align:center;font-weight:900;color:var(--fun-hi,#f2f1ec);font-size:clamp(16px,1.8vw,22px)}
 /* 일시정지 덮개 뒤 화면(inert로 묶음). 배치에는 영향을 주지 않는다. */
 .fun-body{display:contents}
 /* 휴대폰 폭: 리모컨·'← 목록'은 머리줄 위 자기 줄(화면 위 고정 띠)로 — 단계 이름·남은 시간을 가리지 않게. */
@@ -224,9 +224,9 @@
 
 /* 큰 신호 칸: 도전하는 팀 색 띠(빙고에서 칸을 골랐을 때 등) */
 .fun-signal[data-accent]{border-color:var(--fun-signal-accent);box-shadow:inset 0 0 0 4px var(--fun-signal-accent)}
-.fun-cue-kicker{display:inline-block;align-self:center;margin-bottom:4px;padding:4px 14px;border-radius:999px;background:var(--fun-signal-accent,var(--fun-accent));color:#fff;font-weight:900;font-size:clamp(16px,2vw,28px);text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.fun-cue-kicker{display:inline-block;align-self:center;margin-bottom:4px;padding:4px 14px;border-radius:999px;background:var(--fun-signal-accent,var(--fun-accent));color:var(--fun-accent-ink,#1c1917);font-weight:900;font-size:clamp(16px,2vw,28px);text-shadow:0 1px 2px rgba(0,0,0,.35)}
 /* 본게임·마지막 승부에서 Space를 한 번 누르면: '한 번 더 누르면 넘어가요' 알림(선생님 버튼 줄 바로 위). */
-.fun-skip-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:5;max-width:calc(100vw - 24px);box-sizing:border-box;margin:0;padding:8px 16px;border-radius:999px;background:#fde68a;color:#1c1917;font-weight:850;font-size:clamp(15px,1.8vw,22px);box-shadow:0 6px 18px rgba(0,0,0,.35);text-align:center}
+.fun-skip-hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:5;max-width:calc(100vw - 24px);box-sizing:border-box;margin:0;padding:8px 16px;border-radius:999px;background:var(--fun-hi,#f2f1ec);color:#1c1917;font-weight:850;font-size:clamp(15px,1.8vw,22px);box-shadow:0 6px 18px rgba(0,0,0,.35);text-align:center}
 /* 휴대폰 폭: 머리줄이 눌려 음성 단추가 큰 신호 칸 위로 겹치지 않게 하고, 음성 단추는 그림만 보여 한 줄에 넣는다(이름은 화면 낭독기에 그대로). */
 @media (max-width:640px){
  .fun-head{flex:0 0 auto;gap:8px}
@@ -270,11 +270,11 @@
 .fun-paused{background:#0f172a}
 /* 게임 중 '← 목록'을 누르면 묻는 창: TV 가운데에 크게. */
 .fun-leave-backdrop{position:fixed;inset:0;z-index:20010;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,.72)}
-.fun-leave-ask{width:min(640px,100%);display:grid;gap:14px;padding:clamp(18px,3vw,32px);border-radius:24px;background:var(--fun-panel,#1e293b);color:var(--fun-ink,#fff);border:3px solid #fde68a;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.fun-leave-ask h2{margin:0;font-size:clamp(26px,3.6vw,44px);font-weight:900;color:#fde68a}
+.fun-leave-ask{width:min(640px,100%);display:grid;gap:14px;padding:clamp(18px,3vw,32px);border-radius:24px;background:var(--fun-panel,#1e293b);color:var(--fun-ink,#fff);border:3px solid var(--fun-hi,#f2f1ec);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.fun-leave-ask h2{margin:0;font-size:clamp(26px,3.6vw,44px);font-weight:900;color:var(--fun-hi,#f2f1ec)}
 .fun-leave-ask p{margin:0;font-size:clamp(17px,2.2vw,26px);font-weight:750;line-height:1.4;word-break:keep-all}
 .fun-leave-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr));gap:10px}
-.fun-leave-actions button{min-height:56px;font-size:clamp(16px,1.9vw,22px);font-weight:850;border-radius:14px}
+.fun-leave-actions button{min-height:56px;font-size:clamp(16px,1.9vw,22px);font-weight:850;border-radius:999px}
 .fun-paused-note{margin:0;font-weight:800;color:var(--fun-muted);font-size:clamp(15px,1.8vw,22px)}
 /* '■ 끝내기'를 한 번 누르면 '한 번 더' 알림이 뜬다. */
 .fun-skip-hint[data-kind=end]{background:#fecaca;color:#450a0a}
@@ -327,8 +327,8 @@
 .fun-turn-chip{display:inline-flex;align-items:center;padding:5px 14px 5px 8px;border-radius:999px;background:var(--team);color:#fff;font-weight:900;font-size:clamp(14px,1.8vw,22px);white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.7)}
 .fun-turn-chip .fun-team-shape{background:rgba(0,0,0,.28)}
 .fun-scoreboard li[data-turn]{box-shadow:0 0 0 3px #fff inset}
-.fun-scoreboard li[data-turn][data-lead]{box-shadow:0 0 0 3px #fff inset,0 0 0 6px #fde68a inset}
-.fun-team-turn{font-style:normal;color:#fde68a;font-weight:900}
+.fun-scoreboard li[data-turn][data-lead]{box-shadow:0 0 0 3px #fff inset,0 0 0 6px var(--fun-hi,#f2f1ec) inset}
+.fun-team-turn{font-style:normal;color:var(--fun-hi,#f2f1ec);font-weight:900}
 .fun-team-name{white-space:nowrap}
 /* 3·4팀은 칸이 좁아 '차례' 글자는 머리줄 표시(○팀 차례)에 맡기고, 칸은 흰 테두리로 도드라지게 한다. */
 .fun-scoreboard[data-teams="3"] .fun-team-turn,.fun-scoreboard[data-teams="4"] .fun-team-turn{display:none}
@@ -346,7 +346,7 @@
 .fun-dock .fun-exit{margin-right:auto;order:-1}
 .fun-tv-control{display:inline-flex}
 .fun-dock .fun-tv-btn,.fun-intro .fun-tv-btn{min-height:44px;padding:4px 14px;border-color:var(--fun-line);background:var(--fun-bg);color:var(--fun-ink);font-size:clamp(14px,1.6vw,18px);font-weight:800;opacity:1}
-.fun-dock .fun-tv-btn[aria-pressed=true],.fun-intro .fun-tv-btn[aria-pressed=true]{background:#0e7490;border-color:#67e8f9;color:#fff}
+.fun-dock .fun-tv-btn[aria-pressed=true],.fun-intro .fun-tv-btn[aria-pressed=true]{background:var(--fun-primary);border-color:var(--fun-primary);color:var(--fun-primary-ink)}
 .fun-head{padding-left:clamp(110px,12vw,170px);padding-right:clamp(300px,26.5vw,345px);flex-shrink:0}
 /* 머리줄은 한 줄: 게임 이름이 줄어들고(말줄임), 단계·차례·남은 시간은 늘 다 보인다. 차례 표시가 있으면 음성 단추는 그림만. */
 @media (min-width:641px){
@@ -366,7 +366,7 @@ html[data-tv-mode="on"] .fun-intro-top .fun-exit{display:inline-block}
 /* 버튼 자리 통일 ②: 선생님 버튼 줄은 오른쪽 아래에서 시작한다 — '다음'이 늘 오른쪽 아래, 그 왼쪽이 '일시정지', '끝내기'는 가장 멀리. */
 .fun-controls{display:flex;flex-direction:row-reverse;flex-wrap:wrap-reverse}
 .fun-controls button{flex:1 1 170px;min-width:0}
-.fun-demo .fun-demo-skip{border-color:#38bdf8}
+.fun-demo .fun-demo-skip{border-color:var(--fun-muted)}
 @media (min-width:961px){
  /* 결과 화면: 왼쪽 위 나가기 버튼이 왼쪽 칸 첫 줄을 덮지 않게 오른쪽 칸과 같은 만큼 내린다. */
  .fun-arena[data-phase=result] .fun-result-main{padding-top:max(0px,calc(clamp(10px,2vw,28px) + 60px - clamp(56px,7vh,68px)))}
@@ -514,3 +514,10 @@ html[data-tv-mode="on"] .fun-paused-note{font-size:clamp(20px,2.4vw,36px)}
 html[data-tv-mode="on"] .fun-intro .fun-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,96px),1fr))}
 html[data-tv-mode="on"] .fun-intro .fun-choice button{font-size:clamp(18px,1.7vw,28px);min-height:clamp(52px,7vh,76px);white-space:nowrap}
 html[data-tv-mode="on"] .fun-intro .fun-setup legend{font-size:clamp(17px,1.5vw,24px)}
+
+/* r116 디자인 통일: 무대는 어두운 바탕, 주 버튼은 밝게 채운 알약 하나, 끝내기는 붉은 점선, 주황은 '지금 할 동작' 신호에만. */
+.fun-arena,.fun-intro{font-size:max(1em,14px)}
+.fun-scoreboard li,.fun-rule-card,.fun-result,.fun-podium li{border-radius:var(--ui-radius-3,20px)}
+.fun-leave-actions button[data-tone=danger],.fun-leave-actions .fun-danger{border:2px dashed var(--fun-danger);background:transparent;color:var(--fun-danger)}
+@media (min-width:1000px) and (min-height:700px){.fun-controls button,.fun-primary,.fun-secondary{min-height:64px}.fun-controls button{font-size:clamp(18px,1.7vw,22px)}}
+.fun-signal[data-accent] .fun-cue-kicker{color:#fff}

@@ -1,19 +1,21 @@
 /* Approved pair: Cream Olive in light mode, Pearl Charcoal in dark mode.
+   색 값의 원본은 ui.css 의 --ui-* 이다. 여기서는 예전 이름(--forest-*)을 그 값에 잇는다.
+   ui.css 에 없는 값(elevated, control-line, gold, overlay, shadow)만 여기서 정한다.
    Shared by the classroom app and the independent teacher studio. */
 html[data-design=forest] {
-  --forest-bg: #faf8f2;
-  --forest-paper: #fffefa;
+  --forest-bg: var(--ui-bg);
+  --forest-paper: var(--ui-paper);
   --forest-elevated: #fffefa;
-  --forest-ink: #303d35;
-  --forest-muted: #626b60;
-  --forest-line: #ced1c3;
+  --forest-ink: var(--ui-ink);
+  --forest-muted: var(--ui-muted);
+  --forest-line: var(--ui-line);
   --forest-control-line: #858e7e;
-  --forest-accent: #566d4d;
-  --forest-action: #566d4d;
-  --forest-on: #fff;
-  --forest-tint: #edf1e4;
+  --forest-accent: var(--ui-action);
+  --forest-action: var(--ui-action);
+  --forest-on: var(--ui-on-action);
+  --forest-tint: var(--ui-tint);
   --forest-gold: #87623d;
-  --forest-danger: #9e3833;
+  --forest-danger: var(--ui-danger);
   --forest-overlay: rgb(30 38 29 / 48%);
   --forest-shadow: rgb(30 38 29 / 12%);
   --forest-sans: ForestSans, HeaderPretendard, system-ui, sans-serif;
@@ -23,19 +25,10 @@ html[data-design=forest] {
 }
 
 html[data-design=forest].dark-theme {
-  --forest-bg: #171819;
-  --forest-paper: #202224;
   --forest-elevated: #2b2d30;
-  --forest-ink: #f2f1ec;
-  --forest-muted: #babcc1;
-  --forest-line: #3e4145;
   --forest-control-line: #747b82;
   --forest-accent: #d4d7dd;
-  --forest-action: #e6e7ea;
-  --forest-on: #202226;
-  --forest-tint: #30343a;
   --forest-gold: #d4d7dd;
-  --forest-danger: #f1aba4;
   --forest-overlay: rgb(0 0 0 / 65%);
   --forest-shadow: rgb(0 0 0 / 32%);
   color-scheme: dark;

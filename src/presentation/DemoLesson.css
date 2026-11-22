@@ -23,9 +23,9 @@
   .flow.demo-lesson .lesson-wrap { padding: 0 22px 22px; }
   .flow.demo-lesson h1 { font-size: 31px; }
   .flow.demo-lesson .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
-  .flow.demo-lesson .steps li { padding: 10px 12px; font-size: 12px; }
+  .flow.demo-lesson .steps li { padding: 10px 12px; font-size: 14px; }
   .flow.demo-lesson .card { padding: 23px; }
   .flow.demo-lesson .preview { padding: 17px; }
-  .flow.demo-lesson .demo-banner { margin-top: 22px; font-size: 12px; }
+  .flow.demo-lesson .demo-banner { margin-top: 22px; font-size: 14px; }
   .flow.demo-lesson .card > .row > :is(button, a) { flex: 1 1 auto; }
 }
