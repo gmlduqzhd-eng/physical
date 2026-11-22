@@ -48,9 +48,13 @@ test('hub quick picks show the pressed choice, details stay in place, and long r
 
 test('home puts quick picks right under the hero and only opens 더 보기 for anchors that live inside it',()=>{
  const home=read('src/presentation/UnifiedHomePage.tsx');
- assert.ok(home.indexOf('<QuickPicks')<home.indexOf('className="home-featured"'),'quick picks come before the recent shelf');
- assert.match(home,/target\?\.closest\('\[data-home-more\]'\)/);
- assert.match(home,/scrollIntoView/);
+ // round 116: 빠른 추천은 활동 고르기에만 있고, 예전 자리표는 활동 고르기 아래 '더 찾기'로 보낸다.
+ assert.doesNotMatch(home,/<QuickPicks/);
+ assert.match(read('src/presentation/ActivityLibrary.tsx'),/<QuickPicks returnTo=/);
+ assert.match(home,/MOVED_ANCHORS\.has\(id\)\) navigate\(`\/hub#\$\{id\}`/);
+ const more=read('src/presentation/components/HubMoreSections.tsx');
+ assert.match(more,/target\?\.closest\('\[data-hub-more\]'\)/);
+ assert.match(more,/scrollIntoView/);
  assert.doesNotMatch(home,/useState\(\(\) => typeof window !== 'undefined' && window\.location\.hash\.length > 1\)/);
  assert.match(read('src/presentation/UnifiedHomePage.css'),/html\.dark-theme \.unified-home \.home-more\{background:#202224/);
  assert.match(read('src/presentation/PrivacyPage.tsx'),/지난번에 한 활동.*최대 8개.*TV 모드·글씨 크기/);

@@ -55,7 +55,7 @@ test('lobby uses plain words and a big number-only password box',()=>{
  assert.match(read('src/presentation/Lobby.css'),/input\.student-pin-input\{[^}]*font-size:2\.25rem/);
  assert.match(read('src/presentation/components/StudentNumberPad.css'),/\.snp \.snp-tools :is\(button,input\)\{scroll-margin-bottom:104px\}/);
  const home=read('src/presentation/UnifiedHomePage.tsx');
- assert.match(home,/<Link to="\/lobby" className="home-student-join" data-home-student>🙋 학생 참여하기/);
+ assert.match(home,/<Link to="\/lobby" className="entry-btn[^"]* home-student-join" data-home-student>학생 참여하기/);
 });
 
 test('class progress: countdown ring, one step label, lone button spans the row',()=>{

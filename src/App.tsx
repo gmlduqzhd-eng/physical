@@ -24,6 +24,7 @@ const KioskRelayView = lazyWithRetry(() => import('./presentation/KioskRelayView
 const QuickJoin = lazyWithRetry(() => import('./presentation/QuickJoin'), m => m.QuickJoin);
 const BoardEntry = lazyWithRetry(() => import('./presentation/BoardEntry'), m => m.BoardEntry);
 const IntroLandingPage = lazyWithRetry(() => import('./presentation/IntroLandingPage'), m => m.IntroLandingPage);
+const StartLesson = lazyWithRetry(() => import('./presentation/StartLesson'), m => m.StartLesson);
 const GameHub = lazyWithRetry(() => import('./presentation/GameHub'), m => m.GameHub);
 // 놀이 화면 파일을 한 번 못 받아도, 다른 놀이를 열거나 '다시 열기'를 누르면 새로 받는다.
 const GamePlayPage = lazyWithRetry(() => import('./presentation/GamePlayPage'), m => m.GamePlayPage);
@@ -134,6 +135,7 @@ function App() {
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
+        <Route path="/start-lesson" element={<StartLesson />} />
         <Route path="/hub" element={<ActivityLibrary />} />
         {/* 기록·즐겨찾기·뽑기 모음. 수업 도구(/tools)와 헷갈리지 않게 주소를 바꿨다(예전 주소는 이어 준다). */}
         <Route path="/hub/extras" element={<GameHub />} />
