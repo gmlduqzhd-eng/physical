@@ -15,7 +15,7 @@
 /* 묻는 동안에는 막대가 필요한 만큼 커진다(휴대폰에서 글이 잘리지 않게 줄을 바꾼다). */
 .today-bar[data-asking]{height:auto;min-height:var(--today-bar-h);padding-top:6px;padding-bottom:6px}
 .today-bar[data-asking] .today-bar-ask{flex-wrap:wrap;justify-content:center}
-.today-bar-ask .today-bar-next{background:#f59e0b;color:#1c1917;border:0}
+.today-bar-ask .today-bar-next{background:var(--ui-on-stage,#f2f1ec);color:var(--ui-stage,#171819);border:0}
 @media (max-width:520px){
  .today-bar:has(.today-bar-ask) .today-bar-label{display:none}
  .today-bar-ask{gap:6px}

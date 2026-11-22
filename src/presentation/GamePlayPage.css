@@ -51,10 +51,10 @@ body:has(.fun-intro,.fun-arena) .gameplay-toolbar .display-btn{display:none}
 body:has(.today-bar) .game-result-overlay{top:48px}
 
 /* 결과 카드 안 '선생님, 이 활동 우리 반에 잘 맞았나요?' 칸: 어두운 반투명 바탕이 밝은 카드 위에서 회색(꺼진 것처럼)으로 보이지 않게 카드 색 체계를 따른다. */
-.game-result-card .class-feedback[data-tone=dark]{background:var(--forest-tint,#eef3ea);color:var(--forest-ink,#163e42);border:1px solid var(--forest-line,rgba(15,23,42,.18))}
+.game-result-card .class-feedback[data-tone=dark]{background:var(--forest-tint,#eef3ea);color:var(--forest-ink,#303d35);border:1px solid var(--forest-line,rgba(15,23,42,.18))}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button{background:var(--forest-paper,#fff);border-color:var(--forest-control-line,#64748b)}
-.game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button[aria-pressed=true]{background:var(--forest-accent,#0e7490);border-color:var(--forest-accent,#0e7490);color:var(--forest-on,#fff)}
-.game-result-card .class-feedback[data-tone=dark] .class-feedback-done{color:var(--forest-accent,#0e7490)}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-votes button[aria-pressed=true]{background:var(--forest-accent,#566d4d);border-color:var(--forest-accent,#566d4d);color:var(--forest-on,#fff)}
+.game-result-card .class-feedback[data-tone=dark] .class-feedback-done{color:var(--forest-accent,#566d4d)}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-map{background:var(--forest-paper,#fff)}
 /* 놀이 화면에서는 제목 줄의 ←가 같은 일을 하므로, 위쪽 아이콘 줄의 '활동 목록으로'는 숨겨 뒤로 단추를 하나만 둔다. */
 .game-tools-layout:has(.gameplay-toolbar) .game-utilities-bar .icon-toolbar-action[title="활동 목록으로"]{display:none!important}

@@ -409,7 +409,7 @@ const GamePlaySession = () => {
     return (
       <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
-        <button onClick={handleReturnToCatalog} className="px-6 py-3 bg-cyan-600 rounded-xl font-bold">홈으로</button>
+        <button onClick={handleReturnToCatalog} className="px-6 py-3 min-h-[48px] bg-[#566d4d] rounded-full text-white font-bold">홈으로</button>
       </div>
     );
   }
@@ -515,7 +515,7 @@ const GamePlaySession = () => {
           event.stopPropagation();
           handleReplay();
         }
-      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 이 점수가 활동 기록에 반영됩니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-cyan-500/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 신체 놀이 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{<Suspense fallback={<ActivityLoading/>}>{renderGame()}</Suspense>}</div>}
+      }}>{showDetailedResult && <p className="bg-slate-900 p-3 text-center text-sm text-slate-300">아래 점수는 활동 원점수입니다. 이 점수가 활동 기록에 반영됩니다.</p>}{participationCues && !gameFinished && <details className="mx-auto mt-16 mb-2 max-w-md rounded-xl border border-stone-100/40 bg-slate-900 p-3 text-sm text-white"><summary className="cursor-pointer font-bold">오늘의 신체 놀이 · 역할·대기 안내</summary><p className="mt-2">{participationCues.mission}</p><p className="mt-1">역할: {participationCues.roles}</p><p className="mt-1">대기: {participationCues.waiting}</p></details>}{<Suspense fallback={<ActivityLoading/>}>{renderGame()}</Suspense>}</div>}
 
       {/* 배지 획득 토스트 */}
       {newBadge && (
@@ -542,14 +542,14 @@ const GamePlaySession = () => {
         <div className="game-result-overlay fixed inset-0 z-[10001] bg-black/80 backdrop-blur-md flex flex-col items-center overflow-y-auto p-4 font-sans animate-in fade-in duration-200">
           <div className="game-result-card bg-slate-900/95 border border-slate-700 rounded-3xl p-5 my-auto shrink-0 max-w-sm w-full flex flex-col items-center shadow-2xl">
             {/* 학생 폰(수업방)에서는 교육과정 코드 칩을 숨기고 '선생님용 설명'에 둔다. */}
-            {!hasBattle&&<div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-cyan-300 mb-4">
+            {!hasBattle&&<div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-stone-100 mb-4">
               {gameInfo.code!=='연계 확인 필요'&&<><span>{gameInfo.code}</span><span className="text-slate-500">|</span></>}<span className="text-slate-300">{gameInfo.target}</span>
             </div>}
             <span className="text-6xl mb-3">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-base mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
             {/* 오늘 수업 중: 수업을 잇는 길을 결과 카드 맨 위에 둔다(TV에서 스크롤하지 않아도 보이게). */}
-            {lessonStage&&<div className="lesson-next-top w-full mb-4"><button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button><p className="mt-2 text-center text-xs text-slate-300">반응(👍/👎)은 아래에서 남길 수 있어요.</p></div>}
+            {lessonStage&&<div className="lesson-next-top w-full mb-4"><button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-[#566d4d] hover:bg-[#3f5238] text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button><p className="mt-2 text-center text-xs text-slate-300">반응(👍/👎)은 아래에서 남길 수 있어요.</p></div>}
             {/* 학생 폰: 큰 축하 한 줄과 점수를 맨 위에 둔다(390x844 첫 화면 안). */}
             {hasBattle && (
               <div className="student-result-hero w-full mb-4 text-center">
@@ -558,20 +558,20 @@ const GamePlaySession = () => {
                 </p>
                 <div className="result-score student-result-score w-full mt-3 bg-slate-800 rounded-2xl p-4 flex flex-col items-center border border-slate-700">
                   <span className="text-slate-300 text-base font-bold mb-1">오늘 얻은 점수</span>
-                  <span className={`result-score-value text-6xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>{lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}</span>
+                  <span className={`result-score-value text-6xl font-black font-mono ${lastEarnedScore > 0 ? 'text-stone-50' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>{lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}</span>
                 </div>
               </div>
             )}
             {guidedMode && !quietResult && resultDetails?.completion!=='partial' && guidedSubmission.error && (
-              <div role="status" className="mb-4 text-center text-sm text-cyan-300">
+              <div role="status" className="mb-4 text-center text-sm text-stone-100">
                 <p>{guidedSubmission.error}</p>
-                {!guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-cyan-400 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}
+                {!guidedSubmission.receipt?.completed && <button className="mt-2 rounded-lg border border-stone-100 px-3 py-2" onClick={guidedSubmission.retry}>지금 다시 보내기</button>}
               </div>
             )}
-            {guidedMode && !quietResult && resultDetails?.completion!=='partial' && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-300 bg-cyan-900 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className={`mt-2 ${guidedSubmission.receipt?.saved ? 'text-lg font-black text-emerald-300' : 'text-base text-cyan-200'}`}>{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? <><span aria-hidden="true">✅ </span><span>선생님 화면에 저장했어요.</span></> : '선택을 저장하고 있어요.' : '한 가지만 골라요.'}</p></fieldset>}
+            {guidedMode && !quietResult && resultDetails?.completion!=='partial' && <fieldset className="w-full rounded-2xl bg-slate-800/70 border border-slate-700 p-4 mb-4"><legend className="px-2 text-sm font-bold text-white">오늘 잘한 움직임 하나</legend><div className="grid gap-2">{GUIDED_REFLECTIONS.map(choice => <button key={choice.value} type="button" aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border px-3 py-3 text-sm text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'border-stone-100 bg-stone-800 text-white' : 'border-slate-600 text-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className={`mt-2 ${guidedSubmission.receipt?.saved ? 'text-lg font-black text-emerald-300' : 'text-base text-stone-100'}`}>{guidedSubmission.receipt?.reflection ? guidedSubmission.receipt.saved ? <><span aria-hidden="true">✅ </span><span>선생님 화면에 저장했어요.</span></> : '선택을 저장하고 있어요.' : '한 가지만 골라요.'}</p></fieldset>}
             {hasBattle ? <details className="student-result-teacher-note w-full mb-4 rounded-xl border border-slate-700 px-3 py-2 text-sm text-slate-300"><summary className="cursor-pointer font-bold">선생님용 설명</summary><p className="mt-2">{classroomResultMessage({quiet:quietResult,partial:resultDetails?.completion==='partial',queue:queueLength,online:isOnline,warning:syncWarning??'',score:classroomResultScore(lastEarnedScore,resultDetails)})}</p><p className="mt-2">{gameInfo.code!=='연계 확인 필요'&&<>{gameInfo.code} · </>}{gameInfo.target}</p><p className="mt-2 leading-relaxed">이 점수는 이 활동의 참여·감상·화면 규칙 기록이에요(자동 체력 측정 아님). 게임마다 기준이 달라 서로 다른 게임의 점수를 체력이나 운동 능력 순위로 비교하지 않아요.</p></details> : <><p className="text-sm leading-relaxed mb-4">이 점수는 이 활동의 참여·감상·화면 규칙 기록이에요. 게임마다 기준이 달라 서로 다른 게임의 점수를 체력이나 운동 능력 순위로 비교하지 않아요.</p><div className="result-score w-full bg-slate-800 rounded-2xl p-5 mb-3 flex flex-col items-center border border-slate-700">
               <span className="text-slate-400 text-sm font-bold mb-1">참여·감상·화면 규칙 점수 · 자동 체력 측정 아님</span>
-              <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-cyan-400' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
+              <span className={`result-score-value text-5xl font-black font-mono ${lastEarnedScore > 0 ? 'text-stone-50' : lastEarnedScore < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                 {lastEarnedScore > 0 ? '+' : ''}{lastEarnedScore}
               </span>
 
@@ -611,17 +611,17 @@ const GamePlaySession = () => {
                     }}
                     className={`result-rpe-choice min-w-0 whitespace-normal flex flex-col items-center gap-1 px-1 py-2 rounded-xl transition-all border-2 ${
                       rpeSelected === value
-                        ? 'bg-cyan-600/30 border-cyan-400 scale-110 shadow-lg shadow-cyan-900/50'
+                        ? 'bg-stone-100/20 border-stone-100 scale-110 shadow-lg shadow-black/40'
                         : 'bg-slate-900/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800/80'
                     }`}
                   >
                     <span className={`text-2xl transition-transform ${rpeSelected === value ? 'scale-125' : ''}`}>{emoji}</span>
-                    <span className={`text-sm font-bold ${rpeSelected === value ? 'text-cyan-300' : 'text-slate-300'}`}>{label}</span>
+                    <span className={`text-sm font-bold ${rpeSelected === value ? 'text-stone-100' : 'text-slate-300'}`}>{label}</span>
                   </button>
                 ))}
               </div>
               {rpeSelected && (
-                <p className="text-center text-sm text-cyan-300 font-bold mt-2 animate-in fade-in duration-200">
+                <p className="text-center text-sm text-stone-100 font-bold mt-2 animate-in fade-in duration-200">
                   ✅ 자각도 {rpeSelected}/5 기록 완료!
                 </p>
               )}
@@ -638,7 +638,7 @@ const GamePlaySession = () => {
 
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
-            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-cyan-600 bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
+            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-[#566d4d] bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
             {lessonStage?<div className="w-full flex flex-col gap-3">
               {/* 오늘 수업 중: 다음 단계 버튼은 카드 맨 위에 있고, 여기에는 한 번 더·오늘 수업으로만 둔다('홈으로'로 수업에서 벗어나지 않게). */}
               <div className="w-full flex gap-3">
@@ -647,7 +647,7 @@ const GamePlaySession = () => {
               </div>
             </div>:
             <div className="w-full flex gap-3">
-              <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
+              <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-[#566d4d] hover:bg-[#3f5238] text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
               <button onClick={handleReturnToCatalog} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">

@@ -103,7 +103,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
    <p id="fun-leave-text">{inLesson?'오늘 수업으로 돌아가기 전에 결과를 볼까요?':'목록으로 나가기 전에 결과를 볼까요?'} 기록 없이 나가면 이 판은 사라져요.</p>
    <div className="fun-leave-actions">
     <button type="button" className="fun-primary" onClick={()=>{leaveHeld.current=false;setLeaveAsk(false);getLessonActivity()?.finish?.();}}>결과 발표 보기</button>
-    <button type="button" className="fun-secondary" onClick={()=>{leaveHeld.current=false;setLeaveAsk(false);exit();}}>기록 없이 나가기</button>
+    <button type="button" className="fun-secondary fun-danger" onClick={()=>{leaveHeld.current=false;setLeaveAsk(false);exit();}}>기록 없이 나가기</button>
     <button ref={leaveCancelRef} type="button" className="fun-secondary" onClick={cancelLeave}>취소</button>
    </div>
   </div>
