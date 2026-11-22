@@ -6,19 +6,10 @@ import type { GameDef } from './gamesData';
 import { FEATURED_GAMES } from './featuredGames';
 import { FIT_SPACES, activityFit } from './activityFit';
 
-export type QuickSituationId = 'five' | 'classroom' | 'noprep' | 'big';
-export interface QuickSituation { id: QuickSituationId; label: string; emoji: string; note: string; hub: string }
+import { QUICK_PICK_COUNT, type QuickSituationId } from './quickSituations';
+export { QUICK_PICK_COUNT, QUICK_SITUATIONS, type QuickSituation, type QuickSituationId } from './quickSituations';
 
 const [CLASSROOM, GYM, FIELD] = FIT_SPACES;
-
-export const QUICK_SITUATIONS: readonly QuickSituation[] = [
-  { id: 'five', label: '5분 남았어요', emoji: '⏱', note: '준비물 없이 5분 안에 끝나는 활동이에요.', hub: '/hub?minutes=5' },
-  { id: 'classroom', label: '교실에서', emoji: '🏫', note: '교실에서 할 수 있는 활동이에요.', hub: `/hub?where=${encodeURIComponent(CLASSROOM)}` },
-  { id: 'noprep', label: '준비물 없이', emoji: '🙌', note: '준비물 없이 바로 하는 활동이에요.', hub: '/hub?collection=phone' },
-  { id: 'big', label: '강당·운동장에서', emoji: '🏟', note: '넓은 곳에서 하는 활동이에요.', hub: `/hub?where=${encodeURIComponent(GYM)}` },
-];
-
-export const QUICK_PICK_COUNT = 3;
 
 /** 화면을 띄우는 기기 한 대(교사 화면·휴대폰·태블릿·거치 기기)는 '준비물'로 치지 않는다. */
 const DEVICE_PART = /^(교사 화면|스마트폰|휴대폰|태블릿|거치한 기기|모둠별)\s*\d*\s*대?$/;

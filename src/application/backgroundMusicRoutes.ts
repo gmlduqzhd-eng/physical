@@ -1,6 +1,6 @@
 import { isStudentRoute } from './audience';
 const musicPages = new Set([
-  '/', '/start', '/hub', '/games', '/hub/tools', '/about', '/manual',
+  '/', '/start', '/hub', '/games', '/hub/tools', '/hub/extras', '/about', '/manual',
   '/teacher', '/teacher/setup', '/solo', '/records',
 ]);
 
