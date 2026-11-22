@@ -479,3 +479,28 @@ html[data-tv-mode="on"] .fun-paused-note{font-size:clamp(20px,2.4vw,36px)}
 }
 /* 누르는 칸은 44px 이상(TV 모드 단추). */
 .fun-intro .fun-tv-btn{min-height:44px;min-width:44px}
+
+/* '끝내기'는 진행 버튼처럼 보이지 않게: 색 테두리 대신 점선의 차분한 버튼으로, 다른 버튼과 조금 떨어뜨려 왼쪽 끝에 둔다.
+   (진행 버튼 '다음'은 오른쪽 끝이라, 바로 옆에 두면 잘못 누르기 쉽다.) */
+.fun-controls button[data-command=end]{border-style:dashed;border-color:var(--fun-line);background:transparent;color:var(--fun-muted)}
+.fun-controls button[data-command=end]:hover{border-color:#fca5a5;color:#fecaca}
+@media (min-width:641px){.fun-controls button[data-command=end]{flex:0 1 150px;margin-right:14px}}
+
+/* 넓은 화면(TV·노트북)의 시작 화면: 위쪽 게임 도구 막대(← + 제목)는 숨기고 카드 안의 '← 목록'을 쓴다.
+   카드와 규칙 칸도 조금 촘촘하게 해, 1280×720~800에서도 '▶ 시작'이 스크롤 없이 화면 안에 다 보이게 한다. */
+@media (min-width:641px){
+ body:has(main.fun-intro) .gameplay-toolbar{display:none}
+ .fun-intro-top .fun-exit{display:inline-block}
+ body:not(:has(#fun-dock-host .fun-dock)) .fun-intro{margin-top:16px}
+ .fun-intro{gap:10px;padding:clamp(16px,2.6vw,28px) clamp(18px,3.4vw,36px)}
+ .fun-intro h1{font-size:clamp(28px,3.8vw,42px)}
+ .fun-oneline{font-size:clamp(18px,2vw,22px);line-height:1.45}
+ .fun-rule-card{gap:6px}
+ .fun-rule-card li{padding:8px 14px;font-size:clamp(16px,1.8vw,19px);line-height:1.45}
+}
+@media (min-width:641px) and (max-height:760px){
+ .fun-intro{gap:8px}
+ .fun-intro h1{font-size:clamp(26px,3.2vw,36px)}
+ .fun-rule-card li{padding:6px 12px}
+ .fun-big{min-height:60px}
+}

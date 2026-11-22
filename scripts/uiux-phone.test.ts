@@ -14,7 +14,7 @@ test('the phone remote sends one phase-changing command per phase (no double-tap
   assert.equal(isSendLocked(null, 'play', 0), false);
   assert.equal(isSendLocked(lockAfterSend(undefined, 0), undefined, 10), true, 'unknown phase still locks by time');
   const page = readFileSync('src/presentation/FunRemotePage.tsx', 'utf8');
-  assert.match(page, /sendStep\(\{type:'next'\},'다음'\)/);
+  assert.match(page, /sendStep\(\{type:'next'\},nextLabel\)/);
   assert.match(page, /sendStep\(\{type:'end'\},'끝내기'\)/);
   assert.match(page, /role="alertdialog" aria-modal="true"/, 'confirm opens as a modal sheet');
 });
@@ -67,7 +67,7 @@ test('phone remote puts next and pause first, teams in a shape-coded grid, and r
   const teams = page.indexOf('className="frp-teams"');
   const more = page.indexOf('className="frp-more-toggle"');
   assert.ok(big > 0 && teams > big && more > teams, 'order: big buttons, teams, more');
-  assert.match(page, /className="frp-next"[^>]*onClick=\{\(\)=>sendStep\(\{type:'next'\},'다음'\)\}/);
+  assert.match(page, /className="frp-next"[^>]*onClick=\{\(\)=>sendStep\(\{type:'next'\},nextLabel\)\}/);
   assert.match(page, /className="frp-pause"/);
   assert.match(page, /TEAM_SHAPES=\['●','▲','■','◆'\]/);
   assert.match(page, /aria-label=\{`\$\{teamName\(i\)\} 1점 더하기`\}/);
@@ -82,9 +82,9 @@ test('phone remote puts next and pause first, teams in a shape-coded grid, and r
   assert.doesNotMatch(moreBlock, /send(Step)?\(\{type:'next'\}/, 'skip is only sent from its confirm');
   assert.match(page, /게임을 지금 끝내고 결과 발표로 갈까요\?[\s\S]*sendStep\(\{type:'end'\},'끝내기'\)/);
   assert.match(page, /마지막 승부로 넘어갈까요\?[\s\S]*sendStep\(\{type:'next'\},'마지막 승부로'\)/);
-  // In main play there is no dead giant next button: a calm status takes its place and pause comes first.
+  // In main play there is no dead giant next button: a calm status keeps the same first slot (pause never moves up).
   assert.match(page, /inPlay\?<div className="frp-next frp-next-wait" role="status">/);
-  assert.match(css, /\.frp-big\[data-play\] \.frp-pause\{order:-1\}/);
+  assert.doesNotMatch(css, /\.frp-pause\{order:-1\}/);
   // Boss-raid-only special attack is hidden in other games.
   assert.match(page, /hasSpecial&&<button/);
   // Status and feedback lines are kept.

@@ -95,7 +95,7 @@ export function bossStatus(s:FunState):{boss:Boss;index:number;hpLeft:number;def
 
 export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
  // 신호 내용은 그 신호가 시작될 때 싸우던 보스로 정한다(신호 도중에 보스를 쓰러뜨려도 6초 신호에 '10초 달리기'가 끼지 않는다).
- const {boss}=bossStatus(ctx.phase==='tutorial'?ctx.state:stateBeforeCue(ctx.state,{phase:ctx.phase,index:ctx.index}));
+ const {boss,index:bossIndex}=bossStatus(ctx.phase==='tutorial'?ctx.state:stateBeforeCue(ctx.state,{phase:ctx.phase,index:ctx.index}));
  if(ctx.phase==='tutorial'){
   const weak=ctx.seated?BOSSES[0].weakSeated:BOSSES[0].weak;
   return ctx.index%2===0
@@ -106,10 +106,17 @@ export function bossRaidCue(ctx:SignatureCueContext):SignatureCue{
  if(ctx.index%3===2){const r=pickCue(REST,ctx);return {text:r.text,sub:r.sub,icon:'🛡️',tone:'rest',pose:'armsFront',scorable:false};}
  const weak=ctx.seated?boss.weakSeated:boss.weak;
  const climax=ctx.phase==='climax';
+ // 신호 도중에 보스를 쓰러뜨렸으면 동작은 그대로 두고(마저 하게), 안내 줄과 아이콘은 지금 보스로 바꾼다
+ // (보스 칸은 이미 다음 보스인데 '끈적 슬라임이 싫어하는 동작'이 남아 있지 않게).
+ const now=bossStatus(ctx.state);
+ const changed=now.done||now.index!==bossIndex;
+ const sub=!changed?`${boss.emoji} ${boss.name}${subj(boss.name)} 싫어하는 동작이에요`
+  :now.done?'🎉 보스를 모두 물리쳤어요! 이 동작을 마저 해요'
+  :`${boss.emoji} ${boss.name} 물리침! ${now.boss.emoji} ${now.boss.name} 등장 · 이 동작을 마저 해요`;
  return {
   text:`${weak}!`,
-  sub:`${boss.emoji} ${boss.name}${subj(boss.name)} 싫어하는 동작이에요${climax?' · 총공격! 공격 2배':''}`,
-  icon:boss.emoji,tone:climax?'gold':undefined,move:weak,pose:boss.pose,
+  sub:`${sub}${climax?' · 총공격! 공격 2배':''}`,
+  icon:changed?(now.done?'🎉':now.boss.emoji):boss.emoji,tone:climax?'gold':undefined,move:weak,pose:boss.pose,
   // '10초' 동작은 신호를 그만큼 길게 보여 준다(동작 10초 + 준비 2초).
   ...(secondsIn(weak)?{seconds:secondsIn(weak)!+2}:{}),
  };

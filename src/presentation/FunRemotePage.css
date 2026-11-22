@@ -39,10 +39,9 @@
 .fun-remote-page .frp-confirm p{grid-column:1/-1;margin:0;font-size:1.1rem;font-weight:800;line-height:1.4}
 .fun-remote-page .frp-danger-solid{background:#dc2626;color:#fff}
 /* 본게임 중 '다음' 자리: 누르는 버튼이 아니라 지금 상태. 대신 '일시정지'가 크게 위로 온다. */
-.fun-remote-page .frp-next-wait{min-height:auto;padding:12px;border-radius:18px;background:transparent;border:2px dashed var(--frp-line);color:var(--frp-ink);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;text-align:center}
+.fun-remote-page .frp-next-wait{min-height:clamp(104px,21dvh,200px);padding:12px;border-radius:18px;background:transparent;border:2px dashed var(--frp-line);color:var(--frp-ink);display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 10px;text-align:center}
 .fun-remote-page .frp-next-wait .frp-big-icon{font-size:1.6rem}
 .fun-remote-page .frp-next-wait .frp-big-label{font-size:1.25rem}
-.frp-big[data-play] .frp-pause{order:-1}
 .fun-remote-page .frp-next[aria-busy]{opacity:.85}
 /* 자주 쓰는 두 버튼: 세로 화면에서 위아래로 쌓아 화면 절반쯤을 채운다(보지 않고 엄지로 누른다). */
 .frp-big{display:grid;grid-template-columns:1fr;gap:10px}
@@ -106,3 +105,9 @@
  .fun-remote-page .frp-team button{min-height:44px}
  .frp-paused{padding:6px}
 }
+
+/* 보낸 명령 확인: 화면을 다시 보지 않아도 알 수 있게 크게 띄운다. */
+.frp-sent:not(:empty){font-size:1.15rem;font-weight:900;opacity:1;padding:12px 14px;border-radius:14px;background:var(--frp-bg);box-shadow:0 -4px 16px rgb(0 0 0/.18);text-align:center}
+.frp-sent[data-tone=ok]:not(:empty){background:#dcfce7;color:#14532d}
+.frp-sent[data-tone=no]:not(:empty){background:#fee2e2;color:#7f1d1d}
+.frp-sent[data-tone=wait]:not(:empty){background:#e0f2fe;color:#0c4a6e}

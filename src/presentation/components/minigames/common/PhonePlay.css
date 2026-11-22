@@ -104,3 +104,13 @@ html[data-tv-mode="on"] .phone-class .pc-task{font-size:clamp(20px,3vw,40px)}
 
 /* 오늘 수업 막대(48px)가 있으면 반 전체 진행 화면을 그만큼 내린다: 화면 전체를 덮는(fixed) 화면이라 막대 밑으로 머리줄이 들어가지 않게. */
 body:has(.today-bar) .phone-play.phone-class{top:48px}
+
+/* TV 모드의 시작 화면: 본문을 화면 폭 90%까지 넓히고 규칙·안내 글씨를 한 단계 키운다(교실 뒤에서도 읽히게). */
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class){width:min(90vw,1600px);margin-top:16px}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-title h1{font-size:clamp(32px,4vw,64px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-eyebrow{font-size:clamp(16px,1.6vw,24px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-rule-card li{font-size:clamp(24px,2.8vw,44px);padding:clamp(10px,1.4vh,18px) clamp(14px,1.6vw,24px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-start button{font-size:clamp(20px,2.2vw,32px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-start .pp-primary{min-height:clamp(64px,10vh,96px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) :is(.pp-start-note,.pp-setup-first,.pc-space-note){font-size:clamp(16px,1.6vw,24px)}
+html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-badges span{font-size:clamp(15px,1.4vw,22px)}

@@ -4,6 +4,7 @@ import type {ExternalFunCommand,FunRemoteSnapshot} from '../application/funComma
 import {ACK_GIVE_UP_MS,ACK_RETRY_MS,createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,readRoomSecret,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
 import {TEAM_COLORS,TEAM_NAMES,type FunPhase,type SurpriseKind} from '../domain/funLoop';
 import {isSendLocked,lockAfterSend,SEND_LOCK_MS,type SendLock} from '../application/remoteSendLock';
+import {REMOTE_NEXT_LABEL} from '../application/remoteLabels';
 import './FunRemotePage.css';
 
 const PHASE:Record<FunPhase,string>={demo:'시범',tutorial:'연습 판',play:'본게임',climax:'마지막 승부',result:'결과 발표'};
@@ -115,6 +116,7 @@ export function FunRemotePage(){
  // TV가 아직 게임을 띄우지 않았으면(시작·이어 하기 화면) 끝내기·일시정지를 포함해 모두 끈다(눌러도 반영되지 않는다).
  const live=ready&&!tvIdle;
  const inPlay=snap?.phase==='play';
+ const nextLabel=snap?REMOTE_NEXT_LABEL[snap.phase]:'다음';
  const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone'||access==='conflict';
  const events=snap?.events??DEFAULT_EVENTS;
  // '한 방 공격'은 우리 반 보스전에만 있다(다른 게임에서는 감춘다).
@@ -169,9 +171,10 @@ export function FunRemotePage(){
   {/* 수업 중에는 화면을 보지 않고 누른다: 가장 자주 쓰는 '다음'과 '일시정지'를 화면 절반 크기로 둔다. */}
   <div className="frp-big" role="group" aria-label="자주 쓰는 버튼" data-play={inPlay||undefined}>
    {/* 본게임 중에는 '다음'을 누를 일이 없다: 죽은 큰 버튼 대신 지금 상태를 보여 주고 '일시정지'를 크게 위로 둔다. */}
+   {/* 진행 칸은 늘 첫 자리에 둔다(본게임 중에도 자리를 지켜, 같은 곳을 다시 눌러 일시정지가 되는 일이 없게). */}
    {inPlay?<div className="frp-next frp-next-wait" role="status"><span className="frp-big-icon" aria-hidden="true">⏳</span><span className="frp-big-label">본게임 중이에요</span><small>끝나면 저절로 넘어가요</small></div>
-   :<button type="button" className="frp-next" disabled={!live||result||paused||stepLocked} aria-busy={stepLocked||undefined} onClick={()=>sendStep({type:'next'},'다음')}>
-    <span className="frp-big-icon" aria-hidden="true">{stepLocked?'✓':'▶'}</span><span className="frp-big-label">{stepLocked?'보냈어요…':'다음'}</span>
+   :<button type="button" className="frp-next" disabled={!live||result||paused||stepLocked} aria-busy={stepLocked||undefined} onClick={()=>sendStep({type:'next'},nextLabel)}>
+    <span className="frp-big-icon" aria-hidden="true">{stepLocked?'✓':'▶'}</span><span className="frp-big-label">{stepLocked?'보냈어요…':nextLabel}</span>
    </button>}
    <button type="button" className="frp-pause" data-paused={paused||undefined} disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>
     <span className="frp-big-icon" aria-hidden="true">{paused?'▶':'⏸'}</span><span className="frp-big-label">{paused?'다시 시작':'일시정지'}</span>
@@ -204,6 +207,6 @@ export function FunRemotePage(){
     :<button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);sendStep({type:'next'},'마지막 승부로');}}>넘어가기</button>}
    </div>
   </div>}
-  <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>
+  <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?<><span className="frp-sent-icon" aria-hidden="true">{sent.tone==='ok'?'✅':sent.tone==='no'?'⚠️':'📡'}</span> {sent.text}</>:''}</p>
  </main>;
 }

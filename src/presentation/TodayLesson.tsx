@@ -8,9 +8,10 @@ import {useClassProgress} from '../application/classProgressStore';
 import {lessonPlayId,type ClassProgress} from '../domain/classProgress';
 import {MAP_MOMENT_MS,lessonMapMoment,type LessonMapMoment} from '../domain/lessonMapMoment';
 import {readStorage,writeStorage} from '../application/browserStorage';
+import {loadTodaySettings,loadTodayShuffle,saveTodaySettings,saveTodayShuffle} from '../application/todayLessonPrefs';
 import {
- DEFAULT_TODAY,STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- addExtraMain,advanceRun,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
+ STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
+ addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import './TodayLesson.css';
@@ -19,8 +20,6 @@ import './TodayLesson.css';
  * '오늘 수업' 40분 묶음 화면. 설정은 모두 기본값이 있어 ▶ 한 번이면 시작한다.
  * 단계마다 기존 활동 화면을 그대로 열고, 활동에서 나오면 이 화면으로 돌아와 다음 단계를 보여 준다.
  */
-const newSeed=()=>Math.floor(Math.random()*1e9);
-
 export function TodayLesson(){
  const run=useStoredTodayRun();
  const [params]=useSearchParams();
@@ -78,12 +77,17 @@ function StageList({plan,run,outcomes,shown}:{plan:TodayPlan;run?:TodayRun;outco
 
 function TodaySetup({openGuide}:{openGuide:()=>void}){
  const navigate=useNavigate();
- const [settings,setSettings]=useState<TodaySettings>(DEFAULT_TODAY);
- const [seed,setSeed]=useState(newSeed);
+ // 마지막으로 고른 학년·공간·시간·팀 수를 기억한다(1~2학년 선생님이 매번 바꾸지 않게).
+ const [settings,setSettings]=useState<TodaySettings>(loadTodaySettings);
+ // 같은 날·같은 설정이면 계획이 늘 같다. '다른 활동으로'를 눌러야만 바뀐다(그 횟수도 오늘 동안 기억한다).
+ const [day]=useState(()=>localDayKey(Date.now()));
+ const [shuffle,setShuffle]=useState(()=>loadTodayShuffle(Date.now()));
+ const seed=todaySeed(day,settings,shuffle);
  const plan=useMemo(()=>buildTodayPlan(settings,seed),[settings,seed]);
  const mains=mainCandidates(settings.grade,settings.space);
  // 학년·공간을 바꿔 고른 본게임이 맞지 않게 되면 '알아서 골라 주세요'로 돌린다.
- const set=<K extends keyof TodaySettings>(k:K,v:TodaySettings[K])=>setSettings(s=>{const n={...s,[k]:v};if(n.mainId&&!mainCandidates(n.grade,n.space).some(g=>g.id===n.mainId))n.mainId=undefined;return n;});
+ const set=<K extends keyof TodaySettings>(k:K,v:TodaySettings[K])=>setSettings(s=>{const n={...s,[k]:v};if(n.mainId&&!mainCandidates(n.grade,n.space).some(g=>g.id===n.mainId))n.mainId=undefined;saveTodaySettings(n);return n;});
+ const reshuffle=()=>setShuffle(n=>{const next=n+1;saveTodayShuffle(Date.now(),next);return next;});
  const start=()=>{
   const r=startRun(plan,Date.now());saveTodayRun(r);
   const first=r.plan.stages[0];const path=first&&stagePath(first,settings.teams);
@@ -92,13 +96,16 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
  return <section className="today-card" aria-labelledby="today-title">
   <p className="eyebrow">오늘 수업 · 한 번에 진행</p>
   <h1 id="today-title">준비운동부터 돌아보기까지 {settings.minutes}분</h1>
-  <p className="today-lead">학년·공간·시간을 고르면 준비운동 → 대표 게임 → 정리운동 → 돌아보기를 짜 드려요. 고르지 않아도 기본값으로 바로 시작해요.</p>
+  {/* 학년과 장소는 시작 버튼 바로 위 한 줄에서 고른다(첫 화면 안에서 확인하고 누르게). */}
+  <div className="today-quick" role="group" aria-label="학년과 장소">
+   <div className="today-choice" role="group" aria-label="학년">{TODAY_GRADES.map(g=><button key={g.id} type="button" aria-pressed={settings.grade===g.id} onClick={()=>set('grade',g.id)}>{g.label}</button>)}</div>
+   <div className="today-choice" role="group" aria-label="어디서">{TODAY_SPACES.map(s=><button key={s} type="button" aria-pressed={settings.space===s} onClick={()=>set('space',s)}>{s}</button>)}</div>
+  </div>
   <button type="button" className="primary today-primary today-big" onClick={start}>▶ 오늘 수업 시작 · {plan.stages[1]?.title??'대표 게임'}</button>
+  <div className="today-row today-plan-row"><button type="button" className="today-secondary" onClick={reshuffle}>🔀 다른 활동으로</button><span className="today-plan-note">오늘은 열 때마다 같은 계획이에요</span></div>
   <StageList plan={plan}/>
-  <details className="today-settings" open>
-   <summary>학년 · 공간 · 시간 · 팀 바꾸기</summary>
-   <fieldset><legend>학년</legend><div className="today-choice">{TODAY_GRADES.map(g=><button key={g.id} type="button" aria-pressed={settings.grade===g.id} onClick={()=>set('grade',g.id)}>{g.label}</button>)}</div></fieldset>
-   <fieldset><legend>어디서</legend><div className="today-choice">{TODAY_SPACES.map(s=><button key={s} type="button" aria-pressed={settings.space===s} onClick={()=>set('space',s)}>{s}</button>)}</div></fieldset>
+  <details className="today-settings">
+   <summary>시간 · 팀 · 본게임 바꾸기 <small>({settings.minutes}분 · {settings.teams}팀)</small></summary>
    <fieldset><legend>몇 분</legend><div className="today-choice">{TODAY_MINUTES.map(m=><button key={m} type="button" aria-pressed={settings.minutes===m} onClick={()=>set('minutes',m)}>{m}분</button>)}</div></fieldset>
    <fieldset><legend>팀 수 (대표 게임)</legend><div className="today-choice">{TODAY_TEAMS.map(n=><button key={n} type="button" aria-pressed={settings.teams===n} onClick={()=>set('teams',n)}>{n}팀</button>)}</div></fieldset>
    <label className="today-select">본게임(대표 게임)
@@ -107,7 +114,6 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
      {mains.map(g=><option key={g.id} value={g.id}>{g.emoji} {g.name}</option>)}
     </select>
    </label>
-   <button type="button" className="today-secondary" onClick={()=>setSeed(newSeed())}>🔀 다른 준비·정리운동으로</button>
   </details>
   <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
  </section>;
