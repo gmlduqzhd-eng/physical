@@ -90,3 +90,8 @@
 .header-teacher-panel p{margin:0;line-height:1.6}
 .header-teacher-panel button{min-height:44px;padding:8px 14px;border-radius:999px;font-weight:800;cursor:pointer}
 .header-teacher-panel button{border:1px solid var(--forest-line,#d1d5db);background:var(--forest-tint,#f3f4f6);color:inherit}
+/* 설정 창 안의 배경음악 글씨: 작은 상태 글·볼륨 숫자도 읽을 수 있게 13~14px 이상. */
+.header-settings-popover .background-music-title strong{font-size:15px}
+.header-settings-popover .background-music-title small{font-size:13px}
+.header-settings-popover .background-music-volume{font-size:14px}
+.header-more-popover .header-more-panel>button[aria-disabled="true"]{opacity:.6;cursor:default}

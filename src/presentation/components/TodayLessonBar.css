@@ -1,6 +1,9 @@
 /* '오늘 수업' 막대: 게임이 진행 중이면 게임의 주황 '다음' 버튼과 헷갈리지 않게 낮춘다. */
 .today-bar[data-mode="playing"]{background:#1e293b;border-bottom-color:#475569;justify-content:flex-start}
 .today-bar[data-mode="playing"] .today-bar-next{background:transparent;color:#e2e8f0;border:1px solid #64748b;font-weight:700;min-height:32px;font-size:14px}
+/* 게임 중에는 낮게 보이되 누르는 칸은 44px 이상(막대 높이만큼)으로 넓힌다. */
+.today-bar[data-mode="playing"] :is(.today-bar-next,.today-bar-skip){position:relative}
+.today-bar[data-mode="playing"] :is(.today-bar-next,.today-bar-skip)::after{content:"";position:absolute;inset:-8px -2px}
 .today-bar[data-mode="playing"] .today-bar-skip{min-height:32px;font-size:14px}
 .today-bar[data-mode="playing"] .today-bar-label{opacity:.85}
 /* 앞 단계로 돌아와 있을 때: 수업 중이라는 표시와 돌아갈 길만. */

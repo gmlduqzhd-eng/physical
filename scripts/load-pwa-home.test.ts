@@ -79,7 +79,7 @@ test('music stays off until asked, and the chosen brightness is remembered (firs
  assert.match(header,/<BackgroundMusicButton\/>/);assert.doesNotMatch(header,/music\.toggle\(\)/);
  const theme=read('src/application/ThemeContext.tsx');
  assert.match(theme,/prefers-color-scheme: dark/);assert.match(theme,/localStorage\.setItem\(themeKey, next\)/);
- assert.match(theme,/localStorage\.getItem\(themeKey\)\) \?\? asTheme\(window\.sessionStorage\.getItem\(legacyTabKey\)\)/);
+ assert.match(theme,/localStorage\.getItem\(themeKey\)\) \?\? \(window\.sessionStorage\.getItem\(legacyTabKey\) === 'dark' \? 'dark' : null\)/);
 });
 
 test('home keeps one clear start and does not repeat the same doors',()=>{

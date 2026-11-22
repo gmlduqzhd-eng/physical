@@ -80,14 +80,30 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
  // 마지막으로 고른 학년·공간·시간·팀 수를 기억한다(1~2학년 선생님이 매번 바꾸지 않게).
  const [settings,setSettings]=useState<TodaySettings>(loadTodaySettings);
  // 같은 날·같은 설정이면 계획이 늘 같다. '다른 활동으로'를 눌러야만 바뀐다(그 횟수도 오늘 동안 기억한다).
- const [day]=useState(()=>localDayKey(Date.now()));
+ const [day,setDay]=useState(()=>localDayKey(Date.now()));
  const [shuffle,setShuffle]=useState(()=>loadTodayShuffle(Date.now()));
+ // 화면을 자정 넘겨 열어 두었다가 돌아오면 오늘 날짜로 다시 맞춘다(어제 계획이 '오늘 계획'으로 보이지 않게).
+ useEffect(()=>{
+  const sync=()=>{
+   if(document.visibilityState==='hidden')return;
+   const now=Date.now(),today=localDayKey(now);
+   setDay(prev=>{if(prev===today)return prev;setShuffle(loadTodayShuffle(now));return today;});
+  };
+  document.addEventListener('visibilitychange',sync);window.addEventListener('focus',sync);
+  return ()=>{document.removeEventListener('visibilitychange',sync);window.removeEventListener('focus',sync);};
+ },[]);
  const seed=todaySeed(day,settings,shuffle);
  const plan=useMemo(()=>buildTodayPlan(settings,seed),[settings,seed]);
  const mains=mainCandidates(settings.grade,settings.space);
  // 학년·공간을 바꿔 고른 본게임이 맞지 않게 되면 '알아서 골라 주세요'로 돌린다.
  const set=<K extends keyof TodaySettings>(k:K,v:TodaySettings[K])=>setSettings(s=>{const n={...s,[k]:v};if(n.mainId&&!mainCandidates(n.grade,n.space).some(g=>g.id===n.mainId))n.mainId=undefined;saveTodaySettings(n);return n;});
- const reshuffle=()=>setShuffle(n=>{const next=n+1;saveTodayShuffle(Date.now(),next);return next;});
+ const reshuffle=()=>{
+  // 날짜가 바뀐 채 누르면 어제 횟수를 오늘로 넘기지 않고 오늘 것부터 다시 센다.
+  const now=Date.now(),today=localDayKey(now);
+  const next=(today===day?shuffle:loadTodayShuffle(now))+1;
+  if(today!==day)setDay(today);
+  saveTodayShuffle(now,next);setShuffle(next);
+ };
  const start=()=>{
   const r=startRun(plan,Date.now());saveTodayRun(r);
   const first=r.plan.stages[0];const path=first&&stagePath(first,settings.teams);

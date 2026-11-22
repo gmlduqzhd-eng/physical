@@ -61,6 +61,14 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 시작 화면에서 이미 역할을 정하고 들어왔으면(rolesReady) 기다리지 않는다.
  const waitForTeacher=!!p.setup&&!seated&&!rolesReady;
  const [phase,setPhase]=useState<Phase>('rules'),[round,setRound]=useState(0),[elapsed,setElapsed]=useState(0),[paused,setPaused]=useState(false);
+ // 화면을 덮는 창: 열리면 초점을 창에 두고(‘그만두기’ 단추에 두면 실수로 눌린다), Esc는 ‘그만두기’와 같다.
+ const dialogRef=useRef<HTMLElement>(null);
+ useEffect(()=>{dialogRef.current?.focus({preventScroll:true});},[]);
+ useEffect(()=>{
+  if(phase==='done')return;
+  const key=(e:KeyboardEvent)=>{if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();onLeave();}};
+  document.addEventListener('keydown',key);return ()=>document.removeEventListener('keydown',key);
+ },[phase,onLeave]);
  // '오늘 수업' 막대가 활동 중인지 알 수 있게 알린다(활동 중에 다음 단계로 가려 하면 한 번 묻는다).
  // 규칙 화면(시작 전)에는 알리지 않아 묻지 않고, 기록 화면은 '아직 기록 전'으로 알린다. 확인 창이 떠 있는 동안에는 시간을 멈춘다.
  const pausedRef=useRef(paused);pausedRef.current=paused;
@@ -134,8 +142,8 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const barShown=phase==='active'||(phase==='brief'&&!quickBrief);
  const barRatio=duration>0?Math.max(0,Math.min(1,1-elapsed/duration)):0;
  const barState=phase==='active'?(left<=10?'urgent':left<=20?'soon':'ok'):'brief';
- return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p>{phase!=='done'&&<button type="button" className="pc-leave" aria-label="닫기 · 반 전체 진행 그만두기" onClick={onLeave}><span aria-hidden="true">←</span> 그만두기</button>}<h1>{p.name}</h1><TvModeButton className="pc-tv"/><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}{/* 숫자가 여러 가지로 보이면 헷갈려서(카운트다운·번호·단계), 단계는 '1/3단계' 글자로만 보여 준다. */}<p className="pc-step-count" aria-label="과제 진행">{phase==='rules'?`${p.rounds.length}단계 놀이`:`${Math.min(round+1,p.rounds.length)}/${p.rounds.length}단계`}</p>
+ return <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p>{phase!=='done'&&<button type="button" className="pc-leave" aria-label="닫기 · 반 전체 진행 그만두기" onClick={onLeave}><span aria-hidden="true">←</span> 그만두기</button>}<h1>{p.name}</h1><TvModeButton className="pc-tv"/><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}{/* 숫자가 여러 가지로 보이면 헷갈려서(카운트다운·번호·단계), '과제 1/3' 글자로만 보여 준다(아래 큰 글씨의 '1번 과제'와 같은 낱말). */}<p className="pc-step-count" aria-label="과제 진행">{phase==='rules'?`과제 ${p.rounds.length}개`:`과제 ${Math.min(round+1,p.rounds.length)}/${p.rounds.length}`}</p>
    {barShown&&<div className="pc-timebar" data-state={barState} data-stopped={stopped||undefined} role="progressbar" aria-label="남은 시간" aria-valuemin={0} aria-valuemax={Math.round(duration/1000)} aria-valuenow={left} aria-valuetext={`${left}초 남음`}><i style={{width:`${(barRatio*100).toFixed(1)}%`}}/></div>}
   </header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">

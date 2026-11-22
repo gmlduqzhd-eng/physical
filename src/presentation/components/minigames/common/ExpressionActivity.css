@@ -29,7 +29,7 @@ html[data-design=forest] body .expression-activity [class*="bg-purple-"]:not(.ex
 .expression-now-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
 .expression-now-head h3{flex:1 1 auto;min-width:0}
 .expression-now-timer{font-family:ui-monospace,monospace;font-weight:900;font-size:clamp(18px,2.2vw,26px);color:#67e8f9;padding:2px 12px;border-radius:12px;border:1px solid rgba(168,85,247,.35);background:rgba(2,6,23,.6)}
-.expression-now-pause{min-height:40px;padding:6px 12px;border-radius:10px;font-weight:700;font-size:14px;background:#1e293b;color:#cbd5e1}
+.expression-now-pause{min-height:44px;padding:6px 12px;border-radius:10px;font-weight:700;font-size:14px;background:#1e293b;color:#cbd5e1}
 .expression-now-body{margin-top:14px;display:grid;gap:14px;align-items:center}
 @media(min-width:760px){.expression-now-body.has-visual{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}}
 .expression-cue{margin:0;font-weight:900;line-height:1.22;letter-spacing:-.01em;font-size:clamp(26px,3.6vw,46px);color:#fff;word-break:keep-all;overflow-wrap:anywhere}
