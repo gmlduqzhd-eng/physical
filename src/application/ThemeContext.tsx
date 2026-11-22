@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, useLayoutEffect, createContext, useContext, type ReactNode } from 'react';
 
 type Theme = 'dark' | 'light';
 
@@ -17,14 +17,38 @@ const ThemeContext = createContext<ThemeContextType>({
 // eslint-disable-next-line react-refresh/only-export-components
 export const useTheme = () => useContext(ThemeContext);
 
-const themeKey = 'physical_theme_tab_v1';
-function readTabTheme(): Theme {
-  try { return window.sessionStorage.getItem(themeKey) === 'dark' ? 'dark' : 'light'; } catch { return 'light'; }
+/** 직접 고른 밝기. 이 기기에 남는다(새 탭·다음 방문에도). */
+const themeKey = 'physical_theme_v1';
+/** 예전에는 탭마다만 기억했다. 그 값이 있으면 한 번 이어받는다. */
+const legacyTabKey = 'physical_theme_tab_v1';
+const darkQuery = '(prefers-color-scheme: dark)';
+const asTheme = (value: string | null): Theme | null => value === 'dark' || value === 'light' ? value : null;
+function readSaved(): Theme | null {
+  try { return asTheme(window.localStorage.getItem(themeKey)) ?? asTheme(window.sessionStorage.getItem(legacyTabKey)); } catch { return null; }
 }
+const systemTheme = (): Theme => { try { return window.matchMedia?.(darkQuery).matches ? 'dark' : 'light'; } catch { return 'light'; } };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Every fresh visit starts in daylight; a manual change lasts for this tab, including reloads.
-  const [theme, setTheme] = useState<Theme>(readTabTheme);
+  // 처음 오면 기기 설정(밝게·어둡게)을 따르고, 직접 바꾸면 그 선택을 이 기기에 기억한다.
+  const [chosen, setChosen] = useState<Theme | null>(readSaved);
+  const [system, setSystem] = useState<Theme>(systemTheme);
+  const theme = chosen ?? system;
+
+  // 직접 고르지 않았으면 기기 설정이 바뀔 때(저녁에 어둡게 등) 함께 바뀐다.
+  useEffect(() => {
+    if (chosen) return;
+    const media = window.matchMedia?.(darkQuery);
+    if (!media) return;
+    const follow = () => setSystem(media.matches ? 'dark' : 'light');
+    media.addEventListener?.('change', follow);
+    return () => media.removeEventListener?.('change', follow);
+  }, [chosen]);
+  // '기기 정보 지우기'를 누르면 직접 고른 밝기도 지워지니 다시 기기 설정을 따른다.
+  useEffect(() => {
+    const cleared = () => setChosen(null);
+    window.addEventListener?.('physical-device-cleared', cleared);
+    return () => window.removeEventListener?.('physical-device-cleared', cleared);
+  }, []);
 
   // 첫 페인트 전에 .dark 클래스를 적용해 dark: 변형의 깜빡임을 방지
   useLayoutEffect(() => {
@@ -38,10 +62,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
     const background = getComputedStyle(root).getPropertyValue('--forest-bg').trim();
     if (background) document.querySelector('meta[name="theme-color"]')?.setAttribute('content', background);
-    try { window.sessionStorage.setItem(themeKey, theme); } catch { /* 저장소를 못 쓰면 이번 화면에서만 유지한다. */ }
   }, [theme]);
 
-  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  const toggleTheme = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    setChosen(next);
+    try { window.localStorage.setItem(themeKey, next); window.sessionStorage.removeItem(legacyTabKey); } catch { /* 저장소를 못 쓰면 이번 화면에서만 유지한다. */ }
+  };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' }}>

@@ -99,7 +99,7 @@ export function ClassroomSetup() {
       navigate('/teacher/room/'+room.id,policyNotice?{state:{setupNotice:policyNotice}}:undefined);
     } catch (cause) {setError(classroomError(cause,'수업을 만들지 못했습니다.'));} finally {creating.current=false;setBusy(false);}
   };
-  return <FlowShell utilities className="classroom-setup" back="/teacher" backLabel="교사 시작 화면"><p className="eyebrow">선생님 수업 준비실</p><h1>새 수업 준비</h1><ol className="steps" aria-label="수업 준비 단계">{['활동 선택','모둠·시간','학생 참여'].map((s,i)=><li key={s} aria-current={step===i+1?'step':undefined}>{i+1}. {s}</li>)}</ol>
+  return <FlowShell utilities className="classroom-setup" back="/teacher"><p className="eyebrow">선생님 수업 준비</p><h1>새 수업 준비</h1><ol className="steps" aria-label="수업 준비 단계">{['활동 선택','모둠·시간','학생 참여'].map((s,i)=><li key={s} aria-current={step===i+1?'step':undefined}>{i+1}. {s}</li>)}</ol>
     {movedFrom&&<section className="notice"><strong>이 활동은 지금 {withParticle(`‘${requestedGame!.name}’`,'으로')} 이어져요</strong><p>예전 활동 주소로 들어와서 지금 쓰는 활동으로 바꿔 준비했어요. 조건을 확인한 뒤 수업방을 만드세요.</p></section>}
     {recipe&&requestedGame&&<section className='notice'><strong>공개 수업 구성을 가져왔어요</strong><p>활동·모둠·시간·게임 규칙만 복사했습니다. 실제 학생 기록이나 방 접근 정보는 포함하지 않습니다. 아래 조건과 안전을 확인한 뒤 새 방을 만드세요.</p></section>}
     {transfer&&requestedGame&&<section className="notice"><strong>AI 준비실에서 교사가 채택한 활동·공개 조건</strong><p>{transfer.grade} · {transfer.goal} · {transfer.place} · {transfer.device} · {transfer.minutes}분</p><p>AI 초안·학생 기록·인증 정보는 가져오지 않았습니다. 아래에서 모둠·시간·안전을 확인한 뒤 수업방을 만드세요.</p></section>}

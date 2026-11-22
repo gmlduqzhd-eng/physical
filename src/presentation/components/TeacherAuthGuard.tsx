@@ -67,7 +67,7 @@ export function TeacherAuthGuard({ children }: { children: ReactNode }) {
     document.addEventListener('visibilitychange', wake); window.addEventListener('online', wake);
     return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', wake); window.removeEventListener('online', wake); };
   }, [authenticated]);
-  if(checking)return <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면"><p role="status">교사 인증을 확인하고 있어요…</p></FlowShell>;
-  if (!authenticated && reconnect) return <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면"><TeacherReconnect message={reconnect}/></FlowShell>;
-  return authenticated ? <>{children}</> : <FlowShell utilities className="teacher-auth" back="/teacher" backLabel="교사 시작 화면">{error && <p role="status">{error}</p>}<TeacherLogin onLogin={() => { void ensureClassroomTeacher().then(()=>setAuthenticated(true)).catch(cause=>{ if (cause instanceof TeacherReconnectError) setReconnect(cause.message); else setError(cause instanceof Error?cause.message:'수업방 인증 실패'); }); }} /><p className="teacher-auth-note">교사 인증 후에도 DB에서 방 소유권과 권한 만료를 확인합니다. 기존에 소유자 없이 만들어진 방은 자동으로 가져오지 않습니다.</p></FlowShell>;
+  if(checking)return <FlowShell utilities className="teacher-auth" back="/teacher"><p role="status">교사 인증을 확인하고 있어요…</p></FlowShell>;
+  if (!authenticated && reconnect) return <FlowShell utilities className="teacher-auth" back="/teacher"><TeacherReconnect message={reconnect}/></FlowShell>;
+  return authenticated ? <>{children}</> : <FlowShell utilities className="teacher-auth" back="/teacher">{error && <p role="status">{error}</p>}<TeacherLogin onLogin={() => { void ensureClassroomTeacher().then(()=>setAuthenticated(true)).catch(cause=>{ if (cause instanceof TeacherReconnectError) setReconnect(cause.message); else setError(cause instanceof Error?cause.message:'수업방 인증 실패'); }); }} /><p className="teacher-auth-note">교사 인증 후에도 DB에서 방 소유권과 권한 만료를 확인합니다. 기존에 소유자 없이 만들어진 방은 자동으로 가져오지 않습니다.</p></FlowShell>;
 }

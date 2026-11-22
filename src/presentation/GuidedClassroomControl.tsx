@@ -85,7 +85,7 @@ export function GuidedClassroom() {
   const reflections = scores.flatMap(group => Object.entries(group.stats?.guided_reflections || {}).filter(([id, choice]) => guidedMissionIds.has(id) && reflectionLabel(choice)).map(([id, choice]) => ({ group, missionId: id, choice: String(choice) })));
   const accessMissing = !loading && !room && error === '수업 방이 종료되었거나 삭제되었습니다.';
 
-  return <LessonShell audience="teacher" className="guided-classroom" back="/teacher" backLabel="교사 시작 화면">
+  return <LessonShell audience="teacher" className="guided-classroom" back="/teacher">
     {loading ? <p role="status">수업을 불러오는 중…</p> : error || !room ? <>
       <div role="alert" className="error"><p>{accessMissing ? '현재 접속 정보로 이 수업방을 열 수 없습니다. 방이 만료·삭제되었거나, 이 탭에 수업방 소유 권한이 없을 수 있습니다.' : error || '수업을 찾지 못했습니다.'}</p><button onClick={refresh}>다시 확인</button></div>
       {accessMissing && <section className="card guided-reconnect" aria-label="수업방 재접속 안내"><h1>수업방 다시 연결하기</h1><p>수업을 만든 탭이 열려 있다면 그 탭에서 새로고침해 주세요. 새 탭이나 다른 기기에서는 교사 인증만으로 이전 수업방을 가져올 수 없습니다.</p><p>원래 탭을 닫았다면 미리 보관한 수업 PIN과 교사 복구키로 복구할 수 있습니다. 복구키가 없다면 원래 탭을 먼저 확인해 주세요.</p><Link to="/teacher/setup?resume=1">이 탭에서 만든 수업 목록 보기</Link><RecoverClassroom onRecovered={id=>navigate('/teacher/room/'+id,{replace:true})}/></section>}

@@ -1,13 +1,11 @@
-/* Shared icon row: up to seven reachable actions (the seventh is 화면 보기); on very narrow screens the row wraps instead of overflowing. */
+/* Shared icon row: '화면·소리', the page's own actions, then '⋯ 더보기'. On very narrow screens the row wraps instead of overflowing. */
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] {
-  display:grid; grid-template-columns:repeat(7,44px); align-items:center;
-  justify-items:center; justify-content:end; gap:8px; flex:none; margin:0;
+  display:flex; flex-wrap:nowrap; align-items:center;
+  justify-content:flex-end; gap:8px; flex:none; margin:0;
   color:var(--forest-ink); font-family:var(--forest-sans); width:auto;
 }
-/* 선생님 로그인 표시가 붙으면 한 칸 더 둔다. */
-html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label]:has(.teacher-status-chip) { grid-template-columns:repeat(8,44px); }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] .header-utilities.header-tools { display:contents; }
-html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.home-tools,.share-control) { width:44px; min-width:0; }
+html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.home-tools,.share-control) { width:auto; min-width:44px; }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action) {
   display:flex; align-items:center; justify-content:center; width:44px; height:44px;
   min-width:44px; min-height:44px; margin:0; padding:0; gap:0;
@@ -25,9 +23,19 @@ html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.m
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(.music-trigger,.share-trigger,.app-install-trigger,.icon-toolbar-action)>svg { width:20px; height:20px; flex:none; }
 html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(button,summary,a):focus-visible { outline:3px solid var(--forest-accent); outline-offset:3px; }
 html[data-design=forest] body .icon-toolbar .icon-toolbar-action[aria-pressed=true] { background:var(--forest-tint); border-color:var(--forest-accent); }
+html[data-design=forest] body .icon-toolbar .settings-trigger:is([data-display=on],[data-music=blocked]) { background:var(--forest-tint); border-color:var(--forest-accent); }
+/* 넓은 화면에서는 '화면·소리'와 뒤로 가기에 글자를 함께 보여 준다(아이콘만으로는 뜻을 짐작해야 한다). */
+@media(min-width:1024px) {
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(a,button).icon-toolbar-action:is(.settings-trigger,:has(>.lucide-arrow-left,>.lucide-house)) {
+    width:auto; max-width:220px; padding:0 14px 0 12px; gap:6px; border-radius:999px; font-size:15px; font-weight:700;
+  }
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] :is(a,button).icon-toolbar-action:is(.settings-trigger,:has(>.lucide-arrow-left,>.lucide-house))>span {
+    position:static; width:auto; height:auto; margin:0; overflow:hidden; clip-path:none; text-overflow:ellipsis;
+  }
+}
 @media(max-width:760px) {
   html[data-design=forest] body :is(header,.hub-header-row):has(>.icon-toolbar) { flex-wrap:wrap; gap:16px; }
-  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { width:100%; grid-template-columns:repeat(auto-fit,minmax(44px,1fr)); gap:2px; }
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { display:grid; width:100%; grid-template-columns:repeat(auto-fit,minmax(44px,1fr)); justify-items:center; gap:2px; }
 }
 @media(max-width:360px) {
   html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { gap:1px; }
@@ -52,8 +60,8 @@ html[data-design=forest] body .header-popup-layer .header-popup-close {
   border:0; padding:0; border-radius:50%; background:var(--forest-tint); color:var(--forest-ink); cursor:pointer;
 }
 html[data-design=forest] body .header-popup-close>svg { width:20px; height:20px; }
-html[data-design=forest] body .header-music-popover .background-music-controls { width:100%; min-width:0; }
-html[data-design=forest] body .header-music-popover .background-music-volume input { height:44px; }
+html[data-design=forest] body .header-settings-popover .background-music-controls { width:100%; min-width:0; }
+html[data-design=forest] body .header-settings-popover .background-music-volume input { height:44px; }
 html[data-design=forest] body .header-popup-layer input[readonly] { width:100%; min-width:0; margin-top:12px; padding:10px; min-height:44px; border:1px solid var(--forest-line); border-radius:10px; background:var(--forest-paper); color:var(--forest-ink); font:inherit; }
 html[data-design=forest] body .header-share-feedback p { margin:0; }
 html[data-design=forest] body .header-board-popover>button { display:flex; align-items:center; gap:10px; min-height:44px; width:100%; padding:10px; background:transparent; color:inherit; border:0; text-align:left; font:inherit; cursor:pointer; }

@@ -145,7 +145,7 @@ function App() {
         <Route path="/join" element={hasSupabase ? <QuickJoin /> : <SupabaseRequired />} />
         <Route path="/manual" element={<Manual />} />
         <Route path="/board" element={hasSupabase ? <BoardEntry /> : <SupabaseRequired />} />
-        <Route path="/board/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/board" backLabel="전광판 연결" title="점수판을 못 열었어요"><ScoreBoard /></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/board/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/board" backLabel="TV 점수판 연결" title="점수판을 못 열었어요"><ScoreBoard /></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <ClassroomErrorBoundary back="/lobby" backLabel="학생 입장" title="모둠 화면을 못 열었어요"><MobileMissionView /></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/admin" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="관리 화면을 못 열었어요"><TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/remote" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="리모컨을 못 열었어요"><TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
@@ -169,7 +169,7 @@ const SupabaseRequired = () => (
       지금은 실시간 수업에 연결할 수 없습니다.<br/>
       잠시 후 다시 시도해 주세요. 개인 게임은 바로 이용할 수 있습니다.
     </p>
-    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">개인 게임 열기</a>
+    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">활동 고르기 열기</a>
   </div>
 );
 
@@ -177,9 +177,9 @@ const NotFound = () => (
   <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center gap-4 p-6 text-center font-sans">
     <div className="text-6xl" aria-hidden="true">🧭</div>
     <h1 className="text-3xl font-black">페이지를 찾을 수 없습니다</h1>
-    <p className="text-slate-300">주소를 다시 확인하거나 게임 허브로 돌아가 주세요.</p>
+    <p className="text-slate-300">주소를 다시 확인하거나 활동 고르기로 돌아가 주세요.</p>
     <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
-      게임 허브로 이동
+      활동 고르기로 이동
     </a>
   </div>
 );

@@ -261,7 +261,7 @@ export const AdminControlPanel = () => {
     <div className="teacher-admin min-h-[100dvh] bg-slate-50 text-slate-900 p-6 md:p-10 font-sans pb-20">
       <div className="max-w-4xl mx-auto space-y-6 relative">
         <HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로 돌아가기" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>홈으로 돌아가기</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar>
-        <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
+        <RecoverClassroom onRecovered={id=>{void fetchRooms();setSelectedRoomId(id);}}/><button className="bg-cyan-700 text-white rounded-xl px-5 py-3 font-bold" onClick={() => navigate('/teacher-ai')}>✦ 수업 준비실 · 활동 추천 / 난이도 / 지도안</button>
         {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-50 text-rose-700 rounded-xl">{roomError} <button onClick={refreshRoom} className="font-bold underline">다시 시도</button></div>}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 mb-8">
           <h1 className="text-3xl font-black flex items-center gap-3 text-cyan-600">
@@ -369,7 +369,7 @@ export const AdminControlPanel = () => {
                   </div>
                   <div className="flex gap-2 mt-3">
                     <button onClick={(e) => { e.stopPropagation(); void openClassroomBoard(r.id); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
-                      <LucideIcons.Monitor className="w-4 h-4" /> TV 전광판
+                      <LucideIcons.Monitor className="w-4 h-4" /> TV 점수판
                     </button>
                   </div>
                 </div>
@@ -404,7 +404,7 @@ export const AdminControlPanel = () => {
                   <Smartphone className="w-4 h-4" /> 📱 모바일 리모컨
                 </button>
                 <button onClick={() => void openClassroomBoard(currentRoom.id)} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-bold text-sm flex items-center gap-2 shadow-sm transition-colors">
-                  <LucideIcons.Monitor className="w-4 h-4" /> 🖥️ TV 전광판 열기
+                  <LucideIcons.Monitor className="w-4 h-4" /> 🖥️ TV 점수판 열기
                 </button>
               </div>
             </div>

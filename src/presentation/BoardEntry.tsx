@@ -34,7 +34,7 @@ export const BoardEntry = () => {
 
       <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm mx-auto my-8 flex flex-col items-center">
         <Monitor className="w-20 h-20 text-cyan-400 mb-4" />
-        <h1 className="text-2xl font-black mb-2 text-center">TV 전광판 모드</h1>
+        <h1 className="text-2xl font-black mb-2 text-center">TV 점수판</h1>
         <p className="text-slate-300 text-sm mb-6 text-center break-keep">
           교실 TV나 빔 프로젝터에 실시간 순위판을 띄우세요.<br/>
           선생님이 알려주신 방 PIN 번호를 입력합니다.

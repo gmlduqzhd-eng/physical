@@ -9,10 +9,8 @@ import { HeaderToolbar } from './components/HeaderToolbar';
 import { readJsonStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, ChevronRight, BookOpen, Home, QrCode, Award, Star, Shuffle, Sun, Moon, Edit3, Volume2, VolumeX, Settings, X } from 'lucide-react';
-import { useTheme } from '../application/ThemeContext';
+import { Sparkles, ChevronRight, BookOpen, Home, QrCode, Award, Star, Shuffle, Edit3, Settings, X } from 'lucide-react';
 import { usePlayerProfile } from '../application/usePlayerProfile';
-import { useVoiceCoach } from '../application/useVoiceCoach';
 import { WarmupRoulette } from './components/WarmupRoulette';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { DailyStreakModal } from './components/DailyStreakModal';
@@ -39,7 +37,6 @@ export const GameHub = () => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useModalDialog(showMenu, () => setShowMenu(false));
   const catalogRef = useRef<HTMLDivElement>(null);
-  const { isDark, toggleTheme } = useTheme();
   const { profile, createProfile, updateNickname, hasProfile } = usePlayerProfile();
   const [editingNickname, setEditingNickname] = useState(false);
   const [nicknameInput, setNicknameInput] = useState('');
@@ -54,7 +51,6 @@ export const GameHub = () => {
   const [showWarmupRoulette, setShowWarmupRoulette] = useState(false);
 
   // 10대 신규 기능 모달 상태
-  const { enabled: voiceEnabled, toggleEnabled: toggleVoice } = useVoiceCoach();
   const [showStreakModal, setShowStreakModal] = useState(false);
   const [showTamagotchiModal, setShowTamagotchiModal] = useState(false);
   const [showMbtiModal, setShowMbtiModal] = useState(false);
@@ -190,9 +186,8 @@ export const GameHub = () => {
               <button type="button" onClick={() => { setShowMenu(false); requestAnimationFrame(() => { void accessQrDialog.current?.open(); }); }}><QrCode className="w-4 h-4"/>접속 QR 크게 보기</button>
               <button type="button" onClick={() => navigate('/manual')}><BookOpen className="w-4 h-4" /> 사용 설명서</button>
               <button type="button" onClick={() => navigate('/manual?tab=lesson')}><BookOpen className="w-4 h-4" /> 지도안 생성기 (자동 · 바로 만들기)</button>
-              <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI로 지도안 · AI 수업 준비실</button>
-              <button type="button" onClick={toggleTheme}>{isDark ? <Sun className="w-4 h-4 text-yellow-400" /> : <Moon className="w-4 h-4" />} {isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}</button>
-              <button type="button" onClick={toggleVoice} aria-pressed={voiceEnabled}>{voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />} 음성 코칭 {voiceEnabled ? 'ON' : 'OFF'}</button>
+              <button type="button" onClick={() => navigate('/teacher-ai')}><Sparkles className="w-4 h-4" /> AI로 지도안 · 수업 준비실</button>
+              <p className="hub-menu-note">글씨 크기·밝기·음성 안내·음악은 맨 위 '화면·소리'에서 바꿔요.</p>
             </div>
           </div>
         </div>
@@ -203,7 +198,7 @@ export const GameHub = () => {
         <strong className="hub-score">{(profile?.totalScore || 0).toLocaleString()}점</strong>
         <button type="button" onClick={() => setActiveTab('records')} className="hub-record-link">🏆 내 기록 ›</button>
       </div>
-      <nav className="hub-tabs" aria-label="게임 허브 메뉴">
+      <nav className="hub-tabs" aria-label="놀이 모음 메뉴">
         {([{ id: 'games', label: '⭐ 즐겨찾기·뽑기' }, { id: 'activities', label: '⚡ 특별 활동' }, { id: 'teacher', label: '🧑‍🏫 선생님 도구' }, { id: 'records', label: '🏆 내 기록' }] as const).map(tab => (
           <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} aria-controls={`hub-panel-${tab.id}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
         ))}
@@ -343,7 +338,7 @@ export const GameHub = () => {
       </section>
       {activeTab === 'activities' || activeTab === 'teacher' ? (
         <section id={`hub-panel-${activeTab}`} aria-label={activeTab === 'teacher' ? '선생님 도구' : '특별 활동'}>
-          {activeTab === 'teacher' && <div className="p-4 max-w-5xl mx-auto"><button className="rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold" onClick={() => navigate('/teacher-ai')}>✦ AI 수업 준비실 · 활동 추천 / 난이도 / 지도안</button><button className="ml-3 underline" onClick={() => navigate('/privacy')}>기기 정보 관리</button></div>}
+          {activeTab === 'teacher' && <div className="p-4 max-w-5xl mx-auto"><button className="rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold" onClick={() => navigate('/teacher-ai')}>✦ 수업 준비실 · 활동 추천 / 난이도 / 지도안</button><button className="ml-3 underline" onClick={() => navigate('/privacy')}>기기 정보 관리</button></div>}
           <ThemeZone groupFilter={activeTab === 'teacher' ? 'teacher' : 'activities'} onSelect={openThemeMode} onOpenBadgeArchive={() => setShowBadgeArchive(true)} />
         </section>
       ) : null}

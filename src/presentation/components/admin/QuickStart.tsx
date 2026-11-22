@@ -117,14 +117,14 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
               </div>
             </div>
 
-            {/* TV 전광판 바로가기 */}
+            {/* TV 점수판 바로가기 */}
             <a
               href={`/board/${createdRoom.id}`} onClick={e=>{e.preventDefault();void openClassroomBoard(createdRoom.id);}}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
             >
-              <ExternalLink className="w-4 h-4" /> TV 전광판 열기
+              <ExternalLink className="w-4 h-4" /> TV 점수판 열기
             </a>
           </div>
         </div>
