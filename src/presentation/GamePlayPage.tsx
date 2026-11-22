@@ -208,6 +208,8 @@ const GamePlaySession = () => {
   };
   const safeCatalogReturn=catalogReturn&&/^\/(solo|hub|today)(\?[^#]*)?$/.test(catalogReturn)?catalogReturn:null;
   const hubPath = (guidedRequested || !!missionId) && hasBattle ? `/mobile/${battleRoomId}/${battleGroupId}` : hasBattle ? '/hub/tools?battle=1' : safeCatalogReturn||(soloMode?'/solo':'/hub');
+  // 수업방 미션에서 온 학생은 모둠 화면으로 돌아간다(이름도 그렇게 부른다).
+  const backLabel = hubPath.startsWith('/mobile/') ? '우리 모둠으로' : '활동 목록으로';
   const { enqueueAction: enqueueClassroomScore, queueLength, isOnline, storageAvailable, syncWarning } = useSyncQueue(hasBattle);
   const guidedSubmission = useGuidedSubmission(guidedMode ? battleRoomId : null, guidedMode ? battleGroupId : null, guidedMode ? missionId : null);
   const enqueueGuidedCompletion = guidedSubmission.enqueueCompletion;
@@ -459,14 +461,14 @@ const GamePlaySession = () => {
   const renderGame=()=>variantsFor(gameType).length?<ConsolidatedActivity targetId={gameType} selected={variantId} solo={soloMode} groupId={dummyGroupId} enqueueAction={localEnqueueAction}>{renderBaseGame()}</ConsolidatedActivity>:renderBaseGame();
 
   return (
-    <div ref={gameLayoutRef} className="game-tools-scope game-tools-layout">
-      <div className="game-utilities-bar"><HeaderToolbar studentMode={hasBattle}><button className="icon-toolbar-action" type="button" onClick={handleReturnToCatalog} title="활동 목록으로"><ArrowLeft aria-hidden="true"/><span>활동 목록으로</span></button><button className="icon-toolbar-action" type="button" onClick={() => navigate('/manual')} title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
+    <div ref={gameLayoutRef} className="game-tools-scope game-tools-layout" data-student-play={hasBattle ? "" : undefined}>
+      <div className="game-utilities-bar"><HeaderToolbar studentMode={hasBattle || undefined}><button className="icon-toolbar-action" type="button" onClick={handleReturnToCatalog} title={backLabel}><ArrowLeft aria-hidden="true"/><span>{backLabel}</span></button>{!hasBattle&&<button className="icon-toolbar-action" type="button" onClick={() => navigate('/manual')} title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></button>}</HeaderToolbar></div>
       <ActivityPauseBoundary paused={classroomActivity.paused} message={classroomActivity.message}>
     <div className={`warm-game gameplay-page ${hasStarted ? 'has-game-toolbar' : ''} relative min-h-[100dvh] bg-slate-950`}>
       {/* 활동 준비 화면 */}
       {!hasStarted && !gameFinished && (
         <div className="game-prepare fixed inset-0 z-[10002] overflow-y-auto p-4"><div className="game-prepare-inner">
-          <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>활동 목록으로</button>
+          <button className="game-prepare-back" onClick={handleReturnToCatalog}><ArrowLeft aria-hidden="true"/>{backLabel}</button>
           <div className="game-prepare-heading"><span className="game-prepare-emoji" aria-hidden="true">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span><div><p className="game-prepare-eyebrow">땀방울 원정대 · {soloMode ? '혼자 해보기' : '활동 준비'}</p><h1>{gameInfo.name}</h1><p className="game-prepare-target">{gameInfo.target}</p></div></div>
           <div className="game-prepare-info">{(()=>{
             // 표현·안전 활동은 게임마다 다른 3줄 규칙을 보여 준다. 같은 문구('짝과 표현 발표')를 모든 표현 활동에 붙이지 않는다.
@@ -526,7 +528,7 @@ const GamePlaySession = () => {
       {/* 상단 네비게이션 */}
       {hasStarted && (
         <div ref={gameToolbarRef} className="gameplay-toolbar fixed top-0 left-0 right-0 z-[10000] flex items-center justify-between pointer-events-none">
-          <button onClick={handleReturnToCatalog} className="game-toolbar-back" aria-label="활동 목록으로"><ArrowLeft aria-hidden="true"/></button>
+          <button onClick={handleReturnToCatalog} className="game-toolbar-back" aria-label={backLabel}><ArrowLeft aria-hidden="true"/></button>
           <div className="game-toolbar-title"><strong>{gameInfo.name}</strong><small>{gameInfo.domain} · {gameInfo.target}</small></div>
           {showDetailedResult && <button className="game-toolbar-result" onClick={() => setShowDetailedResult(false)}>점수 화면</button>}
           {/* 교실 TV 모드: 위쪽 도구 막대와 작은 설명을 숨기고 놀이 화면을 넓게 쓴다. */}
@@ -545,14 +547,14 @@ const GamePlaySession = () => {
             </div>}
             <span className="text-6xl mb-3">{isPhonePlay(gameType||'')?<PhonePlayIcon gameType={gameType||''} size={48}/>:gameInfo.emoji}</span>
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
-            <p className="text-emerald-400 font-bold text-xs mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
+            <p className="text-emerald-400 font-bold text-base mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
             {/* 오늘 수업 중: 수업을 잇는 길을 결과 카드 맨 위에 둔다(TV에서 스크롤하지 않아도 보이게). */}
             {lessonStage&&<div className="lesson-next-top w-full mb-4"><button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button><p className="mt-2 text-center text-xs text-slate-300">반응(👍/👎)은 아래에서 남길 수 있어요.</p></div>}
             {/* 학생 폰: 큰 축하 한 줄과 점수를 맨 위에 둔다(390x844 첫 화면 안). */}
             {hasBattle && (
               <div className="student-result-hero w-full mb-4 text-center">
                 <p role="status" className="student-result-message text-xl font-black text-white">
-                  {studentResultMessage({quiet:quietResult,partial:resultDetails?.completion==='partial',queue:queueLength,online:isOnline,warning:syncWarning??'',score:classroomResultScore(lastEarnedScore,resultDetails)})}{!storageAvailable&&queueLength>0&&' 화면을 열어 두세요.'}
+                  {studentResultMessage({quiet:quietResult,partial:resultDetails?.completion==='partial',queue:queueLength,online:isOnline,warning:syncWarning??'',score:classroomResultScore(lastEarnedScore,resultDetails),storageAvailable})}
                 </p>
                 <div className="result-score student-result-score w-full mt-3 bg-slate-800 rounded-2xl p-4 flex flex-col items-center border border-slate-700">
                   <span className="text-slate-300 text-base font-bold mb-1">오늘 얻은 점수</span>
@@ -582,7 +584,7 @@ const GamePlaySession = () => {
             {gameType&&<ClassFeedbackSlot gameId={gameType} playId={sessionPlayId}/>}
             {lastEarnedScore > 300 && (
               <div className="w-full bg-orange-950/50 border border-orange-500/30 rounded-xl px-4 py-2.5 mb-4 text-center">
-                <p className="text-xs font-bold text-orange-300">💪 훌륭해요! 다음에는 자신의 기록을 넘어 보세요!</p>
+                <p className="text-sm font-bold text-orange-300">💪 훌륭해요! 다음에는 자신의 기록을 넘어 보세요!</p>
               </div>
             )}
 
@@ -614,12 +616,12 @@ const GamePlaySession = () => {
                     }`}
                   >
                     <span className={`text-2xl transition-transform ${rpeSelected === value ? 'scale-125' : ''}`}>{emoji}</span>
-                    <span className={`text-[10px] font-bold ${rpeSelected === value ? 'text-cyan-300' : 'text-slate-500'}`}>{label}</span>
+                    <span className={`text-sm font-bold ${rpeSelected === value ? 'text-cyan-300' : 'text-slate-300'}`}>{label}</span>
                   </button>
                 ))}
               </div>
               {rpeSelected && (
-                <p className="text-center text-[11px] text-cyan-400/80 font-bold mt-2 animate-in fade-in duration-200">
+                <p className="text-center text-sm text-cyan-300 font-bold mt-2 animate-in fade-in duration-200">
                   ✅ 자각도 {rpeSelected}/5 기록 완료!
                 </p>
               )}
@@ -628,7 +630,7 @@ const GamePlaySession = () => {
             {/* 🫀 쿨다운 & 심박수 정리운동 버튼 */}
             {!quietResult&&<button
               onClick={() => setShowCooldownModal(true)}
-              className="game-result-cooldown w-full mb-4 py-3 border font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
+              className="game-result-cooldown w-full mb-4 py-3 border font-bold text-sm rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md"
             >
               <Heart className="w-4 h-4" />
               <span>🫀 운동 후 쿨다운 루틴</span>

@@ -43,6 +43,18 @@ export function StudentNumberPad({ number, nickname, onNumberChange, onNicknameC
     rootRef.current?.scrollIntoView({ block: 'start' });
     noticeRef.current?.focus({ preventScroll: true });
   }, [notice]);
+  // 번호를 고르면 아래에 붙는 입장 단추가 '더 보기'·'별명 바꾸기'를 가리지 않게, 아래 도구가 보이도록 내려 준다.
+  const firstPick = useRef(true);
+  useEffect(() => {
+    if (firstPick.current) { firstPick.current = false; return; }
+    if (!picked) return;
+    // 맨 아래 도구(별명 바꾸기)를 화면 안으로 올리면(scroll-margin-bottom만큼 위에 멈춘다) 입장 단추가 제자리에 놓여 겹치지 않는다.
+    const tools = rootRef.current?.querySelectorAll<HTMLElement>('.snp-tools button, .snp-tools input');
+    const last = tools?.[tools.length - 1];
+    if (!last || !rootRef.current?.closest('form')?.querySelector('.snp-submit')) return;
+    const frame = requestAnimationFrame(() => last.scrollIntoView({ block: 'nearest' }));
+    return () => cancelAnimationFrame(frame);
+  }, [picked]);
   const shown = range(1, more ? LAST : FIRST);
   const showName = editName || custom;
   return <div className="snp" ref={rootRef}>

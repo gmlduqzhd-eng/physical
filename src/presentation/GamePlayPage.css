@@ -58,3 +58,12 @@ body:has(.today-bar) .game-result-overlay{top:48px}
 .game-result-card .class-feedback[data-tone=dark] .class-feedback-map{background:var(--forest-paper,#fff)}
 /* 놀이 화면에서는 제목 줄의 ←가 같은 일을 하므로, 위쪽 아이콘 줄의 '활동 목록으로'는 숨겨 뒤로 단추를 하나만 둔다. */
 .game-tools-layout:has(.gameplay-toolbar) .game-utilities-bar .icon-toolbar-action[title="활동 목록으로"]{display:none!important}
+
+/* 수업방에서 학생 폰으로 여는 놀이(data-student-play): 1~2학년이 읽을 수 있게 작은 글씨를 14px 이상으로, 접는 줄은 44px 이상으로. */
+.game-tools-layout[data-student-play] .gameplay-toolbar .game-toolbar-title small{display:none}
+.game-tools-layout[data-student-play] .mq-heading p,
+.game-tools-layout[data-student-play] .activity-progress small,
+.game-tools-layout[data-student-play] .start-label-sub,
+.game-tools-layout[data-student-play] .mq-map-mini small{font-size:14px}
+.game-tools-layout[data-student-play] :is(.activity-brief,.student-result-teacher-note)>summary{min-height:44px;display:flex;align-items:center;gap:6px}
+.game-tools-layout[data-student-play] summary{min-height:44px;padding-block:10px;box-sizing:border-box}

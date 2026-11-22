@@ -9,14 +9,14 @@ export interface StudentClassroomEntry { room_id:string; group_id:string; group_
 export interface MyClassroomProfile { group_id:string; student_number:number|null; nickname:string|null }
 const studentJoinErrors: Record<string,string> = {
   invalid_profile:'번호(1~99)와 별명(2~12자)을 확인해 주세요.',
-  invalid_pin:'PIN이 맞지 않거나 종료된 수업입니다. 선생님에게 확인해주세요.',
-  invalid_invite:'QR 참여 코드가 맞지 않거나 만료되었습니다. 선생님에게 새 QR을 요청하세요.',
+  invalid_pin:'모둠 비밀번호가 맞지 않거나 끝난 수업이에요. 선생님께 물어봐요.',
+  invalid_invite:'QR이 맞지 않거나 시간이 지났어요. 선생님께 새 QR을 보여 달라고 해요.',
   // 번호는 먼저 들어온 기기가 최대 4시간 잡고 있다. 선생님 화면에는 번호를 푸는 단추가 없으므로, 할 수 있는 일만 짧게 안내한다.
   // '이전 수업 이어가기'는 그 단추가 화면에 있을 때만 입장 화면이 덧붙인다(studentIdentity.ts의 takenNumberNotice).
   number_taken:'이 번호는 벌써 누가 들어왔어요. 다른 번호를 누르거나 선생님께 말해요.',
   group_locked:'이미 다른 모둠에 참여 중입니다. 선생님에게 문의하세요.',
   room_closed:'종료된 수업입니다. 선생님에게 확인해주세요.',
-  rate_limited:'이 기기에서 잘못된 참여 코드를 여러 번 입력했어요. 이미 참여한 수업은 ‘이전 수업 이어가기’를 이용하고, 새 입장은 15분 후 다시 시도해주세요.',
+  rate_limited:'이 기기에서 틀린 비밀번호를 여러 번 적었어요. 이미 참여한 수업은 ‘이전 수업 이어가기’를 이용하고, 새 입장은 15분 후 다시 시도해주세요.',
 };
 /** 고른 번호를 이미 다른 기기가 쓰고 있다는 오류인지(번호판에서 그 번호를 막는 데 쓴다). */
 export const isNumberTakenError = (error: unknown) => error instanceof Error && error.message === studentJoinErrors.number_taken;
@@ -59,7 +59,7 @@ export async function joinClassroomWithShortPin(pin: string): Promise<{room_id:s
   await ensureClassroomUser();
   const {data,error} = await supabase.rpc('join_classroom_with_short_pin',{entry_pin:pin.trim()});
   if (error) throw new Error('입장 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.');
-  if (!data) throw new Error('PIN이 맞지 않거나 종료된 수업입니다. 선생님에게 확인해주세요.');
+  if (!data) throw new Error('모둠 비밀번호가 맞지 않거나 끝난 수업이에요. 선생님께 물어봐요.');
   if (data.error) throw new Error(data.error);
   return data;
 }
@@ -78,7 +78,7 @@ export async function findRoomByPin(pin: string): Promise<GameRoom> {
 export async function joinClassroomGroup(roomId: string, groupName: string, inviteCode = ''): Promise<string> {
   await ensureClassroomUser();
   const {data,error} = await supabase.rpc('join_secure_classroom',{room_uuid:roomId,group_name:groupName,invite_code:inviteCode.trim().toLowerCase()});
-  if (error || !data) throw new Error('모둠 참여 코드가 맞지 않거나 참여 권한이 만료되었습니다. 교사에게 새 QR 또는 코드를 요청하세요.');
+  if (error || !data) throw new Error('모둠 비밀번호가 맞지 않거나 시간이 지났어요. 선생님께 새 QR이나 비밀번호를 물어봐요.');
   return data;
 }
 

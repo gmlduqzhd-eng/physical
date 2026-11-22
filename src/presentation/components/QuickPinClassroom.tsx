@@ -74,7 +74,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     if (error) throw new Error('팀 정보를 불러오지 못했습니다. 연결 상태를 확인해주세요.');
     const blue = data?.find(group => group.group_name === '청팀');
     const white = data?.find(group => group.group_name === '백팀');
-    if (!blue || !white) throw new Error('청백 학급 배틀 방이 아닙니다. 수업 참여는 홈의 PIN 입장을 이용해주세요.');
+    if (!blue || !white) throw new Error('청백 학급 배틀 방이 아닙니다. 수업 참여는 홈의 ‘학생 참여하기’로 들어와요.');
     return { id, pin, hostId: readStorage('pin_battle_host_' + id, 'session') === 'true' ? clientId : '', blueScore: blue.score, whiteScore: white.score, blueGroupId: blue.id, whiteGroupId: white.id, members: [clientId] };
   };
 
@@ -143,7 +143,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
     try {
       const identity=validateStudentIdentity(studentNumber,nickname);
       const entry = await joinStudentByPin(inputPin,identity);
-      if (entry.group_name !== '청팀' && entry.group_name !== '백팀') throw new Error('청백 배틀 모둠 PIN을 입력해주세요.');
+      if (entry.group_name !== '청팀' && entry.group_name !== '백팀') throw new Error('청백 배틀 팀 비밀번호를 적어요.');
       rememberStudentIdentity(identity);
       const battle = await readBattle(entry.room_id, inputPin);
       setSelectedTeam(entry.group_name === '청팀' ? 'blue' : 'white');
@@ -218,11 +218,11 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <Users className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-black mb-1">4자리 PIN 학급 배틀룸</h2>
-            <p className="text-xs text-slate-400 mb-5">선생님이 알려준 팀 4자리 PIN을 적고, 내 번호를 눌러요.</p>
+            <p className="text-sm text-slate-400 mb-5">선생님이 알려준 팀 비밀번호(숫자 4개)를 적고, 내 번호를 눌러요.</p>
 
             {/* 에러 메시지 배너 */}
             {errorMsg && (
-              <div className="bg-rose-500/15 border border-rose-500/40 p-3.5 rounded-2xl flex items-start gap-2.5 text-xs text-rose-300 text-left mb-4 whitespace-pre-line leading-relaxed">
+              <div className="bg-rose-500/15 border border-rose-500/40 p-3.5 rounded-2xl flex items-start gap-2.5 text-sm text-rose-300 text-left mb-4 whitespace-pre-line leading-relaxed">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <span className="font-medium">{errorMsg}</span>
               </div>
@@ -230,7 +230,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             {/* PIN 입력 폼 */}
             <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700/60 mb-5">
-              <label className="text-xs font-bold text-slate-300 block mb-2">선생님이 알려주신 PIN 입력</label>
+              <label className="text-sm font-bold text-slate-300 block mb-2">선생님이 알려 주신 팀 비밀번호 (숫자 4개)</label>
               <input
                 type="text"
                 maxLength={4}
@@ -259,7 +259,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
-              <div className="relative flex justify-center text-xs uppercase"><span className="bg-slate-900 px-2 text-slate-500 font-bold">또는</span></div>
+              <div className="relative flex justify-center text-sm uppercase"><span className="bg-slate-900 px-2 text-slate-500 font-bold">또는</span></div>
             </div>
 
             <button
@@ -277,9 +277,9 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-bold text-cyan-400">학급 배틀</span>
+                  <span className="text-sm font-bold text-cyan-400">학급 배틀</span>
                   {isHost && (
-                    <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold">
+                    <span className="text-sm bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded border border-amber-500/40 font-bold">
                       방장(선생님)
                     </span>
                   )}
@@ -297,7 +297,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               </div>
 
               {/* 실제 실시간 참가자 수 */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/90 border border-slate-700 rounded-xl text-xs font-bold text-slate-200 shadow-sm">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm font-bold text-slate-200 shadow-sm">
                 <Users className="w-4 h-4 text-cyan-400" />
                 <span className="font-extrabold text-cyan-300">{memberCount}</span>명 참가중
               </div>
@@ -305,7 +305,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             {/* 선생님용 가이드 배너 */}
             {isHost && (
-              <div className="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-xs text-blue-200 mb-4 flex items-center gap-2">
+              <div className="bg-blue-950/40 border border-blue-500/30 p-2.5 rounded-xl text-sm text-blue-200 mb-4 flex items-center gap-2">
                 <div><p>📢 학생에게 자기 팀의 4자리 PIN만 안내하세요.</p>{teacherInvites.map(v=><p key={v.group_name}>{v.group_name}: <code className="text-lg font-bold">{v.short_pin}</code></p>)}<a href="/admin" className="underline">교사 관리 화면에서 QR·복구키 확인</a></div>
               </div>
             )}
@@ -320,11 +320,11 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                     : 'bg-slate-800/50 border-slate-700 opacity-60 hover:opacity-80'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                <div className="flex items-center justify-between text-sm font-bold mb-1">
                   <span className="text-blue-300">청팀 (Blue)</span>
-                  {selectedTeam === 'blue' && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-black">내 팀</span>}
+                  {selectedTeam === 'blue' && <span className="text-sm bg-blue-500 text-white px-1.5 py-0.5 rounded font-black">내 팀</span>}
                 </div>
-                <div className="text-3xl font-mono font-black text-blue-400">{blueScore} <span className="text-xs">점</span></div>
+                <div className="text-3xl font-mono font-black text-blue-400">{blueScore} <span className="text-sm">점</span></div>
               </div>
 
               <div
@@ -335,17 +335,17 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
                     : 'bg-slate-800/50 border-slate-700 opacity-60 hover:opacity-80'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs font-bold mb-1">
+                <div className="flex items-center justify-between text-sm font-bold mb-1">
                   <span className="text-slate-200">백팀 (White)</span>
-                  {selectedTeam === 'white' && <span className="text-[10px] bg-white text-slate-950 px-1.5 py-0.5 rounded font-black">내 팀</span>}
+                  {selectedTeam === 'white' && <span className="text-sm bg-white text-slate-950 px-1.5 py-0.5 rounded font-black">내 팀</span>}
                 </div>
-                <div className="text-3xl font-mono font-black text-white">{whiteScore} <span className="text-xs">점</span></div>
+                <div className="text-3xl font-mono font-black text-white">{whiteScore} <span className="text-sm">점</span></div>
               </div>
             </div>
 
             {/* 팀 점수 비율 게이지 */}
             <div className="bg-slate-800/80 p-3 rounded-2xl mb-4 border border-slate-700/60">
-              <div className="flex justify-between text-[11px] font-bold text-slate-400 mb-1.5">
+              <div className="flex justify-between text-sm font-bold text-slate-400 mb-1.5">
                 <span className="text-blue-400">청팀 {bluePercent}%</span>
                 <span>{totalScore === 0 ? '대결 시작 전' : `총 점수: ${totalScore}점`}</span>
                 <span className="text-slate-200">백팀 {whitePercent}%</span>
@@ -364,20 +364,20 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
             {/* 선택된 팀에 점수 기여하기 */}
             <div className="space-y-2 mb-4">
-              {errorMsg && <p role="alert" className="text-xs text-rose-300">{errorMsg}</p>}
-              <p className="text-xs font-bold text-slate-400">
+              {errorMsg && <p role="alert" className="text-sm text-rose-300">{errorMsg}</p>}
+              <p className="text-sm font-bold text-slate-400">
                 선택된 <span className={selectedTeam === 'blue' ? 'text-blue-400 font-extrabold' : 'text-slate-200 font-extrabold'}>{selectedTeam === 'blue' ? '청팀' : '백팀'}</span>에 점수 기여하기
               </p>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleStartGame('reaction')} disabled={busy}
-                  className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
+                  className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 반응 코스
                 </button>
                 <button
                   onClick={() => handleStartGame('direction')} disabled={busy}
-                  className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
+                  className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
                 >
                   <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 방향 코스
                 </button>
@@ -388,14 +388,14 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="flex gap-2">
               <button
                 onClick={handleLeaveRoom}
-                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-bold rounded-xl flex items-center justify-center gap-1 border border-slate-700"
+                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 font-bold rounded-xl flex items-center justify-center gap-1 border border-slate-700"
               >
                 <LogOut className="w-3.5 h-3.5" /> 방 나가기
               </button>
               {isHost && (
                 <button
                   onClick={handleCloseRoom}
-                  className="py-2.5 px-4 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 text-xs font-bold rounded-xl border border-rose-500/40"
+                  className="py-2.5 px-4 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 text-sm font-bold rounded-xl border border-rose-500/40"
                 >
                   방 종료
                 </button>
