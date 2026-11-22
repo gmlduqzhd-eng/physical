@@ -49,10 +49,10 @@ export const BoardEntry = () => {
             onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
             className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"
           />
-          <label>전광판 전용 코드<input type="password" autoComplete="off" value={boardCode} maxLength={16} onChange={e=>setBoardCode(e.target.value)} className="w-full bg-black/30 border p-3 rounded-xl"/></label>
+          <label>TV 점수판 전용 코드<input type="password" autoComplete="off" value={boardCode} maxLength={16} onChange={e=>setBoardCode(e.target.value)} className="w-full bg-black/30 border p-3 rounded-xl"/></label>
           {error && <p className="text-red-400 text-sm font-bold text-center">{error}</p>}
           <button disabled={loading} type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-colors">
-            {loading ? '확인 중...' : '전광판 열기'}
+            {loading ? '확인 중...' : 'TV 점수판 열기'}
           </button>
         </form>
       </div>

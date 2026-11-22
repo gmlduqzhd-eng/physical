@@ -22,7 +22,7 @@ test('수업방을 만들면 학생 입장 QR을 바로 크게 띄우고, 그 �
   // 새로고침하면 다시 뜨지 않게 표시를 지운다.
   assert.match(room, /delete rest\.justCreated/);
   const panel = read('src/presentation/components/admin/QRCodePanel.tsx');
-  assert.match(panel, /useState\(autoPresent\)/);
+  assert.match(panel, /useState\(\(\)=>autoPresent&&!autoPresentedRooms\.has\(currentRoom\.id\)\)/);
   assert.match(panel, /classroom-presentation-start/);
   assert.match(panel, /휴대폰으로 우리 모둠 QR을 찍어요/);
   assert.match(panel, /classroom-join-address/);

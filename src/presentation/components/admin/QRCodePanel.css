@@ -91,3 +91,35 @@
   :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>.classroom-group-pin{grid-row:4}
   :root body .classroom-presentation.is-presenting[data-size="one"] .classroom-qr-card>img{grid-row:1/span 5}
 }
+
+/* r115 — 크게 보여 주는 화면 다듬기 */
+/* 글씨 '크게/더 크게'는 본문(main)을 통째로 확대(zoom)한다. 화면을 덮는 입장 화면은 이미 화면 크기에 맞춰 크므로
+   확대를 되돌려 화면 밖으로 잘리지 않게 한다(1/1.125, 1/1.25). */
+html[data-text-scale="large"] main .classroom-presentation.is-presenting{zoom:calc(1/1.125)}
+html[data-text-scale="xlarge"] main .classroom-presentation.is-presenting{zoom:.8}
+:root body .classroom-presentation.is-overlay{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+:root body .classroom-presentation.is-overlay:focus{outline:none}
+/* '수업 시작'이 이 화면에서 가장 눈에 띄는 단추 */
+:root body .classroom-presentation .classroom-presentation-actions .classroom-presentation-start{background:var(--forest-accent,#08787a);color:var(--forest-on,#fff);border:2px solid transparent;font-weight:900}
+:root body .classroom-presentation.is-presenting .classroom-presentation-actions .classroom-presentation-start{font-size:clamp(1.25rem,2vw,1.75rem);min-height:64px;padding:12px clamp(20px,2.4vw,36px);border-radius:16px;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+:root body .classroom-presentation .classroom-presentation-actions .classroom-presentation-start:focus-visible{outline:4px solid #f59e0b;outline-offset:3px}
+:root body .classroom-presentation.is-presenting .classroom-total-count{background:transparent;color:var(--forest-ink,#19313b);border:2px solid var(--forest-accent,#08787a)}
+@media(min-width:641px){
+  /* 모둠 셋·넷: 비밀번호 숫자가 카드 밖으로 나가지 않게 조금 줄인다. */
+  :root body .classroom-presentation.is-presenting[data-size="some"] .classroom-group-pin{font-size:clamp(3rem,7vw,6rem);letter-spacing:.02em}
+}
+@media(min-width:900px){
+  /* 모둠 다섯·여섯: 3칸 × 2줄. 칸마다 왼쪽에 비밀번호, 오른쪽에 QR을 두어 TV 한 화면에 모두 들어오게 한다. */
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,1.2vw,16px)}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr auto auto auto 1fr;align-items:center;column-gap:clamp(8px,1vw,16px);padding:clamp(8px,1vw,14px);text-align:left}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card>h3{grid-column:1;grid-row:2;display:block;font-size:clamp(1.1rem,1.6vw,1.5rem)}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card>.classroom-group-count{grid-column:1;grid-row:3;display:block;font-size:clamp(.95rem,1.3vw,1.2rem)}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card>.classroom-group-pin{grid-column:1;grid-row:4;font-size:clamp(2.6rem,4.4vw,4.4rem);letter-spacing:.02em;margin:4px 0 0}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card>img{grid-column:2;grid-row:1/span 5;width:min(24vh,15vw);margin:0}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-qr-card>.classroom-roster{grid-column:1/-1;grid-row:6}
+  :root body .classroom-presentation.is-presenting[data-size="many"] .classroom-presentation-head{margin-bottom:10px}
+  /* 모둠 일곱 이상: 4칸씩. 한 화면에 다 못 들어오면 스크롤한다. */
+  :root body .classroom-presentation.is-presenting[data-size="lots"] .classroom-qr-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(8px,1vw,14px)}
+  :root body .classroom-presentation.is-presenting[data-size="lots"] .classroom-group-pin{font-size:clamp(2.6rem,4.6vw,4.4rem);letter-spacing:.02em;white-space:nowrap}
+  :root body .classroom-presentation.is-presenting[data-size="lots"] .classroom-qr-card img{width:min(100%,20vh)}
+}
