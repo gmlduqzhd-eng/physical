@@ -25,7 +25,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         <span className="text-sm text-slate-500 font-bold">{gameRoom?.name}</span>
-        <HeaderToolbar><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
+        <HeaderToolbar studentMode><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
       </header>
 
       {/* Main content */}

@@ -64,3 +64,6 @@ html[data-design=forest] body .header-modal-layer .install-heading { position:st
 html[data-design=forest] body .header-modal-layer .install-close { position:static; padding:0; min-width:44px; min-height:44px; }
 html[data-design=forest] body .header-modal-layer .install-close>svg { width:20px; height:20px; }
 html[data-design=forest] body .header-modal-layer .install-dialog * { box-sizing:border-box; }
+
+/* 학생 화면: 뒤로·도움말 두 칸만. */
+html[data-design=forest] body .icon-toolbar.header-icon-scope.icon-toolbar-student[aria-label] { grid-template-columns:repeat(2,44px); }
