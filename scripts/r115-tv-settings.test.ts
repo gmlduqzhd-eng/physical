@@ -64,7 +64,7 @@ test('settings popover: closes when focus leaves, studio gets absolute check lin
   assert.match(util, /export function setHeaderCheckLinkBase/);
   assert.match(util, /aria-disabled=\{share\.sharing \|\| undefined\}/);
   assert.match(read('teacher-studio/main.tsx'), /setHeaderCheckLinkBase\(/);
-  assert.match(read('src/presentation/components/HeaderUtilities.css'), /\.header-settings-popover \.background-music-title small\{font-size:13px\}/);
+  assert.match(read('src/presentation/components/HeaderUtilities.css'), /\.header-settings-popover \.background-music-title small\{font-size:14px\}/);
 });
 
 test('class screens: no 9–11px text, 44px targets, one word for a task, Esc leaves', () => {

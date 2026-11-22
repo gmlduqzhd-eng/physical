@@ -29,7 +29,7 @@ export function TeacherLogin({ onLogin }: { onLogin: () => void }) {
       const body = await res.json(); if (!res.ok) throw new Error(body.error ?? '인증 실패'); setCode(''); onLogin();
     } catch (cause) { setError(cause instanceof Error ? cause.message : '인증 서버에 연결할 수 없습니다.'); } finally { setBusy(false); } }}>
       <label className="block font-bold">교사 접근 코드<input className="block w-full border rounded-xl p-3 mt-2" type="password" autoComplete="current-password" minLength={12} maxLength={128} value={code} onChange={e => setCode(e.target.value)} required /></label>
-      <button disabled={busy} className="mt-3 rounded-xl bg-cyan-700 text-white px-5 py-3 font-bold">{busy ? '확인 중…' : setup ? '접근 코드 설정하고 시작' : '교사 인증하기'}</button>
+      <button disabled={busy} className="mt-3 rounded-xl bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] px-5 py-3 font-bold">{busy ? '확인 중…' : setup ? '접근 코드 설정하고 시작' : '교사 인증하기'}</button>
     </form></div>}{error && <p role="alert" className="text-red-700 mt-3">{error}</p>}
   </section>;
 }

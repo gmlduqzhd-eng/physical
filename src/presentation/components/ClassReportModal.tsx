@@ -409,17 +409,17 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         {/* 상단 툴바 */}
         <div className="print:hidden bg-slate-900 text-white px-5 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-800">
           <div className="flex items-center gap-2.5">
-            <span className="p-2 bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white rounded-xl shadow-inner">
+            <span className="p-2 bg-gradient-to-tr from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl shadow-inner">
               <Sparkles className="w-5 h-5" />
             </span>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-black tracking-tight">NEIS 세특 자동 완성</h2>
-                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold rounded-full">
+                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-sm font-bold rounded-full">
                   2022 개정 교육과정
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-sm text-slate-400 mt-0.5">
                 {gameRoom?.name || '체육 수업'} • 초등 체육과 성취기준 연계 원클릭 생성
               </p>
             </div>
@@ -429,7 +429,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <button
               onClick={handleDownloadCSV}
               title="2022 개정 성취기준 세특 포함 CSV 다운로드"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
             >
               <FileSpreadsheet className="w-4 h-4" />
               <span>CSV 저장</span>
@@ -437,7 +437,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <button
               onClick={handleDownloadPhotoCard}
               title="명예의 전당 포토카드 이미지 저장"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
             >
               <ImageIcon className="w-4 h-4" />
               <span>포토카드</span>
@@ -445,7 +445,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <button
               onClick={handlePrint}
               title="인쇄 및 PDF 저장"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
             >
               <Printer className="w-4 h-4" />
               <span>인쇄 / PDF</span>
@@ -465,9 +465,9 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('neis')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-black transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-xl text-sm sm:text-sm font-black transition-all flex items-center gap-2 ${
                 activeTab === 'neis'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                  ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-md shadow-indigo-600/20'
                   : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-white'
               }`}
             >
@@ -476,9 +476,9 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('report')}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-xl text-sm sm:text-sm font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'report'
-                  ? 'bg-cyan-600 text-white shadow-md shadow-cyan-600/20'
+                  ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-md shadow-cyan-600/20'
                   : 'text-slate-600 hover:text-slate-900 bg-white/70 hover:bg-white'
               }`}
             >
@@ -490,7 +490,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
           {activeTab === 'neis' && (
             <button
               onClick={handleCopyAllNeis}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[var(--ui-action,var(--forest-accent,#566d4d))] to-[var(--ui-action,var(--forest-accent,#566d4d))] hover:from-indigo-500 hover:to-cyan-500 text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
             >
               {copiedAll ? <Check className="w-4 h-4 text-emerald-300" /> : <Copy className="w-4 h-4" />}
               <span>{copiedAll ? '전체 세특 복사 완료!' : '📋 전체 세특 일괄 복사'}</span>
@@ -499,7 +499,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         </div>
 
         {actionError && (
-          <p role="alert" className="print:hidden mx-6 my-3 p-3 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl">
+          <p role="alert" className="print:hidden mx-6 my-3 p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl">
             {actionError}
           </p>
         )}
@@ -508,7 +508,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
         {activeTab === 'neis' && (
           <div className="p-4 sm:p-8 overflow-y-auto space-y-5 select-text">
             {/* 교사용 관찰평가 안내 배너 */}
-            <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3 text-xs text-amber-950 leading-relaxed shadow-xs">
+            <div className="p-4 bg-amber-50/90 border border-amber-200/90 rounded-2xl flex items-start gap-3 text-sm text-amber-950 leading-relaxed shadow-xs">
               <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div className="space-y-1">
                 <span className="font-black text-amber-950 block">📌 교사용 관찰평가 참고 안내</span>
@@ -520,16 +520,16 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             </div>
 
             {/* 설정 컨트롤 패널: 학년군 / 영역 / 필터 */}
-            <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/40 rounded-2xl border border-indigo-100 shadow-sm space-y-4">
-              <div className="flex items-center gap-2 text-xs font-black text-indigo-900 uppercase">
-                <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
+            <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/40 rounded-2xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] shadow-sm space-y-4">
+              <div className="flex items-center gap-2 text-sm font-black text-[color:var(--ui-ink,var(--forest-ink,#303d35))] uppercase">
+                <SlidersHorizontal className="w-4 h-4 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]" />
                 <span>2022 개정 체육과 성취기준 맞춤 설정</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* 학년군 선택 */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
                     적용 학년군 선택
                   </label>
                   <div className="flex gap-1.5 flex-wrap">
@@ -537,9 +537,9 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       <button
                         key={grade}
                         onClick={() => setSelectedGrade(grade)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${
                           selectedGrade === grade
-                            ? 'bg-indigo-600 text-white shadow-sm'
+                            ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-sm'
                             : 'bg-white text-slate-700 border border-slate-200 hover:border-indigo-300'
                         }`}
                       >
@@ -551,7 +551,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
                 {/* 중점 영역 선택 */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  <label className="block text-sm font-bold text-slate-700 mb-1.5">
                     중점 평가 영역
                   </label>
                   <div className="flex gap-1.5 flex-wrap">
@@ -564,9 +564,9 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       <button
                         key={d.key}
                         onClick={() => setSelectedDomain(d.key as DomainKey)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                        className={`px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${
                           selectedDomain === d.key
-                            ? 'bg-cyan-700 text-white shadow-sm'
+                            ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-sm'
                             : 'bg-white text-slate-700 border border-slate-200 hover:border-cyan-300'
                         }`}
                       >
@@ -577,7 +577,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-indigo-100/70">
+              <div className="flex items-center justify-between text-sm text-slate-500 pt-2 border-t border-indigo-100/70">
                 <span>💡 2022 개정 체육과의 <strong>지식·이해, 과정·기능, 가치·태도</strong> 3차원 평가 요소가 문장에 자동 반영됩니다.</span>
                 <span>NEIS 한도: 한글 500자 (1,500 Byte)</span>
               </div>
@@ -587,7 +587,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             <div className="p-5 bg-indigo-50/70 rounded-2xl border border-indigo-200/80 space-y-3 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="p-1 bg-indigo-600 text-white rounded-lg">
+                  <span className="p-1 bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-lg">
                     <BookOpen className="w-4 h-4" />
                   </span>
                   <h3 className="text-sm font-black text-indigo-950">
@@ -599,17 +599,17 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                     setCopiedGeneral(true);
                     scheduleCopyReset('general');
                   })}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 text-xs font-bold transition-all shadow-xs"
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] text-sm font-bold transition-all shadow-xs"
                 >
-                  {copiedGeneral ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedGeneral ? <Check className="w-3.5 h-3.5 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedGeneral ? '복사 완료!' : '공통 총평 복사'}</span>
                 </button>
               </div>
 
-              <div className="bg-white p-4 rounded-xl border border-indigo-100 text-xs text-slate-700 space-y-1.5 leading-relaxed">
+              <div className="bg-white p-4 rounded-xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))] text-sm text-slate-700 space-y-1.5 leading-relaxed">
                 {generalNeis.lines.map((line, idx) => (
                   <p key={idx} className="flex items-start gap-2">
-                    <span className="text-indigo-500 font-bold">•</span>
+                    <span className="text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold">•</span>
                     <span>{line}</span>
                   </p>
                 ))}
@@ -623,7 +623,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                   <Sparkles className="w-4 h-4 text-amber-500" />
                   <span>모둠별 2022 개정 성취기준 연계 세특 문구 ({neisCommentList.length}개 모둠)</span>
                 </h3>
-                <span className="text-xs text-slate-500">
+                <span className="text-sm text-slate-500">
                   모둠별 [상/중/하] 레벨을 클릭해 문구를 변경하거나 텍스트를 직접 수정할 수 있습니다.
                 </span>
               </div>
@@ -639,7 +639,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       {/* 모둠 헤더 & 레벨 선택기 */}
                       <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-slate-100">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className={`text-xs font-black px-2.5 py-1 rounded-lg ${
+                          <span className={`text-sm font-black px-2.5 py-1 rounded-lg ${
                             item.rank === 1
                               ? 'bg-amber-100 text-amber-800 border border-amber-300'
                               : item.rank === 2
@@ -661,22 +661,22 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                               placeholder="학생 이름(치환용)"
                               value={customNames[item.groupId] || ''}
                               onChange={(e) => setCustomNames(prev => ({ ...prev, [item.groupId]: e.target.value }))}
-                              className="text-[11px] px-2 py-0.5 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:border-indigo-400 w-28 bg-slate-50"
+                              className="text-sm px-2 py-0.5 border border-slate-200 rounded-lg text-slate-600 focus:outline-none focus:border-[var(--ui-action,var(--forest-accent,#566d4d))] w-28 bg-slate-50"
                               title="학생 이름을 입력하면 문구 내 '모둠' 대신 '학생'으로 자동 치환됩니다"
                             />
                           </div>
 
-                          <span className="text-xs font-mono font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-md">
+                          <span className="text-sm font-mono font-bold text-[color:var(--ui-action,var(--forest-accent,#566d4d))] bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] px-2 py-0.5 rounded-md">
                             {item.score.toLocaleString()}점
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-sm text-slate-500">
                             미션 {item.missionsCount}개 완료 • {item.isDefused ? '🎉 최종 해체 성공' : '미션 진행'}
                           </span>
                         </div>
 
                         {/* 성취 수준 상/중/하 토글 버튼 */}
                         <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                          <span className="text-[11px] font-bold text-slate-500 px-1.5">성취수준:</span>
+                          <span className="text-sm font-bold text-slate-500 px-1.5">성취수준:</span>
                           {(['high', 'mid', 'low'] as AchievementLevel[]).map(lvl => (
                             <button
                               key={lvl}
@@ -689,12 +689,12 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                                   return next;
                                 });
                               }}
-                              className={`px-2 py-0.5 rounded-lg text-xs font-bold transition-all ${
+                              className={`px-2 py-0.5 rounded-lg text-sm font-bold transition-all ${
                                 item.level === lvl
                                   ? lvl === 'high'
-                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-xs'
                                     : lvl === 'mid'
-                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    ? 'bg-[var(--ui-action,var(--forest-accent,#566d4d))] text-[color:var(--ui-on-action,var(--forest-on,#fff))] shadow-xs'
                                     : 'bg-slate-600 text-white shadow-xs'
                                   : 'text-slate-600 hover:text-slate-900'
                               }`}
@@ -706,8 +706,8 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       </div>
 
                       {/* 성취기준 태그 */}
-                      <div className="flex items-center gap-2 flex-wrap text-xs">
-                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-mono font-bold rounded-md border border-indigo-200">
+                      <div className="flex items-center gap-2 flex-wrap text-sm">
+                        <span className="px-2 py-0.5 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-mono font-bold rounded-md border border-[var(--ui-line,var(--forest-line,#d8d6cc))]">
                           {item.standardCodes.join(', ')}
                         </span>
                         <span className="text-slate-600 font-medium">
@@ -723,7 +723,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                               value={item.comment}
                               onChange={(e) => setEditedComments(prev => ({ ...prev, [item.groupId]: e.target.value }))}
                               rows={4}
-                              className="w-full text-xs text-slate-800 p-3 bg-amber-50/50 border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 font-sans leading-relaxed"
+                              className="w-full text-sm text-slate-800 p-3 bg-amber-50/50 border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400 font-sans leading-relaxed"
                             />
                             <div className="flex justify-end gap-2">
                               <button
@@ -736,13 +736,13 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                                   });
                                   setEditModeGroupId(null);
                                 }}
-                                className="px-2.5 py-1 text-slate-500 hover:text-slate-800 text-xs font-bold flex items-center gap-1"
+                                className="px-2.5 py-1 text-slate-500 hover:text-slate-800 text-sm font-bold flex items-center gap-1"
                               >
                                 <RefreshCw className="w-3 h-3" /> 원문 복원
                               </button>
                               <button
                                 onClick={() => setEditModeGroupId(null)}
-                                className="px-3 py-1 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700"
+                                className="px-3 py-1 bg-slate-800 text-white text-sm font-bold rounded-lg hover:bg-slate-700"
                               >
                                 완료
                               </button>
@@ -754,10 +754,10 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                             className="group p-3 bg-slate-50 hover:bg-indigo-50/30 rounded-xl border border-slate-200/80 cursor-pointer transition-colors relative"
                             title="클릭하여 문구를 직접 수정할 수 있습니다"
                           >
-                            <p className="text-xs text-slate-800 leading-relaxed font-sans select-text">
+                            <p className="text-sm text-slate-800 leading-relaxed font-sans select-text">
                               {item.comment}
                             </p>
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2.5 top-2.5 text-[11px] text-indigo-600 font-bold flex items-center gap-1 bg-white/90 px-2 py-0.5 rounded-md border border-indigo-200">
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute right-2.5 top-2.5 text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold flex items-center gap-1 bg-white/90 px-2 py-0.5 rounded-md border border-[var(--ui-line,var(--forest-line,#d8d6cc))]">
                               <Edit3 className="w-3 h-3" /> 직접 수정
                             </span>
                           </div>
@@ -766,10 +766,10 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
 
                       {/* 하단 바: 글자수 / 바이트 / 원클릭 복사 */}
                       <div className="flex items-center justify-between pt-1">
-                        <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+                        <div className="flex items-center gap-2 text-sm text-slate-500 font-mono">
                           <span>글자 수: <strong className="text-slate-800">{item.charCount}자</strong></span>
                           <span>•</span>
-                          <span>바이트: <strong className="text-indigo-700">{item.byteCount} / 1,500 Byte</strong> ({Math.round((item.byteCount / 1500) * 100)}%)</span>
+                          <span>바이트: <strong className="text-[color:var(--ui-action,var(--forest-accent,#566d4d))]">{item.byteCount} / 1,500 Byte</strong> ({Math.round((item.byteCount / 1500) * 100)}%)</span>
                         </div>
 
                         <div className="flex items-center gap-2">
@@ -778,7 +778,7 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                               setCopiedGroupIdx(idx);
                               scheduleCopyReset('group');
                             })}
-                            className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"
+                            className="flex items-center gap-1.5 px-4 py-1.5 bg-[var(--ui-action,var(--forest-accent,#566d4d))] hover:bg-[var(--ui-action-press,#3f5238)] text-[color:var(--ui-on-action,var(--forest-on,#fff))] rounded-xl text-sm font-bold transition-all shadow-sm active:scale-95"
                           >
                             {copiedGroupIdx === idx ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
                             <span>{copiedGroupIdx === idx ? 'NEIS 복사 완료!' : '원클릭 NEIS 복사'}</span>
@@ -799,18 +799,18 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             {/* 타이틀 */}
             <div className="border-b-2 border-slate-900 pb-4 flex items-start justify-between">
               <div>
-                <span className="text-xs font-black text-cyan-600 tracking-wider uppercase">
+                <span className="text-sm font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))] tracking-wider uppercase">
                   2022 개정 초등 체육과 스마트 수업 결과 보고서
                 </span>
                 <h1 className="text-2xl font-black text-slate-900 mt-1">
                   {gameRoom?.name || '체육 미션 원정대 수업'}
                 </h1>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-sm text-slate-500 mt-1">
                   작성일시: {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
               <div className="text-right">
-                <span className="px-3 py-1 bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs font-bold font-mono">
+                <span className="px-3 py-1 bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-sm font-bold font-mono">
                   PIN: {gameRoom?.pin_code || '----'}
                 </span>
               </div>
@@ -819,30 +819,30 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
             {/* 핵심 지표 */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
               <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                <span className="text-xs text-slate-500 font-bold block mb-1">참여 모둠</span>
+                <span className="text-sm text-slate-500 font-bold block mb-1">참여 모둠</span>
                 <span className="text-2xl font-black text-slate-900 font-mono">{scores.length}</span>
-                <span className="text-[11px] text-slate-400 block">개 모둠</span>
+                <span className="text-sm text-slate-400 block">개 모둠</span>
               </div>
-              <div className="p-3 bg-cyan-50 rounded-2xl border border-cyan-200">
-                <span className="text-xs text-cyan-700 font-bold block mb-1">총 획득 점수</span>
-                <span className="text-2xl font-black text-cyan-700 font-mono">{totalScore.toLocaleString()}</span>
-                <span className="text-[11px] text-cyan-600 block">pts</span>
+              <div className="p-3 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] rounded-2xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))]">
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold block mb-1">총 획득 점수</span>
+                <span className="text-2xl font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-mono">{totalScore.toLocaleString()}</span>
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] block">pts</span>
               </div>
-              <div className="p-3 bg-blue-50 rounded-2xl border border-blue-200">
-                <span className="text-xs text-blue-700 font-bold block mb-1">모둠 평균 점수</span>
-                <span className="text-2xl font-black text-blue-700 font-mono">{avgScore.toLocaleString()}</span>
-                <span className="text-[11px] text-blue-600 block">pts</span>
+              <div className="p-3 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] rounded-2xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))]">
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold block mb-1">모둠 평균 점수</span>
+                <span className="text-2xl font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-mono">{avgScore.toLocaleString()}</span>
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] block">pts</span>
               </div>
-              <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200">
-                <span className="text-xs text-emerald-700 font-bold block mb-1">최종 완수율</span>
-                <span className="text-2xl font-black text-emerald-700 font-mono">{defusedCount}</span>
-                <span className="text-[11px] text-emerald-600 block">개 조 ({scores.length > 0 ? Math.round((defusedCount/scores.length)*100) : 0}%)</span>
+              <div className="p-3 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] rounded-2xl border border-[var(--ui-line,var(--forest-line,#d8d6cc))]">
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-bold block mb-1">최종 완수율</span>
+                <span className="text-2xl font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-mono">{defusedCount}</span>
+                <span className="text-sm text-[color:var(--ui-action,var(--forest-accent,#566d4d))] block">개 조 ({scores.length > 0 ? Math.round((defusedCount/scores.length)*100) : 0}%)</span>
               </div>
             </div>
 
             {/* 명예의 전당 */}
             <div className="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border border-amber-200">
-              <h3 className="text-xs font-black text-amber-900 uppercase flex items-center gap-1.5 mb-3">
+              <h3 className="text-sm font-black text-amber-900 uppercase flex items-center gap-1.5 mb-3">
                 <Award className="w-4 h-4 text-amber-600" />
                 오늘의 명예의 전당 (Top 3)
               </h3>
@@ -850,29 +850,29 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                 <div className="bg-white/80 p-3 rounded-xl border border-amber-200 text-center">
                   <span className="text-xl">🥇</span>
                   <span className="block font-black text-sm text-slate-800 mt-1">{top1?.group_name || '-'}</span>
-                  <span className="text-xs font-black font-mono text-amber-600">{top1?.score?.toLocaleString() || 0}점</span>
+                  <span className="text-sm font-black font-mono text-amber-600">{top1?.score?.toLocaleString() || 0}점</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-xl border border-slate-200 text-center">
                   <span className="text-xl">🥈</span>
                   <span className="block font-black text-sm text-slate-800 mt-1">{top2?.group_name || '-'}</span>
-                  <span className="text-xs font-black font-mono text-slate-600">{top2?.score?.toLocaleString() || 0}점</span>
+                  <span className="text-sm font-black font-mono text-slate-600">{top2?.score?.toLocaleString() || 0}점</span>
                 </div>
                 <div className="bg-white/80 p-3 rounded-xl border border-amber-100 text-center">
                   <span className="text-xl">🥉</span>
                   <span className="block font-black text-sm text-slate-800 mt-1">{top3?.group_name || '-'}</span>
-                  <span className="text-xs font-black font-mono text-amber-700">{top3?.score?.toLocaleString() || 0}점</span>
+                  <span className="text-sm font-black font-mono text-amber-700">{top3?.score?.toLocaleString() || 0}점</span>
                 </div>
               </div>
             </div>
 
             {/* 모둠별 세부 성취 결과 */}
             <div>
-              <h3 className="text-xs font-black text-slate-700 uppercase flex items-center gap-1.5 mb-2">
-                <Users className="w-4 h-4 text-cyan-600" />
+              <h3 className="text-sm font-black text-slate-700 uppercase flex items-center gap-1.5 mb-2">
+                <Users className="w-4 h-4 text-[color:var(--ui-action,var(--forest-accent,#566d4d))]" />
                 모둠별 활동 기록
               </h3>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[440px] text-left border-collapse border border-slate-200 rounded-xl overflow-hidden text-xs">
+                <table className="w-full min-w-[440px] text-left border-collapse border border-slate-200 rounded-xl overflow-hidden text-sm">
                   <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                     <tr>
                       <th className="py-2.5 px-3">순위</th>
@@ -887,13 +887,13 @@ export const ClassReportModal: React.FC<ClassReportModalProps> = ({
                       <tr key={s.id} className={idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'}>
                         <td className="py-2 px-3 font-bold text-slate-500 font-mono">{idx + 1}위</td>
                         <td className="py-2 px-3 font-bold text-slate-800">{s.group_name}</td>
-                        <td className="py-2 px-3 font-black text-cyan-700 font-mono text-right">{s.score.toLocaleString()}</td>
+                        <td className="py-2 px-3 font-black text-[color:var(--ui-action,var(--forest-accent,#566d4d))] font-mono text-right">{s.score.toLocaleString()}</td>
                         <td className="py-2 px-3 text-center text-slate-600">{s.completed_missions?.length || 0}개</td>
                         <td className="py-2 px-3 text-center font-bold">
                           {s.is_defused ? (
-                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-[10px]">완료</span>
+                            <span className="px-2 py-0.5 bg-[var(--ui-tint,var(--forest-tint,#e9efe3))] text-[color:var(--ui-action,var(--forest-accent,#566d4d))] rounded-full text-sm">완료</span>
                           ) : (
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-[10px]">미완성</span>
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full text-sm">미완성</span>
                           )}
                         </td>
                       </tr>
