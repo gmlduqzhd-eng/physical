@@ -8,7 +8,7 @@ const assert = require('node:assert/strict');
 const base = (process.argv[2] || process.env.AUDIT_URL || 'http://127.0.0.1:4173').replace(/\/$/, '');
 if (!/^https?:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(base)) throw new Error('로컬 미리보기 주소에서만 돌려요: ' + base);
 const VIEWPORTS = [[320, 568], [360, 800], [390, 844], [430, 932], [667, 375], [844, 390], [768, 1024]];
-const ROUTES = ['/', '/hub', '/today', '/tools', '/solo', '/manual', '/checks', '/checks?tab=sound', '/checks?tab=display', '/privacy', '/teacher'];
+const ROUTES = ['/', '/start-lesson', '/hub', '/today', '/tools', '/solo', '/manual', '/checks', '/checks?tab=sound', '/checks?tab=display', '/privacy', '/teacher'];
 
 (async () => {
   const channel = process.env.BROWSER_CHANNEL;

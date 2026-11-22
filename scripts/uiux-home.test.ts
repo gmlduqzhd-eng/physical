@@ -39,15 +39,14 @@ test('recent activities keep the newest first, without repeats, and ignore broke
  assert.match(read('src/presentation/GamePlayPage.tsx'),/if\(!soloMode&&!hasBattle\)recordRecentActivity\(gameType\)/);
 });
 
-test('home shows two big starts, a recent-or-featured shelf, quick picks, and folds the rest',()=>{
+test('home shows three entries and a recent-or-featured shelf; the rest lives under the hub',()=>{
  const home=read('src/presentation/UnifiedHomePage.tsx');
  assert.match(home,/data-today-link/);assert.match(home,/data-home-hub/);
  assert.match(home,/지난번에 한 활동/);assert.match(home,/★ 즐겨찾기/);
- assert.match(home,/<QuickPicks returnTo="\/"[^>]*\/>/);
- // 나머지 입구는 '더 보기' 안에 그대로 있다(자리표 id도 그대로).
- const more=home.slice(home.indexOf('<details className="home-more"'),home.indexOf('</details>'));
- for(const part of ['더 보기','id="library-title"','className="roles"','id="encyclopedia-title"','<FeaturedExperiences/>'])assert.ok(more.includes(part),part);
- // 주소의 #자리표가 '더 보기' 안에 있을 때만 펼친다(round 110).
+ assert.match(home,/data-home-student/);
+ // round 116: 나머지 입구는 활동 고르기 아래 '더 찾기'에 있다(자리표 id는 그대로).
+ const more=read('src/presentation/components/HubMoreSections.tsx');
+ for(const part of ['더 찾기','id="library-title"','id="encyclopedia-title"','<FeaturedExperiences />'])assert.ok(more.includes(part),part);
  assert.match(home,/window\.location\.hash\.slice\(1\)/);
  // 첫 화면 선반은 4개까지만
  assert.match(home,/FEATURED_GAMES\.slice\(0, 4\)/);assert.match(home,/readRecentActivities\(\)\)\.slice\(0, 4\)/);

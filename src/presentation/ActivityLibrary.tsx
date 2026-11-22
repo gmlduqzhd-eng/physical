@@ -19,6 +19,7 @@ import { activityDetail, finishLine } from './activityDetail';
 import { FlowShell } from './FlowShell';
 import {PhonePlayIcon} from './components/PhonePlayIcon';
 import {QuickPicks} from './components/QuickPicks';
+import {HubMoreSections} from './components/HubMoreSections';
 
 const GRADE_OPTIONS=['1~2학년','3~4학년군','5~6학년군'] as const;
 const DEVICE_OPTIONS=['스마트폰','태블릿 PC','데스크톱 PC'] as const;
@@ -144,4 +145,4 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
     {!solo && !query && !phoneOnly && <button type="button" className="activity-view-toggle" style={{marginTop:20}} aria-pressed={viewAll} onClick={() => setViewAll(!viewAll)}>{viewAll ? `⭐ 추천 활동만 보기 (${FEATURED_GAMES.filter(g=>!exclude||!exclude(g)).length}개)` : `🗄 보관함까지 모두 보기 (${exclude ? GAMES.filter(g => !exclude(g)).length : GAMES.length}개)`}</button>}
   </>;
 }
-export function ActivityLibrary({ solo = false }: { solo?: boolean }) { const [params]=useSearchParams(); return <FlowShell utilities className={solo ? 'solo-library' : ''}><section className="activity-library-head"><h1>{solo ? '혼자 할 활동 고르기' : '오늘 할 활동 고르기'}</h1><p className="forest-lead" data-library-lead>{libraryLead(solo,params.get('view')==='all',SOLO_ACTIVITIES.length,{query:params.get('q')??'',phoneOnly:params.get('collection')==='phone'})}</p><nav className="forest-hero-actions" aria-label="활동 기록과 수업">{!solo&&<Link className="primary" to="/today">📋 오늘 수업 40분</Link>}{!solo&&<Link to="/teacher">수업 준비 시작</Link>}<Link to="/records">내 활동 기록</Link>{!solo&&<Link to="/hub/tools">기록·즐겨찾기</Link>}</nav></section><ActivityPicker solo={solo}/></FlowShell>; }
+export function ActivityLibrary({ solo = false }: { solo?: boolean }) { const [params]=useSearchParams(); return <FlowShell utilities className={solo ? 'solo-library' : ''}><section className="activity-library-head"><h1>{solo ? '혼자 할 활동 고르기' : '오늘 할 활동 고르기'}</h1><p className="forest-lead" data-library-lead>{libraryLead(solo,params.get('view')==='all',SOLO_ACTIVITIES.length,{query:params.get('q')??'',phoneOnly:params.get('collection')==='phone'})}</p><nav className="forest-hero-actions" aria-label="활동 기록과 수업">{!solo&&<Link className="primary" to="/today">📋 오늘 수업 40분</Link>}{!solo&&<Link to="/teacher">수업 준비 시작</Link>}<Link to="/records">내 활동 기록</Link>{!solo&&<Link to="/hub/tools">기록·즐겨찾기</Link>}</nav></section><ActivityPicker solo={solo}/>{!solo&&<HubMoreSections/>}</FlowShell>; }

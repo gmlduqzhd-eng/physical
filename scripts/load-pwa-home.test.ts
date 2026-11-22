@@ -85,8 +85,12 @@ test('music stays off until asked, and the chosen brightness is remembered (firs
 test('home keeps one clear start and does not repeat the same doors',()=>{
  const home=read('src/presentation/UnifiedHomePage.tsx');
  const count=(to:string)=>home.split(`to="${to}"`).length-1;
- assert.equal(count('/today'),1);assert.ok(count('/hub')<=2);assert.equal(count('/lobby'),1);
- assert.match(home,/오늘 수업 시작/);assert.match(home,/활동 고르기/);assert.match(home,/추천 활동 \{FEATURED_GAMES\.length\}개/);
- // 줄였어도 닿는 곳은 그대로다.
- for(const to of ['/tools','/teacher','/solo','/expeditions','/hub?collection=phone','/try/map','/together'])assert.ok(home.includes(`"${to}"`),to);
+ // round 116: 처음 화면의 입구는 세 개(수업 시작 · 학생 참여 · 활동·도구 찾기)뿐이다.
+ assert.equal(count('/today'),0);assert.ok(count('/hub')<=2);assert.equal(count('/lobby'),1);
+ assert.match(home,/to=\{startTo\} data-home-start/);assert.match(home,/수업 시작하기/);assert.match(home,/활동·도구 찾기/);assert.match(home,/추천 활동 \{FEATURED_GAMES\.length\}개/);
+ // 줄였어도 닿는 곳은 그대로다: 나머지 입구는 활동 고르기 아래 '더 찾기'로 옮겼다.
+ const more=read('src/presentation/components/HubMoreSections.tsx');
+ for(const to of ['/tools','/solo','/expeditions','/hub?collection=phone','/together'])assert.ok(more.includes(`"${to}"`),to);
+ assert.match(more,/<FeaturedExperiences \/>/);
+ assert.match(read('src/presentation/ActivityLibrary.tsx'),/\{!solo&&<HubMoreSections\/>\}/);
 });

@@ -99,7 +99,9 @@ test('저장된 값이 이상하면 이어 하지 않는다', ()=>{
 test('오늘 수업 화면 연결: 경로·홈/허브 링크·돌아오기 허용·팀 수 이어 받기', ()=>{
  const app=readFileSync('src/App.tsx','utf8');
  for(const p of ['/today','/guide','/print/signature-cards'])assert.ok(app.includes(`path="${p}"`),p);
- assert.match(readFileSync('src/presentation/UnifiedHomePage.tsx','utf8'),/to="\/today"/);
+ // round 116: 홈의 '수업 시작'은 수업 방식 고르기(또는 지난번 방식)로 가고, 거기서 오늘 수업으로 온다.
+ assert.match(readFileSync('src/presentation/UnifiedHomePage.tsx','utf8'),/to=\{startTo\} data-home-start data-today-link/);
+ assert.match(readFileSync('src/application/lessonStartPrefs.ts','utf8'),/tv:'\/today'/);
  assert.match(readFileSync('src/presentation/ActivityLibrary.tsx','utf8'),/to="\/today"/);
  assert.match(readFileSync('src/presentation/Manual.tsx','utf8'),/to="\/guide"/);
  assert.match(readFileSync('src/presentation/GamePlayPage.tsx','utf8'),/solo\|hub\|today/);
