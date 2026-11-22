@@ -1,0 +1,13 @@
+/* 모둠 기기 수업 첫 안내 카드. LessonShell 안에서 쓰므로 forest 토큰을 따른다. */
+.teacher-room-guide{border:2px solid var(--forest-accent,#60754f);background:var(--forest-paper,#fffefa);color:var(--forest-ink,#354239);border-radius:20px;padding:20px 24px;margin:22px 0 0}
+.flow.lesson-shell .teacher-room-guide h2{font-size:20px;margin:2px 0 12px}
+.flow.lesson-shell .teacher-room-guide-eyebrow{font-size:13px;font-weight:700;color:var(--forest-accent,#60754f)}
+.teacher-room-guide ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.teacher-room-guide li{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.teacher-room-guide li b{display:flex;align-items:center;justify-content:center;flex:none;width:30px;height:30px;border-radius:50%;background:var(--forest-accent,#60754f);color:var(--forest-on,#fff);font-size:15px}
+.teacher-room-guide li strong{display:block;font-size:16px;line-height:1.4}
+.flow.lesson-shell .teacher-room-guide li p{font-size:14px;line-height:1.6;color:var(--forest-muted,#687163);margin-top:4px}
+.teacher-room-guide-foot{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin-top:14px}
+.flow.lesson-shell .teacher-room-guide-note{font-size:14px;color:var(--forest-muted,#687163)}
+.flow.lesson-shell .teacher-room-guide button.primary{min-height:48px;padding:10px 22px;border-radius:12px;font-weight:700}
+@media(max-width:700px){.teacher-room-guide{padding:18px}.teacher-room-guide ol{grid-template-columns:1fr;gap:12px}.flow.lesson-shell .teacher-room-guide button.primary{width:100%}}

@@ -34,6 +34,7 @@ export const AdminControlPanel = () => {
   const [templates, setTemplates] = useState<MissionTemplate[]>([]);
   const [editingTemplate, setEditingTemplate] = useState<MissionTemplate | null>(null);
   const [rooms, setRooms] = useState<GameRoom[]>([]);
+  const [roomsLoaded, setRoomsLoaded] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(() => new URLSearchParams(window.location.search).get('room'));
   
   // Selected Room Data
@@ -52,6 +53,7 @@ export const AdminControlPanel = () => {
   const fetchRooms = async () => {
     const { data } = await supabase.from('game_rooms').select('*').order('created_at', { ascending: false });
     if (data) setRooms(data);
+    setRoomsLoaded(true);
   };
 
   useEffect(() => { void fetchTemplates(); void fetchRooms(); }, []);
@@ -359,16 +361,18 @@ export const AdminControlPanel = () => {
           <div className="space-y-4">
             <QuickStart templates={templates} onRoomCreated={(id) => setSelectedRoomId(id)} onRefresh={fetchRooms} />
             <h2 className="text-xl font-bold">진행 중인 방 목록</h2>
+            {!roomsLoaded ? <p role="status" aria-live="polite" className="text-slate-600">방 목록을 불러오는 중…</p> : !rooms.length && <p className="text-slate-600">아직 만든 방이 없어요. 위에서 새 방을 만들어 보세요.</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rooms.map(r => (
-                <div key={r.id} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 cursor-pointer transition-colors">
-                  <div onClick={() => setSelectedRoomId(r.id)}>
-                    <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500"/> {r.name}</h3>
+                <div key={r.id} className="bg-white shadow-sm p-5 rounded-xl border border-slate-200 hover:border-cyan-500 transition-colors">
+                  {/* 키보드로도 고를 수 있게 방 정보 전체를 단추로 둔다. */}
+                  <button type="button" onClick={() => setSelectedRoomId(r.id)} className="block w-full text-left rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-600" aria-label={`${r.name} 방 열기`}>
+                    <h3 className="font-bold text-xl mb-1 flex items-center gap-2 text-slate-900"><Key className="w-5 h-5 text-yellow-500" aria-hidden="true"/> {r.name}</h3>
                     <p className="text-slate-700 font-bold">모둠별 4자리 PIN은 방 상세에서 확인</p>
                     <p className="text-sm text-slate-500 mt-2">상태: {r.status}</p>
-                  </div>
+                  </button>
                   <div className="flex gap-2 mt-3">
-                    <button onClick={(e) => { e.stopPropagation(); void openClassroomBoard(r.id); }} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
+                    <button type="button" onClick={() => { void openClassroomBoard(r.id); }} className="min-h-[44px] px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold border border-slate-200 flex items-center gap-1">
                       <LucideIcons.Monitor className="w-4 h-4" /> TV 점수판
                     </button>
                   </div>
