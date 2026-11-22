@@ -30,7 +30,7 @@ const files = [
   'src/domain/sportsMovementQuests.ts', 'src/domain/reflectionMovementQuests.ts',
   'src/domain/phonePlayCatalog.ts', 'src/domain/phoneTaskRules.ts', 'src/domain/phonePlayExpansion.ts', 'src/domain/phonePlayVisuals.ts',
   'src/presentation/components/minigames/expedition/expeditionExpressionData.ts',
-  'src/presentation/TeacherAi.css', 'src/presentation/ApplicationPalette.css', 'src/application/ThemeContext.tsx',
+  'src/presentation/TeacherAi.css', 'src/presentation/ui.css', 'src/presentation/ApplicationPalette.css', 'src/application/ThemeContext.tsx',
   'src/application/BackgroundMusicContext.tsx', 'src/application/backgroundMusicRoutes.ts', 'src/application/browserStorage.ts', 'src/application/useModalDialog.ts',
   'src/assets/expedition-theme.mp3',
   'src/presentation/components/HeaderUtilities.tsx', 'src/presentation/components/HeaderUtilities.css',

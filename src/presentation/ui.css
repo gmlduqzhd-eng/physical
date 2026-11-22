@@ -1,0 +1,160 @@
+/* 화면 공통 기준(색·글씨·모서리·버튼·카드). 이 파일이 값의 원본이다.
+   ApplicationPalette.css의 --forest-* 는 여기 --ui-* 를 가리키고, 그 밖의 화면 변수(--bg, --game-* 등)는 --forest-* 를 가리킨다.
+   새 화면은 --ui-* 변수와 .ui-btn / .ui-card 클래스를 쓴다. 색을 화면 CSS에 직접 적지 않는다. */
+
+/* ── 색 12가지 + 무대 보조 3가지 ── */
+html {
+  --ui-bg: #faf8f2;
+  --ui-paper: #fffefa;
+  --ui-tint: #e9efe3;
+  --ui-line: #d8d6cc;
+  --ui-ink: #303d35;
+  --ui-muted: #5d675f;
+  --ui-action: #566d4d;
+  --ui-action-press: #3f5238;
+  --ui-on-action: #ffffff;
+  --ui-signal: #f59e0b;
+  --ui-danger: #9e3833;
+  /* 게임 무대(늘 어두운 화면)는 밝기 설정과 상관없이 같은 값을 쓴다. */
+  --ui-stage: #171819;
+  --ui-on-stage: #f2f1ec;
+  --ui-stage-card: #2b2d30;
+  --ui-stage-danger: #f1aba4;
+
+  /* ── 글씨 7단계 (14px보다 작은 글씨는 쓰지 않는다) ── */
+  --ui-text-1: 14px;
+  --ui-text-2: 16px;
+  --ui-text-3: 18px;
+  --ui-text-4: 22px;
+  --ui-text-5: 28px;
+  --ui-text-6: 40px;
+  --ui-text-7: 64px;
+
+  /* ── 모서리 4단계 ── */
+  --ui-radius-1: 8px;
+  --ui-radius-2: 14px;
+  --ui-radius-3: 20px;
+  --ui-radius-pill: 999px;
+}
+
+/* 어두운 화면: 기존 Pearl Charcoal 값 그대로. */
+html.dark-theme {
+  --ui-bg: #171819;
+  --ui-paper: #202224;
+  --ui-tint: #30343a;
+  --ui-line: #3e4145;
+  --ui-ink: #f2f1ec;
+  --ui-muted: #babcc1;
+  --ui-action: #e6e7ea;
+  --ui-action-press: #c9ccd2;
+  --ui-on-action: #202226;
+  --ui-danger: #f1aba4;
+}
+
+/* TV 모드: 글씨 단계를 1.5배로. --ui-text-* 를 쓰는 요소만 커진다(화면마다 따로 둔 TV 규칙과 겹치지 않는다).
+   글씨 크기 설정(크게/더 크게)은 본문을 통째로 확대(zoom)하므로 여기서 다시 키우지 않는다. */
+html[data-tv-mode="on"] {
+  --ui-text-1: 21px;
+  --ui-text-2: 24px;
+  --ui-text-3: 27px;
+  --ui-text-4: 33px;
+  --ui-text-5: 42px;
+  --ui-text-6: 60px;
+  --ui-text-7: 96px;
+}
+
+/* 무대 안에서는 주 버튼·글자·위험 색이 무대용 값으로 바뀐다. */
+.ui-stage {
+  --ui-bg: var(--ui-stage);
+  --ui-paper: var(--ui-stage-card);
+  --ui-tint: var(--ui-stage-card);
+  --ui-line: #4a4d52;
+  --ui-ink: var(--ui-on-stage);
+  --ui-muted: #c9cbd0;
+  --ui-action: var(--ui-on-stage);
+  --ui-action-press: #d9d8d2;
+  --ui-on-action: var(--ui-stage);
+  --ui-danger: var(--ui-stage-danger);
+  background: var(--ui-stage);
+  color: var(--ui-on-stage);
+}
+
+/* ── 버튼 ──
+   주 버튼(.ui-btn--primary)은 한 화면에 하나. 끝내기·지우기는 .ui-btn--danger, 진행 버튼 반대쪽 끝에 둔다. */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid var(--ui-action);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-paper);
+  color: var(--ui-ink);
+  font: inherit;
+  font-size: var(--ui-text-3);
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ui-btn--secondary { background: var(--ui-paper); color: var(--ui-ink); border-color: var(--ui-action); }
+.ui-btn--primary { background: var(--ui-action); color: var(--ui-on-action); border-color: var(--ui-action); }
+.ui-btn--danger { background: var(--ui-paper); color: var(--ui-danger); border-color: var(--ui-danger); border-style: dashed; }
+.ui-btn--lg { min-height: 64px; padding: 0 36px; font-size: var(--ui-text-4); }
+.ui-btn--block { display: flex; width: 100%; }
+.ui-btn--primary:is(:hover, :active):not(:disabled, [aria-disabled="true"]) { background: var(--ui-action-press); border-color: var(--ui-action-press); }
+.ui-btn:not(.ui-btn--primary):is(:hover, :active):not(:disabled, [aria-disabled="true"]) { background: var(--ui-tint); }
+.ui-btn:is(:disabled, [aria-disabled="true"]) { opacity: .5; cursor: not-allowed; }
+.ui-btn:focus-visible { outline: 3px solid var(--ui-action); outline-offset: 3px; }
+.ui-stage .ui-btn:focus-visible { outline-color: var(--ui-signal); }
+.ui-stage .ui-btn:not(.ui-btn--primary) { background: var(--ui-stage); }
+.ui-stage .ui-btn:not(.ui-btn--primary):is(:hover, :active):not(:disabled, [aria-disabled="true"]) { background: var(--ui-stage-card); }
+html[data-design=forest] :is(.ui-btn, .ui-btn *) { letter-spacing: 0; }
+
+/* ── 카드 ── */
+.ui-card {
+  box-sizing: border-box;
+  background: var(--ui-paper);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-radius-2);
+  padding: 20px;
+}
+.ui-card--focus { border: 2px solid var(--ui-action); border-radius: var(--ui-radius-3); }
+
+/* 지금 할 동작 같은 '신호' 표시(게임 안에서만). 주황은 여기에만 쓴다. */
+.ui-signal { background: var(--ui-signal); color: var(--ui-stage); border-radius: var(--ui-radius-pill); font-weight: 900; }
+
+/* ── 예전 주 버튼 클래스 맞추기 ──
+   화면마다 따로 있던 주 버튼 클래스를 같은 모양(숲 초록 채움, 알약)으로 보이게 한다.
+   색·테두리·모서리만 맞춘다. 크기와 글씨는 각 화면 CSS가 정한다(화면을 옮길 때 .ui-btn 으로 바꾼다). */
+html[data-design=forest] body :is(
+  .lesson-primary, .today-primary, .pp-primary, .mq-primary, .flagship-primary, .expedition-primary,
+  .hub-dialog-primary, .ai-primary, .app-error-primary, .game-stage-primary, .role-start-cta, .flagship-start-button,
+  .flow .primary, .play-experiences .primary, .featured-experiences .primary, .quick-experience .primary
+) {
+  background: var(--ui-action);
+  background-image: none;
+  color: var(--ui-on-action);
+  border-color: var(--ui-action);
+  border-radius: var(--ui-radius-pill);
+}
+/* 늘 어두운 화면(대표 게임 무대·처음 안내 창)의 주 버튼은 밝게 채운다. 주황은 신호에만 남긴다. */
+html[data-design=forest] body :is(.fun-primary, .tqg-primary) {
+  background: var(--ui-on-stage);
+  background-image: none;
+  color: var(--ui-stage);
+  border-color: var(--ui-on-stage);
+  border-radius: var(--ui-radius-pill);
+}
+/* 휴대폰 리모컨은 밝은/어두운 화면에 따라 자기 글자색·바탕색이 뒤집히므로 그 값을 그대로 쓴다. */
+html[data-design=forest] body .fun-remote-page .frp-primary {
+  background: var(--frp-ink, var(--ui-on-stage));
+  color: var(--frp-bg, var(--ui-stage));
+  border-color: var(--frp-ink, var(--ui-on-stage));
+}
