@@ -50,7 +50,7 @@ test('student join: tap a number and enter, nickname is optional and defaults to
   assert.match(join, /학생으로 이어가기/);
   assert.match(join, /다른 학생으로 들어가기/);
   assert.match(join, /우리 모둠으로 입장/);
-  assert.equal((join.match(/bg-cyan-700 text-white rounded-xl p-4 font-bold my-4/g) ?? []).length, 1, 'one primary enter button in the form');
+  assert.equal((join.match(/ui-btn--primary ui-btn--lg sui-block my-4/g) ?? []).length, 1, 'one primary enter button in the form');
   const lobby = read('src/presentation/Lobby.tsx');
   assert.equal((lobby.match(/<StudentNumberPad [^>]*taken=\{taken\}/g) ?? []).length, 2, 'PIN join and resume-profile forms both use the pad');
   assert.match(lobby, /다른 학생으로 들어가기/);

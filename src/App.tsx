@@ -72,7 +72,7 @@ const LessonRecipes = lazyWithRetry(() => import('./presentation/LessonRecipes')
 
 /** 화면 파일을 받는 동안 보이는 자리. 밝은 화면에서 검은 화면이 번쩍이지 않게 지금 테마의 바탕색을 쓴다. */
 function RouteLoading() {
-  return <div role="status" aria-live="polite" className="min-h-[100dvh] flex items-center justify-center text-base font-bold" style={{ background: 'var(--forest-bg, #f4f8f1)', color: 'var(--forest-muted, #4b5d55)' }}>화면을 불러오는 중…</div>;
+  return <div role="status" aria-live="polite" className="min-h-[100dvh] flex items-center justify-center text-base font-bold" style={{ background: 'var(--ui-bg, var(--forest-bg, #faf8f2))', color: 'var(--ui-muted, var(--forest-muted, #5d675f))', fontSize: 'var(--ui-text-3, 18px)' }}>화면을 불러오는 중…</div>;
 }
 
 /** 주소가 바뀐 화면: 붙어 있던 ?값과 #자리표를 그대로 들고 새 주소로 간다. */
@@ -181,22 +181,22 @@ function App() {
 }
 
 const SupabaseRequired = () => (
-  <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center p-8 font-sans">
-    <h1 className="text-2xl font-bold mb-4">수업 연결을 준비하고 있습니다</h1>
-    <p className="text-lg mb-6 text-slate-600 text-center">
+  <div className="min-h-screen bg-[var(--ui-bg,var(--forest-bg,#faf8f2))] text-[var(--ui-ink,var(--forest-ink,#303d35))] flex flex-col items-center justify-center p-8 font-sans">
+    <h1 className="text-[28px] font-black mb-4">수업 연결을 준비하고 있습니다</h1>
+    <p className="text-lg mb-6 text-center">
       지금은 실시간 수업에 연결할 수 없습니다.<br/>
       잠시 후 다시 시도해 주세요. 개인 게임은 바로 이용할 수 있습니다.
     </p>
-    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">활동 고르기 열기</a>
+    <a href="/hub" className="inline-flex items-center justify-center min-h-[64px] px-8 rounded-full text-[22px] font-bold no-underline bg-[var(--ui-action,var(--forest-action,#566d4d))] text-[var(--ui-on-action,var(--forest-on,#ffffff))]">활동 고르기 열기</a>
   </div>
 );
 
 const NotFound = () => (
-  <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center gap-4 p-6 text-center font-sans">
+  <div className="min-h-[100dvh] bg-[var(--ui-bg,var(--forest-bg,#faf8f2))] text-[var(--ui-ink,var(--forest-ink,#303d35))] flex flex-col items-center justify-center gap-4 p-6 text-center font-sans">
     <div className="text-6xl" aria-hidden="true">🧭</div>
-    <h1 className="text-3xl font-black">페이지를 찾을 수 없습니다</h1>
-    <p className="text-slate-300">주소를 다시 확인하거나 활동 고르기로 돌아가 주세요.</p>
-    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
+    <h1 className="text-[28px] font-black">페이지를 찾을 수 없어요</h1>
+    <p className="text-lg">주소를 다시 확인하거나 활동 고르기로 돌아가 주세요.</p>
+    <a href="/hub" className="inline-flex items-center justify-center min-h-[64px] px-8 rounded-full text-[22px] font-bold no-underline bg-[var(--ui-action,var(--forest-action,#566d4d))] text-[var(--ui-on-action,var(--forest-on,#ffffff))]">
       활동 고르기로 이동
     </a>
   </div>

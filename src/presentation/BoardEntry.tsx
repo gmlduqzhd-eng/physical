@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { findRoomByPin, classroomError, joinClassroomBoard } from '../data/classroomRepository';
 import { Monitor } from 'lucide-react';
 import { FlowShell } from './FlowShell';
+import './StudentUi.css';
 
 export const BoardEntry = () => {
   const [boardCode,setBoardCode]=useState('');
@@ -30,7 +31,7 @@ export const BoardEntry = () => {
   };
 
   return (
-    <FlowShell utilities className="board-entry" backLabel="홈으로">
+    <FlowShell utilities className="board-entry sui-scope" backLabel="홈으로">
 
       <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm mx-auto my-8 flex flex-col items-center">
         <Monitor className="w-20 h-20 text-cyan-400 mb-4" />
@@ -51,7 +52,7 @@ export const BoardEntry = () => {
           />
           <label>TV 점수판 전용 코드<input type="password" autoComplete="off" value={boardCode} maxLength={16} onChange={e=>setBoardCode(e.target.value)} className="w-full bg-black/30 border p-3 rounded-xl"/></label>
           {error && <p className="text-red-400 text-sm font-bold text-center">{error}</p>}
-          <button disabled={loading} type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-colors">
+          <button disabled={loading} type="submit" className="ui-btn ui-btn--primary ui-btn--lg sui-block">
             {loading ? '확인 중...' : 'TV 점수판 열기'}
           </button>
         </form>

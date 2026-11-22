@@ -63,13 +63,14 @@ test('the group phone uses in-app notices instead of system alert/confirm', () =
 
 test('light cards keep dark text in a dark colour scheme', () => {
   const mobile = read('src/presentation/MobileMissionView.tsx');
-  assert.match(mobile, /<div data-game-color className="student-activity-card bg-cyan-50/);
-  assert.match(read('src/presentation/MobileMissionView.css'), /\.student-guided-room \.student-activity-card,\.student-guided-room \.student-reflection-picked\{background:#ecfeff!important;color:#0f172a!important\}/);
+  // 칸은 옅은 강조 토큰(sui-tint)을 써서 바탕과 글자가 화면 밝기에 맞춰 함께 바뀐다.
+  assert.match(mobile, /<div className="student-activity-card sui-tint ui-card/);
+  assert.match(read('src/presentation/StudentUi.css'), /\.sui-tint\{background:var\(--ui-tint,var\(--forest-tint/);
   const pad = read('src/presentation/components/StudentNumberPad.css');
   assert.match(pad, /\.snp\{[^}]*color:inherit\}/);
   assert.match(pad, /\.snp-hint\{[^}]*color:inherit/);
   const waiting = read('src/presentation/components/WaitingScreen.tsx');
-  assert.match(waiting, /<span data-game-color className="px-3 py-1 bg-cyan-50 text-cyan-800 text-sm/);
+  assert.match(waiting, /<span className="sui-tint px-3 py-1 text-sm font-bold rounded-full border">대기 중/);
   assert.doesNotMatch(waiting, /text-xs/);
 });
 

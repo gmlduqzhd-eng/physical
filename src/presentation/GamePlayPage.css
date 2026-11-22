@@ -66,4 +66,10 @@ body:has(.today-bar) .game-result-overlay{top:48px}
 .game-tools-layout[data-student-play] .start-label-sub,
 .game-tools-layout[data-student-play] .mq-map-mini small{font-size:14px}
 .game-tools-layout[data-student-play] :is(.activity-brief,.student-result-teacher-note)>summary{min-height:44px;display:flex;align-items:center;gap:6px}
+/* 학생 결과 칸: 통일한 글씨 단계와 모서리를 쓴다(축하 한 줄 28px, 점수 64px, 큰 판 모서리 20px). */
+.game-tools-layout[data-student-play] .student-result-message{font-size:var(--ui-text-5,28px);line-height:1.35}
+.game-tools-layout[data-student-play] .student-result-score{border-radius:var(--ui-radius-3,20px)}
+.game-tools-layout[data-student-play] .student-result-score>span:first-child{font-size:var(--ui-text-3,18px)}
+.game-tools-layout[data-student-play] .student-result-score .result-score-value{font-size:var(--ui-text-7,64px);line-height:1.1}
+.game-tools-layout[data-student-play] .student-result-teacher-note{border-radius:var(--ui-radius-2,14px);font-size:var(--ui-text-1,14px)}
 .game-tools-layout[data-student-play] summary{min-height:44px;padding-block:10px;box-sizing:border-box}

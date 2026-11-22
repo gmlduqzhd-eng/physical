@@ -9,6 +9,7 @@ import { GameIcons as LucideIcons } from './icons';
 import { useNavigate } from 'react-router-dom';
 import { CircleHelp } from 'lucide-react';
 import { HeaderToolbar } from './components/HeaderToolbar';
+import './StudentUi.css';
 
 export const KioskRelayView = () => {
   const [pinCode, setPinCode] = useState('');
@@ -57,7 +58,7 @@ export const KioskRelayView = () => {
 
   if (!room) {
     return (
-      <div className="min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
+      <div className="sui-scope min-h-[100dvh] bg-slate-900 text-white flex flex-col items-center pt-24 pb-20 p-6 font-sans relative overflow-y-auto">
         <div className="absolute top-6 left-6 right-6"><HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로" onClick={() => navigate('/')}><LucideIcons.Home aria-hidden="true"/><span>홈으로</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
         <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm flex flex-col items-center">
           <LucideIcons.MonitorSmartphone className="w-20 h-20 text-cyan-400 mb-4 animate-pulse" />
@@ -73,7 +74,7 @@ export const KioskRelayView = () => {
               onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
               className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"
             />
-            <button disabled={loading} type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-colors">
+            <button disabled={loading} type="submit" className="ui-btn ui-btn--primary ui-btn--lg sui-block">
               {loading || (roomId && roomLoading) ? '확인 중...' : '스테이션 시작'}
             </button>
             {(error || (roomId && roomError)) && <p role="alert" className="text-rose-300 text-sm text-center">{error || roomError}</p>}
@@ -84,9 +85,9 @@ export const KioskRelayView = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-slate-900 text-white p-6 pt-12 pb-24 flex flex-col items-center relative font-sans overflow-y-auto">
+    <div className="sui-scope min-h-[100dvh] bg-slate-900 text-white p-6 pt-12 pb-24 flex flex-col items-center relative font-sans overflow-y-auto">
       <div className="w-full max-w-2xl mb-6"><HeaderToolbar><button className="icon-toolbar-action" type="button" title="홈으로" onClick={() => navigate('/')}><LucideIcons.Home aria-hidden="true"/><span>홈으로</span></button><button className="icon-toolbar-action" type="button" title="이용 안내" onClick={() => navigate('/manual')}><CircleHelp aria-hidden="true"/><span>이용 안내</span></button></HeaderToolbar></div>
-      <button onClick={() => { setRoomId(undefined); setSelectedGroup(null); }} className="mb-4 px-4 py-2 rounded-xl bg-white/10">다른 수업 입장</button>
+      <button onClick={() => { setRoomId(undefined); setSelectedGroup(null); }} className="ui-btn ui-btn--secondary mb-4">다른 수업 입장</button>
       {(error || roomError) && <p role="alert" className="mb-4 text-rose-300">{error || roomError}</p>}
       {!isActive && <p className="mb-4 text-amber-300 font-bold">{room.status === 'finished' ? '수업이 종료되었습니다.' : isTimeUp ? '제한 시간이 끝났습니다.' : '선생님이 수업을 시작하거나 재개할 때까지 기다려주세요.'}</p>}
       {!template?.buttons.length && <p className="mb-4 text-amber-300">등록된 미션이 없습니다. 선생님에게 템플릿을 확인해달라고 요청해주세요.</p>}
@@ -117,7 +118,7 @@ export const KioskRelayView = () => {
         </div>
       ) : (
         <div className="w-full max-w-md flex flex-col items-center">
-          <button onClick={() => setSelectedGroup(null)} className="mb-6 px-4 py-2 bg-white/10 rounded-full text-slate-300 font-bold hover:bg-white/20">&larr; 조 다시 선택하기</button>
+          <button onClick={() => setSelectedGroup(null)} className="ui-btn ui-btn--secondary mb-6">&larr; 조 다시 선택하기</button>
           <div className="bg-slate-800 p-6 rounded-3xl border-2 border-cyan-500 w-full shadow-2xl flex flex-col items-center shadow-cyan-900/50">
             <span className="text-cyan-400 font-bold mb-2">현재 도전자</span>
             <span className="text-3xl font-black mb-8">{selectedGroup.group_name} 조</span>
@@ -146,7 +147,7 @@ export const KioskRelayView = () => {
                 );
               })}
             </div>
-            <p className="text-xs text-slate-500 mt-6 text-center">키오스크 모드에서는 기본 점수의 3배가 지급됩니다!</p>
+            <p className="text-sm text-slate-500 mt-6 text-center">키오스크 모드에서는 기본 점수의 3배가 지급됩니다!</p>
           </div>
         </div>
       )}

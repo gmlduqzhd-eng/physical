@@ -8,6 +8,7 @@ import { X, Users, Play, AlertCircle, Copy, Check, Crown, LogOut } from 'lucide-
 import { useAudio } from '../../application/useAudio';
 import { useModalDialog } from '../../application/useModalDialog';
 import { withParticle } from '../../domain/koreanParticle';
+import '../StudentUi.css';
 
 interface QuickPinClassroomProps {
   isOpen: boolean;
@@ -201,7 +202,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="PIN 모둠 코드 학급대항전" tabIndex={-1} className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-blue-500/40 rounded-3xl max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 text-white shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
+      <div className="sui ui-card ui-card--focus max-w-md w-full max-h-[90dvh] overflow-y-auto p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-200">
         <button
           type="button"
           onClick={onClose}
@@ -251,7 +252,7 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <button
                 onClick={handleJoinRoom}
                 disabled={busy}
-                className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 active:scale-95 text-slate-950 font-black rounded-xl text-sm transition-all shadow-md shadow-cyan-500/20"
+                className="ui-btn ui-btn--primary ui-btn--lg sui-block"
               >
                 방 입장하기
               </button>
@@ -265,9 +266,9 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <button
               onClick={handleCreateRoom}
               disabled={busy}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold rounded-xl text-sm border border-blue-400/30 shadow-lg shadow-blue-500/20 flex items-center justify-center gap-1.5"
+              className="ui-btn ui-btn--secondary sui-block"
             >
-              <Crown className="w-4 h-4 text-amber-300" />
+              <Crown className="w-4 h-4" aria-hidden="true" />
               선생님: 새로운 학급 배틀방 개설하기
             </button>
           </div>
@@ -371,15 +372,15 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleStartGame('reaction')} disabled={busy}
-                  className="py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
+                  className="ui-btn ui-btn--primary"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 반응 코스
+                  <Play className="w-4 h-4" aria-hidden="true" /> 신호등 걷고 멈추기 · 반응 코스
                 </button>
                 <button
                   onClick={() => handleStartGame('direction')} disabled={busy}
-                  className="py-3 bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all"
+                  className="ui-btn ui-btn--secondary"
                 >
-                  <Play className="w-3.5 h-3.5 fill-white" /> 신호등 걷고 멈추기 · 방향 코스
+                  <Play className="w-4 h-4" aria-hidden="true" /> 신호등 걷고 멈추기 · 방향 코스
                 </button>
               </div>
             </div>
@@ -388,14 +389,14 @@ export const QuickPinClassroom: React.FC<QuickPinClassroomProps> = ({ isOpen, on
             <div className="flex gap-2">
               <button
                 onClick={handleLeaveRoom}
-                className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 font-bold rounded-xl flex items-center justify-center gap-1 border border-slate-700"
+                className="ui-btn ui-btn--secondary flex-1"
               >
                 <LogOut className="w-3.5 h-3.5" /> 방 나가기
               </button>
               {isHost && (
                 <button
                   onClick={handleCloseRoom}
-                  className="py-2.5 px-4 bg-rose-600/30 hover:bg-rose-600/50 text-rose-300 text-sm font-bold rounded-xl border border-rose-500/40"
+                  className="ui-btn ui-btn--danger"
                 >
                   방 종료
                 </button>

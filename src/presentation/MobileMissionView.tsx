@@ -21,6 +21,7 @@ import { useGuidedSubmission } from '../application/useGuidedSubmission';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { readStorage, writeStorage, removeStorage } from '../application/browserStorage';
 import { sfxWhistle } from '../application/soundEffects';
+import './StudentUi.css';
 import './MobileMissionView.css';
 
 function StudentRoomHeader() {
@@ -498,17 +499,17 @@ export const MobileMissionView = () => {
   </>, document.body);
 
   if (!groupId || !myGroup || !template || (roomError && isOnline)) return (
-    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col justify-center items-center p-6 gap-4 text-center">
+    <div className="sui min-h-[100dvh] flex flex-col justify-center items-center p-6 gap-4 text-center">
       <p role={roomError ? 'alert' : undefined}>{roomError || (roomLoading ? '수업 정보를 불러오는 중...' : !myGroup ? '모둠 정보가 없어요. 비밀번호로 다시 들어와요.' : '등록된 미션이 없습니다. 선생님에게 템플릿을 확인해달라고 요청해주세요.')}</p>
-      {!roomLoading && <button onClick={refreshRoom} className="py-3 px-5 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button>}
-      <button onClick={() => navigate('/lobby')} className="py-3 px-5 rounded-xl bg-slate-200 font-bold">비밀번호로 다시 들어가기</button>
-      {!storageAvailable && queueLength > 0 && <p className="text-rose-600">이 브라우저는 점수를 기기에 저장할 수 없습니다. 동기화가 끝날 때까지 화면을 닫지 마세요.</p>}
+      {!roomLoading && <button onClick={refreshRoom} className="ui-btn ui-btn--primary ui-btn--lg">다시 시도</button>}
+      <button onClick={() => navigate('/lobby')} className="ui-btn ui-btn--secondary ui-btn--lg">비밀번호로 다시 들어가기</button>
+      {!storageAvailable && queueLength > 0 && <p className="sui-danger-text">이 브라우저는 점수를 기기에 저장할 수 없습니다. 동기화가 끝날 때까지 화면을 닫지 마세요.</p>}
     </div>
   );
 
   // 대기 화면 — 게임 시작 전
   if (gameRoom?.status === 'waiting' || gameRoom?.status === 'paused') {
-    return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} helpControl={guidedEntry && gameRoom.status === 'paused' ? <><button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup.help_requested_at)} onClick={() => void toggleHelp(!myGroup.help_requested_at)} className="w-full py-3 rounded-xl border border-amber-400 bg-amber-50 text-amber-900 font-bold">{myGroup.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>{helpError && <p role="alert" className="text-sm font-bold mt-2">⚠️ {helpError}</p>}</> : undefined} />;
+    return <WaitingScreen myGroup={myGroup} scores={scores} template={template} studentName={studentName} gameRoom={gameRoom} helpControl={guidedEntry && gameRoom.status === 'paused' ? <><button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup.help_requested_at)} onClick={() => void toggleHelp(!myGroup.help_requested_at)} className="ui-btn ui-btn--secondary ui-btn--lg sui-block">{myGroup.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>{helpError && <p role="alert" className="sui-small sui-danger-text font-bold mt-2">⚠️ {helpError}</p>}</> : undefined} />;
   }
 
   // 모두 멈춤 — 선생님이 학생 기기 조작을 잠시 잠근다. 재난 경보처럼 보이지 않게 차분하게 안내한다.
@@ -537,22 +538,21 @@ export const MobileMissionView = () => {
     const isMVP = myRank === 1;
 
     return (
-      <div className="student-classroom-finished min-h-[100dvh] bg-slate-900 flex flex-col items-center relative overflow-y-auto text-white">
+      <div className="student-classroom-finished sui min-h-[100dvh] flex flex-col items-center relative overflow-y-auto">
         <StudentRoomHeader/>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent animate-[pulse_3s_ease-in-out_infinite]"></div>
         
         {isMVP ? (
-          <LucideIcons.Crown className="w-32 h-32 text-yellow-400 mb-4 animate-bounce relative z-10 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+          <LucideIcons.Crown className="sui-accent w-28 h-28 mb-4 relative z-10" />
         ) : (
-          <LucideIcons.Medal className="w-24 h-24 text-slate-400 mb-4 relative z-10" />
+          <LucideIcons.Medal className="sui-muted w-24 h-24 mb-4 relative z-10" />
         )}
         
-        <h1 className="student-finished-title text-4xl font-black mb-2 text-center relative z-10">게임 종료!</h1>
-        <p className="text-xl font-bold mb-8 text-slate-300 relative z-10">최종 순위: {myRank}위</p>
+        <h1 className="student-finished-title text-[40px] font-black mb-2 text-center relative z-10">게임 종료!</h1>
+        <p className="sui-card-title sui-muted mb-8 relative z-10">최종 순위: {myRank}위</p>
         
-        <div className="bg-white/10 p-6 rounded-3xl backdrop-blur-md border border-white/20 w-full max-w-md shadow-2xl flex flex-col items-center relative z-10 mb-8">
-          <span className="text-6xl font-black font-mono text-yellow-400 mb-6">{myGroup?.score ?? 0}점</span>
-          <div className="text-center font-bold text-slate-500 text-sm mt-4 pb-12">
+        <div className="ui-card ui-card--focus p-6 w-full max-w-md flex flex-col items-center relative z-10 mb-8">
+          <span className="sui-ink text-[64px] leading-none font-black mb-6">{myGroup?.score ?? 0}점</span>
+          <div className="sui-body sui-muted text-center font-bold mt-4 pb-6">
             {guidedEntry?'오늘 수업이 끝났어요. 선생님의 마무리 안내를 들어요.':'선생님이 시작 버튼을 누를 때까지 대기하세요.'}
           </div>
         </div>
@@ -560,7 +560,7 @@ export const MobileMissionView = () => {
         {/* 펫 시스템 UI */}
         {myGroup && (
           <div className="fixed bottom-24 right-4 z-40 flex flex-col items-center gap-1">
-            <div className="bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 text-sm font-bold shadow-sm border border-slate-200 text-slate-800">
+            <div className="sui-paper sui-small rounded-full px-3 py-1 font-bold border">
               {myGroup.completed_missions?.length >= 20 ? '🔥 불사조' : 
                myGroup.completed_missions?.length >= 10 ? '🐔 닭' : 
                myGroup.completed_missions?.length >= 5 ? '🐥 병아리' : '🥚 알'}
@@ -573,8 +573,8 @@ export const MobileMissionView = () => {
           </div>
         )}
 
-        {guidedEntry&&<button disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="px-8 py-4 bg-cyan-700 rounded-2xl font-bold text-lg relative z-10 disabled:opacity-50">내 활동 기록 확인</button>}
-        <button onClick={() => navigate('/')} className="mt-8 px-8 py-4 bg-slate-800 hover:bg-slate-700 rounded-2xl text-white font-bold text-lg transition-colors border border-slate-700 relative z-10 shadow-xl">처음으로 돌아가기</button>
+        {guidedEntry&&<button disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="ui-btn ui-btn--primary ui-btn--lg relative z-10">내 활동 기록 확인</button>}
+        <button onClick={() => navigate('/')} className="ui-btn ui-btn--secondary ui-btn--lg mt-4 relative z-10">처음으로 돌아가기</button>
       </div>
     );
   }
@@ -595,7 +595,7 @@ export const MobileMissionView = () => {
           <div ref={scannerRef} role="dialog" aria-modal="true" aria-label="QR 미션 스캐너" tabIndex={-1} className="fixed inset-0 z-[10000] bg-black flex flex-col">
             <div className="flex justify-between items-center p-4 bg-slate-900">
               <span className="text-white font-bold">QR 미션 스캐너</span>
-              <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-4 min-h-[44px] rounded font-bold text-base">닫기</button>
+              <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-5 min-h-[48px] rounded-full font-bold text-lg">닫기</button>
             </div>
             <div className="flex-1 overflow-y-auto text-white"><MissionQrScanner key={`${roomId}:${groupId}`} missionIds={template?.buttons?.map(m=>m.id)??[]} onRead={handleScannedQr} disabled={Boolean(isLocked||cooldown)}/></div>
           </div>
@@ -620,29 +620,29 @@ export const MobileMissionView = () => {
     const { mission: guidedMission, gameType: guidedGameType, order: guidedOrder } = guidedEntry;
     const completed = myGroup?.completed_missions?.includes(guidedMission.id);
     const canPlay = gameRoom?.status === 'playing' && !isTimeUp && !isWhistleActive;
-    return <main className="student-guided-room min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col items-center">
+    return <main className="student-guided-room sui min-h-[100dvh] flex flex-col items-center">
       <StudentRoomHeader/>
       {overlays}
-      <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-        <p className="text-sm font-bold text-cyan-700">땀방울 원정대 · 우리 모둠</p>
-        <h1 className="text-3xl font-black mt-2">{myGroup?.group_name || '모둠 활동'}</h1>
-        <p className="text-slate-600 mt-2">{guidedOrder>1?`오늘의 ${guidedOrder}번째 활동`:gameRoom?.name} · 남은 시간 {mins}:{secs}</p>
-        <div data-game-color className="student-activity-card bg-cyan-50 border border-cyan-100 rounded-2xl p-5 mt-6">
-          <p className="student-activity-eyebrow text-sm font-bold text-cyan-800">{guidedOrder>1?'선생님이 바꾼 새 활동':'오늘의 활동'}</p>
-          <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
-          <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
-          <p className="text-sm text-slate-600 mt-3">{guidedMission.requires_approval?'게임을 끝내면 선생님이 보고 점수를 줘요.':'게임을 끝내면 모둠 점수가 올라가요.'}</p>
+      <div className="ui-card w-full max-w-md p-6">
+        <p className="sui-small sui-accent font-bold">땀방울 원정대 · 우리 모둠</p>
+        <h1 className="sui-title mt-2">{myGroup?.group_name || '모둠 활동'}</h1>
+        <p className="sui-body sui-muted mt-2">{guidedOrder>1?`오늘의 ${guidedOrder}번째 활동`:gameRoom?.name} · 남은 시간 {mins}:{secs}</p>
+        <div className="student-activity-card sui-tint ui-card p-5 mt-6">
+          <p className="student-activity-eyebrow sui-small sui-accent font-bold">{guidedOrder>1?'선생님이 바꾼 새 활동':'오늘의 활동'}</p>
+          <h2 className="sui-card-title mt-2">{guidedMission.title}</h2>
+          <p className="sui-body mt-2">{guidedMission.desc}</p>
+          <p className="sui-small sui-muted mt-3">{guidedMission.requires_approval?'게임을 끝내면 선생님이 보고 점수를 줘요.':'게임을 끝내면 모둠 점수가 올라가요.'}</p>
         </div>
         {/* 학생이 가장 먼저 누를 '게임 시작'을 가장 크게, 맨 위에 둔다. 도움 요청은 그 아래 작은 보조 버튼. */}
-        <button className="student-guided-start w-full mt-5 py-5 bg-cyan-700 text-white rounded-2xl font-black text-2xl shadow-md disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '다시 도전하기 →' : '게임 시작 →'}</button>
-        <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
-        <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`student-guided-help w-full mt-4 min-h-[44px] py-2.5 rounded-xl border text-base font-semibold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-600'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
-        {myGroup?.help_requested_at && <p role="status" className="text-sm font-bold mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
-        {helpError && <p role="alert" className="text-sm font-bold mt-2">⚠️ {helpError}</p>}
-        {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 기록을 저장하고 있어요.' : '연결되면 완료 기록을 자동으로 저장할게요.'}</p>}
-        {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-base">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-base ${guidedSubmission.receipt?.reflection === choice.value ? 'student-reflection-picked border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className={`mt-2 ${guidedSubmission.receipt.saved ? 'student-saved text-lg font-black text-emerald-700' : 'text-base text-slate-600'}`}>{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? <><span aria-hidden="true">✅ </span><span>선생님 화면에 저장했어요.</span></> : '선택을 저장하고 있어요.' : '한 가지만 골라요.'}</p></fieldset>}
-        <button type="button" disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="w-full mt-3 py-3 rounded-xl border border-slate-300 font-bold disabled:opacity-50">내 활동 기록 확인</button>
-        <p className="text-sm text-slate-600 mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 신체 상태에 맞게 참여해요.</p>
+        <button className="student-guided-start ui-btn ui-btn--primary ui-btn--lg sui-block mt-5" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '다시 도전하기 →' : '게임 시작 →'}</button>
+        <div role="status" className="sui-body mt-5 text-center font-bold">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
+        <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className="student-guided-help ui-btn ui-btn--secondary sui-block mt-4">{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
+        {myGroup?.help_requested_at && <p role="status" className="sui-small font-bold mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
+        {helpError && <p role="alert" className="sui-small sui-danger-text font-bold mt-2">⚠️ {helpError}</p>}
+        {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="sui-small sui-accent mt-2 text-center">{guidedSubmission.isOnline ? '완료 기록을 저장하고 있어요.' : '연결되면 완료 기록을 자동으로 저장할게요.'}</p>}
+        {guidedSubmission.receipt?.completed && <fieldset className="sui-line mt-5 border-t pt-4"><legend className="sui-body font-bold">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`sui-body min-h-[48px] p-3 text-left ${guidedSubmission.receipt?.reflection === choice.value ? 'student-reflection-picked sui-picked rounded-[14px]' : 'ui-card'}`}>{choice.label}</button>)}</div><p role="status" className={`mt-2 ${guidedSubmission.receipt.saved ? 'student-saved sui-accent text-lg font-black' : 'sui-body sui-muted'}`}>{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? <><span aria-hidden="true">✅ </span><span>선생님 화면에 저장했어요.</span></> : '선택을 저장하고 있어요.' : '한 가지만 골라요.'}</p></fieldset>}
+        <button type="button" disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="ui-btn ui-btn--secondary sui-block mt-3">내 활동 기록 확인</button>
+        <p className="sui-small sui-muted mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 신체 상태에 맞게 참여해요.</p>
       </div>
     </main>;
   }
@@ -659,7 +659,7 @@ export const MobileMissionView = () => {
         <div className="relative z-10 bg-white/90 p-5 rounded-2xl border border-red-200 shadow-xl flex flex-col items-center">
           <LucideIcons.ShieldAlert className="w-12 h-12 text-emerald-500 mb-3" />
           <p className="text-sm text-slate-600 mb-4 text-center">또는 백신을 구매하여<br/>즉시 해킹을 무효화할 수 있습니다.</p>
-          <button onClick={buyVaccine} disabled={displayScore < 50} className={`w-full py-4 rounded-xl font-black text-lg ${displayScore >= 50 ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-400'}`}>
+          <button onClick={buyVaccine} disabled={displayScore < 50} className={`w-full py-4 rounded-full min-h-[64px] font-black text-lg ${displayScore >= 50 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
             백신 구매 (50점)
           </button>
         </div>
@@ -669,7 +669,7 @@ export const MobileMissionView = () => {
 
   return (
     <div className={`min-h-[100dvh] flex flex-col relative overflow-hidden select-none mobile-mission-root ${
-      isStandMode ? 'bg-black text-amber-300' : isOutdoorMode ? 'bg-black text-white' : 'bg-slate-50 text-slate-900'
+      isStandMode ? 'bg-black text-amber-300' : isOutdoorMode ? 'bg-black text-white' : 'sui'
     }`}>
       {overlays}
       {/* 화면 플래시 효과 */}
@@ -806,7 +806,7 @@ export const MobileMissionView = () => {
             <div ref={scannerRef} role="dialog" aria-modal="true" aria-label="QR 미션 스캐너" tabIndex={-1} className="absolute inset-0 z-50 bg-black flex flex-col rounded-3xl overflow-hidden">
               <div className="flex justify-between items-center p-4 bg-slate-900">
                 <span className="text-white font-bold">QR 미션 스캐너</span>
-                <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-4 min-h-[44px] rounded font-bold text-base">닫기</button>
+                <button onClick={() => setShowScanner(false)} className="text-white bg-slate-700 px-5 min-h-[48px] rounded-full font-bold text-lg">닫기</button>
               </div>
               <div className="flex-1 overflow-y-auto text-white"><MissionQrScanner key={`${roomId}:${groupId}`} missionIds={template?.buttons?.map(m=>m.id)??[]} onRead={handleScannedQr} disabled={Boolean(isLocked||cooldown)}/></div>
             </div>
@@ -825,7 +825,7 @@ export const MobileMissionView = () => {
               <button
                 onClick={() => setShowScanner(true)}
                 disabled={isLocked || cooldown}
-                className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 mb-1 active:scale-95 transition-transform shadow-md"
+                className="ui-btn ui-btn--secondary ui-btn--lg sui-block mb-1"
               >
                 <LucideIcons.Camera className="w-5 h-5" /> QR 코드 미션 스캔 카메라 열기
               </button>
@@ -929,11 +929,11 @@ export const MobileMissionView = () => {
 
       {/* 하단 고정 탭바 */}
       <div className={`tab-bar fixed bottom-0 left-0 right-0 z-50 flex gap-2 p-3 border-t shadow-lg safe-area-bottom ${isOutdoorMode ? 'bg-black/95 border-slate-800' : 'bg-white/95 backdrop-blur-md border-slate-200'}`}>
-        <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'bg-cyan-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.Shield className="w-4 h-4" /> <span className="text-sm">미션</span>
+        <button onClick={() => setActiveTab('mission')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'mission' ? `tab-active ${isOutdoorMode ? 'bg-cyan-700 text-white' : 'sui-tab'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'sui-tab'}`}`}>
+          <LucideIcons.Shield className="w-4 h-4" /> <span className="text-base">미션</span>
         </button>
-        <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'bg-purple-600 text-white shadow-md'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'bg-slate-50 border border-slate-200 text-slate-500'}`}`}>
-          <LucideIcons.ShoppingCart className="w-4 h-4" /> <span className="text-sm">상점</span>
+        <button onClick={() => setActiveTab('shop')} className={`tab-btn flex-1 py-3 rounded-xl font-bold flex justify-center items-center gap-1.5 transition-all ${activeTab === 'shop' ? `tab-active ${isOutdoorMode ? 'bg-purple-700 text-white' : 'sui-tab'}` : `tab-inactive ${isOutdoorMode ? 'bg-slate-800 border border-slate-700 text-slate-400' : 'sui-tab'}`}`}>
+          <LucideIcons.ShoppingCart className="w-4 h-4" /> <span className="text-base">상점</span>
         </button>
       </div>
     </div>
