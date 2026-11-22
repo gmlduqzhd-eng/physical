@@ -29,7 +29,7 @@ function studentJoinResult(data: unknown, error: unknown): StudentClassroomEntry
 }
 
 export async function joinStudentByPin(pin:string, identity:StudentIdentity):Promise<StudentClassroomEntry> {
-  if (!/^\d{4}$/.test(pin)) throw new Error('4자리 모둠 PIN을 입력해주세요.');
+  if (!/^\d{4}$/.test(pin)) throw new Error('모둠 비밀번호 숫자 4개를 적어요.');
   await ensureClassroomUser();
   const {data,error}=await supabase.rpc('join_classroom_short_pin_profile',{entry_pin:pin,student_number:identity.number,nickname:identity.nickname});
   return studentJoinResult(data,error);
@@ -55,7 +55,7 @@ export async function completeStudentProfile(roomId:string, groupId:string, iden
 }
 
 export async function joinClassroomWithShortPin(pin: string): Promise<{room_id:string;group_id:string;group_name:string}> {
-  if (!/^\d{4}$/.test(pin.trim())) throw new Error('4자리 모둠 PIN을 입력해주세요.');
+  if (!/^\d{4}$/.test(pin.trim())) throw new Error('모둠 비밀번호 숫자 4개를 적어요.');
   await ensureClassroomUser();
   const {data,error} = await supabase.rpc('join_classroom_with_short_pin',{entry_pin:pin.trim()});
   if (error) throw new Error('입장 정보를 확인할 수 없습니다. 잠시 후 다시 시도해주세요.');

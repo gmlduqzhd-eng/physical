@@ -22,7 +22,7 @@ import { sfxWhistle } from '../application/soundEffects';
 import './MobileMissionView.css';
 
 function StudentRoomHeader() {
-  return <header className="student-classroom-header"><HeaderToolbar><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar></header>;
+  return <header className="student-classroom-header"><HeaderToolbar studentMode><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar></header>;
 }
 
 const SHOP_ITEMS = [
@@ -599,15 +599,16 @@ export const MobileMissionView = () => {
           <p className="text-sm font-bold text-cyan-800">{guidedOrder>1?'선생님이 바꾼 새 활동':'오늘의 활동'}</p>
           <h2 className="text-xl font-black mt-2">{guidedMission.title}</h2>
           <p className="text-sm text-slate-700 mt-2">{guidedMission.desc}</p>
-          <p className="text-sm text-slate-600 mt-3">{guidedMission.requires_approval?'게임 결과를 제출하면 선생님 확인 후 점수가 반영돼요.':'게임을 끝내면 모둠 점수가 반영돼요.'}</p>
+          <p className="text-sm text-slate-600 mt-3">{guidedMission.requires_approval?'게임을 끝내면 선생님이 보고 점수를 줘요.':'게임을 끝내면 모둠 점수가 올라가요.'}</p>
         </div>
+        {/* 학생이 가장 먼저 누를 '게임 시작'을 가장 크게, 맨 위에 둔다. 도움 요청은 그 아래 작은 보조 버튼. */}
+        <button className="student-guided-start w-full mt-5 py-5 bg-cyan-700 text-white rounded-2xl font-black text-2xl shadow-md disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '다시 도전하기 →' : '게임 시작 →'}</button>
         <div role="status" className="mt-5 text-center font-bold text-slate-700">{isWhistleActive ? '선생님을 바라보고 안내를 들어 주세요.' : completed ? `활동 완료! · 모둠 ${displayScore}점` : `모둠 점수 ${displayScore}점`}</div>
-        <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`w-full mt-4 py-3 rounded-xl border font-bold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-700'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
+        <button type="button" disabled={helpBusy} aria-pressed={Boolean(myGroup?.help_requested_at)} onClick={() => void toggleHelp(!myGroup?.help_requested_at)} className={`student-guided-help w-full mt-4 min-h-[44px] py-2.5 rounded-xl border text-base font-semibold ${myGroup?.help_requested_at ? 'bg-amber-50 border-amber-400 text-amber-900' : 'bg-white border-slate-300 text-slate-600'}`}>{myGroup?.help_requested_at ? '도움 요청 취소하기' : '🙋 선생님, 도움이 필요해요'}</button>
         {myGroup?.help_requested_at && <p role="status" className="text-sm text-amber-800 mt-2 text-center">선생님 화면에 우리 모둠의 요청이 표시돼요.</p>}
         {helpError && <p role="alert" className="text-sm text-red-700 mt-2">{helpError}</p>}
         {guidedSubmission.receipt && !guidedSubmission.receipt.completed && <p role="status" className="mt-2 text-center text-sm text-cyan-800">{guidedSubmission.isOnline ? '완료 기록을 저장하고 있어요.' : '연결되면 완료 기록을 자동으로 저장할게요.'}</p>}
-        {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-sm">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-sm ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className="text-xs text-slate-600 mt-2">{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? '선생님 화면에 저장했어요.' : '선택을 저장하고 있어요.' : '한 가지만 골라 주세요.'}</p></fieldset>}
-        <button className="w-full mt-5 py-4 bg-cyan-700 text-white rounded-xl font-black text-lg disabled:bg-slate-300" disabled={!canPlay} onClick={() => navigate(`/play/${encodeURIComponent(guidedGameType!)}?room=${encodeURIComponent(roomId)}&group=${encodeURIComponent(groupId)}&guided=1&mission=${encodeURIComponent(guidedMission.id)}`)}>{completed ? '다시 도전하기 →' : '게임 시작 →'}</button>
+        {guidedSubmission.receipt?.completed && <fieldset className="mt-5 border-t border-slate-200 pt-4"><legend className="font-bold text-base">오늘 잘한 움직임 하나</legend><div className="grid gap-2 mt-2">{GUIDED_REFLECTIONS.map(choice => <button type="button" key={choice.value} aria-pressed={guidedSubmission.receipt?.reflection === choice.value} onClick={() => guidedSubmission.chooseReflection(choice.value)} className={`rounded-xl border p-3 text-left text-base ${guidedSubmission.receipt?.reflection === choice.value ? 'border-cyan-600 bg-cyan-50' : 'border-slate-200'}`}>{choice.label}</button>)}</div><p role="status" className={`mt-2 ${guidedSubmission.receipt.saved ? 'student-saved text-lg font-black text-emerald-700' : 'text-base text-slate-600'}`}>{guidedSubmission.receipt.reflection ? guidedSubmission.receipt.saved ? <><span aria-hidden="true">✅ </span><span>선생님 화면에 저장했어요.</span></> : '선택을 저장하고 있어요.' : '한 가지만 골라요.'}</p></fieldset>}
         <button type="button" disabled={queueLength>0} onClick={()=>navigate('/records?'+new URLSearchParams({returnTo:`/mobile/${roomId}/${groupId}`}))} className="w-full mt-3 py-3 rounded-xl border border-slate-300 font-bold disabled:opacity-50">내 활동 기록 확인</button>
         <p className="text-xs text-slate-500 mt-4 text-center">활동 전 주변 공간과 기기를 확인하고, 신체 상태에 맞게 참여해요.</p>
       </div>
@@ -660,7 +661,7 @@ export const MobileMissionView = () => {
 
       {/* 상단 퀵 컨트롤 (스탠드 모드 + 야외 모드) */}
       <div className="sticky top-0 z-50 p-3 bg-[var(--forest-bg)] border-b border-[var(--forest-line)]">
-        <HeaderToolbar><button className="icon-toolbar-action" type="button" onClick={toggleStandMode} title="스탠드 모드" aria-pressed={isStandMode}><MonitorSmartphone aria-hidden="true"/><span>스탠드 모드</span></button><button className="icon-toolbar-action" type="button" onClick={toggleOutdoorMode} title="야외 시인성 모드" aria-pressed={isOutdoorMode}><Sun aria-hidden="true"/><span>야외 시인성 모드</span></button></HeaderToolbar>
+        <HeaderToolbar studentMode><button className="icon-toolbar-action" type="button" onClick={toggleStandMode} title="스탠드 모드" aria-pressed={isStandMode}><MonitorSmartphone aria-hidden="true"/><span>스탠드 모드</span></button><button className="icon-toolbar-action" type="button" onClick={toggleOutdoorMode} title="야외 시인성 모드" aria-pressed={isOutdoorMode}><Sun aria-hidden="true"/><span>야외 시인성 모드</span></button></HeaderToolbar>
         {isWakeLockActive && <span className="block text-xs text-center mt-1" role="status">🔆 화면 꺼짐 방지 활성</span>}
       </div>
 

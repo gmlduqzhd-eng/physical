@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useRef,useState} from 'react';
+import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react';
 import {useActivityPause} from '../../../../application/ActivityPauseContext';
 import {sfxPop,sfxWhistle,sfxCountdown,unlockAudio} from '../../../../application/soundEffects';
 import {useWakeLock} from '../../../../application/useWakeLock';
@@ -127,7 +127,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  // 판·사다리·큰 숫자처럼 그림이 함께 나오는 놀이는 큰 글씨를 줄여 한 화면에 다 들어가게 한다.
  const board=['phone-play-101','phone-play-104','phone-play-105'].includes(p.id);
  // 남은 시간은 머리글의 같은 자리에 늘 보인다(신호 칸이 길어져도 가려지지 않게).
- const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'곧 시작해요':phase==='brief'?(quickBrief?'곧 다음 과제':`${left}초 뒤 시작`):phase==='active'?`${left}초 남음`:'';
+ const timer=phase==='rules'?(waitForTeacher?'':`${left}초 뒤 시작`):phase==='countdown'?'':phase==='brief'?(quickBrief?'곧 다음 과제':`${left}초 뒤 시작`):phase==='active'?`${left}초 남음`:'';
  // 기억 놀이: 안내·카운트다운에는 진짜 순서를, 하는 동안에는 가린 순서(006은 ?)를 보여 준다.
  const shownSequence=phase==='active'?view.sequence:view.reveal;
  // 남은 시간 막대: 과제를 하는 동안(그리고 긴 안내 동안) 줄어든다. 글을 못 읽어도 남은 시간을 알 수 있다.
@@ -135,7 +135,7 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
  const barRatio=duration>0?Math.max(0,Math.min(1,1-elapsed/duration)):0;
  const barState=phase==='active'?(left<=10?'urgent':left<=20?'soon':'ok'):'brief';
  return <section role="dialog" aria-modal="true" className="phone-play phone-class" data-phone-class={p.id} data-phase={phase} data-round={round} data-board={board||undefined} aria-label={`${p.name} 반 전체 진행`}>
-  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p>{phase!=='done'&&<button type="button" className="pc-leave" aria-label="닫기 · 반 전체 진행 그만두기" onClick={onLeave}><span aria-hidden="true">←</span> 그만두기</button>}<h1>{p.name}</h1><TvModeButton className="pc-tv"/><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}<ol className="pc-steps" aria-label="과제 진행">{p.rounds.map((title,i)=><li key={title} data-state={phase==='record'||phase==='done'||i<round?'done':i===round&&phase!=='rules'?'now':'next'}>{i+1}</li>)}</ol>
+  <header className="pc-head"><p className="pp-eyebrow">반 전체 진행 · 교사 화면 1대</p>{phase!=='done'&&<button type="button" className="pc-leave" aria-label="닫기 · 반 전체 진행 그만두기" onClick={onLeave}><span aria-hidden="true">←</span> 그만두기</button>}<h1>{p.name}</h1><TvModeButton className="pc-tv"/><TvVoiceToggle voice={voice} className="pc-voice"/><button type="button" className="pc-theme" aria-label={isDark?'라이트 모드로 전환':'다크 모드로 전환'} title={isDark?'라이트 모드로 전환':'다크 모드로 전환'} onClick={toggleTheme}><span aria-hidden="true">{isDark?'☀️':'🌙'}</span></button>{timer&&<p className="pc-timer" aria-hidden={phase==='rules'||phase==='countdown'||undefined}>⏱ {timer}</p>}{/* 숫자가 여러 가지로 보이면 헷갈려서(카운트다운·번호·단계), 단계는 '1/3단계' 글자로만 보여 준다. */}<p className="pc-step-count" aria-label="과제 진행">{phase==='rules'?`${p.rounds.length}단계 놀이`:`${Math.min(round+1,p.rounds.length)}/${p.rounds.length}단계`}</p>
    {barShown&&<div className="pc-timebar" data-state={barState} data-stopped={stopped||undefined} role="progressbar" aria-label="남은 시간" aria-valuemin={0} aria-valuemax={Math.round(duration/1000)} aria-valuenow={left} aria-valuetext={`${left}초 남음`}><i style={{width:`${(barRatio*100).toFixed(1)}%`}}/></div>}
   </header>
   {phase==='rules'&&<div className="pp-signal pc-signal pc-rules" role="status" aria-live="polite">
@@ -146,7 +146,9 @@ export function PhonePlayClass({play,taskSeconds,seated,level,sound,pace,onLeave
   {['countdown','brief','active'].includes(phase)&&<div className="pp-signal pc-signal" data-memory-brief={phase==='brief'&&view.memory||undefined} role="status" aria-live={phase==='active'?'off':'polite'}>
    <p className="pc-task">{stopped?'잠깐 멈췄어요':phase==='countdown'?CLASSIC_CLASS_BRIEF[p.id]??(together?p.players==='짝'?'짝과 떨어져 서고, 1번·2번을 정해요':'모둠과 떨어져 서고, 한 사람씩 번호를 정해요':'자리를 넓게 잡고 화면을 봐요'):phase==='brief'?`${round+1}번 과제`:`${round+1}번 과제 · ${p.rounds[round]}`}</p>
    {phase==='active'&&!stopped&&p.id==='phone-play-101'&&<GroupNumber cue={cue}/>}
-   <strong className="pc-cue" data-length={big.length>44?'long':big.length>20?'medium':'short'}>{big}</strong>
+   {phase==='countdown'&&!stopped
+    ?<div className="pc-countdown" data-countdown={left}><span className="pc-countdown-ring" style={{'--pc-count-ratio':String(duration>0?Math.max(0,Math.min(1,1-elapsed/duration)):0)} as CSSProperties}><b>{left}</b></span><span className="pc-countdown-label">초 뒤 시작</span></div>
+    :<strong className="pc-cue" data-length={big.length>44?'long':big.length>20?'medium':'short'}>{big}</strong>}
    {running&&!stopped&&<p className="pc-rule">{phase==='brief'&&view.memory?'이 순서를 기억해요':ruleLine}</p>}
    {(running||phase==='countdown')&&shownSequence.length>0&&<ol className="pc-sequence" aria-label={phase==='active'?'기억할 순서':'먼저 이 순서를 기억해요'}>{shownSequence.map((c,i)=><li key={i} data-now={phase==='active'&&i===step||undefined}>{c}</li>)}</ol>}
    {phase==='brief'&&view.plan&&<p className="pc-plan">👍 좋은 방법 · {view.plan}</p>}

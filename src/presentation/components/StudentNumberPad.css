@@ -24,3 +24,10 @@
 }
 /* 입장 버튼: 번호판이 폰 한 화면을 다 차지해도 스크롤 없이 누를 수 있게 화면 아래에 붙여 둔다(폼 안에서만). */
 .snp-submit{position:sticky;bottom:max(8px,env(safe-area-inset-bottom));z-index:3;box-shadow:0 -6px 18px rgba(15,23,42,.14),0 4px 10px rgba(15,23,42,.18)}
+/* 붙어 있는 입장 버튼이 '31번부터 더 보기'·'별명 바꾸기'·별명 칸을 가리지 않게:
+   번호판은 폰에서 조금 낮추고(아래 단추까지 한 화면에), 이 단추들로 스크롤·포커스가 갈 때는 입장 버튼 높이만큼 위에 멈춘다. */
+.snp .snp-tools :is(button,input){scroll-margin-bottom:104px}
+/* 번호를 고르기 전에는 붙이지 않는다(누를 일이 없는데 '31번부터 더 보기'를 가리지 않게). data-ready는 번호를 고르면 붙는다. */
+.snp-submit:not([data-ready]){position:static;box-shadow:none}
+.snp-tools{margin-bottom:12px}
+@media (max-width:480px){.snp-grid{max-height:min(46dvh,440px)}}

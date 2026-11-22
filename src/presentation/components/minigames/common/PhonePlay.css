@@ -70,7 +70,7 @@
 .phone-play.phone-class .pc-leave{flex:none;width:auto;min-height:44px;margin:0;padding:6px 14px;border-radius:999px;border:1px solid var(--forest-control-line,#9aa79c);background:var(--forest-paper,#fffef7);color:var(--forest-ink,#24342c);font:inherit;font-size:clamp(14px,1.5vw,20px);font-weight:750;cursor:pointer;white-space:nowrap}
 .phone-class .pc-leave:focus-visible{outline:3px solid var(--forest-focus,#0e7490);outline-offset:2px}
 .phone-play.phone-class .pc-tv{flex:none;width:auto;margin:0;min-height:44px;padding:6px 12px;font-size:clamp(13px,1.3vw,18px);white-space:nowrap}
-@media (min-width:700px){.phone-class .pc-controls{grid-template-columns:minmax(180px,1fr) minmax(220px,2fr)}.phone-class .pc-controls>button:only-child{grid-column:2}}
+@media (min-width:700px){.phone-class .pc-controls{grid-template-columns:minmax(180px,1fr) minmax(220px,2fr)}.phone-class .pc-controls>button:only-child{grid-column:1/-1}}
 /* 남은 시간 막대: 줄어들며 색이 바뀐다(넉넉함 → 곧 끝 → 마지막 10초). */
 .phone-class .pc-timebar{flex:1 0 100%;height:clamp(10px,1.6vh,18px);border-radius:999px;background:var(--forest-tint,#e8efe3);border:1px solid var(--forest-line,rgba(0,0,0,.15));overflow:hidden}
 /* 색은 대표 게임 시간 막대와 같게: 초록 → 노랑(주황) → 빨강. 안내 시간도 같은 초록을 조금 옅게 쓴다. */
@@ -114,3 +114,14 @@ html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-st
 html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-start .pp-primary{min-height:clamp(64px,10vh,96px)}
 html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) :is(.pp-start-note,.pp-setup-first,.pc-space-note){font-size:clamp(16px,1.6vw,24px)}
 html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-badges span{font-size:clamp(15px,1.4vw,22px)}
+/* 단계는 '1/3단계' 글자 하나로(번호 점·카운트다운 숫자와 섞이지 않게). */
+.phone-class .pc-step-count{margin:0;padding:6px 14px;border-radius:999px;border:2px solid #82b4ab;background:var(--forest-paper,#fff);font-weight:900;font-size:clamp(18px,1.8vw,26px);white-space:nowrap}
+/* 시작 전 카운트다운: 큰 번호(과제 번호)와 헷갈리지 않게 줄어드는 원 안에 숫자, 아래 '초 뒤 시작'. */
+.phone-class .pc-countdown{display:grid;justify-items:center;gap:8px}
+.phone-class .pc-countdown-ring{--pc-count-ratio:1;display:grid;place-items:center;width:clamp(120px,18vw,220px);aspect-ratio:1;border-radius:50%;background:conic-gradient(var(--forest-accent,#076d63) calc(var(--pc-count-ratio)*360deg),var(--forest-tint,#d9eee7) 0);position:relative}
+.phone-class .pc-countdown-ring::before{content:"";position:absolute;inset:12%;border-radius:50%;background:var(--forest-paper,#fff)}
+.phone-class .pc-countdown-ring b{position:relative;font-size:clamp(48px,8vw,110px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.phone-class .pc-countdown-label{font-size:clamp(20px,2.2vw,32px);font-weight:850}
+@media (prefers-reduced-motion:reduce){.phone-class .pc-countdown-ring{background:var(--forest-tint,#d9eee7)}}
+.phone-class .pc-head .pc-step-count{margin-left:auto}
+.phone-class .pc-head .pc-timer+.pc-step-count{margin-left:0}
