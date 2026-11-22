@@ -47,9 +47,12 @@ export function countSmallFontTsx(text: string): number {
   return count;
 }
 
-/** 직접 적은 색(#rgb, #rrggbb, #rrggbbaa) 수. `var(--x, #fff)` 의 대체값도 센다(원본 밖의 색이므로). */
+/** 디자인 기준 변수의 대체값(`var(--ui-action,#566d4d)`, `var(--forest-tint,#e9efe3)`)은 기준 색을 그대로 옮겨 적은 것이라 세지 않는다. */
+const TOKEN_FALLBACK = /(var\(\s*--(?:ui|forest)-[\w-]+\s*,\s*)#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-zA-Z_-])/g;
+
+/** 직접 적은 색(#rgb, #rrggbb, #rrggbbaa) 수. 기준 변수의 대체값은 빼고, 다른 변수의 대체값은 센다. */
 export function countRawHex(text: string, isCss: boolean): number {
-  const body = isCss ? stripCssComments(text) : text;
+  const body = (isCss ? stripCssComments(text) : text).replace(TOKEN_FALLBACK, '$1');
   return [...body.matchAll(/#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{3,4})(?![0-9a-zA-Z_-])/g)].length;
 }
 

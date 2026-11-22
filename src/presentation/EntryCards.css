@@ -20,7 +20,7 @@
 .entry-steps li::before{content:counter(entry-step) ". "}
 .entry-btn{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:auto;min-height:64px;padding:8px 24px;border:2px solid var(--e-action);border-radius:var(--ui-radius-pill,999px);background:var(--e-paper);color:var(--e-ink);font-family:inherit;font-size:var(--ui-text-4,22px);font-weight:700;line-height:1.2;text-decoration:none;text-align:center;cursor:pointer}
 .entry-btn:hover{background:var(--e-tint)}
-.entry-btn:focus-visible,.entry-chip:focus-visible,.lesson-method-link a:focus-visible{outline:3px solid #f59e0b;outline-offset:3px}
+.entry-btn:focus-visible,.entry-chip:focus-visible,.lesson-method-link a:focus-visible{outline:3px solid var(--ui-signal,#f59e0b);outline-offset:3px}
 /* 주 버튼은 화면에 하나: 강조 카드(.is-focus) 안의 버튼만 채운다. */
 .entry-card.is-focus{border:2px solid var(--e-action)}
 .entry-card.is-focus .entry-btn{background:var(--e-action);color:var(--e-on-action)}

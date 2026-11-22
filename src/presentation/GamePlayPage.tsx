@@ -409,7 +409,7 @@ const GamePlaySession = () => {
     return (
       <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
-        <button onClick={handleReturnToCatalog} className="px-6 py-3 min-h-[48px] bg-[#566d4d] rounded-full text-white font-bold">홈으로</button>
+        <button onClick={handleReturnToCatalog} className="px-6 py-3 min-h-[48px] bg-[var(--ui-action,#566d4d)] rounded-full text-white font-bold">홈으로</button>
       </div>
     );
   }
@@ -549,7 +549,7 @@ const GamePlaySession = () => {
             <h2 className="text-2xl font-black text-white mb-1">{gameInfo.name}</h2>
             <p className="text-emerald-400 font-bold text-base mb-3">{quietResult?(resultDetails?.participation==='rested'?'휴식 기록을 남겼어요.':'관찰 참여를 기록했어요.'):resultDetails?.completion==='partial'?'일부 수행·도전을 기록했어요.':'활동을 마쳤어요!'}</p>
             {/* 오늘 수업 중: 수업을 잇는 길을 결과 카드 맨 위에 둔다(TV에서 스크롤하지 않아도 보이게). */}
-            {lessonStage&&<div className="lesson-next-top w-full mb-4"><button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-[#566d4d] hover:bg-[#3f5238] text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button><p className="mt-2 text-center text-xs text-slate-300">반응(👍/👎)은 아래에서 남길 수 있어요.</p></div>}
+            {lessonStage&&<div className="lesson-next-top w-full mb-4"><button onClick={handleLessonNext} className="game-stage-primary lesson-next w-full py-4 bg-[var(--ui-action,#566d4d)] hover:bg-[var(--ui-action-press,#3f5238)] text-white rounded-xl font-black text-lg flex items-center justify-center gap-2 transition-colors shadow-lg">다음 단계로 ▶</button><p className="mt-2 text-center text-xs text-slate-300">반응(👍/👎)은 아래에서 남길 수 있어요.</p></div>}
             {/* 학생 폰: 큰 축하 한 줄과 점수를 맨 위에 둔다(390x844 첫 화면 안). */}
             {hasBattle && (
               <div className="student-result-hero w-full mb-4 text-center">
@@ -638,7 +638,7 @@ const GamePlaySession = () => {
 
             {resultDetails && <div className="w-full mb-4"><GameResultDetailsView details={resultDetails} /></div>}
             <button onClick={() => setShowDetailedResult(true)} className="w-full mb-4 py-3 bg-slate-800 border border-slate-600 text-white rounded-xl font-bold text-sm">게임 상세 결과 보기</button>
-            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-[#566d4d] bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
+            <button disabled={hasBattle&&(queueLength>0||(guidedMode&&!quietResult&&resultDetails?.completion!=='partial'&&!guidedSubmission.receipt?.completed))} onClick={()=>navigate(hasBattle?'/records?'+new URLSearchParams({returnTo:`/mobile/${battleRoomId}/${battleGroupId}`}):'/records')} className="w-full mb-4 min-h-12 rounded-xl border border-[var(--ui-action,#566d4d)] bg-slate-800 p-3 font-bold text-white disabled:opacity-50">내 활동 기록 확인</button>
             {lessonStage?<div className="w-full flex flex-col gap-3">
               {/* 오늘 수업 중: 다음 단계 버튼은 카드 맨 위에 있고, 여기에는 한 번 더·오늘 수업으로만 둔다('홈으로'로 수업에서 벗어나지 않게). */}
               <div className="w-full flex gap-3">
@@ -647,7 +647,7 @@ const GamePlaySession = () => {
               </div>
             </div>:
             <div className="w-full flex gap-3">
-              <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-[#566d4d] hover:bg-[#3f5238] text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
+              <button onClick={handleReplay} className="game-stage-primary flex-1 py-4 bg-[var(--ui-action,#566d4d)] hover:bg-[var(--ui-action-press,#3f5238)] text-white rounded-xl font-black text-base flex items-center justify-center gap-2 transition-colors shadow-lg">
                 <RotateCcw className="w-5 h-5" /> 다시 하기
               </button>
               <button onClick={handleReturnToCatalog} className="result-return flex-1 py-4 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-colors">
