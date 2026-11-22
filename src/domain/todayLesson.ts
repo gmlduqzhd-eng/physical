@@ -75,6 +75,30 @@ export function buildTodayPlan(settings:TodaySettings,seed:number):TodayPlan{
  return {settings,seed,stages,reflection};
 }
 
+/** 기기 시계 기준 오늘 날짜 키(예: 2026-11-22). */
+export function localDayKey(now:number):string{const d=new Date(now);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+
+/**
+ * 같은 날·같은 설정이면 늘 같은 수업 계획이 나오게 하는 씨앗값.
+ * 집에서 미리 본 계획과 교실에서 여는 계획이 같다. 바꾸고 싶으면 '다른 활동으로'(shuffle+1)로만 바꾼다.
+ */
+export function todaySeed(day:string,settings:TodaySettings,shuffle=0):number{
+ const text=`${day}|${settings.grade}|${settings.space}|${settings.minutes}|${settings.teams}|${shuffle}`;
+ let h=2166136261;
+ for(let i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}
+ return (h>>>0)%1e9;
+}
+
+/** 저장해 둔 '오늘 수업' 설정을 읽는다. 알 수 없는 값은 기본값으로 돌린다(본게임 고르기는 저장하지 않는다). */
+export function parseTodaySettings(raw:unknown):TodaySettings{
+ const v=(raw&&typeof raw==='object'?raw:{}) as Record<string,unknown>;
+ const grade=TODAY_GRADES.some(g=>g.id===v.grade)?v.grade as TodayGrade:DEFAULT_TODAY.grade;
+ const space=(TODAY_SPACES as readonly unknown[]).includes(v.space)?v.space as FitSpace:DEFAULT_TODAY.space;
+ const minutes=(TODAY_MINUTES as readonly unknown[]).includes(v.minutes)?v.minutes as TodayMinutes:DEFAULT_TODAY.minutes;
+ const teams=(TODAY_TEAMS as readonly unknown[]).includes(v.teams)?v.teams as number:DEFAULT_TODAY.teams;
+ return {grade,space,minutes,teams};
+}
+
 /** 단계 하나의 결과: 다 했어요 / 건너뛰었어요. 걸린 시간(초)을 함께 남긴다. */
 export interface TodayStageResult {status:'done'|'skipped';seconds:number}
 /**

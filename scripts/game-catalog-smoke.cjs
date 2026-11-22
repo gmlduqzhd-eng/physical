@@ -130,7 +130,8 @@ function readGameInventory() {
         for (const control of await controls.all()) {
           const name = (await control.innerText()).trim() || await control.getAttribute('aria-label') || '';
           // Display toggles (TV 모드, 글씨 크기) change the whole layout and persist on the device; they are not game controls.
-          if (/^\[|홈으로|나가기|돌아가기|다시|초기화|마이크|영상|유튜브|센서 권한|TV 모드|글씨/.test(name)) continue;
+          // The signature start card's own '← 목록' / '← 오늘 수업' leave button (shown on wide screens) is navigation too.
+          if (/^\[|홈으로|나가기|돌아가기|다시|초기화|마이크|영상|유튜브|센서 권한|TV 모드|글씨|^← (목록|오늘 수업)$/.test(name)) continue;
           await touchGameControl(control);
           active.touch = { target: name || 'unlabelled game button', outcome: 'activated' };
           await page.waitForTimeout(150);

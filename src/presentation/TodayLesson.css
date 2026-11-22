@@ -98,3 +98,11 @@ html.dark-theme .today-map-moment-tiles li{background:#1e293b;border-color:#4755
 html.dark-theme .today-map-moment-tiles li[data-open]{background:#134e4a;border-color:#5eead4;color:#ccfbf1}
 html.dark-theme .today-map-moment-tiles li[data-fresh]{background:#92400e;border-color:#fbbf24;color:#fff}
 html.dark-theme .today-map-moment-skip{background:#1c1917;color:#fefce8;border-color:#a8a29e}
+
+/* 학년·장소: 시작 버튼 바로 위 한 줄(좁은 화면에서는 두 줄). 첫 화면 안에서 확인하고 바로 누른다. */
+.today-quick{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.today-page .today-quick .today-choice button{min-height:44px;padding:0 14px}
+.today-plan-row{gap:8px 14px}
+.today-plan-note{color:var(--muted,#57534e);font-size:15px}
+.today-settings summary small{font-weight:600;margin-left:6px;color:var(--muted,#57534e)}
+@media (max-width:480px){.today-page .today-quick .today-choice{gap:6px}.today-page .today-quick .today-choice button{padding:0 11px}}
