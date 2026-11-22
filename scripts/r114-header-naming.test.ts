@@ -58,7 +58,9 @@ test("머리말: '화면·소리' 하나에 화면·소리 설정을 모으고, 
   const toolbar = read('src/presentation/components/HeaderToolbar.tsx');
   assert.doesNotMatch(toolbar, /toggleTheme|AppInstallButton/);
   assert.match(toolbar, /\{children\}\n[^\n]*\n {4}<HeaderMoreMenu\/>/);
-  assert.match(toolbar, /data-audience=\{isStudentRoute\(pathname, search\) \? 'student' : 'teacher'\}/);
+  // 학생 화면 여부는 주소로 판단하고(studentMode 기본값), 따로 적으면 그 값이 이긴다.
+  assert.match(toolbar, /if \(studentMode \?\? isStudentRoute\(pathname, search\)\) return <nav/);
+  assert.doesNotMatch(toolbar, /data-audience/);
   // 넓은 화면에서는 '화면·소리'와 뒤로 가기에 글자도 보인다.
   const css = read('src/presentation/components/HeaderToolbar.css');
   assert.match(css, /@media\(min-width:1024px\) \{[^@]*\.settings-trigger,:has\(>\.lucide-arrow-left,>\.lucide-house\)\)>span \{\s*position:static/);
@@ -81,6 +83,12 @@ test('학생 화면인지 한 곳에서 판단한다', () => {
   assert.equal(isStudentRoute('/mobile/r/g'), true);
   assert.equal(isStudentRoute('/play/sig-boss-raid', '?guided=1&room=r'), true);
   assert.equal(isStudentRoute('/play/sig-boss-raid'), false);
+  // 수업방 정보가 붙은 놀이(청백 배틀)와, 모둠 화면에서 넘어온 기록도 학생 화면이다.
+  assert.equal(isStudentRoute('/play/x', '?room=r&group=g'), true);
+  assert.equal(isStudentRoute('/play/x', '?room=r'), false);
+  assert.equal(isStudentRoute('/records', '?returnTo=%2Fmobile%2Fr%2Fg'), true);
+  assert.equal(isStudentRoute('/records'), false);
+  assert.equal(isStudentRoute('/records', '?returnTo=%2Fhub'), false);
   assert.equal(isStudentRoute('/teacher'), false);
   assert.equal(isStudentRoute('/lobbyist'), false);
 });

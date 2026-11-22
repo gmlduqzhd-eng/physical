@@ -1,16 +1,10 @@
 import { cleanClassroomStorage, isFreshClassroomRecord } from './storageRetention';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ScoreRepository } from '../data/scoreRepository';
-import { readStorage, readJsonStorage, writeStorage, removeStorage, isRecord, deviceStorageGeneration } from './browserStorage';
+import { readStorage, readJsonStorage, writeStorage, removeStorage, deviceStorageGeneration } from './browserStorage';
+import { SYNC_WARNING, canEnqueue, dueAction, parseSyncQueue, settleSyncAction, splitExpired, type SyncAction } from './syncQueueLogic';
+export { parseSyncQueue, type SyncAction } from './syncQueueLogic';
 
-export interface SyncAction {
-  id: string;
-  type: 'INCREMENT_SCORE';
-  payload: { id: string; amount: number; [key: string]: unknown };
-  timestamp: number;
-  retryCount?: number;
-  nextRetryAt?: number;
-}
 const LEGACY_KEY = 'bomb_defusal_sync_queue';
 const PREFIX = 'physical_sync_action_';
 const QUEUE_EVENT = 'physical-score-queue-change';
@@ -25,14 +19,6 @@ function persistAction(action: SyncAction): boolean {
   return storageFailures.size === 0;
 }
 const notifyQueue = (detail: { action?: SyncAction; removedId?: string }) => window.dispatchEvent(new CustomEvent(QUEUE_EVENT, { detail }));
-export function parseSyncQueue(value: unknown): SyncAction[] {
-  if (!Array.isArray(value)) return [];
-  const ids = new Set<string>();
-  return value.filter((action): action is SyncAction => {
-    if (!isRecord(action) || typeof action.id !== 'string' || !action.id || action.id.length > 128 || ids.has(action.id) || action.type !== 'INCREMENT_SCORE' || !isRecord(action.payload) || typeof action.payload.id !== 'string' || !Number.isSafeInteger(action.payload.amount) || Math.abs(Number(action.payload.amount)) > 1000000 || !isFreshClassroomRecord(action.timestamp)) return false;
-    ids.add(action.id); return true;
-  });
-}
 function loadActions(): SyncAction[] {
   cleanClassroomStorage();
   const actions: unknown[] = [];
@@ -74,16 +60,7 @@ export const useSyncQueue = (enabled = true) => {
     if (!enabled) return;
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => setIsOnline(false);
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key?.startsWith(PREFIX)) {
-        if (event.newValue === null) {
-          const id = event.key.slice(PREFIX.length);
-          volatileActions.delete(id); storageFailures.delete(id);
-        }
-        updateQueue(loadActions());
-        setStorageAvailable(storageFailures.size === 0);
-      }
-    };
+    // 대기열은 탭마다 따로 둔다(sessionStorage). 다른 탭의 storage 이벤트는 오지 않으므로 듣지 않는다.
     const handleQueueEvent = (event: Event) => {
       const { action, removedId } = (event as CustomEvent<{ action?: SyncAction; removedId?: string }>).detail;
       const retained = queueRef.current.filter(item => item.id !== removedId && item.id !== action?.id);
@@ -94,27 +71,38 @@ export const useSyncQueue = (enabled = true) => {
     window.addEventListener('physical-device-cleared', clear);
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    window.addEventListener('storage', handleStorage);
     window.addEventListener(QUEUE_EVENT, handleQueueEvent);
-    return () => { window.removeEventListener('physical-device-cleared', clear); window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); window.removeEventListener('storage', handleStorage); window.removeEventListener(QUEUE_EVENT, handleQueueEvent); };
+    return () => { window.removeEventListener('physical-device-cleared', clear); window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); window.removeEventListener(QUEUE_EVENT, handleQueueEvent); };
   }, [enabled, updateQueue]);
 
   useEffect(() => {
     if (!enabled || !isOnline || queue.length === 0) return;
     let cancelled = false;
-    if (queue.some(item => !isFreshClassroomRecord(item.timestamp))) { updateQueue(loadActions()); return; }
-    const action = [...queue].sort((left, right) => (left.nextRetryAt || 0) - (right.nextRetryAt || 0))[0];
-    const delay = Math.max(0, (action.nextRetryAt || 0) - Date.now());
+    const { expired } = splitExpired(queue);
+    if (expired.length) {
+      // 8시간이 지난 점수는 서버가 받지 않는다. 말없이 버리지 않고 학생에게 알린다.
+      for (const item of expired) { removeStorage(PREFIX + item.id); volatileActions.delete(item.id); storageFailures.delete(item.id); }
+      setSyncWarning(SYNC_WARNING.expired(expired.length));
+      updateQueue(loadActions());
+      return;
+    }
+    const { action, delay } = dueAction(queue)!;
     const timer = window.setTimeout(async () => {
       if (cancelled || inFlight.has(action.id)) return;
       const generation=deviceStorageGeneration();
       inFlight.add(action.id); setIsSyncing(true);
       try {
         const execute = async () => {
-          const result = await ScoreRepository.saveScoreAction(action.payload.id, action.payload.amount, action.id, typeof action.payload.activityId === 'string' ? action.payload.activityId : 'classroom-extra');
-          if (result === 'retry') throw new Error('Score request failed');
-          if (result === 'obsolete') setSyncWarning('수업 상태·점수 한도·참여 권한 때문에 저장하지 못했습니다. 선생님께 확인해 주세요.');
-          if (result === 'pending') setSyncWarning('게임 점수를 제출했습니다. 선생님이 확인한 뒤 모둠 점수에 반영됩니다.');
+          const outcome = await settleSyncAction(action, item => ScoreRepository.saveScoreAction(item.payload.id, item.payload.amount, item.id, typeof item.payload.activityId === 'string' ? item.payload.activityId : 'classroom-extra'));
+          if (!outcome.done) {
+            if (generation!==deviceStorageGeneration()) return;
+            setStorageAvailable(persistAction(outcome.failed));
+            updateQueue(queueRef.current.map(item => item.id === action.id ? outcome.failed : item));
+            notifyQueue({ action: outcome.failed });
+            return;
+          }
+          // 잘 보냈으면 앞서 띄운 안내를 지우고, 확인 대기·저장 불가면 그 안내를 띄운다.
+          setSyncWarning(outcome.warning);
           removeStorage(PREFIX + action.id);
           volatileActions.delete(action.id); storageFailures.delete(action.id);
           setStorageAvailable(storageFailures.size === 0);
@@ -123,21 +111,23 @@ export const useSyncQueue = (enabled = true) => {
         };
         if (navigator.locks) await navigator.locks.request('physical-score-' + action.id, execute);
         else await execute();
-      } catch {
-        if(generation!==deviceStorageGeneration())return;
-        const retries = (action.retryCount || 0) + 1;
-        const failed = { ...action, retryCount: retries, nextRetryAt: Date.now() + Math.min(30000, 1000 * 2 ** Math.min(retries, 5)) };
-        setStorageAvailable(persistAction(failed));
-        updateQueue(queueRef.current.map(item => item.id === action.id ? failed : item));
-        notifyQueue({ action: failed });
       } finally { inFlight.delete(action.id); setIsSyncing(false); }
     }, delay);
     return () => { cancelled = true; window.clearTimeout(timer); };
   }, [enabled, queue, isOnline, storageAvailable, updateQueue]);
 
+  // 아직 보내지 못한 점수가 있는데 화면을 닫으려 하면 브라우저가 한 번 더 묻게 한다(대기열은 탭을 닫으면 사라진다).
+  const hasPending = enabled && queue.length > 0;
+  useEffect(() => {
+    if (!hasPending) return;
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = SYNC_WARNING.leaving; return SYNC_WARNING.leaving; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [hasPending]);
+
   const enqueueAction = useCallback((action: SyncAction) => {
     if (!enabled) return;
-    if (parseSyncQueue([action]).length !== 1 || queueRef.current.some(item => item.id === action.id)) return;
+    if (!canEnqueue(queueRef.current, action)) return;
     setStorageAvailable(persistAction(action));
     updateQueue([...queueRef.current, action]);
     notifyQueue({ action });

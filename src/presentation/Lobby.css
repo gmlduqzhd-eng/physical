@@ -12,3 +12,11 @@ html[data-design=forest] .flow.lesson-shell.lesson-student :is(.student-choice>s
 /* 머리말 부제·안내 첫 줄도 1~2학년이 읽을 수 있게. */
 html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-brand .forest-brand-name small,.flow.lesson-shell.lesson-student .lesson-brand .forest-brand-name small{font-size:14px}
 html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-intro .lesson-eyebrow,.flow.lesson-shell.lesson-student .lesson-intro .lesson-eyebrow{font-size:15px}
+/* 들어가는 방법 바꾸기: 비밀번호가 먼저, QR은 그 아래 작은 단추. */
+.flow.lesson-shell.lesson-student .student-mode-switch{margin:14px 0 0;text-align:center}
+html[data-design=forest] .flow.lesson-shell.lesson-student .student-mode-switch button,
+.flow.lesson-shell.lesson-student .student-mode-switch button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 18px;border:2px solid currentColor;border-radius:999px;background:transparent;color:inherit;font-size:16px;font-weight:800;cursor:pointer}
+.flow.lesson-shell.lesson-student .student-mode-switch svg{width:20px;height:20px}
+/* QR 읽기 안내도 14px 이상으로. */
+.flow.lesson-shell.lesson-student .camera-qr-panel p{font-size:14px!important}
+html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-more summary,.flow.lesson-shell.lesson-student .lesson-more summary{min-height:44px;padding-block:10px;box-sizing:border-box}

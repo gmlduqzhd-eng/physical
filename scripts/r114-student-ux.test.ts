@@ -26,17 +26,18 @@ test('student result card: celebration and score first, codes and adult notes fo
  assert.match(page,/game-achievement-toast fixed \$\{gameFinished \? 'bottom-6' : 'top-20'\}/);
 });
 
-test('student screens show only back and help in the header',()=>{
+test('student screens show only the page buttons in the header',()=>{
  const toolbar=read('src/presentation/components/HeaderToolbar.tsx');
- assert.match(toolbar,/if \(studentMode\) return <nav className=\{`header-icon-scope icon-toolbar icon-toolbar-student/);
+ assert.match(toolbar,/if \(studentMode \?\? isStudentRoute\(pathname, search\)\) return <nav className=\{`header-icon-scope icon-toolbar icon-toolbar-student/);
  assert.match(read('src/presentation/LessonShell.tsx'),/studentMode=\{audience === 'student'\}/);
  assert.match(read('src/presentation/QuickJoin.tsx'),/<FlowShell utilities studentMode/);
  assert.match(read('src/presentation/MobileMissionView.tsx'),/student-classroom-header"><HeaderToolbar studentMode>/);
  assert.match(read('src/presentation/components/WaitingScreen.tsx'),/<HeaderToolbar studentMode>/);
  const page=read('src/presentation/GamePlayPage.tsx');
- assert.match(page,/<HeaderToolbar studentMode=\{hasBattle\}>/);
+ assert.match(page,/<HeaderToolbar studentMode=\{hasBattle \|\| undefined\}>/);
  assert.match(page,/!hasBattle && <TvModeButton/);
 });
+
 
 test('group phone: start is the biggest first button, help is secondary below it',()=>{
  const view=read('src/presentation/MobileMissionView.tsx');
