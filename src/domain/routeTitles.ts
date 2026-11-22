@@ -5,7 +5,8 @@ import {SCREEN} from './glossary';
 export const SITE_NAME='땀방울 원정대';
 const TITLES:readonly (readonly [RegExp,string])[]=[
  [/^\/(start)?$/,''],
- [/^\/hub\/tools/,'놀이 모음'],
+ [/^\/hub\/(tools|extras)/,'놀이 모음'],
+ [/^\/checks/,'수업 전 확인'],
  [/^\/(hub|games)/,SCREEN.hub],
  [/^\/solo$/,'혼자 하는 놀이'],
  [/^\/today/,SCREEN.today],

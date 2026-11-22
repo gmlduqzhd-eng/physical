@@ -35,7 +35,7 @@ const ActivityLibrary = lazyWithRetry(() => import('./presentation/ActivityLibra
 const PlayerRecords = lazyWithRetry(() => import('./presentation/PlayerRecords'), m => m.PlayerRecords);
 const FlagshipCollection=lazyWithRetry(() => import('./presentation/flagship/FlagshipCollection'), m => m.FlagshipCollection);
 const TeacherMembers=lazyWithRetry(() => import('./presentation/TeacherMembers'), m => m.TeacherMembers);
-const DeviceCheck = lazyWithRetry(() => import('./presentation/DeviceCheck'), m => m.DeviceCheck);
+const ChecksPage = lazyWithRetry(() => import('./presentation/ChecksPage'), m => m.ChecksPage);
 const ClassroomOperations = lazyWithRetry(() => import('./presentation/ClassroomOperations'), m => m.ClassroomOperations);
 const TeacherHome = lazyWithRetry(() => import('./presentation/TeacherHome'), m => m.TeacherHome);
 const ClassroomSetup = lazyWithRetry(() => import('./presentation/GuidedClassroom'), m => m.ClassroomSetup);
@@ -55,8 +55,6 @@ const AngleLab = lazyWithRetry(() => import('./presentation/AngleLab'), m => m.A
 const MoreApps = lazyWithRetry(() => import('./presentation/MoreApps'), m => m.MoreApps);
 const TodayLesson = lazyWithRetry(() => import('./presentation/TodayLesson'), m => m.TodayLesson);
 const TeacherGuidePage = lazyWithRetry(() => import('./presentation/TeacherGuidePage'), m => m.TeacherGuidePage);
-const SoundCheckPage = lazyWithRetry(() => import('./presentation/SoundCheckPage'), m => m.SoundCheckPage);
-const DisplayCheckPage = lazyWithRetry(() => import('./presentation/DisplayCheckPage'), m => m.DisplayCheckPage);
 const SignatureCardsPrint = lazyWithRetry(() => import('./presentation/SignatureCardsPrint'), m => m.SignatureCardsPrint);
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
 const TodayLessonBar = lazyWithRetry(loadTodayLessonBar, m => m.TodayLessonBar);
@@ -74,6 +72,15 @@ const LessonRecipes = lazyWithRetry(() => import('./presentation/LessonRecipes')
 /** 화면 파일을 받는 동안 보이는 자리. 밝은 화면에서 검은 화면이 번쩍이지 않게 지금 테마의 바탕색을 쓴다. */
 function RouteLoading() {
   return <div role="status" aria-live="polite" className="min-h-[100dvh] flex items-center justify-center text-base font-bold" style={{ background: 'var(--forest-bg, #f4f8f1)', color: 'var(--forest-muted, #4b5d55)' }}>화면을 불러오는 중…</div>;
+}
+
+/** 주소가 바뀐 화면: 붙어 있던 ?값과 #자리표를 그대로 들고 새 주소로 간다. */
+function MovedTo({ to, set }: { to: string; set?: Record<string, string> }) {
+  const { search, hash } = useLocation();
+  const params = new URLSearchParams(search);
+  for (const [key, value] of Object.entries(set ?? {})) params.set(key, value);
+  const query = params.toString();
+  return <Navigate to={`${to}${query ? `?${query}` : ''}${hash}`} replace />;
 }
 
 function RouteScrollReset() {
@@ -120,13 +127,17 @@ function App() {
         <Route path="/print/signature-cards" element={<SignatureCardsPrint/>} />
         <Route path="/today" element={<TodayLesson/>} />
         <Route path="/guide" element={<TeacherGuidePage/>} />
-        <Route path="/sound-check" element={<SoundCheckPage/>} />
-        <Route path="/display-check" element={<DisplayCheckPage/>} />
+        {/* 수업 전 확인은 한 화면(/checks)의 세 갈래다. 예전 주소는 맞는 갈래로 이어 준다. */}
+        <Route path="/checks" element={<ChecksPage/>} />
+        <Route path="/sound-check" element={<MovedTo to="/checks" set={{tab:'sound'}}/>} />
+        <Route path="/display-check" element={<MovedTo to="/checks" set={{tab:'display'}}/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
-        <Route path="/hub/tools" element={<GameHub />} />
+        {/* 기록·즐겨찾기·뽑기 모음. 수업 도구(/tools)와 헷갈리지 않게 주소를 바꿨다(예전 주소는 이어 준다). */}
+        <Route path="/hub/extras" element={<GameHub />} />
+        <Route path="/hub/tools" element={<MovedTo to="/hub/extras"/>} />
         <Route path="/about" element={<IntroLandingPage />} />
         <Route path="/teacher" element={<TeacherHome />} />
         <Route path="/teacher/google-callback" element={<FlowShell><GoogleTeacherCallback endpoint="teacher"/></FlowShell>} />
@@ -137,7 +148,7 @@ function App() {
         <Route path="/teacher/room/:roomId" element={hasSupabase ? <TeacherAuthGuard><GuidedClassroom /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/demo" element={<DemoLesson />} />
         <Route path="/teacher-ai" element={<TeacherStudioEntry />} />
-        <Route path="/device-check" element={<DeviceCheck />} />
+        <Route path="/device-check" element={<MovedTo to="/checks" set={{tab:'device'}}/>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />

@@ -30,6 +30,8 @@ import { AVAILABLE_GAMES as GAMES } from '../domain/gamesData';
 import type { AchievementStandard, GameDef } from '../domain/gamesData';
 import { CooldownTimerModal } from './components/CooldownTimerModal';
 
+const HUB_TABS = [{ id: 'games', label: '⭐ 즐겨찾기·뽑기' }, { id: 'activities', label: '⚡ 특별 활동' }, { id: 'teacher', label: '🧑‍🏫 선생님 도구' }, { id: 'records', label: '🏆 내 기록' }] as const;
+
 export const GameHub = () => {
   const accessQrDialog = useRef<AccessQrDialogHandle>(null);
   const navigate = useNavigate();
@@ -198,12 +200,19 @@ export const GameHub = () => {
         <strong className="hub-score">{(profile?.totalScore || 0).toLocaleString()}점</strong>
         <button type="button" onClick={() => setActiveTab('records')} className="hub-record-link">🏆 내 기록 ›</button>
       </div>
-      <nav className="hub-tabs" aria-label="놀이 모음 메뉴">
-        {([{ id: 'games', label: '⭐ 즐겨찾기·뽑기' }, { id: 'activities', label: '⚡ 특별 활동' }, { id: 'teacher', label: '🧑‍🏫 선생님 도구' }, { id: 'records', label: '🏆 내 기록' }] as const).map(tab => (
-          <button key={tab.id} type="button" aria-pressed={activeTab === tab.id} aria-controls={`hub-panel-${tab.id}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
+      {/* 갈래 줄: 화살표 키(←→·Home·End)로 옮기고, 고른 갈래만 Tab 순서에 둔다. */}
+      <div className="hub-tabs" role="tablist" aria-label="놀이 모음 메뉴" onKeyDown={event => {
+        const ids = HUB_TABS.map(tab => tab.id), at = ids.indexOf(activeTab);
+        const next = event.key === 'ArrowRight' ? ids[(at + 1) % ids.length] : event.key === 'ArrowLeft' ? ids[(at + ids.length - 1) % ids.length] : event.key === 'Home' ? ids[0] : event.key === 'End' ? ids[ids.length - 1] : null;
+        if (!next) return;
+        event.preventDefault(); setActiveTab(next);
+        event.currentTarget.querySelector<HTMLElement>(`#hub-tab-${next}`)?.focus();
+      }}>
+        {HUB_TABS.map(tab => (
+          <button key={tab.id} type="button" role="tab" id={`hub-tab-${tab.id}`} aria-selected={activeTab === tab.id} tabIndex={activeTab === tab.id ? 0 : -1} aria-controls={`hub-panel-${tab.id}`} onClick={() => setActiveTab(tab.id)}>{tab.label}</button>
         ))}
-      </nav>
-      <section id="hub-panel-records" aria-label="내 기록" hidden={activeTab !== 'records'}>
+      </div>
+      <section id="hub-panel-records" role="tabpanel" aria-labelledby="hub-tab-records" hidden={activeTab !== 'records'}>
       <div className="px-4 md:px-8 max-w-5xl mx-auto py-4"><RecentGameRecords profile={profile}/></div>
       {/* 📋 내 기록 */}
       <div className="px-4 md:px-8 max-w-5xl mx-auto pt-4 pb-2">
@@ -337,7 +346,7 @@ export const GameHub = () => {
 
       </section>
       {activeTab === 'activities' || activeTab === 'teacher' ? (
-        <section id={`hub-panel-${activeTab}`} aria-label={activeTab === 'teacher' ? '선생님 도구' : '특별 활동'}>
+        <section id={`hub-panel-${activeTab}`} role="tabpanel" aria-labelledby={`hub-tab-${activeTab}`}>
           {activeTab === 'teacher' && <div className="p-4 max-w-5xl mx-auto"><button className="rounded-xl bg-cyan-700 text-white px-5 py-4 font-bold" onClick={() => navigate('/teacher-ai')}>✦ 수업 준비실 · 활동 추천 / 난이도 / 지도안</button><button className="ml-3 underline" onClick={() => navigate('/privacy')}>기기 정보 관리</button></div>}
           <ThemeZone groupFilter={activeTab === 'teacher' ? 'teacher' : 'activities'} onSelect={openThemeMode} onOpenBadgeArchive={() => setShowBadgeArchive(true)} />
         </section>
@@ -361,7 +370,7 @@ export const GameHub = () => {
         </div>
       )}
 
-      <section id="hub-panel-games" aria-label="즐겨찾기와 뽑기" hidden={activeTab !== 'games'}>
+      <section id="hub-panel-games" role="tabpanel" aria-labelledby="hub-tab-games" hidden={activeTab !== 'games'}>
       <div ref={catalogRef} className="hub-catalog-heading"><div><h2>⭐ 즐겨찾기와 뽑기</h2><p>조건(어디서 · 몇 명 · 몇 분)으로 찾기는 활동 목록에서 해요. 여기서는 즐겨찾기와 뽑기만 해요.</p></div>          <div className="grid grid-cols-2 sm:flex items-center gap-1.5 sm:gap-2">
             <button type="button" onClick={() => navigate('/hub')} className="px-2.5 sm:px-3 py-2 sm:py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 whitespace-nowrap bg-gradient-to-r from-cyan-600 to-blue-600 text-white border border-cyan-400/30 shrink-0"><span>🔎 조건으로 찾기</span></button>
             <button
