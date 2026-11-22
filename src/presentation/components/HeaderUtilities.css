@@ -66,12 +66,22 @@
 }
 :is(.unified-home,.flow.lesson-shell,.flow.activity-tools-scope,.game-tools-scope,.teacher-ai.studio-tools-scope,.header-icon-scope) .header-tools { font-family:ForestSans,HeaderPretendard,system-ui,sans-serif; }
 
-/* 화면 보기(글씨 크기 · TV 모드) 팝오버 */
-.header-display-popover .header-display-panel{display:grid;gap:10px;min-width:220px}
-.header-display-popover .header-display-panel p{margin:0;font-size:14px;line-height:1.6}
-.header-display-popover .header-display-panel .display-btn{justify-content:center;width:100%}
-.header-display-popover .header-display-panel a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:inherit;text-underline-offset:4px}
-html[data-design=forest] body .icon-toolbar .display-trigger[data-display=on]{background:var(--forest-tint);border-color:var(--forest-accent)}
+/* 화면·소리 설정 팝오버 */
+.header-settings-popover .header-settings-panel{display:grid;gap:18px;min-width:220px}
+.header-settings-popover .header-settings-panel section{display:grid;gap:10px}
+.header-settings-popover .header-settings-panel h3{margin:0;font-size:15px;font-weight:800}
+.header-settings-popover .header-settings-panel section+section{padding-top:14px;border-top:1px solid var(--forest-line,#ced1c3)}
+.header-settings-popover .header-settings-panel p{margin:0;font-size:14px;line-height:1.6}
+.header-settings-popover .header-settings-panel .display-btn{justify-content:center;width:100%}
+.header-settings-popover .header-settings-panel a{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:inherit;text-underline-offset:4px}
+.header-settings-popover .background-music-controls{width:100%;min-width:0}
+.header-settings-popover .background-music-volume input{height:44px}
+/* 더보기(링크 공유 · 앱 설치) */
+.header-more-popover .header-more-panel{display:grid;gap:8px;min-width:200px}
+.header-more-popover .header-more-panel>button{display:flex;align-items:center;gap:10px;min-height:48px;width:100%;padding:10px 12px;border:1px solid var(--forest-line,#ced1c3);border-radius:14px;background:transparent;color:inherit;font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.header-more-popover .header-more-panel>button:disabled{opacity:.6;cursor:default}
+.header-more-popover .header-more-panel>button>svg{width:20px;height:20px;flex:none}
+.header-more-popover .header-share-feedback p{margin:0;font-size:14px;line-height:1.6}
 /* 선생님 로그인 표시(로그인했을 때만 보인다) */
 .teacher-status-chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:44px;min-height:44px;padding:0 10px;border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
 .teacher-status-chip>svg{width:20px;height:20px;flex:none}
@@ -80,3 +90,8 @@ html[data-design=forest] body .icon-toolbar .display-trigger[data-display=on]{ba
 .header-teacher-panel p{margin:0;line-height:1.6}
 .header-teacher-panel button{min-height:44px;padding:8px 14px;border-radius:999px;font-weight:800;cursor:pointer}
 .header-teacher-panel button{border:1px solid var(--forest-line,#d1d5db);background:var(--forest-tint,#f3f4f6);color:inherit}
+/* 설정 창 안의 배경음악 글씨: 작은 상태 글·볼륨 숫자도 읽을 수 있게 13~14px 이상. */
+.header-settings-popover .background-music-title strong{font-size:15px}
+.header-settings-popover .background-music-title small{font-size:13px}
+.header-settings-popover .background-music-volume{font-size:14px}
+.header-more-popover .header-more-panel>button[aria-disabled="true"]{opacity:.6;cursor:default}

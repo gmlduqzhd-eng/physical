@@ -71,13 +71,15 @@ test('installed app: any orientation, PNG icons, and the home picture is kept fo
  for(const f of found)assert.ok(existsSync(join('public',f)));
 });
 
-test('music stays off until asked, and a dark screen survives a reload in the same tab',()=>{
+test('music stays off until asked, and the chosen brightness is remembered (first visit follows the device)',()=>{
  const music=read('src/application/BackgroundMusicContext.tsx');
  assert.match(music,/readStorage\(preferenceKey\) === "on"/);assert.match(music,/preload="none"/);
+ // 음악은 '화면·소리' 설정 안의 배경음악 스위치로만 켠다(머리말을 누르기만 해서 켜지지 않는다).
  const header=read('src/presentation/components/HeaderUtilities.tsx');
- assert.match(header,/'음악 켜기'/);assert.match(header,/if \(!music\.enabled && !musicOpen\) music\.toggle\(\)/);
+ assert.match(header,/<BackgroundMusicButton\/>/);assert.doesNotMatch(header,/music\.toggle\(\)/);
  const theme=read('src/application/ThemeContext.tsx');
- assert.match(theme,/sessionStorage\.getItem\(themeKey\) === 'dark'/);assert.match(theme,/sessionStorage\.setItem\(themeKey, theme\)/);
+ assert.match(theme,/prefers-color-scheme: dark/);assert.match(theme,/localStorage\.setItem\(themeKey, next\)/);
+ assert.match(theme,/localStorage\.getItem\(themeKey\)\) \?\? \(window\.sessionStorage\.getItem\(legacyTabKey\) === 'dark' \? 'dark' : null\)/);
 });
 
 test('home keeps one clear start and does not repeat the same doors',()=>{

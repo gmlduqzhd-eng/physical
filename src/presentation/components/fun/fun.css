@@ -479,3 +479,38 @@ html[data-tv-mode="on"] .fun-paused-note{font-size:clamp(20px,2.4vw,36px)}
 }
 /* 누르는 칸은 44px 이상(TV 모드 단추). */
 .fun-intro .fun-tv-btn{min-height:44px;min-width:44px}
+
+/* '끝내기'는 진행 버튼처럼 보이지 않게: 색 테두리 대신 점선의 차분한 버튼으로, 다른 버튼과 조금 떨어뜨려 왼쪽 끝에 둔다.
+   (진행 버튼 '다음'은 오른쪽 끝이라, 바로 옆에 두면 잘못 누르기 쉽다.) */
+.fun-controls button[data-command=end]{border-style:dashed;border-color:var(--fun-line);background:transparent;color:var(--fun-muted)}
+.fun-controls button[data-command=end]:hover{border-color:#fca5a5;color:#fecaca}
+@media (min-width:641px){.fun-controls button[data-command=end]{flex:0 1 150px;margin-right:14px}}
+
+/* 넓은 화면(TV·노트북)의 시작 화면: 위쪽 게임 도구 막대(← + 제목)는 숨기고 카드 안의 '← 목록'을 쓴다.
+   카드와 규칙 칸도 조금 촘촘하게 해, 1280×720~800에서도 '▶ 시작'이 스크롤 없이 화면 안에 다 보이게 한다. */
+@media (min-width:641px){
+ body:has(main.fun-intro) .gameplay-toolbar{display:none}
+ .fun-intro-top .fun-exit{display:inline-block}
+ body:not(:has(#fun-dock-host .fun-dock)) .fun-intro{margin-top:16px}
+ .fun-intro{gap:10px;padding:clamp(16px,2.6vw,28px) clamp(18px,3.4vw,36px)}
+ .fun-intro h1{font-size:clamp(28px,3.8vw,42px)}
+ .fun-oneline{font-size:clamp(18px,2vw,22px);line-height:1.45}
+ .fun-rule-card{gap:6px}
+ .fun-rule-card li{padding:8px 14px;font-size:clamp(16px,1.8vw,19px);line-height:1.45}
+}
+@media (min-width:641px) and (max-height:760px){
+ .fun-intro{gap:8px}
+ .fun-intro h1{font-size:clamp(26px,3.2vw,36px)}
+ .fun-rule-card li{padding:6px 12px}
+ .fun-big{min-height:60px}
+}
+
+/* 수업 중 누르는 칸은 낮은 화면에서도 44px 이상: 보이는 크기는 그대로 두고 누르는 칸만 넓히거나(도크), 버튼을 키운다(팀 점수). */
+.fun-dock :is(.fun-remote-btn,.fun-exit,.fun-tv-btn){position:relative}
+.fun-dock :is(.fun-remote-btn,.fun-exit,.fun-tv-btn)::after{content:"";position:absolute;inset:-5px -2px}
+@media (max-width:640px) and (max-height:720px){.fun-scoreboard[data-teams="3"] .fun-team-buttons button,.fun-scoreboard[data-teams="4"] .fun-team-buttons button{min-height:44px}}
+@media (orientation:landscape) and (max-height:480px){.fun-team-buttons button{min-height:44px;min-width:44px}}
+/* TV 모드 시작 화면의 고르기 단추(팀 수 등): 한 줄에 들어가게 칸을 좁히고 글씨는 키운다. */
+html[data-tv-mode="on"] .fun-intro .fun-choice{grid-template-columns:repeat(auto-fit,minmax(min(100%,96px),1fr))}
+html[data-tv-mode="on"] .fun-intro .fun-choice button{font-size:clamp(18px,1.7vw,28px);min-height:clamp(52px,7vh,76px);white-space:nowrap}
+html[data-tv-mode="on"] .fun-intro .fun-setup legend{font-size:clamp(17px,1.5vw,24px)}

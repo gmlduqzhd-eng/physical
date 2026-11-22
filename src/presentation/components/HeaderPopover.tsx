@@ -66,6 +66,14 @@ export function HeaderPopover({ open, onClose, anchor, id, label, children, clas
       dismiss();
       anchor.current?.focus();
     };
+    // Tab으로 창 밖(뒤쪽 화면)에 초점이 가면 창을 닫는다(창이 열린 채 뒤쪽 화면을 돌아다니지 않게).
+    const focusLeft = (event: FocusEvent) => {
+      const next = event.target;
+      if (!(next instanceof Node) || next === document.body) return;
+      if (panel.current?.contains(next) || anchor.current?.contains(next)) return;
+      dismiss();
+    };
+    document.addEventListener('focusin', focusLeft);
     position();
     panel.current?.focus({ preventScroll: true });
     const observer = new ResizeObserver(position);
@@ -79,6 +87,7 @@ export function HeaderPopover({ open, onClose, anchor, id, label, children, clas
     window.addEventListener(dismissEvent, dismissOthers);
     return () => {
       observer.disconnect();
+      document.removeEventListener('focusin', focusLeft);
       window.removeEventListener('resize', position);
       window.removeEventListener('scroll', onScroll, true);
       window.visualViewport?.removeEventListener('resize', position);

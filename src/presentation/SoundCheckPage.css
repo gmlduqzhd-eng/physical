@@ -16,3 +16,7 @@
 .sound-check-list button:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
 .sound-check-voice-name{font-weight:800}
 @media (max-width:560px){.sound-check-list li{grid-template-columns:1fr 1fr}.sound-check-list li>div{grid-column:1/-1}.sound-check-list button{min-width:0}}
+.sound-check-voice-switch{margin:12px 0 4px}
+
+/* 어두운 화면: 밝은 청록 단추 위 흰 글씨는 잘 안 보여서 짙은 글씨로. */
+.dark-theme .sound-check-new{color:#042f2e}

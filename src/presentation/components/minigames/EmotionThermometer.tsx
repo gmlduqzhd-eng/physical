@@ -114,7 +114,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                   >
                     <span className="text-3xl block mb-1">{emo.emoji}</span>
                     <span className="font-black text-xs block text-white">{emo.name}</span>
-                    <span className="text-[10px] text-slate-400 line-clamp-1">{emo.desc}</span>
+                    <span className="text-[13px] text-slate-400 line-clamp-1">{emo.desc}</span>
                   </button>
                 ))}
               </div>
@@ -145,7 +145,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                     </button>
                   ))}
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-500 px-1">
+                <div className="flex justify-between text-[13px] text-slate-500 px-1">
                   <span>은은하고 잔잔한 움직임</span>
                   <span>온몸으로 폭발하는 움직임</span>
                 </div>
@@ -270,7 +270,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
 
               <div className="grid grid-cols-2 gap-3 bg-slate-950 p-5 rounded-2xl border border-slate-800 mb-5 text-left">
                 <div className="border-r border-slate-800 pr-3">
-                  <span className="text-[10px] font-bold text-purple-400 block mb-1">
+                  <span className="text-[13px] font-bold text-purple-400 block mb-1">
                     👤 표현자의 원래 의도
                   </span>
                   <div className="text-lg font-black text-white mb-1">
@@ -282,7 +282,7 @@ export const EmotionThermometer = ({ groupId, enqueueAction, onExit }: Props) =>
                 </div>
 
                 <div className="pl-2">
-                  <span className="text-[10px] font-bold text-rose-300 block mb-1">
+                  <span className="text-[13px] font-bold text-rose-300 block mb-1">
                     👥 짝꿍이 느낀 감정
                   </span>
                   <div className="text-lg font-black text-white mb-1">

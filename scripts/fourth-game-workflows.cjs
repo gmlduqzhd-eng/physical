@@ -10,6 +10,8 @@ function world(){
   useEffect(fn,deps){const a=active,i=a.cursor++,old=a.effects[i];if(!old||!equal(old.deps,deps))a.queue.push(()=>{old?.cleanup?.();a.effects[i]={deps,cleanup:fn()};});},
  };
  hooks.useLayoutEffect=hooks.useEffect;
+ // 화면이 쓰는 맥락(테마 등)은 기본값만 돌려주면 된다.
+ hooks.createContext=value=>({Provider:({children})=>children,_value:value});hooks.useContext=context=>context._value;hooks.useSyncExternalStore=(subscribe,get)=>get();
  const timer=(fn,ms,repeat)=>{const id=++nextTimer;env.timers.set(id,{fn,ms:Math.max(1,ms),at:env.now+Math.max(1,ms),repeat});return id;};
  const events={addEventListener:(name,fn)=>{const set=env.listeners.get(name)??new Set();set.add(fn);env.listeners.set(name,set);},removeEventListener:(name,fn)=>env.listeners.get(name)?.delete(fn)};
  const win={...events,scrollTo(){},setInterval:(fn,ms)=>timer(fn,ms,true),clearInterval:id=>env.timers.delete(id),setTimeout:(fn,ms)=>timer(fn,ms,false),clearTimeout:id=>env.timers.delete(id),speechSynthesis:{cancel(){}}};

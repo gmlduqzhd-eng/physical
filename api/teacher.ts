@@ -4,6 +4,7 @@ import { ABSOLUTE_SECONDS, authConfigured, codeConfigured, cookie, newSession, r
 import { generateAdvice } from '../server/aiService.js';
 import { publicAiError } from '../server/aiErrors.js';
 import { authorizeClassroomTeacher, ClassroomReconnectError } from '../server/classroomBridge.js';
+import { sharedLimiterConfigured, studioLimit, StudioLimiterUnavailable } from '../server/studioRateLimit.js';
 
 export const maxDuration = 60;
 type Request = IncomingMessage & { body?: unknown };
@@ -68,10 +69,22 @@ export default async function handler(req: Request, res: ServerResponse) {
     }
     if (action !== 'generate') return send(404, { error: '없는 기능입니다.' });
     if (!rateLimit('ai:' + nonce, 12, 60 * 1000)) return send(429, { error: '생성 요청이 많습니다. 잠시 후 다시 시도하세요.' });
-    const data = await generateAdvice(body);
+    // The in-memory limit above is per server instance. When the shared (database-backed) limiter the
+    // lesson studio uses is configured for this project too, apply it as well so the cap holds across instances.
+    // Without that configuration this stays exactly as before (no new required environment variables).
+    if (!sharedLimiterConfigured()) return send(200, await generateAdvice(body));
+    const admission = await studioLimit('generate', nonce);
+    if (!admission.allowed) {
+      res.setHeader('Retry-After', String(admission.retrySeconds));
+      return send(429, { error: admission.reason === 'daily' ? '오늘의 전체 AI 생성 한도에 도달했습니다. 내일 다시 이용해 주세요.' : '생성 요청이 많습니다. 잠시 후 다시 시도하세요.' });
+    }
+    let data;
+    try { data = await generateAdvice(body); }
+    finally { try { await studioLimit('release', nonce, admission.token); } catch { console.warn('teacher_limiter_release_pending'); } }
     return send(200, data);
   } catch (error) {
     if (error instanceof TeacherAccountError) return send(error.status, { error: error.message });
+    if (error instanceof StudioLimiterUnavailable) return send(503, { error: error.message });
     // The server login is still valid but this tab has no (or another) Google connection: ask to reconnect.
     if (error instanceof ClassroomReconnectError) return send(409, { error: error.message, reconnect: true });
     const providerError = publicAiError(error);

@@ -3,7 +3,7 @@
  * 활동 번호만 적고 학생 정보는 담지 않는다. 혼자 하기(/solo)에서 연 활동은 적지 않는다.
  */
 import { readJsonStorage, writeStorage } from './browserStorage';
-import { getMergedGame } from '../domain/gameLifecycle';
+import { mergedTargetId } from '../domain/homeCatalog';
 
 export const RECENT_ACTIVITIES_KEY = 'physical_recent_activities_v1';
 export const RECENT_ACTIVITIES_MAX = 8;
@@ -14,7 +14,7 @@ export function parseRecentActivities(saved: unknown): string[] {
   const out: string[] = [];
   for (const value of saved) {
     if (typeof value !== 'string' || !/^[\w-]{1,80}$/.test(value)) continue;
-    const id = getMergedGame(value)?.target || value;
+    const id = mergedTargetId(value) || value;
     if (!out.includes(id)) out.push(id);
     if (out.length >= RECENT_ACTIVITIES_MAX) break;
   }

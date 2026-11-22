@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CircleHelp } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { HeaderToolbar } from './HeaderToolbar';
 import type { RoomGroup, GameRoom, MissionTemplate } from '../../domain/types';
 import { GameIcons as LucideIcons } from '../icons';
@@ -25,7 +25,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         <span className="text-sm text-slate-500 font-bold">{gameRoom?.name}</span>
-        <HeaderToolbar><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
+        <HeaderToolbar studentMode><Link className="icon-toolbar-action" to="/lobby" title="학생 입장으로"><ArrowLeft aria-hidden="true"/><span>학생 입장으로</span></Link></HeaderToolbar>
       </header>
 
       {/* Main content */}
@@ -52,7 +52,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         <div className="w-full max-w-sm bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-3">
             <span className="text-slate-500 text-sm font-bold">내 정보</span>
-            <span className="px-3 py-1 bg-cyan-50 text-cyan-600 text-xs font-bold rounded-full border border-cyan-200">대기 중</span>
+            <span data-game-color className="px-3 py-1 bg-cyan-50 text-cyan-800 text-sm font-bold rounded-full border border-cyan-200">대기 중</span>
           </div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center">
@@ -66,32 +66,32 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         {/* Participant count */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
+        <div data-game-color className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
           <LucideIcons.Users className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-bold text-emerald-700">현재 {scores.length}개 모둠 참여 중</span>
+          <span className="text-sm font-bold text-emerald-800">현재 {scores.length}개 모둠 참여 중</span>
         </div>
 
         {/* Mission preview */}
         {template && Array.isArray(template.buttons) && template.buttons.length > 0 && (
           <div className="w-full max-w-sm">
-            <p className="text-xs text-slate-400 font-bold mb-2 text-center">오늘의 미션 미리보기</p>
+            <p className="text-sm text-slate-500 font-bold mb-2 text-center">오늘의 미션 미리보기</p>
             <div className="space-y-2">
               {template.buttons.filter(m => !m.isHidden).slice(0, 3).map((m, i) => {
                 const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
                 return (
-                  <div key={m.id || i} className={`p-3 border rounded-xl flex items-center gap-3 opacity-60 ${m.bg}`}>
+                  <div key={m.id || i} className={`p-3 border rounded-xl flex items-center gap-3 ${m.bg}`}>
                     <div className={`w-10 h-10 rounded-full bg-white flex items-center justify-center ${m.color}`}>
                       <IconComp className="w-5 h-5" />
                     </div>
                     <div>
                       <p className={`font-bold text-sm ${m.color}`}>{m.title}</p>
-                      <p className="text-xs text-slate-400">{m.desc}</p>
+                      <p className="text-sm text-slate-500">{m.desc}</p>
                     </div>
                   </div>
                 );
               })}
               {template.buttons.length > 3 && (
-                <p className="text-xs text-slate-400 text-center font-bold">외 {template.buttons.length - 3}개 미션...</p>
+                <p className="text-sm text-slate-500 text-center font-bold">외 {template.buttons.length - 3}개 미션...</p>
               )}
             </div>
           </div>

@@ -1,0 +1,22 @@
+/* 학생 입장(/lobby): 1~2학년이 혼자 들어올 수 있게 큰 비밀번호 칸과 15px 이상 글씨. */
+html[data-design=forest] .flow.lesson-shell.lesson-student .student-pin-label,
+.flow.lesson-shell.lesson-student .student-pin-label{display:grid;gap:8px;font-size:1.1rem;font-weight:900;text-align:center}
+html[data-design=forest] .flow.lesson-shell.lesson-student input.student-pin-input,
+.flow.lesson-shell.lesson-student input.student-pin-input{width:min(100%,260px);justify-self:center;min-height:68px;padding:8px 12px;border:3px solid #0e7490;border-radius:18px;background:#fff;color:#0f172a;font-size:2.25rem;font-weight:900;letter-spacing:.35em;text-align:center;font-variant-numeric:tabular-nums}
+.flow.lesson-shell.lesson-student input.student-pin-input::placeholder{color:#cbd5e1;letter-spacing:.35em}
+.flow.lesson-shell.lesson-student input.student-pin-input:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.flow.lesson-shell.lesson-student .student-pin-help{margin:6px 0 0;text-align:center;font-size:15px;font-weight:700}
+/* 작은 글씨(12~13px)를 15px 이상으로. */
+html[data-design=forest] .flow.lesson-shell.lesson-student :is(.student-choice>span:not(.lesson-icon),.student-help a,.lesson-more summary,.lesson-more .small,.quiet-links a,.lesson-footer a,.student-resume button,.lesson-intro>p:last-child),
+.flow.lesson-shell.lesson-student :is(.student-choice>span:not(.lesson-icon),.student-help a,.lesson-more summary,.lesson-more .small,.quiet-links a,.lesson-footer a,.student-resume button,.lesson-intro>p:last-child){font-size:15px}
+/* 머리말 부제·안내 첫 줄도 1~2학년이 읽을 수 있게. */
+html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-brand .forest-brand-name small,.flow.lesson-shell.lesson-student .lesson-brand .forest-brand-name small{font-size:14px}
+html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-intro .lesson-eyebrow,.flow.lesson-shell.lesson-student .lesson-intro .lesson-eyebrow{font-size:15px}
+/* 들어가는 방법 바꾸기: 비밀번호가 먼저, QR은 그 아래 작은 단추. */
+.flow.lesson-shell.lesson-student .student-mode-switch{margin:14px 0 0;text-align:center}
+html[data-design=forest] .flow.lesson-shell.lesson-student .student-mode-switch button,
+.flow.lesson-shell.lesson-student .student-mode-switch button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:8px 18px;border:2px solid currentColor;border-radius:999px;background:transparent;color:inherit;font-size:16px;font-weight:800;cursor:pointer}
+.flow.lesson-shell.lesson-student .student-mode-switch svg{width:20px;height:20px}
+/* QR 읽기 안내도 14px 이상으로. */
+.flow.lesson-shell.lesson-student .camera-qr-panel p{font-size:14px!important}
+html[data-design=forest] .flow.lesson-shell.lesson-student .lesson-more summary,.flow.lesson-shell.lesson-student .lesson-more summary{min-height:44px;padding-block:10px;box-sizing:border-box}

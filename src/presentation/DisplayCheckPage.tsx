@@ -13,7 +13,7 @@ const SCALES:ReadonlyArray<{id:TextScale;label:string;note:string}>=[
 /** "뒤에서 보여요?" 확인 화면: 교실 맨 뒤에 서서 글씨가 읽히는지 보고, 글씨 크기와 TV 모드를 맞춘다. */
 export function DisplayCheckPage(){
  const prefs=useDisplayPrefs();
- return <FlowShell utilities className="display-check-page" back="/manual" backLabel="이용 안내">
+ return <FlowShell utilities className="display-check-page">
   <section className="display-check" aria-labelledby="display-check-title">
    <p className="eyebrow">화면 보기 설정 · 이 기기에만 저장해요</p>
    <h1 id="display-check-title">뒤에서 보여요?</h1>

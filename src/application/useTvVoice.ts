@@ -1,23 +1,22 @@
 import {useCallback,useEffect,useSyncExternalStore} from 'react';
 import {useActivityPause} from './ActivityPauseContext';
-import {readStorage,writeStorage} from './browserStorage';
 import {duckForSpeech,sfxEarcon} from './soundEffects';
-import {createAnnouncer,parseSpeechPrefs,SPEECH_PREFS_KEY,VOICE_WAIT_MS,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
+import {createAnnouncer,VOICE_WAIT_MS,type Announcer,type SayOptions,type SpeechPrefs,type SpeechStatus} from './speechAnnouncer';
+import {getVoicePrefs,setVoicePrefs,subscribeVoicePrefs} from './voicePrefs';
 
 /**
- * TV 화면(대표 게임·반 전체 진행)의 음성 안내. 기기마다 켜기/끄기·속도·크기를 기억한다.
+ * TV 화면(대표 게임·반 전체 진행)의 음성 안내. 켜기/끄기·속도·크기는 voicePrefs 하나에 저장해
+ * 다른 활동의 음성 코칭(useVoiceCoach)과 함께 쓴다.
  * 한 화면에 TV 음성은 하나뿐이라 안내기는 하나를 함께 쓴다.
  */
 let announcer:Announcer|null=null;
-let prefsCache:SpeechPrefs|null=null;
 const listeners=new Set<()=>void>();
 const notify=()=>listeners.forEach(l=>l());
+// 설정이 바뀌면(어느 화면에서든) 안내기에도 바로 알려 준다.
+subscribeVoicePrefs(()=>{announcer?.setPrefs(getVoicePrefs());notify();});
 
 const browserSynth=()=>typeof window!=='undefined'&&'speechSynthesis' in window&&typeof window.SpeechSynthesisUtterance==='function'?window.speechSynthesis:null;
-function readPrefs():SpeechPrefs{
- if(!prefsCache)prefsCache=parseSpeechPrefs(readStorage(SPEECH_PREFS_KEY));
- return prefsCache;
-}
+const readPrefs=getVoicePrefs;
 export function tvAnnouncer():Announcer{
  if(!announcer){
   const synth=browserSynth();
@@ -31,10 +30,8 @@ export function tvAnnouncer():Announcer{
  return announcer;
 }
 function setPrefs(next:SpeechPrefs){
- prefsCache={...next};
- try{writeStorage(SPEECH_PREFS_KEY,JSON.stringify(prefsCache));}catch{/* 저장이 막혀도 이번 화면에서는 그대로 쓴다 */}
- tvAnnouncer().setPrefs(prefsCache);
- notify();
+ tvAnnouncer();
+ setVoicePrefs(next);
 }
 const subscribe=(l:()=>void)=>{listeners.add(l);return ()=>{listeners.delete(l);};};
 

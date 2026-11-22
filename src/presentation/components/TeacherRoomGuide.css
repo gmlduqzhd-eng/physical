@@ -1,0 +1,17 @@
+/* 처음 온 선생님용 '모둠 기기 수업' 안내 카드. 소개 바로 아래 첫 화면 안에 작게 두고, '수업 준비 시작' 단추를 밀어내지 않게 촘촘하게 한다. */
+.teacher-room-guide{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 16px;border:2px solid var(--forest-accent,#60754f);background:var(--forest-paper,#fffefa);color:var(--forest-ink,#354239);border-radius:16px;padding:12px 18px;margin:14px 0 12px}
+.flow.lesson-shell .teacher-room-guide-eyebrow{grid-column:1;font-size:13px;font-weight:700;color:var(--forest-accent,#60754f);margin:0}
+.flow.lesson-shell .teacher-room-guide h2{grid-column:1;font-size:18px;margin:0}
+.flow.lesson-shell .teacher-room-guide button.teacher-room-guide-close{grid-column:2;grid-row:1/span 2;min-height:48px;padding:10px 22px;border-radius:12px;font-weight:700}
+.teacher-room-guide ol{grid-column:1/-1;list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.teacher-room-guide li{display:flex;gap:8px;align-items:flex-start;min-width:0}
+.teacher-room-guide li b{display:flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--forest-accent,#60754f);color:var(--forest-on,#fff);font-size:14px}
+.teacher-room-guide li strong{display:block;font-size:15px;line-height:1.35}
+.flow.lesson-shell .teacher-room-guide li p{font-size:14px;line-height:1.45;color:var(--forest-muted,#687163);margin:2px 0 0}
+.flow.lesson-shell .teacher-room-guide-note{grid-column:1/-1;font-size:14px;color:var(--forest-muted,#687163);margin:6px 0 0}
+/* 낮은 TV 화면: 설명 줄을 숨겨 '수업 준비 시작'이 첫 화면에 남게 한다(제목만으로 흐름을 읽을 수 있다). */
+@media(min-width:701px) and (max-height:860px){.flow.lesson-shell .teacher-room-guide li p,.flow.lesson-shell .teacher-room-guide-note{display:none}}
+/* 휴대폰: 제목 세 줄만 보이게 줄인다. */
+@media(max-width:700px){.teacher-room-guide{padding:10px 12px;gap:2px 10px;margin-top:10px}.flow.lesson-shell .teacher-room-guide h2{font-size:16px}.teacher-room-guide ol{grid-template-columns:1fr;gap:4px}.flow.lesson-shell .teacher-room-guide li p,.flow.lesson-shell .teacher-room-guide-note{display:none}.flow.lesson-shell .teacher-room-guide button.teacher-room-guide-close{padding:8px 14px}}
+/* 더 낮은 화면(작은 폰, 720px 높이 TV): 제목 한 줄과 '알겠어요'만 남긴다. */
+@media(max-height:760px){.teacher-room-guide ol,.flow.lesson-shell .teacher-room-guide-eyebrow{display:none}.flow.lesson-shell .teacher-room-guide button.teacher-room-guide-close{grid-row:1}}

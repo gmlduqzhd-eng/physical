@@ -34,7 +34,7 @@ export const BoardEntry = () => {
 
       <div className="bg-white/10 backdrop-blur-md p-8 rounded-3xl border border-white/20 w-full max-w-sm mx-auto my-8 flex flex-col items-center">
         <Monitor className="w-20 h-20 text-cyan-400 mb-4" />
-        <h1 className="text-2xl font-black mb-2 text-center">TV 전광판 모드</h1>
+        <h1 className="text-2xl font-black mb-2 text-center">TV 점수판</h1>
         <p className="text-slate-300 text-sm mb-6 text-center break-keep">
           교실 TV나 빔 프로젝터에 실시간 순위판을 띄우세요.<br/>
           선생님이 알려주신 방 PIN 번호를 입력합니다.
@@ -49,10 +49,10 @@ export const BoardEntry = () => {
             onChange={e => setPinCode(e.target.value.replace(/\D/g, ''))}
             className="bg-black/30 border border-white/20 px-4 py-4 rounded-xl text-center text-2xl tracking-[0.5em] focus:outline-none focus:border-cyan-400 w-full uppercase"
           />
-          <label>전광판 전용 코드<input type="password" autoComplete="off" value={boardCode} maxLength={16} onChange={e=>setBoardCode(e.target.value)} className="w-full bg-black/30 border p-3 rounded-xl"/></label>
+          <label>TV 점수판 전용 코드<input type="password" autoComplete="off" value={boardCode} maxLength={16} onChange={e=>setBoardCode(e.target.value)} className="w-full bg-black/30 border p-3 rounded-xl"/></label>
           {error && <p className="text-red-400 text-sm font-bold text-center">{error}</p>}
           <button disabled={loading} type="submit" className="w-full py-4 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-lg transition-colors">
-            {loading ? '확인 중...' : '전광판 열기'}
+            {loading ? '확인 중...' : 'TV 점수판 열기'}
           </button>
         </form>
       </div>

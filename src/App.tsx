@@ -3,7 +3,7 @@ import {PlayErrorBoundary} from './components/PlayErrorBoundary';
 import {ClassroomErrorBoundary} from './components/ClassroomErrorBoundary';
 import {lazyWithRetry} from './application/lazyWithRetry';
 import { cleanClassroomStorage } from './application/storageRetention';
-import { lazy, Suspense, useEffect, useLayoutEffect } from 'react';
+import { Suspense, useEffect, useLayoutEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { syncServerTime } from './application/timeSync';
 import { ThemeProvider } from './application/ThemeContext';
@@ -12,54 +12,52 @@ import { RouteTitle } from './presentation/components/RouteTitle';
 import { BackgroundMusicProvider } from './application/BackgroundMusicContext';
 
 // 교사 인증·구글 로그인 화면은 필요할 때만 받는다(Supabase·zod가 첫 화면 묶음에 들어가지 않게).
-const TeacherAuthGuard = lazy(() => import('./presentation/components/TeacherAuthGuard').then(m => ({ default: m.TeacherAuthGuard })));
-const GoogleTeacherCallback = lazy(() => import('./presentation/components/GoogleTeacherCallback').then(m => ({ default: m.GoogleTeacherCallback })));
+const TeacherAuthGuard = lazyWithRetry(() => import('./presentation/components/TeacherAuthGuard'), m => m.TeacherAuthGuard);
+const GoogleTeacherCallback = lazyWithRetry(() => import('./presentation/components/GoogleTeacherCallback'), m => m.GoogleTeacherCallback);
 // 수업 화면(입장·점수판·모둠 폰·리모컨·관리)은 한 번 못 받아도 '다시 시도'로 새로 받는다.
 const ScoreBoard = lazyWithRetry(() => import('./presentation/ScoreBoard'), m => m.ScoreBoard);
 const MobileMissionView = lazyWithRetry(() => import('./presentation/MobileMissionView'), m => m.MobileMissionView);
 const AdminControlPanel = lazyWithRetry(() => import('./presentation/AdminControlPanel'), m => m.AdminControlPanel);
 const Lobby = lazyWithRetry(() => import('./presentation/Lobby'), m => m.Lobby);
-const Manual = lazy(() => import('./presentation/Manual').then(m => ({ default: m.Manual })));
+const Manual = lazyWithRetry(() => import('./presentation/Manual'), m => m.Manual);
 const KioskRelayView = lazyWithRetry(() => import('./presentation/KioskRelayView'), m => m.KioskRelayView);
 const QuickJoin = lazyWithRetry(() => import('./presentation/QuickJoin'), m => m.QuickJoin);
 const BoardEntry = lazyWithRetry(() => import('./presentation/BoardEntry'), m => m.BoardEntry);
-const IntroLandingPage = lazy(() => import('./presentation/IntroLandingPage').then(m => ({ default: m.IntroLandingPage })));
-const GameHub = lazy(() => import('./presentation/GameHub').then(m => ({ default: m.GameHub })));
+const IntroLandingPage = lazyWithRetry(() => import('./presentation/IntroLandingPage'), m => m.IntroLandingPage);
+const GameHub = lazyWithRetry(() => import('./presentation/GameHub'), m => m.GameHub);
 // 놀이 화면 파일을 한 번 못 받아도, 다른 놀이를 열거나 '다시 열기'를 누르면 새로 받는다.
 const GamePlayPage = lazyWithRetry(() => import('./presentation/GamePlayPage'), m => m.GamePlayPage);
 const TeacherRemote = lazyWithRetry(() => import('./presentation/TeacherRemote'), m => m.TeacherRemote);
-const TeacherStudioEntry = lazy(() => import('./presentation/TeacherStudioEntry').then(m => ({ default: m.TeacherStudioEntry })));
-const PrivacyPage = lazy(() => import('./presentation/PrivacyPage').then(m => ({ default: m.PrivacyPage })));
-const UnifiedHomePage = lazy(() => import('./presentation/UnifiedHomePage').then(m => ({ default: m.UnifiedHomePage })));
-const ActivityLibrary = lazy(() => import('./presentation/ActivityLibrary').then(m => ({ default: m.ActivityLibrary })));
-const PlayerRecords = lazy(() => import('./presentation/PlayerRecords').then(m => ({ default: m.PlayerRecords })));
-const FlagshipCollection=lazy(()=>import('./presentation/flagship/FlagshipCollection').then(m=>({default:m.FlagshipCollection})));
-const TeacherMembers=lazy(()=>import('./presentation/TeacherMembers').then(m=>({default:m.TeacherMembers})));
-const DeviceCheck = lazy(() => import('./presentation/DeviceCheck').then(m => ({ default: m.DeviceCheck })));
-const ClassroomOperations = lazy(() => import('./presentation/ClassroomOperations').then(m => ({ default: m.ClassroomOperations })));
-const TeacherHome = lazy(() => import('./presentation/TeacherHome').then(m => ({ default: m.TeacherHome })));
-const ClassroomSetup = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.ClassroomSetup })));
-const GuidedClassroom = lazy(() => import('./presentation/GuidedClassroom').then(m => ({ default: m.GuidedClassroom })));
-const DemoLesson = lazy(() => import('./presentation/DemoLesson').then(m => ({ default: m.DemoLesson })));
-const PlayExperiencePage = lazy(() => import('./presentation/PlayExperiencePage').then(m=>({default:m.PlayExperiencePage})));
-const SharedScreenLesson = lazy(() => import('./presentation/SharedScreenLesson').then(m=>({default:m.SharedScreenLesson})));
-const SportsClassroom = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportsClassroom})));
-const ClassTools = lazy(() => import('./presentation/ClassTools').then(m=>({default:m.ClassTools})));
-const ClassProgressPage = lazy(() => import('./presentation/ClassProgressPage').then(m=>({default:m.ClassProgressPage})));
-const FunRemotePage = lazy(() => import('./presentation/FunRemotePage').then(m=>({default:m.FunRemotePage})));
-const SafetyClassroom = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.SafetyClassroom})));
-const CrowdSafetyLesson = lazy(() => import('./presentation/SafetyClassroom').then(m=>({default:m.CrowdSafetyLesson})));
-const ClassJourney = lazy(() => import('./presentation/ClassJourney').then(m=>({default:m.ClassJourney})));
-const SportDeepDive = lazy(() => import('./presentation/SportDeepDive').then(m=>({default:m.SportDeepDive})));
-const AngleLab = lazy(() => import('./presentation/AngleLab').then(m=>({default:m.AngleLab})));
-const MoreApps = lazy(() => import('./presentation/MoreApps').then(m=>({default:m.MoreApps})));
-const TodayLesson = lazy(() => import('./presentation/TodayLesson').then(m=>({default:m.TodayLesson})));
-const TeacherGuidePage = lazy(() => import('./presentation/TeacherGuidePage').then(m=>({default:m.TeacherGuidePage})));
-const SoundCheckPage = lazy(() => import('./presentation/SoundCheckPage').then(m=>({default:m.SoundCheckPage})));
-const DisplayCheckPage = lazy(() => import('./presentation/DisplayCheckPage').then(m=>({default:m.DisplayCheckPage})));
-const SignatureCardsPrint = lazy(() => import('./presentation/SignatureCardsPrint').then(m=>({default:m.SignatureCardsPrint})));
+const TeacherStudioEntry = lazyWithRetry(() => import('./presentation/TeacherStudioEntry'), m => m.TeacherStudioEntry);
+const PrivacyPage = lazyWithRetry(() => import('./presentation/PrivacyPage'), m => m.PrivacyPage);
+const UnifiedHomePage = lazyWithRetry(() => import('./presentation/UnifiedHomePage'), m => m.UnifiedHomePage);
+const ActivityLibrary = lazyWithRetry(() => import('./presentation/ActivityLibrary'), m => m.ActivityLibrary);
+const PlayerRecords = lazyWithRetry(() => import('./presentation/PlayerRecords'), m => m.PlayerRecords);
+const FlagshipCollection=lazyWithRetry(() => import('./presentation/flagship/FlagshipCollection'), m => m.FlagshipCollection);
+const TeacherMembers=lazyWithRetry(() => import('./presentation/TeacherMembers'), m => m.TeacherMembers);
+const ChecksPage = lazyWithRetry(() => import('./presentation/ChecksPage'), m => m.ChecksPage);
+const ClassroomOperations = lazyWithRetry(() => import('./presentation/ClassroomOperations'), m => m.ClassroomOperations);
+const TeacherHome = lazyWithRetry(() => import('./presentation/TeacherHome'), m => m.TeacherHome);
+const ClassroomSetup = lazyWithRetry(() => import('./presentation/GuidedClassroom'), m => m.ClassroomSetup);
+const GuidedClassroom = lazyWithRetry(() => import('./presentation/GuidedClassroom'), m => m.GuidedClassroom);
+const DemoLesson = lazyWithRetry(() => import('./presentation/DemoLesson'), m => m.DemoLesson);
+const PlayExperiencePage = lazyWithRetry(() => import('./presentation/PlayExperiencePage'), m => m.PlayExperiencePage);
+const SharedScreenLesson = lazyWithRetry(() => import('./presentation/SharedScreenLesson'), m => m.SharedScreenLesson);
+const SportsClassroom = lazyWithRetry(() => import('./presentation/SportsClassroom'), m => m.SportsClassroom);
+const ClassTools = lazyWithRetry(() => import('./presentation/ClassTools'), m => m.ClassTools);
+const ClassProgressPage = lazyWithRetry(() => import('./presentation/ClassProgressPage'), m => m.ClassProgressPage);
+const FunRemotePage = lazyWithRetry(() => import('./presentation/FunRemotePage'), m => m.FunRemotePage);
+const SafetyClassroom = lazyWithRetry(() => import('./presentation/SafetyClassroom'), m => m.SafetyClassroom);
+const CrowdSafetyLesson = lazyWithRetry(() => import('./presentation/SafetyClassroom'), m => m.CrowdSafetyLesson);
+const ClassJourney = lazyWithRetry(() => import('./presentation/ClassJourney'), m => m.ClassJourney);
+const SportDeepDive = lazyWithRetry(() => import('./presentation/SportDeepDive'), m => m.SportDeepDive);
+const AngleLab = lazyWithRetry(() => import('./presentation/AngleLab'), m => m.AngleLab);
+const MoreApps = lazyWithRetry(() => import('./presentation/MoreApps'), m => m.MoreApps);
+const TodayLesson = lazyWithRetry(() => import('./presentation/TodayLesson'), m => m.TodayLesson);
+const TeacherGuidePage = lazyWithRetry(() => import('./presentation/TeacherGuidePage'), m => m.TeacherGuidePage);
+const SignatureCardsPrint = lazyWithRetry(() => import('./presentation/SignatureCardsPrint'), m => m.SignatureCardsPrint);
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
-const TodayLessonBar = lazy(() => loadTodayLessonBar().then(m=>({default:m.TodayLessonBar})));
+const TodayLessonBar = lazyWithRetry(loadTodayLessonBar, m => m.TodayLessonBar);
 /** 활동 화면(/play/…)과 활동 목록(/hub, /games)에서만 단계 막대를 그린다. '오늘 수업' 화면에서 미리 불러 두어 활동 화면에서 바로 뜬다. */
 function TodayBarGate(){
   const {pathname}=useLocation();
@@ -67,9 +65,23 @@ function TodayBarGate(){
   useEffect(()=>{if(shown||pathname.startsWith('/today'))void loadTodayLessonBar().catch(()=>{});},[shown,pathname]);
   return shown?<Suspense fallback={null}><TodayLessonBar /></Suspense>:null;
 }
-const PrintCards = lazy(() => import('./presentation/PrintCards').then(m=>({default:m.PrintCards})));
-const SportLesson = lazy(() => import('./presentation/SportsClassroom').then(m=>({default:m.SportLesson})));
-const LessonRecipes = lazy(() => import('./presentation/LessonRecipes').then(m=>({default:m.LessonRecipes})));
+const PrintCards = lazyWithRetry(() => import('./presentation/PrintCards'), m => m.PrintCards);
+const SportLesson = lazyWithRetry(() => import('./presentation/SportsClassroom'), m => m.SportLesson);
+const LessonRecipes = lazyWithRetry(() => import('./presentation/LessonRecipes'), m => m.LessonRecipes);
+
+/** 화면 파일을 받는 동안 보이는 자리. 밝은 화면에서 검은 화면이 번쩍이지 않게 지금 테마의 바탕색을 쓴다. */
+function RouteLoading() {
+  return <div role="status" aria-live="polite" className="min-h-[100dvh] flex items-center justify-center text-base font-bold" style={{ background: 'var(--forest-bg, #f4f8f1)', color: 'var(--forest-muted, #4b5d55)' }}>화면을 불러오는 중…</div>;
+}
+
+/** 주소가 바뀐 화면: 붙어 있던 ?값과 #자리표를 그대로 들고 새 주소로 간다. */
+function MovedTo({ to, set }: { to: string; set?: Record<string, string> }) {
+  const { search, hash } = useLocation();
+  const params = new URLSearchParams(search);
+  for (const [key, value] of Object.entries(set ?? {})) params.set(key, value);
+  const query = params.toString();
+  return <Navigate to={`${to}${query ? `?${query}` : ''}${hash}`} replace />;
+}
 
 function RouteScrollReset() {
   const { pathname } = useLocation();
@@ -93,7 +105,7 @@ function App() {
       <RouteTitle />
       <BackgroundMusicProvider>
       <KakaoInAppNotice />
-      <Suspense fallback={<div role="status" className="min-h-[100dvh] flex items-center justify-center bg-slate-950 text-white">화면을 불러오는 중…</div>}>
+      <Suspense fallback={<RouteLoading />}>
       <Routes>
         {/* 소개·역할 선택·활동 탐색을 한 메인 화면에서 시작 */}
         <Route path="/" element={<UnifiedHomePage />} />
@@ -115,13 +127,17 @@ function App() {
         <Route path="/print/signature-cards" element={<SignatureCardsPrint/>} />
         <Route path="/today" element={<TodayLesson/>} />
         <Route path="/guide" element={<TeacherGuidePage/>} />
-        <Route path="/sound-check" element={<SoundCheckPage/>} />
-        <Route path="/display-check" element={<DisplayCheckPage/>} />
+        {/* 수업 전 확인은 한 화면(/checks)의 세 갈래다. 예전 주소는 맞는 갈래로 이어 준다. */}
+        <Route path="/checks" element={<ChecksPage/>} />
+        <Route path="/sound-check" element={<MovedTo to="/checks" set={{tab:'sound'}}/>} />
+        <Route path="/display-check" element={<MovedTo to="/checks" set={{tab:'display'}}/>} />
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
         <Route path="/hub" element={<ActivityLibrary />} />
-        <Route path="/hub/tools" element={<GameHub />} />
+        {/* 기록·즐겨찾기·뽑기 모음. 수업 도구(/tools)와 헷갈리지 않게 주소를 바꿨다(예전 주소는 이어 준다). */}
+        <Route path="/hub/extras" element={<GameHub />} />
+        <Route path="/hub/tools" element={<MovedTo to="/hub/extras"/>} />
         <Route path="/about" element={<IntroLandingPage />} />
         <Route path="/teacher" element={<TeacherHome />} />
         <Route path="/teacher/google-callback" element={<FlowShell><GoogleTeacherCallback endpoint="teacher"/></FlowShell>} />
@@ -132,7 +148,7 @@ function App() {
         <Route path="/teacher/room/:roomId" element={hasSupabase ? <TeacherAuthGuard><GuidedClassroom /></TeacherAuthGuard> : <SupabaseRequired />} />
         <Route path="/demo" element={<DemoLesson />} />
         <Route path="/teacher-ai" element={<TeacherStudioEntry />} />
-        <Route path="/device-check" element={<DeviceCheck />} />
+        <Route path="/device-check" element={<MovedTo to="/checks" set={{tab:'device'}}/>} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/games" element={<ActivityLibrary />} />
         <Route path="/solo" element={<ActivityLibrary key="solo" solo />} />
@@ -145,7 +161,7 @@ function App() {
         <Route path="/join" element={hasSupabase ? <QuickJoin /> : <SupabaseRequired />} />
         <Route path="/manual" element={<Manual />} />
         <Route path="/board" element={hasSupabase ? <BoardEntry /> : <SupabaseRequired />} />
-        <Route path="/board/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/board" backLabel="전광판 연결" title="점수판을 못 열었어요"><ScoreBoard /></ClassroomErrorBoundary> : <SupabaseRequired />} />
+        <Route path="/board/:roomId" element={hasSupabase ? <ClassroomErrorBoundary back="/board" backLabel="TV 점수판 연결" title="점수판을 못 열었어요"><ScoreBoard /></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/mobile/:roomId/:groupId" element={hasSupabase ? <ClassroomErrorBoundary back="/lobby" backLabel="학생 입장" title="모둠 화면을 못 열었어요"><MobileMissionView /></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/admin" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="관리 화면을 못 열었어요"><TeacherAuthGuard><AdminControlPanel /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
         <Route path="/remote" element={hasSupabase ? <ClassroomErrorBoundary back="/teacher" backLabel="수업 준비" title="리모컨을 못 열었어요"><TeacherAuthGuard><TeacherRemote /></TeacherAuthGuard></ClassroomErrorBoundary> : <SupabaseRequired />} />
@@ -169,7 +185,7 @@ const SupabaseRequired = () => (
       지금은 실시간 수업에 연결할 수 없습니다.<br/>
       잠시 후 다시 시도해 주세요. 개인 게임은 바로 이용할 수 있습니다.
     </p>
-    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">개인 게임 열기</a>
+    <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 text-white font-bold">활동 고르기 열기</a>
   </div>
 );
 
@@ -177,9 +193,9 @@ const NotFound = () => (
   <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center gap-4 p-6 text-center font-sans">
     <div className="text-6xl" aria-hidden="true">🧭</div>
     <h1 className="text-3xl font-black">페이지를 찾을 수 없습니다</h1>
-    <p className="text-slate-300">주소를 다시 확인하거나 게임 허브로 돌아가 주세요.</p>
+    <p className="text-slate-300">주소를 다시 확인하거나 활동 고르기로 돌아가 주세요.</p>
     <a href="/hub" className="px-6 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-bold transition-colors">
-      게임 허브로 이동
+      활동 고르기로 이동
     </a>
   </div>
 );

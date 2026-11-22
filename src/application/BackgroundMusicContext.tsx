@@ -37,7 +37,7 @@ const BackgroundMusicContext = createContext<{
 } | null>(null);
 
 export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   // Off until someone turns it on: a classroom TV must not start playing on the first click.
   // The audio file is fetched only when playback starts.
   const [enabled, setEnabled] = useState(
@@ -50,7 +50,7 @@ export function BackgroundMusicProvider({ children }: { children: ReactNode }) {
   const eligibleRef = useRef(false);
   const suppressedRef = useRef(false);
   const lessonPausedRef=useRef(false);
-  const eligible = allowsBackgroundMusic(pathname);
+  const eligible = allowsBackgroundMusic(pathname, search);
 
   const attemptPlay = useCallback(() => {
     const audio = audioRef.current;

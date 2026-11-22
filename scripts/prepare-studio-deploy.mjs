@@ -22,7 +22,7 @@ const files = [
   'server/studioHandler.ts', 'server/geminiStudio.ts', 'server/aiService.ts', 'server/teacherSession.ts', 'server/studioRateLimit.ts', 'server/teacherAccounts.ts',
   'src/presentation/components/TeacherAccountForm.tsx', 'src/presentation/components/GoogleTeacherCallback.tsx', 'src/application/teacherGoogle.ts', 'src/presentation/components/TeacherAuthGuard.css',
   'teacher-studio/studioRequest.ts', 'teacher-studio/studioHandoff.ts', 'teacher-studio/localChallenge.ts',
-  'src/domain/publicLessonTransfer.ts', 'src/domain/playRecipes.ts', 'src/domain/cooperativeMap.ts', 'src/domain/expeditionWorkshop.ts', 'src/domain/flagship.ts', 'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
+  'src/domain/publicLessonTransfer.ts', 'src/domain/playRecipes.ts', 'src/domain/primaryExperiences.ts', 'src/domain/cooperativeMap.ts', 'src/domain/expeditionWorkshop.ts', 'src/domain/flagship.ts', 'src/domain/gamesData.ts', 'src/domain/teacherAi.ts', 'src/domain/participationCues.ts', 'src/data/lessonGameCatalog.ts',
   'src/domain/expeditionGames.ts', 'src/domain/expeditionCatalog.ts',
   'src/domain/gameLifecycle.ts', 'src/domain/safetyLessons.ts', 'src/domain/gameResultDetails.ts',
   'src/domain/expeditionRules.ts',
@@ -43,6 +43,18 @@ const files = [
   'teacher-studio/public/fonts/Pretendard-LICENSE.txt',
   'src/presentation/components/minigames/expression/expressionGamesData.ts',
   'src/presentation/components/minigames/curriculum/curriculumGamesMeta.ts',
+  // 머리말(화면·소리 설정)·교사 로그인·대표 게임 목록이 함께 쓰는 파일. scripts/r114-header-naming.test.ts가 빠진 파일이 없는지 확인한다.
+  'src/application/audience.ts', 'src/application/displayPrefs.ts', 'src/application/speechAnnouncer.ts',
+  'src/application/speechText.ts', 'src/application/teacherLoginPrefs.ts', 'src/application/voicePrefs.ts',
+  'src/data/supabase.ts', 'src/data/teacherAuthStorage.ts', 'src/domain/expeditionClarity.ts',
+  'src/domain/funLoop.ts', 'src/domain/koreanParticle.ts', 'src/domain/peQuizBingo.ts',
+  'src/domain/phonePlayClarity.ts', 'src/domain/phonePlayClassics.ts', 'src/domain/phonePlayClassicsMode.ts',
+  'src/domain/phonePlayKid.ts', 'src/domain/questClarity.ts', 'src/domain/signature/define.ts',
+  'src/domain/signature/sig-boss-raid.ts', 'src/domain/signature/sig-memory-relay.ts', 'src/domain/signature/sig-mirror-pair.ts',
+  'src/domain/signature/sig-move-bingo.ts', 'src/domain/signature/sig-signal-captain.ts', 'src/domain/signature/sig-stage-show.ts',
+  'src/domain/signature/types.ts', 'src/domain/signatureGames.ts', 'src/presentation/components/DisplayButtons.tsx',
+  'src/presentation/components/TeacherStatusChip.tsx', 'src/presentation/components/minigames/expression/expressionClarity.ts', 'src/presentation/components/minigames/expression/expressionKidText.ts',
+  'src/presentation/components/DisplayButtons.css', 'src/presentation/components/TeacherAccountForm.css',
 ];
 for (const file of files) {
   await mkdir(join(root, file, '..'), { recursive: true });

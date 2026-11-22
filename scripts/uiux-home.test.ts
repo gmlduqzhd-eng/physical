@@ -71,7 +71,7 @@ test('hub cards are compact: name, one-line rule, people and time, open button; 
 
 test('text size and TV mode are reachable from the header and the check page',()=>{
  const header=read('src/presentation/components/HeaderUtilities.tsx');
- assert.match(header,/<TextScaleButton\/><TvModeButton\/>/);assert.match(header,/to="\/display-check"/);
+ assert.match(header,/<TextScaleButton\/><TvModeButton\/><ThemeButton\/>/);assert.match(header,/to="\/display-check"/);
  const page=read('src/presentation/DisplayCheckPage.tsx');
  assert.match(page,/뒤에서 보여요\?/);
  for(const scale of ['normal','large','xlarge'])assert.ok(page.includes(`id:'${scale}'`),scale);
@@ -79,7 +79,7 @@ test('text size and TV mode are reachable from the header and the check page',()
  assert.match(read('src/presentation/TeacherGuidePage.tsx'),/to="\/display-check"/);
  assert.match(read('src/App.tsx'),/path="\/display-check"/);
  assert.equal(routeTitle('/display-check').startsWith('뒤에서 보여요?'),true);
- // 아이콘 줄은 일곱 개까지 한 줄에 들어가고, 좁으면 넘치지 않고 줄을 바꾼다.
+ // 아이콘 줄은 한 줄로 오른쪽에 붙고, 좁으면 넘치지 않고 줄을 바꾼다.
  const toolbar=read('src/presentation/components/HeaderToolbar.css');
- assert.match(toolbar,/repeat\(7,44px\)/);assert.match(toolbar,/repeat\(auto-fit,minmax\(44px,1fr\)\)/);
+ assert.match(toolbar,/display:flex; flex-wrap:nowrap/);assert.match(toolbar,/repeat\(auto-fit,minmax\(44px,1fr\)\)/);
 });

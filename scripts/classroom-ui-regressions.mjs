@@ -101,11 +101,11 @@ try {
   await studentContext.setOffline(true);
   await student.waitForTimeout(1400);
   await normalButton.click();
-  const pending = await student.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('physical_sync_action_')).map(key => JSON.parse(localStorage.getItem(key))));
+  const pending = await student.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('physical_sync_action_')).map(key => JSON.parse(sessionStorage.getItem(key))));
   assert.equal(pending.length, 1); const offlineAmount = pending[0].payload.amount;
   await studentContext.setOffline(false);
   await until(async () => await score(group.id) === 35 + offlineAmount, 'offline queued score restored');
-  await until(async () => await student.evaluate(() => Object.keys(localStorage).filter(key => key.startsWith('physical_sync_action_')).length) === 0, 'ack removed persisted action');
+  await until(async () => await student.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('physical_sync_action_')).length) === 0, 'ack removed persisted action');
   await student.reload();
   await normalButton.waitFor(); assert.equal(await score(group.id), 35 + offlineAmount);
   checks.push('Offline mission persists until acknowledgement; reconnect and reload do not duplicate points');

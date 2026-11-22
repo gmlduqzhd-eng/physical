@@ -10,6 +10,7 @@ import type { ExpressionGameData } from '../expression/expressionGamesData';
 import { sfxSuccess } from '../../../../application/soundEffects';
 import { ExpressionSoundPlayer } from '../expression/ExpressionSoundPlayer';
 import {expressionAssessment,type GameResultDetails} from '../../../../domain/gameResultDetails';
+import { useModalDialog } from '../../../../application/useModalDialog';
 import './ExpressionActivity.css';
 import {ActivityProgress} from './ActivityProgress';
 import {ExpressionPoseCards,JoinOrderChart} from '../expression/ExpressionPoseCards';
@@ -40,6 +41,7 @@ export const ExpressionActivityLayout = ({
   const [timeLeft, setTimeLeft] = useState<number>(game.steps[0]?.durationSeconds || 30);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const [showAchievementModal, setShowAchievementModal] = useState<boolean>(false);
+  const achievementDialog = useModalDialog(showAchievementModal, () => setShowAchievementModal(false));
 
   // 평가 점수 상태 (각 평가 기준별 1~5점)
   const [ratings, setRatings] = useState<number[]>(()=>expressionAssessment(game.steps,game.rubric,game.steps.map((_,i)=>i)).map(()=>0));
@@ -156,6 +158,8 @@ export const ExpressionActivityLayout = ({
       {/* 성취기준 세부 모달 */}
       {showAchievementModal && (
         <div
+          ref={achievementDialog}
+          tabIndex={-1}
           role="dialog"
           aria-modal="true"
           aria-label="성취기준 안내"
@@ -282,13 +286,13 @@ export const ExpressionActivityLayout = ({
               <button
                 type="button"
                 onClick={() => setShowAchievementModal(true)}
-                className="px-2 py-0.5 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-[10px] font-mono font-bold text-purple-300 flex items-center gap-1 transition-colors"
+                className="min-h-[44px] px-3 py-1 rounded-lg bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-[13px] font-mono font-bold text-purple-300 flex items-center gap-1 transition-colors"
                 title="성취기준 상세 보기"
               >
                 <Info className="w-2.5 h-2.5" />
                 <span>{achievementLabel(game.achievement.code)}</span>
               </button>
-              <span className={`text-[10px] px-2 py-0.5 rounded-md font-bold border ${
+              <span className={`text-[13px] px-2 py-0.5 rounded-md font-bold border ${
                 game.playMode === '협동'
                   ? 'bg-amber-950/80 text-yellow-200 border-amber-800/60'
                   : 'bg-slate-800 text-slate-300 border-slate-700'
@@ -300,7 +304,7 @@ export const ExpressionActivityLayout = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-1 text-[11px] bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-1 text-[13px] bg-slate-950/60 px-3 py-1 rounded-xl border border-slate-800">
           <span className="text-slate-400">지원:</span>
           {game.devices.includes('스마트폰') && <span title="스마트폰">📱</span>}
           {game.devices.includes('태블릿 PC') && <span title="태블릿 PC">📟</span>}
@@ -430,7 +434,7 @@ export const ExpressionActivityLayout = ({
 
           {/* 한 줄 성찰 출력 */}
           {selfReflection.trim()&&<div className="bg-purple-950/30 p-4 rounded-2xl border border-purple-500/20 max-w-lg mx-auto text-left">
-            <div className="text-[11px] font-bold text-purple-300 mb-1">느낀 점:</div>
+            <div className="text-[13px] font-bold text-purple-300 mb-1">느낀 점:</div>
             <p className="text-xs text-slate-200 italic">&ldquo;{selfReflection}&rdquo;</p>
           </div>}
 

@@ -3,6 +3,7 @@ import {useTvVoice} from '../application/useTvVoice';
 import {legacySfx,type LegacyKey} from '../application/soundEffectsLegacy';
 import {sfxClick,sfxCoin,sfxCountdown,sfxFail,sfxFanfare,sfxSuccess,sfxTap,sfxTimerTick,sfxUrgentWarning,sfxWhistle,sfxWhoosh,unlockAudio} from '../application/soundEffects';
 import type {SpeechTone} from '../application/speechText';
+import {VoiceGuideButton} from './components/DisplayButtons';
 import './SoundCheckPage.css';
 
 const SOUNDS:ReadonlyArray<{key:LegacyKey;label:string;use:string;play:()=>void}>=[
@@ -54,7 +55,8 @@ export function SoundCheckPage(){
      <button type="button" className="sound-check-new" disabled={blocked} onClick={()=>{unlockAudio();voice.say(s.text,{tone:s.tone,force:true,long:true,priority:true});}}>▶ 들어 보기</button>
     </li>)}
    </ul>
-   <p className="sound-check-note">빠르기·크기는 게임 화면의 🔊 음성 안내 설정에서 바꿀 수 있어요.</p>
+   <div className="sound-check-voice-switch"><VoiceGuideButton/></div>
+   <p className="sound-check-note">여기서 끄면 모든 활동의 음성 안내가 함께 꺼져요. 머리말의 '화면·소리'에서도 바꿀 수 있고, 빠르기·크기는 게임 화면의 🔊 음성 안내 설정에서 바꿔요.</p>
   </section>
   <p><Link to="/guide">← 1분 안내로</Link> · <Link to="/hub">활동 고르기</Link></p>
  </main>;

@@ -88,8 +88,8 @@ test('music that the browser blocked says so instead of claiming it plays', () =
   assert.match(music, /NotAllowedError"\) setBlocked\(true\)/);
   assert.match(music, /blocked: enabled && eligible && blocked/);
   const header = read('src/presentation/components/HeaderUtilities.tsx');
-  assert.match(header, /music\.blocked \? '음악 다시 켜기'/);
-  assert.match(header, /if \(music\.blocked\) \{ music\.resume\(\); return; \}/);
+  assert.match(header, /music\.blocked \? '화면·소리 설정 \(음악 다시 켜기\)'/);
+  assert.match(header, /if \(music\.blocked\) music\.resume\(\); setOpen\(!open\);/);
 });
 
 test('the service worker precaches only the first font pieces and caches rare-letter pieces on first use', async () => {

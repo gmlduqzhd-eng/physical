@@ -1,8 +1,9 @@
 /* 학생 입장 번호판: 내 번호를 한 번 누르면 끝. 손가락으로 누르기 쉬운 큰 칸(56px 이상), 좁은 휴대폰(360px)에서도 넘치지 않는다.
    크기·글자 규칙의 !important는 화면 테마(ForestTheme 등)의 공통 input·button 규칙에 밀리지 않게 하려는 것이다. */
-.snp{display:grid;gap:10px;margin:16px 0;max-width:560px;margin-inline:auto;color:#0f172a}
+/* 글자색은 둘레 카드의 색을 따른다(어두운 화면에서 남색 글씨가 어두운 카드에 묻히지 않게). */
+.snp{display:grid;gap:10px;margin:16px 0;max-width:560px;margin-inline:auto;color:inherit}
 .snp-title{margin:0;font-size:1.25rem;font-weight:900;text-align:center}
-.snp-hint{margin:-4px 0 0;min-height:1.3em;font-size:.95rem;font-weight:800;color:#0e7490;text-align:center}
+.snp-hint{margin:-4px 0 0;min-height:1.3em;font-size:.95rem;font-weight:800;color:inherit;text-align:center}
 .snp-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;max-height:min(60dvh,520px);overflow-y:auto;padding:2px}
 @media (min-width:700px){.snp-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
 .snp .snp-num{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:clamp(56px,8dvh,72px)!important;border-radius:16px!important;border:2px solid #94a3b8;background:#f8fafc;color:#0f172a;font:inherit;font-size:1.6rem!important;font-weight:900;line-height:1!important;cursor:pointer;touch-action:manipulation;padding:0!important;font-variant-numeric:tabular-nums}
@@ -14,7 +15,7 @@
 .snp .snp-num:active{background:#cffafe;border-color:#0e7490}
 .snp .snp-num:disabled{opacity:.55;cursor:not-allowed;background:#e2e8f0;border-style:dashed}
 .snp-tools{display:grid;gap:8px}
-.snp .snp-more,.snp .snp-rename{min-height:48px!important;border-radius:14px!important;border:2px dashed #94a3b8;background:transparent;color:#0f172a;font:inherit;font-weight:800;cursor:pointer}
+.snp .snp-more,.snp .snp-rename{min-height:48px!important;border-radius:14px!important;border:2px dashed #94a3b8;background:transparent;color:inherit;font:inherit;font-weight:800;cursor:pointer}
 .snp label{display:grid;gap:6px;font-weight:800;text-align:left}
 .snp input{width:100%;box-sizing:border-box;border:2px solid #94a3b8;border-radius:14px;background:#fff;color:#0f172a;padding:12px;font:inherit;font-size:1.15rem}
 .snp button:focus-visible,.snp input:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
@@ -24,3 +25,12 @@
 }
 /* 입장 버튼: 번호판이 폰 한 화면을 다 차지해도 스크롤 없이 누를 수 있게 화면 아래에 붙여 둔다(폼 안에서만). */
 .snp-submit{position:sticky;bottom:max(8px,env(safe-area-inset-bottom));z-index:3;box-shadow:0 -6px 18px rgba(15,23,42,.14),0 4px 10px rgba(15,23,42,.18)}
+/* 붙어 있는 입장 버튼이 '31번부터 더 보기'·'별명 바꾸기'·별명 칸을 가리지 않게:
+   번호판은 폰에서 조금 낮추고(아래 단추까지 한 화면에), 이 단추들로 스크롤·포커스가 갈 때는 입장 버튼 높이만큼 위에 멈춘다. */
+.snp .snp-tools :is(button,input){scroll-margin-bottom:104px}
+/* 번호를 고르기 전에는 붙이지 않는다(누를 일이 없는데 '31번부터 더 보기'를 가리지 않게). data-ready는 번호를 고르면 붙는다. */
+.snp-submit:not([data-ready]){position:static;box-shadow:none}
+.snp-tools{margin-bottom:12px}
+@media (max-width:480px){.snp-grid{max-height:min(46dvh,440px)}}
+/* QR 입장(/join) 머리말 부제도 14px 이상으로(학생 화면에만). */
+.flow:has(.icon-toolbar-student) .activity-brand .forest-brand-name small{font-size:14px}

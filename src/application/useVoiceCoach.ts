@@ -1,6 +1,6 @@
 import {useActivityPause} from './ActivityPauseContext';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { readStorage, writeStorage } from './browserStorage';
+import { useCallback, useEffect, useRef } from 'react';
+import { setVoiceOn, useVoicePrefs } from './voicePrefs';
 
 export interface VoiceCoachOptions {
   enabled?: boolean;
@@ -9,10 +9,8 @@ export interface VoiceCoachOptions {
 }
 
 export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
-  const [enabled, setEnabled] = useState<boolean>(() => {
-    const saved = readStorage('voice_coach_enabled');
-    return saved !== null ? saved === 'true' : true;
-  });
+  // 음성 안내 켜기·끄기는 TV 음성 안내와 같은 설정 하나를 쓴다(어디서 끄든 모두 꺼진다).
+  const enabled = useVoicePrefs().on;
   const paused=useActivityPause(),pausedRef=useRef(paused);pausedRef.current=paused;
   const synth = useRef<SpeechSynthesis | null>(null);
   const koreanVoice = useRef<SpeechSynthesisVoice | null>(null);
@@ -37,16 +35,8 @@ export const useVoiceCoach = (options: VoiceCoachOptions = {}) => {
   }, []);
 
   useEffect(()=>{if(paused)synth.current?.cancel();},[paused]);
-  const toggleEnabled = useCallback(() => {
-    setEnabled(prev => {
-      const next = !prev;
-      writeStorage('voice_coach_enabled', String(next));
-      if (!next && synth.current) {
-        synth.current.cancel();
-      }
-      return next;
-    });
-  }, []);
+  useEffect(() => { if (!enabled) synth.current?.cancel(); }, [enabled]);
+  const toggleEnabled = useCallback(() => { setVoiceOn(!enabled); }, [enabled]);
 
   const speak = useCallback((text: string, priority = false) => {
     if (pausedRef.current||!enabled || options.enabled === false || !synth.current) return;

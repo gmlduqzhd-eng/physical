@@ -7,7 +7,8 @@ import { removeStorage } from '../application/browserStorage';
 import { rememberStudentIdentity, savedStudentIdentity, takenNumberNotice, validateStudentIdentity } from '../application/studentIdentity';
 import { StudentNumberPad } from './components/StudentNumberPad';
 import { lastRoomFor, rememberLastEntry, resumeLabel, switchToAnotherStudent } from '../application/lastStudentEntry';
-import { ArrowRight, BookOpen, Hash, QrCode, RotateCcw } from 'lucide-react';
+import { BookOpen, Hash, QrCode, RotateCcw } from 'lucide-react';
+import './Lobby.css';
 
 
 export const Lobby = () => {
@@ -33,8 +34,9 @@ export const Lobby = () => {
   }, [error]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const [mode,setMode]=useState<'qr'|'code'|null>(()=>new URLSearchParams(window.location.search).has('pin')?'code':null);
-  // '코드로 참여해요'를 누르면 PIN 칸으로 내려가 바로 적을 수 있게 한다(폰에서는 칸이 화면 맨 아래에 걸려 눌러도 변화가 없어 보였다).
+  // TV가 알려 준 주소로 들어오면 비밀번호 칸이 바로 보인다(QR은 그 아래 작은 단추로 바꾼다).
+  const [mode,setMode]=useState<'qr'|'code'>('code');
+  // 'QR 대신 비밀번호로'를 누르면 비밀번호 칸으로 내려가 바로 적을 수 있게 한다.
   const [revealCode,setRevealCode]=useState(0);
   const codeFormRef=useRef<HTMLFormElement>(null);
   const pinRef=useRef<HTMLInputElement>(null);
@@ -63,7 +65,7 @@ export const Lobby = () => {
         const profile = await getMyClassroomProfile(lastRoom);
         if (!profile || profile.group_id!==lastGroup) {
           ['physical_last_room', 'physical_last_group', 'physical_last_group_name','physical_student_number','physical_student_name'].forEach(key => removeStorage(key));
-          throw new Error('이전 수업이 삭제되었습니다. 새 PIN으로 입장해주세요.');
+          throw new Error('이전 수업이 삭제되었습니다. 새 비밀번호로 들어와요.');
         }
         if (!profile.student_number || !profile.nickname) { setResumePending(true); return; }
         rememberStudentIdentity({number:profile.student_number,nickname:profile.nickname});
@@ -90,7 +92,7 @@ export const Lobby = () => {
     e.preventDefault();
     if (loading) return;
     if (!pinCode) {
-      setError('핀 번호를 입력해주세요.');
+      setError('모둠 비밀번호 숫자 4개를 적어요.');
       return;
     }
     setLoading(true);
@@ -106,12 +108,12 @@ export const Lobby = () => {
     finally { setLoading(false); }
   };
 
-  return <LessonShell audience="student"><section className="lesson-intro"><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요</h1><p>선생님이 보여주신 QR이나 코드로 참여해요.<br/>내 번호만 누르면 준비 완료!</p></section>
+  return <LessonShell audience="student"><section className="lesson-intro"><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요</h1><p>선생님이 알려 주신 모둠 비밀번호를 적어요.<br/>내 번호만 누르면 준비 완료!</p></section>
     {lastRoom&&lastGroup&&<p className="student-resume" style={{display:'flex',flexWrap:'wrap',gap:10}}><button disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName}{lastWho?` · ${lastWho}`:''})</button><button type="button" className="student-resume-other" disabled={loading} onClick={otherStudent}>다른 학생으로 들어가기</button></p>}
-    {resumePending&&<form className="card" onSubmit={handleResumeProfile}><h2>이전 수업의 내 번호를 눌러요</h2><p>이 기기에 번호 기록이 없어요. 내 번호를 누르면 이어서 참여할 수 있어요.</p><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={pickNumber} onNicknameChange={setNickname} taken={taken} notice={padNotice}/><button className="primary button-wide snp-submit" disabled={loading}>정보 저장하고 이어가기</button></form>}
-    <div className="student-choices" role="group" aria-label="수업 참여 방법"><button type="button" className="student-choice" aria-pressed={mode==='qr'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>setMode('qr')}><span className="lesson-icon"><QrCode aria-hidden="true"/></span><strong>QR로 참여해요</strong><span>선생님 화면의 우리 모둠 QR을 비춰요.</span><span className="student-choice-action">QR 참여 선택 <ArrowRight aria-hidden="true"/></span></button><button type="button" className="student-choice" aria-pressed={mode==='code'} aria-controls="student-entry-panel" disabled={loading} onClick={()=>{setMode('code');setRevealCode(value=>value+1);}}><span className="lesson-icon"><Hash aria-hidden="true"/></span><strong>코드로 참여해요</strong><span>선생님이 알려주신 코드를 입력해요.</span><span className="student-choice-action">코드 참여 선택 <ArrowRight aria-hidden="true"/></span></button></div><div id="student-entry-panel" className="student-entry-panel">
-    {mode==='qr'&&<StudentQrScanner/>}
-    {mode==='code'&&<form onSubmit={handleJoin} className="card" ref={codeFormRef}><h2>선생님이 알려준 모둠 PIN을 입력해요</h2><label>모둠 PIN (4자리)<input type="text" inputMode="numeric" autoComplete="one-time-code" maxLength={4} required pattern="[0-9]{4}" placeholder="4자리 숫자" value={pinCode} ref={pinRef} onChange={e=>{setPinCode(e.target.value.replace(/\D/g,'').slice(0,4));setTaken(new Set());setPadNotice('');}}/></label><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={pickNumber} onNicknameChange={setNickname} taken={taken} notice={padNotice}/><button className="primary button-wide snp-submit" disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button></form>}
-    </div>{error&&<p ref={errorRef} tabIndex={-1} role="alert" className="error student-entry-error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 전광판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
+    {resumePending&&<form className="card" onSubmit={handleResumeProfile}><h2>이전 수업의 내 번호를 눌러요</h2><p>이 기기에 번호 기록이 없어요. 내 번호를 누르면 이어서 참여할 수 있어요.</p><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={pickNumber} onNicknameChange={setNickname} taken={taken} notice={padNotice}/><button className="primary button-wide snp-submit" data-ready={studentNumber?"":undefined} disabled={loading}>정보 저장하고 이어가기</button></form>}
+    <div id="student-entry-panel" className="student-entry-panel">
+    {mode==='qr'&&<><StudentQrScanner/><p className="student-mode-switch"><button type="button" disabled={loading} onClick={()=>{setMode('code');setRevealCode(value=>value+1);}}><Hash aria-hidden="true"/>QR 대신 비밀번호로 들어갈래요</button></p></>}
+    {mode==='code'&&<form onSubmit={handleJoin} className="card" ref={codeFormRef}><h2>선생님이 알려준 모둠 비밀번호를 적어요</h2><label className="student-pin-label">모둠 비밀번호 (숫자 4개)<input className="student-pin-input" type="text" inputMode="numeric" enterKeyHint="next" autoComplete="one-time-code" maxLength={4} required pattern="[0-9]{4}" placeholder="____" aria-describedby="student-pin-help" value={pinCode} ref={pinRef} onChange={e=>{setPinCode(e.target.value.replace(/\D/g,'').slice(0,4));setTaken(new Set());setPadNotice('');}}/></label><p id="student-pin-help" className="student-pin-help">숫자 4개를 적으면 아래에서 내 번호를 눌러요.</p><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={pickNumber} onNicknameChange={setNickname} taken={taken} notice={padNotice}/><button className="primary button-wide snp-submit" data-ready={studentNumber?"":undefined} disabled={loading}>{loading?'우리 모둠 확인 중…':'우리 모둠으로 입장'}</button><p className="student-mode-switch"><button type="button" disabled={loading} onClick={()=>setMode('qr')}><QrCode aria-hidden="true"/>QR을 찍어서 들어갈래요</button></p></form>}
+    </div>{error&&<p ref={errorRef} tabIndex={-1} role="alert" className="error student-entry-error">{error}</p>}<nav className="student-help" aria-label="다른 이용 방법"><Link to="/hub"><BookOpen aria-hidden="true"/>혼자 활동하기</Link><Link to="/demo">참여 방법 미리 보기 ↗</Link></nav><details className="lesson-more"><summary>다른 참여 방법·도움말</summary><div className="quiet-links"><Link to="/board">TV 점수판 연결</Link><Link to="/manual">이용 안내</Link></div><p className="small muted">교사용 수업 준비와 공용 패드 설정은 홈 화면의 ‘교사로 시작하기’에서 이용해요.</p></details>
   </LessonShell>;
 };

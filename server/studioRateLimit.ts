@@ -5,6 +5,12 @@ const resultSchema = z.object({ allowed: z.boolean(), retrySeconds: z.number().i
 export type LimitResult = z.infer<typeof resultSchema>;
 export class StudioLimiterUnavailable extends Error { constructor() { super('공통 요청 제한 서버에 연결하지 못했습니다. 잠시 후 다시 시도하세요.'); } }
 
+/** True when this deployment has the shared limiter settings (same check studioLimit makes before calling it). */
+export function sharedLimiterConfigured() {
+  const secret = process.env.STUDIO_LIMIT_SECRET;
+  return !!process.env.STUDIO_LIMIT_URL && !!process.env.STUDIO_LIMIT_KEY && !!secret && secret.length >= 32;
+}
+
 export async function studioUsage() {
   const url=process.env.STUDIO_LIMIT_URL, key=process.env.STUDIO_LIMIT_KEY, secret=process.env.STUDIO_LIMIT_SECRET;
   if(!url||!key||!secret)throw new StudioLimiterUnavailable();

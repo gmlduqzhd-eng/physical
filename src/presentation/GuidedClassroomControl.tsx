@@ -3,7 +3,7 @@ import {isFlagship} from '../domain/flagship';
 import {isSignatureId} from '../domain/signatureGames';
 import {FlagshipControl} from './flagship/FlagshipControl';
 import { ClassroomScoreReview } from './components/ClassroomScoreReview';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useGameLogic } from '../application/useGameLogic';
 import { useGameTimer } from '../application/useGameTimer';
@@ -25,6 +25,13 @@ export function GuidedClassroom() {
   const navigate = useNavigate();
   const location=useLocation();
   const setupNotice=typeof location.state?.setupNotice==='string'?location.state.setupNotice:'';
+  // 수업방을 막 만들었으면 학생 입장 QR·비밀번호를 바로 크게 띄운다. 새로고침해도 다시 뜨지 않게 표시는 한 번만 읽는다.
+  const [justCreated]=useState(()=>location.state?.justCreated===true);
+  useEffect(()=>{
+    if(location.state?.justCreated!==true)return;
+    const rest={...(location.state as Record<string,unknown>)};delete rest.justCreated;
+    navigate(location.pathname+location.search,{replace:true,state:Object.keys(rest).length?rest:null});
+  },[location.state,location.pathname,location.search,navigate]);
   const { gameRoom: room, scores, template, loading, error, refresh } = useGameLogic(roomId);
   const { mins, secs, timeLeft } = useGameTimer(room);
   const [busy, setBusy] = useState(false);
@@ -84,20 +91,23 @@ export function GuidedClassroom() {
   const completedGroupCount = new Set(completed.map(item => item.group.id)).size;
   const reflections = scores.flatMap(group => Object.entries(group.stats?.guided_reflections || {}).filter(([id, choice]) => guidedMissionIds.has(id) && reflectionLabel(choice)).map(([id, choice]) => ({ group, missionId: id, choice: String(choice) })));
   const accessMissing = !loading && !room && error === '수업 방이 종료되었거나 삭제되었습니다.';
+  const startLesson = () => mutate({ status: 'playing', started_at: new Date(Date.now() + timeOffset).toISOString() });
+  const joinPanel = room && room.status !== 'finished' ? <details className="guided-join-details" open={room.status === 'waiting'}><summary>학생 참여 QR 보여 주기</summary><QRCodePanel currentRoom={room} roomGroups={scores} autoPresent={justCreated && room.status === 'waiting'} onStart={room.status === 'waiting' ? () => void startLesson() : undefined} startDisabled={busy}/></details> : null;
 
-  return <LessonShell audience="teacher" className="guided-classroom" back="/teacher" backLabel="교사 시작 화면">
+  return <LessonShell audience="teacher" className="guided-classroom" back="/teacher">
     {loading ? <p role="status">수업을 불러오는 중…</p> : error || !room ? <>
       <div role="alert" className="error"><p>{accessMissing ? '현재 접속 정보로 이 수업방을 열 수 없습니다. 방이 만료·삭제되었거나, 이 탭에 수업방 소유 권한이 없을 수 있습니다.' : error || '수업을 찾지 못했습니다.'}</p><button onClick={refresh}>다시 확인</button></div>
       {accessMissing && <section className="card guided-reconnect" aria-label="수업방 재접속 안내"><h1>수업방 다시 연결하기</h1><p>수업을 만든 탭이 열려 있다면 그 탭에서 새로고침해 주세요. 새 탭이나 다른 기기에서는 교사 인증만으로 이전 수업방을 가져올 수 없습니다.</p><p>원래 탭을 닫았다면 미리 보관한 수업 PIN과 교사 복구키로 복구할 수 있습니다. 복구키가 없다면 원래 탭을 먼저 확인해 주세요.</p><Link to="/teacher/setup?resume=1">이 탭에서 만든 수업 목록 보기</Link><RecoverClassroom onRecovered={id=>navigate('/teacher/room/'+id,{replace:true})}/></section>}
     </> : <>
       {setupNotice&&<p role="alert" className="notice">{setupNotice}</p>}<div className="guided-intro"><p className="eyebrow">{status}</p><h1>{room.name}</h1><p>모둠의 참여와 활동 시간을 한눈에 살펴보세요.</p></div>
+      {room.status === 'waiting' && joinPanel}
       <div className="grid guided-overview">
         <section className="card guided-action-card">
           <h2>수업 조작</h2>
-          <p>{room.status === 'waiting' ? '학생에게 아래의 우리 모둠 QR을 보여 주세요.' : room.status === 'finished' ? '오늘의 활동을 함께 돌아보세요.' : '모둠별 활동 진행과 점수를 실시간으로 살펴보세요.'}</p>
+          <p>{room.status === 'waiting' ? '학생에게 위의 우리 모둠 QR을 보여 주세요. 모두 들어오면 수업 시작을 눌러요.' : room.status === 'finished' ? '오늘의 활동을 함께 돌아보세요.' : '모둠별 활동 진행과 점수를 실시간으로 살펴보세요.'}</p>
           <p className="muted">등록된 모둠 {scores.length}개 · {activities.length>1?`지금 활동 완료 ${currentDone}개`:`완료 모둠 ${completedGroupCount}개`}</p>
           <div className="guided-quick-actions">
-            {['waiting', 'playing', 'paused'].includes(room.status) && <button className="primary" disabled={busy} onClick={() => void mutate(room.status === 'playing' ? { status: 'paused', started_at: null, global_time_modifier: timeLeft - 300 } : { status: 'playing', started_at: new Date(Date.now() + timeOffset).toISOString() })}>{room.status === 'waiting' ? '수업 시작' : room.status === 'playing' ? '일시정지' : '수업 이어가기'}</button>}
+            {['waiting', 'playing', 'paused'].includes(room.status) && <button className="primary" disabled={busy} onClick={() => void (room.status === 'playing' ? mutate({ status: 'paused', started_at: null, global_time_modifier: timeLeft - 300 }) : startLesson())}>{room.status === 'waiting' ? '수업 시작' : room.status === 'playing' ? '일시정지' : '수업 이어가기'}</button>}
             {room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ global_time_modifier: room.global_time_modifier + 60 })}>+1분</button>}
           </div>
         </section>
@@ -121,9 +131,9 @@ export function GuidedClassroom() {
 
       {isGuidedLesson && <details className="guided-reflections"><summary>모둠별 오늘의 회고 ({reflections.length})</summary>{reflections.length ? <div className="guided-reflection-list">{scores.map(group => { const answers = reflections.filter(item => item.group.id === group.id); return <p key={group.id}><strong>{group.group_name}</strong><span>{answers.length ? answers.map(item => `${missions.find(button => button.id === item.missionId)?.title || '활동'}: ${reflectionLabel(item.choice)}`).join(' · ') : '아직 응답 없음'}</span></p>; })}</div> : <p className="muted">아직 도착한 회고가 없어요.</p>}</details>}
 
-      {room.status !== 'finished' && <details className="guided-join-details" open={room.status === 'waiting'}><summary>학생 참여 QR 보여 주기</summary><QRCodePanel currentRoom={room} roomGroups={scores}/></details>}
+      {room.status !== 'waiting' && joinPanel}
       <ClassroomScoreReview roomId={room.id} finished={room.status==='finished'}/><p><Link to="/teacher/manage">수업 정리·즉시 삭제</Link></p>
-      <details><summary>모둠 점수와 추가 도구</summary><div className="guided-score-list">{scores.map(group => <p key={group.id}><strong>{group.group_name}</strong><span>{group.score}점</span></p>)}</div><div className="row">{room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ announcement: room.announcement === 'WHISTLE' ? null : 'WHISTLE' })}>{room.announcement === 'WHISTLE' ? '집중 안내 해제' : '잠깐 집중 안내'}</button>}{room.status === 'finished' ? <Link to={`/board/${room.id}`}>수업 결과 보기</Link> : <button onClick={() => void openClassroomBoard(room.id)}>전광판 열기</button>}{room.status === 'finished' && <Link to={`/admin?room=${room.id}`}>수업 리포트 (상세 화면)</Link>}</div>{room.status !== 'finished' && (!confirmEnd ? <button onClick={() => setConfirmEnd(true)}>수업 종료하기</button> : <div className="notice"><p>종료하면 학생의 점수 제출을 마감합니다.</p><div className="row"><button onClick={() => setConfirmEnd(false)}>계속 진행</button><button disabled={busy} onClick={() => void mutate({ status: 'finished', started_at: null, global_time_modifier: timeLeft - 300 })}>수업 종료 확정</button></div></div>)}</details>
+      <details><summary>모둠 점수와 추가 도구</summary><div className="guided-score-list">{scores.map(group => <p key={group.id}><strong>{group.group_name}</strong><span>{group.score}점</span></p>)}</div><div className="row">{room.status !== 'finished' && <button disabled={busy} onClick={() => void mutate({ announcement: room.announcement === 'WHISTLE' ? null : 'WHISTLE' })}>{room.announcement === 'WHISTLE' ? '집중 안내 해제' : '잠깐 집중 안내'}</button>}{room.status === 'finished' ? <Link to={`/board/${room.id}`}>수업 결과 보기</Link> : <button onClick={() => void openClassroomBoard(room.id)}>TV 점수판 열기</button>}{room.status === 'finished' && <Link to={`/admin?room=${room.id}`}>수업 리포트 (상세 화면)</Link>}</div>{room.status !== 'finished' && (!confirmEnd ? <button onClick={() => setConfirmEnd(true)}>수업 종료하기</button> : <div className="notice"><p>종료하면 학생의 점수 제출을 마감합니다.</p><div className="row"><button onClick={() => setConfirmEnd(false)}>계속 진행</button><button disabled={busy} onClick={() => void mutate({ status: 'finished', started_at: null, global_time_modifier: timeLeft - 300 })}>수업 종료 확정</button></div></div>)}</details>
       {message && <p role="status" className="notice">{message}</p>}
     </>}
   </LessonShell>;

@@ -43,7 +43,7 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
       const room = await createClassroom(roomName, recentTemplate.id, Array.from({ length: groupCount }, (_, i) => `${i + 1}모둠`));
       onRefresh(); onRoomCreated(room.id);
       const {data:invites,error:inviteError}=await supabase.rpc('get_classroom_invites',{room_uuid:room.id});
-      if(inviteError || !Array.isArray(invites) || invites.some(item=>!item.short_pin)) throw new Error('모둠 PIN을 불러오지 못했습니다. 방 관리 화면에서 확인해주세요.');
+      if(inviteError || !Array.isArray(invites) || invites.some(item=>!item.short_pin)) throw new Error('모둠 비밀번호를 불러오지 못했습니다. 방 관리 화면에서 확인해주세요.');
       setCreatedRoom({ id: room.id, name: roomName, pin: room.pin_code, templateName: recentTemplate.name, groupCount, groupPins: invites });
     } catch (cause) { alert(classroomError(cause, '방 생성에 실패했습니다.')); }
     finally { setLoading(false); }
@@ -92,17 +92,17 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
 
             {/* PIN 코드 대형 표시 */}
             <div className="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-200 rounded-2xl p-6 mb-5 text-center">
-              <p className="text-xs font-bold text-cyan-600 uppercase tracking-widest mb-2">모둠별 4자리 입장 PIN</p>
+              <p className="text-xs font-bold text-cyan-600 uppercase tracking-widest mb-2">모둠별 입장 비밀번호 (숫자 4개)</p>
               <div className="grid grid-cols-2 gap-2 text-left">{createdRoom.groupPins.map(item=><p key={item.group_name} className="rounded-lg bg-white p-2 font-bold">{item.group_name}: <span className="font-mono text-2xl">{item.short_pin}</span></p>)}</div>
               <details className="mt-3 text-sm"><summary>교사 복구용 8자리 PIN</summary><p>{createdRoom.pin}</p><button onClick={handleCopyPin} className="p-2 bg-white border border-cyan-200 rounded-lg" title="복구 PIN 복사">{copied ? <Check className="w-5 h-5 text-emerald-600"/> : <Copy className="w-5 h-5 text-cyan-500"/>}</button></details>
-              <p className="text-xs text-cyan-500 mt-2">학생에게 자기 모둠 PIN만 알려주세요.</p>
+              <p className="text-xs text-cyan-500 mt-2">학생에게 자기 모둠 비밀번호만 알려 주세요.</p>
             </div>
 
             {/* 전체 입장 QR 코드 */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-5 text-center">
               <p className="text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">📱 전체 입장 QR 코드</p>
               <LocalQRCode value={baseUrl+'/lobby'} alt="학생 입장 QR" className="w-36 h-36 mx-auto"/>
-              <p className="text-xs text-slate-400">QR 스캔 → PIN 입력 → 바로 참여!</p>
+              <p className="text-xs text-slate-400">QR을 찍거나 비밀번호를 누르면 바로 참여해요!</p>
             </div>
 
             {/* 방 정보 요약 */}
@@ -117,14 +117,14 @@ export const QuickStart = ({ templates, onRoomCreated, onRefresh }: QuickStartPr
               </div>
             </div>
 
-            {/* TV 전광판 바로가기 */}
+            {/* TV 점수판 바로가기 */}
             <a
               href={`/board/${createdRoom.id}`} onClick={e=>{e.preventDefault();void openClassroomBoard(createdRoom.id);}}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-colors"
             >
-              <ExternalLink className="w-4 h-4" /> TV 전광판 열기
+              <ExternalLink className="w-4 h-4" /> TV 점수판 열기
             </a>
           </div>
         </div>

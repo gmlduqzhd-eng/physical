@@ -4,6 +4,7 @@ import type {ExternalFunCommand,FunRemoteSnapshot} from '../application/funComma
 import {ACK_GIVE_UP_MS,ACK_RETRY_MS,createRemoteSender,formatConfirmCode,isRemotePin,isValidRoomCode,loadPhoneKeys,normalizeRoomCode,openRemoteChannel,phonePinStore,phoneSeqStore,readRoomSecret,remoteConfigured,type RemoteAccess,type RemoteAck,type RemoteStatus} from '../application/funRemote';
 import {TEAM_COLORS,TEAM_NAMES,type FunPhase,type SurpriseKind} from '../domain/funLoop';
 import {isSendLocked,lockAfterSend,SEND_LOCK_MS,type SendLock} from '../application/remoteSendLock';
+import {REMOTE_NEXT_LABEL} from '../application/remoteLabels';
 import './FunRemotePage.css';
 
 const PHASE:Record<FunPhase,string>={demo:'시범',tutorial:'연습 판',play:'본게임',climax:'마지막 승부',result:'결과 발표'};
@@ -91,6 +92,12 @@ export function FunRemotePage(){
  };
  // 잠금이 시간으로 풀릴 때 화면을 다시 그린다.
  useEffect(()=>{if(!stepLock)return;const t=setTimeout(()=>setStepLock(null),Math.max(0,stepLock.until-Date.now())+20);return ()=>clearTimeout(t);},[stepLock]);
+ // 보낸 결과 알림은 잠깐만 띄운다(계속 붙어 아래 버튼을 가리지 않게). 반영되지 않은 알림은 조금 더 오래 둔다.
+ useEffect(()=>{
+  if(!sent||sent.tone==='wait')return;
+  const hide=setTimeout(()=>setSent(null),sent.tone==='ok'?2500:6000);
+  return ()=>clearTimeout(hide);
+ },[sent]);
  const stepLocked=isSendLocked(stepLock,snap?.phase,Date.now());
  /** 단계를 바꾸는 명령: 잠겨 있으면 무시하고, 보내면 잠근다. */
  const sendStep=(cmd:ExternalFunCommand,label:string)=>{
@@ -115,6 +122,7 @@ export function FunRemotePage(){
  // TV가 아직 게임을 띄우지 않았으면(시작·이어 하기 화면) 끝내기·일시정지를 포함해 모두 끈다(눌러도 반영되지 않는다).
  const live=ready&&!tvIdle;
  const inPlay=snap?.phase==='play';
+ const nextLabel=snap?REMOTE_NEXT_LABEL[snap.phase]:'다음';
  const ended=access==='closed'||access==='rejected'||access==='full'||access==='gone'||access==='conflict';
  const events=snap?.events??DEFAULT_EVENTS;
  // '한 방 공격'은 우리 반 보스전에만 있다(다른 게임에서는 감춘다).
@@ -122,7 +130,7 @@ export function FunRemotePage(){
  const teamName=(i:number)=>teams===1?'우리 반':TEAM_NAMES[i];
  const teamRows=useMemo(()=>Array.from({length:teams},(_,i)=>i),[teams]);
  if(!valid)return <main className="fun-remote-page">
-  <h1>📱 대표 게임 리모컨</h1>
+  <h1>📱 휴대폰 리모컨</h1>
   <p>TV 화면의 ‘📱 휴대폰 리모컨’에 나온 방 코드 6자리를 넣어요.</p>
   <form onSubmit={e=>{e.preventDefault();setParams({room:normalizeRoomCode(draft)});}}>
    <label>방 코드<input value={draft} onChange={e=>setDraft(e.target.value)} maxLength={8} autoCapitalize="characters" autoComplete="off" inputMode="text"/></label>
@@ -135,7 +143,7 @@ export function FunRemotePage(){
  const codeText=formatConfirmCode(code),tvCodeText=formatConfirmCode(tvCode);
  return <main className="fun-remote-page" data-status={status}>
   <header>
-   <h1>📱 리모컨 · {room}</h1>
+   <h1>📱 휴대폰 리모컨 · {room}</h1>
    <p role="status" className="frp-status" data-status={status==='connected'?access:status}>{statusText}</p>
    {ready&&tvHidden&&access==='approved'&&<p className="frp-note">TV 화면이 잠시 가려져 있어요. 명령이 늦게 반영될 수 있어요.</p>}
    {tvCode&&access!=='verify'&&!pinned&&<p className="frp-note">TV 확인 번호 <b className="frp-tvcode">{tvCodeText}</b> · TV 화면의 번호와 같은지 확인해요</p>}
@@ -145,7 +153,7 @@ export function FunRemotePage(){
   {status==='connected'&&access==='verify'&&<section className="frp-wait" aria-label="TV 확인">
    <p>이 방 코드로 답한 TV의 확인 번호</p>
    <p className="frp-pin" aria-label={`TV 확인 번호 ${tvCode.split('').join(' ')}`}>{tvCodeText||'······'}</p>
-   <p>TV 리모컨 창의 연결 요청 칸에 <b>‘TV 확인 번호’</b>가 나와요(안 보이면 <b>‘QR 없이 코드만 넣어 연결할 때’</b>를 열어요). 그 번호와 같을 때만 눌러요.</p>
+   <p>TV의 ‘📱 휴대폰 리모컨’ 창에 있는 연결 요청 칸에 <b>‘TV 확인 번호’</b>가 나와요(안 보이면 <b>‘QR 없이 코드만 넣어 연결할 때’</b>를 열어요). 그 번호와 같을 때만 눌러요.</p>
    <button type="button" className="frp-primary" onClick={()=>{void sender.current?.confirmTv();}}>✅ TV 번호와 같아요</button>
    <button type="button" onClick={()=>{setParams({});setDraft('');}}>다르면 QR로 다시 연결</button>
   </section>}
@@ -158,25 +166,26 @@ export function FunRemotePage(){
    <p>{access==='closed'?'TV에서 새 방 코드를 만들었거나 게임 화면을 닫았어요.':access==='gone'?'이 방 코드로 답하는 TV가 없어요. TV 화면의 새 코드를 확인해요.':access==='full'?'다른 휴대폰을 끊은 뒤 다시 연결해요.':access==='conflict'?'같은 방 코드로 서로 다른 TV가 답했어요. 가짜 TV일 수 있어요. TV 화면의 QR을 휴대폰 카메라로 찍어 다시 연결해요.':'다시 연결하려면 새로 요청해요.'}</p>
    <button type="button" className="frp-primary" onClick={()=>{setParams({});setDraft('');}}>새 코드로 다시 연결</button>
   </section>}
-  {result&&access!=='closed'&&<p className="frp-done" role="status">🏁 게임이 끝났어요 · TV에서 결과를 함께 봐요</p>}
   {snap&&!idleNow?<section className="frp-snap" aria-label="TV 상태">
    <p><b>{snap.gameName}</b> · {snap.phaseLabel??PHASE[snap.phase]}{paused?' · ⏸ 일시정지 중':''}{result?'':` · ⏱ ${snap.secondsLeft}초`}</p>
    {!result&&snap.cue&&<p className="frp-cue">{snap.cue}</p>}
    {result&&<p className="frp-cue">{teams===1?`우리 반 ${snap.scores[0]}점`:snap.scores.map((n,i)=>`${TEAM_NAMES[i]} ${n}`).join(' · ')}</p>}
   </section>:<p className="frp-note">{ready?(tvIdle?'TV에서 게임을 시작하거나 ‘이어 하기’를 눌러요.':'TV 화면을 기다려요. TV에서 대표 게임을 열어 두세요.'):''}</p>}
-  {ready&&tvBusy?<p className="frp-paused" role="status">⏳ TV에서 확인 중이에요 · 지금은 버튼을 눌러도 반영되지 않아요</p>
-   :paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · 다음·점수·이벤트는 다시 시작한 뒤에 보낼 수 있어요</p>}
   {/* 수업 중에는 화면을 보지 않고 누른다: 가장 자주 쓰는 '다음'과 '일시정지'를 화면 절반 크기로 둔다. */}
   <div className="frp-big" role="group" aria-label="자주 쓰는 버튼" data-play={inPlay||undefined}>
    {/* 본게임 중에는 '다음'을 누를 일이 없다: 죽은 큰 버튼 대신 지금 상태를 보여 주고 '일시정지'를 크게 위로 둔다. */}
-   {inPlay?<div className="frp-next frp-next-wait" role="status"><span className="frp-big-icon" aria-hidden="true">⏳</span><span className="frp-big-label">본게임 중이에요</span><small>끝나면 저절로 넘어가요</small></div>
-   :<button type="button" className="frp-next" disabled={!live||result||paused||stepLocked} aria-busy={stepLocked||undefined} onClick={()=>sendStep({type:'next'},'다음')}>
-    <span className="frp-big-icon" aria-hidden="true">{stepLocked?'✓':'▶'}</span><span className="frp-big-label">{stepLocked?'보냈어요…':'다음'}</span>
+   {/* 진행 칸은 늘 첫 자리에 둔다(본게임 중에도 자리를 지켜, 같은 곳을 다시 눌러 일시정지가 되는 일이 없게). */}
+   {inPlay||result?<div className="frp-next frp-next-wait" role="status"><span className="frp-big-icon" aria-hidden="true">{result?'🏁':'⏳'}</span><span className="frp-big-label">{result?'게임이 끝났어요':'본게임 중이에요'}</span><small>{result?'TV에서 결과를 함께 봐요':'끝나면 저절로 넘어가요'}</small></div>
+   :<button type="button" className="frp-next" disabled={!live||result||paused||stepLocked} aria-busy={stepLocked||undefined} onClick={()=>sendStep({type:'next'},nextLabel)}>
+    <span className="frp-big-icon" aria-hidden="true">{stepLocked?'✓':'▶'}</span><span className="frp-big-label">{stepLocked?'보냈어요…':nextLabel}</span>
    </button>}
    <button type="button" className="frp-pause" data-paused={paused||undefined} disabled={!live||result} onClick={()=>send({type:'pause'},paused?'다시 시작':'일시정지')}>
     <span className="frp-big-icon" aria-hidden="true">{paused?'▶':'⏸'}</span><span className="frp-big-label">{paused?'다시 시작':'일시정지'}</span>
    </button>
   </div>
+  {/* 알림 띠는 큰 버튼 아래에 둔다(띠가 끼어들어 큰 버튼 자리가 밀리지 않게). */}
+  {ready&&tvBusy?<p className="frp-paused" role="status">⏳ TV에서 확인 중이에요 · 지금은 버튼을 눌러도 반영되지 않아요</p>
+   :paused&&ready&&<p className="frp-paused" role="status">⏸ 일시정지 중 · ‘다시 시작’을 누르면 점수를 줄 수 있어요</p>}
   <section className="frp-teams" aria-label="팀 점수" data-count={teams}>
    {teamRows.map(i=><div key={i} className="frp-team" style={{'--team':TEAM_COLORS[i]} as React.CSSProperties}>
     <b><span className="frp-shape" aria-hidden="true">{TEAM_SHAPES[i]}</span> {teamName(i)} <span className="frp-score">{snap?.scores[i]??0}</span></b>
@@ -204,6 +213,6 @@ export function FunRemotePage(){
     :<button type="button" className="frp-primary" onClick={()=>{setConfirmSkip(false);sendStep({type:'next'},'마지막 승부로');}}>넘어가기</button>}
    </div>
   </div>}
-  <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?.text??''}</p>
+  <p aria-live="polite" className="frp-sent" data-tone={sent?.tone}>{sent?<><span className="frp-sent-icon" aria-hidden="true">{sent.tone==='ok'?'✅':sent.tone==='no'?'⚠️':'📡'}</span> {sent.text}</>:''}</p>
  </main>;
 }

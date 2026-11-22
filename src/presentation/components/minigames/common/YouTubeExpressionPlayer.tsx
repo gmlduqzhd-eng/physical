@@ -291,7 +291,7 @@ export const YouTubeExpressionPlayer = ({
           <div className="min-w-0">
             <div className="text-xs font-black text-white truncate flex items-center gap-1.5">
               <span>{videoTitle}</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800">
+              <span className="text-[13px] font-mono px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800">
                 YouTube IFrame API
               </span>
             </div>
@@ -419,7 +419,7 @@ export const YouTubeExpressionPlayer = ({
 
         {/* 거울 모드 워터마크 표시 */}
         {isMirrored && (
-          <div className={`absolute top-2 left-2 z-10 pointer-events-none bg-purple-900/80 backdrop-blur-md px-2 py-0.5 rounded-md border border-purple-400 text-[10px] font-black text-purple-200 ${isMirrored ? 'scale-x-[-1]' : ''}`}>
+          <div className={`absolute top-2 left-2 z-10 pointer-events-none bg-purple-900/80 backdrop-blur-md px-2 py-0.5 rounded-md border border-purple-400 text-[13px] font-black text-purple-200 ${isMirrored ? 'scale-x-[-1]' : ''}`}>
             🪞 거울 모드 (좌우 반전 중)
           </div>
         )}
@@ -453,7 +453,7 @@ export const YouTubeExpressionPlayer = ({
           <button
             type="button"
             onClick={handleSpeedToggle}
-            className="ml-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+            className="ml-1 min-h-[44px] px-3 py-1.5 rounded-lg text-[13px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
             title="배속 순환 토글"
           >
             순환 ⟳
@@ -516,7 +516,7 @@ export const YouTubeExpressionPlayer = ({
             <button
               type="button"
               onClick={handleResetLoop}
-              className="px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-slate-800 hover:bg-red-900/60 text-red-400 border border-slate-700 transition-colors"
+              className="min-h-[44px] px-3 py-1.5 rounded-lg text-[13px] font-bold bg-slate-800 hover:bg-red-900/60 text-red-400 border border-slate-700 transition-colors"
               title="A/B 구간 초기화"
             >
               초기화
@@ -526,7 +526,7 @@ export const YouTubeExpressionPlayer = ({
 
         {/* 현재 재생 위치 & 구간 표시 바 */}
         {(pointA !== null || pointB !== null) && (
-          <div className="bg-slate-950 rounded-xl px-3 py-2 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-3">
+          <div className="bg-slate-950 rounded-xl px-3 py-2 border border-slate-800 text-[13px] text-slate-400 flex items-center gap-3">
             <span>📍 현재: <strong className="text-cyan-300">{formatTime(currentTime)}</strong></span>
             {pointA !== null && <span>A: <strong className="text-emerald-300">{formatTime(pointA)}</strong></span>}
             {pointB !== null && <span>B: <strong className="text-orange-300">{formatTime(pointB)}</strong></span>}
@@ -536,7 +536,7 @@ export const YouTubeExpressionPlayer = ({
       </div>
 
       {/* 하단 팁 및 안내 */}
-      <div className="p-2.5 bg-slate-950 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800">
+      <div className="p-2.5 bg-slate-950 text-[13px] text-slate-400 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800">
         <span>💡 <strong>거울 모드:</strong> 강사의 왼손이 화면 왼쪽으로 보여 거울처럼 쉽게 따라 할 수 있습니다.</span>
         <span className="text-slate-500">
           ※ <strong>구간 반복:</strong> 영상을 재생하면서 원하는 시점에 A→B를 설정한 뒤 반복 시작 버튼을 누르세요.
