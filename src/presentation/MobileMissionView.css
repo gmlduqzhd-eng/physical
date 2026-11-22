@@ -4,22 +4,20 @@
 .student-finished-title { color: var(--forest-ink, #19313b); }
 
 /* 화면 안 알림: 첫 화면 위쪽에 잠깐 뜬다(시스템 알림창 대신). 밝은·어두운 화면 모두 같은 색으로 또렷하게. */
-.student-toast{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:10050;display:flex;align-items:center;gap:10px;width:min(calc(100vw - 24px),440px);padding:14px 12px 14px 18px;border-radius:18px;background:#0f172a;color:#fff;border:2px solid #67e8f9;box-shadow:0 10px 30px rgba(15,23,42,.35);font-size:18px;font-weight:800;line-height:1.4;animation:student-toast-in .2s ease-out}
+.student-toast{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:10050;display:flex;align-items:center;gap:10px;width:min(calc(100vw - 24px),440px);padding:14px 12px 14px 18px;border-radius:var(--ui-radius-2,14px);background:var(--ui-stage,#171819);color:var(--ui-on-stage,#f2f1ec);border:2px solid var(--ui-on-stage,#f2f1ec);box-shadow:0 10px 30px rgba(15,23,42,.35);font-size:var(--ui-text-3,18px);font-weight:800;line-height:1.4;animation:student-toast-in .2s ease-out}
 .student-toast span{flex:1;min-width:0;word-break:keep-all}
-.student-toast button{flex:none;min-width:44px;min-height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.14);color:#fff;font-size:18px;font-weight:900;cursor:pointer}
+.student-toast button{flex:none;min-width:44px;min-height:44px;border:0;border-radius:var(--ui-radius-1,8px);background:rgba(255,255,255,.14);color:var(--ui-on-stage,#f2f1ec);font-size:18px;font-weight:900;cursor:pointer}
 @keyframes student-toast-in{from{transform:translate(-50%,-14px)}to{transform:translate(-50%,0)}}
 @media (prefers-reduced-motion:reduce){.student-toast{animation:none}}
 /* 확인 창: '네 / 아니요' 큰 단추 두 개. */
 .student-ask-backdrop{position:fixed;inset:0;z-index:10060;display:grid;place-items:center;padding:16px;background:rgba(15,23,42,.6)}
-.student-ask{width:min(100%,400px);padding:22px 18px 18px;border-radius:22px;background:#fff;color:#0f172a;box-shadow:0 20px 50px rgba(15,23,42,.4);text-align:center}
+.student-ask{width:min(100%,400px);padding:22px 18px 18px;border-radius:var(--ui-radius-3,20px);background:var(--ui-paper,var(--forest-paper,#fffefa));color:var(--ui-ink,var(--forest-ink,#303d35));box-shadow:0 20px 50px rgba(15,23,42,.4);text-align:center}
 .student-ask:focus{outline:none}
-.student-ask p{margin:0 0 18px;font-size:20px;font-weight:800;line-height:1.45;word-break:keep-all;color:#0f172a}
+.student-ask p{margin:0 0 18px;font-size:var(--ui-text-4,22px);font-weight:800;line-height:1.45;word-break:keep-all;color:var(--ui-ink,var(--forest-ink,#303d35))}
 .student-ask-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.student-ask-actions button{min-height:56px;border-radius:16px;font-size:18px;font-weight:900;cursor:pointer}
-.student-ask-no{border:2px solid #94a3b8;background:#fff;color:#0f172a}
-.student-ask-yes{border:2px solid #0e7490;background:#0e7490;color:#fff}
-.student-ask-actions button:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.student-ask-actions button{min-height:56px;border-radius:var(--ui-radius-pill,999px);font-size:var(--ui-text-3,18px);font-weight:900;cursor:pointer}
+.student-ask-no{border:2px solid var(--ui-action,var(--forest-action,#566d4d));background:var(--ui-paper,var(--forest-paper,#fffefa));color:var(--ui-ink,var(--forest-ink,#303d35))}
+.student-ask-yes{border:2px solid var(--ui-action,var(--forest-action,#566d4d));background:var(--ui-action,var(--forest-action,#566d4d));color:var(--ui-on-action,var(--forest-on,#ffffff))}
+.student-ask-actions button:focus-visible{outline:3px solid var(--ui-action,var(--forest-accent,#566d4d));outline-offset:2px}
 
-/* 밝은 하늘색 칸은 화면 밝기와 상관없이 밝게 두므로, 글자도 늘 어두운 색으로 고정한다(어두운 화면에서 밝은 글씨가 밝은 칸에 묻혔다). */
-.student-guided-room .student-activity-card,.student-guided-room .student-reflection-picked{background:#ecfeff!important;color:#0f172a!important}
-/* 칸 안의 글자색 클래스(text-slate-*, text-cyan-*)는 data-game-color 덕분에 어두운 화면에서도 바뀌지 않는다. */
+/* 오늘의 활동 칸·고른 답은 옅은 강조 색(토큰)을 쓴다. 밝은·어두운 화면에서 바탕과 글자가 함께 바뀌어 늘 읽힌다. */

@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import './StudentUi.css';
 import { ArrowRight, CircleHelp, QrCode } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AVAILABLE_GAMES as GAMES } from "../domain/gamesData";
@@ -19,7 +20,7 @@ const domains = [
 export function IntroLandingPage() {
   const accessQrDialog = useRef<AccessQrDialogHandle>(null);
   return (
-    <div className="intro-landing">
+    <div className="intro-landing sui-scope">
       <div className="shell">
         <header className="header">
           <Link className="brand" to="/" aria-label="땀방울 원정대 홈">

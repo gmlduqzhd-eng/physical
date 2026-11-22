@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { HeaderToolbar } from './HeaderToolbar';
 import type { RoomGroup, GameRoom, MissionTemplate } from '../../domain/types';
 import { GameIcons as LucideIcons } from '../icons';
+import '../StudentUi.css';
 
 interface WaitingScreenProps {
   myGroup: RoomGroup;
@@ -16,7 +17,7 @@ interface WaitingScreenProps {
 
 export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom, helpControl }: WaitingScreenProps) => {
   return (
-    <div className="min-h-[100dvh] bg-slate-50 text-slate-900 flex flex-col font-sans">
+    <div className="sui min-h-[100dvh] flex flex-col font-sans">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 p-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
@@ -35,13 +36,13 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
           <div className="w-24 h-24 rounded-full bg-cyan-100 flex items-center justify-center animate-pulse">
             <LucideIcons.Timer className="w-12 h-12 text-cyan-500" />
           </div>
-          <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-white">
+          <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center border-2 border-white">
             <LucideIcons.Check className="w-4 h-4 text-white" />
           </div>
         </div>
 
         <div className="text-center">
-          <h1 className="text-2xl font-black text-slate-800 mb-2">{gameRoom?.status === 'paused' ? '수업 일시 정지' : '접속 완료!'}</h1>
+          <h1 className="sui-title mb-2">{gameRoom?.status === 'paused' ? '수업 일시 정지' : '접속 완료!'}</h1>
           <p className="text-slate-500 font-bold">{gameRoom?.status === 'paused' ? '선생님이 수업을 재개할 때까지 잠시 쉬어주세요.' : '선생님이 곧 게임을 시작합니다'}</p>
           <p className="text-slate-400 text-sm mt-1">잠시만 기다려주세요...</p>
         </div>
@@ -52,7 +53,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         <div className="w-full max-w-sm bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-3">
             <span className="text-slate-500 text-sm font-bold">내 정보</span>
-            <span data-game-color className="px-3 py-1 bg-cyan-50 text-cyan-800 text-sm font-bold rounded-full border border-cyan-200">대기 중</span>
+            <span className="sui-tint px-3 py-1 text-sm font-bold rounded-full border">대기 중</span>
           </div>
           <div className="flex items-center gap-3 mb-3">
             <div className="w-12 h-12 rounded-full bg-cyan-100 flex items-center justify-center">
@@ -66,9 +67,9 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
         </div>
 
         {/* Participant count */}
-        <div data-game-color className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-full">
-          <LucideIcons.Users className="w-4 h-4 text-emerald-600" />
-          <span className="text-sm font-bold text-emerald-800">현재 {scores.length}개 모둠 참여 중</span>
+        <div className="sui-tint flex items-center gap-2 px-4 py-2 border rounded-full">
+          <LucideIcons.Users className="w-4 h-4" />
+          <span className="text-sm font-bold">현재 {scores.length}개 모둠 참여 중</span>
         </div>
 
         {/* Mission preview */}
@@ -79,7 +80,7 @@ export const WaitingScreen = ({ myGroup, scores, template, studentName, gameRoom
               {template.buttons.filter(m => !m.isHidden).slice(0, 3).map((m, i) => {
                 const IconComp = (LucideIcons as unknown as Record<string, React.ElementType>)[m.iconName] || LucideIcons.Activity;
                 return (
-                  <div key={m.id || i} className={`p-3 border rounded-xl flex items-center gap-3 ${m.bg}`}>
+                  <div key={m.id || i} data-game-color className={`p-3 border rounded-xl flex items-center gap-3 ${m.bg}`}>
                     <div className={`w-10 h-10 rounded-full bg-white flex items-center justify-center ${m.color}`}>
                       <IconComp className="w-5 h-5" />
                     </div>

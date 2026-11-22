@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import './StudentUi.css';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../data/supabase';
 import { openClassroomBoard } from '../data/classroomRepository';
@@ -177,7 +178,7 @@ export const TeacherRemote: React.FC = () => {
   };
 
   return (
-    <div className="teacher-remote min-h-[100dvh] bg-slate-950 text-white flex flex-col font-sans select-none pb-12">
+    <div className="teacher-remote sui-scope min-h-[100dvh] bg-slate-950 text-white flex flex-col font-sans select-none pb-12">
       {selectedRoomId && roomError && <div role="alert" className="p-4 bg-rose-950 text-rose-200">{roomError} <button onClick={refreshRoom} className="underline font-bold">다시 시도</button></div>}
       {/* 액션 피드백 토스트 */}
       {actionFeedback && (
@@ -189,7 +190,7 @@ export const TeacherRemote: React.FC = () => {
       {/* 상단 미니 헤더 */}
       <header className="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
-          <span className="text-xs px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
+          <span className="text-sm px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-bold">
             📱 교사 스마트 리모컨
           </span>
         </div>
@@ -198,13 +199,13 @@ export const TeacherRemote: React.FC = () => {
 
       {/* 학급 방 선택 */}
       <div className="px-4 py-3 bg-slate-900 border-b border-slate-800 flex items-center gap-2">
-        <label htmlFor="room-select" className="text-xs font-bold text-slate-400 shrink-0">대상 학급:</label>
+        <label htmlFor="room-select" className="text-sm font-bold text-slate-400 shrink-0">대상 학급:</label>
         <select
           id="room-select"
           aria-label="대상 학급 선택"
           value={selectedRoomId || ''}
           onChange={(e) => setSelectedRoomId(e.target.value)}
-          className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-cyan-500"
+          className="flex-1 bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-2 text-sm font-bold focus:outline-none focus:border-cyan-500"
         >
           {rooms.map((r) => (
             <option key={r.id} value={r.id}>
@@ -226,10 +227,10 @@ export const TeacherRemote: React.FC = () => {
         {/* 현황 카드 (타이머 & 상태) */}
         <div className={`p-4 rounded-2xl border-2 transition-all shadow-lg ${isDanger ? 'bg-red-950/40 border-red-500/60' : 'bg-slate-900 border-slate-800'}`}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black text-slate-400 tracking-wider">
+            <span className="text-sm font-black text-slate-400 tracking-wider">
               {currentRoom?.name || '학급을 선택하세요'}
             </span>
-            <span className={`px-2 py-0.5 rounded text-[11px] font-black uppercase ${
+            <span className={`px-2 py-0.5 rounded text-sm font-black uppercase ${
               currentRoom?.status === 'playing' ? 'bg-emerald-500/20 text-emerald-400' :
               currentRoom?.status === 'paused' ? 'bg-amber-500/20 text-amber-400' :
               currentRoom?.status === 'finished' ? 'bg-purple-500/20 text-purple-400' :
@@ -243,7 +244,7 @@ export const TeacherRemote: React.FC = () => {
             <div className="font-mono font-black text-4xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-cyan-400">
               {mins}:{secs}
             </div>
-            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
+            <div className="flex items-center gap-1.5 text-sm font-bold text-slate-400">
               <Users className="w-4 h-4 text-cyan-400" />
               <span>{roomGroups.length}개 모둠 접속</span>
             </div>
@@ -264,7 +265,7 @@ export const TeacherRemote: React.FC = () => {
               <Volume2 className="w-8 h-8 animate-bounce" />
               <span>{isWhistling ? '✅ 집중 해제 (게임 재개)' : '🚨 원터치 휘슬! (전원 집중)'}</span>
             </div>
-            <span className="text-xs font-semibold opacity-90">
+            <span className="text-sm font-semibold opacity-90">
               {isWhistling ? '현재 학생 기기가 모두 잠금 상태입니다 (터치하여 해제)' : '체육관 전체 호루라기 소리와 함께 학생 화면 즉시 정지'}
             </span>
           </button>
@@ -272,7 +273,7 @@ export const TeacherRemote: React.FC = () => {
 
         {/* ⏱️ 핵심 2: 타이머 빠른 제어 */}
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-          <h3 className="text-xs font-black text-slate-400 flex items-center gap-1.5 uppercase">
+          <h3 className="text-sm font-black text-slate-400 flex items-center gap-1.5 uppercase">
             <Play className="w-3.5 h-3.5 text-emerald-400" />
             수업 진행 및 시간 통제
           </h3>
@@ -297,25 +298,25 @@ export const TeacherRemote: React.FC = () => {
           <div className="grid grid-cols-4 gap-2 pt-1">
             <button
               onClick={() => handleTimeModifier(-30)}
-              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
+              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm flex items-center justify-center gap-1 active:scale-95"
             >
               <Minus className="w-3 h-3" /> 30초
             </button>
             <button
               onClick={() => handleTimeModifier(30)}
-              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
+              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-sm flex items-center justify-center gap-1 active:scale-95"
             >
               <Plus className="w-3 h-3" /> 30초
             </button>
             <button
               onClick={() => handleTimeModifier(60)}
-              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
+              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-sm flex items-center justify-center gap-1 active:scale-95"
             >
               <Plus className="w-3 h-3" /> 1분
             </button>
             <button
               onClick={() => handleTimeModifier(180)}
-              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-xs flex items-center justify-center gap-1 active:scale-95"
+              className="py-2.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 rounded-xl font-bold text-sm flex items-center justify-center gap-1 active:scale-95"
             >
               <Plus className="w-3 h-3" /> 3분
             </button>
@@ -324,7 +325,7 @@ export const TeacherRemote: React.FC = () => {
 
         {/* ⚡ 핵심 3: 즉각 이벤트 트리거 */}
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-          <h3 className="text-xs font-black text-slate-400 flex items-center gap-1.5 uppercase">
+          <h3 className="text-sm font-black text-slate-400 flex items-center gap-1.5 uppercase">
             <Sparkles className="w-3.5 h-3.5 text-yellow-400" />
             수업 긴급 이벤트 발동
           </h3>
@@ -332,35 +333,35 @@ export const TeacherRemote: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               onClick={() => handleTriggerEvent('fever')}
-              className="py-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-white font-black animate-pulse"
+              className="py-3 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-white font-black animate-pulse"
             >
               <Sparkles className="w-4 h-4 fill-white" />
               <span>전체 피버 타임 (1분)</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('underdog')}
-              className="py-3 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"
+              className="py-3 bg-gradient-to-r from-amber-500 to-yellow-500 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"
             >
               <Trophy className="w-4 h-4 fill-slate-950" />
               <span>언더독 역전 찬스</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('buff')}
-              className="py-3 bg-gradient-to-r from-yellow-600 to-amber-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"
+              className="py-3 bg-gradient-to-r from-yellow-600 to-amber-600 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 active:scale-95 shadow-md text-slate-950 font-black"
             >
               <Zap className="w-4 h-4 fill-slate-950" />
               <span>전원 2배 버프 (1분)</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('tsunami')}
-              className="py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
+              className="py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
               <Waves className="w-4 h-4" />
               <span>{currentRoom?.status === 'tsunami' ? '모두 멈춤 해제' : '모두 멈춤 (화면 잠금)'}</span>
             </button>
             <button
               onClick={() => handleTriggerEvent('boss_raid')}
-              className="col-span-2 py-3 bg-gradient-to-r from-rose-700 to-red-600 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
+              className="col-span-2 py-3 bg-gradient-to-r from-rose-700 to-red-600 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
             >
               <ShieldAlert className="w-4 h-4" />
               <span>보스 레이드 소환</span>
@@ -369,7 +370,7 @@ export const TeacherRemote: React.FC = () => {
 
           <button
             onClick={() => handleTriggerEvent('finish')}
-            className="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-purple-300 rounded-xl font-black text-xs flex items-center justify-center gap-2 active:scale-95"
+            className="w-full py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-purple-300 rounded-xl font-black text-sm flex items-center justify-center gap-2 active:scale-95"
           >
             <Trophy className="w-4 h-4 text-purple-400" />
             <span>수업 종료 및 전광판 시상대 발표</span>
@@ -379,14 +380,14 @@ export const TeacherRemote: React.FC = () => {
         {/* 📢 핵심 4: 빠른 공지사항 전송 */}
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black text-slate-400 flex items-center gap-1.5 uppercase">
+            <h3 className="text-sm font-black text-slate-400 flex items-center gap-1.5 uppercase">
               <Send className="w-3.5 h-3.5 text-cyan-400" />
               학생 전체 긴급 공지
             </h3>
             {currentRoom?.announcement && currentRoom.announcement !== 'WHISTLE' && (
               <button
                 onClick={handleClearAnnouncement}
-                className="text-[11px] text-red-400 hover:underline"
+                className="text-sm text-red-400 hover:underline"
               >
                 공지 삭제
               </button>
@@ -399,7 +400,7 @@ export const TeacherRemote: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handleSendAnnouncement(q)}
-                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold active:scale-95 border border-slate-700/60"
+                className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-semibold active:scale-95 border border-slate-700/60"
               >
                 {q}
               </button>
@@ -413,11 +414,11 @@ export const TeacherRemote: React.FC = () => {
               value={announcementInput}
               onChange={(e) => setAnnouncementInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendAnnouncement(announcementInput)}
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
             />
             <button
               onClick={() => handleSendAnnouncement(announcementInput)}
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-xs shrink-0 active:scale-95"
+              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-xl font-bold text-sm shrink-0 active:scale-95"
             >
               전송
             </button>
@@ -426,14 +427,14 @@ export const TeacherRemote: React.FC = () => {
 
         {/* 실시간 모둠 순위 미리보기 */}
         <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
-          <h3 className="text-xs font-black text-slate-400 mb-2 uppercase">
+          <h3 className="text-sm font-black text-slate-400 mb-2 uppercase">
             실시간 모둠 순위 현황
           </h3>
           <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
             {roomGroups.map((g, idx) => (
-              <div key={g.id} className="flex items-center justify-between px-3 py-2 bg-slate-800/60 rounded-xl text-xs">
+              <div key={g.id} className="flex items-center justify-between px-3 py-2 bg-slate-800/60 rounded-xl text-sm">
                 <div className="flex items-center gap-2">
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-[10px] ${
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center font-black text-sm ${
                     idx === 0 ? 'bg-yellow-400 text-slate-950' :
                     idx === 1 ? 'bg-slate-300 text-slate-950' :
                     idx === 2 ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400'
@@ -446,7 +447,7 @@ export const TeacherRemote: React.FC = () => {
               </div>
             ))}
             {roomGroups.length === 0 && (
-              <p className="text-center text-xs text-slate-500 py-3">접속한 모둠이 없습니다.</p>
+              <p className="text-center text-sm text-slate-500 py-3">접속한 모둠이 없습니다.</p>
             )}
           </div>
         </div>

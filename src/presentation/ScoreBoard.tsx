@@ -14,6 +14,7 @@ import { ClassReportModal } from './components/ClassReportModal';
 import { sfxWhistle } from '../application/soundEffects';
 import { BoardAccess } from './components/BoardAccess';
 import './ScoreBoard.css';
+import './StudentUi.css';
 
 export const ScoreBoard = () => <BoardAccess><ScoreBoardContent/></BoardAccess>;
 const ScoreBoardContent = () => {
@@ -98,11 +99,11 @@ const ScoreBoardContent = () => {
   }, [isWhistle]);
 
   if (!gameRoom) return (
-    <div className="min-h-[100dvh] bg-slate-50 flex flex-col items-center justify-center gap-4 p-6 text-center text-slate-800">
+    <div className="sui min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-6 text-center">
       <p>{error || (loading ? '전광판 정보를 불러오는 중...' : '수업 방 정보가 없습니다.')}</p>
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <button onClick={refresh} className="px-5 py-3 rounded-xl bg-cyan-600 text-white font-bold">다시 시도</button>
-        <button type="button" onClick={handleBackToList} className="px-5 py-3 rounded-xl bg-slate-200 text-slate-800 font-bold flex items-center gap-2">
+        <button onClick={refresh} className="ui-btn ui-btn--primary ui-btn--lg">다시 시도</button>
+        <button type="button" onClick={handleBackToList} className="ui-btn ui-btn--secondary ui-btn--lg">
           <ArrowLeft className="w-4 h-4" /> 목록으로 돌아가기
         </button>
       </div>
@@ -115,7 +116,7 @@ const ScoreBoardContent = () => {
     const top3 = sorted.slice(0, 3);
 
     return (
-      <div className="scoreboard-results min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center pb-24">
+      <div className="scoreboard-results sui-scope min-h-[100dvh] font-sans overflow-y-auto relative bg-slate-900 text-white flex flex-col items-center pb-24">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-slate-900 to-slate-900 animate-[pulse_4s_ease-in-out_infinite] pointer-events-none"></div>
         
         {/* 상단 목록 복귀 버튼 */}
@@ -187,10 +188,10 @@ const ScoreBoardContent = () => {
                 <span className="font-mono text-xl font-bold text-cyan-300">{s.score}점</span>
               </div>
               <div className="flex gap-2 flex-wrap">
-                {s.badges && s.badges.includes('rich') && <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded text-xs font-bold border border-yellow-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.Coins className="w-3 h-3"/> 만수르</span>}
-                {s.badges && s.badges.includes('shopaholic') && <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs font-bold border border-purple-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.ShoppingCart className="w-3 h-3"/> 쇼핑 중독</span>}
-                {s.badges && s.badges.includes('bingo') && <span className="px-2 py-1 bg-orange-500/20 text-orange-300 rounded text-xs font-bold border border-orange-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.Grid className="w-3 h-3"/> 빙고 마스터</span>}
-                {(!s.badges || s.badges.length === 0) && <span className="text-xs text-slate-500 italic">배지 없음</span>}
+                {s.badges && s.badges.includes('rich') && <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded text-sm font-bold border border-yellow-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.Coins className="w-3 h-3"/> 만수르</span>}
+                {s.badges && s.badges.includes('shopaholic') && <span className="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-sm font-bold border border-purple-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.ShoppingCart className="w-3 h-3"/> 쇼핑 중독</span>}
+                {s.badges && s.badges.includes('bingo') && <span className="px-2 py-1 bg-orange-500/20 text-orange-300 rounded text-sm font-bold border border-orange-500/30 flex items-center gap-1 shadow-inner"><LucideIcons.Grid className="w-3 h-3"/> 빙고 마스터</span>}
+                {(!s.badges || s.badges.length === 0) && <span className="text-sm text-slate-500 italic">배지 없음</span>}
               </div>
             </div>
           ))}
@@ -200,14 +201,14 @@ const ScoreBoardContent = () => {
           <button
             type="button"
             onClick={handleBackToList}
-            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-bold text-base shadow-xl active:scale-95 transition-all"
+            className="ui-btn ui-btn--secondary ui-btn--lg"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>목록으로 돌아가기</span>
           </button>
           <button
             onClick={() => setShowReportModal(true)}
-            className="flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-black text-base shadow-xl active:scale-95 transition-all"
+            className="ui-btn ui-btn--primary ui-btn--lg"
           >
             <Sparkles className="w-5 h-5 text-amber-300 animate-pulse" />
             <span>📝 2022 개정 NEIS 세특 자동 완성 & 리포트</span>
@@ -225,7 +226,7 @@ const ScoreBoardContent = () => {
   }
 
   return (
-    <div className={`min-h-[100dvh] font-sans overflow-y-auto relative transition-colors duration-1000 ${isTsunami ? 'bg-blue-100' : isDanger ? 'bg-red-50' : 'bg-slate-50'} text-slate-900 pb-20`}>
+    <div className={`sui-scope min-h-[100dvh] font-sans overflow-y-auto relative transition-colors duration-1000 ${isTsunami ? 'bg-blue-100' : isDanger ? 'bg-red-50' : 'bg-slate-50'} text-slate-900 pb-20`}>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
       
       {isTsunami && (

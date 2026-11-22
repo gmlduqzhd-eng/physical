@@ -43,7 +43,8 @@ test('group phone: start is the biggest first button, help is secondary below it
  const view=read('src/presentation/MobileMissionView.tsx');
  const start=view.indexOf('student-guided-start');const help=view.indexOf('student-guided-help');
  assert.ok(start>0&&help>start,'start before help');
- assert.match(view,/student-guided-start w-full mt-5 py-5 bg-cyan-700 text-white rounded-2xl font-black text-2xl/);
+ assert.match(view,/student-guided-start ui-btn ui-btn--primary ui-btn--lg sui-block/);
+ assert.match(view,/student-guided-help ui-btn ui-btn--secondary/);
  assert.match(view,/<span aria-hidden="true">✅ <\/span><span>선생님 화면에 저장했어요\.<\/span>/);
  assert.doesNotMatch(view,/게임 결과를 제출하면/);
 });
