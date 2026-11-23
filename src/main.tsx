@@ -23,6 +23,7 @@ import { purgeLegacyPersonalData } from './application/browserStorage'
 import { getDisplayPrefs } from './application/displayPrefs'
 import { startAppRuntime } from './application/appRuntime'
 import './presentation/components/DisplayButtons.css'
+import './presentation/Readability.css'
 
 purgeLegacyPersonalData();
 startAppRuntime(); // 잡히지 않은 오류를 콘솔에 남기고, 처음 받은 화면 파일을 서비스워커에 알려 준다

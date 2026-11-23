@@ -1,0 +1,36 @@
+/*
+ * 교실 TV·전자칠판에서도 읽히게: 넓은 화면 확대와 최소 글씨(14px).
+ * 화면마다 따로 적힌 작은 글씨를 여기서 한꺼번에 끌어올린다(main.tsx에서 맨 나중에 읽는다).
+ */
+
+/* 1) 넓은 화면(1600px 이상)에서는 내용 전체를 키운다. 교실 뒤에서도 카드 글씨가 읽히게.
+      확대는 내용 상자에만 걸어, 화면 배경·진행 화면(게임)은 그대로 둔다. */
+@media (min-width:1600px){
+  html body :is(.flow.activity-tools-scope .flow-wrap,.unified-home>.shell,.hub-page){zoom:1.2}
+}
+@media (min-width:2300px){
+  html body :is(.flow.activity-tools-scope .flow-wrap,.unified-home>.shell,.hub-page){zoom:1.5}
+}
+
+/* 2) 14px보다 작던 글씨 */
+html body .forest-brand-name small{font-size:14px}
+html body .unified-home footer,html body .unified-home footer :is(p,a){font-size:14px}
+html body :is(.flow.activity-tools-scope,.hub-page) :is(small,em){font-size:max(14px,.8em)}
+html body .activity-meta,html body .activity-meta span:not(.sr-only),html body .activity-situation,html body .activity-situation span{font-size:14px}
+html body .activity-tags .pill{font-size:14px}
+html body .activity-card-more p.small,html body .activity-card-more p{font-size:14px}
+/* 놀이 모음(/hub/extras) */
+html body .hub-page :is(.hub-curriculum,.hub-header p,.hub-header p button,.hub-summary p,.hub-summary strong,.hub-record-link,.hub-recommendations summary,.hub-footer,.hub-footer span){font-size:14px}
+html body .hub-page .text-\[13px\],html body .hub-page .text-\[12px\],html body .hub-page .text-\[11px\],html body .hub-page .text-xs{font-size:14px}
+
+/* 3) 누르는 곳은 44px 이상 */
+html body .hub-page .hub-tabs button{min-height:48px;font-size:16px}
+html body .hub-page .hub-record-link{display:inline-flex;align-items:center;min-height:44px;padding-inline:12px}
+html body .hub-page :is(button,summary):not(.hub-tabs button){min-height:44px}
+html body .flow input[type=checkbox],html body .flow input[type=radio]{width:24px;height:24px}
+html body .flow label:has(>input[type=checkbox]),html body .flow .check{min-height:44px}
+html body .unified-home .brand{min-height:44px}
+/* 화면 파일의 더 구체적인 규칙보다 앞서도록 */
+html body .flow.activity-tools-scope :is(.catalog-card,.catalog-card-compact) :is(.pill,details.activity-card-more>.small,details.activity-card-more>p){font-size:14px}
+html body .unified-home footer .ys-credit{font-size:14px}
+html body .hub-page .hub-catalog-heading p{font-size:14px}

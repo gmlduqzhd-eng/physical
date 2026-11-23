@@ -15,6 +15,7 @@ import { Suspense, useState, useCallback, useEffect, useLayoutEffect, useRef, us
 // 활동 화면은 지금 여는 것 하나만 받는다(놀이 화면 첫 묶음을 가볍게).
 import {ActivityLoading,ConsolidatedActivity,EmotionThermometer,ExpeditionActivity,ExpressionGameViewer,FlagshipActivity,MovementQuest,PartnerRobotLab,PhonePlay,RetiredGameNotice,SafetyLesson,SignaturePlay,StretchTimer} from './components/minigames/lazyActivities';
 import { GAMES } from '../domain/gamesData';
+import { FEATURED_GAMES } from '../domain/featuredGames';
 import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
@@ -408,8 +409,15 @@ const GamePlaySession = () => {
   if (!gameType || !gameInfo) {
     return (
       <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
-        <h1 className="text-3xl font-black mb-4">존재하지 않는 게임입니다</h1>
-        <button onClick={handleReturnToCatalog} className="px-6 py-3 min-h-[48px] bg-[var(--ui-action,#566d4d)] rounded-full text-white font-bold">홈으로</button>
+        {/* 주소가 틀렸거나 정리된 활동: 막다른 화면 대신 찾는 길과 추천 활동을 바로 보여 준다. */}
+        <h1 className="text-3xl font-black mb-3 text-center" data-game-not-found>이 활동을 찾을 수 없어요</h1>
+        <p className="mb-6 text-center text-slate-300 break-keep">주소가 바뀌었거나 정리된 활동일 수 있어요. 아래에서 다른 활동을 골라 보세요.</p>
+        <div className="flex flex-wrap justify-center gap-3 mb-6">
+          <button type="button" onClick={() => navigate('/hub')} className="px-6 py-3 min-h-[48px] bg-[var(--ui-action,#566d4d)] rounded-full text-white font-bold">활동 고르기에서 찾기</button>
+          <button type="button" onClick={handleReturnToCatalog} className="px-6 py-3 min-h-[48px] border-2 border-white/60 rounded-full text-white font-bold">처음으로</button>
+        </div>
+        <p className="mb-3 font-bold">먼저 해 볼 활동</p>
+        <ul className="flex flex-wrap justify-center gap-3">{FEATURED_GAMES.slice(0, 4).map(g => <li key={g.type}><button type="button" onClick={() => navigate(`/play/${g.type}`)} className="px-5 py-3 min-h-[48px] bg-white/10 border border-white/30 rounded-full font-bold" data-not-found-pick={g.type}>{g.emoji} {g.name}</button></li>)}</ul>
       </div>
     );
   }

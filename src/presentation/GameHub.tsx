@@ -6,6 +6,7 @@ import { AccessQrDialog, type AccessQrDialogHandle } from "./components/AccessQr
 import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { HeaderToolbar } from './components/HeaderToolbar';
+import { ForestBrand } from './components/ForestIdentity';
 import { readJsonStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
@@ -173,10 +174,10 @@ export const GameHub = () => {
       <header className="hub-header">
         <div className="hub-header-row">
           <div className="hub-brand-row">
-            <h1><button type="button" onClick={() => navigate('/')} className="hub-brand">땀방울 원정대</button></h1>
+            <h1 className="hub-brand-title"><button type="button" onClick={() => navigate('/')} className="hub-brand activity-brand" aria-label="땀방울 원정대 처음으로"><ForestBrand/></button></h1>
             <span className="hub-curriculum"><Award className="w-3.5 h-3.5" /> 2022 개정 체육과 연계</span>
           </div>
-          <HeaderToolbar><button type="button" className="icon-toolbar-action" title="메인 화면" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>메인 화면</span></button><button type="button" className="icon-toolbar-action" title="메뉴" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings aria-hidden="true"/><span>메뉴</span></button></HeaderToolbar>
+          <HeaderToolbar><button type="button" className="icon-toolbar-action" title="처음으로" onClick={() => navigate('/')}><Home aria-hidden="true"/><span>처음으로</span></button><button type="button" className="icon-toolbar-action" title="메뉴" onClick={() => setShowMenu(true)} aria-haspopup="dialog"><Settings aria-hidden="true"/><span>메뉴</span></button></HeaderToolbar>
         </div>
         <p>기록 · 즐겨찾기 · 특별 활동 · 선생님 도구 · 활동 {GAMES.length}개는 <button type="button" className="underline" onClick={() => navigate('/hub')}>활동 목록</button>에서 찾아요</p>
       </header>
