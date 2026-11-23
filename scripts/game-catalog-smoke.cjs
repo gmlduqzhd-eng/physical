@@ -147,7 +147,7 @@ function readGameInventory() {
         }
         if (!active.touch) active.touch = { outcome: 'no standalone button; launch and navigation checked' };
         active.afterTouchWidth = await page.evaluate(() => document.documentElement.scrollWidth);
-        if (active.pageErrors.length || active.layout.documentWidth > viewport.width + 2 || active.afterTouchWidth > viewport.width + 2 || !active.layout.text.trim() || active.layout.text.includes('존재하지 않는 게임')) {
+        if (active.pageErrors.length || active.layout.documentWidth > viewport.width + 2 || active.afterTouchWidth > viewport.width + 2 || !active.layout.text.trim() || active.layout.text.includes('이 활동을 찾을 수 없어요')) {
           active.status = 'fail';
           await page.screenshot({ path: path.join(work, `catalog-fail-${engine}-${viewport.width}-${game.type}.png`), fullPage: true });
         }

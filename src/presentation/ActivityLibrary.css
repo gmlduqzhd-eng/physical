@@ -139,10 +139,11 @@ html.dark-theme .flow.activity-tools-scope .catalog-card-compact .activity-card-
  .flow.activity-tools-scope .catalog-card-compact .activity-oneline{margin-bottom:4px}
  .flow.activity-tools-scope .catalog-card-compact .activity-meta{margin-bottom:6px}
 }
-/* 휴대폰: 빠른 추천 상황 버튼은 한 줄로 두고 옆으로 밀어 본다(카드가 너무 아래로 밀리지 않게). */
+/* 휴대폰: 빠른 추천 상황 버튼. */
 @media(max-width:700px){
- .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
- .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations button{flex:none}
+ /* 상황 버튼은 옆으로 숨기지 않고 두 칸씩 모두 보이게(밀어야 더 있는 줄 몰랐다). */
+ .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%}
+ .flow.activity-tools-scope .hub-quick-picks .quick-picks-situations button{justify-content:center;padding-inline:10px;white-space:nowrap}
 }
 /* 글씨를 크게·더 크게 하면 카드 폭이 상대적으로 좁아지니, 한 줄 규칙을 3줄까지 보여 준다. */
 html:is([data-text-scale="large"],[data-text-scale="xlarge"]) .flow.activity-tools-scope .catalog-card-compact .activity-oneline{-webkit-line-clamp:3}
