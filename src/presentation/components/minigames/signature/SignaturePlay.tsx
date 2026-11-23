@@ -149,7 +149,7 @@ export function SignaturePlay({gameId,groupId='standalone-player',enqueueAction,
   </div>
   <fieldset className="fun-setup">
    <legend>팀 수</legend>
-   <div className="fun-choice">{[1,2,3,4].filter(n=>n>=game.teamsMin).map(n=><button type="button" key={n} aria-pressed={teams===n} onClick={()=>setTeams(n)}>{n===1?'반 전체 한 팀':`${n}팀 (${TEAM_NAMES.slice(0,n).join('·')})`}</button>)}</div>
+   <div className="fun-choice">{[1,2,3,4].filter(n=>n>=game.teamsMin).map(n=><button type="button" key={n} aria-pressed={teams===n} onClick={()=>setTeams(n)}>{n===1?<strong>반 전체 한 팀</strong>:<><strong>{n}팀</strong><small>{TEAM_NAMES.slice(0,n).join('·')}</small></>}</button>)}</div>
   </fieldset>
   <label className="fun-check"><input type="checkbox" checked={seated} onChange={e=>setSeated(e.target.checked)}/>앉아서 하기 · {game.seatedNote}</label>
   <details className="fun-more"><summary>선생님 안내 · 단축키 · 안전</summary>
