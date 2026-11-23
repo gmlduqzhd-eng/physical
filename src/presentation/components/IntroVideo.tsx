@@ -13,6 +13,8 @@ export function IntroVideo() {
   const dialog = useRef<HTMLDialogElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const open = () => {
+    // 썸네일은 창을 열 때 붙인다(처음 화면에서는 보이지 않으니 미리 받지 않는다).
+    if (video.current && !video.current.poster) video.current.poster = INTRO_VIDEO.poster;
     dialog.current?.showModal();
     void video.current?.play().catch(() => { /* 자동 재생이 막히면 재생 버튼을 누르면 된다. */ });
   };
@@ -22,7 +24,7 @@ export function IntroVideo() {
       onClose={() => video.current?.pause()}
       onClick={event => { if (event.target === event.currentTarget) event.currentTarget.close(); }}>
       <div className="intro-video-frame">
-        <video ref={video} src={INTRO_VIDEO.src} poster={INTRO_VIDEO.poster} controls playsInline preload="none" width={1920} height={1080}/>
+        <video ref={video} src={INTRO_VIDEO.src} controls playsInline preload="none" width={1920} height={1080}/>
         <button type="button" className="intro-video-close" aria-label="소개 영상 닫기" onClick={() => dialog.current?.close()}><X aria-hidden="true"/></button>
       </div>
     </dialog>

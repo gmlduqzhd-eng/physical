@@ -8,6 +8,10 @@ test('wide screens (TV) enlarge the content boxes, not the game screens', () => 
   assert.match(css, /@media \(min-width:2300px\)\{[^}]*zoom:1\.5/);
   assert.match(readFileSync('src/main.tsx', 'utf8'), /import '\.\/presentation\/Readability\.css'/);
 });
+test('game start screens (before play) are enlarged on TV, play screens are not', () => {
+  assert.match(css, /@media \(min-width:1600px\)\{\s*html body :is\(\.fun-intro,\.phone-play\[data-phase=intro\]:not\(\.phone-class\),\.tqg-dialog\)\{zoom:1\.3\}/);
+  assert.doesNotMatch(css, /data-phase=active\][^}]*zoom/);
+});
 test('small text is lifted to 14px and tap targets to 44px', () => {
   assert.match(css, /html body \.forest-brand-name small\{font-size:14px\}/);
   assert.match(css, /html body \.unified-home footer \.ys-credit\{font-size:14px\}/);
