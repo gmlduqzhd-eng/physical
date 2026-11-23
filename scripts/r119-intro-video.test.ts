@@ -9,6 +9,9 @@ test('home shows the intro video button inside the sky banner', () => {
 test('intro video loads only when opened, and stops when closed', () => {
   const src = readFileSync('src/presentation/components/IntroVideo.tsx', 'utf8');
   assert.match(src, /preload="none"/);
+  // 썸네일도 창을 열 때만 받는다
+  assert.doesNotMatch(src, /poster=\{INTRO_VIDEO\.poster\}/);
+  assert.match(src, /video\.current\.poster = INTRO_VIDEO\.poster/);
   assert.match(src, /onClose=\{\(\) => video\.current\?\.pause\(\)\}/);
   assert.match(src, /aria-label="소개 영상 닫기"/);
 });

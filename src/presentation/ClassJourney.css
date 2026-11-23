@@ -1,8 +1,9 @@
 .journey-status{font-size:clamp(18px,2.4vw,24px);font-weight:750;margin:16px 0}
 .journey-map{list-style:none;padding:0;margin:18px 0 26px;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
 .journey-island{padding:16px;border:1px solid var(--forest-line);border-radius:20px;background:var(--forest-paper);display:flex;flex-direction:column;gap:8px}
-.journey-island[data-state=ahead]{opacity:.62}.journey-island[data-state=sailing]{border:2px solid var(--forest-accent)}.journey-island[data-state=arrived]{background:var(--forest-tint);border-color:var(--forest-accent)}
-.journey-head{display:flex;align-items:center;gap:12px}.journey-icon{font-size:34px;line-height:1}.journey-head strong{display:block;font-size:19px}.journey-head small{color:var(--forest-muted)}
+/* 아직 먼 섬: 글씨는 흐리게 하지 않고(읽기 대비 4.5:1), 도장 칸만 흐리게. */
+.journey-island[data-state=ahead]>:not(.journey-head):not(p){opacity:.62}.journey-island[data-state=sailing]{border:2px solid var(--forest-accent)}.journey-island[data-state=arrived]{background:var(--forest-tint);border-color:var(--forest-accent)}
+.journey-head{display:flex;align-items:center;gap:12px}.journey-icon{font-size:34px;line-height:1}.journey-head strong{display:block;font-size:19px}.journey-head small{color:var(--ui-muted,var(--forest-muted))}
 .journey-island p{margin:0;font-size:15px;line-height:1.5}
 .journey-stamps{list-style:none;padding:0;margin:auto 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.journey-stamps li{aspect-ratio:1;display:grid;place-items:center;border:2px dashed var(--forest-control-line);border-radius:50%;font-size:clamp(18px,3vw,24px)}.journey-stamps li[data-filled=yes]{border-style:solid;border-color:var(--forest-accent);background:var(--forest-paper)}
 .journey-arrival{padding:20px;border:2px solid var(--forest-accent);border-radius:22px;background:var(--forest-tint);margin:16px 0}.journey-arrival h2{margin:6px 0;font-size:clamp(24px,3.6vw,38px)}

@@ -139,7 +139,7 @@ export const GameHub = () => {
 
 
   return (
-    <div className="hub-page min-h-[100dvh] bg-slate-950 text-white font-sans overflow-y-auto">
+    <main className="hub-page min-h-[100dvh] bg-slate-950 text-white font-sans overflow-y-auto">
       {/* 성취기준 상세 모달 */}
       {activeAchievement && (
         <div
@@ -518,6 +518,6 @@ export const GameHub = () => {
           </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
