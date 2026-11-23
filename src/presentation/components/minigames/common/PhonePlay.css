@@ -133,4 +133,4 @@ html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-ba
 .phone-play .pp-panel,.phone-play .pp-rule-card li{border-radius:var(--ui-radius-2,14px)}
 
 /* 큰 신호 글자가 단어 중간에서 끊기지 않게(예: "출동, 제자리 두 / 걸음" → 단어 단위로 줄바꿈). */
-.phone-play :is(.pc-cue,.pc-task,.pp-title h1),.phone-class :is(.pc-cue,.pc-task){word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
+.phone-play :is(.pc-cue,.pc-task,.pp-title h1,.pp-signal strong),.phone-class :is(.pc-cue,.pc-task){word-break:keep-all;overflow-wrap:break-word;text-wrap:balance}
