@@ -24,3 +24,7 @@ test('first screen does not wait for fonts (no font preloads; fonts swap in)', (
   assert.doesNotMatch(readFileSync('index.html', 'utf8'), /rel="preload"[^>]*as="font"/);
   assert.match(readFileSync('src/presentation/fontFaces.css', 'utf8'), /font-display:swap/);
 });
+test('login-keep note is not faded below readable contrast', () => {
+  const css = readFileSync('src/presentation/components/TeacherAccountForm.css', 'utf8');
+  assert.match(css, /\.taf-stay small\{display:block;font-size:14px;font-weight:400;color:var\(--ui-muted\)\}/);
+});
