@@ -10,7 +10,7 @@ test('skip link always has a target and sits inside a landmark', () => {
 });
 test('every screen has one main landmark (play collection, connection notice) and named asides', () => {
   assert.match(readFileSync('src/presentation/GameHub.tsx', 'utf8'), /<main className="hub-page /);
-  assert.match(readFileSync('src/App.tsx', 'utf8'), /const SupabaseRequired = \(\) => \(\n  <main className=/);
+  assert.match(readFileSync('src/App.tsx', 'utf8'), /const SupabaseRequired = \(\) => \(\n {2}<main className=/);
   const manual = readFileSync('src/presentation/Manual.tsx', 'utf8');
   assert.match(manual, /aria-label="처음 쓰는 선생님 안내"/);
   assert.match(manual, /aria-label="AI 수업 준비 안내"/);
