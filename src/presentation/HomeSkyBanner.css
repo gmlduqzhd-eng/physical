@@ -11,7 +11,7 @@
 /* 어두운 화면: 그림은 그대로, 글 뒤를 어둡게 덮는다(글씨는 밝은 색 토큰 그대로). */
 html.dark-theme .entry-head.home-sky{background:rgb(23,50,74)}
 html.dark-theme .entry-head.home-sky::before{background:linear-gradient(90deg,rgba(22,26,30,.94) 0%,rgba(22,26,30,.82) 34%,rgba(22,26,30,0) 56%)}
-/* 폰·좁은 화면: 그림은 위 띠, 글은 아래 카드. 글씨를 키우면 그림을 숨겨 입구 카드가 먼저 보이게 한다. */
+/* 폰·좁은 화면: 그림은 위 띠, 글은 아래 카드. 글씨를 키워도 그림은 보이고 띠만 조금 낮춘다. */
 @media(max-width:900px){
  .entry-head.home-sky{display:flex;flex-direction:column;min-height:0;padding:0;margin-bottom:16px;background:var(--e-paper);border:1px solid var(--e-line);border-radius:20px}
  .entry-head.home-sky::before{display:none}
@@ -19,5 +19,5 @@ html.dark-theme .entry-head.home-sky::before{background:linear-gradient(90deg,rg
  .home-sky-art img{object-position:62% 52%}
  .home-sky-text{gap:6px;max-width:none;padding:18px 20px 20px}
  .home-sky-text .intro-video-link{margin-top:6px}
- html:is([data-text-scale=large],[data-text-scale=xlarge]) .home-sky-art{display:none}
+ html:is([data-text-scale=large],[data-text-scale=xlarge]) .home-sky-art{height:clamp(120px,26vw,200px)}
 }

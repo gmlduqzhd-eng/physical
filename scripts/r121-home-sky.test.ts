@@ -13,7 +13,8 @@ test('text side is lightened (and darkened in dark mode) so the title stays read
   assert.match(css, /\.entry-head\.home-sky::before\{[^}]*linear-gradient\(90deg,rgba\(246,251,255,\.97\)/);
   assert.match(css, /html\.dark-theme \.entry-head\.home-sky::before\{background:linear-gradient\(90deg,rgba\(22,26,30,\.94\)/);
 });
-test('on phones the picture is a strip above the text, and hides with large text', () => {
+test('on phones the picture is a strip above the text, and stays visible (a bit shorter) with large text', () => {
   assert.match(css, /@media\(max-width:900px\)\{[^]*\.home-sky-art\{position:relative;inset:auto;z-index:0;height:clamp\(150px,30vw,250px\)\}/);
-  assert.match(css, /html:is\(\[data-text-scale=large\],\[data-text-scale=xlarge\]\) \.home-sky-art\{display:none\}/);
+  assert.match(css, /html:is\(\[data-text-scale=large\],\[data-text-scale=xlarge\]\) \.home-sky-art\{height:clamp\(120px,26vw,200px\)\}/);
+  assert.doesNotMatch(css, /home-sky-art\{display:none\}/);
 });
