@@ -1,3 +1,4 @@
+import { MascotHello } from './components/MascotBadge';
 import { LessonShell } from './LessonShell';
 import { StudentQrScanner } from './components/StudentQrScanner';
 import React, { useEffect, useRef, useState } from 'react';
@@ -109,7 +110,7 @@ export const Lobby = () => {
     finally { setLoading(false); }
   };
 
-  return <LessonShell audience="student"><section className="lesson-intro"><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요</h1><p>선생님이 알려 주신 모둠 비밀번호를 적어요.<br/>내 번호만 누르면 준비 완료!</p></section>
+  return <LessonShell audience="student"><section className="lesson-intro"><MascotHello name="jump">번호만 누르면 같이 출발!</MascotHello><p className="lesson-eyebrow">함께하는 우리들의 체육 시간</p><h1>우리 모둠으로,<br/>함께 들어가요</h1><p>선생님이 알려 주신 모둠 비밀번호를 적어요.<br/>내 번호만 누르면 준비 완료!</p></section>
     {lastRoom&&lastGroup&&<p className="student-resume" style={{display:'flex',flexWrap:'wrap',gap:10}}><button className="ui-btn ui-btn--secondary ui-btn--lg" disabled={loading} onClick={()=>void handleResume()}><RotateCcw size={18}/>이전 수업 이어가기 ({lastGroupName}{lastWho?` · ${lastWho}`:''})</button><button type="button" className="student-resume-other ui-btn ui-btn--secondary" disabled={loading} onClick={otherStudent}>다른 학생으로 들어가기</button></p>}
     {resumePending&&<form className="card" onSubmit={handleResumeProfile}><h2>이전 수업의 내 번호를 눌러요</h2><p>이 기기에 번호 기록이 없어요. 내 번호를 누르면 이어서 참여할 수 있어요.</p><StudentNumberPad number={studentNumber} nickname={nickname} onNumberChange={pickNumber} onNicknameChange={setNickname} taken={taken} notice={padNotice}/><button className="primary button-wide snp-submit ui-btn ui-btn--primary ui-btn--lg" data-ready={studentNumber?"":undefined} disabled={loading}>정보 저장하고 이어가기</button></form>}
     <div id="student-entry-panel" className="student-entry-panel">

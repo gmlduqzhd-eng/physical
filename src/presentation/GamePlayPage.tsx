@@ -16,6 +16,7 @@ import { Suspense, useState, useCallback, useEffect, useLayoutEffect, useRef, us
 import {ActivityLoading,ConsolidatedActivity,EmotionThermometer,ExpeditionActivity,ExpressionGameViewer,FlagshipActivity,MovementQuest,PartnerRobotLab,PhonePlay,RetiredGameNotice,SafetyLesson,SignaturePlay,StretchTimer} from './components/minigames/lazyActivities';
 import { GAMES } from '../domain/gamesData';
 import { FEATURED_GAMES } from '../domain/featuredGames';
+import { MascotBadge } from './components/MascotBadge';
 import { gameBestStorageKey, isQuestId, QUEST_IDS, QUEST_META } from '../domain/movementQuests';
 import { GUIDED_REFLECTIONS } from '../domain/guidedReflection';
 import { useGuidedSubmission } from '../application/useGuidedSubmission';
@@ -410,6 +411,7 @@ const GamePlaySession = () => {
     return (
       <div className="warm-game min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 font-sans">
         {/* 주소가 틀렸거나 정리된 활동: 막다른 화면 대신 찾는 길과 추천 활동을 바로 보여 준다. */}
+        <MascotBadge name="main" className="mb-4"/>
         <h1 className="text-3xl font-black mb-3 text-center" data-game-not-found>이 활동을 찾을 수 없어요</h1>
         <p className="mb-6 text-center text-slate-300 break-keep">주소가 바뀌었거나 정리된 활동일 수 있어요. 아래에서 다른 활동을 골라 보세요.</p>
         <div className="flex flex-wrap justify-center gap-3 mb-6">

@@ -1,0 +1,4 @@
+/* 땀방울 친구들: 동그란 그림 + 말풍선. */
+.mascot-badge{display:block;flex:none;border-radius:50%;object-fit:cover;border:4px solid var(--ui-paper);box-shadow:0 6px 18px rgba(40,80,120,.18);background:var(--ui-tint)}
+.mascot-hello{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+.mascot-hello p{margin:0;padding:10px 14px;border-radius:16px 16px 16px 4px;background:var(--ui-tint);color:var(--ui-ink);font-size:16px;font-weight:700;line-height:1.4}
