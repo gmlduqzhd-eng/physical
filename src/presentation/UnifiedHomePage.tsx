@@ -9,6 +9,7 @@ import { HeaderToolbar } from './components/HeaderToolbar';
 import { IntroVideo } from './components/IntroVideo';
 import './UnifiedHomePage.css';
 import './EntryCards.css';
+import './HomeSkyBanner.css';
 import {readRecentActivities} from '../application/recentActivities';
 import {readFavorites} from '../application/useActivityFavorites';
 import {lessonStartPath} from '../application/lessonStartPrefs';
@@ -46,7 +47,7 @@ export function UnifiedHomePage() {
       <HeaderToolbar label="상단 메뉴"><button className="icon-toolbar-action" type="button" title="접속 QR" aria-haspopup="dialog" aria-controls="access-qr-dialog" onClick={() => { void qr.current?.open(); }}><QrCode aria-hidden="true"/><span>접속 QR</span></button><Link className="icon-toolbar-action" to="/manual" title="이용 안내"><CircleHelp aria-hidden="true"/><span>이용 안내</span></Link></HeaderToolbar>
     </header><HomeAccountTabs/>
     <main className="home-entries" aria-labelledby="home-title">
-      <div className="entry-head has-intro"><h1 id="home-title">무엇을 할까요?</h1><p>세 가지 중에 하나를 골라요.</p><IntroVideo/></div>
+      <div className="entry-head home-sky"><span className="home-sky-art" aria-hidden="true"><img src="/images/home-hero-1600.webp" srcSet="/images/home-hero-900.webp 900w, /images/home-hero-1600.webp 1600w" sizes="(max-width: 900px) 100vw, 1240px" alt="" width={1600} height={900} fetchPriority="high" decoding="async"/></span><div className="home-sky-text"><h1 id="home-title">무엇을 할까요?</h1><p>세 가지 중에 하나를 골라요.</p><IntroVideo/></div></div>
       <div className="entry-grid">
         <section className="entry-card" data-entry="lesson" aria-labelledby="home-entry-lesson"><Play aria-hidden="true"/><h2 id="home-entry-lesson">수업 시작</h2><p>선생님이 오늘 수업을 열어요. TV 한 대로도, 모둠 폰으로도 할 수 있어요.</p><Link className="entry-btn ui-btn ui-btn--lg" to={startTo} data-home-start data-today-link>수업 시작하기</Link></section>
         <section className="entry-card" data-entry="student" aria-labelledby="home-entry-student"><UserRound aria-hidden="true"/><h2 id="home-entry-student">학생 참여</h2><p>모둠 비밀번호를 누르고 내 번호를 골라 들어가요.</p><Link to="/lobby" className="entry-btn ui-btn ui-btn--lg home-student-join" data-home-student>학생 참여하기</Link></section>

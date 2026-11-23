@@ -1,0 +1,23 @@
+/* 처음 화면 '무엇을 할까요?' 하늘 배너: 땀방울 친구들 그림을 깔고, 제목·안내·소개 영상 버튼은 왼쪽 하늘 위에 얹는다. */
+.entry-head.home-sky{position:relative;isolation:isolate;overflow:hidden;display:grid;align-content:center;min-height:340px;margin:0 0 28px;padding:40px 44px;border-radius:24px;background:rgb(203,232,251)}
+.home-sky-art{position:absolute;inset:0;z-index:-2;display:block}
+.home-sky-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:right 40%}
+/* 글 뒤만 하늘색으로 밝게 덮어 읽기 쉽게(그림은 오른쪽에서 그대로 보인다). */
+.entry-head.home-sky::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(246,251,255,.97) 0%,rgba(246,251,255,.88) 30%,rgba(246,251,255,0) 52%)}
+.home-sky-text{display:grid;gap:10px;justify-items:start;max-width:520px}
+.home-sky-text h1{margin:0}
+.home-sky-text p{margin:0}
+.home-sky-text .intro-video-link{margin-top:10px}
+/* 어두운 화면: 그림은 그대로, 글 뒤를 어둡게 덮는다(글씨는 밝은 색 토큰 그대로). */
+html.dark-theme .entry-head.home-sky{background:rgb(23,50,74)}
+html.dark-theme .entry-head.home-sky::before{background:linear-gradient(90deg,rgba(22,26,30,.94) 0%,rgba(22,26,30,.82) 34%,rgba(22,26,30,0) 56%)}
+/* 폰·좁은 화면: 그림은 위 띠, 글은 아래 카드. 글씨를 키우면 그림을 숨겨 입구 카드가 먼저 보이게 한다. */
+@media(max-width:900px){
+ .entry-head.home-sky{display:flex;flex-direction:column;min-height:0;padding:0;margin-bottom:16px;background:var(--e-paper);border:1px solid var(--e-line);border-radius:20px}
+ .entry-head.home-sky::before{display:none}
+ .home-sky-art{position:relative;inset:auto;z-index:0;height:clamp(150px,30vw,250px)}
+ .home-sky-art img{object-position:62% 52%}
+ .home-sky-text{gap:6px;max-width:none;padding:18px 20px 20px}
+ .home-sky-text .intro-video-link{margin-top:6px}
+ html:is([data-text-scale=large],[data-text-scale=xlarge]) .home-sky-art{display:none}
+}
