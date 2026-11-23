@@ -131,3 +131,6 @@ html[data-tv-mode="on"] .phone-play[data-phase="intro"]:not(.phone-class) .pp-ba
 .phone-play .pp-start button:not(.pp-primary),.phone-class .pc-controls button:not(.pp-primary){border:2px solid var(--ui-action,var(--forest-accent,#566d4d))}
 .phone-class .pc-leave{border:2px dashed var(--ui-danger,var(--forest-danger,#9e3833));color:var(--ui-danger,var(--forest-danger,#9e3833))}
 .phone-play .pp-panel,.phone-play .pp-rule-card li{border-radius:var(--ui-radius-2,14px)}
+
+/* 큰 신호 글자가 단어 중간에서 끊기지 않게(예: "출동, 제자리 두 / 걸음" → 단어 단위로 줄바꿈). */
+.phone-play :is(.pc-cue,.pc-task,.pp-title h1),.phone-class :is(.pc-cue,.pc-task){word-break:keep-all;overflow-wrap:break-word}

@@ -117,6 +117,8 @@
 
 /* 상태 칸(본게임 중·게임 끝)은 버튼과 높이가 같아야 아래 '일시정지' 자리가 밀리지 않는다: 글자가 넘쳐 칸이 커지지 않게 줄인다. */
 .fun-remote-page .frp-next-wait{overflow:hidden;align-content:center}
+/* 본게임 중 안내 칸: 어두운 무대 위에서도 읽히게 밝은 칸에 진한 글자로. */
+.fun-remote-page .frp-next-wait{background:var(--ui-paper,#fffefa);color:var(--ui-ink,#303d35);border-color:var(--ui-action,#566d4d)}
 .fun-remote-page .frp-next-wait small{flex-basis:100%;font-size:.85rem;font-weight:700}
 @media (orientation:portrait) and (max-height:700px){.fun-remote-page .frp-next-wait{padding:6px}.fun-remote-page .frp-next-wait .frp-big-label{font-size:1.1rem}.fun-remote-page .frp-next-wait small{display:none}}
 /* TV 상태 칸: 단계마다 줄 수가 달라도 큰 버튼 자리가 움직이지 않게 두 줄 높이를 미리 잡아 둔다. */
