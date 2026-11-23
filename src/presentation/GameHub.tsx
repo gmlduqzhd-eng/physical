@@ -7,6 +7,7 @@ import { useState, useMemo, useEffect, useLayoutEffect, useRef } from 'react';
 import { useBackgroundMusic } from '../application/BackgroundMusicContext';
 import { HeaderToolbar } from './components/HeaderToolbar';
 import { ForestBrand } from './components/ForestIdentity';
+import { MascotBadge } from './components/MascotBadge';
 import { readJsonStorage, isRecord } from '../application/browserStorage';
 import { useModalDialog } from '../application/useModalDialog';
 import { useNavigate } from 'react-router-dom';
@@ -392,7 +393,7 @@ export const GameHub = () => {
       <div className="px-4 md:px-8 pb-8 max-w-5xl mx-auto">
         {favoriteGames.length === 0 ? (
           <div className="text-center py-12 text-slate-400 bg-slate-900/40 rounded-3xl border border-slate-800">
-            <span className="text-4xl block mb-3">☆</span>
+            <MascotBadge name="ball" className="mx-auto mb-3"/>
             <p className="font-bold">아직 즐겨찾기한 활동이 없어요.</p>
             <p className="text-sm mt-1">활동 목록에서 카드의 ☆를 누르면 여기에 모여요.</p>
             <button type="button" onClick={() => navigate('/hub')} className="mt-4 px-4 py-2 rounded-xl bg-cyan-600 text-white font-bold text-sm">활동 목록 열기</button>
