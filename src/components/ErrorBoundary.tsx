@@ -27,9 +27,26 @@ export class ErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
   }
 
+  // 인터넷이 끊겨 화면 파일을 못 받았으면, 연결이 돌아오는 순간 저절로 다시 연다.
+  private retryWhenOnline = () => { if (this.state.hasError && isChunkLoadError(this.state.error)) window.location.reload(); };
+  public componentDidMount() { window.addEventListener('online', this.retryWhenOnline); }
+  public componentWillUnmount() { window.removeEventListener('online', this.retryWhenOnline); }
+
   public render() {
     if (this.state.hasError) {
       const chunk = isChunkLoadError(this.state.error);
+      const offline = chunk && typeof navigator !== 'undefined' && navigator.onLine === false;
+      if (offline) return (
+        <main className="app-error" role="alert" data-app-error="offline">
+          <p className="app-error-icon" aria-hidden="true">📶</p>
+          <h1>인터넷이 끊겨서 이 화면을 아직 못 받았어요</h1>
+          <p>인터넷이 다시 연결되면 저절로 열려요. 그동안 처음 화면과 전에 한 번 열어 본 화면은 바로 쓸 수 있어요.</p>
+          <div className="app-error-actions">
+            <button type="button" className="app-error-primary" onClick={() => window.location.reload()}>다시 열기</button>
+            <a href="/">처음 화면으로</a>
+          </div>
+        </main>
+      );
       return (
         <main className="app-error" role="alert">
           <p className="app-error-icon" aria-hidden="true">🌧️</p>
