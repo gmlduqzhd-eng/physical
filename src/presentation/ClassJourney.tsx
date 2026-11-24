@@ -4,16 +4,21 @@ import {FlowShell} from './FlowShell';
 import {readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxPop,sfxSuccess,unlockAudio} from '../application/soundEffects';
 import {JOURNEY_ISLANDS,JOURNEY_KINDS,JOURNEY_TOTAL,STAMPS_PER_ISLAND,addStamp,islandStamps,isJourneyKind,journeyProgress,kindCounts,localDate,parseJourney,undoStamp,type JourneyKind,type JourneyStamp} from '../domain/classJourney';
+import {useClassRoster} from '../application/classRosterStore';
+import {classStorageKey,currentClass} from '../domain/classRoster';
+import {ClassSwitcher} from './components/ClassSwitcher';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassJourney.css';
 
-const JOURNEY_KEY='physical_class_journey_v1';
+const JOURNEY_BASE='physical_class_journey_v1';
 const KIND_ICON=Object.fromEntries(JOURNEY_KINDS.map(k=>[k.id,k.icon])) as Record<JourneyKind,string>;
 const KIND_LABEL=Object.fromEntries(JOURNEY_KINDS.map(k=>[k.id,k.label])) as Record<JourneyKind,string>;
 
-/** 우리 반 원정 지도 */
-export function ClassJourney(){
+/** 우리 반 원정 지도. 반을 바꾸면 그 반의 지도로 다시 그린다. */
+export function ClassJourney(){const roster=useClassRoster();return <JourneyOf key={roster.current} classId={roster.current} className={currentClass(roster).name}/>;}
+function JourneyOf({classId,className}:{classId:string;className:string}){
+ const JOURNEY_KEY=classStorageKey(JOURNEY_BASE,classId);
  const [params]=useSearchParams(),suggested=params.get('suggest');
  const [stamps,setStamps]=useState<JourneyStamp[]>(()=>parseJourney(readJsonStorage(JOURNEY_KEY)));
  const [kind,setKind]=useState<JourneyKind>(isJourneyKind(suggested)?suggested:'play'),[confirm,setConfirm]=useState(false),[confirmUndo,setConfirmUndo]=useState(false),[fresh,setFresh]=useState(false);
@@ -21,7 +26,8 @@ export function ClassJourney(){
  const stamp=()=>{if(progress.finished)return;unlockAudio();const next=addStamp(stamps,kind);save(next);setFresh(true);if(journeyProgress(next).justArrived)sfxSuccess();else sfxPop();};
  const arrival=fresh?progress.justArrived:null,target=progress.sailingTo===null?null:JOURNEY_ISLANDS[progress.sailingTo];
  return <FlowShell utilities><section className="play-experiences sports-classroom class-journey" aria-label="우리 반 원정 지도">
-  <p className="eyebrow">체육수업 대백과 · 우리 반 원정 지도</p><h1>우리 반 원정 지도</h1>
+  <p className="eyebrow">체육수업 대백과 · 우리 반 원정 지도</p><h1>{className} 원정 지도</h1>
+  <ClassSwitcher/>
   <p>체육 수업을 마칠 때마다 도장을 하나 찍어요. 도장 네 개마다 섬 하나에 도착하고, 일곱 섬을 건너면 원정이 끝나요.</p>
   <p className="journey-status" role="status">{progress.finished?'일곱 섬을 모두 건넜어요. 원정 완주!':`도장 ${progress.total} / ${JOURNEY_TOTAL} · ${target!.name}까지 ${progress.stepsToNext}번 남았어요`}</p>
   {arrival&&<section className="journey-arrival" role="alert"><p className="eyebrow">섬 도착</p><h2><span aria-hidden="true">{arrival.icon}</span> {arrival.name}에 도착했어요</h2><p>{arrival.value}</p><p className="sports-guide">도착 미션 · {arrival.quest}</p><button onClick={()=>setFresh(false)}>미션을 마쳤어요</button></section>}

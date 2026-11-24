@@ -88,3 +88,11 @@ html .class-progress .cp-tabs button:not([aria-current]){background:transparent}
  .cp-table.cp-reason-table td:nth-of-type(1){flex-direction:row;justify-content:space-between;text-align:right}
  .cp-table.cp-reason-table td::before{content:attr(data-label);font-weight:700;text-align:left;opacity:.85}
 }
+/* 학기 정리 */
+.cp-term-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+.cp-term-facts div{padding:12px 14px;border:1px solid var(--ui-line);border-radius:12px;background:var(--ui-paper)}
+.cp-term-facts dt{font-size:14px;color:var(--ui-muted)}
+.cp-term-facts dd{margin:2px 0 0;font-size:20px;font-weight:900}
+.cp-term-line{margin:8px 0;font-size:16px;line-height:1.6}
+.cp-term-line strong{margin-right:8px}
+@media print{.class-progress .cp-tabs,.class-progress .class-switcher,.class-progress .cp-share,.flow header,.flow footer{display:none!important}}

@@ -15,6 +15,7 @@ import {
  addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
+import {ClassSwitcher} from './components/ClassSwitcher';
 import './TodayLesson.css';
 
 /**
@@ -79,7 +80,9 @@ function StageList({plan,run,outcomes,shown}:{plan:TodayPlan;run?:TodayRun;outco
 function TodaySetup({openGuide}:{openGuide:()=>void}){
  const navigate=useNavigate();
  // 마지막으로 고른 학년·공간·시간·팀 수를 기억한다(1~2학년 선생님이 매번 바꾸지 않게).
- const [settings,setSettings]=useState<TodaySettings>(loadTodaySettings);
+ // 여러 차시 계획에서 '이 차시로 열기'(?main=활동)로 오면 그 본게임을 골라 둔다.
+ const [params]=useSearchParams();
+ const [settings,setSettings]=useState<TodaySettings>(()=>{const saved=loadTodaySettings(),main=params.get('main');return main&&mainCandidates(saved.grade,saved.space).some(g=>g.id===main)?{...saved,mainId:main}:saved;});
  // 같은 날·같은 설정이면 계획이 늘 같다. '다른 활동으로'를 눌러야만 바뀐다(그 횟수도 오늘 동안 기억한다).
  const [day,setDay]=useState(()=>localDayKey(Date.now()));
  const [shuffle,setShuffle]=useState(()=>loadTodayShuffle(Date.now()));
@@ -114,6 +117,7 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
   <p className="eyebrow">오늘 수업 · 한 번에 진행</p>
   <h1 id="today-title">준비운동부터 돌아보기까지 {settings.minutes}분</h1>
   <LessonMethodLink method="tv"/>
+  <ClassSwitcher manage={false}/>
   {/* 학년과 장소는 시작 버튼 바로 위 한 줄에서 고른다(첫 화면 안에서 확인하고 누르게). */}
   <div className="today-quick" role="group" aria-label="학년과 장소">
    <div className="today-choice" role="group" aria-label="학년">{TODAY_GRADES.map(g=><button key={g.id} type="button" aria-pressed={settings.grade===g.id} onClick={()=>set('grade',g.id)}>{g.label}</button>)}</div>
@@ -133,7 +137,7 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
     </select>
    </label>
   </details>
-  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
+  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/week" data-week-link>📅 여러 차시 한 번에 짜기</Link> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
  </section>;
 }
 

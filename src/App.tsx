@@ -55,6 +55,7 @@ const SportDeepDive = lazyWithRetry(() => import('./presentation/SportDeepDive')
 const AngleLab = lazyWithRetry(() => import('./presentation/AngleLab'), m => m.AngleLab);
 const MoreApps = lazyWithRetry(() => import('./presentation/MoreApps'), m => m.MoreApps);
 const TodayLesson = lazyWithRetry(() => import('./presentation/TodayLesson'), m => m.TodayLesson);
+const WeekPlanPage = lazyWithRetry(() => import('./presentation/WeekPlanPage'), m => m.WeekPlanPage);
 const TeacherGuidePage = lazyWithRetry(() => import('./presentation/TeacherGuidePage'), m => m.TeacherGuidePage);
 const SignatureCardsPrint = lazyWithRetry(() => import('./presentation/SignatureCardsPrint'), m => m.SignatureCardsPrint);
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
@@ -127,6 +128,7 @@ function App() {
         <Route path="/print" element={<PrintCards/>} />
         <Route path="/print/signature-cards" element={<SignatureCardsPrint/>} />
         <Route path="/today" element={<TodayLesson/>} />
+        <Route path="/week" element={<WeekPlanPage/>} />
         <Route path="/guide" element={<TeacherGuidePage/>} />
         {/* 수업 전 확인은 한 화면(/checks)의 세 갈래다. 예전 주소는 맞는 갈래로 이어 준다. */}
         <Route path="/checks" element={<ChecksPage/>} />

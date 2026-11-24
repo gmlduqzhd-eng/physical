@@ -44,7 +44,7 @@ test('오늘 수업: 같은 날·같은 설정이면 같은 계획, 다른 활�
   assert.match(page, /🔀 다른 활동으로/);
   // 학년·장소는 시작 버튼 위 한 줄에 있다.
   assert.ok(page.indexOf('className="today-quick"') < page.indexOf('▶ 오늘 수업 시작'));
-  assert.match(page, /useState<TodaySettings>\(loadTodaySettings\)/, '마지막 학년을 기억한다');
+  assert.match(page, /useState<TodaySettings>\(\(\)=>\{const saved=loadTodaySettings\(\)/, '마지막 학년을 기억한다');
 });
 
 test('보스전: 신호 도중 보스가 바뀌면 안내 줄과 아이콘은 지금 보스로, 동작은 그대로', () => {
