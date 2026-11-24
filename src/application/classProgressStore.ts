@@ -1,4 +1,5 @@
 import {useEffect,useState} from 'react';
+import {classKey,onClassChange} from './classRosterStore';
 import {EMPTY_PROGRESS,addPlay,keepTotal,mergeProgress,parseProgress,reasonsOf,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
 
 /**
@@ -6,6 +7,8 @@ import {EMPTY_PROGRESS,addPlay,keepTotal,mergeProgress,parseProgress,reasonsOf,s
  * 키 이름은 그대로 두고, 안의 version(2: 반응 이유 추가)으로 예전 기록을 읽어 옮긴다.
  */
 export const CLASS_PROGRESS_KEY='physical_class_progress_v1';
+/** 지금 고른 반의 저장 자리. 기본 반은 예전 자리(CLASS_PROGRESS_KEY) 그대로다. */
+const storageKey=()=>classKey(CLASS_PROGRESS_KEY);
 const EVENT='class-progress-change';
 let memory:ClassProgress=EMPTY_PROGRESS;
 /**
@@ -29,7 +32,7 @@ export function withoutRemoved(stored:ClassProgress,cleared:number,removed:Reado
 
 export function readProgress():ClassProgress{
  try{
-  const raw=window.localStorage.getItem(CLASS_PROGRESS_KEY);
+  const raw=window.localStorage.getItem(storageKey());
   if(raw){const stored=parseProgress(JSON.parse(raw));memory=saveFailed?mergeProgress(memory,withoutRemoved(stored,clearedAt,removedReasons)):keepTotal(stored,memory);}
  }catch{/* 저장소를 못 쓰면 메모리 값 */}
  return memory;
@@ -51,7 +54,7 @@ export function releasePlayId(gameId:string,id:string){if(openPlays.get(gameId)=
 export const openPlayId=(gameId:string)=>openPlays.get(gameId);
 function write(next:ClassProgress){
  memory=next;
- try{window.localStorage.setItem(CLASS_PROGRESS_KEY,JSON.stringify(next));saveFailed=false;clearedAt=0;removedReasons.clear();}catch{saveFailed=true;/* 저장소가 막혀도 이번 화면에서는 쓴다 */}
+ try{window.localStorage.setItem(storageKey(),JSON.stringify(next));saveFailed=false;clearedAt=0;removedReasons.clear();}catch{saveFailed=true;/* 저장소가 막혀도 이번 화면에서는 쓴다 */}
  try{window.dispatchEvent(new Event(EVENT));}catch{/* 서버 렌더링 등 */}
 }
 /** 판 기록. play(판 id)를 주지 않으면, 화면의 반응 칸이 잡아 둔 판 id를 쓴다. */
@@ -66,12 +69,15 @@ export function recordReasons(id:string,play:string,reasons:readonly ReasonId[],
 }
 export function clearProgress(){clearedAt=Date.now();removedReasons.clear();write({...EMPTY_PROGRESS,plays:[],votes:[],reasons:[]});}
 
-/** 기록이 바뀌면(다른 탭 포함) 다시 그린다. */
+// 반을 바꾸면 메모리에 든 앞 반 기록을 비우고, 새 반의 기록을 다시 읽게 알린다.
+onClassChange(()=>{memory=EMPTY_PROGRESS;saveFailed=false;clearedAt=0;removedReasons.clear();try{window.dispatchEvent(new Event(EVENT));}catch{/* 서버 렌더링 등 */}});
+
+/** 기록이 바뀌면(다른 탭·반 바꾸기 포함) 다시 그린다. */
 export function useClassProgress():ClassProgress{
  const [p,setP]=useState<ClassProgress>(()=>readProgress());
  useEffect(()=>{
   const on=()=>setP(readProgress());
-  const onStorage=(e:StorageEvent)=>{if(e.key===CLASS_PROGRESS_KEY)on();};
+  const onStorage=(e:StorageEvent)=>{if(e.key===storageKey())on();};
   window.addEventListener(EVENT,on);window.addEventListener('storage',onStorage);
   return ()=>{window.removeEventListener(EVENT,on);window.removeEventListener('storage',onStorage);};
  },[]);

@@ -15,6 +15,7 @@ import {
  addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
+import {ClassSwitcher} from './components/ClassSwitcher';
 import './TodayLesson.css';
 
 /**
@@ -114,6 +115,7 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
   <p className="eyebrow">오늘 수업 · 한 번에 진행</p>
   <h1 id="today-title">준비운동부터 돌아보기까지 {settings.minutes}분</h1>
   <LessonMethodLink method="tv"/>
+  <ClassSwitcher manage={false}/>
   {/* 학년과 장소는 시작 버튼 바로 위 한 줄에서 고른다(첫 화면 안에서 확인하고 누르게). */}
   <div className="today-quick" role="group" aria-label="학년과 장소">
    <div className="today-choice" role="group" aria-label="학년">{TODAY_GRADES.map(g=><button key={g.id} type="button" aria-pressed={settings.grade===g.id} onClick={()=>set('grade',g.id)}>{g.label}</button>)}</div>
