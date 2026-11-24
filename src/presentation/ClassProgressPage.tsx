@@ -10,6 +10,7 @@ import type {ExportTable} from '../application/documentExport';
 import {ClassSwitcher} from './components/ClassSwitcher';
 import {useClassRoster} from '../application/classRosterStore';
 import {currentClass} from '../domain/classRoster';
+import {TermSummaryTab} from './components/TermSummaryTab';
 import './ClassProgressPage.css';
 
 const NAME=new Map(GAMES.map(g=>[g.type,`${g.emoji??''} ${g.name}`.trim()]));
@@ -34,7 +35,7 @@ export function ClassProgressPage(){
  const className=currentClass(useClassRoster()).name;
  const [params,setParams]=useSearchParams();
  const tabParam=params.get('tab');
- const tab=tabParam==='map'?'map':tabParam==='reasons'?'reasons':'reactions';
+ const tab=tabParam==='map'?'map':tabParam==='reasons'?'reasons':tabParam==='term'?'term':'reactions';
  const [copied,setCopied]=useState('');
  // 복사가 막힌 기기(학교 PC·일부 태블릿): 요약 글을 칸에 보여 주고 전체 선택해 두어 손으로 복사하게 한다.
  const [fallbackOpen,setFallbackOpen]=useState(false);
@@ -63,8 +64,9 @@ export function ClassProgressPage(){
     <button type="button" aria-current={tab==='reactions'?'page':undefined} onClick={()=>setParams({},{replace:true})}>👍 우리 반 반응</button>
     <button type="button" aria-current={tab==='reasons'?'page':undefined} onClick={()=>setParams({tab:'reasons'},{replace:true})}>🗒 반응 이유</button>
     <button type="button" aria-current={tab==='map'?'page':undefined} onClick={()=>setParams({tab:'map'},{replace:true})}>🗺 반 원정 지도</button>
+    <button type="button" aria-current={tab==='term'?'page':undefined} onClick={()=>setParams({tab:'term'},{replace:true})} data-tab-term>📄 학기 정리</button>
    </nav>
-   {tab==='reasons'?<section aria-labelledby="cp-reasons-title" data-tab="reasons">
+   {tab==='term'?<TermSummaryTab className={className}/>:tab==='reasons'?<section aria-labelledby="cp-reasons-title" data-tab="reasons">
     <h2 id="cp-reasons-title" className="cp-h2">반응 이유</h2>
     <p className="cp-hint">결과 화면에서 👍/👎 뒤에 고른 이유와 한 줄 메모를 모아요. 같은 이유가 {MIN_REASON_COUNT}번 이상 나오면 다음 할 일을 알려 줘요.</p>
     <div className="cp-share"><button type="button" className="cp-share-btn" onClick={copySummary} disabled={!progress.plays.length&&!progress.votes.length&&!progress.reasons.length}>📋 공유용 요약 복사</button>{copied&&<span role="status">{copied}</span>}</div>

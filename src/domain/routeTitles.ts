@@ -11,6 +11,7 @@ const TITLES:readonly (readonly [RegExp,string])[]=[
  [/^\/(hub|games)/,SCREEN.hub],
  [/^\/solo$/,'혼자 하는 놀이'],
  [/^\/today/,SCREEN.today],
+ [/^\/week/,'여러 차시 계획'],
  [/^\/tools/,SCREEN.tools],
  [/^\/sports/,'종목 교실'],
  [/^\/class-progress/,'우리 반 반응'],

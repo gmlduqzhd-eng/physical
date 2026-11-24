@@ -1,0 +1,10 @@
+/* 여러 차시 계획. 오늘 수업 화면의 모양(TodayLesson.css)을 그대로 쓰고 목록만 더한다. */
+.week-lead{margin:0;font-size:16px;color:var(--ui-muted)}
+.week-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:12px}
+.week-lesson{display:grid;gap:6px;padding:16px 18px;border:1px solid var(--ui-line);border-radius:var(--ui-radius-2,14px);background:var(--ui-paper)}
+.week-lesson-head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:16px}
+.week-reason{padding:4px 12px;border-radius:999px;background:var(--ui-tint);font-size:14px;font-weight:700}
+.week-main{margin:0;font-size:22px;font-weight:900;line-height:1.3}
+.week-main small{font-size:14px;font-weight:400;color:var(--ui-muted)}
+.week-sub{margin:0;font-size:15px;color:var(--ui-muted);line-height:1.5}
+.week-open{justify-self:start;display:inline-flex;align-items:center;min-height:44px;text-decoration:none}
