@@ -1,8 +1,9 @@
-import {useRef,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {MAX_CLASS_NAME,DEFAULT_CLASS_ID,canAddClass,cleanClassName,currentClass} from '../../domain/classRoster';
 import {backupSummary} from '../../domain/classBackup';
 import {chooseClass,createClass,deleteClass,renameClassTo,useClassRoster} from '../../application/classRosterStore';
 import {applyBackup,downloadBackup,readBackupText} from '../../application/classBackupStore';
+import {cloudState,loadFromAccount,saveToAccount,type CloudState} from '../../application/classCloudStore';
 import './ClassSwitcher.css';
 
 /**
@@ -14,6 +15,15 @@ export function ClassSwitcher({manage=true}:{manage?:boolean}){
  const [open,setOpen]=useState(false),[name,setName]=useState(''),[rename,setRename]=useState(''),[confirmDelete,setConfirmDelete]=useState(false);
  const [pending,setPending]=useState<ReturnType<typeof readBackupText>>(null),[note,setNote]=useState('');
  const file=useRef<HTMLInputElement>(null);
+ // 선생님 계정 보관: 관리 칸을 열 때 로그인 여부를 한 번 확인한다(로그인하지 않았으면 이 줄은 보이지 않는다).
+ const [cloud,setCloud]=useState<CloudState|null>(null),[busy,setBusy]=useState(false);
+ useEffect(()=>{if(!open||!manage)return;let live=true;void cloudState().then(s=>{if(live)setCloud(s);});return()=>{live=false;};},[open,manage]);
+ const upload=async()=>{setBusy(true);const r=await saveToAccount();setBusy(false);
+  if(r.status==='ready'){setCloud(r);setNote('모든 반의 기록을 선생님 계정에 올렸어요. 다른 기기에서 로그인해 ‘계정에서 가져오기’를 누르면 이어 쓸 수 있어요.');}
+  else setNote(r.status==='too-big'?'기록이 너무 커서 계정에 올릴 수 없어요. ‘기록 파일로 보관’을 써 주세요.':r.status==='signed-out'?'선생님 로그인이 필요해요.':'지금은 계정에 올릴 수 없어요. 잠시 뒤 다시 해 보거나 ‘기록 파일로 보관’을 써 주세요.');};
+ const download=async()=>{setBusy(true);const r=await loadFromAccount();setBusy(false);
+  if(r.status==='found'){setPending(r.parsed);setNote('');}
+  else setNote(r.status==='empty'?'계정에 올려 둔 기록이 아직 없어요.':r.status==='signed-out'?'선생님 로그인이 필요해요.':'지금은 계정에서 가져올 수 없어요. 잠시 뒤 다시 해 보세요.');};
  const add=()=>{if(!cleanClassName(name))return;createClass(name);setName('');setNote('새 반을 만들고 그 반으로 바꿨어요.');};
  const pick=async(input:HTMLInputElement)=>{
   const f=input.files?.[0];input.value='';if(!f)return;
@@ -42,10 +52,14 @@ export function ClassSwitcher({manage=true}:{manage?:boolean}){
     <button type="button" onClick={()=>{downloadBackup();setNote('모든 반의 기록을 파일로 받았어요. 새 기기에서 ‘기록 파일 가져오기’로 이어 쓸 수 있어요.');}} data-class-backup>⬇ 기록 파일로 보관</button>
     <button type="button" onClick={()=>file.current?.click()} data-class-restore>⬆ 기록 파일 가져오기</button>
     <input ref={file} type="file" accept="application/json,.json" hidden onChange={e=>{void pick(e.currentTarget);}} data-class-file/></div>
-   {pending&&<div className="class-switcher-confirm" role="alert"><p>파일의 기록으로 바꿀까요? 이 기기의 지금 기록은 파일 내용으로 덮어써요.</p><p className="class-switcher-note">{backupSummary(pending)}</p>
-    <button type="button" onClick={()=>setPending(null)}>그대로 두기</button><button type="button" className="primary" onClick={()=>{setNote(applyBackup(pending)?'파일의 기록을 가져왔어요.':'이 기기에 저장하지 못했어요. 저장 공간을 확인해 주세요.');setPending(null);}} data-class-restore-yes>네, 가져와요</button></div>}
+   {cloud?.status==='ready'&&<div className="class-switcher-row class-switcher-backup" data-class-cloud>
+    <button type="button" onClick={()=>{void upload();}} disabled={busy} data-class-cloud-save>☁ 계정에 올리기</button>
+    <button type="button" onClick={()=>{void download();}} disabled={busy} data-class-cloud-load>☁ 계정에서 가져오기</button>
+    <span className="class-switcher-note">{cloud.savedAt?`계정에 마지막으로 올린 때 · ${new Date(cloud.savedAt).toLocaleString('ko-KR')}`:'계정에 올려 둔 기록이 아직 없어요.'}</span></div>}
+   {pending&&<div className="class-switcher-confirm" role="alert"><p>가져온 기록으로 바꿀까요? 이 기기의 지금 기록은 가져온 내용으로 덮어써요.</p><p className="class-switcher-note">{backupSummary(pending)}</p>
+    <button type="button" onClick={()=>setPending(null)}>그대로 두기</button><button type="button" className="primary" onClick={()=>{setNote(applyBackup(pending)?'기록을 가져왔어요.':'이 기기에 저장하지 못했어요. 저장 공간을 확인해 주세요.');setPending(null);}} data-class-restore-yes>네, 가져와요</button></div>}
    {note&&<p className="class-switcher-note" role="status">{note}</p>}
-   <p className="class-switcher-note">반 이름과 기록은 이 기기에만 저장돼요. 학생 이름이나 개인 기록은 담지 않아요.</p>
+   <p className="class-switcher-note">반 이름과 기록은 이 기기에 저장돼요{cloud?.status==='ready'?'. ‘계정에 올리기’를 누를 때만 선생님 계정에 한 벌 보관돼요':''}. 학생 이름이나 개인 기록은 담지 않아요.</p>
   </div>}
  </section>;
 }

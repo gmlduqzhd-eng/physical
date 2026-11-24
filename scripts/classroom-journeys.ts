@@ -25,6 +25,8 @@ try{for(const teacherWidth of [390,1440]){
    const reply=(json:any,status=200)=>route.fulfill({json,status,headers});if(req.method()==='OPTIONS')return reply({});
    if(u.pathname.startsWith('/auth/')){const user={id:teacherId,aud:'authenticated',role:'authenticated',email:'',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};const token=['e30',Buffer.from(JSON.stringify({sub:teacherId,exp:Math.floor(Date.now()/1000)+86400})).toString('base64url'),'fixture'].join('.');return reply(u.pathname.endsWith('/user')?user:{access_token:token,refresh_token:'fixture',token_type:'bearer',expires_in:86400,expires_at:Math.floor(Date.now()/1000)+86400,user});}
    if(u.pathname.includes('/rpc/')){const rpc=u.pathname.split('/').at(-1);
+    // 익명 활동 횟수: 활동 번호 하나만 보내는지 확인하고 받아 준다(학생·점수 정보가 섞이면 실패).
+    if(rpc==='count_activity_play'){assert.deepEqual(Object.keys(body),['activity']);assert.match(String(body.activity),/^[a-zA-Z0-9_-]{1,80}$/);return reply({});}
     if(rpc==='create_guided_classroom'){assert.equal(body.game_type,'zigzag');assert.equal(body.group_count,1);assert.equal(body.lesson_minutes,40);created=true;return reply(room);}
     if(rpc==='get_classroom_invites')return reply([{group_name:'1모둠',code:'fixture',short_pin:'2468'}]);
     if(rpc==='get_classroom_device_codes')return reply({board_code:'fixture-board',recovery_code:'fixture-recovery'});
