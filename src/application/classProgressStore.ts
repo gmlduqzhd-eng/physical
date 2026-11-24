@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {classKey,onClassChange} from './classRosterStore';
+import {countActivityPlay} from './activityStats';
 import {EMPTY_PROGRESS,addPlay,keepTotal,mergeProgress,parseProgress,reasonsOf,setReasons,setVote,type ClassProgress,type ReasonId,type Vote} from '../domain/classProgress';
 
 /**
@@ -58,7 +59,7 @@ function write(next:ClassProgress){
  try{window.dispatchEvent(new Event(EVENT));}catch{/* 서버 렌더링 등 */}
 }
 /** 판 기록. play(판 id)를 주지 않으면, 화면의 반응 칸이 잡아 둔 판 id를 쓴다. */
-export function recordPlay(id:string,at=Date.now(),play?:string){write(addPlay(readProgress(),id,at,play??openPlays.get(id)));}
+export function recordPlay(id:string,at=Date.now(),play?:string){write(addPlay(readProgress(),id,at,play??openPlays.get(id)));countActivityPlay(id);}
 export function recordVote(id:string,vote:Vote,at=Date.now(),play?:string){write(setVote(readProgress(),id,vote,at,play));}
 /** 한 판의 반응 이유와 한 줄 메모(고르지 않아도 된다). */
 export function recordReasons(id:string,play:string,reasons:readonly ReasonId[],note?:string,at=Date.now()){
