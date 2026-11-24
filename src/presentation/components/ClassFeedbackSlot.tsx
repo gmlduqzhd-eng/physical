@@ -2,6 +2,8 @@ import {Link} from 'react-router-dom';
 import {useEffect,useRef,useState} from 'react';
 import {holdPlayId,newPlayId,recordReasons,recordVote,releasePlayId,useClassProgress} from '../../application/classProgressStore';
 import {MAX_NOTE,REASONS,currentVote,mapView,reasonsForVote,reasonsOf,weekCompare,type ClassProgress,type ReasonId,type Vote} from '../../domain/classProgress';
+import {useClassRoster} from '../../application/classRosterStore';
+import {currentClass} from '../../domain/classRoster';
 import './ClassFeedbackSlot.css';
 
 const VOTE_OF=new Map(REASONS.map(r=>[r.id,r.vote]));
@@ -15,6 +17,8 @@ const VOTE_OF=new Map(REASONS.map(r=>[r.id,r.vote]));
  */
 export function ClassFeedbackSlot({gameId,playId,tone='dark',showMap=true}:{gameId:string;playId?:string;tone?:'dark'|'light';showMap?:boolean}){
  const progress=useClassProgress();
+ // 반이 여럿이면 어느 반에 기록되는지 보여 준다(반은 오늘 수업·우리 반 반응 화면에서 바꾼다).
+ const roster=useClassRoster();
  const [claimed]=useState(()=>playId?'':newPlayId());
  // 화면에 붙어 있는 동안 이 판 id를 잡아 둔다. 결과를 기록하면 이 id로 판이 남는다.
  useEffect(()=>{if(!claimed)return;holdPlayId(gameId,claimed);return ()=>releasePlayId(gameId,claimed);},[gameId,claimed]);
@@ -34,7 +38,8 @@ export function ClassFeedbackSlot({gameId,playId,tone='dark',showMap=true}:{game
   if(saved||next.length)recordReasons(gameId,play,next,saved?.note);
  };
  return <section className="class-feedback" data-tone={tone} aria-label={showMap?'선생님 반응과 반 원정 지도':'선생님 반응'}>
-  <p className="class-feedback-q">선생님, 이 활동 우리 반에 잘 맞았나요?</p>
+  <p className="class-feedback-q">선생님, 이 활동 {roster.classes.length>1?`‘${currentClass(roster).name}’에`:'우리 반에'} 잘 맞았나요?</p>
+  {roster.classes.length>1&&<p className="class-feedback-class" data-feedback-class>기록할 반 · <strong>{currentClass(roster).name}</strong></p>}
   <div className="class-feedback-votes" role="group" aria-label="반응 남기기">
    <button type="button" aria-pressed={vote==='up'} onClick={()=>cast('up')}>👍 또 할래요</button>
    <button type="button" aria-pressed={vote==='down'} onClick={()=>cast('down')}>👎 별로였어요</button>

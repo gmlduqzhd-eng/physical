@@ -7,6 +7,9 @@ import {REASONS,REASON_EXPORT_HEADERS,REASON_HINTS,MIN_REASON_COUNT,archiveCandi
 import {GAMES} from '../domain/gamesData';
 import {isFeatured} from '../domain/featuredGames';
 import type {ExportTable} from '../application/documentExport';
+import {ClassSwitcher} from './components/ClassSwitcher';
+import {useClassRoster} from '../application/classRosterStore';
+import {currentClass} from '../domain/classRoster';
 import './ClassProgressPage.css';
 
 const NAME=new Map(GAMES.map(g=>[g.type,`${g.emoji??''} ${g.name}`.trim()]));
@@ -28,6 +31,7 @@ function SummaryFallback({text}:{text:string}){
 /** 선생님용: 우리 반 반응(👍/👎)과 반 원정 지도. 기록은 이 기기에만 있다. */
 export function ClassProgressPage(){
  const progress=useClassProgress();
+ const className=currentClass(useClassRoster()).name;
  const [params,setParams]=useSearchParams();
  const tabParam=params.get('tab');
  const tab=tabParam==='map'?'map':tabParam==='reasons'?'reasons':'reactions';
@@ -39,7 +43,7 @@ export function ClassProgressPage(){
  const archive=archiveCandidates(rows,isFeatured),promote=featuredCandidates(rows,isFeatured);
  const map=mapView(progress),week=weekCompare(progress,Date.now()),badges=classBadges(progress);
  const reasons=useMemo(()=>reasonRows(progress),[progress]),problems=useMemo(()=>topProblems(progress),[progress]);
- const reasonTable=():ExportTable=>({title:'우리 반 반응 이유',fileBase:'우리반반응이유',meta:[['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['이유를 남긴 판',`${progress.reasons.length}판`]],headers:REASON_EXPORT_HEADERS,rows:reasonExportRows(progress,nameOf)});
+ const reasonTable=():ExportTable=>({title:'우리 반 반응 이유',fileBase:'우리반반응이유',meta:[['반',className],['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['이유를 남긴 판',`${progress.reasons.length}판`]],headers:REASON_EXPORT_HEADERS,rows:reasonExportRows(progress,nameOf)});
  const copySummary=async()=>{
   const text=shareSummary(progress,nameOf);
   try{
@@ -47,11 +51,12 @@ export function ClassProgressPage(){
    await navigator.clipboard.writeText(text);setFallbackOpen(false);setCopied('요약을 복사했어요. 메신저에 붙여 넣으면 돼요.');
   }catch{setFallbackOpen(true);setCopied('이 기기에서는 바로 복사할 수 없어요. 아래 글을 길게 눌러(또는 Ctrl+C로) 복사해요.');}
  };
- const table=():ExportTable=>({title:'우리 반 활동 반응',fileBase:'우리반반응',meta:[['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['판 수',`${progress.plays.length}판`]],
+ const table=():ExportTable=>({title:'우리 반 활동 반응',fileBase:'우리반반응',meta:[['반',className],['저장한 때',today()],['기록 위치','이 기기(브라우저)'],['판 수',`${progress.plays.length}판`]],
   headers:['활동','기록한 판','👍','👎','👍 비율','기록 안 한 판 반응','구분'],rows:rows.map(r=>[nameOf(r.id),r.plays,r.up,r.down,pct(r),r.unrecorded,isFeatured(r.id)?'대표':'보관함'])});
  return <FlowShell utilities back="/tools" backLabel="수업 도구">
   <section className="class-progress" aria-labelledby="cp-title">
-   <h1 id="cp-title">우리 반 반응 · 원정 지도</h1>
+   <h1 id="cp-title">{className} 반응 · 원정 지도</h1>
+   <ClassSwitcher/>
    <p className="cp-lead">게임이 끝날 때 남긴 👍/👎와 판 수를 모아 보여 줘요. 기록은 이 기기에만 저장돼요.</p>
    {progressSaveFailed()&&<p className="cp-save-warning" role="alert" data-save-failed>⚠ 이 기기에 기록을 저장하지 못했어요(저장 공간이 꽉 찼거나 막혀 있어요). 지금 화면을 닫으면 최근 기록이 사라질 수 있으니, ‘내보내기’로 먼저 파일에 저장해 두세요.</p>}
    <nav className="cp-tabs" aria-label="보기 고르기">
