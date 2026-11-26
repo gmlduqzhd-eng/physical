@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>마지막 카드</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script>
+<style>
+  #card{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:120px}
+  .brand{display:flex;flex-direction:column;gap:34px}
+  .mark-row{display:flex;align-items:center;gap:34px}
+  .word{font-family:ForestSans,sans-serif;font-weight:700;font-size:132px;letter-spacing:-0.055em;line-height:1;color:var(--ink)}
+  .url{font-family:ForestSans,sans-serif;font-weight:500;font-size:44px;letter-spacing:-0.01em;color:var(--muted);padding-left:6px;display:flex;align-items:center;gap:18px}
+  .url i{display:inline-block;width:56px;height:6px;border-radius:3px;background:var(--amber)}
+  .qr{width:360px;height:360px;padding:34px;background:var(--paper);border:3px solid var(--line);border-radius:36px;box-shadow:0 18px 0 -6px #e9efe3}
+  .qr img{width:100%;height:100%;display:block}
+</style></head>
+<body><div id="stage"></div>
+<div id="card">
+  <div class="brand">
+    <div class="mark-row"><svg id="mark" width="150" height="150" viewBox="0 0 24 24"></svg><div class="word" id="word">땀방울 원정대</div></div>
+    <div class="url" id="url"><i></i>physical-pi.vercel.app</div>
+  </div>
+  <div class="qr" id="qr"><img src="qr.svg" alt="physical-pi.vercel.app QR"></div>
+</div>
+<script>
+// 로고 등장 → 주소 → QR. 2초 이후엔 배경 물방울만 천천히 떠다니는 차분한 상태.
+const A=ART, C=A.C, el=A.el, svg=A.svg();
+svg.style.position='absolute';
+// 배경 장식: 옅은 원과 물방울
+const deco=[];
+const r=A.rng(5);
+for(let i=0;i<9;i++){
+  const g=el('g',{},svg);
+  const x=[150,420,1700,1820,260,1560,980,90,1250][i], y=[160,930,140,820,560,980,90,980,960][i];
+  const s=[1.6,1.1,1.9,1.2,0.9,1.0,0.8,1.3,0.9][i];
+  el('path',{d:'M0 -30 C14 -10 22 2 22 14 A22 22 0 0 1 -22 14 C-22 2 -14 -10 0 -30 Z',fill:i%4===1?C.sage:C.tint},g);
+  deco.push({g,x,y,s,ph:r()});
+}
+const mk=document.getElementById('mark');
+const p1=el('path',{d:'M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z',fill:'none',stroke:C.forest,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round',pathLength:1,'stroke-dasharray':1},mk);
+const p2=el('path',{d:'M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97',fill:'none',stroke:C.forest,'stroke-width':2,'stroke-linecap':'round','stroke-linejoin':'round',pathLength:1,'stroke-dasharray':1},mk);
+const word=document.getElementById('word'), url=document.getElementById('url'), qr=document.getElementById('qr');
+A.onFrame(t=>{
+  p1.setAttribute('stroke-dashoffset',1-A.easeInOut(A.span(t,0.1,0.8)));
+  p2.setAttribute('stroke-dashoffset',1-A.easeInOut(A.span(t,0.35,1.1)));
+  const w=A.easeOut(A.span(t,0.5,1.2));
+  word.style.opacity=w; word.style.transform=`translateY(${(1-w)*30}px)`;
+  const u=A.easeOut(A.span(t,1.0,1.6));
+  url.style.opacity=u; url.style.transform=`translateY(${(1-u)*20}px)`;
+  const q=A.backOut(A.span(t,1.3,1.9));
+  qr.style.opacity=A.clamp(A.span(t,1.3,1.6)); qr.style.transform=`scale(${0.9+0.1*q})`;
+  for(const d of deco){
+    const a=A.smooth(A.span(t,0.2+d.ph*0.8,1.4+d.ph*0.8));
+    d.g.setAttribute('transform',`translate(${d.x} ${d.y+Math.sin(2*Math.PI*(t/7+d.ph))*10}) scale(${d.s*a})`);
+  }
+});
+</script></body></html>

@@ -45,6 +45,7 @@ jobs:
           npm run test:catalog:ci
           npm run test:signature:e2e
           npm run test:mobile:ci
+          npm run test:records:e2e
       - name: Teacher and student classroom journey (isolated API fixtures)
         # Supabase and /api/teacher are answered by in-script fixtures; nothing reaches a real database.
         run: |
@@ -52,3 +53,4 @@ jobs:
           npx vite preview --outDir dist-journeys --host 127.0.0.1 --port 4174 --strictPort > preview-journeys.log 2>&1 &
           for attempt in $(seq 1 30); do curl --silent --fail --output /dev/null http://127.0.0.1:4174/ && break; sleep 1; done
           npm run test:journeys -- http://127.0.0.1:4174
+          npm run test:records:account -- http://127.0.0.1:4174

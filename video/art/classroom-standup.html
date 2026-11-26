@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>모두 일어서기</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// TV가 켜지고 수업이 시작되면 아이들이 차례로 자리에서 일어선다. 이후 편안한 대기 자세 유지.
+const A=ART, svg=A.svg();
+const room=A.classroom(svg,{rain:true,tvOn:true});
+const T=A.teacherSide(room.mid,{x:1770,y:880,s:.78,skin:A.SKIN[1],top:'#7e8e9b',hair:A.HAIR[0]});
+const kids=A.seatKids(room);
+const order=[2,6,0,7,4,5,1,8,3];        // 일어서는 순서(살짝 엇갈림)
+A.onFrame(t=>{
+  room.rain.render(t);
+  // 선생님: "일어나 볼까요" 손짓
+  const g=A.smooth(A.span(t,0.1,0.6))*(1-A.smooth(A.span(t,2.2,2.9)));
+  T.set({fa:10+g*120, fe:-20-g*30, tilt:-4+g*-4, ba:-4, be:-10});
+  kids.forEach((k,i)=>{
+    const start=0.55+order.indexOf(i)*0.16;
+    const u=A.span(t,start,start+0.55);
+    const sit=1-A.easeInOut(u);
+    const pop=Math.sin(Math.PI*A.clamp(u))*18;             // 일어날 때 살짝 튀어 오름
+    const settle=A.span(t,start+0.55,start+1.4);
+    const stretch=Math.sin(Math.PI*settle)*(i%3===0?1:0); // 몇 명은 기지개
+    const ph=i*0.19;
+    k.set({sit, lift:pop, lean:A.wave(t,3.5,ph)*1.4*(1-sit),
+      la:8+stretch*150, ra:8+stretch*150, le:4, re:4,
+      tilt:A.wave(t,7,ph)*3});
+  });
+});
+</script></body></html>

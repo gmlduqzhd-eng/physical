@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>모둠 폰 참여</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 모둠 네 명이 한 대의 폰을 둘러싸고 비밀번호를 누른다 → 입장 성공 → 작은 환호. 7초 주기(14초에 2번)
+const A=ART, C=A.C, el=A.el, svg=A.svg();
+// 배경: 교실을 옅게(초점 밖)
+el('rect',{x:0,y:0,width:1920,height:1080,fill:C.wall},svg);
+el('rect',{x:0,y:680,width:1920,height:138,fill:C.wainscot},svg);
+el('rect',{x:0,y:810,width:1920,height:270,fill:C.floor},svg);
+const room=A.classroom(svg,{rain:true,tvOn:true});
+room.g.setAttribute('transform','translate(600 -70) scale(1.25)');
+const veil=el('rect',{x:0,y:0,width:1920,height:1080,fill:C.bg,opacity:.55},svg);
+el('rect',{x:0,y:860,width:1920,height:220,fill:C.floor,opacity:.6},svg);
+const L=el('g',{},svg);
+const S=1.45, HIP=1150;
+const kidsOpt=[
+  {x:470, y:HIP+10,s:1.25,skin:A.SKIN[4],hair:A.HAIR[3],style:'curly',shirt:A.SHIRT[7],pants:A.PANTS[0],arm:1.3},
+  {x:1450,y:HIP+10,s:1.25,skin:A.SKIN[0],hair:A.HAIR[4],style:'pony', shirt:A.SHIRT[1],pants:A.PANTS[1],arm:1.3,tie:C.amber},
+  {x:715, y:HIP,   s:S,   skin:A.SKIN[2],hair:A.HAIR[1],style:'short',shirt:A.SHIRT[3],pants:A.PANTS[2],arm:1.35},
+];
+const kidA=A.kidBack(L,kidsOpt[0]), kidD=A.kidBack(L,kidsOpt[1]), kidB=A.kidBack(L,kidsOpt[2]);
+// 폰(가운데) — 화면이 우리 쪽을 향함
+const PX=960, PY=700, PW=176, PH=360;
+const ph=el('g',{},L);
+el('rect',{x:PX-PW/2-12,y:PY-PH/2-12,width:PW+24,height:PH+24,rx:30,fill:'#24272a'},ph);
+el('rect',{x:PX-PW/2,y:PY-PH/2,width:PW,height:PH,rx:20,fill:C.paper},ph);
+const scr=el('g',{},ph);
+// 입력 칸 4개
+const dots=[];
+for(let i=0;i<4;i++){ dots.push(el('circle',{cx:PX-48+i*32,cy:PY-PH/2+52,r:10,fill:'none',stroke:C.forest,'stroke-width':4},scr)); }
+el('rect',{x:PX-44,y:PY-PH/2+18,width:88,height:8,rx:4,fill:C.muted,opacity:.35},scr);
+// 숫자판 3x4 (숫자 대신 단정한 원)
+const keys=[];
+for(let r=0;r<4;r++) for(let c=0;c<3;c++){
+  const kx=PX-50+c*50, ky=PY-PH/2+112+r*52;
+  keys.push({x:kx,y:ky,e:el('circle',{cx:kx,cy:ky,r:19,fill:C.tint},scr)});
+}
+const ok=el('g',{opacity:0},ph);
+el('rect',{x:PX-PW/2,y:PY-PH/2,width:PW,height:PH,rx:20,fill:C.tint},ok);
+el('circle',{cx:PX,cy:PY-10,r:50,fill:C.forest},ok);
+el('path',{d:`M${PX-22} ${PY-10} l15 15 l30 -32`,fill:'none',stroke:C.paper,'stroke-width':11,'stroke-linecap':'round','stroke-linejoin':'round'},ok);
+const ripple=el('circle',{r:20,fill:'none',stroke:C.amber,'stroke-width':5,opacity:0},ph);
+// 폰을 받치는 손가락(B의 손, 폰 뒤)
+const kidC=A.kidBack(L,{x:1180,y:HIP,s:S,skin:A.SKIN[3],hair:A.HAIR[0],style:'bun',shirt:A.SHIRT[0],pants:A.PANTS[4],arm:1.35,tie:C.forestLight});
+const seq=[1,5,9,10];     // 누르는 칸
+const TAPS=[0.9,1.5,2.1,2.7], OK=3.25;
+function toArm(k,tx,ty,lean,dy,mirror){
+  let x=(tx-k.x)/k.s, y=(ty-k.y)/k.s-dy;
+  const r=-lean*Math.PI/180, xr=x*Math.cos(r)-y*Math.sin(r), yr=x*Math.sin(r)+y*Math.cos(r);
+  let dx=xr-(mirror?56:-56), dyy=yr+150;
+  if(mirror) dx=-dx;
+  return [dx,dyy];
+}
+A.onFrame(t=>{
+  room.rain.render(t);
+  const u=t%7;
+  const pressed=TAPS.filter(x=>u>=x).length;
+  const okv=A.smooth(A.span(u,OK,OK+0.3))*(1-A.smooth(A.span(u,6.3,6.8)));
+  dots.forEach((d,i)=>d.setAttribute('fill',i<pressed&&u<6.3?C.forest:'none'));
+  ok.setAttribute('opacity',okv);
+  // 손가락 목표
+  let ti=TAPS.findIndex(x=>u<x+0.3); if(ti<0) ti=3;
+  const key=keys[seq[ti]];
+  const tn=TAPS[ti], near=u<OK?Math.max(0,1-Math.abs(u-tn)/0.22):0;
+  const away=u<0.5?1-A.smooth(u/0.5):(u>OK?A.smooth(A.span(u,OK,OK+0.4)):0);
+  keys.forEach((k,i)=>k.e.setAttribute('fill', (i===seq[ti] && near>0.7 && u<OK)?C.forest:C.tint));
+  const cheer=Math.sin(Math.PI*A.span(u,OK+0.1,OK+1.5));
+  const up=A.smooth(A.span(u,OK+0.05,OK+0.35))*(1-A.smooth(A.span(u,OK+1.2,OK+1.6)));   // 팔은 빠르게 올라갔다 내려옴
+  // C(오른쪽 앞) — 왼팔로 누름
+  const leanC=-9+cheer*3, dyC=-cheer*14;
+  const hx=key.x+18-away*40, hy=key.y+16-near*6+away*120;
+  const [dxc,dyc]=toArm(kidC,hx,hy,leanC,dyC,false);
+  const [ac,ec]=A.ik(dxc,dyc,kidC.armL.L1,kidC.armL.L2,-1);
+  const ca=u>OK?A.smooth(A.span(u,OK,OK+0.35))*(1-A.smooth(A.span(u,5.6,6.4))):0;
+  kidC.set({lean:leanC,lift:cheer*14,la:A.lerp(ac,14,ca),le:A.lerp(ec,4,ca),ra:8+up*140,re:4,tilt:-8});
+  // B(왼쪽 앞) — 오른팔로 폰을 받침(폰 뒤), 성공 때 왼팔 번쩍
+  const [dxb,dyb]=toArm(kidB,PX-PW/2+16,PY+90,4,-cheer*10,true);
+  const [ab,eb]=A.ik(dxb,dyb,kidB.armR.L1,kidB.armR.L2,1);
+  kidB.set({lean:4,lift:cheer*10,ra:ab,re:eb,la:8+up*150,le:-4,tilt:8});
+  // 뒤쪽 두 명: 들여다보다가 환호
+  kidA.set({lean:10-cheer*6,lift:cheer*22,la:8+up*150,ra:8+up*150,tilt:8+A.wave(t,3.5)*2});
+  kidD.set({lean:-10+cheer*6,lift:cheer*22,la:8+up*150,ra:8+up*150,tilt:-8+A.wave(t,3.5,.3)*2});
+  // 누를 때 물결
+  const rp=A.span(u,tn,tn+0.45);
+  ripple.setAttribute('cx',key.x); ripple.setAttribute('cy',key.y);
+  ripple.setAttribute('r',20+rp*22); ripple.setAttribute('opacity',u>=tn&&u<tn+0.45&&u<OK?(1-rp)*0.9:0);
+});
+</script></body></html>

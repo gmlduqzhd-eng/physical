@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>교실 대기</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 비 오는 날 교실: TV는 꺼져 있고 아이들은 자리에 앉아 살짝 흔들린다(14초 반복)
+const A=ART, svg=A.svg();
+const room=A.classroom(svg,{rain:true,tvOn:false});
+const kids=A.seatKids(room);
+const T=A.teacherSide(room.mid,{x:1770,y:880,s:.78,skin:A.SKIN[1],top:'#7e8e9b',hair:A.HAIR[0]});
+A.onFrame(t=>{
+  room.rain.render(t);
+  kids.forEach((k,i)=>{
+    const ph=i*0.137;
+    const look = (i===0||i===5) ? A.smooth(A.span(t,3,4))*(1-A.smooth(A.span(t,9,10))) : 0; // 창밖 보기
+    k.set({sit:1, lean:A.wave(t,7,ph)*1.6, tilt:A.wave(t,3.5,ph)*3 - look*12, hx:-look*6,
+      la:8, ra:8, le:4, re:4});
+  });
+  T.set({tilt:-4+A.wave(t,7)*2, fa:10, fe:-30, ba:-4, be:-10});
+});
+</script></body></html>

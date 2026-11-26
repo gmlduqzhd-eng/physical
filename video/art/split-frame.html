@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>TV와 폰 틀</title>
+<link rel="stylesheet" href="art.css">
+<style>html,body{background:transparent}</style>
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 왼쪽 TV + 오른쪽 휴대폰. 두 화면 모두 투명 구멍(합성기가 아래에 녹화를 깐다)
+const A=ART, C=A.C, el=A.el, svg=A.svg();
+const hole=(x,y,w,h,r)=>`M${x+r} ${y} H${x+w-r} A${r} ${r} 0 0 1 ${x+w} ${y+r} V${y+h-r} A${r} ${r} 0 0 1 ${x+w-r} ${y+h} H${x+r} A${r} ${r} 0 0 1 ${x} ${y+h-r} V${y+r} A${r} ${r} 0 0 1 ${x+r} ${y} Z`;
+const full='M0 0 H1920 V1080 H0 Z';
+const TVr={x:110,y:200,w:1120,h:630}, TB=20;           // 16:9
+const PHr={x:1430,y:150,w:360,h:780}, PB=16, PR=40;    // 390x844 비율에 가깝게
+const tvHole=hole(TVr.x,TVr.y,TVr.w,TVr.h,4), phHole=hole(PHr.x,PHr.y,PHr.w,PHr.h,PR);
+el('path',{d:[full,tvHole,phHole].join(' '),'fill-rule':'evenodd',fill:C.bg},svg);
+const m=el('mask',{id:'cut'},svg); el('path',{d:[full,tvHole,phHole].join(' '),'fill-rule':'evenodd',fill:'#fff'},m);
+const deco=el('g',{mask:'url(#cut)'},svg);
+el('rect',{x:0,y:900,width:1920,height:180,fill:C.tint},deco);
+el('rect',{x:0,y:900,width:1920,height:4,fill:C.line},deco);
+// 그림자
+el('rect',{x:TVr.x-TB+18,y:TVr.y-TB+24,width:TVr.w+2*TB,height:TVr.h+2*TB,rx:26,fill:C.ink,opacity:.1},deco);
+el('rect',{x:PHr.x-PB+14,y:PHr.y-PB+20,width:PHr.w+2*PB,height:PHr.h+2*PB,rx:PR+PB,fill:C.ink,opacity:.1},deco);
+// TV 받침
+el('rect',{x:TVr.x+TVr.w/2-14,y:TVr.y+TVr.h+TB,width:28,height:46,fill:'#3a3e41'},svg);
+el('rect',{x:TVr.x+TVr.w/2-170,y:TVr.y+TVr.h+TB+40,width:340,height:14,rx:7,fill:'#3a3e41'},svg);
+// 몸체
+el('path',{d:hole(TVr.x-TB,TVr.y-TB,TVr.w+2*TB,TVr.h+2*TB,22)+' '+tvHole,'fill-rule':'evenodd',fill:'#24272a'},svg);
+el('path',{d:hole(PHr.x-PB,PHr.y-PB,PHr.w+2*PB,PHr.h+2*PB,PR+PB)+' '+phHole,'fill-rule':'evenodd',fill:'#24272a'},svg);
+el('rect',{x:PHr.x+PHr.w+PB,y:PHr.y+130,width:5,height:110,rx:2.5,fill:'#3a3e41'},svg);
+el('rect',{...TVr,width:TVr.w,height:TVr.h,fill:'none','data-rect':'tv'},svg);
+el('rect',{...PHr,width:PHr.w,height:PHr.h,fill:'none','data-rect':'phone'},svg);
+A.onFrame(()=>{});
+</script></body></html>
