@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>폰 틀</title>
+<link rel="stylesheet" href="art.css">
+<style>html,body{background:transparent}</style>
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 브랜드 배경 + 휴대폰 틀. 화면 부분은 투명(합성기가 아래에 폰 녹화를 깐다)
+const A=ART, C=A.C, el=A.el, svg=A.svg();
+const SW=420, SH=910, SX=960-SW/2, SY=540-SH/2, SR=46, B=18;   // 화면(390x844 비율)
+const hole=(x,y,w,h,r)=>`M${x+r} ${y} H${x+w-r} A${r} ${r} 0 0 1 ${x+w} ${y+r} V${y+h-r} A${r} ${r} 0 0 1 ${x+w-r} ${y+h} H${x+r} A${r} ${r} 0 0 1 ${x} ${y+h-r} V${y+r} A${r} ${r} 0 0 1 ${x+r} ${y} Z`;
+const full='M0 0 H1920 V1080 H0 Z';
+const screen=hole(SX,SY,SW,SH,SR);
+// 배경(화면 구멍 뚫음)
+el('path',{d:full+' '+screen,'fill-rule':'evenodd',fill:C.bg},svg);
+const deco=el('g',{},svg);
+el('circle',{cx:960,cy:540,r:430,fill:C.tint},deco);
+el('circle',{cx:960,cy:540,r:500,fill:'none',stroke:C.line,'stroke-width':3,'stroke-dasharray':'2 14','stroke-linecap':'round'},deco);
+for(const [x,y,s,c] of [[300,250,1.6,C.tint],[1640,300,1.3,C.sage],[1560,860,1.9,C.tint],[380,850,1.1,C.sage]]){
+  const g=el('g',{transform:`translate(${x} ${y}) scale(${s})`},deco);
+  el('path',{d:'M0 -30 C14 -10 22 2 22 14 A22 22 0 0 1 -22 14 C-22 2 -14 -10 0 -30 Z',fill:c},g);
+}
+// 꾸밈도 화면 구멍을 침범하지 않도록 마스크
+const m=el('mask',{id:'cut'},svg); el('path',{d:full+' '+screen,'fill-rule':'evenodd',fill:'#fff'},m);
+deco.setAttribute('mask','url(#cut)');
+// 그림자 + 몸체
+el('path',{d:hole(SX-B+16,SY-B+22,SW+2*B,SH+2*B,SR+B)+' '+hole(SX+16,SY+22,SW,SH,SR),'fill-rule':'evenodd',fill:C.ink,opacity:.12,mask:'url(#cut)'},svg);
+el('path',{d:hole(SX-B,SY-B,SW+2*B,SH+2*B,SR+B)+' '+screen,'fill-rule':'evenodd',fill:'#24272a'},svg);
+el('rect',{x:SX-B-5,y:SY+170,width:5,height:90,rx:2.5,fill:'#3a3e41'},svg);
+el('rect',{x:SX+SW+B,y:SY+140,width:5,height:130,rx:2.5,fill:'#3a3e41'},svg);
+el('rect',{x:SX,y:SY,width:SW,height:SH,fill:'none','data-rect':'screen'},svg);
+A.onFrame(()=>{});
+</script></body></html>

@@ -1,0 +1,11 @@
+/* 그림 장면 공통 스타일: 앱 디자인 토큰 */
+:root{
+  --bg:#faf8f2; --paper:#fffefa; --tint:#e9efe3; --line:#d8d6cc;
+  --ink:#303d35; --muted:#5d675f; --forest:#566d4d; --amber:#f59e0b;
+  --stage:#171819; --stage-ink:#f2f1ec;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:ForestSans,sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:absolute;inset:0;width:1920px;height:1080px}
+svg{display:block}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>보스 물리치고 환호</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 보스를 물리친 순간: 두 팔 번쩍, 통통 뛰기, 앱 색 꽃가루(모두 14초에 맞춘 주기)
+const A=ART, C=A.C, svg=A.svg();
+const room=A.classroom(svg,{rain:true,tvOn:true});
+const T=A.teacherSide(room.mid,{x:1770,y:880,s:.78,skin:A.SKIN[1],top:'#7e8e9b',hair:A.HAIR[0]});
+const kids=A.seatKids(room);
+// 꽃가루
+const r=A.rng(11), cols=[C.forest,C.amber,C.forestLight,C.sage,'#e9c98f',C.forestDark];
+const conf=[];
+for(let i=0;i<120;i++){
+  const k=2+Math.floor(r()*3);              // 14초에 2~4번 떨어짐
+  const g=A.el('g',{},room.top);
+  const c=cols[Math.floor(r()*cols.length)];
+  const shape=r();
+  if(shape<0.55) A.el('rect',{x:-9,y:-5,width:18,height:10,rx:2.5,fill:c},g);
+  else if(shape<0.85) A.el('circle',{cx:0,cy:0,r:6.5,fill:c},g);
+  else A.el('path',{d:'M-10 0 Q-5 -8 0 0 T10 0',fill:'none',stroke:c,'stroke-width':4,'stroke-linecap':'round'},g);
+  conf.push({g,k,ph:r(),x:r()*1920,sw:20+r()*40,swk:1+Math.floor(r()*3),rot:(r()<.5?-1:1)*(1+Math.floor(r()*3)),fl:1+Math.floor(r()*4),s:1.3+r()*0.9});
+}
+A.onFrame(t=>{
+  room.rain.render(t);
+  kids.forEach((k,i)=>{
+    const P=0.7, off=[0,.12,.05,.18,.08,.1,0,.15,.06][i];
+    const p=((t/P)+off)%1;
+    const hop=Math.pow(Math.sin(Math.PI*p),1.4)*30;
+    const wv=Math.sin(2*Math.PI*((t/1.4)+off));
+    const one = i===3||i===8;   // 몇 명은 한 팔만 흔들기
+    k.set({sit:0, lift:hop, la:one?150+wv*12:148+wv*10, ra:one?20:148-wv*10, le:one?0:-6, re:one?6:-6,
+      legL:hop*0.12, legR:hop*0.12, tilt:wv*4});
+  });
+  const p=(t/0.7)%1;
+  T.set({lift:Math.sin(Math.PI*p)*8, fa:165+Math.sin(2*Math.PI*t/1.4)*8, fe:-4, ba:20, be:-60, tilt:-6});
+  for(const c of conf){
+    const q=((t/14)*c.k+c.ph)%1;
+    const y=-40+q*1160;
+    const x=c.x+Math.sin(2*Math.PI*q*c.swk)*c.sw;
+    const fl=Math.cos(2*Math.PI*q*c.fl*3);
+    c.g.setAttribute('transform',`translate(${x} ${y}) rotate(${360*c.rot*q}) scale(${c.s*fl} ${c.s})`);
+  }
+});
+</script></body></html>

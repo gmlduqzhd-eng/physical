@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>리모컨으로 TV 켜기</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 선생님 손이 리모컨 버튼을 누르면 TV가 켜진다. 이후 켜진 화면과 손의 미세한 흔들림만 남는 차분한 상태.
+const A=ART, C=A.C, el=A.el, TV=A.TV, svg=A.svg();
+el('rect',{x:0,y:0,width:1920,height:1080,fill:C.wall},svg);
+const room=A.classroom(svg,{rain:true,tvOn:false});
+room.g.setAttribute('transform','translate(960 360) scale(1.13) translate(-960 -360)');
+// 뒷줄 아이들만 앉혀 둠(앞쪽은 손이 차지)
+const kids=[];
+A.CAST.slice(0,5).forEach((c,i)=>{ A.desk(room.back,c.x,c.y,c.s); const k=A.kidBack(room.back,c); A.chair(room.back,c.x,c.y,c.s); kids.push(k); });
+// 전원이 켜질 때의 가로선
+const flash=el('rect',{x:TV.x,y:TV.y+TV.h/2-3,width:TV.w,height:6,fill:'#ffffff',opacity:0},room.g);
+// 손 + 리모컨 (손 좌표계: 위쪽이 TV 방향)
+const hand=el('g',{},svg);
+const H=el('g',{},hand);
+const skin=A.SKIN[2], skinD='#b47b55', sleeve='#7e8e9b';
+el('path',{d:'M-130 150 L-170 980 L250 980 L190 140 Q40 100 -130 150 Z',fill:sleeve},H);
+el('path',{d:'M-136 150 Q40 104 196 146',fill:'none',stroke:'#6c7c88','stroke-width':28,'stroke-linecap':'round'},H);
+// 리모컨
+const R=el('g',{},H);
+el('rect',{x:-56,y:-300,width:112,height:400,rx:50,fill:'#2c302e'},R);
+el('rect',{x:-50,y:-294,width:100,height:388,rx:46,fill:'none',stroke:'#3d423f','stroke-width':5},R);
+el('rect',{x:-18,y:-286,width:36,height:12,rx:6,fill:'#474d49'},R);
+const btnGlow=el('circle',{cx:0,cy:-196,r:44,fill:C.amber,opacity:0},R);
+const btn=el('circle',{cx:0,cy:-196,r:26,fill:C.amber},R);
+el('path',{d:'M-9 -205 A12 12 0 1 0 9 -205 M0 -211 V-196',fill:'none',stroke:'#2c302e','stroke-width':5,'stroke-linecap':'round'},R);
+for(const [x,y] of [[-22,-134],[22,-134],[-22,-100],[22,-100]]) el('rect',{x:x-14,y:y-9,width:28,height:18,rx:9,fill:'#3d423f'},R);
+// 신호 호(리모컨 끝에서 위로 퍼짐)
+const waves=[0,1,2].map(i=>el('path',{d:'M-46 0 A64 64 0 0 1 46 0',fill:'none',stroke:C.amber,'stroke-width':10,'stroke-linecap':'round',opacity:0},H));
+// 손바닥·손등과 감싼 손가락
+el('path',{d:'M-96 140 Q-118 60 -92 -30 L96 -40 Q138 40 126 140 Q20 170 -96 140 Z',fill:skin},H);
+for(let i=0;i<4;i++) el('rect',{x:-96,y:-70+i*42,width:66,height:42,rx:21,fill:skin,stroke:skinD,'stroke-width':3},H);
+el('path',{d:'M-66 40 Q-74 130 30 140 Q116 140 122 50 L106 -50 L40 -40 Z',fill:skin},H);
+// 엄지
+const thumb=el('g',{},H);
+el('path',{d:'M58 -10 Q76 -60 48 -128 Q36 -172 8 -184 Q-18 -192 -24 -168 Q-28 -146 -12 -112 Q4 -70 -6 -30 Z',fill:skin},thumb);
+el('path',{d:'M-10 -150 Q0 -176 16 -172',fill:'none',stroke:'#f0c6a2','stroke-width':8,'stroke-linecap':'round',opacity:.6},thumb);
+A.onFrame(t=>{
+  room.rain.render(t);
+  kids.forEach((k,i)=>k.set({sit:1,lean:A.wave(t,7,i*.2)*1.5,tilt:A.wave(t,3.5,i*.17)*3+(t>2.4?A.smooth(A.span(t,2.4,3.0))*0:0)}));
+  // 손: 아래에서 올라와 자리 잡기
+  const enter=A.easeOut(A.span(t,0,1.1));
+  const bob=Math.sin(2*Math.PI*t/3.5)*4;
+  hand.setAttribute('transform',`translate(${1490+(1-enter)*120} ${880+(1-enter)*360+bob}) rotate(-36)`);
+  // 엄지: 대기 땐 버튼 아래쪽, 1.45~1.95초에 눌렀다 뗌
+  const press=A.span(t,1.4,1.6)*(1-A.span(t,1.8,2.1));
+  thumb.setAttribute('transform',`translate(${4-press*4} ${30-press*30})`);
+  btnGlow.setAttribute('opacity', press*0.55);
+  btn.setAttribute('fill', press>0.5?'#ffb733':C.amber);
+  waves.forEach((w,i)=>{
+    const st=1.62+i*0.13, q=A.span(t,st,st+0.6);
+    w.setAttribute('transform',`translate(0 ${-330-q*190}) scale(${0.7+q*0.9})`);
+    w.setAttribute('opacity',t>st&&t<st+0.6?(1-q)*0.9:0);
+  });
+  // TV 켜짐
+  const f=A.span(t,2.05,2.3), on=A.easeOut(A.span(t,2.25,2.9));
+  flash.setAttribute('opacity', t>2.05&&t<2.45 ? (1-A.span(t,2.3,2.45)) : 0);
+  flash.setAttribute('x',TV.x+TV.w/2*(1-f)); flash.setAttribute('width',TV.w*f);
+  flash.setAttribute('height',6+A.span(t,2.3,2.45)*TV.h); flash.setAttribute('y',TV.y+TV.h/2-3-A.span(t,2.3,2.45)*TV.h/2);
+  room.setTv(on);
+});
+</script></body></html>

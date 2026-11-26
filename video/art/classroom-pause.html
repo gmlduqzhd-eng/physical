@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>잠깐 멈춤</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 선생님이 휴대폰(리모컨)으로 일시정지 → 아이들이 재미있는 자세로 멈추고 킥킥 웃는다. 이후 그 상태 유지.
+const A=ART, C=A.C, el=A.el, svg=A.svg();
+const room=A.classroom(svg,{rain:true,tvOn:true});
+const T=A.teacherSide(room.mid,{x:1770,y:880,s:.78,skin:A.SKIN[1],top:'#7e8e9b',hair:A.HAIR[0]});
+// 선생님 손의 휴대폰
+const phone=el('g',{transform:'rotate(-10)'},T.prop);
+el('rect',{x:-30,y:-62,width:40,height:72,rx:8,fill:C.ink},phone);
+const pscr=el('rect',{x:-26,y:-57,width:32,height:58,rx:5,fill:C.tint},phone);
+const kids=A.seatKids(room);
+const TP=2.4;   // 멈추는 순간
+const freeze=[
+  {la:92,ra:92,le:0,re:0,legL:24,lean:-4},
+  {la:165,ra:165,le:-4,re:-4,lift:6},
+  {la:150,ra:20,le:0,re:10,lean:8,tilt:8},
+  {la:120,ra:120,le:110,re:110},
+  {la:60,ra:125,le:20,re:0,lean:-7,legR:20},
+  {la:100,ra:80,le:0,re:0,lean:10,legL:18},
+  {la:155,ra:155,le:-8,re:-8,legR:22},
+  {la:25,ra:165,le:10,re:0,lean:-8,tilt:-6},
+  {la:115,ra:115,le:75,re:75},
+];
+// 웃음 표시(머리 옆 짧은 곡선)
+const marks=kids.map(k=>{
+  const g=el('g',{opacity:0},k.fx);
+  for(const [x,y,r] of [[84,-300,0],[96,-266,0]]) el('path',{d:`M${x} ${y} q12 -6 18 4`,fill:'none',stroke:C.muted,'stroke-width':6,'stroke-linecap':'round'},g);
+  return g;
+});
+// 일시정지 표시
+const badge=el('g',{},room.top);
+const ring=el('circle',{cx:0,cy:0,r:56,fill:'none',stroke:C.amber,'stroke-width':6},badge);
+el('circle',{cx:0,cy:0,r:56,fill:C.amber},badge);
+el('rect',{x:-19,y:-22,width:13,height:44,rx:4,fill:C.paper},badge);
+el('rect',{x:6,y:-22,width:13,height:44,rx:4,fill:C.paper},badge);
+el('path',{d:'M-12 50 L10 50 L-6 78 Z',fill:C.amber},badge);
+A.onFrame(t=>{
+  room.rain.render(t);
+  const fz=t>=TP?1:0;
+  kids.forEach((k,i)=>{
+    const f=freeze[i], ph=i*0.11;
+    const w=fz?1:(1+Math.cos(2*Math.PI*(t-TP)/0.8))/2;    // 춤추다 TP에 목표 자세에 딱 닿음
+    const hop=fz?0:Math.abs(Math.sin(Math.PI*(t-TP)/0.8))*20;
+    // 킥킥: 멈춘 뒤 0.6초부터 짧게 반복
+    const g=fz?Math.max(0,Math.sin(Math.PI*(((t-TP-0.6-ph*2)%1.75+1.75)%1.75)/0.9))*(t>TP+0.6?1:0):0;
+    const shake=g*Math.sin(2*Math.PI*t*7)*1.8;
+    k.set({sit:0, lift:hop+(f.lift||0)*w+g*3*Math.abs(Math.sin(2*Math.PI*t*7)),
+      la:A.lerp(8,f.la,w), ra:A.lerp(8,f.ra,w), le:A.lerp(4,f.le,w), re:A.lerp(4,f.re,w),
+      legL:(f.legL||0)*w, legR:(f.legR||0)*w, lean:(f.lean||0)*w+shake, tilt:(f.tilt||0)*w+shake*2});
+    marks[i].setAttribute('opacity', A.clamp(g*1.6));
+    marks[i].setAttribute('transform',`translate(0 ${-g*6})`);
+  });
+  // 선생님: 휴대폰을 들어 누름
+  const raise=A.smooth(A.span(t,0.6,1.4));
+  const press=A.span(t,TP-0.2,TP)*(1-A.span(t,TP,TP+0.25));
+  T.set({fa:A.lerp(6,40,raise), fe:A.lerp(-6,62,raise)+press*6, ba:-4, be:-10, tilt:A.lerp(-2,6,raise)});
+  pscr.setAttribute('fill', t>=TP && t<TP+0.5 ? C.amber : C.tint);
+  // 배지
+  const b=A.backOut(A.span(t,TP,TP+0.45));
+  const bob=Math.sin(2*Math.PI*t/3.5)*4;
+  badge.setAttribute('transform',`translate(1610 ${396+bob}) scale(${b})`);
+  badge.setAttribute('opacity', t<TP?0:1);
+  const rp=t<TP?0:((t-TP)%1.75)/1.75;
+  ring.setAttribute('r',56+rp*40); ring.setAttribute('opacity',(1-rp)*0.6);
+});
+</script></body></html>

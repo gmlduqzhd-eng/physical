@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>함께 움직이기</title>
+<link rel="stylesheet" href="fonts.css"><link rel="stylesheet" href="art.css">
+<script src="kit.js"></script></head>
+<body><div id="stage"></div>
+<script>
+// 반 전체가 TV에 맞춰 팔 벌려 뛰기(1.4초 주기 → 14초에 정확히 10번, 끊김 없는 반복)
+const A=ART, svg=A.svg();
+const room=A.classroom(svg,{rain:true,tvOn:true});
+const T=A.teacherSide(room.mid,{x:1770,y:880,s:.78,skin:A.SKIN[1],top:'#7e8e9b',hair:A.HAIR[0]});
+const kids=A.seatKids(room);
+const P=1.4;
+const drops=kids.map(k=>A.sweatDrop(k.fx));
+A.onFrame(t=>{
+  room.rain.render(t);
+  kids.forEach((k,i)=>{
+    const off=[0,.03,.01,.04,.02,.02,0,.03,.01][i];
+    const p=((t/P)-off+1)%1;
+    const f=(1-Math.cos(2*Math.PI*p))/2;   // 0 → 1 → 0 : 팔 내림 → 올림 → 내림
+    const hop=Math.abs(Math.sin(2*Math.PI*p))*26;      // 바뀔 때마다 한 번씩 점프
+    k.set({sit:0, lift:hop, la:10+f*150, ra:10+f*150, le:6-f*6, re:6-f*6,
+      legL:f*12, legR:f*12, tilt:0});
+    // 땀방울: 몇 명만, 2.8초마다 한 번
+    const d=drops[i];
+    if (i%3===1){
+      const q=((t+i*0.37)%2.8)/2.8;
+      const v=A.clamp(q/0.25);
+      d.setAttribute('opacity', q<0.25 ? Math.sin(Math.PI*v)*0.95 : 0);
+      d.setAttribute('transform',`translate(${70+v*40} ${-300+v*v*60-v*30}) scale(1.1)`);
+    }
+  });
+  const p=(t/P)%1, f=(1-Math.cos(2*Math.PI*p))/2;
+  T.set({lift:Math.abs(Math.sin(2*Math.PI*p))*14, fa:8+f*164, fe:-4, ba:-8+f*164, be:-4});
+});
+</script></body></html>
