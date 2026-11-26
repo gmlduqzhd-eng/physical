@@ -1,6 +1,7 @@
 import {MAX_BACKUP_BYTES,buildBackup,parseBackup} from '../domain/classBackup';
 import {classStorageKey} from '../domain/classRoster';
 import {CLASS_DATA_KEYS,getRoster,replaceRoster} from './classRosterStore';
+import {noteBackedUp} from './backupMarkStore';
 
 const [PROGRESS,JOURNEY]=CLASS_DATA_KEYS;
 const readJson=(key:string):unknown=>{try{const raw=window.localStorage.getItem(key);return raw?JSON.parse(raw):null;}catch{return null;}};
@@ -13,6 +14,7 @@ export function downloadBackup(now=new Date()){
  const blob=new Blob([exportBackupText(now)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download=`땀방울원정대-기록-${now.toISOString().slice(0,10)}.json`;document.body.append(a);a.click();a.remove();
  window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+ noteBackedUp(false,now.getTime());
 }
 /** 파일 글을 읽어 걸러 낸다. 우리 파일이 아니거나 너무 크면 null. */
 export function readBackupText(text:string){
@@ -30,5 +32,7 @@ export function applyBackup(parsed:NonNullable<ReturnType<typeof readBackupText>
   }
  }catch{return false;}
  replaceRoster(parsed.roster);
+ // 방금 가져온 기록은 이미 보관본과 같으니, 보관 알림을 처음부터 다시 센다.
+ noteBackedUp(false);
  return true;
 }

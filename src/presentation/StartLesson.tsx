@@ -39,6 +39,7 @@ export function StartLesson() {
       </div>
       <nav className="entry-strip plain" aria-label="다른 준비 방법"><p>다른 준비 방법</p>
         <ul>
+          <li><Link className="entry-chip" to="/week" data-start-week>📅 여러 차시 계획</Link></li>
           <li><Link className="entry-chip" to="/lessons">{SCREEN.lessons}</Link></li>
           <li><Link className="entry-chip" to="/teacher-ai">{SCREEN.teacherAi} (AI)</Link></li>
           <li><Link className="entry-chip" to="/manual?tab=lesson">지도안 만들기</Link></li>

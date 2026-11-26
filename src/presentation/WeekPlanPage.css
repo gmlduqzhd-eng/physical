@@ -8,3 +8,6 @@
 .week-main small{font-size:14px;font-weight:400;color:var(--ui-muted)}
 .week-sub{margin:0;font-size:15px;color:var(--ui-muted);line-height:1.5}
 .week-open{justify-self:start;display:inline-flex;align-items:center;min-height:44px;text-decoration:none}
+.week-pinned{margin:0;padding:12px 14px;border-radius:12px;background:var(--ui-tint);font-size:16px;font-weight:700}
+.week-done{padding:4px 12px;border-radius:999px;background:var(--ui-action);color:var(--ui-on-action);font-size:14px;font-weight:700}
+.week-lesson[data-done=yes]{border-color:var(--ui-action)}

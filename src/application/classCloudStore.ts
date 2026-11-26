@@ -1,5 +1,6 @@
 import {readStorage} from './browserStorage';
 import {applyBackup,exportBackupText,readBackupText} from './classBackupStore';
+import {noteBackedUp} from './backupMarkStore';
 
 /**
  * 선생님 계정에 반 기록 보관(올리기·가져오기). 로그인한 선생님만 쓴다.
@@ -38,7 +39,9 @@ export async function cloudState():Promise<CloudState>{return toState(await call
 export async function saveToAccount():Promise<CloudState|{status:'too-big'}>{
  const text=exportBackupText();
  if(text.length>MAX_CLOUD_BYTES)return {status:'too-big'};
- return toState(await call({next_payload:JSON.parse(text)}));
+ const state=toState(await call({next_payload:JSON.parse(text)}));
+ if(state.status==='ready')noteBackedUp(true);
+ return state;
 }
 /** 계정에 올려 둔 기록을 읽는다(가져오기 전에 내용을 보여 주려고 적용은 따로 한다). */
 export async function loadFromAccount():Promise<{status:'empty'|'signed-out'|'unavailable'}|{status:'found';parsed:NonNullable<ReturnType<typeof readBackupText>>;savedAt:string|null}>{
