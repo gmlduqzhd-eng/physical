@@ -16,7 +16,8 @@ const up = () => new Promise(resolve => { const req = http.get(BASE + '/', res =
     let ready = false;
     for (let i = 0; i < 40 && !ready; i++) { ready = await up(); if (!ready) await new Promise(r => setTimeout(r, 500)); }
     if (!ready) { console.error(`미리보기 서버(${BASE})가 뜨지 않았어요. ${PORT}번 포트를 다른 프로그램이 쓰는지 확인해 주세요.`); }
-    else code = run('npx', ['tsx', 'scripts/classroom-journeys.ts', BASE]);
+    // 같은 가짜 서버 빌드로 수업방 흐름과 선생님 계정 기능(올리기·가져오기·관리자 통계)을 차례로 본다.
+    else code = run('npx', ['tsx', 'scripts/classroom-journeys.ts', BASE]) || run('node', ['scripts/records-account-e2e.cjs', BASE]);
   } finally { preview.kill(); }
   process.exit(code);
 })();
