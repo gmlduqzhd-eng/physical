@@ -1,3 +1,4 @@
+import {ManualRecordsGuide} from './components/ManualRecordsGuide';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
@@ -42,6 +43,8 @@ export const Manual = () => {
               학생들의 신체활동 역량과 협동심을 기를 수 있도록 설계된 학교 체육 수업 플랫폼입니다.
             </p>
           </div>
+
+          <ManualRecordsGuide/>
 
           {/* 1. 2022 개정 교육과정 3대 영역 및 성취기준 체계 */}
           <section className="space-y-4">

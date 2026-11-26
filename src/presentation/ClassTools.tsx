@@ -256,8 +256,14 @@ export function ClassTools(){
  return <FlowShell utilities back={tool?'/tools':undefined} backLabel={tool?'수업 도구':undefined}>
   {!tool&&<section className="play-experiences sports-classroom" aria-label="수업 도구">
    <p className="eyebrow">체육수업 대백과 · 수업 도구</p><h1>수업을 돕는 도구</h1><p>대진표, 시계, 뽑기를 교사 화면 한 대로 써요. 학생 이름은 넣지 않고 번호와 팀만 써요.</p>
+   {/* 우리 반 기록으로 가는 길을 도구들 위에 둔다(예전에는 맨 아래 작은 링크라 찾기 어려웠다). */}
+   <nav className="tools-records" aria-label="우리 반 기록" data-tools-records>
+    <Link to="/class-progress"><strong>👍 우리 반 반응</strong><span>반 관리 · 기록 보관</span></Link>
+    <Link to="/class-progress?tab=term"><strong>📄 학기 정리</strong><span>한 장으로 인쇄·내보내기</span></Link>
+    <Link to="/journey"><strong>🗺 원정 지도</strong><span>수업마다 도장 찍기</span></Link>
+    <Link to="/week"><strong>📅 여러 차시 계획</strong><span>반응을 보고 한 번에 짜기</span></Link>
+   </nav>
    <div className="sports-grid">{CLASS_TOOLS.map(t=><Link key={t.id} className="sports-card" to={`/tools?tool=${t.id}`} data-tool={t.id}><span className="sports-icon" aria-hidden="true">{t.icon}</span><strong>{t.label}</strong><span>{t.summary}</span></Link>)}</div>
-   <p className="tools-progress-link"><Link to="/class-progress">👍 우리 반 반응 · 🗺 반 원정 지도 보기 →</Link> <span>게임이 끝날 때 남긴 반응과 판 수를 모아 봐요.</span></p>
    <p className="sports-muted">종목별 점수판과 시상은 <Link to="/sports">종목 교실</Link>에 있어요. 도구를 오가거나 새로고침해도 번호 뽑기·모둠·레이스·대진표는 이어서 할 수 있어요.</p>
   </section>}
   <section className="play-experiences sports-lesson class-tools" hidden={!tool} aria-label={tool?.label??'수업 도구'} data-tool={tool?.id}>

@@ -7,3 +7,6 @@
 .device-check-list label{display:flex!important;flex-direction:row!important;align-items:flex-start;gap:12px;margin-block:18px}
 .device-check-list input{flex:0 0 auto;width:20px!important;height:20px;margin-top:3px}
 @media(max-width:600px){.operations-page .row,.score-review .row{flex-wrap:wrap}.operations-page button,.score-review button{min-height:46px;white-space:normal}}
+
+/* 관리자: 익명 활동 횟수 표 */
+.activity-stats-table{width:100%;border-collapse:collapse;margin-top:8px}.activity-stats-table :is(th,td){padding:8px 10px;border-bottom:1px solid var(--ui-line);text-align:left;font-size:16px}.activity-stats-table td:last-child,.activity-stats-table th:last-child{text-align:right}

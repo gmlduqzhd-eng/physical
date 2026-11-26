@@ -7,6 +7,7 @@ import {JOURNEY_ISLANDS,JOURNEY_KINDS,JOURNEY_TOTAL,STAMPS_PER_ISLAND,addStamp,i
 import {useClassRoster} from '../application/classRosterStore';
 import {classStorageKey,currentClass} from '../domain/classRoster';
 import {ClassSwitcher} from './components/ClassSwitcher';
+import {StorageNote} from './components/BackupNudge';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassJourney.css';
@@ -41,7 +42,7 @@ function JourneyOf({classId,className}:{classId:string;className:string}){
    {confirmUndo&&stamps.length>0&&<div className="sports-confirm" role="alert"><p>{stamps.at(-1)!.date===localDate()?'오늘':stamps.at(-1)!.date} 찍은 {KIND_LABEL[stamps.at(-1)!.kind]} 도장을 취소할까요?</p><button onClick={()=>setConfirmUndo(false)}>그대로 두기</button><button className="primary" onClick={()=>{save(undoStamp(stamps));setFresh(false);setConfirmUndo(false);}}>네, 취소해요</button></div>}
    {confirm&&<div className="sports-confirm" role="alert"><p>지금까지 찍은 도장 {stamps.length}개를 모두 지우고 처음부터 시작할까요? 되돌릴 수 없어요.</p><button onClick={()=>setConfirm(false)}>그대로 두기</button><button className="primary" onClick={()=>{removeStorage(JOURNEY_KEY);setStamps([]);setConfirm(false);setFresh(false);}}>모두 지우고 새로 시작</button></div>}
    {stamps.length>0&&<p className="sports-muted">지금까지 · {kindCounts(stamps).filter(k=>k.count).map(k=>`${k.label} ${k.count}번`).join(', ')}</p>}
-   <p className="sports-muted">도장은 이 기기에만 수업 종류와 날짜로 저장돼요. 학생 이름이나 개인 기록은 담지 않아요. 다른 기기에서는 보이지 않아요.</p></section>
+   <p className="sports-muted">도장은 수업 종류와 날짜만 담아요. 학생 이름이나 개인 기록은 담지 않아요. <StorageNote/> 다른 기기에서 보려면 ‘반 관리 · 기록 보관’에서 가져와요.</p></section>
   <div className="flagship-row"><Link to="/sports">종목 교실</Link><Link to="/hub">신체 놀이 찾기</Link><Link to="/safety">안전 교실</Link></div>
  </section></FlowShell>;
 }
