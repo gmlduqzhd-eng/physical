@@ -4,7 +4,8 @@ import {noteBackedUp} from './backupMarkStore';
 
 /**
  * 선생님 계정에 반 기록 보관(올리기·가져오기). 로그인한 선생님만 쓴다.
- * 자동으로 맞추지 않고 선생님이 누를 때만 올리고 가져온다 — 두 기기의 기록이 말없이 덮어써지지 않게.
+ * 선생님이 누를 때 올리고 가져온다. 로그인해 있으면 cloudAutoSync가 기록이 바뀔 때 자동으로도 올린다
+ * (다른 기기에서 더 최근에 올린 기록은 말없이 덮어쓰지 않고 먼저 묻는다).
  * 서버에는 보관 파일과 같은 내용(반 이름, 반별 활동 반응·도장)만 간다. 학생 정보는 없다.
  */
 export type CloudState=
@@ -32,6 +33,8 @@ async function call(args:{next_payload?:unknown;remove?:boolean}={}):Promise<Rec
   return isReply(data)?data:'unavailable';
  }catch{return 'unavailable';}
 }
+/** 계정에 있는 기록과 저장 시각을 그대로 읽는다(자동 보관이 비교할 때 쓴다). */
+export const readAccount=()=>call();
 const toState=(r:Awaited<ReturnType<typeof call>>):CloudState=>typeof r==='string'?{status:r}:{status:'ready',savedAt:r.updatedAt};
 
 export async function cloudState():Promise<CloudState>{return toState(await call());}

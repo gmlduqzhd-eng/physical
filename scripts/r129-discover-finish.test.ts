@@ -57,6 +57,6 @@ test('backup nudge appears after enough new plays and can be snoozed', () => {
 test('backups are noted, and screens say where records live', () => {
   assert.match(read('src/application/classBackupStore.ts'), /noteBackedUp\(false,now\.getTime\(\)\)/);
   assert.match(read('src/application/classCloudStore.ts'), /if\(state\.status==='ready'\)noteBackedUp\(true\)/);
-  assert.match(read('src/presentation/ClassProgressPage.tsx'), /<StorageNote\/><\/p>\s*<BackupNudge\/>/);
+  assert.match(read('src/presentation/ClassProgressPage.tsx'), /<StorageNote\/><\/p>\s*<CloudSyncPrompt\/>\s*<BackupNudge\/>/);
   assert.match(read('src/presentation/ClassJourney.tsx'), /<StorageNote\/>/);
 });

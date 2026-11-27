@@ -5,7 +5,7 @@ import { HOME_COUNTS } from '../src/domain/homeIndex.generated';
 
 test('teacher screens used during class are precached, with final file names', () => {
   const cfg = readFileSync('vite.config.ts', 'utf8');
-  assert.ok(cfg.includes('PRECACHE_ROUTES = /\\/src\\/presentation\\/(?:Lobby|QuickJoin|MobileMissionView|StartLesson|TodayLesson|ActivityLibrary|ClassTools|components\\/TodayLessonBar)\\.tsx$/'));
+  assert.ok(cfg.includes('PRECACHE_ROUTES = /\\/src\\/presentation\\/(?:Lobby|QuickJoin|MobileMissionView|StartLesson|TodayLesson|ActivityLibrary|ClassTools|WeekPlanPage|ClassJourney|ClassProgressPage|GamePlayPage|components\\/TodayLessonBar)\\.tsx$/'));
   assert.match(cfg, /writeBundle\(options, bundle\)/);
   assert.doesNotMatch(cfg, /generateBundle\(_options, bundle\)/);
 });

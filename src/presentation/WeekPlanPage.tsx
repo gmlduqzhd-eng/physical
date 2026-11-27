@@ -14,6 +14,8 @@ import {classStorageKey} from '../domain/classRoster';
 import type {ExportTable} from '../application/documentExport';
 import './TodayLesson.css';
 import './WeekPlanPage.css';
+import {OfflineReady} from './components/OfflineReady';
+import {CloudSyncPrompt} from './components/CloudSyncPrompt';
 
 /**
  * 여러 차시 한 번에 짜기: 학년·장소·시간과 차시 수를 고르면 차시마다 준비운동·본게임·정리운동을 짜 준다.
@@ -45,6 +47,7 @@ function WeekPlanOf({classId,className}:{classId:string;className:string}){
    <h1 id="week-title">{pin?`이번 주 ${plan.lessons.length}차시 계획`:`${count}차시를 한 번에 짜요`}</h1>
    <p className="week-lead">본게임은 우리 반 반응을 보고 골라요. 👍가 많았던 활동과 아직 안 해 본 활동이 먼저 나와요.</p>
    <ClassSwitcher manage={false}/>
+   <CloudSyncPrompt/>
    {pin?<p className="week-pinned" role="status" data-week-pinned>📌 이번 주 계획을 정해 두었어요. 수업을 하고 반응을 남겨도 순서는 그대로예요. 마친 차시는 {done.filter(Boolean).length} / {plan.lessons.length}</p>:<>
    <div className="today-quick" role="group" aria-label="학년과 장소">
     <div className="today-choice" role="group" aria-label="학년">{TODAY_GRADES.map(g=><button key={g.id} type="button" aria-pressed={settings.grade===g.id} onClick={()=>set('grade',g.id)}>{g.label}</button>)}</div>
@@ -64,6 +67,7 @@ function WeekPlanOf({classId,className}:{classId:string;className:string}){
    </li>)}</ol>
    {plan.lessons.length===0&&<p role="status">이 학년·장소에 맞는 대표 게임이 없어요. 장소를 바꿔 보세요.</p>}
    <div className="today-row">{pin?<button type="button" className="today-secondary" onClick={unfix} data-week-unpin>계획 다시 짜기</button>:<><button type="button" className="primary today-primary" onClick={fix} disabled={!plan.lessons.length} data-week-pin>📌 이 계획으로 정하기</button><button type="button" className="today-secondary" onClick={()=>setShuffle(n=>n+1)} data-week-shuffle>🔀 다른 순서로</button></>}<ExportMenu table={table}/></div>
+   <OfflineReady/>
    <p className="today-plan-note">{pin?'주가 바뀌면 새 계획을 짤 수 있어요. 그동안 남긴 👍/👎는 다음 계획에 반영돼요.':'‘이 계획으로 정하기’를 누르면 이번 주 동안 순서가 바뀌지 않고, 마친 차시가 표시돼요.'}</p>
   </section>
  </FlowShell>;
