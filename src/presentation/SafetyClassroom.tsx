@@ -19,6 +19,7 @@ export function SafetyClassroom(){
    <h3 id="safety-theme">2. 상황 주제</h3><div className="safety-options" role="group" aria-labelledby="safety-theme">{CROWD_THEMES.map(t=><button key={t.id} aria-pressed={theme===t.id} onClick={()=>setTheme(t.id)}><strong><span aria-hidden="true">{t.icon}</span> {t.label}</strong><small>상황 {t.situations.length||6}개</small></button>)}</div>
    <Link className="primary safety-start" to={`/safety/crowd?theme=${theme}&grade=${grade}`}>수업 시작하기 →</Link>
    <p className="sports-muted">상황 판단 → 몸으로 익히기 → 생각 확인 → 우리 반 약속 순서예요. 15~20분쯤 걸려요.</p></section>
+  <section className="recipe-card" aria-label="수영장 가기 전"><h2>🏊 수영장 가기 전 (생존수영)</h2><p>학교·수영장 안내를 적으면 TV 확인 질문과 인쇄용 참관 과제가 만들어져요.</p><Link className="primary safety-start" to="/safety/pool" data-pool-link>수영장 가기 전 준비하기 →</Link></section>
   <h2>응급·건강 안전</h2><p className="sports-muted">상황 카드와 몸짓으로 익히는 안전 수업이에요.</p>
   <div className="sports-grid">{SAFETY_LESSON_IDS.map(id=>{const lesson=SAFETY_LESSONS[id];return <Link key={id} className="sports-card" to={`/play/${id}`} data-safety={id}><span className="sports-icon" aria-hidden="true">{lesson.emoji}</span><strong>{lesson.name}</strong><span>{lesson.description}</span></Link>;})}</div>
  </section></FlowShell>;

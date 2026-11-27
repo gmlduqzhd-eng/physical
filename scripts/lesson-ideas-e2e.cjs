@@ -40,7 +40,7 @@ async function scene(browser, name, viewport, run) {
       assert.match(await p.textContent(`${team(1)} .rope-roles`), /2🪢 도전3🔢 세기4✏️ 기록/);
       await p.click('[data-rope-undo]'); assert.match(await p.textContent(`${team(1)} .rope-head`), /1번째 도전/); await p.click(`${team(1)} [data-rope-complete]`);
       // 모둠 목표 조정
-      await p.click(`${team(2)} [aria-label="2모둠 목표 줄이기"]`); assert.equal((await p.textContent(`${team(2)} [data-rope-left]`)).trim(), '4');
+      await p.click('[data-rope-settings]'); await p.click(`${team(2)} [aria-label="2모둠 목표 줄이기"]`); assert.equal((await p.textContent(`${team(2)} [data-rope-left]`)).trim(), '4');
       // 새로고침해도 이어진다
       await p.reload({ waitUntil: 'networkidle' }); await p.click('text=이어서 하기');
       assert.match(await p.textContent(`${team(1)} .rope-head`), /2번째 도전/);
@@ -104,6 +104,69 @@ async function scene(browser, name, viewport, run) {
       await p.goto(base + '/sports/soccer?series=badminton-3&lesson=1', { waitUntil: 'networkidle' });
       assert.equal(await p.locator('[data-series-banner]').count(), 0);
     });
-    console.log(JSON.stringify({ passed: 4 }));
+    await scene(browser, 'rope relay on a 1080p TV: every group fits once running', { width: 1920, height: 1080 }, async p => {
+      await p.goto(base + '/tools?tool=rope-relay', { waitUntil: 'networkidle' });
+      await p.evaluate(() => document.documentElement.setAttribute('data-tv-mode', 'on'));
+      await p.click('[data-rope-team="1"] [data-rope-complete]');
+      await p.waitForSelector('[data-rope-settings]');
+      assert.equal(await p.locator('.class-tools .tools-tabs').isVisible(), false, 'tool tabs folded');
+      const bottoms = await p.$$eval('.rope-team', els => els.map(e => e.getBoundingClientRect().bottom));
+      assert.equal(bottoms.length, 4); assert.ok(Math.max(...bottoms) <= 1080, `all groups on screen (${Math.max(...bottoms)})`);
+      if (shots) await p.screenshot({ path: path.join(shots, 'rope-tv.png') });
+      // 진행 중(접힌 채)에 다른 도구로 가도 그 도구의 탭과 제목은 접히지 않는다
+      await p.goto(base + '/tools?tool=league', { waitUntil: 'networkidle' });
+      assert.ok(await p.locator('.class-tools .tools-tabs').isVisible(), 'other tools are never folded');
+      await p.goto(base + '/tools?tool=rope-relay', { waitUntil: 'networkidle' }); await p.click('text=이어서 하기');
+      await p.click('[data-rope-focus]').catch(() => {}); await p.waitForSelector('[data-rope-settings]');
+      await p.click('[data-rope-settings]'); assert.ok(await p.locator('[data-rope-target]').isVisible());
+    });
+
+    await scene(browser, 'role swap and 8-beat maker', { width: 1280, height: 900 }, async p => {
+      await p.goto(base + '/tools?tool=role-swap', { waitUntil: 'networkidle' });
+      assert.equal(await p.getAttribute('[data-swap-team="1"]', 'data-role'), '도전');
+      assert.equal(await p.getAttribute('[data-swap-team="2"]', 'data-role'), '준비');
+      for (let i = 0; i < 3; i++) await p.click('[data-swap-now]');
+      assert.match(await p.textContent('[data-swap-summary]'), /교대 3번 · 도전한 모둠 4 \/ 4 · ✅ 모든 모둠이 도전했어요/);
+      await p.click('[data-swap-run]'); await p.click('[data-swap-pause]'); await p.waitForSelector('[data-swap-run]');
+      await p.goto(base + '/tools?tool=beat-moves', { waitUntil: 'networkidle' });
+      await p.selectOption('[data-beat-tempo]', '100'); await p.selectOption('select[aria-label="모둠 수"] >> visible=true', '2');
+      const before = await p.getAttribute('[data-beat-team="1"] [data-beat-cell="0"]', 'aria-label');
+      await p.click('[data-beat-team="1"] [data-beat-cell="0"]'); assert.notEqual(await p.getAttribute('[data-beat-team="1"] [data-beat-cell="0"]', 'aria-label'), before);
+      await p.click('[data-beat-show]'); await p.waitForSelector('[data-beat-stage]');
+      await p.waitForSelector('[data-beat-reflect]', { timeout: 30000 });
+      assert.match(await p.textContent('[data-beat-reflect]'), /모두가 동작을 맡았나요/);
+    });
+
+    await scene(browser, 'rain from the field: choose the gym, then the classroom is still possible', { width: 1280, height: 900 }, async p => {
+      await p.goto(base + '/today', { waitUntil: 'networkidle' }); await p.waitForTimeout(800); await closeGuide(p);
+      await p.click('button[aria-pressed] >> text=운동장'); await p.click('.today-primary'); await p.waitForURL(/\/play\//);
+      await p.goto(base + '/today', { waitUntil: 'networkidle' }); await p.click('[data-rain-open]');
+      assert.equal(await p.locator('[data-rain-space]').count(), 2);
+      await p.click('[data-rain-space="체육관·강당"]'); await p.click('[data-rain-pick]');
+      assert.match(await p.textContent('[data-rain-open]'), /교실로/);
+    });
+
+    await scene(browser, 'pool prep: write, check on TV, printable task', { width: 1280, height: 900 }, async p => {
+      await p.goto(base + '/safety', { waitUntil: 'networkidle' }); await p.click('[data-pool-link]'); await p.waitForURL(/\/safety\/pool/);
+      await p.fill('[data-pool-place]', '구민 수영장'); await p.fill('[data-pool-promises]', '호루라기에 바로 멈춰요');
+      await p.click('[data-pool-tv]'); await p.click('[data-pool-show]');
+      assert.match(await p.textContent('[data-pool-answer]'), /구민 수영장/);
+      await p.click('[data-pool-next]'); await p.click('[data-pool-next]');
+      await p.click('[data-pool-show]'); assert.match(await p.textContent('[data-pool-answer]'), /호루라기/);
+      await p.reload({ waitUntil: 'networkidle' }); assert.equal(await p.inputValue('[data-pool-place]'), '구민 수영장', 'kept on this device');
+      await p.emulateMedia({ media: 'print' }); await p.evaluate(() => document.body.classList.add('pool-printing'));
+      assert.ok(await p.locator('.pool-print').isVisible()); assert.match(await p.textContent('.pool-print'), /다음에 선생님께 물어볼 질문/);
+    });
+
+    await scene(browser, 'volleyball and tee-ball series open their sports lessons', { width: 1280, height: 900 }, async p => {
+      await p.goto(base + '/week', { waitUntil: 'networkidle' });
+      await p.click('[data-series-open="volleyball-3"]'); await p.click('[data-series-go="3"]');
+      await p.waitForURL(/\/sports\/volleyball\?series=volleyball-3&lesson=3/);
+      assert.match(await p.textContent('[data-series-banner]'), /보자기 배구 3차시 · 3차시/);
+      await p.click('.sports-stages li:nth-child(2) button'); assert.match(await p.textContent('.sports-filters button[aria-pressed="true"]'), /더 어렵게/);
+      await p.goto(base + '/sports/baseball?series=teeball-3&lesson=1', { waitUntil: 'networkidle' });
+      assert.match(await p.textContent('[data-series-banner]'), /티볼 3차시 · 1차시/);
+    });
+    console.log(JSON.stringify({ passed: 9 }));
   } finally { await browser.close(); }
 })().catch(error => { console.error('FAIL', error.message); process.exit(1); });

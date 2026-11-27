@@ -57,6 +57,7 @@ const MoreApps = lazyWithRetry(() => import('./presentation/MoreApps'), m => m.M
 const TodayLesson = lazyWithRetry(() => import('./presentation/TodayLesson'), m => m.TodayLesson);
 const WeekPlanPage = lazyWithRetry(() => import('./presentation/WeekPlanPage'), m => m.WeekPlanPage);
 const TeacherGuidePage = lazyWithRetry(() => import('./presentation/TeacherGuidePage'), m => m.TeacherGuidePage);
+const PoolPrepPage = lazyWithRetry(() => import('./presentation/PoolPrepPage'), m => m.PoolPrepPage);
 const SignatureCardsPrint = lazyWithRetry(() => import('./presentation/SignatureCardsPrint'), m => m.SignatureCardsPrint);
 const loadTodayLessonBar=()=>import('./presentation/components/TodayLessonBar');
 const TodayLessonBar = lazyWithRetry(loadTodayLessonBar, m => m.TodayLessonBar);
@@ -137,6 +138,7 @@ function App() {
         <Route path="/safety" element={<SafetyClassroom/>} />
         <Route path="/journey" element={<ClassJourney/>} />
         <Route path="/safety/crowd" element={<CrowdSafetyLesson/>} />
+        <Route path="/safety/pool" element={<PoolPrepPage/>} />
         <Route path="/start-lesson" element={<StartLesson />} />
         <Route path="/hub" element={<ActivityLibrary />} />
         {/* 기록·즐겨찾기·뽑기 모음. 수업 도구(/tools)와 헷갈리지 않게 주소를 바꿨다(예전 주소는 이어 준다). */}

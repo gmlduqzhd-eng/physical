@@ -12,7 +12,7 @@ import {readStorage,writeStorage} from '../application/browserStorage';
 import {loadTodaySettings,loadTodayShuffle,saveTodaySettings,saveTodayShuffle} from '../application/todayLessonPrefs';
 import {
  STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,rainCandidates,remainingMinutes,swapToClassroom,
+ addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,rainCandidates,rainTargets,remainingMinutes,swapToSpace,CLASSROOM_SPACE,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import {ClassSwitcher} from './components/ClassSwitcher';
@@ -203,12 +203,17 @@ function TodayStageView({run:stored}:{run:TodayRun}){
  */
 function RainSwap({run,now}:{run:TodayRun;now:number}){
  const [open,setOpen]=useState(false);
- const list=rainCandidates(run);
- if(!list.length)return null;
+ const targets=rainTargets(run);
+ const [space,setSpace]=useState(targets[0]);
+ const pick=targets.includes(space)?space:targets[0];
+ if(!targets.length||!pick)return null;
+ const list=rainCandidates(run,pick);
  return <div className="today-rain" data-rain-swap>
-  {!open?<button type="button" className="today-secondary" onClick={()=>setOpen(true)} data-rain-open>☔ 비가 와서 교실로 바꾸기</button>
-   :<><p className="today-rain-lead">남은 시간 약 {remainingMinutes(run,now)}분 · 교실에서 할 본게임을 골라요. 이미 한 단계와 돌아보기는 그대로예요.</p>
-    <ul className="today-rain-list">{list.map(g=><li key={g.id}><button type="button" onClick={()=>{saveTodayRun(swapToClassroom(run,g.id));setOpen(false);}} data-rain-pick={g.id}><b>{g.emoji} {g.name}</b><span>{g.oneLine}</span><small>🪑 좁은 교실: {g.seatedNote}</small></button></li>)}</ul>
+  {!open?<button type="button" className="today-secondary" onClick={()=>setOpen(true)} data-rain-open>☔ 비가 와서 {targets.length>1?'실내로':'교실로'} 바꾸기</button>
+   :<>{targets.length>1&&<div className="today-choice" role="group" aria-label="어디로 옮기나요">{targets.map(t=><button key={t} type="button" aria-pressed={t===pick} onClick={()=>setSpace(t)} data-rain-space={t}>{t===CLASSROOM_SPACE?'🏫 교실로':'🏟 체육관·강당으로'}</button>)}</div>}
+    <p className="today-rain-lead">남은 시간 약 {remainingMinutes(run,now)}분 · {pick}에서 할 본게임을 골라요. 이미 한 단계와 돌아보기는 그대로예요.</p>
+    {list.length?<ul className="today-rain-list">{list.map(g=><li key={g.id}><button type="button" onClick={()=>{saveTodayRun(swapToSpace(run,g.id,pick));setOpen(false);}} data-rain-pick={g.id}><b>{g.emoji} {g.name}</b><span>{g.oneLine}</span>{pick===CLASSROOM_SPACE&&<small>🪑 좁은 교실: {g.seatedNote}</small>}</button></li>)}</ul>
+     :<p className="today-hint">이 학년에 맞는 {pick}용 대표 게임이 없어요. 다른 곳을 골라 보세요.</p>}
     <button type="button" className="today-ghost" onClick={()=>setOpen(false)}>그대로 하기</button></>}
  </div>;
 }
@@ -266,7 +271,7 @@ function TodaySummary({run:stored}:{run:TodayRun}){
   {moment&&momentOpen&&<MapMoment moment={moment} onClose={closeMoment}/>}
   {moment&&!momentOpen&&<p ref={mapLineRef} tabIndex={-1} className="today-map-line">🗺️ {moment.line} <Link to="/class-progress?tab=map">반 원정 지도 보기</Link></p>}
   <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
-  {run.rainFrom&&<p className="today-rain-done" data-rain-done>☔ 비가 와서 교실 수업으로 바꿨어요 (원래 본게임: {mainGameLabel(run.rainFrom)})</p>}
+  {run.rainFrom&&<p className="today-rain-done" data-rain-done>☔ 비가 와서 {run.plan.settings.space} 수업으로 바꿨어요 (원래 본게임: {mainGameLabel(run.rainFrom)})</p>}
   <StageList plan={run.plan} run={run} outcomes={outcomes} shown={did}/>
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>
