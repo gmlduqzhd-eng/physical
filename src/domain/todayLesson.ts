@@ -235,45 +235,52 @@ export function otherMains(run:TodayRun,limit=3):SignatureGameDef[]{
  const {grade,space}=run.plan.settings;
  return mainCandidates(grade,space).filter(g=>g.id!==stage.gameId).slice(0,limit);
 }
-/* ── 비 오는 날: 진행 중인 수업을 교실용으로 ── */
+/* ── 비 오는 날: 진행 중인 수업을 실내로 ── */
 export const CLASSROOM_SPACE:FitSpace=FIT_SPACES[0];
+export const GYM_SPACE:FitSpace=FIT_SPACES[1];
 const mainIndexOf=(run:TodayRun)=>run.plan.stages.findIndex(s=>s.kind==='main');
 /** 수업 시작부터 지난 시간을 빼고 남은 계획 시간(분). */
 export const remainingMinutes=(run:TodayRun,now:number)=>Math.max(0,Math.round(run.plan.settings.minutes-(now-run.startedAt)/60000));
-/**
- * 교실로 바꿀 때 보여 줄 대표 게임(2~3개). 본게임을 아직 마치지 않았고 교실 수업이 아닐 때만.
- * 같은 수업이면 늘 같은 순서로 보여 준다(seed로 돌린다).
- */
-export function rainCandidates(run:TodayRun,limit=3):SignatureGameDef[]{
+/** 옮겨 갈 수 있는 실내: 운동장이면 체육관·강당 또는 교실, 체육관이면 교실. 본게임을 마쳤으면 없다. */
+export function rainTargets(run:TodayRun):FitSpace[]{
  const at=mainIndexOf(run);
- if(run.finishedAt!==undefined||at<0||run.index>at||run.plan.settings.space===CLASSROOM_SPACE)return [];
- const current=run.plan.stages[at].gameId;
- const list=mainCandidates(run.plan.settings.grade,CLASSROOM_SPACE).filter(g=>g.id!==current);
+ if(run.finishedAt!==undefined||at<0||run.index>at)return [];
+ const {space}=run.plan.settings;
+ return space===FIT_SPACES[2]?[GYM_SPACE,CLASSROOM_SPACE]:space===GYM_SPACE?[CLASSROOM_SPACE]:[];
+}
+/**
+ * 그 공간으로 옮길 때 보여 줄 대표 게임(2~3개). 같은 수업이면 늘 같은 순서로 보여 준다(seed로 돌린다).
+ */
+export function rainCandidates(run:TodayRun,space:FitSpace=CLASSROOM_SPACE,limit=3):SignatureGameDef[]{
+ if(!rainTargets(run).includes(space))return [];
+ const current=run.plan.stages[mainIndexOf(run)].gameId;
+ const list=mainCandidates(run.plan.settings.grade,space).filter(g=>g.id!==current);
  if(!list.length)return [];
  const shift=run.plan.seed%list.length;
  return [...list.slice(shift),...list.slice(0,shift)].slice(0,limit);
 }
 /**
- * 남은 단계를 교실용으로 바꾼다: 본게임은 고른 대표 게임으로, 아직 안 한 준비·정리운동은 교실에 맞지 않으면 교실용으로.
+ * 남은 단계를 그 공간용으로 바꾼다: 본게임은 고른 대표 게임으로, 아직 안 한 준비·정리운동은 그 공간에 맞지 않으면 맞는 것으로.
  * 이미 마친 단계와 돌아보기, '한 판 더'로 한 게임 기록은 그대로 둔다.
  */
-export function swapToClassroom(run:TodayRun,gameId:string):TodayRun{
- if(!rainCandidates(run,99).some(g=>g.id===gameId))return run;
+export function swapToSpace(run:TodayRun,gameId:string,space:FitSpace):TodayRun{
+ if(!rainCandidates(run,space,99).some(g=>g.id===gameId))return run;
  const sig=READY_SIGNATURE_GAMES.find(g=>g.id===gameId)!;
  const {grade}=run.plan.settings,at=mainIndexOf(run),from=run.plan.stages[at].gameId;
  const stages=run.plan.stages.map((s,i)=>{
   if(i<run.index)return s;
-  if(i===at)return {...s,title:sig.name,gameId:sig.id,emoji:sig.emoji,note:`${sig.oneLine} 교실이 좁으면: ${sig.seatedNote}`};
+  if(i===at)return {...s,title:sig.name,gameId:sig.id,emoji:sig.emoji,note:space===CLASSROOM_SPACE?`${sig.oneLine} 교실이 좁으면: ${sig.seatedNote}`:sig.oneLine};
   if((s.kind==='warmup'||s.kind==='cooldown')&&s.gameId&&i!==run.index){
    const g=BY_ID.get(s.gameId);
-   if(g&&fitsSpace(g,CLASSROOM_SPACE))return s;
-   const alt=stageCandidates(s.kind,grade,CLASSROOM_SPACE)[0];
+   if(g&&fitsSpace(g,space))return s;
+   const alt=stageCandidates(s.kind,grade,space)[0];
    return alt?{...s,title:alt.name,gameId:alt.type,emoji:alt.emoji||s.emoji}:s;
   }
   return s;
  });
- return {...run,rainFrom:run.rainFrom??from,plan:{...run.plan,settings:{...run.plan.settings,space:CLASSROOM_SPACE,mainId:sig.id},stages}};
+ return {...run,rainFrom:run.rainFrom??from,plan:{...run.plan,settings:{...run.plan.settings,space,mainId:sig.id},stages}};
 }
+export const swapToClassroom=(run:TodayRun,gameId:string)=>swapToSpace(run,gameId,CLASSROOM_SPACE);
 /** 수업 중에 여는 대표 게임 주소(끝나면 '오늘 수업'으로 돌아온다). */
 export const mainPath=(gameId:string,teams:number)=>`/play/${gameId}?${new URLSearchParams({returnTo:'/today',teams:String(teams)}).toString()}`;
 export const formatSeconds=(sec:number)=>sec<60?`${sec}초`:`${Math.floor(sec/60)}분${sec%60?` ${sec%60}초`:''}`;

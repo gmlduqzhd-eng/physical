@@ -3,6 +3,8 @@ export type Rng=()=>number;
 
 export const CLASS_TOOLS=[
  {id:'rope-relay',label:'모둠 이어 넘기',icon:'🪢',summary:'모둠이 차례로 줄을 넘고, 걸리면 멈춘 횟수부터 이어 해요. TV에 남은 횟수와 다음 차례가 떠요'},
+ {id:'role-swap',label:'역할 교대',icon:'🔄',summary:'신호마다 기다리던 모둠이 도전으로 돌아와요. 모든 모둠이 도전했는지 보여 줘요'},
+ {id:'beat-moves',label:'8박 동작 만들기',icon:'🎵',summary:'모둠이 동작 카드로 8박을 만들고, 박자에 맞춰 연습한 뒤 TV로 발표해요'},
  {id:'league',label:'리그 대진표',icon:'📋',summary:'모든 팀이 한 번씩 만나는 경기 순서와 순위표'},
  {id:'timer',label:'카운트다운',icon:'⏳',summary:'30초·1분·3분·5분을 크게 세고 끝나면 소리로 알려요'},
  {id:'race',label:'레이스 시계',icon:'⏱️',summary:'여러 팀의 도착 시간을 한 화면에서 기록'},

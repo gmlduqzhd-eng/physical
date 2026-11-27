@@ -4,7 +4,7 @@ import {FlowShell} from './FlowShell';
 import {ExportMenu} from './components/ExportMenu';
 import type {ExportTable} from '../application/documentExport';
 import {isRecord,readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
-import {sfxPop,sfxTimerTick,sfxWhistle,unlockAudio} from '../application/soundEffects';
+import {sfxClick,sfxPop,sfxTap,sfxTimerTick,sfxWhistle,unlockAudio} from '../application/soundEffects';
 import {useRunningClock} from '../application/useRunningClock';
 import {CLASS_TOOLS,COUNTDOWN_PRESETS,withRo,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
 import './PlayExperiences.css';
@@ -12,11 +12,13 @@ import './SportsClassroom.css';
 import './ClassTools.css';
 import {PeQuizBingo} from './components/PeQuizBingo';
 import {ROPE_GROUPS,ROPE_MEMBERS,ROPE_MOTIONS,ROPE_ROLE_EMOJI,ROPE_TARGETS,completeTurn,finishedCount,isFinished,newRopeState,parseRopeState,remaining,roleOf,setGroupTarget,started,stopAt,turnLine,type RopeMotion,type RopeState} from '../domain/ropeRelay';
+import {SWAP_GROUPS,SWAP_ROLE_TEXT,SWAP_SECONDS,everyoneChallenged,newSwapState,parseSwapState,roleOfGroup,swap,type SwapState} from '../domain/roleSwap';
+import {BEAT_CARDS,BEAT_GROUPS,BEAT_REFLECTION,BEAT_TEMPOS,beatMs,cycleBeat,hasMove,newBeatState,parseBeatState,showAt,type BeatState} from '../domain/beatMoves';
 import {OfflineReady} from './components/OfflineReady';
 
 const LEAGUE_KEY='physical_class_league_v1';
 // 번호 뽑기·모둠·레이스는 이 탭에만 적어 둔다(새로고침·자동 새로고침에도 이어지고, 탭을 닫으면 사라진다).
-const ROPE_KEY='physical_tools_rope_v1',DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1',COUNTDOWN_KEY='physical_tools_countdown_v1';
+const SWAP_KEY='physical_tools_swap_v1',BEAT_KEY='physical_tools_beat_v1',ROPE_KEY='physical_tools_rope_v1',DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1',COUNTDOWN_KEY='physical_tools_countdown_v1';
 const today=()=>new Date().toLocaleString('ko-KR');
 /** 엽쌤의 달리기 뽑기 앱. 달리기 경주로 순서를 정할 때 쓴다. */
 const RUNRUN_URL='https://gmlduqzhd123-lab.github.io/RunRun/';
@@ -258,26 +260,32 @@ function RopeRelay(){
  const [state,setState]=useState<RopeState>(()=>saved??newRopeState());
  const [resumed,setResumed]=useState(!!saved&&started(saved));
  const [stopping,setStopping]=useState<number|null>(null),[last,setLast]=useState<RopeState|null>(null),[pending,setPending]=useState<RopeState|null>(null),[announce,setAnnounce]=useState('');
+ // 진행 중에는 TV 한 화면에 모든 모둠이 들어오게 제목·도구 탭·설정을 접는다(설정 열기로 다시 펼친다).
+ const [settingsOpen,setSettingsOpen]=useState(()=>!(saved&&started(saved)));
+ const focus=started(state)&&!settingsOpen;
+ useEffect(()=>{document.body.classList.toggle('tools-focus',focus);return()=>document.body.classList.remove('tools-focus');},[focus]);
  useEffect(()=>{if(started(state))writeStorage(ROPE_KEY,JSON.stringify(state),'session');else removeStorage(ROPE_KEY,'session');},[state]);
- const act=(next:RopeState,message:string)=>{if(next===state)return;setLast(state);setState(next);setStopping(null);setAnnounce(message);};
+ const act=(next:RopeState,message:string)=>{if(next===state)return;setLast(state);setState(next);setStopping(null);setAnnounce(message);setSettingsOpen(false);};
  // 설정(모둠 수·인원·목표·동작)을 바꾸면 처음부터. 이미 시작했으면 먼저 묻는다.
  const configure=(next:RopeState)=>{if(started(state))setPending(next);else{setState(next);setLast(null);}};
- const fresh=()=>{setState(newRopeState(state.groups,state.members,state.target,state.motion));setLast(null);setStopping(null);setAnnounce('처음부터 다시 시작해요.');};
+ const fresh=()=>{setState(newRopeState(state.groups,state.members,state.target,state.motion));setLast(null);setStopping(null);setSettingsOpen(true);setAnnounce('처음부터 다시 시작해요.');};
  const motion=ROPE_MOTIONS.find(m=>m.id===state.motion)!;
  const done=finishedCount(state);
  const print=()=>{document.body.classList.add('rope-printing');const off=()=>{document.body.classList.remove('rope-printing');window.removeEventListener('afterprint',off);};window.addEventListener('afterprint',off);window.print();window.setTimeout(off,1500);};
  return <>
+  {focus?<div className="rope-focus-bar"><span>{motion.emoji} {motion.label} · 한 사람 목표 {state.target}회 · 멈춘 횟수부터 이어 해요</span><button type="button" className="tools-go" onClick={()=>setSettingsOpen(true)} data-rope-settings>⚙ 설정 열기</button></div>
+  :<>{started(state)&&<div className="rope-focus-bar"><button type="button" className="primary tools-go" onClick={()=>setSettingsOpen(false)} data-rope-focus>▣ 모둠만 크게 보기</button></div>}
   <div className="tools-bar">
    <NumberSelect label="모둠 수" value={state.groups} min={ROPE_GROUPS.min} max={ROPE_GROUPS.max} unit="모둠" onChange={n=>configure(newRopeState(n,state.members,state.target,state.motion))}/>
    <NumberSelect label="모둠 인원" value={state.members} min={ROPE_MEMBERS.min} max={ROPE_MEMBERS.max} unit="명" onChange={n=>configure(newRopeState(state.groups,n,state.target,state.motion))}/>
    <label className="tools-select">한 사람 목표<select aria-label="한 사람 목표" value={state.target} onChange={e=>configure(newRopeState(state.groups,state.members,Number(e.target.value),state.motion))} data-rope-target>{ROPE_TARGETS.map(n=><option key={n} value={n}>{n}회</option>)}</select></label>
    <label className="tools-select">동작<select aria-label="동작" value={state.motion} onChange={e=>setState({...state,motion:e.target.value as RopeMotion})} data-rope-motion>{ROPE_MOTIONS.map(m=><option key={m.id} value={m.id}>{m.emoji} {m.label}</option>)}</select></label>
-  </div>
+  </div></>}
   {resumed&&<Resume message="하던 모둠 이어 넘기가 남아 있어요." onKeep={()=>setResumed(false)} onFresh={()=>{fresh();setResumed(false);}}/>}
   {pending&&<Confirm message="설정을 바꾸면 모둠별 진행이 처음으로 돌아가요. 바꿀까요?" yes="처음으로 하고 바꾸기" onNo={()=>setPending(null)} onYes={()=>{setState(pending);setPending(null);setLast(null);setStopping(null);}}/>}
-  <p className="rope-rule" data-rope-rule><b>{motion.emoji} {motion.label}</b> · {motion.hint} 걸리면 처음부터가 아니라 <b>멈춘 횟수부터 이어</b> 해요. 목표를 채우면 역할을 한 칸씩 바꿔요.</p>
+  {!focus&&<p className="rope-rule" data-rope-rule><b>{motion.emoji} {motion.label}</b> · {motion.hint} 걸리면 처음부터가 아니라 <b>멈춘 횟수부터 이어</b> 해요. 목표를 채우면 역할을 한 칸씩 바꿔요.</p>}
   <p className="rope-summary" role="status" data-rope-summary>완료한 모둠 {done} / {state.groups}{done===state.groups?' · 🎉 모든 모둠 성공!':''}</p>
-  <div className="rope-grid" data-many={state.groups>4?'yes':'no'}>{state.teams.map((t,g)=>{const fin=isFinished(state,g);return <section key={g} className="rope-team" data-rope-team={g+1} data-done={fin?'yes':'no'} aria-label={`${g+1}모둠`}>
+  <div className="rope-grid" data-many={state.groups>4?'yes':'no'} data-focus={focus?'yes':undefined} style={{'--rope-cols':String(Math.min(state.groups,4))} as React.CSSProperties}>{state.teams.map((t,g)=>{const fin=isFinished(state,g);return <section key={g} className="rope-team" data-rope-team={g+1} data-done={fin?'yes':'no'} aria-label={`${g+1}모둠`}>
    <div className="rope-head"><strong>{g+1}모둠</strong><span>{turnLine(state,g)}</span></div>
    {fin?<p className="rope-left rope-done">🎉</p>:<p className="rope-left" aria-label={`남은 횟수 ${remaining(state,g)}회`}><output data-rope-left>{remaining(state,g)}</output><small>회 남음 · 목표 {t.target}회{t.done?` · ${t.done}회부터 이어서`:''}</small></p>}
    <ol className="rope-roles" aria-label="역할">{Array.from({length:state.members},(_,m)=>{const role=fin?null:roleOf(state.members,t.turn,m);return <li key={m} data-role={role??'done'} data-past={m<t.turn?'yes':undefined}><b>{m+1}</b>{role?<span>{ROPE_ROLE_EMOJI[role]} {role}</span>:<span>✅</span>}</li>;})}</ol>
@@ -287,7 +295,7 @@ function RopeRelay(){
      <button type="button" className="primary" onClick={()=>{sfxPop();act(completeTurn(state,g),t.turn+1>=state.members?`${g+1}모둠 모두 성공!`:`${g+1}모둠 교대. ${t.turn+2}번째 도전.`);}} data-rope-complete>✅ 목표 성공 · 교대</button>
      <button type="button" onClick={()=>setStopping(g)} data-rope-stop>⏸ 멈춤</button>
     </div>)}
-   {!fin&&<div className="rope-adjust"><button type="button" aria-label={`${g+1}모둠 목표 줄이기`} disabled={t.target<=1} onClick={()=>act(setGroupTarget(state,g,t.target-1),`${g+1}모둠 목표 ${t.target-1}회`)}>−</button><span>모둠 목표</span><button type="button" aria-label={`${g+1}모둠 목표 늘리기`} onClick={()=>act(setGroupTarget(state,g,t.target+1),`${g+1}모둠 목표 ${t.target+1}회`)}>+</button></div>}
+   {!fin&&!focus&&<div className="rope-adjust"><button type="button" aria-label={`${g+1}모둠 목표 줄이기`} disabled={t.target<=1} onClick={()=>act(setGroupTarget(state,g,t.target-1),`${g+1}모둠 목표 ${t.target-1}회`)}>−</button><span>모둠 목표</span><button type="button" aria-label={`${g+1}모둠 목표 늘리기`} onClick={()=>act(setGroupTarget(state,g,t.target+1),`${g+1}모둠 목표 ${t.target+1}회`)}>+</button></div>}
   </section>;})}</div>
   <p className="sports-sr" role="status">{announce}</p>
   <div className="flagship-row">
@@ -304,7 +312,82 @@ function RopeRelay(){
  </>;
 }
 
-const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={'rope-relay':RopeRelay,league:League,timer:Countdown,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice,'quiz-bingo':PeQuizBingo};
+/* ── 역할 교대 ── */
+// 신호(시간이 다 되거나 '교대'를 누를 때)마다 기다리던 모둠이 도전으로 돌아온다. 점수는 반 전체 교대 횟수만.
+function RoleSwap(){
+ const [saved]=useState(()=>parseSwapState(readJsonStorage(SWAP_KEY,'session')));
+ const [state,setState]=useState<SwapState>(()=>saved??newSwapState());
+ const [endsAt,setEndsAt]=useState<number|null>(null),[left,setLeft]=useState<number|null>(null),[auto,setAuto]=useState(true),[announce,setAnnounce]=useState('');
+ const [resumed,setResumed]=useState(!!saved&&saved.swaps>0);
+ useEffect(()=>{if(state.swaps>0)writeStorage(SWAP_KEY,JSON.stringify(state),'session');else removeStorage(SWAP_KEY,'session');},[state]);
+ const doSwap=()=>{setState(s=>{const n=swap(s);setAnnounce(`교대! ${n.swaps}번째 교대예요.`);return n;});sfxWhistle();};
+ const run=()=>{unlockAudio();setEndsAt(Date.now()+(left??state.seconds*1000));setLeft(null);};
+ const pause=()=>{if(endsAt){setLeft(Math.max(0,endsAt-Date.now()));setEndsAt(null);setAnnounce('일시정지. 모두 그 자리에 멈춰요.');}};
+ const [, setTick]=useState(0);
+ useEffect(()=>{if(!endsAt)return;const t=window.setInterval(()=>{const rest=endsAt-Date.now();setTick(x=>x+1);if(rest<=3000&&rest>0)sfxTimerTick(Math.ceil(rest/1000));if(rest<=0){doSwap();if(auto)setEndsAt(Date.now()+state.seconds*1000);else{setEndsAt(null);setLeft(null);}}},500);return()=>window.clearInterval(t);},[endsAt,auto,state.seconds]);
+ const remain=endsAt?Math.max(0,Math.ceil((endsAt-Date.now())/1000)):Math.ceil((left??state.seconds*1000)/1000);
+ const configure=(next:SwapState)=>{setState(next);setEndsAt(null);setLeft(null);};
+ return <>
+  <div className="tools-bar">
+   <NumberSelect label="모둠 수" value={state.groups} min={SWAP_GROUPS.min} max={SWAP_GROUPS.max} unit="모둠" onChange={n=>configure(newSwapState(n,Math.min(state.active,n-1),state.seconds))}/>
+   <NumberSelect label="한 번에 도전" value={state.active} min={1} max={Math.max(1,state.groups-1)} unit="모둠" onChange={n=>configure(newSwapState(state.groups,n,state.seconds))}/>
+   <label className="tools-select">도전 시간<select aria-label="도전 시간" value={state.seconds} onChange={e=>configure(newSwapState(state.groups,state.active,Number(e.target.value)))} data-swap-seconds>{SWAP_SECONDS.map(n=><option key={n} value={n}>{n<60?`${n}초`:`${n/60}분${n%60?' 30초':''}`}</option>)}</select></label>
+   <label className="tools-check"><input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} data-swap-auto/> 시간이 되면 저절로 교대</label>
+  </div>
+  {resumed&&<Resume message="하던 역할 교대가 남아 있어요." onKeep={()=>setResumed(false)} onFresh={()=>{configure(newSwapState(state.groups,state.active,state.seconds));setResumed(false);}}/>}
+  <div className="sports-timer"><strong aria-live="off" data-swap-left>{formatCountdown(remain)}</strong><div className="flagship-row">
+   {endsAt?<button type="button" className="primary tools-go" onClick={pause} data-swap-pause>⏸ 일시정지</button>:<button type="button" className="primary tools-go" onClick={run} data-swap-run>{left!==null?'▶ 이어서':'▶ 시작'}</button>}
+   <button type="button" className="tools-go" onClick={()=>{doSwap();if(endsAt)setEndsAt(Date.now()+state.seconds*1000);else setLeft(null);}} data-swap-now>🔁 지금 교대</button>
+  </div></div>
+  <p className="rope-summary" role="status" data-swap-summary>반 전체 교대 {state.swaps}번 · 도전한 모둠 {state.challenged.length} / {state.groups}{everyoneChallenged(state)?' · ✅ 모든 모둠이 도전했어요':''}</p>
+  <div className="swap-grid">{Array.from({length:state.groups},(_,g)=>{const role=roleOfGroup(state,g);return <section key={g} className="swap-team" data-swap-team={g+1} data-role={role} aria-label={`${g+1}모둠 ${role}`}>
+   <strong>{g+1}모둠</strong><p className="swap-role">{SWAP_ROLE_TEXT[role].emoji} {role}</p><small>{SWAP_ROLE_TEXT[role].hint}</small>{state.challenged.includes(g)&&<span className="swap-did">도전 ✓</span>}
+  </section>;})}</div>
+  <p className="sports-sr" role="status">{announce}</p>
+  <div className="flagship-row"><button type="button" className="tools-go" disabled={state.swaps===0} onClick={()=>configure(newSwapState(state.groups,state.active,state.seconds))} data-swap-reset>처음으로</button></div>
+  <p className="sports-muted">도전 구역과 안전 구역을 미리 나눠 두세요. 학생은 이동할 때 화면 대신 신호 소리를 듣고, 혼잡하면 바로 일시정지해요. 점수는 반 전체 교대 횟수만 세요.</p>
+ </>;
+}
+
+/* ── 8박 동작 만들기 ── */
+// 모둠이 4박 줄 두 개를 골라 8박으로 잇고, 박자에 맞춰 연습한 뒤 TV로 차례로 발표한다.
+function BeatMaker(){
+ const [state,setState]=useState<BeatState>(()=>parseBeatState(readJsonStorage(BEAT_KEY,'session'))??newBeatState());
+ useEffect(()=>{writeStorage(BEAT_KEY,JSON.stringify(state),'session');},[state]);
+ const [mode,setMode]=useState<{kind:'practice';group:number}|{kind:'show'}|null>(null),[tick,setTick]=useState(-1),[ended,setEnded]=useState(false);
+ useEffect(()=>{if(!mode)return;setTick(-4);const t=window.setInterval(()=>setTick(x=>x+1),beatMs(state.bpm));return()=>window.clearInterval(t);},[mode,state.bpm]);
+ const show=mode?.kind==='show'?showAt(state,tick):null;
+ useEffect(()=>{if(!mode)return;if(tick<0){if(tick>-5)sfxClick();return;}
+  if(mode.kind==='show'&&!show){setMode(null);setEnded(true);sfxWhistle();return;}
+  const g=mode.kind==='practice'?mode.group:show!.group,b=mode.kind==='practice'?tick%8:show!.beat;
+  if(state.teams[g].pattern[b]!=='rest')sfxTap();
+ },[tick]); // eslint-disable-line react-hooks/exhaustive-deps
+ const stop=()=>{setMode(null);setTick(-1);};
+ const card=(id:string)=>BEAT_CARDS.find(c=>c.id===id)!;
+ const playing=(g:number)=>mode?(mode.kind==='practice'?(mode.group===g&&tick>=0?tick%8:-1):(show?.group===g?show.beat:-1)):-1;
+ return <>
+  <div className="tools-bar">
+   <NumberSelect label="모둠 수" value={state.groups} min={BEAT_GROUPS.min} max={BEAT_GROUPS.max} unit="모둠" onChange={n=>{stop();setState(newBeatState(n,state.bpm));}}/>
+   <label className="tools-select">빠르기<select aria-label="빠르기" value={state.bpm} onChange={e=>setState({...state,bpm:Number(e.target.value)})} data-beat-tempo>{BEAT_TEMPOS.map(t=><option key={t.bpm} value={t.bpm}>{t.label}</option>)}</select></label>
+  </div>
+  <p className="rope-rule">칸을 누를 때마다 👏 손뼉 → 🦶 발 디딤 → 🙌 팔 동작 → · 쉼으로 바뀌어요. 앞 4박과 뒤 4박을 모둠이 하나씩 정해 8박으로 이어요. 동작은 학교에서 정한 동작으로 바꿔도 돼요.</p>
+  {mode?.kind==='show'&&show&&<div className="beat-stage" role="status" data-beat-stage><p>{show.group+1}모둠 발표 · {show.round+1}번째</p><strong>{card(state.teams[show.group].pattern[show.beat]).emoji}</strong><span>{show.beat+1} / 8</span></div>}
+  {mode&&tick<0&&<p className="beat-count" role="status" data-beat-count>준비 {-tick}</p>}
+  {ended&&<div className="rope-rule" data-beat-reflect><b>발표를 마쳤어요. 말로 돌아봐요.</b><ul>{BEAT_REFLECTION.map(q=><li key={q}>{q}</li>)}</ul></div>}
+  <div className="beat-grid">{state.teams.map((t,g)=><section key={g} className="beat-team" data-beat-team={g+1} aria-label={`${g+1}모둠 8박`}>
+   <strong>{g+1}모둠</strong>
+   <ol className="beat-row">{t.pattern.map((c,i)=><li key={i}><button type="button" data-now={playing(g)===i?'yes':undefined} data-half={i<4?'a':'b'} aria-label={`${i+1}박 ${card(c).label}`} onClick={()=>setState(cycleBeat(state,g,i))} data-beat-cell={i}>{card(c).emoji}<small>{i+1}</small></button></li>)}</ol>
+   <button type="button" className="tools-go" disabled={!hasMove(t.pattern)||mode?.kind==='show'} onClick={()=>{unlockAudio();setEnded(false);setMode(mode?.kind==='practice'&&mode.group===g?null:{kind:'practice',group:g});}} data-beat-practice>{mode?.kind==='practice'&&mode.group===g?'⏹ 멈춤':'🔁 반복 연습'}</button>
+  </section>)}</div>
+  <div className="flagship-row">
+   {mode?.kind==='show'?<button type="button" className="primary tools-go" onClick={stop}>⏹ 발표 멈춤</button>
+    :<button type="button" className="primary tools-go" disabled={!state.teams.every(t=>hasMove(t.pattern))} onClick={()=>{unlockAudio();setEnded(false);setMode({kind:'show'});}} data-beat-show>📺 TV 발표 시작 (1모둠부터 두 번씩)</button>}
+  </div>
+  <p className="sports-muted">박자 소리에 맞춰 모둠이 함께 움직여요. 맞췄는지는 모둠이 서로 확인해요. 카메라와 마이크는 쓰지 않아요.</p>
+ </>;
+}
+
+const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={'rope-relay':RopeRelay,'role-swap':RoleSwap,'beat-moves':BeatMaker,league:League,timer:Countdown,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice,'quiz-bingo':PeQuizBingo};
 
 /** 수업 도구 모음. 도구들을 늘 붙여 두고 보이는 것만 바꿔, 도구를 오가도 시계·뽑기 기록이 남는다. */
 export function ClassTools(){

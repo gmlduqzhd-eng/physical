@@ -102,3 +102,40 @@ html.dark-theme .tools-countdown[data-last=yes] strong{color:#fdba74}html.dark-t
  .rope-print th,.rope-print td{border:1px solid currentColor;padding:6px;height:28px;text-align:left}
  .rope-print caption{text-align:left;font-weight:800;padding:4px 0}
 }
+/* 진행 중 TV 한 화면: 제목·도구 탭·설정을 접고 모둠 카드만 크게 */
+body.tools-focus .class-tools[data-tool="rope-relay"]>.eyebrow,
+body.tools-focus .class-tools[data-tool="rope-relay"]>h1,
+body.tools-focus .class-tools[data-tool="rope-relay"]>h1+p,
+body.tools-focus .class-tools[data-tool="rope-relay"]>.tools-tabs,
+body.tools-focus .class-tools[data-tool="rope-relay"]>.tools-switch{display:none}
+.rope-focus-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-weight:700}
+@media (min-width:900px){
+ .rope-grid[data-focus="yes"]{grid-template-columns:repeat(var(--rope-cols),minmax(0,1fr))}
+ .rope-grid[data-focus="yes"][data-many="yes"] .rope-left output{font-size:clamp(2.2rem,4.5vw,3.6rem)}
+ .rope-grid[data-focus="yes"][data-many="yes"] .rope-roles li{font-size:.85rem;padding:2px 6px}
+}
+/* 역할 교대 */
+.tools-check{display:flex;align-items:center;gap:6px;font-weight:600}
+.tools-check input{width:20px;height:20px}
+.swap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:10px}
+.swap-team{border:2px solid var(--ui-line);border-radius:var(--ui-radius-2);padding:12px;display:flex;flex-direction:column;gap:4px;background:var(--ui-paper);position:relative}
+.swap-team strong{font-size:1.2rem}
+.swap-role{margin:0;font-size:clamp(1.6rem,3.5vw,2.6rem);font-weight:900}
+.swap-team[data-role="도전"]{border-color:var(--ui-signal);background:var(--ui-tint)}
+.swap-team[data-role="도전"] .swap-role{color:var(--ui-ink)}
+.swap-team[data-role="준비"]{border-style:dashed;border-color:var(--ui-action)}
+.swap-team small{color:var(--ui-muted)}
+.swap-did{position:absolute;top:10px;right:10px;font-size:.85rem;font-weight:700}
+/* 8박 동작 만들기 */
+.beat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:12px}
+.beat-team{border:2px solid var(--ui-line);border-radius:var(--ui-radius-2);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--ui-paper)}
+.beat-row{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px}
+.beat-row button{width:100%;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.4rem;border-radius:10px;border:2px solid var(--ui-line);background:var(--ui-paper);color:var(--ui-ink);cursor:pointer;padding:2px}
+.beat-row button[data-half="b"]{background:var(--ui-tint)}
+.beat-row button small{font-size:.7rem;color:var(--ui-muted)}
+.beat-row button[data-now="yes"]{border-color:var(--ui-signal);outline:3px solid var(--ui-signal);transform:scale(1.06)}
+.beat-stage{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px;border-radius:var(--ui-radius-2);background:var(--ui-stage);color:var(--ui-on-stage);margin:8px 0}
+.beat-stage p{margin:0;font-weight:800;font-size:1.3rem}
+.beat-stage strong{font-size:clamp(4rem,12vw,8rem);line-height:1}
+.beat-count{font-size:2rem;font-weight:900;text-align:center;margin:8px 0}
+@media (prefers-reduced-motion:reduce){.beat-row button[data-now="yes"]{transform:none}}
