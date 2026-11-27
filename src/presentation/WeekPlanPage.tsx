@@ -16,6 +16,7 @@ import './TodayLesson.css';
 import './WeekPlanPage.css';
 import {OfflineReady} from './components/OfflineReady';
 import {CloudSyncPrompt} from './components/CloudSyncPrompt';
+import {SportSeriesCard} from './components/SportSeriesCard';
 
 /**
  * 여러 차시 한 번에 짜기: 학년·장소·시간과 차시 수를 고르면 차시마다 준비운동·본게임·정리운동을 짜 준다.
@@ -70,5 +71,6 @@ function WeekPlanOf({classId,className}:{classId:string;className:string}){
    <OfflineReady/>
    <p className="today-plan-note">{pin?'주가 바뀌면 새 계획을 짤 수 있어요. 그동안 남긴 👍/👎는 다음 계획에 반영돼요.':'‘이 계획으로 정하기’를 누르면 이번 주 동안 순서가 바뀌지 않고, 마친 차시가 표시돼요.'}</p>
   </section>
+  <SportSeriesCard classId={classId}/>
  </FlowShell>;
 }

@@ -9,6 +9,9 @@ import {readJsonStorage,removeStorage,writeStorage} from '../application/browser
 import {sfxWhistle,sfxCountdown,unlockAudio} from '../application/soundEffects';
 import {LESSON_STAGES,MEDAL_LABEL,awardReady,blankResults,parseLessonProgress,startScores,SPORT_BY_ID,SPORT_FILTERS,SPORT_GROUPS,TEAM_COLORS,TEAM_NAMES,addMedals,filterSports,formatResult,medalStandings,parseMedalTally,rankTeams,scoreChange,type MedalTally,type SportEvent,type SportFilter,type SportGrade} from '../domain/sportsClassroom';
 import {hasDeepDive} from '../domain/sportDeepDive';
+import {markLesson,seriesFromQuery,seriesLessonPath,type SeriesLesson,type SportSeries} from '../domain/sportSeries';
+import {currentClassId} from '../application/classRosterStore';
+import {readSeries,writeSeries} from '../application/sportSeriesStore';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 
@@ -85,6 +88,21 @@ function TimeMatch({event,teams,scores,setScores}:{event:SportEvent;teams:number
 }
 
 const LESSON_KEY='physical_sport_lesson_v1';
+/** 종목 연속 차시의 이번 차시 띠: 할 것 3줄과 지켜볼 동작. 돌아보기 단계에서 '마쳤어요'를 누르면 반에 기록하고 다음 차시를 알려 준다. */
+function SeriesBanner({series,lesson,last}:{series:SportSeries;lesson:SeriesLesson;last:boolean}){
+ const classId=currentClassId();
+ const [done,setDone]=useState(()=>(readSeries(classId)[series.id]??[]).includes(lesson.no));
+ const next=series.lessons.find(l=>l.no===lesson.no+1);
+ const finish=()=>{writeSeries(classId,markLesson(readSeries(classId),series.id,lesson.no,true));setDone(true);};
+ return <aside className="sports-series" aria-label={`${series.name} ${lesson.no}차시`} data-series-banner={lesson.no}>
+  <p className="sports-series-head"><b>{series.icon} {series.name} · {lesson.no}차시</b> {lesson.title}</p>
+  <ul>{lesson.rules.map(r=><li key={r}>{r}</li>)}</ul>
+  <p>👀 지켜볼 동작 · {lesson.watch}</p>
+  {last&&(done
+   ?<p className="sports-series-done" role="status" data-series-finished>✅ {lesson.no}차시를 마쳤어요. {next?<Link to={seriesLessonPath(series,next.no)}>다음 차시: {next.no}차시 {next.title} →</Link>:'모든 차시를 마쳤어요!'} <Link to="/week">여러 차시 계획으로</Link></p>
+   :<div className="flagship-row"><button type="button" className="primary" onClick={finish} data-series-finish>✅ {lesson.no}차시 마쳤어요</button><span className="sports-muted">{lesson.repeatIf}</span></div>)}
+ </aside>;
+}
 /** 종목 한 차시: 준비운동 → 미션 → 준비·안전 → 경기 → 시상 → 돌아보기. 진행 상태는 이 탭에 남아 새로고침해도 이어진다. */
 export function SportLesson(){
  const {sportId}=useParams(),event=SPORT_BY_ID.get(sportId??'');
@@ -93,8 +111,11 @@ export function SportLesson(){
 }
 
 function SportLessonBody({event}:{event:SportEvent}){
+ // 종목 연속 차시에서 열었으면(?series=…&lesson=…) 그 차시의 규칙 수준으로 시작하고 차시 띠를 보여 준다.
+ const [query]=useSearchParams();
+ const series=useMemo(()=>seriesFromQuery(event.id,query.get('series'),query.get('lesson')),[event.id,query]);
  const saved=useMemo(()=>parseLessonProgress(readJsonStorage(LESSON_KEY,'session'),event.id),[event.id]);
- const [stage,setStage]=useState(saved?.stage??0),[teams,setTeams]=useState(saved?.teams??2),[level,setLevel]=useState<'easy'|'basic'|'hard'>(saved?.level??'basic');
+ const [stage,setStage]=useState(saved?.stage??0),[teams,setTeams]=useState(saved?.teams??2),[level,setLevel]=useState<'easy'|'basic'|'hard'>(series?.lesson.level??saved?.level??'basic');
  const [scores,setScores]=useState<Results>(saved?.scores??blankResults()),[awarded,setAwarded]=useState(saved?.awarded??false),[tally,setTally]=useState<MedalTally>(readTally),[round,setRound]=useState(0);
  useEffect(()=>{writeStorage(LESSON_KEY,JSON.stringify({sport:event.id,stage,teams,level,scores,awarded}),'session');},[event.id,stage,teams,level,scores,awarded]);
  useEffect(()=>{window.scrollTo(0,0);},[stage]);
@@ -111,6 +132,7 @@ function SportLessonBody({event}:{event:SportEvent}){
  return <FlowShell utilities back="/sports" backLabel="종목 고르기"><section className="play-experiences sports-lesson" aria-label={`${event.name} 수업`} data-sport={event.id} data-stage={id}>
   <p className="eyebrow">종목 교실 · {SPORT_GROUPS[event.group]}</p><h1><span aria-hidden="true">{event.icon}</span> {event.name} <small>{event.sub}</small></h1>
   {hasDeepDive(event.id)&&<p><Link className="sports-deep-link" to={`/sports/${event.id}/deep`}>📖 {event.name} 깊이 보기 · 용어·기술·포지션·퀴즈 →</Link></p>}
+  {series&&<SeriesBanner series={series.series} lesson={series.lesson} last={id==='reflect'}/>}
   <div className="sports-progress" aria-hidden="true"><span style={{width:`${((stage+1)/LESSON_STAGES.length)*100}%`}}/></div>
   <p className="sports-progress-label" aria-live="polite">{LESSON_STAGES.length}단계 중 {stage+1}단계 · {LESSON_STAGES[stage].label}</p>
   <ol className="sports-stages" aria-label="수업 단계">{LESSON_STAGES.map((s,i)=><li key={s.id}><button aria-current={i===stage?'step':undefined} onClick={()=>setStage(i)}>{i+1}. {s.label}</button></li>)}</ol>

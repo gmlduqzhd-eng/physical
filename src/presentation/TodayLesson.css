@@ -110,3 +110,10 @@ html.dark-theme .today-map-moment-skip{background:#1c1917;color:#fefce8;border-c
 /* 작은 글씨 올리기: 눈썹 글·접힌 칸의 요약. */
 .today-page .eyebrow{font-size:15px}
 .today-page .today-settings summary small{font-size:15px}
+/* 비 오는 날: 교실로 바꾸기 */
+.today-rain{margin:12px 0;display:flex;flex-direction:column;gap:8px}
+.today-rain-lead,.today-rain-done{margin:0;padding:10px 12px;border-radius:12px;background:var(--ui-tint);font-weight:700}
+.today-rain-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.today-rain-list button{width:100%;text-align:left;display:flex;flex-direction:column;gap:4px;padding:12px;min-height:48px;border-radius:12px;border:2px solid var(--ui-line);background:var(--ui-paper);color:var(--ui-ink);cursor:pointer}
+.today-rain-list button:hover,.today-rain-list button:focus-visible{border-color:var(--ui-action)}
+.today-rain-list small{color:var(--ui-muted)}

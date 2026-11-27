@@ -28,3 +28,9 @@
 .sports-progress-label{margin:0;font-weight:800;font-size:15px}
 .sports-teams{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;font-weight:700}.sports-teams select{min-height:44px}
 @media print{.sports-progress,.sports-progress-label{display:none}}
+/* 종목 연속 차시 띠 */
+.sports-series{margin:8px 0 12px;padding:12px 14px;border-radius:var(--ui-radius-2);border:2px solid var(--ui-action);background:var(--ui-tint);line-height:1.5}
+.sports-series ul{margin:6px 0;padding-left:1.2em}
+.sports-series p{margin:4px 0}
+.sports-series-head{font-size:1.1rem}
+.sports-series-done{font-weight:700}

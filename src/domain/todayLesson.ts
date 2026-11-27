@@ -107,7 +107,8 @@ export interface TodayStageResult {status:'done'|'skipped';seconds:number}
  * extraMains: 본게임 단계에서 '다른 대표 게임으로 한 판 더'로 연 대표 게임(연 순서대로, 겹치지 않게). 이 게임들도 본게임으로 친다.
  * extraPlays: 끝 화면에서 extraMains마다 반응을 붙일 판 id(extraMains와 같은 순서·같은 길이).
  */
-export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number;recordsSince?:number;stagePlays?:string[];extraMains?:string[];extraPlays?:string[]}
+export interface TodayRun {plan:TodayPlan;index:number;startedAt:number;stageStartedAt:number;results:TodayStageResult[];finishedAt?:number;recordsSince?:number;stagePlays?:string[];extraMains?:string[];extraPlays?:string[];
+ /** 비가 와서 교실로 바꾼 수업이면 원래 본게임 id(끝 화면에 '교실로 바꿨어요'를 적는다). */ rainFrom?:string}
 /** 이 수업의 판·반응을 찾는 시작 시각. */
 export const recordsSince=(run:TodayRun)=>run.recordsSince??run.startedAt;
 
@@ -209,6 +210,7 @@ export function parseRun(raw:unknown):TodayRun|null{
  if(r.stagePlays!==undefined&&(!Array.isArray(r.stagePlays)||r.stagePlays.length!==p.stages.length||!r.stagePlays.every(x=>typeof x==='string'&&x.length<=64)))return null;
  if(r.extraMains!==undefined&&(!Array.isArray(r.extraMains)||r.extraMains.length>MAX_EXTRA_MAINS||!r.extraMains.every(isMainId)||new Set(r.extraMains).size!==r.extraMains.length))return null;
  if(r.extraPlays!==undefined&&(!Array.isArray(r.extraPlays)||r.extraPlays.length!==(r.extraMains?.length??0)||!r.extraPlays.every(x=>typeof x==='string'&&x.length>0&&x.length<=64)))return null;
+ if(r.rainFrom!==undefined&&!isMainId(r.rainFrom))return null;
  if((r.index===p.stages.length)!==(r.finishedAt!==undefined))return null;
  const st=p.settings as Partial<TodaySettings>;
  if(!TODAY_GRADES.some(g=>g.id===st.grade)||!TODAY_SPACES.includes(st.space as FitSpace)||!(TODAY_MINUTES as readonly number[]).includes(st.minutes as number))return null;
@@ -232,6 +234,45 @@ export function otherMains(run:TodayRun,limit=3):SignatureGameDef[]{
  if(stage?.kind!=='main')return [];
  const {grade,space}=run.plan.settings;
  return mainCandidates(grade,space).filter(g=>g.id!==stage.gameId).slice(0,limit);
+}
+/* ── 비 오는 날: 진행 중인 수업을 교실용으로 ── */
+export const CLASSROOM_SPACE:FitSpace=FIT_SPACES[0];
+const mainIndexOf=(run:TodayRun)=>run.plan.stages.findIndex(s=>s.kind==='main');
+/** 수업 시작부터 지난 시간을 빼고 남은 계획 시간(분). */
+export const remainingMinutes=(run:TodayRun,now:number)=>Math.max(0,Math.round(run.plan.settings.minutes-(now-run.startedAt)/60000));
+/**
+ * 교실로 바꿀 때 보여 줄 대표 게임(2~3개). 본게임을 아직 마치지 않았고 교실 수업이 아닐 때만.
+ * 같은 수업이면 늘 같은 순서로 보여 준다(seed로 돌린다).
+ */
+export function rainCandidates(run:TodayRun,limit=3):SignatureGameDef[]{
+ const at=mainIndexOf(run);
+ if(run.finishedAt!==undefined||at<0||run.index>at||run.plan.settings.space===CLASSROOM_SPACE)return [];
+ const current=run.plan.stages[at].gameId;
+ const list=mainCandidates(run.plan.settings.grade,CLASSROOM_SPACE).filter(g=>g.id!==current);
+ if(!list.length)return [];
+ const shift=run.plan.seed%list.length;
+ return [...list.slice(shift),...list.slice(0,shift)].slice(0,limit);
+}
+/**
+ * 남은 단계를 교실용으로 바꾼다: 본게임은 고른 대표 게임으로, 아직 안 한 준비·정리운동은 교실에 맞지 않으면 교실용으로.
+ * 이미 마친 단계와 돌아보기, '한 판 더'로 한 게임 기록은 그대로 둔다.
+ */
+export function swapToClassroom(run:TodayRun,gameId:string):TodayRun{
+ if(!rainCandidates(run,99).some(g=>g.id===gameId))return run;
+ const sig=READY_SIGNATURE_GAMES.find(g=>g.id===gameId)!;
+ const {grade}=run.plan.settings,at=mainIndexOf(run),from=run.plan.stages[at].gameId;
+ const stages=run.plan.stages.map((s,i)=>{
+  if(i<run.index)return s;
+  if(i===at)return {...s,title:sig.name,gameId:sig.id,emoji:sig.emoji,note:`${sig.oneLine} 교실이 좁으면: ${sig.seatedNote}`};
+  if((s.kind==='warmup'||s.kind==='cooldown')&&s.gameId&&i!==run.index){
+   const g=BY_ID.get(s.gameId);
+   if(g&&fitsSpace(g,CLASSROOM_SPACE))return s;
+   const alt=stageCandidates(s.kind,grade,CLASSROOM_SPACE)[0];
+   return alt?{...s,title:alt.name,gameId:alt.type,emoji:alt.emoji||s.emoji}:s;
+  }
+  return s;
+ });
+ return {...run,rainFrom:run.rainFrom??from,plan:{...run.plan,settings:{...run.plan.settings,space:CLASSROOM_SPACE,mainId:sig.id},stages}};
 }
 /** 수업 중에 여는 대표 게임 주소(끝나면 '오늘 수업'으로 돌아온다). */
 export const mainPath=(gameId:string,teams:number)=>`/play/${gameId}?${new URLSearchParams({returnTo:'/today',teams:String(teams)}).toString()}`;
