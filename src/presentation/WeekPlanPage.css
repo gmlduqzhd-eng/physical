@@ -11,3 +11,9 @@
 .week-pinned{margin:0;padding:12px 14px;border-radius:12px;background:var(--ui-tint);font-size:16px;font-weight:700}
 .week-done{padding:4px 12px;border-radius:999px;background:var(--ui-action);color:var(--ui-on-action);font-size:14px;font-weight:700}
 .week-lesson[data-done=yes]{border-color:var(--ui-action)}
+/* 종목 연속 차시 */
+.week-series{margin-top:16px}
+.week-series-item{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.week-series-toggle{text-align:left}
+.week-series-rules{margin:4px 0;padding-left:1.2em;line-height:1.5}
+.week-lesson[data-next="yes"]{border-color:var(--ui-action)}

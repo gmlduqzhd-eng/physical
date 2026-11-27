@@ -11,11 +11,12 @@ import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
 import {PeQuizBingo} from './components/PeQuizBingo';
+import {ROPE_GROUPS,ROPE_MEMBERS,ROPE_MOTIONS,ROPE_ROLE_EMOJI,ROPE_TARGETS,completeTurn,finishedCount,isFinished,newRopeState,parseRopeState,remaining,roleOf,setGroupTarget,started,stopAt,turnLine,type RopeMotion,type RopeState} from '../domain/ropeRelay';
 import {OfflineReady} from './components/OfflineReady';
 
 const LEAGUE_KEY='physical_class_league_v1';
 // 번호 뽑기·모둠·레이스는 이 탭에만 적어 둔다(새로고침·자동 새로고침에도 이어지고, 탭을 닫으면 사라진다).
-const DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1',COUNTDOWN_KEY='physical_tools_countdown_v1';
+const ROPE_KEY='physical_tools_rope_v1',DRAW_KEY='physical_tools_draw_v1',GROUPS_KEY='physical_tools_groups_v1',RACE_KEY='physical_tools_race_v1',COUNTDOWN_KEY='physical_tools_countdown_v1';
 const today=()=>new Date().toLocaleString('ko-KR');
 /** 엽쌤의 달리기 뽑기 앱. 달리기 경주로 순서를 정할 때 쓴다. */
 const RUNRUN_URL='https://gmlduqzhd123-lab.github.io/RunRun/';
@@ -248,7 +249,62 @@ function Dice(){
  </>;
 }
 
-const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={league:League,timer:Countdown,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice,'quiz-bingo':PeQuizBingo};
+
+/* ── 모둠 이어 넘기 ── */
+// TV 한 대에서 모둠별 목표·이어 온 횟수·다음 차례를 보여 준다. 선생님은 멈춤·교대 때만 누른다.
+// 이 탭에만 적어 두어 새로고침해도 이어지고, '수업 마침'을 누르면 지운다.
+function RopeRelay(){
+ const [saved]=useState(()=>parseRopeState(readJsonStorage(ROPE_KEY,'session')));
+ const [state,setState]=useState<RopeState>(()=>saved??newRopeState());
+ const [resumed,setResumed]=useState(!!saved&&started(saved));
+ const [stopping,setStopping]=useState<number|null>(null),[last,setLast]=useState<RopeState|null>(null),[pending,setPending]=useState<RopeState|null>(null),[announce,setAnnounce]=useState('');
+ useEffect(()=>{if(started(state))writeStorage(ROPE_KEY,JSON.stringify(state),'session');else removeStorage(ROPE_KEY,'session');},[state]);
+ const act=(next:RopeState,message:string)=>{if(next===state)return;setLast(state);setState(next);setStopping(null);setAnnounce(message);};
+ // 설정(모둠 수·인원·목표·동작)을 바꾸면 처음부터. 이미 시작했으면 먼저 묻는다.
+ const configure=(next:RopeState)=>{if(started(state))setPending(next);else{setState(next);setLast(null);}};
+ const fresh=()=>{setState(newRopeState(state.groups,state.members,state.target,state.motion));setLast(null);setStopping(null);setAnnounce('처음부터 다시 시작해요.');};
+ const motion=ROPE_MOTIONS.find(m=>m.id===state.motion)!;
+ const done=finishedCount(state);
+ const print=()=>{document.body.classList.add('rope-printing');const off=()=>{document.body.classList.remove('rope-printing');window.removeEventListener('afterprint',off);};window.addEventListener('afterprint',off);window.print();window.setTimeout(off,1500);};
+ return <>
+  <div className="tools-bar">
+   <NumberSelect label="모둠 수" value={state.groups} min={ROPE_GROUPS.min} max={ROPE_GROUPS.max} unit="모둠" onChange={n=>configure(newRopeState(n,state.members,state.target,state.motion))}/>
+   <NumberSelect label="모둠 인원" value={state.members} min={ROPE_MEMBERS.min} max={ROPE_MEMBERS.max} unit="명" onChange={n=>configure(newRopeState(state.groups,n,state.target,state.motion))}/>
+   <label className="tools-select">한 사람 목표<select aria-label="한 사람 목표" value={state.target} onChange={e=>configure(newRopeState(state.groups,state.members,Number(e.target.value),state.motion))} data-rope-target>{ROPE_TARGETS.map(n=><option key={n} value={n}>{n}회</option>)}</select></label>
+   <label className="tools-select">동작<select aria-label="동작" value={state.motion} onChange={e=>setState({...state,motion:e.target.value as RopeMotion})} data-rope-motion>{ROPE_MOTIONS.map(m=><option key={m.id} value={m.id}>{m.emoji} {m.label}</option>)}</select></label>
+  </div>
+  {resumed&&<Resume message="하던 모둠 이어 넘기가 남아 있어요." onKeep={()=>setResumed(false)} onFresh={()=>{fresh();setResumed(false);}}/>}
+  {pending&&<Confirm message="설정을 바꾸면 모둠별 진행이 처음으로 돌아가요. 바꿀까요?" yes="처음으로 하고 바꾸기" onNo={()=>setPending(null)} onYes={()=>{setState(pending);setPending(null);setLast(null);setStopping(null);}}/>}
+  <p className="rope-rule" data-rope-rule><b>{motion.emoji} {motion.label}</b> · {motion.hint} 걸리면 처음부터가 아니라 <b>멈춘 횟수부터 이어</b> 해요. 목표를 채우면 역할을 한 칸씩 바꿔요.</p>
+  <p className="rope-summary" role="status" data-rope-summary>완료한 모둠 {done} / {state.groups}{done===state.groups?' · 🎉 모든 모둠 성공!':''}</p>
+  <div className="rope-grid" data-many={state.groups>4?'yes':'no'}>{state.teams.map((t,g)=>{const fin=isFinished(state,g);return <section key={g} className="rope-team" data-rope-team={g+1} data-done={fin?'yes':'no'} aria-label={`${g+1}모둠`}>
+   <div className="rope-head"><strong>{g+1}모둠</strong><span>{turnLine(state,g)}</span></div>
+   {fin?<p className="rope-left rope-done">🎉</p>:<p className="rope-left" aria-label={`남은 횟수 ${remaining(state,g)}회`}><output data-rope-left>{remaining(state,g)}</output><small>회 남음 · 목표 {t.target}회{t.done?` · ${t.done}회부터 이어서`:''}</small></p>}
+   <ol className="rope-roles" aria-label="역할">{Array.from({length:state.members},(_,m)=>{const role=fin?null:roleOf(state.members,t.turn,m);return <li key={m} data-role={role??'done'} data-past={m<t.turn?'yes':undefined}><b>{m+1}</b>{role?<span>{ROPE_ROLE_EMOJI[role]} {role}</span>:<span>✅</span>}</li>;})}</ol>
+   {!fin&&(stopping===g
+    ?<div className="rope-stop" role="group" aria-label={`${g+1}모둠 멈춘 횟수`}><p>지금까지 넘은 횟수를 눌러요</p><div className="rope-stop-keys">{Array.from({length:t.target-t.done},(_,i)=>t.done+i).map(n=><button key={n} type="button" onClick={()=>act(stopAt(state,g,n),`${g+1}모둠 ${n}회에서 멈춤. 남은 ${t.target-n}회부터 이어 해요.`)} data-rope-count={n}>{n}</button>)}</div><button type="button" className="tools-cancel" onClick={()=>setStopping(null)}>닫기</button></div>
+    :<div className="rope-actions">
+     <button type="button" className="primary" onClick={()=>{sfxPop();act(completeTurn(state,g),t.turn+1>=state.members?`${g+1}모둠 모두 성공!`:`${g+1}모둠 교대. ${t.turn+2}번째 도전.`);}} data-rope-complete>✅ 목표 성공 · 교대</button>
+     <button type="button" onClick={()=>setStopping(g)} data-rope-stop>⏸ 멈춤</button>
+    </div>)}
+   {!fin&&<div className="rope-adjust"><button type="button" aria-label={`${g+1}모둠 목표 줄이기`} disabled={t.target<=1} onClick={()=>act(setGroupTarget(state,g,t.target-1),`${g+1}모둠 목표 ${t.target-1}회`)}>−</button><span>모둠 목표</span><button type="button" aria-label={`${g+1}모둠 목표 늘리기`} onClick={()=>act(setGroupTarget(state,g,t.target+1),`${g+1}모둠 목표 ${t.target+1}회`)}>+</button></div>}
+  </section>;})}</div>
+  <p className="sports-sr" role="status">{announce}</p>
+  <div className="flagship-row">
+   <button type="button" className="tools-go" disabled={!last} onClick={()=>{if(last){setState(last);setLast(null);setAnnounce('방금 누른 것을 되돌렸어요.');}}} data-rope-undo>↩ 되돌리기</button>
+   <button type="button" className="tools-go" onClick={print} data-rope-print>🖨 종이 표시판 인쇄</button>
+   <button type="button" className="tools-go" disabled={!started(state)} onClick={fresh} data-rope-reset>수업 마침 · 지우기</button>
+  </div>
+  <p className="sports-muted">모둠이 서로 세고, 멈추면 몇 회까지 했는지 말해요. 선생님은 그 횟수만 누르면 TV에 남은 횟수가 떠요. TV가 멈추면 인쇄한 종이 표시판으로 이어 가요. 학생 이름은 받지 않아요.</p>
+  <section className="rope-print" aria-hidden="true">
+   <h2>🪢 모둠 이어 넘기 표시판</h2>
+   <p>{motion.label} · 한 사람 목표 {state.target}회 · 걸리면 멈춘 횟수부터 이어 하기 · 성공하면 역할 바꾸기(도전 → 세기 → 기록 → 연습)</p>
+   {state.teams.map((t,g)=><table key={g}><caption>{g+1}모둠 (목표 {t.target}회)</caption><thead><tr><th>차례</th><th>멈춘 횟수 적기</th><th>성공</th></tr></thead><tbody>{Array.from({length:state.members},(_,m)=><tr key={m}><td>{m+1}번째</td><td></td><td>☐</td></tr>)}</tbody></table>)}
+  </section>
+ </>;
+}
+
+const TOOL_VIEW:Record<ClassToolId,()=>React.ReactElement>={'rope-relay':RopeRelay,league:League,timer:Countdown,race:Race,ladder:LadderTool,draw:Draw,groups:Groups,dice:Dice,'quiz-bingo':PeQuizBingo};
 
 /** 수업 도구 모음. 도구들을 늘 붙여 두고 보이는 것만 바꿔, 도구를 오가도 시계·뽑기 기록이 남는다. */
 export function ClassTools(){

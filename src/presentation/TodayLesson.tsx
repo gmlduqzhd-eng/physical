@@ -12,7 +12,7 @@ import {readStorage,writeStorage} from '../application/browserStorage';
 import {loadTodaySettings,loadTodayShuffle,saveTodaySettings,saveTodayShuffle} from '../application/todayLessonPrefs';
 import {
  STAGE_LABEL,TODAY_GRADES,TODAY_MINUTES,TODAY_SPACES,TODAY_TEAMS,
- addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,
+ addExtraMain,advanceRun,localDayKey,todaySeed,bindStagePlays,buildTodayPlan,currentStage,formatSeconds,isStaleRun,mainCandidates,mainPath,otherMains,recordsSince,resumeRun,runSeconds,stageMinute,stageOutcomes,stagePlanText,stageTitle,mainGameLabel,startRun,stagePath,withRecordedExtras,rainCandidates,remainingMinutes,swapToClassroom,
  type StageOutcome,type TodayPlan,type TodayRun,type TodaySettings,
 } from '../domain/todayLesson';
 import {ClassSwitcher} from './components/ClassSwitcher';
@@ -137,7 +137,7 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
     </select>
    </label>
   </details>
-  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/week" data-week-link>📅 여러 차시 한 번에 짜기</Link> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
+  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/week" data-week-link>📅 여러 차시 한 번에 짜기</Link> · <Link to="/tools?tool=rope-relay" data-rope-link>🪢 모둠 이어 넘기</Link> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
  </section>;
 }
 
@@ -191,9 +191,26 @@ function TodayStageView({run:stored}:{run:TodayRun}){
       :<>{path&&<button type="button" className="primary today-primary today-big" onClick={()=>navigate(path)}>{rounds>0?`🔁 ${again} · ${stage.title}`:`▶ ${stage.title} 열기`}</button>}
         <div className="today-row"><button type="button" className="today-secondary" onClick={()=>step('done')}>다음 단계 ▶</button>{rounds===0&&<button type="button" className="today-ghost" onClick={()=>step('skipped')}>건너뛰기</button>}</div></>}
      {stage.kind==='main'&&rounds>0&&!over&&others.length>0&&<div className="today-others"><p>다른 대표 게임으로 한 판 더</p><div className="today-choice">{others.map(g=><button key={g.id} type="button" onClick={()=>{saveTodayRun(addExtraMain(run,g.id));navigate(mainPath(g.id,teams));}}>{g.emoji} {g.name}</button>)}</div></div>}</>}
+  <RainSwap run={run} now={now}/>
   <StageList plan={run.plan} run={run} shown={didInLesson(progress,run,Infinity)}/>
   <p className="today-more"><button type="button" className="today-link" onClick={quit}>오늘 수업 그만하고 새로 짜기</button></p>
  </section>;
+}
+
+/**
+ * 비 오는 날: 진행 중인 수업에서 본게임만 교실용 대표 게임으로 바꾼다(마친 단계·돌아보기는 그대로).
+ * 좁은 교실을 생각해 앉아서 하는 방법을 함께 보여 준다.
+ */
+function RainSwap({run,now}:{run:TodayRun;now:number}){
+ const [open,setOpen]=useState(false);
+ const list=rainCandidates(run);
+ if(!list.length)return null;
+ return <div className="today-rain" data-rain-swap>
+  {!open?<button type="button" className="today-secondary" onClick={()=>setOpen(true)} data-rain-open>☔ 비가 와서 교실로 바꾸기</button>
+   :<><p className="today-rain-lead">남은 시간 약 {remainingMinutes(run,now)}분 · 교실에서 할 본게임을 골라요. 이미 한 단계와 돌아보기는 그대로예요.</p>
+    <ul className="today-rain-list">{list.map(g=><li key={g.id}><button type="button" onClick={()=>{saveTodayRun(swapToClassroom(run,g.id));setOpen(false);}} data-rain-pick={g.id}><b>{g.emoji} {g.name}</b><span>{g.oneLine}</span><small>🪑 좁은 교실: {g.seatedNote}</small></button></li>)}</ul>
+    <button type="button" className="today-ghost" onClick={()=>setOpen(false)}>그대로 하기</button></>}
+ </div>;
 }
 
 /**
@@ -249,6 +266,7 @@ function TodaySummary({run:stored}:{run:TodayRun}){
   {moment&&momentOpen&&<MapMoment moment={moment} onClose={closeMoment}/>}
   {moment&&!momentOpen&&<p ref={mapLineRef} tabIndex={-1} className="today-map-line">🗺️ {moment.line} <Link to="/class-progress?tab=map">반 원정 지도 보기</Link></p>}
   <p className="today-lead">{run.plan.stages.length}단계 중 {parts.join(' · ')}.</p>
+  {run.rainFrom&&<p className="today-rain-done" data-rain-done>☔ 비가 와서 교실 수업으로 바꿨어요 (원래 본게임: {mainGameLabel(run.rainFrom)})</p>}
   <StageList plan={run.plan} run={run} outcomes={outcomes} shown={did}/>
   <div className="today-reflection"><p className="today-reflection-label">오늘의 질문</p><p className="today-question">{run.plan.reflection}</p></div>
   <h2 className="today-sub">활동마다 반응 남기기</h2>

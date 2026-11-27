@@ -4,8 +4,8 @@ import {EMPTY_ROSTER,addClass,classStorageKey,parseRoster,removeClass,renameClas
 /** 반 목록과 지금 고른 반. 이 기기에만 저장한다(반 이름만, 학생 정보 없음). */
 export const CLASS_ROSTER_KEY='physical_classes_v1';
 /** 반별로 따로 저장하는 기록 자리(기본 이름). 반을 지우거나 파일로 보관할 때 함께 다룬다. */
-export const CLASS_DATA_KEYS=['physical_class_progress_v1','physical_class_journey_v1','physical_week_plan_v1'] as const;
-// 보관 파일에는 앞의 둘(반응 기록·원정 지도)만 담는다. 셋째(이번 주 고정 계획)는 반을 지울 때 함께 지우기만 한다.
+export const CLASS_DATA_KEYS=['physical_class_progress_v1','physical_class_journey_v1','physical_week_plan_v1','physical_sport_series_v1'] as const;
+// 보관 파일에는 앞의 둘(반응 기록·원정 지도)만 담는다. 나머지(이번 주 고정 계획·종목 연속 차시 진행)는 반을 지울 때 함께 지우기만 한다.
 
 const listeners=new Set<()=>void>();
 let cache:ClassRoster|null=null;

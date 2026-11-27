@@ -46,6 +46,7 @@ jobs:
           npm run test:signature:e2e
           npm run test:mobile:ci
           npm run test:records:e2e
+          npm run test:lesson-ideas
       - name: Teacher and student classroom journey (isolated API fixtures)
         # Supabase and /api/teacher are answered by in-script fixtures; nothing reaches a real database.
         run: |
