@@ -28,6 +28,11 @@ import './presentation/Readability.css'
 purgeLegacyPersonalData();
 startAppRuntime(); // 잡히지 않은 오류를 콘솔에 남기고, 처음 받은 화면 파일을 서비스워커에 알려 준다
 
+// 계정 자동 보관: 선생님 로그인 정보가 있을 때만 받는다(학생 휴대폰과 로그인하지 않은 화면은 받지 않는다).
+try {
+  if (sessionStorage.getItem('physical_supabase_auth') || localStorage.getItem('physical_supabase_auth')) void import('./application/cloudAutoSync').then(m => m.startAutoSync()).catch(() => {});
+} catch { /* 저장소가 막혀 있으면 자동 보관 없이 */ }
+
 getDisplayPrefs(); // TV 모드·글씨 크기를 첫 그리기 전에 맞춘다
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

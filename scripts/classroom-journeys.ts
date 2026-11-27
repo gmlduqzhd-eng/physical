@@ -12,7 +12,7 @@ const browser=await chromium.launch({...(process.env.BROWSER_CHANNEL&&process.en
 const button=(p:Page,name:string)=>p.getByRole('button',{name,exact:true});
 try{for(const teacherWidth of [390,1440]){
  const studentWidth=teacherWidth===390?1440:390,roomId=randomUUID(),groupId=randomUUID(),teacherId=randomUUID(),templateId=randomUUID(),missionId=randomUUID();
- let created=false,scoreCalls=0;const actions=new Set<string>();
+ let created=false,scoreCalls=0,cloud:{payload:unknown;updatedAt:string|null}={payload:null,updatedAt:null};const actions=new Set<string>();
  const room:any={id:roomId,name:'갈림길 보급 작전',teacher_id:teacherId,status:'waiting',pin_code:'12345678',template_id:templateId,global_time_modifier:2100,setup_minutes:40,goal_percent:75,created_at:new Date().toISOString(),started_at:null};
  const group:any={id:groupId,room_id:roomId,group_name:'1모둠',score:0,completed_missions:[],pending_missions:[],stats:{}};
  const template={id:templateId,name:room.name,buttons:[{id:missionId,gameType:'zigzag',title:room.name+' 활동 완료',desc:'게임을 마치고 결과를 확인해요.',requires_approval:true,amount:10,cooldown:0}]};
@@ -27,6 +27,8 @@ try{for(const teacherWidth of [390,1440]){
    if(u.pathname.includes('/rpc/')){const rpc=u.pathname.split('/').at(-1);
     // 익명 활동 횟수: 활동 번호 하나만 보내는지 확인하고 받아 준다(학생·점수 정보가 섞이면 실패).
     if(rpc==='count_activity_play'){assert.deepEqual(Object.keys(body),['activity']);assert.match(String(body.activity),/^[a-zA-Z0-9_-]{1,80}$/);return reply({});}
+    // 계정 자동 보관: 반 기록 보관본만 받는다(학생 정보가 섞이면 실패).
+    if(rpc==='teacher_class_records'){if(body.next_payload){assert.deepEqual(Object.keys(body.next_payload).sort(),['classes','current','kind','savedAt','version']);cloud={payload:body.next_payload,updatedAt:new Date().toISOString()};}return reply(cloud);}
     if(rpc==='create_guided_classroom'){assert.equal(body.game_type,'zigzag');assert.equal(body.group_count,1);assert.equal(body.lesson_minutes,40);created=true;return reply(room);}
     if(rpc==='get_classroom_invites')return reply([{group_name:'1모둠',code:'fixture',short_pin:'2468'}]);
     if(rpc==='get_classroom_device_codes')return reply({board_code:'fixture-board',recovery_code:'fixture-recovery'});

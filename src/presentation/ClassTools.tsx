@@ -11,6 +11,7 @@ import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
 import {PeQuizBingo} from './components/PeQuizBingo';
+import {OfflineReady} from './components/OfflineReady';
 
 const LEAGUE_KEY='physical_class_league_v1';
 // 번호 뽑기·모둠·레이스는 이 탭에만 적어 둔다(새로고침·자동 새로고침에도 이어지고, 탭을 닫으면 사라진다).
@@ -263,6 +264,7 @@ export function ClassTools(){
     <Link to="/journey"><strong>🗺 원정 지도</strong><span>수업마다 도장 찍기</span></Link>
     <Link to="/week"><strong>📅 여러 차시 계획</strong><span>반응을 보고 한 번에 짜기</span></Link>
    </nav>
+   <OfflineReady/>
    <div className="sports-grid">{CLASS_TOOLS.map(t=><Link key={t.id} className="sports-card" to={`/tools?tool=${t.id}`} data-tool={t.id}><span className="sports-icon" aria-hidden="true">{t.icon}</span><strong>{t.label}</strong><span>{t.summary}</span></Link>)}</div>
    <p className="sports-muted">종목별 점수판과 시상은 <Link to="/sports">종목 교실</Link>에 있어요. 도구를 오가거나 새로고침해도 번호 뽑기·모둠·레이스·대진표는 이어서 할 수 있어요.</p>
   </section>}

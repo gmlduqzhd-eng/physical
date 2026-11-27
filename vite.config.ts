@@ -9,8 +9,9 @@ import react from '@vitejs/plugin-react'
  * 이제는 첫 화면 묶음과 학생 화면(입장·모둠 폰)만 미리 받고, 나머지는 쓸 때 받아 둔다.
  */
 // 미리 받는 화면: 학생이 들어오는 곳과 선생님이 수업 중에 자주 여는 곳(수업 시작 방식·오늘 수업·활동 고르기·수업 도구).
-// 교실 와이파이가 끊겨도 처음 여는 이 화면들이 바로 떠야 한다.
-export const PRECACHE_ROUTES = /\/src\/presentation\/(?:Lobby|QuickJoin|MobileMissionView|StartLesson|TodayLesson|ActivityLibrary|ClassTools|components\/TodayLessonBar)\.tsx$/
+// 교실 와이파이가 끊겨도 처음 여는 이 화면들이 바로 떠야 한다. 기록 화면(주간 계획·원정 지도·우리 반 기록)과 놀이 화면도
+// 기록이 모두 기기 안에 있으므로 함께 받아 둔다.
+export const PRECACHE_ROUTES = /\/src\/presentation\/(?:Lobby|QuickJoin|MobileMissionView|StartLesson|TodayLesson|ActivityLibrary|ClassTools|WeekPlanPage|ClassJourney|ClassProgressPage|GamePlayPage|components\/TodayLessonBar)\.tsx$/
 function swPrecacheList(): Plugin {
   return {
     name: 'sw-precache-list',
@@ -30,6 +31,9 @@ function swPrecacheList(): Plugin {
       }
       for (const chunk of chunks.values()) if (chunk.isEntry || (chunk.facadeModuleId && PRECACHE_ROUTES.test(chunk.facadeModuleId))) visit(chunk.fileName)
       writeFileSync(join(options.dir ?? 'dist', 'sw-precache.json'), JSON.stringify([...files].sort().map(file => `/${file}`)))
+      // "인터넷 없이 쓰기 준비"를 누르면 받는 목록: 이 배포의 모든 화면 묶음(스크립트·스타일).
+      const all = Object.keys(bundle).filter(name => /^assets\/.+\.(?:js|css)$/.test(name)).sort().map(file => `/${file}`)
+      writeFileSync(join(options.dir ?? 'dist', 'sw-all.json'), JSON.stringify(all))
     },
   }
 }

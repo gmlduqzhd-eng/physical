@@ -13,6 +13,7 @@ import {useClassRoster} from '../application/classRosterStore';
 import {currentClass} from '../domain/classRoster';
 import {TermSummaryTab} from './components/TermSummaryTab';
 import './ClassProgressPage.css';
+import {CloudSyncPrompt} from './components/CloudSyncPrompt';
 
 const NAME=new Map(GAMES.map(g=>[g.type,`${g.emoji??''} ${g.name}`.trim()]));
 const nameOf=(id:string)=>NAME.get(id)??id;
@@ -60,6 +61,7 @@ export function ClassProgressPage(){
    <h1 id="cp-title">{className} 반응 · 원정 지도</h1>
    <ClassSwitcher/>
    <p className="cp-lead">게임이 끝날 때 남긴 👍/👎와 판 수를 모아 보여 줘요. <StorageNote/></p>
+   <CloudSyncPrompt/>
    <BackupNudge/>
    {progressSaveFailed()&&<p className="cp-save-warning" role="alert" data-save-failed>⚠ 이 기기에 기록을 저장하지 못했어요(저장 공간이 꽉 찼거나 막혀 있어요). 지금 화면을 닫으면 최근 기록이 사라질 수 있으니, ‘내보내기’로 먼저 파일에 저장해 두세요.</p>}
    <nav className="cp-tabs" aria-label="보기 고르기">

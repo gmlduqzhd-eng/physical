@@ -8,6 +8,11 @@ const MANIFEST_URL = '/__sw-precache.json';
 const FONTS_URL = '/__sw-fonts.json';
 // Written by the build (vite.config.ts): the first screen and the student screens, with their imports and CSS.
 const PRECACHE_LIST_URL = '/sw-precache.json';
+// Every screen of this deployment. Fetched only after the teacher presses "인터넷 없이 쓰기 준비".
+const ALL_LIST_URL = '/sw-all.json';
+// Marks that the teacher asked for every screen. A new deployment then fetches its whole list on install,
+// so the gym keeps working offline after an update.
+const OFFLINE_ALL_URL = '/__sw-offline-all';
 // Font pieces carry a content hash in their name, so a cached copy never goes stale.
 const HASHED_FONT = /^\/fonts\/[^/]+\.[0-9a-f]{8}\.woff2$/;
 // The rare-letter pieces (-rest, -ks) are fetched only when a page draws one of their letters.
@@ -61,6 +66,15 @@ self.addEventListener('install', (event) => {
       }
     };
     await Promise.all(assets.map(cacheAsset));
+    if (await cache.match(OFFLINE_ALL_URL)) {
+      try {
+        const list = await fetch(ALL_LIST_URL, { cache: 'no-cache' });
+        if (list.ok && list.headers.get('Content-Type')?.includes('json')) {
+          const files = (await list.json()).filter(file => typeof file === 'string').map(file => new URL(file, self.location.origin));
+          for (let i = 0; i < files.length; i += 6) await Promise.all(files.slice(i, i + 6).map(url => cacheAsset(url).catch(() => {})));
+        }
+      } catch { /* The teacher can press the button again. */ }
+    }
     await cache.put(MANIFEST_URL, new Response(JSON.stringify([...visited]), { headers: { 'Content-Type': 'application/json' } }));
     await cache.put(FONTS_URL, new Response(JSON.stringify([...fonts]), { headers: { 'Content-Type': 'application/json' } }));
     await self.skipWaiting();
@@ -95,8 +109,43 @@ self.addEventListener('activate', (event) => {
 
 // The page that registered this worker loaded its files before the worker was in control. The page sends
 // their names once the worker is ready, so the screen the teacher or student opened first also works offline.
+// "인터넷 없이 쓰기 준비": fetch every screen of this deployment and report progress to the page that asked.
+async function cacheEverything(reply) {
+  const cache = await caches.open(CACHE_NAME);
+  const list = await fetch(ALL_LIST_URL, { cache: 'no-cache' });
+  if (!list.ok || !list.headers.get('Content-Type')?.includes('json')) throw new Error('No list');
+  const files = (await list.json()).filter(file => typeof file === 'string' && file.startsWith('/assets/'));
+  const manifest = await cache.match(MANIFEST_URL);
+  const known = new Set(manifest ? await manifest.json() : []);
+  let done = 0, failed = 0;
+  const one = async (file) => {
+    const url = new URL(file, self.location.origin);
+    try {
+      if (!(await cache.match(url.href))) {
+        const response = await fetch(url.href);
+        if (!response.ok || response.headers.get('Content-Type')?.includes('text/html')) throw new Error('Bad response');
+        await cache.put(url.href, response);
+      }
+      known.add(url.href);
+    } catch { failed += 1; }
+    done += 1;
+    reply({ type: 'cache-all-progress', done, total: files.length });
+  };
+  for (let i = 0; i < files.length; i += 6) await Promise.all(files.slice(i, i + 6).map(one));
+  await cache.put(MANIFEST_URL, new Response(JSON.stringify([...known]), { headers: { 'Content-Type': 'application/json' } }));
+  if (!failed) await cache.put(OFFLINE_ALL_URL, new Response(new Date().toISOString(), { headers: { 'Content-Type': 'text/plain' } }));
+  reply({ type: 'cache-all-done', total: files.length, failed });
+}
+
 self.addEventListener('message', (event) => {
   const data = event.data;
+  if (data && data.type === 'cache-all') {
+    const port = event.ports && event.ports[0];
+    const reply = message => { try { port ? port.postMessage(message) : event.source?.postMessage(message); } catch { /* The page closed. */ } };
+    const task = cacheEverything(reply).catch(() => reply({ type: 'cache-all-done', total: 0, failed: 1 }));
+    if (typeof event.waitUntil === 'function') event.waitUntil(task);
+    return;
+  }
   if (!data || data.type !== 'cache-loaded' || !Array.isArray(data.urls)) return;
   const task = (async () => {
     const cache = await caches.open(CACHE_NAME);
