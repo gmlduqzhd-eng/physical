@@ -153,3 +153,10 @@ html:is([data-text-scale="large"],[data-text-scale="xlarge"]) .flow.activity-too
 .flow.activity-tools-scope .catalog-card h3 .activity-name-link{display:inline-flex;align-items:center;min-height:44px}
 .flow.activity-tools-scope .catalog-card details details>summary,.flow.activity-tools-scope .catalog-card>details>summary{min-height:44px;box-sizing:border-box;padding-block:10px;cursor:pointer}
 @media(max-width:700px){.activity-library-head nav a{min-height:44px}}
+/* 검색 바로가기: 활동 목록 밖의 수업 도구·안전 수업·연속 차시 */
+.activity-shortcuts{margin:12px 0;padding:12px;border-radius:var(--ui-radius-2);background:var(--ui-tint)}
+.activity-shortcuts>p{margin:0 0 8px;font-weight:700}
+.activity-shortcuts ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:8px}
+.activity-shortcuts a{display:flex;flex-direction:column;gap:2px;padding:10px 12px;min-height:48px;border-radius:12px;background:var(--ui-paper);border:2px solid var(--ui-line);color:var(--ui-ink);text-decoration:none}
+.activity-shortcuts a:hover,.activity-shortcuts a:focus-visible{border-color:var(--ui-action)}
+.activity-shortcuts span{font-size:.9rem;color:var(--ui-muted)}

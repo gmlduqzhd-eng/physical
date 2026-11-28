@@ -12,6 +12,7 @@ import { isQuestId } from '../domain/movementQuests';
 import { isSignatureId } from '../domain/signatureGames';
 import { FIT_PEOPLE, FIT_SPACES, FIT_TIMES, activityFit, matchesFit, parseFitPeople, parseFitSpace, parseFitTime, situationBadges, type FitFilter } from '../domain/activityFit';
 import { similarSuggestions } from '../domain/activitySearch';
+import { matchShortcuts } from '../domain/featureShortcuts';
 import { activityGroup, activityIcon } from '../domain/activityGroups';
 import { gradeLabel } from '../domain/glossary';
 import { useActivityFavorites } from '../application/useActivityFavorites';
@@ -119,6 +120,7 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
     </details>
     {!moreOpen&&chosenFilters.length>0&&<ul className="activity-filter-chosen" aria-label="고른 조건">{chosenFilters.map(f=><li key={f.key}><button type="button" onClick={f.clear} aria-label={`${f.label} 조건 지우기`}>{f.label} <span aria-hidden="true">✕</span></button></li>)}</ul>}
     {isFiltered&&<button style={{marginTop:4}} onClick={clearFilters}>검색·조건 초기화</button>}
+    {!solo&&query&&matchShortcuts(query).length>0&&<nav className="activity-shortcuts" aria-label="수업 도구·안내 바로가기" data-search-shortcuts><p>활동 목록 밖의 바로가기</p><ul>{matchShortcuts(query).map(s=><li key={s.id}><Link to={s.to} data-shortcut={s.id}><b>{s.icon} {s.title}</b><span>{s.summary}</span></Link></li>)}</ul></nav>}
     <div className="inline-title" style={{margin:'14px 0 12px'}}><h2>{solo ? '혼자 할 수 있는 활동' : !archiveIncluded ? (isFiltered ? '조건에 맞는 추천 활동' : `먼저 해 보기 좋은 추천 활동 ${source.length}개`) : query ? '찾은 활동 · 추천 활동 먼저' : phoneOnly ? `준비물 없는 놀이 ${matched.length}개 · 보관함까지 모두` : isFiltered ? `조건에 맞는 활동 ${matched.length}개` : `보관함까지 모든 활동 ${matched.length}개`}</h2>{games.length>0&&<span className="muted small" data-list-count role="status" aria-live="polite">{displayed.length<games.length?`${games.length}개 중 ${displayed.length}개 표시`:`${games.length}개 모두 표시`}</span>}</div>
     <div className="grid three">{displayed.map(g => {const group=activityGroup(g),cardFit=activityFit(g);return <article className="card catalog-card catalog-card-compact" data-game-card={g.type} key={g.type}>
       {/* 카드는 이름 · 한 줄 규칙 · 인원·시간만. TV 첫 화면에 두 줄이 보이게 하고, 나머지는 '자세히'에 접는다. */}

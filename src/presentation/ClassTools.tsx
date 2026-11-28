@@ -263,7 +263,7 @@ function RopeRelay(){
  // 진행 중에는 TV 한 화면에 모든 모둠이 들어오게 제목·도구 탭·설정을 접는다(설정 열기로 다시 펼친다).
  const [settingsOpen,setSettingsOpen]=useState(()=>!(saved&&started(saved)));
  const focus=started(state)&&!settingsOpen;
- useEffect(()=>{document.body.classList.toggle('tools-focus',focus);return()=>document.body.classList.remove('tools-focus');},[focus]);
+ useEffect(()=>{document.body.classList.toggle('tools-focus-rope-relay',focus);return()=>document.body.classList.remove('tools-focus-rope-relay');},[focus]);
  useEffect(()=>{if(started(state))writeStorage(ROPE_KEY,JSON.stringify(state),'session');else removeStorage(ROPE_KEY,'session');},[state]);
  const act=(next:RopeState,message:string)=>{if(next===state)return;setLast(state);setState(next);setStopping(null);setAnnounce(message);setSettingsOpen(false);};
  // 설정(모둠 수·인원·목표·동작)을 바꾸면 처음부터. 이미 시작했으면 먼저 묻는다.
@@ -319,33 +319,39 @@ function RoleSwap(){
  const [state,setState]=useState<SwapState>(()=>saved??newSwapState());
  const [endsAt,setEndsAt]=useState<number|null>(null),[left,setLeft]=useState<number|null>(null),[auto,setAuto]=useState(true),[announce,setAnnounce]=useState('');
  const [resumed,setResumed]=useState(!!saved&&saved.swaps>0);
+ // 시작하면 TV 한 화면에 모둠 카드가 다 보이게 제목·도구 탭·설정을 접는다.
+ const [settingsOpen,setSettingsOpen]=useState(true);
+ const focus=!settingsOpen;
+ useEffect(()=>{document.body.classList.toggle('tools-focus-role-swap',focus);return()=>document.body.classList.remove('tools-focus-role-swap');},[focus]);
  useEffect(()=>{if(state.swaps>0)writeStorage(SWAP_KEY,JSON.stringify(state),'session');else removeStorage(SWAP_KEY,'session');},[state]);
  const doSwap=()=>{setState(s=>{const n=swap(s);setAnnounce(`교대! ${n.swaps}번째 교대예요.`);return n;});sfxWhistle();};
- const run=()=>{unlockAudio();setEndsAt(Date.now()+(left??state.seconds*1000));setLeft(null);};
+ const run=()=>{unlockAudio();setEndsAt(Date.now()+(left??state.seconds*1000));setLeft(null);setSettingsOpen(false);};
  const pause=()=>{if(endsAt){setLeft(Math.max(0,endsAt-Date.now()));setEndsAt(null);setAnnounce('일시정지. 모두 그 자리에 멈춰요.');}};
  const [, setTick]=useState(0);
  useEffect(()=>{if(!endsAt)return;const t=window.setInterval(()=>{const rest=endsAt-Date.now();setTick(x=>x+1);if(rest<=3000&&rest>0)sfxTimerTick(Math.ceil(rest/1000));if(rest<=0){doSwap();if(auto)setEndsAt(Date.now()+state.seconds*1000);else{setEndsAt(null);setLeft(null);}}},500);return()=>window.clearInterval(t);},[endsAt,auto,state.seconds]);
  const remain=endsAt?Math.max(0,Math.ceil((endsAt-Date.now())/1000)):Math.ceil((left??state.seconds*1000)/1000);
  const configure=(next:SwapState)=>{setState(next);setEndsAt(null);setLeft(null);};
  return <>
-  <div className="tools-bar">
+  {focus?<div className="rope-focus-bar"><span>{state.groups}모둠 · 한 번에 {state.active}모둠 도전 · {state.seconds}초마다 교대</span><button type="button" className="tools-go" onClick={()=>setSettingsOpen(true)} data-swap-settings>⚙ 설정 열기</button></div>
+  :<div className="tools-bar">
    <NumberSelect label="모둠 수" value={state.groups} min={SWAP_GROUPS.min} max={SWAP_GROUPS.max} unit="모둠" onChange={n=>configure(newSwapState(n,Math.min(state.active,n-1),state.seconds))}/>
    <NumberSelect label="한 번에 도전" value={state.active} min={1} max={Math.max(1,state.groups-1)} unit="모둠" onChange={n=>configure(newSwapState(state.groups,n,state.seconds))}/>
    <label className="tools-select">도전 시간<select aria-label="도전 시간" value={state.seconds} onChange={e=>configure(newSwapState(state.groups,state.active,Number(e.target.value)))} data-swap-seconds>{SWAP_SECONDS.map(n=><option key={n} value={n}>{n<60?`${n}초`:`${n/60}분${n%60?' 30초':''}`}</option>)}</select></label>
    <label className="tools-check"><input type="checkbox" checked={auto} onChange={e=>setAuto(e.target.checked)} data-swap-auto/> 시간이 되면 저절로 교대</label>
-  </div>
+   {(state.swaps>0||endsAt)&&<button type="button" className="primary tools-go" onClick={()=>setSettingsOpen(false)} data-swap-focus>▣ 모둠만 크게 보기</button>}
+  </div>}
   {resumed&&<Resume message="하던 역할 교대가 남아 있어요." onKeep={()=>setResumed(false)} onFresh={()=>{configure(newSwapState(state.groups,state.active,state.seconds));setResumed(false);}}/>}
   <div className="sports-timer"><strong aria-live="off" data-swap-left>{formatCountdown(remain)}</strong><div className="flagship-row">
    {endsAt?<button type="button" className="primary tools-go" onClick={pause} data-swap-pause>⏸ 일시정지</button>:<button type="button" className="primary tools-go" onClick={run} data-swap-run>{left!==null?'▶ 이어서':'▶ 시작'}</button>}
-   <button type="button" className="tools-go" onClick={()=>{doSwap();if(endsAt)setEndsAt(Date.now()+state.seconds*1000);else setLeft(null);}} data-swap-now>🔁 지금 교대</button>
+   <button type="button" className="tools-go" onClick={()=>{doSwap();setSettingsOpen(false);if(endsAt)setEndsAt(Date.now()+state.seconds*1000);else setLeft(null);}} data-swap-now>🔁 지금 교대</button>
   </div></div>
   <p className="rope-summary" role="status" data-swap-summary>반 전체 교대 {state.swaps}번 · 도전한 모둠 {state.challenged.length} / {state.groups}{everyoneChallenged(state)?' · ✅ 모든 모둠이 도전했어요':''}</p>
-  <div className="swap-grid">{Array.from({length:state.groups},(_,g)=>{const role=roleOfGroup(state,g);return <section key={g} className="swap-team" data-swap-team={g+1} data-role={role} aria-label={`${g+1}모둠 ${role}`}>
+  <div className="swap-grid" data-focus={focus?'yes':undefined} style={{'--swap-cols':String(Math.min(state.groups,4))} as React.CSSProperties}>{Array.from({length:state.groups},(_,g)=>{const role=roleOfGroup(state,g);return <section key={g} className="swap-team" data-swap-team={g+1} data-role={role} aria-label={`${g+1}모둠 ${role}`}>
    <strong>{g+1}모둠</strong><p className="swap-role">{SWAP_ROLE_TEXT[role].emoji} {role}</p><small>{SWAP_ROLE_TEXT[role].hint}</small>{state.challenged.includes(g)&&<span className="swap-did">도전 ✓</span>}
   </section>;})}</div>
   <p className="sports-sr" role="status">{announce}</p>
   <div className="flagship-row"><button type="button" className="tools-go" disabled={state.swaps===0} onClick={()=>configure(newSwapState(state.groups,state.active,state.seconds))} data-swap-reset>처음으로</button></div>
-  <p className="sports-muted">도전 구역과 안전 구역을 미리 나눠 두세요. 학생은 이동할 때 화면 대신 신호 소리를 듣고, 혼잡하면 바로 일시정지해요. 점수는 반 전체 교대 횟수만 세요.</p>
+  {!focus&&<p className="sports-muted">도전 구역과 안전 구역을 미리 나눠 두세요. 학생은 이동할 때 화면 대신 신호 소리를 듣고, 혼잡하면 바로 일시정지해요. 점수는 반 전체 교대 횟수만 세요.</p>}
  </>;
 }
 
@@ -363,18 +369,21 @@ function BeatMaker(){
   if(state.teams[g].pattern[b]!=='rest')sfxTap();
  },[tick]); // eslint-disable-line react-hooks/exhaustive-deps
  const stop=()=>{setMode(null);setTick(-1);};
+ // TV 발표 중에는 제목·도구 탭·설정·설명을 접고 무대와 모둠 칸만 보인다.
+ const focus=mode?.kind==='show';
+ useEffect(()=>{document.body.classList.toggle('tools-focus-beat-moves',focus);return()=>document.body.classList.remove('tools-focus-beat-moves');},[focus]);
  const card=(id:string)=>BEAT_CARDS.find(c=>c.id===id)!;
  const playing=(g:number)=>mode?(mode.kind==='practice'?(mode.group===g&&tick>=0?tick%8:-1):(show?.group===g?show.beat:-1)):-1;
  return <>
-  <div className="tools-bar">
+  {!focus&&<><div className="tools-bar">
    <NumberSelect label="모둠 수" value={state.groups} min={BEAT_GROUPS.min} max={BEAT_GROUPS.max} unit="모둠" onChange={n=>{stop();setState(newBeatState(n,state.bpm));}}/>
    <label className="tools-select">빠르기<select aria-label="빠르기" value={state.bpm} onChange={e=>setState({...state,bpm:Number(e.target.value)})} data-beat-tempo>{BEAT_TEMPOS.map(t=><option key={t.bpm} value={t.bpm}>{t.label}</option>)}</select></label>
   </div>
-  <p className="rope-rule">칸을 누를 때마다 👏 손뼉 → 🦶 발 디딤 → 🙌 팔 동작 → · 쉼으로 바뀌어요. 앞 4박과 뒤 4박을 모둠이 하나씩 정해 8박으로 이어요. 동작은 학교에서 정한 동작으로 바꿔도 돼요.</p>
+  <p className="rope-rule">칸을 누를 때마다 👏 손뼉 → 🦶 발 디딤 → 🙌 팔 동작 → · 쉼으로 바뀌어요. 앞 4박과 뒤 4박을 모둠이 하나씩 정해 8박으로 이어요. 동작은 학교에서 정한 동작으로 바꿔도 돼요.</p></>}
   {mode?.kind==='show'&&show&&<div className="beat-stage" role="status" data-beat-stage><p>{show.group+1}모둠 발표 · {show.round+1}번째</p><strong>{card(state.teams[show.group].pattern[show.beat]).emoji}</strong><span>{show.beat+1} / 8</span></div>}
   {mode&&tick<0&&<p className="beat-count" role="status" data-beat-count>준비 {-tick}</p>}
   {ended&&<div className="rope-rule" data-beat-reflect><b>발표를 마쳤어요. 말로 돌아봐요.</b><ul>{BEAT_REFLECTION.map(q=><li key={q}>{q}</li>)}</ul></div>}
-  <div className="beat-grid">{state.teams.map((t,g)=><section key={g} className="beat-team" data-beat-team={g+1} aria-label={`${g+1}모둠 8박`}>
+  <div className="beat-grid" data-focus={focus?'yes':undefined}>{state.teams.map((t,g)=><section key={g} className="beat-team" data-beat-team={g+1} aria-label={`${g+1}모둠 8박`}>
    <strong>{g+1}모둠</strong>
    <ol className="beat-row">{t.pattern.map((c,i)=><li key={i}><button type="button" data-now={playing(g)===i?'yes':undefined} data-half={i<4?'a':'b'} aria-label={`${i+1}박 ${card(c).label}`} onClick={()=>setState(cycleBeat(state,g,i))} data-beat-cell={i}>{card(c).emoji}<small>{i+1}</small></button></li>)}</ol>
    <button type="button" className="tools-go" disabled={!hasMove(t.pattern)||mode?.kind==='show'} onClick={()=>{unlockAudio();setEnded(false);setMode(mode?.kind==='practice'&&mode.group===g?null:{kind:'practice',group:g});}} data-beat-practice>{mode?.kind==='practice'&&mode.group===g?'⏹ 멈춤':'🔁 반복 연습'}</button>

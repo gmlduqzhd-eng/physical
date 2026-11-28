@@ -25,6 +25,7 @@ const TITLES:readonly (readonly [RegExp,string])[]=[
  [/^\/(lobby|join)/,SCREEN.join],
  [/^\/teacher-ai/,SCREEN.teacherAi],
  [/^\/teacher/,SCREEN.teacher],
+ [/^\/safety\/pool/,'수영장 가기 전'],
  [/^\/safety/,'안전 교실'],
  [/^\/expeditions/,'원정 모음'],
  [/^\/lessons/,SCREEN.lessons],
