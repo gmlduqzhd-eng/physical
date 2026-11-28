@@ -1,4 +1,5 @@
 import {ManualRecordsGuide} from './components/ManualRecordsGuide';
+import {ManualLessonHelpers} from './components/ManualLessonHelpers';
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, Smartphone, Monitor, Users, User, ShieldCheck, Timer, FileText } from 'lucide-react';
@@ -45,6 +46,7 @@ export const Manual = () => {
           </div>
 
           <ManualRecordsGuide/>
+          <ManualLessonHelpers/>
 
           {/* 1. 2022 개정 교육과정 3대 영역 및 성취기준 체계 */}
           <section className="space-y-4">

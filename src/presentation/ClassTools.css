@@ -103,11 +103,21 @@ html.dark-theme .tools-countdown[data-last=yes] strong{color:#fdba74}html.dark-t
  .rope-print caption{text-align:left;font-weight:800;padding:4px 0}
 }
 /* 진행 중 TV 한 화면: 제목·도구 탭·설정을 접고 모둠 카드만 크게 */
-body.tools-focus .class-tools[data-tool="rope-relay"]>.eyebrow,
-body.tools-focus .class-tools[data-tool="rope-relay"]>h1,
-body.tools-focus .class-tools[data-tool="rope-relay"]>h1+p,
-body.tools-focus .class-tools[data-tool="rope-relay"]>.tools-tabs,
-body.tools-focus .class-tools[data-tool="rope-relay"]>.tools-switch{display:none}
+body.tools-focus-rope-relay .class-tools[data-tool="rope-relay"]>.eyebrow,
+body.tools-focus-rope-relay .class-tools[data-tool="rope-relay"]>h1,
+body.tools-focus-rope-relay .class-tools[data-tool="rope-relay"]>h1+p,
+body.tools-focus-rope-relay .class-tools[data-tool="rope-relay"]>.tools-tabs,
+body.tools-focus-rope-relay .class-tools[data-tool="rope-relay"]>.tools-switch,
+body.tools-focus-role-swap .class-tools[data-tool="role-swap"]>.eyebrow,
+body.tools-focus-role-swap .class-tools[data-tool="role-swap"]>h1,
+body.tools-focus-role-swap .class-tools[data-tool="role-swap"]>h1+p,
+body.tools-focus-role-swap .class-tools[data-tool="role-swap"]>.tools-tabs,
+body.tools-focus-role-swap .class-tools[data-tool="role-swap"]>.tools-switch,
+body.tools-focus-beat-moves .class-tools[data-tool="beat-moves"]>.eyebrow,
+body.tools-focus-beat-moves .class-tools[data-tool="beat-moves"]>h1,
+body.tools-focus-beat-moves .class-tools[data-tool="beat-moves"]>h1+p,
+body.tools-focus-beat-moves .class-tools[data-tool="beat-moves"]>.tools-tabs,
+body.tools-focus-beat-moves .class-tools[data-tool="beat-moves"]>.tools-switch{display:none}
 .rope-focus-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;font-weight:700}
 @media (min-width:900px){
  .rope-grid[data-focus="yes"]{grid-template-columns:repeat(var(--rope-cols),minmax(0,1fr))}
@@ -139,3 +149,8 @@ body.tools-focus .class-tools[data-tool="rope-relay"]>.tools-switch{display:none
 .beat-stage strong{font-size:clamp(4rem,12vw,8rem);line-height:1}
 .beat-count{font-size:2rem;font-weight:900;text-align:center;margin:8px 0}
 @media (prefers-reduced-motion:reduce){.beat-row button[data-now="yes"]{transform:none}}
+@media (min-width:900px){
+ .swap-grid[data-focus="yes"]{grid-template-columns:repeat(var(--swap-cols),minmax(0,1fr))}
+ .beat-grid[data-focus="yes"]{grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr))}
+}
+.tools-focus-role-swap .sports-timer strong[data-swap-left]{font-size:clamp(3rem,8vw,6rem)}

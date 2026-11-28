@@ -167,6 +167,29 @@ async function scene(browser, name, viewport, run) {
       await p.goto(base + '/sports/baseball?series=teeball-3&lesson=1', { waitUntil: 'networkidle' });
       assert.match(await p.textContent('[data-series-banner]'), /티볼 3차시 · 1차시/);
     });
-    console.log(JSON.stringify({ passed: 9 }));
+    await scene(browser, 'role swap and 8-beat show fit a 1080p TV', { width: 1920, height: 1080 }, async p => {
+      await p.goto(base + '/tools?tool=role-swap', { waitUntil: 'networkidle' });
+      await p.evaluate(() => document.documentElement.setAttribute('data-tv-mode', 'on'));
+      await p.click('[data-swap-now]'); await p.waitForSelector('[data-swap-settings]');
+      const swapBottom = Math.max(...await p.$$eval('.swap-team', els => els.map(e => e.getBoundingClientRect().bottom)));
+      assert.ok(swapBottom <= 1080, `role cards on screen (${swapBottom})`);
+      await p.click('[data-swap-settings]'); assert.ok(await p.locator('[data-swap-seconds]').isVisible());
+      await p.goto(base + '/tools?tool=beat-moves', { waitUntil: 'networkidle' });
+      await p.evaluate(() => document.documentElement.setAttribute('data-tv-mode', 'on'));
+      await p.click('[data-beat-show]'); await p.waitForSelector('[data-beat-stage]');
+      assert.equal(await p.locator('.class-tools .tools-tabs').isVisible(), false);
+      const stage = await p.$eval('[data-beat-stage]', e => e.getBoundingClientRect().bottom); assert.ok(stage <= 1080, `stage on screen (${stage})`);
+    });
+
+    await scene(browser, 'search finds tools, safety and series that are not activities', { width: 1280, height: 900 }, async p => {
+      for (const [q, id] of [['줄넘기', 'tool-rope-relay'], ['수영', 'pool-prep'], ['배드민턴', 'series-badminton-3']]) {
+        await p.goto(base + '/games?q=' + encodeURIComponent(q), { waitUntil: 'networkidle' });
+        await p.waitForSelector(`[data-shortcut="${id}"]`);
+      }
+      await p.click('[data-shortcut="series-badminton-3"]'); await p.waitForURL(/series=badminton-3/);
+      await p.goto(base + '/manual', { waitUntil: 'networkidle' }); assert.equal(await p.locator('[data-manual-helpers] h4').count(), 6);
+      await p.goto(base + '/guide', { waitUntil: 'networkidle' }); assert.equal(await p.locator('[data-guide-helpers] li a').count(), 6);
+    });
+    console.log(JSON.stringify({ passed: 11 }));
   } finally { await browser.close(); }
 })().catch(error => { console.error('FAIL', error.message); process.exit(1); });

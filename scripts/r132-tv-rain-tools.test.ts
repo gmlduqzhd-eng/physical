@@ -15,10 +15,10 @@ const read = (p: string) => readFileSync(p, 'utf8');
 test('rope relay folds titles, tabs and settings while running so every group fits a TV', () => {
   const tools = read('src/presentation/ClassTools.tsx');
   assert.match(tools, /const focus=started\(state\)&&!settingsOpen;/);
-  assert.match(tools, /document\.body\.classList\.toggle\('tools-focus',focus\)/);
+  assert.match(tools, /document\.body\.classList\.toggle\('tools-focus-rope-relay',focus\)/);
   assert.match(tools, /data-rope-settings>⚙ 설정 열기/);
   const css = read('src/presentation/ClassTools.css');
-  assert.match(css, /body\.tools-focus \.class-tools\[data-tool="rope-relay"\]>\.tools-tabs/, 'only while the rope relay is the open tool');
+  assert.match(css, /body\.tools-focus-rope-relay \.class-tools\[data-tool="rope-relay"\]>\.tools-tabs/, 'only while the rope relay is the open tool');
   assert.match(css, /grid-template-columns:repeat\(var\(--rope-cols\),minmax\(0,1fr\)\)/);
 });
 
