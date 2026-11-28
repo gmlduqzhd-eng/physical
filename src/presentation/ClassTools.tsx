@@ -6,7 +6,7 @@ import type {ExportTable} from '../application/documentExport';
 import {isRecord,readJsonStorage,removeStorage,writeStorage} from '../application/browserStorage';
 import {sfxClick,sfxPop,sfxTap,sfxTimerTick,sfxWhistle,unlockAudio} from '../application/soundEffects';
 import {useRunningClock} from '../application/useRunningClock';
-import {CLASS_TOOLS,COUNTDOWN_PRESETS,withRo,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
+import {CLASS_TOOLS,TOOL_GROUPS,COUNTDOWN_PRESETS,withRo,formatCountdown,parseCountdownSaved,parseDrawSaved,parseGroupsSaved,parseRaceSaved,bumpScore,drawNumber,formatClock,homeAwayScore,ladderLabels,leagueMatchCount,leagueTable,makeLadder,matchKey,numberSubject,rollDice,roundRobin,splitGroups,traceLadder,type ClassToolId,type Ladder,type MatchScore} from '../domain/classTools';
 import './PlayExperiences.css';
 import './SportsClassroom.css';
 import './ClassTools.css';
@@ -412,8 +412,11 @@ export function ClassTools(){
     <Link to="/journey"><strong>🗺 원정 지도</strong><span>수업마다 도장 찍기</span></Link>
     <Link to="/week"><strong>📅 여러 차시 계획</strong><span>반응을 보고 한 번에 짜기</span></Link>
    </nav>
-   <OfflineReady/>
-   <div className="sports-grid">{CLASS_TOOLS.map(t=><Link key={t.id} className="sports-card" to={`/tools?tool=${t.id}`} data-tool={t.id}><span className="sports-icon" aria-hidden="true">{t.icon}</span><strong>{t.label}</strong><span>{t.summary}</span></Link>)}</div>
+   {TOOL_GROUPS.map(g=><section key={g.id} className="tools-group" aria-labelledby={`tools-group-${g.id}`} data-tools-group={g.id}>
+    <h2 id={`tools-group-${g.id}`}>{g.label} <small>{g.hint}</small></h2>
+    <div className="sports-grid tools-grid">{g.tools.map(id=>{const t=CLASS_TOOLS.find(x=>x.id===id)!;return <Link key={t.id} className="sports-card tools-card" to={`/tools?tool=${t.id}`} data-tool={t.id}><span className="sports-icon" aria-hidden="true">{t.icon}</span><strong>{t.label}</strong><span className="tools-card-summary">{t.summary}</span></Link>;})}</div>
+   </section>)}
+   <OfflineReady compact/>
    <p className="sports-muted">종목별 점수판과 시상은 <Link to="/sports">종목 교실</Link>에 있어요. 도구를 오가거나 새로고침해도 번호 뽑기·모둠·레이스·대진표는 이어서 할 수 있어요.</p>
   </section>}
   <section className="play-experiences sports-lesson class-tools" hidden={!tool} aria-label={tool?.label??'수업 도구'} data-tool={tool?.id}>

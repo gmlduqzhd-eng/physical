@@ -137,7 +137,12 @@ function TodaySetup({openGuide}:{openGuide:()=>void}){
     </select>
    </label>
   </details>
-  <p className="today-more"><button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/week" data-week-link>📅 여러 차시 한 번에 짜기</Link> · <Link to="/tools?tool=rope-relay" data-rope-link>🪢 모둠 이어 넘기</Link> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link> · <Link to="/print/signature-cards">규칙 카드·QR 안내 인쇄</Link></p>
+  <nav className="today-shortcuts" aria-label="함께 쓰는 화면" data-today-shortcuts>
+   <Link to="/week" data-week-link><span aria-hidden="true">📅</span> 여러 차시 한 번에 짜기</Link>
+   <Link to="/tools?tool=rope-relay" data-rope-link><span aria-hidden="true">🪢</span> 모둠 이어 넘기</Link>
+   <Link to="/print/signature-cards"><span aria-hidden="true">🖨</span> 규칙 카드·QR 안내 인쇄</Link>
+  </nav>
+  <p className="today-more">도움말 · <button type="button" className="today-link today-guide-again" onClick={openGuide}>❓ 1분 안내 다시 보기</button> · <Link to="/guide">처음 쓰는 선생님 안내 전체</Link></p>
  </section>;
 }
 

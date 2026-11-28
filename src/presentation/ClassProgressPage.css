@@ -56,7 +56,7 @@
 .cp-reason-table td.cp-notes{white-space:normal;min-width:180px}
 
 /* 지금 고른 탭: 전역 버튼 색(디자인 테마)보다 우선하게 구체성을 높인다. */
-html .class-progress .cp-tabs button[aria-current=page],html[data-design] .flow .class-progress .cp-tabs button[aria-current=page]{background:#0e7490;border-color:#0e7490;color:#fff}
+html .class-progress .cp-tabs button[aria-current=page],html[data-design] .flow .class-progress .cp-tabs button[aria-current=page]{background:var(--ui-action);border-color:var(--ui-action);color:var(--ui-on-action)}
 html .class-progress .cp-tabs button:not([aria-current]){background:transparent}
 
 /* 바로 복사가 안 될 때의 요약 글 칸 */
@@ -96,3 +96,6 @@ html .class-progress .cp-tabs button:not([aria-current]){background:transparent}
 .cp-term-line{margin:8px 0;font-size:16px;line-height:1.6}
 .cp-term-line strong{margin-right:8px}
 @media print{.class-progress .cp-tabs,.class-progress .class-switcher,.class-progress .cp-share,.flow header,.flow footer{display:none!important}}
+/* 제목 위 여백과 작은 윗글을 다른 화면과 같게 */
+.class-progress>.eyebrow{margin:20px 0 4px;color:var(--ui-muted);font-size:var(--ui-text-1,14px);letter-spacing:.02em}
+.class-progress>.eyebrow+h1{margin-top:0}
