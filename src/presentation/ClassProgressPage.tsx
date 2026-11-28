@@ -58,6 +58,7 @@ export function ClassProgressPage(){
   headers:['활동','기록한 판','👍','👎','👍 비율','기록 안 한 판 반응','구분'],rows:rows.map(r=>[nameOf(r.id),r.plays,r.up,r.down,pct(r),r.unrecorded,isFeatured(r.id)?'대표':'보관함'])});
  return <FlowShell utilities back="/tools" backLabel="수업 도구">
   <section className="class-progress" aria-labelledby="cp-title">
+   <p className="eyebrow">수업 도구 · 우리 반 기록</p>
    <h1 id="cp-title">{className} 반응 · 원정 지도</h1>
    <ClassSwitcher/>
    <p className="cp-lead">게임이 끝날 때 남긴 👍/👎와 판 수를 모아 보여 줘요. <StorageNote/></p>

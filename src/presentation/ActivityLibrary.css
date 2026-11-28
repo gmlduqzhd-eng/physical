@@ -52,7 +52,7 @@
 .activity-library-head nav{display:flex;flex-wrap:wrap;gap:8px}.activity-library-head nav a{min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border-radius:12px;border:1px solid var(--forest-line,#cbd1bf);text-decoration:none;font-weight:700;color:var(--forest-accent,#52634a);background:var(--forest-paper,#fffefa)}
 .activity-library-head nav a.primary{color:var(--forest-on,#fffefa);background:var(--forest-accent,#576c50)}
 /* 어디서 · 몇 명 · 몇 분: 늘 맨 위에 보이는 공통 조건 */
-.activity-fit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,1.6fr);gap:12px;align-items:end;border:2px solid var(--forest-accent,#576c50);border-radius:18px;padding:14px 16px 16px;margin:0 0 4px;background:var(--forest-paper,#fffefa)}
+.activity-fit{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;border:2px solid var(--forest-accent,#576c50);border-radius:18px;padding:14px 16px 16px;margin:0 0 4px;background:var(--forest-paper,#fffefa)}
 .activity-fit legend{font-weight:800;padding:0 8px;font-size:15px;color:var(--forest-accent,#52634a)}
 .activity-fit label{display:flex;flex-direction:column;gap:6px;min-width:0}.activity-fit select,.activity-fit input{width:100%}
 .activity-more-filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start;margin:0 0 12px}.activity-more-filters>label{display:flex;flex-direction:column;gap:6px;min-width:180px}.activity-more-filters>details{flex:1 1 260px}
@@ -160,3 +160,11 @@ html:is([data-text-scale="large"],[data-text-scale="xlarge"]) .flow.activity-too
 .activity-shortcuts a{display:flex;flex-direction:column;gap:2px;padding:10px 12px;min-height:48px;border-radius:12px;background:var(--ui-paper);border:2px solid var(--ui-line);color:var(--ui-ink);text-decoration:none}
 .activity-shortcuts a:hover,.activity-shortcuts a:focus-visible{border-color:var(--ui-action)}
 .activity-shortcuts span{font-size:.9rem;color:var(--ui-muted)}
+/* 검색칸은 맨 위, 조건 상자는 휴대폰에서 접어 둔다 */
+.activity-search-top{display:flex;flex-direction:column;gap:6px;margin:0 0 12px;font-weight:700}
+.activity-search-top input{width:100%;min-height:48px}
+.activity-fit-toggle{display:none}
+@media(max-width:700px){
+ .activity-fit-toggle{display:inline-flex;align-items:center;justify-content:center;min-height:48px;width:100%;margin:8px 0}
+ .activity-fit[data-open="no"]{display:none}
+}

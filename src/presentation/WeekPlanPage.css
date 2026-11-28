@@ -17,3 +17,13 @@
 .week-series-toggle{text-align:left}
 .week-series-rules{margin:4px 0;padding-left:1.2em;line-height:1.5}
 .week-lesson[data-next="yes"]{border-color:var(--ui-action)}
+/* 종목 고르기 카드 */
+.week-series-pick{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:10px 0}
+.week-series-pick button{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px;min-height:48px;border-radius:var(--ui-radius-2);border:2px solid var(--ui-line);background:var(--ui-paper);color:var(--ui-ink);cursor:pointer}
+.week-series-pick button[aria-pressed="true"]{border-color:var(--ui-action);background:var(--ui-tint)}
+.week-series-pick button:hover,.week-series-pick button:focus-visible{border-color:var(--ui-action)}
+.week-series-icon{font-size:30px;line-height:1.1}
+.week-series-pick b{font-size:var(--ui-text-3,18px)}
+.week-series-pick small{color:var(--ui-muted);line-height:1.4}
+.week-series-count{margin-top:4px;padding:2px 10px;border-radius:var(--ui-radius-pill);background:var(--ui-tint);font-size:var(--ui-text-1,14px);font-weight:700}
+.week-series-pick button[aria-pressed="true"] .week-series-count{background:var(--ui-paper)}

@@ -37,6 +37,16 @@ html[data-design=forest] body .icon-toolbar .settings-trigger:is([data-display=o
   html[data-design=forest] body :is(header,.hub-header-row):has(>.icon-toolbar) { flex-wrap:wrap; gap:16px; }
   html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { display:grid; width:100%; grid-template-columns:repeat(auto-fit,minmax(44px,1fr)); justify-items:center; gap:2px; }
 }
+/* 휴대폰: 아이콘 아래에 이름을 함께 보여 준다(조절 막대·집·물음표·점 세 개만으로는 뜻을 짐작해야 한다). 학생 화면은 그대로. */
+@media(max-width:760px) {
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label]:not(.icon-toolbar-student) :is(.music-trigger,.share-trigger,.icon-toolbar-action):has(>span) {
+    flex-direction:column; width:100%; max-width:96px; height:auto; min-height:56px; padding:6px 4px; gap:2px; border-radius:14px;
+  }
+  html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label]:not(.icon-toolbar-student) :is(.music-trigger,.share-trigger,.icon-toolbar-action)>span {
+    position:static; width:auto; max-width:100%; height:auto; margin:0; overflow:hidden; clip-path:none; text-overflow:ellipsis;
+    font-size:var(--ui-text-1,14px); font-weight:700; line-height:1.2;
+  }
+}
 @media(max-width:360px) {
   html[data-design=forest] body .icon-toolbar.header-icon-scope[aria-label] { gap:1px; }
 }

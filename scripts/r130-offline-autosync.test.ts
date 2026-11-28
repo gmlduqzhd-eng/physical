@@ -14,7 +14,7 @@ test('record screens are precached; the whole app is listed for the offline butt
   const sw = read('public/sw.js');
   assert.match(sw, /const ALL_LIST_URL = '\/sw-all\.json'/);
   assert.match(sw, /if \(await cache\.match\(OFFLINE_ALL_URL\)\)/, 'a new deploy refetches everything once the teacher asked');
-  for (const page of ['src/presentation/WeekPlanPage.tsx', 'src/presentation/ClassTools.tsx']) assert.match(read(page), /<OfflineReady\/>/);
+  for (const page of ['src/presentation/WeekPlanPage.tsx', 'src/presentation/ClassTools.tsx']) assert.match(read(page), /<OfflineReady(?: compact)?\/>/);
   assert.match(read('src/presentation/components/OfflineReady.tsx'), /인터넷 없이 쓰기 준비/);
 });
 

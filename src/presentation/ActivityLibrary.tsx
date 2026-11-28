@@ -101,13 +101,16 @@ export function ActivityPicker({ onSelect, solo = false, exclude }: { onSelect?:
   const games = matched;
   const suggestions = !games.length && query ? similarSuggestions(query, exclude ? source : pool) : {games:[],sports:[],reason:'',length:0};
   const displayed = games.slice(0, limit);
+  const [fitOpen,setFitOpen]=useState(fitActive);
   const fitOptions=[['where','어디서',fit.space,FIT_SPACES],['who','몇 명이',fit.people,solo?(['혼자'] as const):FIT_PEOPLE],['minutes','몇 분',fit.time,FIT_TIMES]] as const;
   return <>
+    {/* 검색칸을 맨 위에 둔다. 휴대폰에서는 조건 상자를 접어 두어 첫 화면에 활동 카드가 보이게 한다. */}
+    <label className="activity-fit-search activity-search-top">활동 찾기<input type="search" placeholder="이름 · 장소 · 종목 · 예전 이름" value={query} onChange={e => { setQuery(e.target.value);updateFilter('q',e.target.value); }}/></label>
     {!solo&&!onSelect&&<QuickPicks returnTo={location.pathname+location.search} className="hub-quick-picks"/>}
-    <fieldset className="activity-fit" aria-label="어디서 · 몇 명 · 몇 분">
+    <button type="button" className="activity-fit-toggle" aria-expanded={fitOpen} onClick={()=>setFitOpen(!fitOpen)} data-fit-toggle>{fitOpen?'조건 접기':`어디서 · 몇 명 · 몇 분 고르기${fitActive?' (고름)':''}`}</button>
+    <fieldset className="activity-fit" aria-label="어디서 · 몇 명 · 몇 분" data-open={fitOpen?'yes':'no'}>
       <legend>어디서 · 몇 명 · 몇 분</legend>
       {fitOptions.map(([key,label,value,options])=><label key={key}>{label}<select aria-label={label} value={value} onChange={e=>updateFilter(key,e.target.value)}><option>전체</option>{options.map(v=><option key={v}>{v}</option>)}</select></label>)}
-      <label className="activity-fit-search">활동 찾기<input type="search" placeholder="이름 · 장소 · 종목 · 예전 이름" value={query} onChange={e => { setQuery(e.target.value);updateFilter('q',e.target.value); }}/></label>
     </fieldset>
     {/* TV 첫 화면에 카드가 보이도록 목적·영역·학년 조건은 접어 둔다. 이미 고른 조건이 있으면 펼쳐서 보여 준다. */}
     <details className="activity-filter-more" open={moreOpen} onToggle={e=>setMoreOpen(e.currentTarget.open)}><summary>조건 더 보기 · 목적 · 영역 · 학년{moreCount>0&&<span className="activity-filter-count"> ({moreCount}개 고름)</span>}</summary>

@@ -15,6 +15,12 @@ export const CLASS_TOOLS=[
  {id:'quiz-bingo',label:'체육 지식 빙고',icon:'🟩',summary:'문제를 맞히면 칸을 차지하고, 한 줄을 채우면 빙고! 움직임 칸은 반 전체가 함께 해요'},
 ] as const;
 export type ClassToolId=typeof CLASS_TOOLS[number]['id'];
+/** 수업 도구 화면에서 쓰임새별로 묶어 보여 준다(도구가 늘어도 한눈에 찾게). */
+export const TOOL_GROUPS:readonly {id:string;label:string;hint:string;tools:readonly ClassToolId[]}[]=[
+ {id:'team',label:'모둠 활동',hint:'TV에 띄워 모둠 차례와 역할을 이끌어요',tools:['rope-relay','role-swap','beat-moves']},
+ {id:'time',label:'시간 · 기록',hint:'재고, 세고, 순위를 매겨요',tools:['timer','race','league']},
+ {id:'pick',label:'뽑기 · 나누기',hint:'순서와 모둠을 공정하게 정해요',tools:['ladder','draw','groups','dice','quiz-bingo']},
+];
 
 export function shuffled<T>(items:readonly T[],rng:Rng=Math.random):T[]{
  const out=[...items];

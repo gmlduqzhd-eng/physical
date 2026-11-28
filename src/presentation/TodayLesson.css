@@ -119,3 +119,7 @@ html.dark-theme .today-map-moment-skip{background:#1c1917;color:#fefce8;border-c
 .today-rain-list small{color:var(--ui-muted)}
 .today-guide-links{list-style:none;margin:8px 0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px}
 .today-guide-links a{display:flex;align-items:center;min-height:48px;padding:8px 12px;border-radius:12px;border:2px solid var(--ui-line);background:var(--ui-paper);color:var(--ui-ink);font-weight:700;text-decoration:none}
+/* 함께 쓰는 화면: 글자 줄 대신 누르기 쉬운 버튼 */
+.today-shortcuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:8px;margin:14px 0 8px}
+.today-shortcuts a{display:flex;align-items:center;gap:8px;min-height:48px;padding:8px 14px;border-radius:var(--ui-radius-pill);border:2px solid var(--ui-line);background:var(--ui-paper);color:var(--ui-ink);font-weight:700;text-decoration:none}
+.today-shortcuts a:hover,.today-shortcuts a:focus-visible{border-color:var(--ui-action)}
